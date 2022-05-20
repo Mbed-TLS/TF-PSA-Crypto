@@ -56,6 +56,7 @@ typedef struct {
     uint32_t MBEDTLS_PRIVATE(index);
     uint16_t MBEDTLS_PRIVATE(olen);
     uint16_t MBEDTLS_PRIVATE(max_block_size);
+    uint8_t MBEDTLS_PRIVATE(finished);
 }
 mbedtls_sha3_context;
 

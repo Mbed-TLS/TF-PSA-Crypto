@@ -320,6 +320,7 @@ int mbedtls_sha3_starts(mbedtls_sha3_context *ctx, mbedtls_sha3_id id)
 
     memset(ctx->state, 0, sizeof(ctx->state));
     ctx->index = 0;
+    ctx->finished = 0;
 
     return 0;
 }
@@ -385,10 +386,13 @@ int mbedtls_sha3_finish(mbedtls_sha3_context *ctx,
         xor_byte = SHAKE_XOR_BYTE;
     }
 
-    ABSORB(ctx, ctx->index, xor_byte);
-    ABSORB(ctx, ctx->max_block_size - 1, 0x80);
-    keccak_f1600(ctx);
-    ctx->index = 0;
+    if (ctx->finished == 0) {
+        ABSORB(ctx, ctx->index, xor_byte);
+        ABSORB(ctx, ctx->max_block_size - 1, 0x80);
+        keccak_f1600(ctx);
+        ctx->index = 0;
+        ctx->finished = 1;
+    }
 
     while (olen-- > 0) {
         *output++ = SQUEEZE(ctx, ctx->index);
