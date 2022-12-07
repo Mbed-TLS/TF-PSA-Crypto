@@ -32,3 +32,70 @@ currently PAKE.
   evolutions of the Mbed TLS repository but the less the better. The trigger
   of the updates may or may not be automated.
 * The testing of the PSA cryptography repository updates should be automated (CI).
+
+## PSA cryptography repository definition
+
+Name of the GitHub repo: psa-crypto
+
+### Repository tree
+
+```bash
+├── include
+│   └── psa
+├── core
+├── drivers
+│   └── builtin
+│       ├── include
+│       └── src
+```
+
+* The PSA cryptographic interface is defined and exposed in include/psa.
+* To ease the addition and integration of various partial and/or complete
+  implementations of the PSA unified driver interface (based on different
+  cryptographic code bases like everest or p256-m), the implementation of the
+  PSA core and the implementations of the PSA unified driver interface are
+  separated into two directories: core and drivers.
+* The drivers directory contains various partial and or complete
+  implementations of the PSA unified driver interface, one directory per
+  cryptographic code base source. The first of them being the builtin
+  directory hosting the PSA cryptography repository self-contained
+  implementation of the PSA unified driver interface.
+
+#### First phase considerations
+
+```bash
+├── include
+│   └── psa
+├── core
+├── drivers
+│   └── builtin
+│       ├── include
+│       │   └── mbedtls
+│       └── src
+└── scripts
+    ├── data_files
+    │   ├── driver_jsons
+    │   └── driver_templates
+    └── mbedtls_dev
+        └── __pycache__
+```
+
+The builtin implementation is made of copies without modifications of Mbed TLS
+files from the development branch in `drivers/builtin/include/mbedtls` and
+`drivers/builtin/src`.
+
+The core and its headers (directories include/psa and core) are copies of the
+relevant Mbed TLS files from the development branch with as little as possible
+modifications. The cmake files are specific to the PSA cryptography repository.
+
+All the files in scripts are just copies of Mbed TLS files from the development
+branch or from a specific branch derived from the development branch that we
+would need to rebase when we want to update the PSA cryptography repository
+according to a newer version of the development branch. The rebase needs to be
+trivial in most cases which contrains what can be done in the specific branch.
+
+### Build system
+A fair amount of projects rely on the cmake build system to integrate Mbed TLS
+thus we need to provide a cmake based build system for the PSA cryptography
+repository as well. Each build system for the first phase and in the long term
+is a significant amount of work thus the plan to just have a cmake build system.
