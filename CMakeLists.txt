@@ -68,6 +68,8 @@ endif()
 string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
 string(REGEX MATCH "GNU" CMAKE_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
 
+option(ENABLE_TESTING "Build PSA cryptography tests." ON)
+
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
@@ -182,3 +184,47 @@ if(LIB_INSTALL_DIR)
 endif()
 
 add_subdirectory(core)
+
+#
+# The C files in tests/src directory contain test code shared among test suites
+# and programs. This shared test code is compiled and linked to test suites and
+# programs objects as a set of compiled objects. The compiled objects are NOT
+# built into a library that the test suite and program objects would link
+# against as they link against the psacrypto library.
+# The reason is that such library is expected to have mutual dependencies with
+# the psacrypto library and that there is as of today no portable way of
+# handling such dependencies (only toolchain specific solutions).
+#
+# Thus the below definition of the `psa_crypto_test` CMake library of objects
+# target. This library of objects is used by tests and programs CMake files
+# to define the test executables.
+#
+if(ENABLE_TESTING)
+    file(GLOB PSA_CRYPTO_TEST_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
+    add_library(psa_crypto_test OBJECT ${PSA_CRYPTO_TEST_FILES})
+    target_include_directories(psa_crypto_test
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/include)
+endif()
+
+if(ENABLE_TESTING)
+    enable_testing()
+
+    add_subdirectory(tests)
+
+    # additional convenience targets for Unix only
+    if(UNIX)
+
+        ADD_CUSTOM_TARGET(covtest
+            COMMAND make test
+        )
+    endif(UNIX)
+
+    # Make scripts needed for testing available in an out-of-source build.
+    if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+        link_to_source(scripts)
+    endif()
+endif()

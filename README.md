@@ -14,7 +14,8 @@ The CMake build system creates one library: libpsacrypto.
 You need the following tools to build the library from the main branch with the provided CMake files:
 
 * A C99 toolchain (compiler, linker, archiver). We actively test with GCC 5.4, Clang 3.8. More recent versions should work. Slightly older versions may work.
-* Perl to generate some source files as part of the build.
+* Python 3.6 to generate the test code in the main branch.
+* Perl to run the tests, and to generate some source files in the main branch.
 * CMake 3.10.2 or later.
 
 ### Generated source files in the main branch
@@ -23,13 +24,18 @@ The source code of PSA cryptography includes some files that are automatically g
 
 The following tools are required:
 
-* Python 3 and some Python packages, for some library source files. To install the necessary packages, run
+* Python 3 and some Python packages, for some library source files and test data. To install the necessary packages, run
     ```
     python -m pip install -r scripts/basic.requirements.txt
     ```
+* A C compiler for the host platform, for some test data.
+
+If you are cross-compiling, you must set the `CC` environment variable to a C compiler for the host platform when generating the configuration-independent files.
+
 Any of the following methods are available to generate the configuration-independent files:
 
 * When not cross-compiling, CMake will generate the required files automatically.
+* Run `tests/scripts/check-generated-files.sh -u` to generate all the configuration-independent files.
 
 ### CMake
 
@@ -38,6 +44,14 @@ In order to build the source using CMake in a separate directory (recommended), 
     mkdir /path/to/build_dir && cd /path/to/build_dir
     cmake /path/to/psa/crypto/source
     cmake --build .
+
+In order to run the tests, enter:
+
+    ctest
+
+The test suites need Python to be built and Perl to be executed. If you don't have one of these installed, you'll want to disable the test suites with:
+
+    cmake -DENABLE_TESTING=Off /path/to/psa/crypto/source
 
 To configure CMake for building shared libraries, use:
 
@@ -93,6 +107,11 @@ You can now make the desired change:
 Regarding variables, also note that if you set CFLAGS when invoking cmake,
 your value of CFLAGS doesn't override the content provided by cmake (depending
 on the build mode as seen above), it's merely prepended to it.
+
+Tests
+-----
+
+PSA cryptography includes an elaborate test suite in `tests/` that initially requires Python to generate the tests files (e.g. `test\_suite\_psa\_crypto.c`). These files are generated from a `function file` (e.g. `suites/test\_suite\_psa\_crypto.function`) and a `data file` (e.g. `suites/test\_suite\_psa\_crypto.data`). The `function file` contains the test functions. The `data file` contains the test cases, specified as parameters that will be passed to the test function.
 
 License
 -------
