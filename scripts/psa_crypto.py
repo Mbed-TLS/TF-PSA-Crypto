@@ -89,6 +89,27 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     copy_tree(os.path.join(source_path, "mbedtls_dev"),
               os.path.join(destination_path, "mbedtls_dev"))
 
+def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
+    source_path = os.path.join(mbedtls_root_path, "tests")
+    destination_path = os.path.join(psa_crypto_root_path, "tests")
+
+    copy_tree( os.path.join( source_path, "include" ),
+               os.path.join( destination_path, "include" ) )
+
+    copy_tree( os.path.join( source_path, "scripts" ),
+               os.path.join( destination_path, "scripts" ) )
+
+    copy_tree( os.path.join( source_path, "src" ),
+               os.path.join( destination_path, "src" ) )
+
+    tests_suites_files = filter(lambda file_: re.match(
+                                "test_suite_psa_crypto.*|helpers\.function|"\
+                                "host_test\.function|main_test\.function", file_),
+                                os.listdir(os.path.join(source_path, "suites")))
+    for file_ in tests_suites_files:
+        shutil.copy2(os.path.join(source_path, "suites", file_),
+                     os.path.join(destination_path, "suites", file_))
+
 def main():
     parser = argparse.ArgumentParser(
         description=(
@@ -113,6 +134,7 @@ def main():
     copy_of_mbedtls_headers(mbedtls_root_path, os.getcwd())
     copy_from_library(mbedtls_root_path, os.getcwd())
     copy_from_scripts(mbedtls_root_path, os.getcwd())
+    copy_from_tests(mbedtls_root_path, os.getcwd())
 
 if __name__ == "__main__":
     main()
