@@ -163,6 +163,7 @@ if(CMAKE_COMPILER_IS_GNU)
     endif()
     set(CMAKE_C_FLAGS_RELEASE     "-O2")
     set(CMAKE_C_FLAGS_DEBUG       "-O0 -g3")
+    set(CMAKE_C_FLAGS_COVERAGE    "-O0 -g3 --coverage")
     set(CMAKE_C_FLAGS_ASAN        "-fsanitize=address -fno-common -fsanitize=undefined -fno-sanitize-recover=all -O3")
     set(CMAKE_C_FLAGS_ASANDBG     "-fsanitize=address -fno-common -fsanitize=undefined -fno-sanitize-recover=all -O1 -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
     set(CMAKE_C_FLAGS_CHECK       "-Os")
@@ -173,6 +174,7 @@ if(CMAKE_COMPILER_IS_CLANG)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wwrite-strings -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral")
     set(CMAKE_C_FLAGS_RELEASE     "-O2")
     set(CMAKE_C_FLAGS_DEBUG       "-O0 -g3")
+    set(CMAKE_C_FLAGS_COVERAGE    "-O0 -g3 --coverage")
     set(CMAKE_C_FLAGS_ASAN        "-fsanitize=address -fno-common -fsanitize=undefined -fno-sanitize-recover=all -O3")
     set(CMAKE_C_FLAGS_ASANDBG     "-fsanitize=address -fno-common -fsanitize=undefined -fno-sanitize-recover=all -O1 -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
     set(CMAKE_C_FLAGS_MEMSAN      "-fsanitize=memory -O3")
@@ -190,6 +192,12 @@ if(PSA_CRYPTO_FATAL_WARNINGS)
         endif(UNSAFE_BUILD)
     endif(CMAKE_COMPILER_IS_CLANG OR CMAKE_COMPILER_IS_GNU)
 endif(PSA_CRYPTO_FATAL_WARNINGS)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    if(CMAKE_COMPILER_IS_GNU OR CMAKE_COMPILER_IS_CLANG)
+        set(CMAKE_SHARED_LINKER_FLAGS "--coverage")
+    endif(CMAKE_COMPILER_IS_GNU OR CMAKE_COMPILER_IS_CLANG)
+endif(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 
 if(LIB_INSTALL_DIR)
     set(CMAKE_INSTALL_LIBDIR "${LIB_INSTALL_DIR}")
@@ -239,11 +247,44 @@ if(ENABLE_TESTING)
         ADD_CUSTOM_TARGET(covtest
             COMMAND make test
         )
+
+# Typical sequence using lcov target (out-of-tree build from (root)/build):
+# cmake -D CMAKE_BUILD_TYPE:String=Coverage ..
+# cmake --build .
+# {ctest|make test}
+# make lcov
+# Browse `Coverage/index.html`
+        ADD_CUSTOM_TARGET(lcov
+            COMMAND rm -rf Coverage
+            COMMAND lcov --capture --initial --directory core/CMakeFiles/psacrypto.dir -o files.info
+            COMMAND lcov --capture --directory core/CMakeFiles/psacrypto.dir -o tests.info
+            COMMAND lcov --add-tracefile files.info --add-tracefile tests.info -o all.info
+            COMMAND lcov --remove all.info -o final.info '*.h'
+            COMMAND gendesc ${CMAKE_CURRENT_SOURCE_DIR}/tests/Descriptions.txt -o descriptions
+            COMMAND genhtml --title "PSA cryptography" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
+            COMMAND rm -f files.info tests.info all.info final.info descriptions
+        )
+
+# Typical sequence using memcheck target (out-of-tree build from (root)/build):
+# cmake -D CMAKE_BUILD_TYPE:String=Release ..
+# cmake --build .
+# make memcheck
+        ADD_CUSTOM_TARGET(memcheck
+            COMMAND sed -i.bak s+/usr/bin/valgrind+`which valgrind`+ DartConfiguration.tcl
+            COMMAND ctest -O memcheck.log -D ExperimentalMemCheck
+            COMMAND tail -n1 memcheck.log | grep 'Memory checking results:' > /dev/null
+            COMMAND rm -f memcheck.log
+            COMMAND mv DartConfiguration.tcl.bak DartConfiguration.tcl
+        )
     endif(UNIX)
 
     # Make scripts needed for testing available in an out-of-source build.
     if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
         link_to_source(scripts)
+        # Copy (don't link) DartConfiguration.tcl, needed for memcheck, to
+        # keep things simple with the sed commands in the memcheck target.
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/DartConfiguration.tcl
+                    ${CMAKE_CURRENT_BINARY_DIR}/DartConfiguration.tcl COPYONLY)
     endif()
 endif()
 
