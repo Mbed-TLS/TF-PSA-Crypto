@@ -37,3 +37,11 @@ if(GEN_FILES)
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/psa_constant_names_generated.c)
     add_dependencies(psa_constant_names generate_psa_constant_names_generated_c)
 endif()
+
+install(TARGETS ${executables}
+        DESTINATION "bin"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+install(PROGRAMS
+            key_ladder_demo.sh
+        DESTINATION "bin")

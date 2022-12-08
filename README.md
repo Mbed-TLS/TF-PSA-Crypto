@@ -108,6 +108,34 @@ Regarding variables, also note that if you set CFLAGS when invoking cmake,
 your value of CFLAGS doesn't override the content provided by cmake (depending
 on the build mode as seen above), it's merely prepended to it.
 
+#### Consuming PSA cryptography
+
+PSA cryptography provides a package config file for consumption as a dependency
+in other CMake projects. You can include PSA cryptography CMake targets yourself
+with:
+
+    find_package(PSACrypto)
+
+If prompted, set `PSACrypto_DIR` to `${YOUR_PSA_CRYPTO_INSTALL_DIR}/cmake`. This
+creates the `PSACrypto::psacrypto` target.
+
+You can then use it directly through `target_link_libraries()`:
+
+    add_executable(xyz)
+
+    target_link_libraries(xyz PUBLIC PSACrypto::psacrypto)
+
+This will link the PSA cryptography library to your library or application, and
+add its include directories to your target (transitively, in the case of
+`PUBLIC` or `INTERFACE` link libraries).
+
+#### PSA cryptography as a subproject
+
+PSA cryptography supports being built as a CMake subproject. One can
+use `add_subdirectory()` from a parent CMake project to include PSA
+cryptography as a subproject.
+
+
 Example programs
 ----------------
 
