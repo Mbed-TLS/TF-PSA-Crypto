@@ -110,6 +110,13 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
         shutil.copy2(os.path.join(source_path, "suites", file_),
                      os.path.join(destination_path, "suites", file_))
 
+def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
+    programs_psa_files = filter(lambda file_: not re.match("CMakeLists\.txt|Makefile", file_),
+                                os.listdir(os.path.join(mbedtls_root_path, "programs", "psa")))
+    for file_ in programs_psa_files:
+        shutil.copy2(os.path.join(mbedtls_root_path, "programs", "psa", file_),
+                     os.path.join(psa_crypto_root_path, "programs", "psa"))
+
 def main():
     parser = argparse.ArgumentParser(
         description=(
@@ -135,6 +142,7 @@ def main():
     copy_from_library(mbedtls_root_path, os.getcwd())
     copy_from_scripts(mbedtls_root_path, os.getcwd())
     copy_from_tests(mbedtls_root_path, os.getcwd())
+    copy_from_programs(mbedtls_root_path, os.getcwd())
 
 if __name__ == "__main__":
     main()
