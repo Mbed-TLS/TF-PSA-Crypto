@@ -81,12 +81,20 @@ if(USE_SHARED_PSA_CRYPTO_LIBRARY)
 endif(USE_SHARED_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
+    add_library(PSACrypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
         PUBLIC $<BUILD_INTERFACE:${PSA_CRYPTO_DIR}/include/>
                $<INSTALL_INTERFACE:include/>
         PUBLIC $<BUILD_INTERFACE:${PSA_CRYPTO_DIR}/drivers/builtin/include/>
         PRIVATE ${PSA_CRYPTO_DIR}/core
         PRIVATE ${PSA_CRYPTO_DIR}/drivers/builtin/src)
+    install(
+        TARGETS ${target}
+        EXPORT PSACryptoTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endforeach(target)
 
 set(lib_target "${PSA_CRYPTO_TARGET_PREFIX}lib")

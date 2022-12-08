@@ -41,6 +41,14 @@ endif()
 
 include(GNUInstallDirs)
 
+# Determine if PSA crypto is being built as a subproject using add_subdirectory()
+if(NOT DEFINED PSA_CRYPTO_AS_SUBPROJECT)
+  set(PSA_CRYPTO_AS_SUBPROJECT ON)
+  if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(PSA_CRYPTO_AS_SUBPROJECT OFF)
+  endif()
+endif()
+
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -66,6 +74,8 @@ else()
         set(PSA_CRYPTO_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
     endif()
 endif()
+
+option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target export and installation" ${PSA_CRYPTO_AS_SUBPROJECT})
 
 string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
 string(REGEX MATCH "GNU" CMAKE_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
@@ -185,6 +195,8 @@ if(LIB_INSTALL_DIR)
     set(CMAKE_INSTALL_LIBDIR "${LIB_INSTALL_DIR}")
 endif()
 
+add_subdirectory(include)
+add_subdirectory(drivers/builtin/include)
 add_subdirectory(core)
 
 #
@@ -232,5 +244,41 @@ if(ENABLE_TESTING)
     # Make scripts needed for testing available in an out-of-source build.
     if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
         link_to_source(scripts)
+    endif()
+endif()
+
+if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
+    configure_package_config_file(
+        "cmake/PSACryptoConfig.cmake.in"
+        "cmake/PSACryptoConfig.cmake"
+            INSTALL_DESTINATION "cmake")
+
+    write_basic_package_version_file(
+        "cmake/PSACryptoConfigVersion.cmake"
+            COMPATIBILITY SameMajorVersion
+            VERSION 0.1.0)
+
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfigVersion.cmake"
+        DESTINATION "cmake")
+
+    export(
+        EXPORT PSACryptoTargets
+        NAMESPACE PSACrypto::
+        FILE "cmake/PSACryptoTargets.cmake")
+
+    install(
+        EXPORT PSACryptoTargets
+        NAMESPACE PSACrypto::
+        DESTINATION "cmake"
+        FILE "PSACryptoTargets.cmake")
+
+    if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
+        # Do not export the package by default
+        cmake_policy(SET CMP0090 NEW)
+
+        # Make this package visible to the system
+        export(PACKAGE PSACrypto)
     endif()
 endif()
