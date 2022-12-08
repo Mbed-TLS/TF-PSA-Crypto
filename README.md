@@ -14,7 +14,7 @@ The CMake build system creates one library: libpsacrypto.
 You need the following tools to build the library from the main branch with the provided CMake files:
 
 * A C99 toolchain (compiler, linker, archiver). We actively test with GCC 5.4, Clang 3.8. More recent versions should work. Slightly older versions may work.
-* Python 3.6 to generate the test code in the main branch.
+* Python 3.6 to generate the test code, and to generate sample programs in the main branch.
 * Perl to run the tests, and to generate some source files in the main branch.
 * CMake 3.10.2 or later.
 
@@ -24,7 +24,7 @@ The source code of PSA cryptography includes some files that are automatically g
 
 The following tools are required:
 
-* Python 3 and some Python packages, for some library source files and test data. To install the necessary packages, run
+* Python 3 and some Python packages, for some library source files, sample programs and test data. To install the necessary packages, run
     ```
     python -m pip install -r scripts/basic.requirements.txt
     ```
@@ -107,6 +107,12 @@ You can now make the desired change:
 Regarding variables, also note that if you set CFLAGS when invoking cmake,
 your value of CFLAGS doesn't override the content provided by cmake (depending
 on the build mode as seen above), it's merely prepended to it.
+
+Example programs
+----------------
+
+We've included example programs for different features and uses in [`programs/`](programs/README.md).
+Please note that the goal of these sample programs is to demonstrate specific features of the library, and the code may need to be adapted to build a real-world application.
 
 Tests
 -----

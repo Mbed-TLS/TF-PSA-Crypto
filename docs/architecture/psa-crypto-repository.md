@@ -72,6 +72,7 @@ Name of the GitHub repo: psa-crypto
 │       ├── include
 │       │   └── mbedtls
 │       └── src
+├── programs
 ├── scripts
 │   ├── data_files
 │   │   ├── driver_jsons
@@ -89,12 +90,12 @@ The core and its headers (directories include/psa and core) are copies of the
 relevant Mbed TLS files from the development branch with as little as possible
 modifications. The cmake files are specific to the PSA cryptography repository.
 
-All the files in scripts and tests are just copies of Mbed TLS files from the
-development branch or from a specific branch derived from the development
-branch that we would need to rebase when we want to update the PSA cryptography
-repository according to a newer version of the development branch. The rebase
-needs to be trivial in most cases which contrains what can be done in the
-specific branch.
+All the files in scripts, programs and tests are just copies of Mbed TLS files
+from the development branch or from a specific branch derived from the
+development branch that we would need to rebase when we want to update the PSA
+cryptography repository according to a newer version of the development branch.
+The rebase needs to be trivial in most cases which contrains what can be done
+in the specific branch.
 
 ### Build system
 A fair amount of projects rely on the cmake build system to integrate Mbed TLS

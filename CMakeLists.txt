@@ -44,6 +44,8 @@ include(GNUInstallDirs)
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+option(ENABLE_PROGRAMS "Build PSA cryptography programs." ON)
+
 option(UNSAFE_BUILD "Allow unsafe builds. These builds ARE NOT SECURE." OFF)
 option(PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
 if(CMAKE_HOST_WIN32)
@@ -199,7 +201,7 @@ add_subdirectory(core)
 # target. This library of objects is used by tests and programs CMake files
 # to define the test executables.
 #
-if(ENABLE_TESTING)
+if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     file(GLOB PSA_CRYPTO_TEST_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
     add_library(psa_crypto_test OBJECT ${PSA_CRYPTO_TEST_FILES})
     target_include_directories(psa_crypto_test
@@ -208,6 +210,10 @@ if(ENABLE_TESTING)
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/include)
+endif()
+
+if(ENABLE_PROGRAMS)
+    add_subdirectory(programs)
 endif()
 
 if(ENABLE_TESTING)
