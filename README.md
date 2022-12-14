@@ -3,6 +3,19 @@ README for psa-crypto
 
 The PSA Cryptography repository contains a reference implementation of the [PSA Cryptography API and its unified driver interface](https://armmbed.github.io/mbed-crypto/psa/#application-programming-interface). This encompasses the on-going extensions to the PSA Cryptography API like currently PAKE.
 
+Documentation
+-------------
+
+Documentation for the PSA Cryptography API is available [on GitHub](https://arm-software.github.io/psa-api/crypto/).
+
+To generate a local copy of the library documentation in HTML format:
+
+1. Make sure that [Doxygen](http://www.doxygen.nl/) is installed.
+1. Run `mkdir /path/to/build_dir && cd /path/to/build_dir`
+1. Run `cmake /path/to/psa/crypto/source`
+1. Run `make apidoc`
+1. Browse `apidoc/index.html` or `apidoc/modules.html`.
+
 Compiling
 ---------
 

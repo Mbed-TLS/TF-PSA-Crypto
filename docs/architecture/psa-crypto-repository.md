@@ -73,6 +73,8 @@ Name of the GitHub repo: psa-crypto
 │       │   └── mbedtls
 │       └── src
 ├── cmake
+├── doxygen
+│   └── input
 ├── programs
 ├── scripts
 │   ├── data_files
@@ -89,7 +91,8 @@ files from the development branch in `drivers/builtin/include/mbedtls` and
 
 The core and its headers (directories include/psa and core) are copies of the
 relevant Mbed TLS files from the development branch with as little as possible
-modifications. The cmake files are specific to the PSA cryptography repository.
+modifications. The cmake and doxygen files are specific to the PSA cryptography
+repository.
 
 All the files in scripts, programs and tests are just copies of Mbed TLS files
 from the development branch or from a specific branch derived from the
