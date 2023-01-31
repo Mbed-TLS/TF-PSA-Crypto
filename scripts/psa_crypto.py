@@ -25,8 +25,12 @@ import shutil
 from distutils.dir_util import copy_tree
 
 def copy_of_psa_headers(mbedtls_root_path, psa_crypto_root_path):
-    copy_tree(os.path.join(mbedtls_root_path, "include", "psa"),
-              os.path.join(psa_crypto_root_path, "include", "psa"))
+    source_path = os.path.join(mbedtls_root_path, "include", "psa")
+    destination_path = os.path.join(psa_crypto_root_path, "include", "psa")
+    include_files = filter(lambda file_: not re.match("build_info\.h|crypto_config\.h", file_),
+                           os.listdir(source_path))
+    for file_ in include_files:
+        shutil.copy2(os.path.join(source_path, file_), destination_path)
 
 def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "include", "mbedtls")
@@ -47,8 +51,9 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
 def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     library_files = filter(lambda file_: not re.match(
-                           "x509.*|mps.*|ssl.*|\.gitignore|Makefile|CMakeLists\.txt|"\
-                           "debug\.c|error\.c|net_sockets\.c", file_),
+                           ".*\.o|x509.*|mps.*|ssl.*|\.gitignore|Makefile|CMakeLists\.txt|"\
+                           "debug\.c|error\.c|net_sockets\.c"\
+                           "psa_crypto_core_common\.h", file_),
                            os.listdir(os.path.join(mbedtls_root_path, "library")))
 
     for file_ in library_files:
@@ -68,11 +73,15 @@ def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
                               "psa_crypto_storage.c",
                               "psa_crypto_storage.h",
                               "psa_its_file.c",
-                              "psa_crypto_driver_wrappers.h" ]
+                              "psa_crypto_driver_wrappers.h",
+                              "check_crypto_config.h" ]
 
     for file_ in psa_crypto_core_files:
         shutil.move(os.path.join(builtin_path, "src", file_),
                     os.path.join(psa_crypto_root_path, "core", file_))
+
+    shutil.copy2(os.path.join(mbedtls_root_path, "library", "alignment.h"),
+                 os.path.join(psa_crypto_root_path, "core"))
 
 def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "scripts")
@@ -92,6 +101,8 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
 def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "tests")
     destination_path = os.path.join(psa_crypto_root_path, "tests")
+
+    shutil.copy2(os.path.join(source_path, "seedfile"), destination_path)
 
     copy_tree( os.path.join( source_path, "include" ),
                os.path.join( destination_path, "include" ) )
