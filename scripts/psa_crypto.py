@@ -117,6 +117,12 @@ def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
         shutil.copy2(os.path.join(mbedtls_root_path, "programs", "psa", file_),
                      os.path.join(psa_crypto_root_path, "programs", "psa"))
 
+def copy_from_docs(mbedtls_root_path, psa_crypto_root_path):
+    source_path = os.path.join(mbedtls_root_path, "docs", "proposed")
+    destination_path = os.path.join(psa_crypto_root_path, "docs", "proposed")
+    shutil.copy2(os.path.join(source_path, "psa-conditional-inclusion-c.md"), destination_path)
+    shutil.copy2(os.path.join(source_path, "psa-driver-interface.md"), destination_path)
+
 def main():
     parser = argparse.ArgumentParser(
         description=(
@@ -143,6 +149,7 @@ def main():
     copy_from_scripts(mbedtls_root_path, os.getcwd())
     copy_from_tests(mbedtls_root_path, os.getcwd())
     copy_from_programs(mbedtls_root_path, os.getcwd())
+    copy_from_docs(mbedtls_root_path, os.getcwd())
 
 if __name__ == "__main__":
     main()

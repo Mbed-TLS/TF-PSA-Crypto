@@ -3,6 +3,19 @@ README for psa-crypto
 
 The PSA Cryptography repository contains a reference implementation of the [PSA Cryptography API and its unified driver interface](https://armmbed.github.io/mbed-crypto/psa/#application-programming-interface). This encompasses the on-going extensions to the PSA Cryptography API like currently PAKE.
 
+Configuration
+-------------
+
+PSA cryptography should build out of the box on most systems. Its configuration is based on C preprocessor macros gathered in `include/psa/crypto_config.h`. The C preprocessor macros or configuration options are organized into four groups:
+1. General configuration options.
+2. Configuration of the PSA cryptographic mechanisms to support: cryptographic  algorithms, key types, elliptic curves ... as defined in psa-conditional-inclusion-c.md.
+3. Configuration of the PSA cryptography core as defined in psa-driver-interface.md which provides the key management, the generation of random numbers and the dispatch to drivers.
+4. Configuration of the implementation of the PSA cryptographic mechanisms, which is an implementation of the PSA driver interface as defined in `psa-driver-interface.md`.
+
+The file `include/psa/crypto_config.h` can be edited manually, or in a more programmatic way using the Python 3 script `scripts/config.py` (use `--help` for usage instructions).
+
+Compiler options can be set using conventional environment variables such as `CC` and `CFLAGS` when using the CMake build system (see below).
+
 Documentation
 -------------
 
