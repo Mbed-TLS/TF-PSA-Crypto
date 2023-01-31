@@ -131,3 +131,31 @@ of the commit identifiers are used.
 * git commit -s -m"Update against \<mbedtls-commit-id\>(PR \<mbedtls-pr\>) with \<psa-crypto-commit-id\>"
 * Create a PR against the main branch with the branch that has just been created.
 * Merge the PR which completes the update.
+
+## Configuration
+The build-time configuration information file is `include/psa/build_info.h`.
+This file is included by the PSA headers (header files located in
+`include/psa`) and the PSA core files (located in `core`) to access the
+configuration options defined in `include/psa/crypto_config.h` or
+PSA_CRYPTO_CONFIG_FILE. The PSA core files do not include it directly but
+through the `core/common.h` file.
+
+Both the PSA headers and the PSA core files reference Mbed TLS configuration
+options. Therefore, `include/psa/build_info.h` includes the header file
+`drivers/builtin/include/mbedtls/config_psa.h` which defines the Mbed TLS
+configuration options as implied by the set of enabled PSA configuration
+options. The goal is to eventually get rid of this. For PSA headers, it is
+just to use the configuration options of the PSA cryptography repository
+instead of their Mbed TLS equivalent. For PSA core files, some code needs
+also to be restructured as the key derivation and key agreement code where
+support for driver is yet to be added.
+
+The build-time configuration information file for the builtin implementation is
+the Mbed TLS one: `include/mbedtls/build_info.h`. It is based on the
+minimalist Mbed TLS configuration file `drivers/builtin/mbedtls_config.h`
+(copied by `scrips/psa_crypto.py` into `drivers/builtin/include/mbedtls/` to
+overwrite the Mbed TLS default configuration file), that enables only the
+two Mbed TLS configuration options MBEDTLS_PSA_CRYPTO_C and
+MBEDTLS_PSA_CRYPTO_CONFIG. The other configuration options that need to be
+enabled are again enabled by the pre-processor logic in
+`drivers/builtin/include/mbedtls/config_psa.h` given `include/psa/crypto_config.h`.
