@@ -26,12 +26,4 @@
 
 #define MBEDTLS_PSA_CRYPTO_C
 #define MBEDTLS_PSA_CRYPTO_CONFIG
-
-/* PSA core mandatory configuration options */
-#define MBEDTLS_CIPHER_C
-#define MBEDTLS_AES_C
-#define MBEDTLS_SHA224_C
-#define MBEDTLS_SHA256_C
-#define MBEDTLS_PSA_BUILTIN_ALG_SHA_256 1
-#define MBEDTLS_CTR_DRBG_C
-#define MBEDTLS_ENTROPY_C
+#define MBEDTLS_CIPHER_C /* Prerequisite of MBEDTLS_PSA_CRYPTO_C */
