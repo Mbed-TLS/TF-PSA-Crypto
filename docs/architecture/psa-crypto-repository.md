@@ -139,6 +139,37 @@ macros). The other configuration options that need to be enabled are again
 enabled by the pre-processor logic in `drivers/builtin/include/mbedtls/config_psa.h`
 given `include/psa/crypto_config.h`.
 
+### Platform abstraction layer
+The PSA cryptography implementation is mostly written in portable C99 and
+builds and works out of the box on systems or platforms with support for the
+C standard library.
+
+The PSA cryptography implementation assumes the availability of the following
+C standard library functions:
+. memory functions: memcmp(), memcpy(), memset() and memmove()
+. string functions: strcmp(), strlen(), strncmp(), strncpy() and strstr()
+
+On another side, to ease the port of the library and its usage in an embedded
+context, the PSA cryptography implementation does not use directly some
+functions of the standard C library but rather their equivalent platform
+abstraction functions whose names are `psa_crypto_xyz` when the name of the
+standard function is `xyz`. These functions are:
+
+. dynamic memory allocation functions: psa_crypto_calloc(), psa_crypto_free()
+. formatted output functions: psa_crypto_printf(), psa_crypto_fprintf() and
+  psa_crypto_snprintf()
+. other functions: psa_crypto_setbuf()
+
+If the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
+these platform abstraction functions are just aliases to the corresponding
+standard C library functions. Otherwise, these platform abstraction functions have to
+be provided as part of the integration of the PSA cryptography library.
+
+More generally, if the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled
+the PSA cryptography library provides an implementation of most of the
+platform abstraction functions based on the functions of the standard C library
+(see include/psa/platform.h for more information).
+
 ## Updating the main branch
 
 The PSA-Crypto repository provides a reference implementation of the
