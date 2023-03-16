@@ -20,6 +20,7 @@
 
 import argparse
 import os
+import stat
 import re
 import shutil
 from distutils.dir_util import copy_tree
@@ -94,6 +95,7 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
 
     shutil.copy2(os.path.join(source_path, "generate_driver_wrappers.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "generate_psa_constants.py"), destination_path)
+    shutil.copy2(os.path.join(source_path, "output_env.sh"), destination_path)
 
     copy_tree(os.path.join(source_path, "mbedtls_dev"),
               os.path.join(destination_path, "mbedtls_dev"))
@@ -134,6 +136,45 @@ def copy_from_docs(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "psa-conditional-inclusion-c.md"), destination_path)
     shutil.copy2(os.path.join(source_path, "psa-driver-interface.md"), destination_path)
 
+def replace_all_sh_components(psa_crypto_root_path):
+    tests_scripts_path = os.path.join(psa_crypto_root_path, "tests", "scripts")
+    shutil.move(os.path.join(tests_scripts_path, "all.sh"),
+                os.path.join(tests_scripts_path, "all.sh.bak"))
+
+    before_components = 1
+    in_components = 0
+    after_components = 0
+    components_start = re.compile(r"#### Basic checks")
+    components_end = re.compile(r"#### Termination")
+    new_all_sh = open(os.path.join(tests_scripts_path, "all.sh"), 'x')
+
+    with open(os.path.join(tests_scripts_path, "all.sh.bak"), 'rt') as all_sh:
+        for line in all_sh:
+            if before_components:
+                if components_start.match(line) != None:
+                    new_all_sh.write("### PSA cryptography test components\n")
+                    new_all_sh.write("################################################################\n\n")
+
+                    with open(os.path.join(psa_crypto_root_path, "tests", "all_sh_components.txt"), 'rt') as components:
+                        for line in components:
+                            new_all_sh.write(line)
+                    before_components = 0
+                    in_components = 1
+                else:
+                    new_all_sh.write(line)
+
+            if in_components:
+                if components_end.match(line) != None:
+                    in_components = 0
+                    after_components = 1
+                    new_all_sh.write("\n################################################################\n")
+
+            if after_components:
+                new_all_sh.write(line)
+
+    new_all_sh.close()
+    os.chmod(os.path.join(tests_scripts_path, "all.sh"), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
+
 def main():
     parser = argparse.ArgumentParser(
         description=(
@@ -161,6 +202,7 @@ def main():
     copy_from_tests(mbedtls_root_path, os.getcwd())
     copy_from_programs(mbedtls_root_path, os.getcwd())
     copy_from_docs(mbedtls_root_path, os.getcwd())
+    replace_all_sh_components(os.getcwd())
 
 if __name__ == "__main__":
     main()
