@@ -56,7 +56,7 @@ The following tools are required:
 
 * Python 3 and some Python packages, for some library source files, sample programs and test data. To install the necessary packages, run
     ```
-    python -m pip install -r scripts/basic.requirements.txt
+    python3 -m pip install -r scripts/basic.requirements.txt
     ```
 * A C compiler for the host platform, for some test data.
 

@@ -14,9 +14,8 @@ currently PAKE.
 * The PSA-Crypto repository exposes as public interface the cryptographic
   interface defined in the PSA cryptography API specification and solely this
   interface.
-* The PSA-Crypto repository provides a way to independently build and
-  test a C static and/or shared library exposing completely or partially the
-  PSA cryptography API, without relying on the Mbed TLS repository.
+* The PSA-Crypto repository provides a way to build and test a C static and/or
+  shared library exposing completely or partially the PSA cryptography API.
 * The PSA-Crypto repository provides a configuration mechanism to define
   the parts of the PSA cryptography API exposed by the built C library.
 * The PSA-Crypto repository is derived from the Mbed TLS repository. No
@@ -99,7 +98,7 @@ All the files in scripts, programs and tests are just copies of Mbed TLS files
 from the development branch or from a specific branch derived from the
 development branch that we would need to rebase when we want to update the
 PSA-Crypto repository according to a newer version of the development branch.
-The rebase needs to be trivial in most cases which contrains what can be done
+The rebase needs to be trivial in most cases which constrains what can be done
 in the specific branch.
 
 ### Build system
@@ -134,29 +133,33 @@ of the commit identifiers are used.
 * Merge the PR which completes the update.
 
 ## Configuration
-The build-time configuration information file is `include/psa/build_info.h`.
-This file is included by the PSA headers (header files located in
-`include/psa`) and the PSA core files (located in `core`) to access the
-configuration options defined in `include/psa/crypto_config.h` or
-PSA_CRYPTO_CONFIG_FILE. The PSA core files do not include it directly but
-through the `core/common.h` file.
+The build-time configuration file is `include/psa/build_info.h`. This file is
+included by the PSA headers (header files located in `include/psa`) and the PSA
+core files (located in `core`) to access the configuration options defined in
+`include/psa/crypto_config.h` or PSA_CRYPTO_CONFIG_FILE. The PSA core files do
+not include `include/psa/build_info.h` directly but through the `core/common.h`
+file.
 
 Both the PSA headers and the PSA core files reference Mbed TLS configuration
 options. Therefore, `include/psa/build_info.h` includes the header file
 `drivers/builtin/include/mbedtls/config_psa.h` which defines the Mbed TLS
 configuration options as implied by the set of enabled PSA configuration
-options. The goal is to eventually get rid of this. For PSA headers, it is
-just to use the configuration options of the PSA-Crypto repository instead of
-their Mbed TLS equivalent. For PSA core files, some code needs also to be
-restructured as the key derivation and key agreement code where support for
-driver is yet to be added.
+options. The goal is to eventually get rid of the Mbed TLS configuration
+options, in two ways:
+. For PSA headers, use the configuration options of the PSA-Crypto repository
+instead of their Mbed TLS equivalent.
+. For PSA core files, some code needs also to be restructured as the key
+derivation and key agreement code where support for driver is yet to be added.
 
-The build-time configuration information file for the builtin implementation is
+The build-time configuration file for the builtin implementation is
 the Mbed TLS one: `include/mbedtls/build_info.h`. It is based on the
 minimalist Mbed TLS configuration file `drivers/builtin/mbedtls_config.h`
 (copied by `scrips/psa_crypto.py` into `drivers/builtin/include/mbedtls/` to
-overwrite the Mbed TLS default configuration file), that enables only the
-two Mbed TLS configuration options MBEDTLS_PSA_CRYPTO_C and
-MBEDTLS_PSA_CRYPTO_CONFIG. The other configuration options that need to be
-enabled are again enabled by the pre-processor logic in
-`drivers/builtin/include/mbedtls/config_psa.h` given `include/psa/crypto_config.h`.
+overwrite the Mbed TLS default configuration file). This minimalist Mbed TLS
+configuration file enables only the two Mbed TLS configuration options
+MBEDTLS_PSA_CRYPTO_C (enable the PSA cryptography interface) and
+MBEDTLS_PSA_CRYPTO_CONFIG (enable the selection of the cryptographic
+mechanisms supported by the PSA cryptography interface through PSA_WANT_xxx
+macros). The other configuration options that need to be enabled are again
+enabled by the pre-processor logic in `drivers/builtin/include/mbedtls/config_psa.h`
+given `include/psa/crypto_config.h`.

@@ -52,7 +52,7 @@ endif()
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-option(ENABLE_PROGRAMS "Build PSA cryptography programs." ON)
+option(ENABLE_PROGRAMS "Build PSA cryptography example programs." ON)
 
 option(PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
 if(CMAKE_HOST_WIN32)
