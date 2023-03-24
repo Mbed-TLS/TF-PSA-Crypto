@@ -4,8 +4,9 @@ PSA-Crypto repository
 ## Introduction
 
 The PSA-Crypto repository contains a reference implementation of the
-[PSA Cryptography API and its unified driver interface](https://armmbed.github.io/mbed-crypto/psa/#application-programming-interface).
-This encompasses the on-going extensions to the PSA cryptography API like
+[PSA Cryptography API](https://arm-software.github.io/psa-api) and its
+[unified driver interface](https://armmbed.github.io/mbed-crypto/psa).
+This encompasses the on-going extensions to the PSA Cryptography API like
 currently PAKE.
 
 ## Requirements
