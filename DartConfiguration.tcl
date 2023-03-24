@@ -1,4 +1,4 @@
 Site: localhost
-BuildName: PSA cryptography-test
+BuildName: PSA-Crypto-test
 CoverageCommand: /usr/bin/gcov
 MemoryCheckCommand: /usr/bin/valgrind

@@ -1,41 +1,41 @@
-PSA cryptography repository
-===========================
+PSA-Crypto repository
+=====================
 
 ## Introduction
 
-The PSA cryptography repository contains a reference implementation of the
+The PSA-Crypto repository contains a reference implementation of the
 [PSA Cryptography API and its unified driver interface](https://armmbed.github.io/mbed-crypto/psa/#application-programming-interface).
 This encompasses the on-going extensions to the PSA cryptography API like
 currently PAKE.
 
 ## Requirements
 
-* The PSA cryptography repository exposes as public interface the cryptographic
+* The PSA-Crypto repository exposes as public interface the cryptographic
   interface defined in the PSA cryptography API specification and solely this
   interface.
-* The PSA cryptography repository provides a way to independently build and
+* The PSA-Crypto repository provides a way to independently build and
   test a C static and/or shared library exposing completely or partially the
   PSA cryptography API, without relying on the Mbed TLS repository.
-* The PSA cryptography repository provides a configuration mechanism to define
+* The PSA-Crypto repository provides a configuration mechanism to define
   the parts of the PSA cryptography API exposed by the built C library.
-* The PSA cryptography repository is derived from the Mbed TLS repository. No
-  cryptographic development activities as such will occur on the PSA
-  cryptography repository.
-* The PSA cryptography repository is derived from the Mbed TLS repository but
+* The PSA-Crypto repository is derived from the Mbed TLS repository. No
+  cryptographic development activities as such will occur on the PSA-Crypto
+  repository.
+* The PSA-Crypto repository is derived from the Mbed TLS repository but
   it does not mean that all its content comes from Mbed TLS. It may contain a
   marginal number of files on its own.
-* The PSA cryptography repository must be able to evolve to be the development
+* The PSA-Crypto repository must be able to evolve to be the development
   repository of the PSA cryptography reference implementation.
-* The update of the PSA cryptography repository from the Mbed TLS repository
+* The update of the PSA-Crypto repository from the Mbed TLS repository
   should be automated and done at a reasonably short cadence (i.e, at least
   monthly). It is expected that the automation itself evolves with the
   evolutions of the Mbed TLS repository but the less the better. The trigger
   of the updates may or may not be automated.
-* The testing of the PSA cryptography repository updates should be automated (CI).
+* The testing of the PSA-Crypto repository updates should be automated (CI).
 
-## PSA cryptography repository definition
+## PSA-Crypto repository definition
 
-Name of the GitHub repo: psa-crypto
+Name of the GitHub repo: PSA-Crypto
 
 ### Repository tree
 
@@ -58,8 +58,8 @@ Name of the GitHub repo: psa-crypto
 * The drivers directory contains various partial and or complete
   implementations of the PSA unified driver interface, one directory per
   cryptographic code base source. The first of them being the builtin
-  directory hosting the PSA cryptography repository self-contained
-  implementation of the PSA unified driver interface.
+  directory hosting the PSA-Crypto repository self-contained implementation of
+  the PSA unified driver interface.
 
 #### First phase considerations
 
@@ -91,25 +91,25 @@ files from the development branch in `drivers/builtin/include/mbedtls` and
 
 The core and its headers (directories include/psa and core) are copies of the
 relevant Mbed TLS files from the development branch with as little as possible
-modifications. The cmake and doxygen files are specific to the PSA cryptography
+modifications. The cmake and doxygen files are specific to the PSA-Crypto
 repository.
 
 All the files in scripts, programs and tests are just copies of Mbed TLS files
 from the development branch or from a specific branch derived from the
-development branch that we would need to rebase when we want to update the PSA
-cryptography repository according to a newer version of the development branch.
+development branch that we would need to rebase when we want to update the
+PSA-Crypto repository according to a newer version of the development branch.
 The rebase needs to be trivial in most cases which contrains what can be done
 in the specific branch.
 
 ### Build system
 A fair amount of projects rely on the cmake build system to integrate Mbed TLS
-thus we need to provide a cmake based build system for the PSA cryptography
+thus we need to provide a cmake based build system for the PSA-Crypto
 repository as well. Each build system for the first phase and in the long term
 is a significant amount of work thus the plan to just have a cmake build system.
 
 ## Updating the main branch
 
-The PSA cryptography repository provides a reference implementation of the
+The PSA-Crypto repository provides a reference implementation of the
 PSA cryptography API through its main branch.
 
 The main branch is updated against the head of the Mbed TLS development branch
@@ -145,10 +145,10 @@ options. Therefore, `include/psa/build_info.h` includes the header file
 `drivers/builtin/include/mbedtls/config_psa.h` which defines the Mbed TLS
 configuration options as implied by the set of enabled PSA configuration
 options. The goal is to eventually get rid of this. For PSA headers, it is
-just to use the configuration options of the PSA cryptography repository
-instead of their Mbed TLS equivalent. For PSA core files, some code needs
-also to be restructured as the key derivation and key agreement code where
-support for driver is yet to be added.
+just to use the configuration options of the PSA-Crypto repository instead of
+their Mbed TLS equivalent. For PSA core files, some code needs also to be
+restructured as the key derivation and key agreement code where support for
+driver is yet to be added.
 
 The build-time configuration information file for the builtin implementation is
 the Mbed TLS one: `include/mbedtls/build_info.h`. It is based on the

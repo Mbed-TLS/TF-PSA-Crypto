@@ -22,10 +22,10 @@
  */
 
 /**
- * @mainpage PSA cryptography v0.1.0 source code documentation
+ * @mainpage PSA-Crypto v0.1.0 source code documentation
  *
- * This documentation describes the internal structure of PSA cryptography. It
- * was automatically generated from specially formatted comment blocks in
- * PSA cryptography source code using Doxygen.  (See
- * http://www.stack.nl/~dimitri/doxygen/ for more information on Doxygen)
+ * This documentation describes the internal structure of ths PSA-Crypto
+ * library. It was automatically generated from specially formatted comment
+ * blocks in PSA-Crypto source code using Doxygen (see
+ * http://www.stack.nl/~dimitri/doxygen/ for more information on Doxygen).
  */

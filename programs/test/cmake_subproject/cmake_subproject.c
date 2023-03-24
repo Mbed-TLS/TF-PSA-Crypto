@@ -1,6 +1,6 @@
 /*
- *  Simple program to test that CMake builds with PSA cryptography as a
- *  subdirectory work correctly.
+ *  Simple program to test that CMake builds with PSA-Crypto as a subdirectory
+ *  work correctly.
  *
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0

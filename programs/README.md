@@ -1,5 +1,5 @@
-PSA cryptography sample programs
-================================
+PSA cryptography example programs
+=================================
 
 This subdirectory mostly contains sample programs that illustrate specific features of the library, as well as a few test and support programs.
 

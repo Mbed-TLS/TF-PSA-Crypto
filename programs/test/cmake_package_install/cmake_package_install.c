@@ -1,6 +1,6 @@
 /*
- * Simple program to test that PSA cryptography builds correctly as an
- * installable CMake package.
+ * Simple program to test that PSA-Crypto builds correctly as an installable
+ * CMake package.
  *
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0

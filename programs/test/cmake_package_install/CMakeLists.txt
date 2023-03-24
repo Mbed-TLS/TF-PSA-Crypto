@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 #
-# Simulate configuring and building PSA cryptography as the user might do it.
+# Simulate configuring and building PSA-Crypto as the user might do it.
 # We'll install into a directory inside our own build directory.
 #
 
@@ -30,7 +30,7 @@ set(PSACrypto_DIR "${PSACrypto_INSTALL_DIR}/cmake")
 find_package(PSACrypto REQUIRED)
 
 #
-# At this point, the PSA cryptography target should have been imported, and
+# At this point, the PSA-Crypto targets should have been imported, and
 # we can now link to them from our own program.
 #
 

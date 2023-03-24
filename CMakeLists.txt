@@ -34,14 +34,14 @@ cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0012 NEW)
 
 if(TEST_CPP)
-    project("PSA Cryptography" C CXX)
+    project("PSA-Crypto" C CXX)
 else()
-    project("PSA Cryptography" C)
+    project("PSA-Crypto" C)
 endif()
 
 include(GNUInstallDirs)
 
-# Determine if PSA crypto is being built as a subproject using add_subdirectory()
+# Determine if PSA-Crypto is being built as a subproject using add_subdirectory()
 if(NOT DEFINED PSA_CRYPTO_AS_SUBPROJECT)
   set(PSA_CRYPTO_AS_SUBPROJECT ON)
   if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -80,7 +80,7 @@ option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target
 string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
 string(REGEX MATCH "GNU" CMAKE_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
 
-option(ENABLE_TESTING "Build PSA cryptography tests." ON)
+option(ENABLE_TESTING "Build PSA-Crypto tests." ON)
 
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -265,7 +265,7 @@ if(ENABLE_TESTING)
             COMMAND lcov --add-tracefile files.info --add-tracefile tests.info -o all.info
             COMMAND lcov --remove all.info -o final.info '*.h'
             COMMAND gendesc ${CMAKE_CURRENT_SOURCE_DIR}/tests/Descriptions.txt -o descriptions
-            COMMAND genhtml --title "PSA cryptography" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
+            COMMAND genhtml --title "PSA-Crypto" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
             COMMAND rm -f files.info tests.info all.info final.info descriptions
         )
 
