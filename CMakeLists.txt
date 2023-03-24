@@ -79,6 +79,10 @@ option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target
 string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
 string(REGEX MATCH "GNU" CMAKE_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
 
+if(NOT CMAKE_COMPILER_IS_CLANG AND NOT CMAKE_COMPILER_IS_GNU)
+    message(FATAL_ERROR "Compiler ${CMAKE_C_COMPILER_ID} not supported.")
+endif()
+
 option(ENABLE_TESTING "Build PSA-Crypto tests." ON)
 
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
