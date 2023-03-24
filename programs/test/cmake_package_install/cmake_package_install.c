@@ -25,7 +25,7 @@
  * linkage works, but that is all. */
 int main()
 {
-    psa_crypto_init( );
+    psa_crypto_init();
 
-    return( 0 );
+    return 0;
 }

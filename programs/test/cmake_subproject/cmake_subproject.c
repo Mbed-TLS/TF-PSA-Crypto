@@ -27,5 +27,5 @@ int main()
 {
     psa_crypto_init();
 
-    return( 0 );
+    return 0;
 }
