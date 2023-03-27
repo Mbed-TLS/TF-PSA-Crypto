@@ -27,8 +27,10 @@
 #define PSA_CRYPTO_CONFIG_H
 
 /**
- * \name SECTION: General configuration options
+ * \name SECTION: General configuration options.
  *
+ * This section contains the options that are not related to a specific part
+ * of the implementation of the PSA Cryptography API.
  * \{
  */
 
@@ -81,8 +83,8 @@
 /**
  * \name SECTION: PSA cryptography interface configuration
  *
- * This section allows for configuring the PSA cryptography interface as
- * specified in psa-conditional-inclusion-c.md.
+ * This section allows for configuring the parts of the PSA Cryptography API
+ * to enable as specified in psa-conditional-inclusion-c.md.
  *
  * \{
  */
@@ -278,8 +280,12 @@
 /**
  * \name SECTION: PSA driver interface implementation configuration options
  *
- * This section allows for the configuration of the PSA cryptography driver
- * interface implementation which implements the PSA cryptographic mechanisms.
+ * This section allows for the configuration of the built-in implementation of
+ * the PSA driver interface as defined in psa-driver-interface.md. The
+ * configuration options in the section are mostly non-functional,
+ * related to performance/size trade-offs and platform specific features like
+ * processor specific instructions.
+ *
  * \{
  */
 

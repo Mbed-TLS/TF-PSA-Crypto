@@ -11,10 +11,10 @@ Configuration
 -------------
 
 The PSA-Crypto repository should build out of the box on most systems. Its configuration is based on C preprocessor macros gathered in `include/psa/crypto_config.h`. The C preprocessor macros or configuration options are organized into four groups:
-1. General configuration options.
-2. Configuration of the PSA cryptographic mechanisms to support: cryptographic  algorithms, key types, elliptic curves ... as defined in psa-conditional-inclusion-c.md.
+1. General configuration options, options that are not related to a specific part of the implementation of the PSA Cryptography API.
+2. Configuration, using PSA_WANT_xxx macros as defined in psa-conditional-inclusion-c.md, of which parts of the PSA Cryptography API the user wishes to enable: cryptographic algorithms, key types, elliptic curves ...
 3. Configuration of the PSA cryptography core as defined in psa-driver-interface.md which provides the key management, the generation of random numbers and the dispatch to drivers.
-4. Configuration of the implementation of the PSA cryptographic mechanisms, which is an implementation of the PSA driver interface as defined in `psa-driver-interface.md`.
+4. Configuration of the built-in implementation of the PSA driver interface as defined in psa-driver-interface.md: non-functional configuration related to performance/size trade-offs.
 
 The file `include/psa/crypto_config.h` can be edited manually, or in a more programmatic way using the Python 3 script `scripts/config.py` (use `--help` for usage instructions).
 
