@@ -31,14 +31,6 @@
 
 /* Check configuration */
 #include "check_crypto_config.h"
-#if defined(PSA_CRYPTO_INJECT_ENTROPY) && \
-    !defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#error "PSA_CRYPTO_INJECT_ENTROPY defined, but not all prerequisites"
-#endif
-
-#if defined(PSA_CRYPTO_INJECT_ENTROPY) && defined(PSA_CRYPTO_EXTERNAL_RNG)
-#error "PSA_CRYPTO_INJECT_ENTROPY is not compatible with PSA_CRYPTO_EXTERNAL_RNG"
-#endif
 
 #include "alignment.h"
 
