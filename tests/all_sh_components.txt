@@ -45,3 +45,19 @@ component_test_ccm_aes_sha256_secp256r1() {
     cd "$PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_test_gcm_ccm_cbc_aes_sha256_512_secp256_384r1_rsa() {
+    msg "build: gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h, gcc, ASan"
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS='-D PSA_CRYPTO_CONFIG_FILE=\"../configs/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h\"' "$PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: main suites"
+    make test
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
