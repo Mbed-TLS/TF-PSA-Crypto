@@ -228,6 +228,5 @@ License
 Unless specifically indicated otherwise in a file, PSA-Crypto files are
 provided under the [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)
 license. See the [LICENSE](LICENSE) file for the full text of this license.
-Contributors must accept that their contributions are made under both the
-Apache-2.0 AND [GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html)
-licenses.
+Contributors must accept that their contributions are made under the
+Apache-2.0 license.
