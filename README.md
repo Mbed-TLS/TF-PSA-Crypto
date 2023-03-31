@@ -55,14 +55,18 @@ The CMake build system creates one library: libpsacrypto.
 ### Tool versions
 
 You need the following tools to build the library from the main branch with the
-provided CMake files:
+provided CMake files. PSA-Crypto minimum tool version requirements are set
+based on the versions shipped in the latest or penultimate (depending on the
+release cadence) long-term support releases of major Linux distributions,
+namely at time of writing: Ubuntu 20.04, RHEL 8, SLES 15 ...
 
 * A C99 toolchain (compiler, linker, archiver). We actively test with GCC 5.4,
   Clang 3.8. More recent versions should work. Slightly older versions may work.
-* Python 3.6 to generate the test code, and to generate sample programs in the
-  main branch.
+* Python 3.6.5 to generate the test code, and to generate sample programs in
+  the main branch.
 * Perl to run the tests, and to generate some source files in the main branch.
-* CMake 3.10.2 or later.
+* CMake 3.16.3 or later.
+* Doxygen 1.8.14 or later.
 
 ### Generated source files in the main branch
 
