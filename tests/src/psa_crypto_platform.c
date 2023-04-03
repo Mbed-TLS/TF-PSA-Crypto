@@ -21,6 +21,7 @@
  */
 
 #include <psa/build_info.h>
+#include <psa/platform.h>
 
 #if !defined(PSA_CRYPTO_STD_FUNCTIONS)
 #include <stdarg.h>

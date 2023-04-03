@@ -37,6 +37,27 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
+/**
+ * \def PSA_CRYPTO_PRINTF_ATTRIBUTE
+ *
+ * Mark a function as having printf attributes, and thus enable checking
+ * via -wFormat and other flags. This does nothing on builds with compilers
+ * that do not support the format attribute
+ *
+ * This macro is intended to be used to qualify the plaform specific
+ * implementations of functions of the printf family.
+ */
+#if defined(__has_attribute)
+#if __has_attribute(format)
+#define PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)    \
+    __attribute__((format(printf, string_index, first_to_check)))
+#else /* __has_attribute(format) */
+#define PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)
+#endif /* __has_attribute(format) */
+#else /* defined(__has_attribute) */
+#define PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)
+#endif
+
 /*
  * If the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
  * the following platform abstraction functions are just aliases to the
@@ -53,9 +74,9 @@ extern "C" {
  */
 void *psa_crypto_calloc(size_t nmemb, size_t size);
 void psa_crypto_free(void *ptr);
-int psa_crypto_printf(const char *format, ...);
-int psa_crypto_fprintf(FILE *stream, const char *format, ...);
-int psa_crypto_snprintf(char *s, size_t n, const char *format, ...);
+int psa_crypto_printf(const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(1, 2);
+int psa_crypto_fprintf(FILE *stream, const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(2, 3);
+int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(3, 4);
 void psa_crypto_setbuf(FILE *stream, char *buf);
 
 /**
