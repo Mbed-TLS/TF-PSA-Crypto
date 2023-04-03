@@ -130,8 +130,6 @@ function(get_name_without_last_ext dest_var full_name)
     set(${dest_var} ${no_ext_name} PARENT_SCOPE)
 endfunction(get_name_without_last_ext)
 
-string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
-
 include(CheckCCompilerFlag)
 
 set(CMAKE_C_EXTENSIONS OFF)
