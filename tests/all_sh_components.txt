@@ -90,3 +90,19 @@ component_build_psa_crypto_spm () {
     cd "$PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_test_psa_compliance () {                                              
+    msg "build: default, gcc"
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$PSA_CRYPTO_ROOT_DIR"
+    make
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
+    msg "unit test: test_psa_compliance.py"                                     
+    ./tests/scripts/test_psa_compliance.py                                      
+
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
