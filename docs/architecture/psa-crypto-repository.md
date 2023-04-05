@@ -162,13 +162,15 @@ standard function is `xyz`. These functions are:
 
 If the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
 these platform abstraction functions are just aliases to the corresponding
-standard C library functions. Otherwise, these platform abstraction functions have to
-be provided as part of the integration of the PSA cryptography library.
+standard C library functions. Otherwise, these platform abstraction functions
+have to be provided as part of the integration of the PSA cryptography library.
 
-More generally, if the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled
-the PSA cryptography library provides an implementation of most of the
-platform abstraction functions based on the functions of the standard C library
-(see include/psa/platform.h for more information).
+Finally, some platform abstraction functions are not just clones of standard C
+library functions, like psa_crypto_platform_entropy_nv_seed_read() for example,
+see include/psa/platform.h for more information. If the configuration option
+PSA_CRYPTO_STD_FUNCTIONS is enabled the PSA cryptography library provides an
+implementation of most of those functions based on functions of the standard C
+library though.
 
 ## Updating the main branch
 

@@ -330,8 +330,9 @@
  * (Also enables the NV seed read/write functions in the platform abstraction
  *  layer)
  *
- * This is crucial (if not required) on systems that do not have a
- * cryptographic entropy source (in hardware or kernel) available.
+ * This is crucial, or maybe even required, to enable a non-volatile seed
+ * entropy source on systems that do not have a cryptographic entropy source
+ * (in hardware or kernel) available.
  *
  * \note If you use the library default functions that read a seed file
  *       with regular fopen() (PSA_CRYPTO_STD_FUNCTIONS and PSA_CRYPTO_FS_IO
