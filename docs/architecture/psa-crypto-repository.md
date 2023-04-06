@@ -107,32 +107,7 @@ thus we need to provide a cmake based build system for the PSA-Crypto
 repository as well. Each build system for the first phase and in the long term
 is a significant amount of work thus the plan to just have a cmake build system.
 
-## Updating the main branch
-
-The PSA-Crypto repository provides a reference implementation of the
-PSA cryptography API through its main branch.
-
-The main branch is updated against the head of the Mbed TLS development branch
-according to the following sequence where \<mbedtls-commit-id> is the identifier
-of the head of the Mbed TLS development branch, \<mbedtls-pr\> is the number
-of the last PR merged into the Mbed TLS development branch and
-\<psa-crypto-commit-id\> is the identifier of the head of the development
-branch of this repository used for the update. Just the first nine characters
-of the commit identifiers are used.
-
-* Checkout the Mbed TLS branch https://github.com/ronald-cron-arm/mbedtls/tree/psa-crypto-repository.
-  This branch should have been rebased beforehand on top of the head of the
-  Mbed TLS development branch we want to update against.
-* cd path/to/my/psa/crypto/repo
-* git checkout -b update-against-\<mbedtls-commit-id\>-PR\<mbedtls-pr\>-with-\<psa-crypto-commit-id\>
-  development
-* ./scripts/psa_crypto.py --mbedlts path/to/the/mbedtls/branch
-* git add --all
-* git commit -s -m"Update against \<mbedtls-commit-id\>(PR \<mbedtls-pr\>) with \<psa-crypto-commit-id\>"
-* Create a PR against the main branch with the branch that has just been created.
-* Merge the PR which completes the update.
-
-## Configuration
+### Configuration
 The build-time configuration file is `include/psa/build_info.h`. This file is
 included by the PSA headers (header files located in `include/psa`) and the PSA
 core files (located in `core`) to access the configuration options defined in
@@ -163,3 +138,61 @@ mechanisms supported by the PSA cryptography interface through PSA_WANT_xxx
 macros). The other configuration options that need to be enabled are again
 enabled by the pre-processor logic in `drivers/builtin/include/mbedtls/config_psa.h`
 given `include/psa/crypto_config.h`.
+
+### Platform abstraction layer
+The PSA cryptography implementation is mostly written in portable C99 and
+builds and works out of the box on systems or platforms with support for the
+C standard library.
+
+The PSA cryptography implementation assumes the availability of the following
+C standard library functions:
+. memory functions: memcmp(), memcpy(), memset() and memmove()
+. string functions: strcmp(), strlen(), strncmp(), strncpy() and strstr()
+
+On another side, to ease the port of the library and its usage in an embedded
+context, the PSA cryptography implementation does not use directly some
+functions of the standard C library but rather their equivalent platform
+abstraction functions whose names are `psa_crypto_xyz` when the name of the
+standard function is `xyz`. These functions are:
+
+. dynamic memory allocation functions: psa_crypto_calloc(), psa_crypto_free()
+. formatted output functions: psa_crypto_printf(), psa_crypto_fprintf() and
+  psa_crypto_snprintf()
+. other functions: psa_crypto_setbuf()
+
+If the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
+these platform abstraction functions are just aliases to the corresponding
+standard C library functions. Otherwise, these platform abstraction functions
+have to be provided as part of the integration of the PSA cryptography library.
+
+Finally, some platform abstraction functions are not just clones of standard C
+library functions, like psa_crypto_platform_entropy_nv_seed_read() for example,
+see include/psa/platform.h for more information. If the configuration option
+PSA_CRYPTO_STD_FUNCTIONS is enabled the PSA cryptography library provides an
+implementation of most of those functions based on functions of the standard C
+library though.
+
+## Updating the main branch
+
+The PSA-Crypto repository provides a reference implementation of the
+PSA cryptography API through its main branch.
+
+The main branch is updated against the head of the Mbed TLS development branch
+according to the following sequence where \<mbedtls-commit-id> is the identifier
+of the head of the Mbed TLS development branch, \<mbedtls-pr\> is the number
+of the last PR merged into the Mbed TLS development branch and
+\<psa-crypto-commit-id\> is the identifier of the head of the development
+branch of this repository used for the update. Just the first nine characters
+of the commit identifiers are used.
+
+* Checkout the Mbed TLS branch https://github.com/ronald-cron-arm/mbedtls/tree/psa-crypto-repository.
+  This branch should have been rebased beforehand on top of the head of the
+  Mbed TLS development branch we want to update against.
+* cd path/to/my/psa/crypto/repo
+* git checkout -b update-against-\<mbedtls-commit-id\>-PR\<mbedtls-pr\>-with-\<psa-crypto-commit-id\>
+  development
+* ./scripts/psa_crypto.py --mbedlts path/to/the/mbedtls/branch
+* git add --all
+* git commit -s -m"Update against \<mbedtls-commit-id\>(PR \<mbedtls-pr\>) with \<psa-crypto-commit-id\>"
+* Create a PR against the main branch with the branch that has just been created.
+* Merge the PR which completes the update.

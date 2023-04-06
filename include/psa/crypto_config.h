@@ -78,6 +78,42 @@
  */
 //#define PSA_CRYPTO_SPM
 
+/**
+ * \def PSA_CRYPTO_STD_FUNCTIONS
+ *
+ * If this option is enabled then most of the platform abstraction functions,
+ * as defined in include/psa/platform.h are provided by the library. They are
+ * aliases to standard C library functions or their implementation is based on
+ * standard C library functions.
+ *
+ * Uncomment to provide your own implementations of the platform abstraction
+ * functions.
+ */
+#define PSA_CRYPTO_STD_FUNCTIONS
+
+/**
+ * \def PSA_CRYPTO_FS_IO
+ *
+ * Enable functions that use the file system. The file system is accessed
+ * through the standard C library file functions like fopen(), fclose() ...
+ *
+ * Uncomment if there is no file system that can be accessed through the
+ * standard C library file functions.
+ */
+#define PSA_CRYPTO_FS_IO
+
+/**
+ * \def PSA_CRYPTO_MEMORY_BUFFER_ALLOC
+ *
+ * Enable the buffer allocator implementation that makes use of a (stack)
+ * based buffer to 'allocate' dynamic memory. (replaces calloc() and free()
+ * calls)
+ *
+ * \note This configuration option does not have any effect on the build if
+ *       the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled.
+ */
+//#define PSA_CRYPTO_MEMORY_BUFFER_ALLOC
+
 /** \} name SECTION: General configuration options */
 
 /**
@@ -274,6 +310,57 @@
  * 32 keys.
  */
 //#define PSA_CRYPTO_KEY_SLOT_COUNT 32
+
+/**
+ * \def PSA_CRYPTO_PLATFORM_ENTROPY
+ *
+ * Enable the usage of standard platform entropy functions like /dev/urandom or
+ * Windows CryptoAPI as a source of entropy.
+ *
+ * Comment this macro to disable the usage of standard platform entropy
+ * functions as a source of entropy.
+ *
+ */
+#define PSA_CRYPTO_PLATFORM_ENTROPY
+
+/**
+ * \def PSA_CRYPTO_ENTROPY_NV_SEED
+ *
+ * Enable the non-volatile (NV) seed entropy source.
+ * (Also enables the NV seed read/write functions in the platform abstraction
+ *  layer)
+ *
+ * This is crucial, or maybe even required, to enable a non-volatile seed
+ * entropy source on systems that do not have a cryptographic entropy source
+ * (in hardware or kernel) available.
+ *
+ * \note If you use the library default functions that read a seed file
+ *       with regular fopen() (PSA_CRYPTO_STD_FUNCTIONS and PSA_CRYPTO_FS_IO
+ *       enabled), please make sure you make a seed file with the proper name
+ *       (defined by PSA_CRYPTO_ENTROPY_NV_SEED_FILE) and at least
+ *       PSA_CRYPTO_ENTROPY_BLOCK_SIZE bytes in size that can be read from
+ *       and written to or you will get an entropy source error. The default
+ *       functions will only use the first PSA_CRYPTO_ENTROPY_BLOCK_SIZE bytes
+ *       from the file.
+ *
+ * \note The entropy collector will write to the seed file before entropy is
+ *       given to an external source, to update it.
+ */
+//#define PSA_CRYPTO_ENTROPY_NV_SEED
+
+/**
+ * \def PSA_CRYPTO_ENTROPY_NV_SEED_FILE
+ *
+ * Define the path to the file to be used as non-volatile seed entropy source.
+ *
+ * \note See the PSA_CRYPTO_ENTROPY_NV_SEED configuration option for more
+ *       information.
+ *
+ * \note If PSA_CRYPTO_ENTROPY_NV_SEED or PSA_CRYPTO_STD_FUNCTIONS or
+ *       PSA_CRYPTO_FS_IO is disabled, this option does not have any effect on
+ *       the build.
+ */
+#define PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
 
 /** \} name SECTION: PSA cryptography core configuration options */
 
