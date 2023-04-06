@@ -81,13 +81,15 @@ void psa_crypto_setbuf(FILE *stream, char *buf)
 {
     setbuf(stream, buf);
 }
+#endif /* !PSA_CRYPTO_STD_FUNCTIONS */
 
+#if defined(PSA_CRYPTO_PLATFORM_ZEROIZE)
 void psa_crypto_platform_zeroize(void *buf, size_t len)
 {
     if (buf != NULL && len != 0)
         memset(buf, 0, len);
 }
-#endif /* !PSA_CRYPTO_STD_FUNCTIONS */
+#endif
 
 #if defined(PSA_CRYPTO_ENTROPY_NV_SEED) && \
     (!defined(PSA_CRYPTO_STD_FUNCTIONS) || !defined(PSA_CRYPTO_FS_IO))

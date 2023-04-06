@@ -134,9 +134,9 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
  *        heap before freeing the heap object.
  *
  *        It is extremely difficult to guarantee that calls to
- *        mbedtls_platform_zeroize() are not removed by aggressive
- *        compiler optimizations in a portable way. By disabling the
- *        PSA_CRYPTO_STD_FUNCTIONS configuration option, users of the
+ *        psa_crypto_platform_zeroize() are not removed by aggressive
+ *        compiler optimizations in a portable way. By enabling the
+ *        PSA_CRYPTO_PLATFORM_ZEROIZE configuration option, users of the
  *        psa-crypto library can provide their own implementation suitable for
  *        their platform and needs.
  *

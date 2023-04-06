@@ -39,8 +39,6 @@
 #define MBEDTLS_PLATFORM_FPRINTF_MACRO  psa_crypto_fprintf
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO  psa_crypto_snprintf
 #define MBEDTLS_PLATFORM_SETBUF_MACRO  psa_crypto_setbuf
-#define MBEDTLS_PLATFORM_ZEROIZE_ALT
-#define mbedtls_platform_zeroize psa_crypto_platform_zeroize
 #if defined(PSA_CRYPTO_MEMORY_BUFFER_ALLOC)
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #define MBEDTLS_MEMORY_ALIGN_MULTIPLE 8
@@ -52,6 +50,11 @@
 
 #if defined(PSA_CRYPTO_FS_IO)
 #define MBEDTLS_FS_IO
+#endif
+
+#if defined(PSA_CRYPTO_PLATFORM_ZEROIZE)
+#define MBEDTLS_PLATFORM_ZEROIZE_ALT
+#define mbedtls_platform_zeroize psa_crypto_platform_zeroize
 #endif
 
 #if defined(PSA_CRYPTO_BUILTIN_KEYS)

@@ -35,6 +35,7 @@
 //#define PSA_CRYPTO_STD_FUNCTIONS
 #define PSA_CRYPTO_FS_IO
 #define PSA_CRYPTO_MEMORY_BUFFER_ALLOC
+//#define PSA_CRYPTO_PLATFORM_ZEROIZE
 
 /** \} name SECTION: General configuration options */
 
