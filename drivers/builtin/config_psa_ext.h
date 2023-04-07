@@ -127,6 +127,11 @@
 #define MBEDTLS_NO_PLATFORM_ENTROPY
 #endif
 
+#if defined(PSA_CRYPTO_HARDWARE_ENTROPY)
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#define mbedtls_hardware_poll psa_crypto_hardware_entropy
+#endif
+
 #if defined(PSA_CRYPTO_ENTROPY_NV_SEED)
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_ENTROPY_NV_SEED

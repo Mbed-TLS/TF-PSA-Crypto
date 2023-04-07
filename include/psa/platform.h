@@ -80,6 +80,25 @@ int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) PSA_CRYPTO_P
 void psa_crypto_setbuf(FILE *stream, char *buf);
 
 /**
+ * \brief  Poll entropy from a hardware source
+ *
+ * \warning  This is not provided by PSA-Crypto.
+ *           See \c PSA_CRYPTO_HARDWARE_ENTROPY in crypto_config.h.
+ *
+ * \param[in]  data    Pointer to function-specific data. NULL must be accepted.
+ * \param[out] output  Buffer to write data in
+ * \param      size    Size of \p output
+ * \param[out] len     Number of bytes written in \p output. As far as possible,
+ *                     should be \p size but may be as low as 0.
+ * 
+ * \return             0 if no critical failure occured, a negative value
+ *                     otherwise.
+ */
+int psa_crypto_hardware_entropy(void *data,
+                                unsigned char *output, size_t size,
+                                size_t *len);
+
+/**
  * \brief   Read an entropy seed from a Non-Volatile (NV) storage.
  *
  * \note This platform abstraction function is used by the psa-crypto library

@@ -343,6 +343,18 @@
 #define PSA_CRYPTO_PLATFORM_ENTROPY
 
 /**
+ * \def PSA_CRYPTO_HARDWARE_ENTROPY
+ *
+ * Uncomment the macro to let PSA-Crypto use your own hardware entropy
+ * collector.
+ *
+ * Your hardware entropy collector function must be called
+ * \c psa_crypto_hardware_entropy(), see include/psa/platform.h for its
+ * prototype.
+ */
+//#define PSA_CRYPTO_HARDWARE_ENTROPY
+
+/**
  * \def PSA_CRYPTO_ENTROPY_NV_SEED
  *
  * Enable the non-volatile (NV) seed entropy source.

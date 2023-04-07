@@ -91,6 +91,20 @@ void psa_crypto_platform_zeroize(void *buf, size_t len)
 }
 #endif
 
+#if defined(PSA_CRYPTO_HARDWARE_ENTROPY)
+int psa_crypto_hardware_entropy(void *data,
+                                unsigned char *output, size_t size,
+                                size_t *len)
+{
+    (void) data;
+
+    memset(output, 0, size);
+    *len = size;
+    
+    return 0;
+}
+#endif
+
 #if defined(PSA_CRYPTO_ENTROPY_NV_SEED) && \
     (!defined(PSA_CRYPTO_STD_FUNCTIONS) || !defined(PSA_CRYPTO_FS_IO))
 #include <mbedtls/entropy.h>
