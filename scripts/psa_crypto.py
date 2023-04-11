@@ -99,6 +99,7 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "generate_driver_wrappers.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "generate_psa_constants.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "output_env.sh"), destination_path)
+    shutil.copy2(os.path.join(source_path, "config.py"), destination_path)
 
     copy_tree(os.path.join(source_path, "mbedtls_dev"),
               os.path.join(destination_path, "mbedtls_dev"))
