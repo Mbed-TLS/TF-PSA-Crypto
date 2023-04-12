@@ -83,6 +83,8 @@ endif(USE_SHARED_PSA_CRYPTO_LIBRARY)
 foreach(target IN LISTS target_libraries)
     add_library(PSACrypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include/>
+               $<INSTALL_INTERFACE:include/>
         PUBLIC $<BUILD_INTERFACE:${PSA_CRYPTO_DIR}/include/>
                $<INSTALL_INTERFACE:include/>
         PUBLIC $<BUILD_INTERFACE:${PSA_CRYPTO_DIR}/drivers/builtin/include/>
