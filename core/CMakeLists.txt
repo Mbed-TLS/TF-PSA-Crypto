@@ -37,6 +37,12 @@ if(CMAKE_COMPILER_IS_CLANG)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wmissing-declarations -Wmissing-prototypes -Wdocumentation -Wno-documentation-deprecated-sync -Wunreachable-code")
 endif(CMAKE_COMPILER_IS_CLANG)
 
+if(CMAKE_COMPILER_IS_MSVC)
+    # Disable warning that a function is deprecated. Added to avoid the warnings
+    # associated to the usage of file related functions fopen(), fclose() ...
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
+endif(CMAKE_COMPILER_IS_MSVC)
+
 if(LINK_WITH_PTHREAD)
     set(libs ${libs} pthread)
 endif()

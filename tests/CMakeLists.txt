@@ -165,6 +165,11 @@ if(CMAKE_COMPILER_IS_CLANG)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wdocumentation -Wno-documentation-deprecated-sync -Wunreachable-code")
 endif(CMAKE_COMPILER_IS_CLANG)
 
+if(CMAKE_COMPILER_IS_MSVC)
+    #Silence "conversion from size_t to int*" warnings in test code
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4267 /wd4244")
+endif(CMAKE_COMPILER_IS_MSVC)
+
 file(GLOB test_suites RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" suites/*.data)
 list(APPEND test_suites ${all_generated_data_files})
 # If the generated .data files are present in the source tree, we just added
