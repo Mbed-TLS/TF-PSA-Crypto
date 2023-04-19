@@ -222,7 +222,7 @@ their interface is not public and thus may change without notice:
 . pkparse.c
 . pkwrite.c
 
-Otherwise, the PSA-Crypto library does not support for alternative
+Otherwise, the PSA-Crypto library does not have support for alternative
 implementations of cryptography operations as Mbed TLS does through
 MBEDTLS_xxx_ALT like configuration options. Alternative implementations should
 instead be provided as PSA drivers.
