@@ -39,7 +39,9 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     destination_path = os.path.join(builtin_path, "include", "mbedtls")
 
     include_files = filter(lambda file_: not re.match(
-                           "x509.*|mps.*|ssl.*|\.gitignore|debug\.h|net_sockets\.h", file_),
+                           "x509.*|mps.*|ssl.*|base64\.*|nist_kw\.*|pem\.*|padlock\.*|pkcs.*|"\
+                           "\.gitignore|debug\.h|net_sockets\.h"\
+                           "", file_),
                            os.listdir(source_path))
     for file_ in include_files:
         shutil.copy2(os.path.join(source_path, file_), destination_path)
@@ -52,7 +54,8 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
 def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     library_files = filter(lambda file_: not re.match(
-                           ".*\.o|x509.*|mps.*|ssl.*|\.gitignore|Makefile|CMakeLists\.txt|"\
+                           ".*\.o|x509.*|mps.*|ssl.*|base64\.*|nist_kw\.*|pem\.*|padlock\.*|pkcs.*|"\
+                           "\.gitignore|Makefile|CMakeLists\.txt|"\
                            "debug\.c|error\.c|net_sockets\.c"\
                            "psa_crypto_core_common\.h", file_),
                            os.listdir(os.path.join(mbedtls_root_path, "library")))

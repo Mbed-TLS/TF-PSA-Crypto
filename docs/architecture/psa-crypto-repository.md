@@ -196,3 +196,33 @@ of the commit identifiers are used.
 * git commit -s -m"Update against \<mbedtls-commit-id\>(PR \<mbedtls-pr\>) with \<psa-crypto-commit-id\>"
 * Create a PR against the main branch with the branch that has just been created.
 * Merge the PR which completes the update.
+
+## Comparison with the Mbed TLS cryptography library
+
+The PSA-Crypto library does not support all the cryptographic features
+that the Mbed TLS cryptographic library supports, the main area of discrepancy
+being the handling of the various formats of private and public asymmetric
+keys.
+
+To be more specific, the following Mbed TLS C modules can be potentially
+included in the Mbed TLS cryptography library but not in the PSA-Crypto one:
+. nist_kw.c
+. pem.c
+. pkcs5.c
+. pkcs7.c
+. pkcs12.c
+
+Furthermore, the following Mbed TLS C modules can be potentially included in
+the PSA-Crypto library as the builtin driver implementation relies on them but
+their interface is not public and thus may change without notice:
+. asn1parse.c
+. asn1write.c
+. oid.c
+. pk.c
+. pkparse.c
+. pkwrite.c
+
+Otherwise, the PSA-Crypto library does not have support for alternative
+implementations of cryptography operations as Mbed TLS does through
+MBEDTLS_xxx_ALT like configuration options. Alternative implementations should
+instead be provided as PSA drivers.
