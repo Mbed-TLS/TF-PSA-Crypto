@@ -52,6 +52,18 @@ endif()
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Set-up configuration file
+set(PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
+    "PSA-Crypto configuration file, absolute path or path relative to the root directory")
+get_filename_component(PSA_CRYPTO_CONFIG_FILE_REALPATH
+                       ${PSA_CRYPTO_CONFIG_FILE} REALPATH BASE_DIR ${PSA_CRYPTO_DIR})
+configure_file(${PSA_CRYPTO_CONFIG_FILE_REALPATH}
+               ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
+               COPYONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
+        DESTINATION include/psa
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
 option(ENABLE_PROGRAMS "Build PSA cryptography example programs." ON)
 
 option(PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
@@ -221,6 +233,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     file(GLOB PSA_CRYPTO_TEST_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
     add_library(psa_crypto_test OBJECT ${PSA_CRYPTO_TEST_FILES})
     target_include_directories(psa_crypto_test
+        PRIVATE ${CMAKE_BINARY_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src

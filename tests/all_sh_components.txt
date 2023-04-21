@@ -20,7 +20,7 @@ component_test_ccm_aes_sha256() {
     PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS='-D PSA_CRYPTO_CONFIG_FILE=\"../configs/ccm-aes-sha256.h\"' "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D PSA_CRYPTO_CONFIG_FILE="configs/ccm-aes-sha256.h" "$PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites"
@@ -36,7 +36,7 @@ component_test_ccm_aes_sha256_secp256r1() {
     PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS='-D PSA_CRYPTO_CONFIG_FILE=\"../configs/ccm-aes-sha256-secp256r1.h\"' "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D PSA_CRYPTO_CONFIG_FILE="configs/ccm-aes-sha256-secp256r1.h" "$PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites"
@@ -52,12 +52,57 @@ component_test_gcm_ccm_cbc_aes_sha256_512_secp256_384r1_rsa() {
     PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS='-D PSA_CRYPTO_CONFIG_FILE=\"../configs/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h\"' "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D PSA_CRYPTO_CONFIG_FILE="configs/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h" "$PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites"
     make test
 
     cd "$PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
+# check_renamed_symbols HEADER LIB
+# Check that if HEADER contains '#define MACRO ...' then MACRO is not a symbol
+# name is LIB.
+check_renamed_symbols () {
+    ! nm "$2" | sed 's/.* //' |
+      grep -x -F "$(sed -n 's/^ *# *define  *\([A-Z_a-z][0-9A-Z_a-z]*\)..*/\1/p' "$1")"
+}
+
+component_build_psa_crypto_spm () {
+    msg "build: default config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER + PSA_CRYPTO_SPM, make, gcc"
+    scripts/config.py -f include/psa/crypto_config.h set PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+    scripts/config.py -f include/psa/crypto_config.h set PSA_CRYPTO_SPM
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D ENABLE_TESTING=Off -D ENABLE_PROGRAMS=Off -D CMAKE_C_FLAGS="-I$PSA_CRYPTO_ROOT_DIR/tests/include/spe" ..
+
+    make
+
+    # Check that if a symbol is renamed by crypto_spe.h, the non-renamed
+    # version is not present.
+    echo "Checking for renamed symbols in the library"
+    check_renamed_symbols $PSA_CRYPTO_ROOT_DIR/tests/include/spe/crypto_spe.h core/libpsacrypto.a
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
+component_test_psa_compliance () {                                              
+    msg "build: default, gcc"
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$PSA_CRYPTO_ROOT_DIR"
+    make
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
+    msg "unit test: test_psa_compliance.py"                                     
+    ./tests/scripts/test_psa_compliance.py                                      
+
     rm -rf "$OUT_OF_SOURCE_DIR"
 }

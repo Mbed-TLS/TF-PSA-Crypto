@@ -99,6 +99,7 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "generate_driver_wrappers.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "generate_psa_constants.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "output_env.sh"), destination_path)
+    shutil.copy2(os.path.join(source_path, "config.py"), destination_path)
 
     copy_tree(os.path.join(source_path, "mbedtls_dev"),
               os.path.join(destination_path, "mbedtls_dev"))
@@ -178,6 +179,37 @@ def replace_all_sh_components(psa_crypto_root_path):
     new_all_sh.close()
     os.chmod(os.path.join(tests_scripts_path, "all.sh"), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
 
+def extend_config_psa(psa_crypto_root_path):
+    include_mbedtls_path = os.path.join(psa_crypto_root_path, "drivers", "builtin", "include", "mbedtls")
+    shutil.move(os.path.join(include_mbedtls_path, "config_psa.h"),
+                os.path.join(include_mbedtls_path, "config_psa.h.bak"))
+
+    if_defined_mbedtls_psa_crypto_config_file = re.compile("#if defined\(MBEDTLS_PSA_CRYPTO_CONFIG_FILE\)")
+    include_mbedtls_psa_crypto_config_file = re.compile("#include MBEDTLS_PSA_CRYPTO_CONFIG_FILE")
+    ext_placeholder = re.compile(".*BELOW THIS LINE - PLACEHOLDER FOR PSA-CRYPTO ADDITIONAL CONFIG OPTIONS TRANSLATION")
+    new_config_psa = open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x')
+
+    with open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt') as config_psa:
+        for line in config_psa:
+            if if_defined_mbedtls_psa_crypto_config_file.match(line) != None:
+                new_config_psa.write("#if defined(PSA_CRYPTO_CONFIG_FILE)\n")
+            elif include_mbedtls_psa_crypto_config_file.match(line) != None:
+                new_config_psa.write("#include PSA_CRYPTO_CONFIG_FILE\n")
+            elif ext_placeholder.match(line) != None:
+                break
+            else:
+                new_config_psa.write(line)
+
+    config_psa.close()
+
+    with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
+        for line in ext:
+            new_config_psa.write(line)
+
+    new_config_psa.write("\n#endif /* MBEDTLS_PSA_CRYPTO_CONFIG */")
+    new_config_psa.write("\n#endif /* MBEDTLS_CONFIG_PSA_H */")
+    new_config_psa.close()
+
 def main():
     parser = argparse.ArgumentParser(
         description=(
@@ -206,6 +238,7 @@ def main():
     copy_from_programs(mbedtls_root_path, os.getcwd())
     copy_from_docs(mbedtls_root_path, os.getcwd())
     replace_all_sh_components(os.getcwd())
+    extend_config_psa(os.getcwd())
 
 if __name__ == "__main__":
     main()

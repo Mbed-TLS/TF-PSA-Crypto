@@ -144,6 +144,7 @@ function(add_test_suite suite_name)
     # files are automatically included because the library targets declare
     # them as PUBLIC.
     target_include_directories(test_suite_${data_name}
+        PRIVATE ${CMAKE_BINARY_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../drivers/builtin/src
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../core)

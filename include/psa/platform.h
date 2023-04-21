@@ -80,6 +80,25 @@ int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) PSA_CRYPTO_P
 void psa_crypto_setbuf(FILE *stream, char *buf);
 
 /**
+ * \brief  Poll entropy from a hardware source
+ *
+ * \warning  This is not provided by PSA-Crypto.
+ *           See \c PSA_CRYPTO_HARDWARE_ENTROPY in crypto_config.h.
+ *
+ * \param[in]  data    Pointer to function-specific data. NULL must be accepted.
+ * \param[out] output  Buffer to write data in
+ * \param      size    Size of \p output
+ * \param[out] len     Number of bytes written in \p output. As far as possible,
+ *                     should be \p size but may be as low as 0.
+ * 
+ * \return             0 if no critical failure occured, a negative value
+ *                     otherwise.
+ */
+int psa_crypto_hardware_entropy(void *data,
+                                unsigned char *output, size_t size,
+                                size_t *len);
+
+/**
  * \brief   Read an entropy seed from a Non-Volatile (NV) storage.
  *
  * \note This platform abstraction function is used by the psa-crypto library
@@ -134,9 +153,9 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
  *        heap before freeing the heap object.
  *
  *        It is extremely difficult to guarantee that calls to
- *        mbedtls_platform_zeroize() are not removed by aggressive
- *        compiler optimizations in a portable way. By disabling the
- *        PSA_CRYPTO_STD_FUNCTIONS configuration option, users of the
+ *        psa_crypto_platform_zeroize() are not removed by aggressive
+ *        compiler optimizations in a portable way. By enabling the
+ *        PSA_CRYPTO_PLATFORM_ZEROIZE configuration option, users of the
  *        psa-crypto library can provide their own implementation suitable for
  *        their platform and needs.
  *
