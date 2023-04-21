@@ -127,9 +127,7 @@
  * versions of the C language standards do not provide a secure implementation
  * of memset(). Therefore, PSA_CRYPTO_PLATFORM_ZEROIZE enables users to provide
  * their own implementation of psa_crypto_platform_zeroize(), for
- * example by using directives specific to their compiler, features from newer
- * C standards (e.g using memset_s() in C11) or calling a secure memset() from
- * their system (e.g explicit_bzero() in BSD).
+ * example by using directives specific to their compiler.
  */
 //#define PSA_CRYPTO_PLATFORM_ZEROIZE
 
