@@ -154,9 +154,9 @@ def replace_all_sh_components(psa_crypto_root_path):
     after_components = 0
     components_start = re.compile(r"#### Basic checks")
     components_end = re.compile(r"#### Termination")
-    new_all_sh = open(os.path.join(tests_scripts_path, "all.sh"), 'x')
 
-    with open(os.path.join(tests_scripts_path, "all.sh.bak"), 'rt') as all_sh:
+    with open(os.path.join(tests_scripts_path, "all.sh"), 'x') as new_all_sh, \
+         open(os.path.join(tests_scripts_path, "all.sh.bak"), 'rt') as all_sh:
         for line in all_sh:
             if before_components:
                 if components_start.match(line) != None:
@@ -180,7 +180,6 @@ def replace_all_sh_components(psa_crypto_root_path):
             if after_components:
                 new_all_sh.write(line)
 
-    new_all_sh.close()
     os.chmod(os.path.join(tests_scripts_path, "all.sh"), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
 
 def extend_config_psa(psa_crypto_root_path):
@@ -193,33 +192,30 @@ def extend_config_psa(psa_crypto_root_path):
     ext_placeholder = re.compile(".*BELOW THIS LINE - PLACEHOLDER FOR PSA-CRYPTO ADDITIONAL CONFIG OPTIONS TRANSLATION")
     endif_mbedtls_psa_crypto_config = re.compile("#endif /\* MBEDTLS_PSA_CRYPTO_CONFIG \*/")
 
-    new_config_psa = open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x')
-    config_psa = open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt')
+    with open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x') as new_config_psa, \
+         open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt') as config_psa:
 
-    for line in config_psa:
-        if if_defined_mbedtls_psa_crypto_config_file.match(line) != None:
-            new_config_psa.write("#if defined(PSA_CRYPTO_CONFIG_FILE)\n")
-        elif include_mbedtls_psa_crypto_config_file.match(line) != None:
-            new_config_psa.write("#include PSA_CRYPTO_CONFIG_FILE\n")
-        elif ext_placeholder.match(line) != None:
-            break
-        else:
-            new_config_psa.write(line)
+        for line in config_psa:
+            if if_defined_mbedtls_psa_crypto_config_file.match(line) != None:
+                new_config_psa.write("#if defined(PSA_CRYPTO_CONFIG_FILE)\n")
+            elif include_mbedtls_psa_crypto_config_file.match(line) != None:
+                new_config_psa.write("#include PSA_CRYPTO_CONFIG_FILE\n")
+            elif ext_placeholder.match(line) != None:
+                break
+            else:
+                new_config_psa.write(line)
 
-    with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
-        for line in ext:
-            new_config_psa.write(line)
+        with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
+            for line in ext:
+                new_config_psa.write(line)
 
-    trailer = False
-    for line in config_psa:
-        if endif_mbedtls_psa_crypto_config.match(line) != None:
-            new_config_psa.write("\n")
-            trailer = True
-        if trailer:
-            new_config_psa.write(line)
-
-    config_psa.close()
-    new_config_psa.close()
+        trailer = False
+        for line in config_psa:
+            if endif_mbedtls_psa_crypto_config.match(line) != None:
+                new_config_psa.write("\n")
+                trailer = True
+            if trailer:
+                new_config_psa.write(line)
 
 def main():
     parser = argparse.ArgumentParser(
