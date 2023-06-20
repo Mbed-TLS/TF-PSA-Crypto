@@ -23,7 +23,6 @@ import os
 import stat
 import re
 import shutil
-from distutils.dir_util import copy_tree
 
 def copy_of_psa_headers(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "include", "psa")
@@ -91,18 +90,20 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "scripts")
     destination_path = os.path.join(psa_crypto_root_path, "scripts")
 
-    copy_tree(os.path.join(source_path, "data_files", "driver_jsons"),
-              os.path.join(destination_path, "data_files", "driver_jsons"))
-    copy_tree(os.path.join(source_path, "data_files", "driver_templates"),
-              os.path.join(destination_path, "data_files", "driver_templates"))
+    shutil.copytree(os.path.join(source_path, "data_files", "driver_jsons"),
+                    os.path.join(destination_path, "data_files", "driver_jsons"),
+                    dirs_exist_ok=True)
+    shutil.copytree(os.path.join(source_path, "data_files", "driver_templates"),
+                    os.path.join(destination_path, "data_files", "driver_templates"),
+                    dirs_exist_ok=True)
 
     shutil.copy2(os.path.join(source_path, "generate_driver_wrappers.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "generate_psa_constants.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "output_env.sh"), destination_path)
     shutil.copy2(os.path.join(source_path, "config.py"), destination_path)
 
-    copy_tree(os.path.join(source_path, "mbedtls_dev"),
-              os.path.join(destination_path, "mbedtls_dev"))
+    shutil.copytree(os.path.join(source_path, "mbedtls_dev"),
+                    os.path.join(destination_path, "mbedtls_dev"), dirs_exist_ok=True)
 
 def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "tests")
@@ -110,14 +111,17 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
 
     shutil.copy2(os.path.join(source_path, "seedfile"), destination_path)
 
-    copy_tree( os.path.join( source_path, "include" ),
-               os.path.join( destination_path, "include" ) )
+    shutil.copytree(os.path.join(source_path, "include"),
+                    os.path.join(destination_path, "include"),
+                    dirs_exist_ok=True)
 
-    copy_tree( os.path.join( source_path, "scripts" ),
-               os.path.join( destination_path, "scripts" ) )
+    shutil.copytree(os.path.join(source_path, "scripts"),
+                    os.path.join(destination_path, "scripts"),
+                    dirs_exist_ok=True)
 
-    copy_tree( os.path.join( source_path, "src" ),
-               os.path.join( destination_path, "src" ) )
+    shutil.copytree(os.path.join(source_path, "src"),
+                    os.path.join(destination_path, "src"),
+                    dirs_exist_ok=True)
 
     tests_suites_files = filter(lambda file_: re.match(
                                 "test_suite_psa_crypto.*|helpers\.function|"\
@@ -150,9 +154,9 @@ def replace_all_sh_components(psa_crypto_root_path):
     after_components = 0
     components_start = re.compile(r"#### Basic checks")
     components_end = re.compile(r"#### Termination")
-    new_all_sh = open(os.path.join(tests_scripts_path, "all.sh"), 'x')
 
-    with open(os.path.join(tests_scripts_path, "all.sh.bak"), 'rt') as all_sh:
+    with open(os.path.join(tests_scripts_path, "all.sh"), 'x') as new_all_sh, \
+         open(os.path.join(tests_scripts_path, "all.sh.bak"), 'rt') as all_sh:
         for line in all_sh:
             if before_components:
                 if components_start.match(line) != None:
@@ -176,7 +180,6 @@ def replace_all_sh_components(psa_crypto_root_path):
             if after_components:
                 new_all_sh.write(line)
 
-    new_all_sh.close()
     os.chmod(os.path.join(tests_scripts_path, "all.sh"), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
 
 def extend_config_psa(psa_crypto_root_path):
@@ -187,9 +190,11 @@ def extend_config_psa(psa_crypto_root_path):
     if_defined_mbedtls_psa_crypto_config_file = re.compile("#if defined\(MBEDTLS_PSA_CRYPTO_CONFIG_FILE\)")
     include_mbedtls_psa_crypto_config_file = re.compile("#include MBEDTLS_PSA_CRYPTO_CONFIG_FILE")
     ext_placeholder = re.compile(".*BELOW THIS LINE - PLACEHOLDER FOR PSA-CRYPTO ADDITIONAL CONFIG OPTIONS TRANSLATION")
-    new_config_psa = open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x')
+    endif_mbedtls_psa_crypto_config = re.compile("#endif /\* MBEDTLS_PSA_CRYPTO_CONFIG \*/")
 
-    with open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt') as config_psa:
+    with open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x') as new_config_psa, \
+         open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt') as config_psa:
+
         for line in config_psa:
             if if_defined_mbedtls_psa_crypto_config_file.match(line) != None:
                 new_config_psa.write("#if defined(PSA_CRYPTO_CONFIG_FILE)\n")
@@ -200,15 +205,17 @@ def extend_config_psa(psa_crypto_root_path):
             else:
                 new_config_psa.write(line)
 
-    config_psa.close()
+        with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
+            for line in ext:
+                new_config_psa.write(line)
 
-    with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
-        for line in ext:
-            new_config_psa.write(line)
-
-    new_config_psa.write("\n#endif /* MBEDTLS_PSA_CRYPTO_CONFIG */")
-    new_config_psa.write("\n#endif /* MBEDTLS_CONFIG_PSA_H */")
-    new_config_psa.close()
+        trailer = False
+        for line in config_psa:
+            if endif_mbedtls_psa_crypto_config.match(line) != None:
+                new_config_psa.write("\n")
+                trailer = True
+            if trailer:
+                new_config_psa.write(line)
 
 def main():
     parser = argparse.ArgumentParser(
