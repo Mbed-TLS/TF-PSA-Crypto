@@ -177,24 +177,51 @@ library though.
 The PSA-Crypto repository provides a reference implementation of the
 PSA cryptography API through its main branch.
 
-The main branch is updated against the head of the Mbed TLS development branch
-according to the following sequence where \<mbedtls-commit-id> is the identifier
-of the head of the Mbed TLS development branch, \<mbedtls-pr\> is the number
-of the last PR merged into the Mbed TLS development branch and
-\<psa-crypto-commit-id\> is the identifier of the head of the development
-branch of this repository used for the update. Just the first nine characters
-of the commit identifiers are used.
+The main branch head is built from a commit of the PSA-Crypto development
+branch and a commit of the Mbed TLS development branch. Updating the main
+branch consists in moving its head to be based on more recent commits of the
+PSA-Crypto and Mbed TLS development branches. In the following,
+\<mbedtls-commit-id\> is the identifier of the commit of the Mbed TLS
+development branch used to update the main branch, \<mbedtls-pr\> is
+the number of the last PR merged into this commit, \<psa-crypto-commit-id\> is
+the identifier of the commit of the development branch of this repository used
+for the update and \<psa-crypto-pr\> the number of the last PR merged into that
+commit. Just the first nine characters of the commit identifiers are used.
 
-* Checkout the Mbed TLS branch https://github.com/ronald-cron-arm/mbedtls/tree/psa-crypto-repository.
-  This branch should have been rebased beforehand on top of the head of the
-  Mbed TLS development branch we want to update against.
+An update follows the following flow:
+
+* A base-for-psa-crypto-PR\<psa-crypto-pr\> branch is created in
+  https://github.com/ronald-cron-arm/mbedtls/tree/psa-crypto-repository. The
+  branch is the Mbed TLS commit we want to update against plus a few additional
+  commits. This specific branch is created to keep track of those few
+  additional commits.
+* Checkout locally the base-for-psa-crypto-PR\<psa-crypto-pr\> branch.
+
+Build what we want to become the new head of the main branch:
 * cd path/to/my/psa/crypto/repo
-* git checkout -b update-against-\<mbedtls-commit-id\>-PR\<mbedtls-pr\>-with-\<psa-crypto-commit-id\>
-  development
-* ./scripts/psa_crypto.py --mbedlts path/to/the/mbedtls/branch
+* git checkout -b new-main development
+* git clean -fdx
+* ./scripts/psa_crypto.py --mbedtls path/to/the/mbedtls/branch/checked/out/above
 * git add --all
-* git commit -s -m"Update against \<mbedtls-commit-id\>(PR \<mbedtls-pr\>) with \<psa-crypto-commit-id\>"
-* Create a PR against the main branch with the branch that has just been created.
+* git commit -s -m"New main head"
+
+Create the branch for the update pull request from current main head, merge
+into it the PSA-Crypto development branch to get its last version (not necessary
+if the PSA-Crypto development branch has not changed since the last update)
+and then update the PSA cryptography implementation by applying the patch to
+end up with the same tree as the new-main branch.
+* git checkout -b update-against-\<mbedtls-commit-id\>-PR\<mbedtls-pr\>-with-\<psa-crypto-commit-id\>-PR\<psa-crypto-pr\> main
+* git merge development -m"Merge \<psa-crypto-commit-id\>-PR\<psa-crypto-pr\>"
+* git diff HEAD new-main > patch.file
+* git apply patch.file
+* rm patch.file
+* git add --all
+* git commit -s -m"Update against \<mbedtls-commit-id\>(PR \<mbedtls-pr\>)"
+
+Clean-up
+* git branch -D new-main
+
+* Create a PR against the main branch with the update branch created above.
 * Merge the PR which completes the update.
 
 ## Comparison with the Mbed TLS cryptography library
