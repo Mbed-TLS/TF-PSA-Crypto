@@ -102,9 +102,12 @@
 
 /** Count leading zero bits in a given integer.
  *
+ * \warning     The result is undefined if \p a == 0
+ *
  * \param a     Integer to count leading zero bits.
  *
- * \return      The number of leading zero bits in \p a.
+ * \return      The number of leading zero bits in \p a, if \p a != 0.
+ *              If \p a == 0, the result is undefined.
  */
 size_t mbedtls_mpi_core_clz(mbedtls_mpi_uint a);
 
@@ -278,7 +281,7 @@ int mbedtls_mpi_core_write_be(const mbedtls_mpi_uint *A,
                               unsigned char *output,
                               size_t output_length);
 
-/** \brief              Shift an MPI right in place by a number of bits.
+/** \brief              Shift an MPI in-place right by a number of bits.
  *
  *                      Shifting by more bits than there are bit positions
  *                      in \p X is valid and results in setting \p X to 0.
@@ -291,6 +294,21 @@ int mbedtls_mpi_core_write_be(const mbedtls_mpi_uint *A,
  * \param count         The number of bits to shift by.
  */
 void mbedtls_mpi_core_shift_r(mbedtls_mpi_uint *X, size_t limbs,
+                              size_t count);
+
+/**
+ * \brief               Shift an MPI in-place left by a number of bits.
+ *
+ *                      Shifting by more bits than there are bit positions
+ *                      in \p X will produce an unspecified result.
+ *
+ *                      This function's execution time depends on the value
+ *                      of \p count (and of course \p limbs).
+ * \param[in,out] X     The number to shift.
+ * \param limbs         The number of limbs of \p X. This must be at least 1.
+ * \param count         The number of bits to shift by.
+ */
+void mbedtls_mpi_core_shift_l(mbedtls_mpi_uint *X, size_t limbs,
                               size_t count);
 
 /**

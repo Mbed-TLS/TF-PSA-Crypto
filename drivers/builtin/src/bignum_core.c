@@ -35,6 +35,23 @@
 
 size_t mbedtls_mpi_core_clz(mbedtls_mpi_uint a)
 {
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_clz)
+    if (sizeof(mbedtls_mpi_uint) == sizeof(unsigned int)) {
+        return (size_t) __builtin_clz(a);
+    }
+#endif
+#if __has_builtin(__builtin_clzl)
+    if (sizeof(mbedtls_mpi_uint) == sizeof(unsigned long)) {
+        return (size_t) __builtin_clzl(a);
+    }
+#endif
+#if __has_builtin(__builtin_clzll)
+    if (sizeof(mbedtls_mpi_uint) == sizeof(unsigned long long)) {
+        return (size_t) __builtin_clzll(a);
+    }
+#endif
+#endif
     size_t j;
     mbedtls_mpi_uint mask = (mbedtls_mpi_uint) 1 << (biL - 1);
 
@@ -51,21 +68,17 @@ size_t mbedtls_mpi_core_clz(mbedtls_mpi_uint a)
 
 size_t mbedtls_mpi_core_bitlen(const mbedtls_mpi_uint *A, size_t A_limbs)
 {
-    size_t i, j;
+    int i;
+    size_t j;
 
-    if (A_limbs == 0) {
-        return 0;
-    }
-
-    for (i = A_limbs - 1; i > 0; i--) {
+    for (i = ((int) A_limbs) - 1; i >= 0; i--) {
         if (A[i] != 0) {
-            break;
+            j = biL - mbedtls_mpi_core_clz(A[i]);
+            return (i * biL) + j;
         }
     }
 
-    j = biL - mbedtls_mpi_core_clz(A[i]);
-
-    return (i * biL) + j;
+    return 0;
 }
 
 /* Convert a big-endian byte array aligned to the size of mbedtls_mpi_uint
@@ -348,6 +361,41 @@ void mbedtls_mpi_core_shift_r(mbedtls_mpi_uint *X, size_t limbs,
             r1 = X[i - 1] << (biL - v1);
             X[i - 1] >>= v1;
             X[i - 1] |= r0;
+            r0 = r1;
+        }
+    }
+}
+
+void mbedtls_mpi_core_shift_l(mbedtls_mpi_uint *X, size_t limbs,
+                              size_t count)
+{
+    size_t i, v0, v1;
+    mbedtls_mpi_uint r0 = 0, r1;
+
+    v0 = count / (biL);
+    v1 = count & (biL - 1);
+
+    /*
+     * shift by count / limb_size
+     */
+    if (v0 > 0) {
+        for (i = limbs; i > v0; i--) {
+            X[i - 1] = X[i - v0 - 1];
+        }
+
+        for (; i > 0; i--) {
+            X[i - 1] = 0;
+        }
+    }
+
+    /*
+     * shift by count % limb_size
+     */
+    if (v1 > 0) {
+        for (i = v0; i < limbs; i++) {
+            r1 = X[i] >> (biL - v1);
+            X[i] <<= v1;
+            X[i] |= r0;
             r0 = r1;
         }
     }

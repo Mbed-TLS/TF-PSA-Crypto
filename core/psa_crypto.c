@@ -35,6 +35,7 @@
 #include "psa_crypto_invasive.h"
 #include "psa_crypto_driver_wrappers.h"
 #include "psa_crypto_ecp.h"
+#include "psa_crypto_ffdh.h"
 #include "psa_crypto_hash.h"
 #include "psa_crypto_mac.h"
 #include "psa_crypto_rsa.h"
@@ -91,10 +92,6 @@
 #define BUILTIN_ALG_ANY_HKDF 1
 #endif
 
-/* The only two JPAKE user/peer identifiers supported for the time being. */
-static const uint8_t jpake_server_id[] = { 's', 'e', 'r', 'v', 'e', 'r' };
-static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
-
 /****************************************************************/
 /* Global data, support functions and library management */
 /****************************************************************/
@@ -132,6 +129,21 @@ int psa_can_do_hash(psa_algorithm_t hash_alg)
     (void) hash_alg;
     return global_data.drivers_initialized;
 }
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR) ||       \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) ||     \
+    defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR)
+static int psa_is_dh_key_size_valid(size_t bits)
+{
+    if (bits != 2048 && bits != 3072 && bits != 4096 &&
+        bits != 6144 && bits != 8192) {
+        return 0;
+    }
+
+    return 1;
+}
+#endif /* MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR ||
+          MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY ||
+          PSA_WANT_KEY_TYPE_DH_KEY_PAIR */
 
 psa_status_t mbedtls_to_psa_error(int ret)
 {
@@ -628,6 +640,23 @@ psa_status_t psa_import_key_into_slot(
 
         return PSA_SUCCESS;
     } else if (PSA_KEY_TYPE_IS_ASYMMETRIC(type)) {
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR) || \
+        defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY)
+        if (PSA_KEY_TYPE_IS_DH(type)) {
+            if (psa_is_dh_key_size_valid(PSA_BYTES_TO_BITS(data_length)) == 0) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+
+            /* Copy the key material. */
+            memcpy(key_buffer, data, data_length);
+            *key_buffer_length = data_length;
+            *bits = PSA_BYTES_TO_BITS(data_length);
+            (void) key_buffer_size;
+
+            return PSA_SUCCESS;
+        }
+#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR) ||
+        * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR) || \
         defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY)
         if (PSA_KEY_TYPE_IS_ECC(type)) {
@@ -1330,7 +1359,8 @@ psa_status_t psa_export_key_internal(
 
     if (key_type_is_raw_bytes(type) ||
         PSA_KEY_TYPE_IS_RSA(type)   ||
-        PSA_KEY_TYPE_IS_ECC(type)) {
+        PSA_KEY_TYPE_IS_ECC(type)   ||
+        PSA_KEY_TYPE_IS_DH(type)) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
@@ -1396,47 +1426,54 @@ psa_status_t psa_export_public_key_internal(
 {
     psa_key_type_t type = attributes->core.type;
 
-    if (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type)) {
-        if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type)) {
-            /* Exporting public -> public */
-            return psa_export_key_buffer_internal(
-                key_buffer, key_buffer_size,
-                data, data_size, data_length);
-        }
-
-        if (PSA_KEY_TYPE_IS_RSA(type)) {
+    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) &&
+        (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type) ||
+         PSA_KEY_TYPE_IS_DH(type))) {
+        /* Exporting public -> public */
+        return psa_export_key_buffer_internal(
+            key_buffer, key_buffer_size,
+            data, data_size, data_length);
+    } else if (PSA_KEY_TYPE_IS_RSA(type)) {
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR) || \
-            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY)
-            return mbedtls_psa_rsa_export_public_key(attributes,
-                                                     key_buffer,
-                                                     key_buffer_size,
-                                                     data,
-                                                     data_size,
-                                                     data_length);
+        defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY)
+        return mbedtls_psa_rsa_export_public_key(attributes,
+                                                 key_buffer,
+                                                 key_buffer_size,
+                                                 data,
+                                                 data_size,
+                                                 data_length);
 #else
-            /* We don't know how to convert a private RSA key to public. */
-            return PSA_ERROR_NOT_SUPPORTED;
+        /* We don't know how to convert a private RSA key to public. */
+        return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
-        } else {
+    } else if (PSA_KEY_TYPE_IS_ECC(type)) {
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR) || \
-            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY)
-            return mbedtls_psa_ecp_export_public_key(attributes,
-                                                     key_buffer,
-                                                     key_buffer_size,
-                                                     data,
-                                                     data_size,
-                                                     data_length);
+        defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY)
+        return mbedtls_psa_ecp_export_public_key(attributes,
+                                                 key_buffer,
+                                                 key_buffer_size,
+                                                 data,
+                                                 data_size,
+                                                 data_length);
 #else
-            /* We don't know how to convert a private ECC key to public */
-            return PSA_ERROR_NOT_SUPPORTED;
+        /* We don't know how to convert a private ECC key to public */
+        return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY) */
-        }
+    } else if (PSA_KEY_TYPE_IS_DH(type)) {
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR) || \
+        defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY)
+        return mbedtls_psa_export_ffdh_public_key(attributes,
+                                                  key_buffer,
+                                                  key_buffer_size,
+                                                  data, data_size,
+                                                  data_length);
+#else
+        return PSA_ERROR_NOT_SUPPORTED;
+#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR) ||
+        * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
     } else {
-        /* This shouldn't happen in the reference implementation, but
-           it is valid for a special-purpose implementation to omit
-           support for exporting certain key types. */
         return PSA_ERROR_NOT_SUPPORTED;
     }
 }
@@ -5962,6 +5999,11 @@ static psa_status_t psa_key_agreement_try_support(psa_algorithm_t alg)
         return PSA_SUCCESS;
     }
 #endif
+#if defined(PSA_WANT_ALG_FFDH)
+    if (alg == PSA_ALG_FFDH) {
+        return PSA_SUCCESS;
+    }
+#endif
     (void) alg;
     return PSA_ERROR_NOT_SUPPORTED;
 }
@@ -6481,6 +6523,27 @@ exit:
     return status;
 }
 
+static psa_status_t psa_key_derivation_input_integer_internal(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    uint64_t value)
+{
+    psa_status_t status;
+    psa_algorithm_t kdf_alg = psa_key_derivation_get_kdf_alg(operation);
+
+    {
+        (void) step;
+        (void) value;
+        (void) kdf_alg;
+        status = PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (status != PSA_SUCCESS) {
+        psa_key_derivation_abort(operation);
+    }
+    return status;
+}
+
 psa_status_t psa_key_derivation_input_bytes(
     psa_key_derivation_operation_t *operation,
     psa_key_derivation_step_t step,
@@ -6490,6 +6553,14 @@ psa_status_t psa_key_derivation_input_bytes(
     return psa_key_derivation_input_internal(operation, step,
                                              PSA_KEY_TYPE_NONE,
                                              data, data_length);
+}
+
+psa_status_t psa_key_derivation_input_integer(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    uint64_t value)
+{
+    return psa_key_derivation_input_integer_internal(operation, step, value);
 }
 
 psa_status_t psa_key_derivation_input_key(
@@ -6550,6 +6621,19 @@ psa_status_t psa_key_agreement_raw_builtin(const psa_key_attributes_t *attribute
                                                   shared_secret_size,
                                                   shared_secret_length);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ECDH */
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_FFDH)
+        case PSA_ALG_FFDH:
+            return mbedtls_psa_key_agreement_ffdh(attributes,
+                                                  peer_key,
+                                                  peer_key_length,
+                                                  key_buffer,
+                                                  key_buffer_size,
+                                                  shared_secret,
+                                                  shared_secret_size,
+                                                  shared_secret_length);
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_FFDH */
+
         default:
             (void) attributes;
             (void) key_buffer;
@@ -6931,6 +7015,14 @@ static psa_status_t psa_validate_key_type_and_size_for_key_generation(
         return PSA_SUCCESS;
     } else
 #endif /* defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR) */
+
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR)
+    if (PSA_KEY_TYPE_IS_DH(type) && PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        if (psa_is_dh_key_size_valid(bits) == 0) {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+    } else
+#endif /* defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR) */
     {
         return PSA_ERROR_NOT_SUPPORTED;
     }
@@ -6982,6 +7074,15 @@ psa_status_t psa_generate_key_internal(
                                             key_buffer_length);
     } else
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR) */
+
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR)
+    if (PSA_KEY_TYPE_IS_DH(type) && PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        return mbedtls_psa_ffdh_generate_key(attributes,
+                                             key_buffer,
+                                             key_buffer_size,
+                                             key_buffer_length);
+    } else
+#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR) */
     {
         (void) key_buffer_length;
         return PSA_ERROR_NOT_SUPPORTED;
@@ -7208,19 +7309,6 @@ psa_status_t psa_crypto_driver_pake_get_password(
     return PSA_SUCCESS;
 }
 
-psa_status_t psa_crypto_driver_pake_get_role(
-    const psa_crypto_driver_pake_inputs_t *inputs,
-    psa_pake_role_t *role)
-{
-    if (inputs->role == PSA_PAKE_ROLE_NONE) {
-        return PSA_ERROR_BAD_STATE;
-    }
-
-    *role = inputs->role;
-
-    return PSA_SUCCESS;
-}
-
 psa_status_t psa_crypto_driver_pake_get_user_len(
     const psa_crypto_driver_pake_inputs_t *inputs,
     size_t *user_len)
@@ -7296,6 +7384,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     return PSA_SUCCESS;
 }
 
+#if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t psa_pake_setup(
     psa_pake_operation_t *operation,
     const psa_pake_cipher_suite_t *cipher_suite)
@@ -7415,15 +7504,6 @@ psa_status_t psa_pake_set_user(
         goto exit;
     }
 
-    /* Allow only "client" or "server" values (temporary restriction). */
-    if ((user_id_len != sizeof(jpake_server_id) ||
-         memcmp(user_id, jpake_server_id, user_id_len) != 0) &&
-        (user_id_len != sizeof(jpake_client_id) ||
-         memcmp(user_id, jpake_client_id, user_id_len) != 0)) {
-        status = PSA_ERROR_NOT_SUPPORTED;
-        goto exit;
-    }
-
     operation->data.inputs.user = mbedtls_calloc(1, user_id_len);
     if (operation->data.inputs.user == NULL) {
         status = PSA_ERROR_INSUFFICIENT_MEMORY;
@@ -7458,15 +7538,6 @@ psa_status_t psa_pake_set_peer(
 
     if (operation->data.inputs.peer_len != 0) {
         status = PSA_ERROR_BAD_STATE;
-        goto exit;
-    }
-
-    /* Allow only "client" or "server" values (temporary restriction). */
-    if ((peer_id_len != sizeof(jpake_server_id) ||
-         memcmp(peer_id, jpake_server_id, peer_id_len) != 0) &&
-        (peer_id_len != sizeof(jpake_client_id) ||
-         memcmp(peer_id, jpake_client_id, peer_id_len) != 0)) {
-        status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
 
@@ -7586,19 +7657,6 @@ static psa_status_t psa_pake_complete_inputs(
     if (operation->alg == PSA_ALG_JPAKE) {
         if (inputs.user_len == 0 || inputs.peer_len == 0) {
             return PSA_ERROR_BAD_STATE;
-        }
-        if (memcmp(inputs.user, jpake_client_id, inputs.user_len) == 0 &&
-            memcmp(inputs.peer, jpake_server_id, inputs.peer_len) == 0) {
-            inputs.role = PSA_PAKE_ROLE_CLIENT;
-        } else
-        if (memcmp(inputs.user, jpake_server_id, inputs.user_len) == 0 &&
-            memcmp(inputs.peer, jpake_client_id, inputs.peer_len) == 0) {
-            inputs.role = PSA_PAKE_ROLE_SERVER;
-        }
-
-        if (inputs.role != PSA_PAKE_ROLE_CLIENT &&
-            inputs.role != PSA_PAKE_ROLE_SERVER) {
-            return PSA_ERROR_NOT_SUPPORTED;
         }
     }
 
@@ -8043,5 +8101,6 @@ psa_status_t psa_pake_abort(
 
     return status;
 }
+#endif /* PSA_WANT_ALG_SOME_PAKE */
 
 #endif /* MBEDTLS_PSA_CRYPTO_C */
