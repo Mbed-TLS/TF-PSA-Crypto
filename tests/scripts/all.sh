@@ -411,6 +411,18 @@ check_tools()
     done
 }
 
+pre_parse_command_line_for_dirs () {
+    # Make an early pass through the options given, so we can set directories
+    # for Arm compilers, before SUPPORTED_COMPONENTS is determined.
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --armc5-bin-dir) shift; ARMC5_BIN_DIR="$1";;
+            --armc6-bin-dir) shift; ARMC6_BIN_DIR="$1";;
+        esac
+        shift
+    done
+}
+
 pre_parse_command_line () {
     COMMAND_LINE_COMPONENTS=
     all_except=0
@@ -427,8 +439,8 @@ pre_parse_command_line () {
             --arm-none-eabi-gcc-prefix) shift; ARM_NONE_EABI_GCC_PREFIX="$1";;
             --arm-linux-gnueabi-gcc-prefix) shift; ARM_LINUX_GNUEABI_GCC_PREFIX="$1";;
             --armcc) no_armcc=;;
-            --armc5-bin-dir) shift; ARMC5_BIN_DIR="$1";;
-            --armc6-bin-dir) shift; ARMC6_BIN_DIR="$1";;
+            --armc5-bin-dir) shift; ;; # assignment to ARMC5_BIN_DIR done in pre_parse_command_line_for_dirs
+            --armc6-bin-dir) shift; ;; # assignment to ARMC6_BIN_DIR done in pre_parse_command_line_for_dirs
             --error-test) error_test=$((error_test + 1));;
             --except) all_except=1;;
             --force|-f) FORCE=1;;
@@ -795,7 +807,101 @@ pre_generate_files() {
     fi
 }
 
+################################################################
+#### Helpers for components using libtestdriver1
+################################################################
 
+# How to use libtestdriver1
+# -------------------------
+#
+# 1. Define the list algorithms and key types to accelerate,
+#    designated the same way as PSA_WANT_ macros but without PSA_WANT_.
+#    Examples:
+#      - loc_accel_list="ALG_JPAKE"
+#      - loc_accel_list="ALG_FFDH KEY_TYPE_DH_KEY_PAIR KEY_TYPE_DH_PUBLIC_KEY"
+# 2. Make configurations changes for the driver and/or main libraries.
+#    2a. Call helper_libtestdriver1_adjust_config <base>, where the argument
+#        can be either "default" to start with the default config, or a name
+#        supported by scripts/config.py (for example, "full"). This selects
+#        the base to use, and makes common adjustments.
+#    2b. If desired, adjust the PSA_WANT symbols in psa/crypto_config.h.
+#        These changes affect both the driver and the main libraries.
+#        (Note: they need to have the same set of PSA_WANT symbols, as that
+#        determines the ABI between them.)
+#    2c. Adjust MBEDTLS_ symbols in mbedtls_config.h. This only affects the
+#        main libraries. Typically, you want to disable the module(s) that are
+#        being accelerated. You may need to also disable modules that depend
+#        on them or options that are not supported with drivers.
+#    2d. On top of psa/crypto_config.h, the driver library uses its own config
+#        file: tests/include/test/drivers/config_test_driver.h. You usually
+#        don't need to edit it: using loc_extra_list (see below) is preferred.
+#        However, when there's no PSA symbol for what you want to enable,
+#        calling scripts/config.py on this file remains the only option.
+# 3. Build the driver library, then the main libraries, test, and programs.
+#    3a. Call helper_libtestdriver1_make_drivers "$loc_accel_list". You may
+#        need to enable more algorithms here, typically hash algorithms when
+#        accelerating some signature algorithms (ECDSA, RSAv2). This is done
+#        by passing a 2nd argument listing the extra algorithms.
+#        Example:
+#          loc_extra_list="ALG_SHA_224 ALG_SHA_256 ALG_SHA_384 ALG_SHA_512"
+#          helper_libtestdriver1_make_drivers "$loc_accel_list" "$loc_extra_list"
+#    4b. Call helper_libtestdriver1_make_main "$loc_accel_list". Any
+#        additional arguments will be passed to make: this can be useful if
+#        you don't want to build everything when iterating during development.
+#        Example:
+#          helper_libtestdriver1_make_main "$loc_accel_list" -C tests test_suite_foo
+# 4. Run the tests you want.
+
+# Adjust the configuration - for both libtestdriver1 and main library,
+# as they should have the same PSA_WANT macros.
+helper_libtestdriver1_adjust_config() {
+    BASE_CONFIG=$1
+    # Select the base configuration
+    if [ "$BASE_CONFIG" != "default" ]; then
+        scripts/config.py "$BASE_CONFIG"
+    fi
+
+    # Enable PSA-based config (necessary to use drivers)
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_CONFIG
+
+    # Disable ALG_STREAM_CIPHER and ALG_ECB_NO_PADDING to avoid having
+    # partial support for cipher operations in the driver test library.
+    scripts/config.py -f include/psa/crypto_config.h unset PSA_WANT_ALG_STREAM_CIPHER
+    scripts/config.py -f include/psa/crypto_config.h unset PSA_WANT_ALG_ECB_NO_PADDING
+
+    # Dynamic secure element support is a deprecated feature and needs to be disabled here.
+    # This is done to have the same form of psa_key_attributes_s for libdriver and library.
+    scripts/config.py unset MBEDTLS_PSA_CRYPTO_SE_C
+}
+
+# Build the drivers library libtestdriver1.a (with ASan).
+#
+# Parameters:
+# 1. a space-separated list of things to accelerate;
+# 2. optional: a space-separate list of things to also support.
+# Here "things" are PSA_WANT_ symbols but with PSA_WANT_ removed.
+helper_libtestdriver1_make_drivers() {
+    loc_accel_flags=$( echo "$1 ${2-}" | sed 's/[^ ]* */-DLIBTESTDRIVER1_MBEDTLS_PSA_ACCEL_&/g' )
+    make -C tests libtestdriver1.a CFLAGS=" $ASAN_CFLAGS $loc_accel_flags" LDFLAGS="$ASAN_CFLAGS"
+}
+
+# Build the main libraries, programs and tests,
+# linking to the drivers library (with ASan).
+#
+# Parameters:
+# 1. a space-separated list of things to accelerate;
+# *. remaining arguments if any are passed directly to make
+#    (examples: lib, -C tests test_suite_xxx, etc.)
+# Here "things" are PSA_WANT_ symbols but with PSA_WANT_ removed.
+helper_libtestdriver1_make_main() {
+    loc_accel_list=$1
+    shift
+
+    # we need flags both with and without the LIBTESTDRIVER1_ prefix
+    loc_accel_flags=$( echo "$loc_accel_list" | sed 's/[^ ]* */-DLIBTESTDRIVER1_MBEDTLS_PSA_ACCEL_&/g' )
+    loc_accel_flags="$loc_accel_flags $( echo "$loc_accel_list" | sed 's/[^ ]* */-DMBEDTLS_PSA_ACCEL_&/g' )"
+    make CFLAGS="$ASAN_CFLAGS -I../tests/include -I../tests -I../../tests -DPSA_CRYPTO_DRIVER_TEST -DMBEDTLS_TEST_LIBTESTDRIVER1 $loc_accel_flags" LDFLAGS="-ltestdriver1 $ASAN_CFLAGS" "$@"
+}
 
 ################################################################
 ### PSA cryptography test components
@@ -1000,6 +1106,7 @@ run_component () {
 
 # Preliminary setup
 pre_check_environment
+pre_parse_command_line_for_dirs "$@"
 pre_initialize_variables
 pre_parse_command_line "$@"
 
