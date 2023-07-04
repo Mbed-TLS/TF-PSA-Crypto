@@ -31,6 +31,15 @@
 #include "bignum_mod.h"
 #include "mbedtls/ecp.h"
 
+/*
+ * Curve modulus types
+ */
+typedef enum {
+    MBEDTLS_ECP_MOD_NONE = 0,
+    MBEDTLS_ECP_MOD_COORDINATE,
+    MBEDTLS_ECP_MOD_SCALAR
+} mbedtls_ecp_modulus_type;
+
 #if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_LIGHT)
 
 #if defined(MBEDTLS_ECP_MONTGOMERY_ENABLED)
@@ -241,10 +250,50 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs);
 
 #endif /* MBEDTLS_ECP_DP_SECP256K1_ENABLED */
 
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+
+/** Fast quasi-reduction modulo p255 = 2^255 - 19
+ *
+ * \param[in,out]   X       The address of the MPI to be converted.
+ *                          Must have exact limb size that stores a 510-bit MPI
+ *                          (double the bitlength of the modulus).
+ *                          Upon return holds the reduced value which is
+ *                          in range `0 <= X < 2 * N` (where N is the modulus).
+ * \param[in]       X_limbs The length of \p X in limbs.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_ECP_BAD_INPUT_DATA if \p X does not have
+ *                  twice as many limbs as the modulus.
+ * \return          #MBEDTLS_ERR_ECP_ALLOC_FAILED if memory allocation failed.
+ */
+MBEDTLS_STATIC_TESTABLE
+int mbedtls_ecp_mod_p255_raw(mbedtls_mpi_uint *X, size_t X_limbs);
+
+#endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
+
 #if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
 
+/** Fast quasi-reduction modulo p448 = 2^448 - 2^224 - 1
+ * Write X as A0 + 2^448 A1 and A1 as B0 + 2^224 B1, and return A0 + A1 + B1 +
+ * (B0 + B1) * 2^224.
+ *
+ * \param[in,out]   X       The address of the MPI to be converted.
+ *                          Must have exact limb size that stores a 896-bit MPI
+ *                          (double the bitlength of the modulus). Upon return
+ *                          holds the reduced value which is in range `0 <= X <
+ *                          N` (where N is the modulus). The bitlength of the
+ *                          reduced value is the same as that of the modulus
+ *                          (448 bits).
+ * \param[in]       X_limbs The length of \p X in limbs.
+ *
+ * \return          \c 0 on Success.
+ * \return          #MBEDTLS_ERR_ECP_BAD_INPUT_DATA if \p X does not have
+ *                  twice as many limbs as the modulus.
+ * \return          #MBEDTLS_ERR_ECP_ALLOC_FAILED if memory allocation
+ *                  failed.
+ */
 MBEDTLS_STATIC_TESTABLE
-int mbedtls_ecp_mod_p448(mbedtls_mpi *N);
+int mbedtls_ecp_mod_p448_raw(mbedtls_mpi_uint *X, size_t X_limbs);
 
 #endif /* MBEDTLS_ECP_DP_CURVE448_ENABLED */
 
@@ -257,7 +306,7 @@ int mbedtls_ecp_mod_p448(mbedtls_mpi *N);
  * \param[in,out] N The address of the modulus structure to populate.
  *                  Must be initialized.
  * \param[in] id    The mbedtls_ecp_group_id for which to initialise the modulus.
- * \param[in] ctype The mbedtls_ecp_curve_type identifier for a coordinate modulus (P)
+ * \param[in] ctype The mbedtls_ecp_modulus_type identifier for a coordinate modulus (P)
  *                  or a scalar modulus (N).
  *
  * \return          \c 0 if successful.
@@ -268,7 +317,7 @@ int mbedtls_ecp_mod_p448(mbedtls_mpi *N);
 MBEDTLS_STATIC_TESTABLE
 int mbedtls_ecp_modulus_setup(mbedtls_mpi_mod_modulus *N,
                               const mbedtls_ecp_group_id id,
-                              const mbedtls_ecp_curve_type ctype);
+                              const mbedtls_ecp_modulus_type ctype);
 
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
 

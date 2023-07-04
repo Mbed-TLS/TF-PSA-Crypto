@@ -184,7 +184,7 @@ typedef struct mbedtls_pk_rsassa_pss_options {
 #endif
 #else /* MBEDTLS_USE_PSA_CRYPTO */
 #if defined(PSA_WANT_ALG_ECDSA)
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR)
+#if defined(MBEDTLS_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_LEGACY)
 #define MBEDTLS_PK_CAN_ECDSA_SIGN
 #endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
@@ -207,7 +207,8 @@ typedef struct mbedtls_pk_rsassa_pss_options {
  * format. It should be noticed that this only affect how data is stored, not
  * which functions are used for various operations. The overall picture looks
  * like this:
- * - if ECP_C is defined then use legacy functions
+ * - if USE_PSA is not defined and ECP_C is then use ecp_keypair data structure
+ *   and legacy functions
  * - if USE_PSA is defined and
  *     - if ECP_C then use ecp_keypair structure, convert data to a PSA friendly
  *       format and use PSA functions
@@ -218,10 +219,17 @@ typedef struct mbedtls_pk_rsassa_pss_options {
  * ecp_keypair structure inside the pk_context so he/she can modify it using
  * ECP functions which are not under PK module's control.
  */
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && !defined(MBEDTLS_ECP_C) && \
-    defined(MBEDTLS_ECP_LIGHT)
+#if defined(MBEDTLS_USE_PSA_CRYPTO) && defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && \
+    !defined(MBEDTLS_ECP_C)
 #define MBEDTLS_PK_USE_PSA_EC_DATA
 #endif /* MBEDTLS_USE_PSA_CRYPTO && !MBEDTLS_ECP_C */
+
+/* Helper symbol to state that the PK module has support for EC keys. This
+ * can either be provided through the legacy ECP solution or through the
+ * PSA friendly MBEDTLS_PK_USE_PSA_EC_DATA. */
+#if defined(MBEDTLS_PK_USE_PSA_EC_DATA) || defined(MBEDTLS_ECP_C)
+#define MBEDTLS_PK_HAVE_ECC_KEYS
+#endif /* MBEDTLS_PK_USE_PSA_EC_DATA || MBEDTLS_ECP_C */
 
 /**
  * \brief           Types for interfacing with the debug module
@@ -262,11 +270,24 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 typedef struct mbedtls_pk_context {
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
     void *MBEDTLS_PRIVATE(pk_ctx);                        /**< Underlying public key context  */
-    /* When MBEDTLS_PSA_CRYPTO_C is enabled then the following priv_id field is
-     * used to store the ID of the opaque key.
-     * This priv_id is guarded by MBEDTLS_PSA_CRYPTO_C and not by
-     * MBEDTLS_USE_PSA_CRYPTO because it can be used also in mbedtls_pk_sign_ext
-     * for RSA keys. */
+    /* The following field is used to store the ID of a private key in the
+     * following cases:
+     * - opaque key when MBEDTLS_PSA_CRYPTO_C is defined
+     * - normal key when MBEDTLS_PK_USE_PSA_EC_DATA is defined. In this case:
+     *    - the pk_ctx above is not not used to store the private key anymore.
+     *      Actually that field not populated at all in this case because also
+     *      the public key will be stored in raw format as explained below
+     *    - this ID is used for all private key operations (ex: sign, check
+     *      key pair, key write, etc) using PSA functions
+     *
+     * Note: this private key storing solution only affects EC keys, not the
+     *       other ones. The latters still use the pk_ctx to store their own
+     *       context.
+     *
+     * Note: this priv_id is guarded by MBEDTLS_PSA_CRYPTO_C and not by
+     *       MBEDTLS_PK_USE_PSA_EC_DATA (as the public counterpart below) because,
+     *       when working with opaque keys, it can be used also in
+     *       mbedtls_pk_sign_ext for RSA keys. */
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);      /**< Key ID for opaque keys */
 #endif /* MBEDTLS_PSA_CRYPTO_C */
@@ -277,8 +298,7 @@ typedef struct mbedtls_pk_context {
      *
      * When MBEDTLS_PK_USE_PSA_EC_DATA is enabled:
      * - the pk_ctx above is not used anymore for storing the public key
-     *   inside the ecp_keypair structure (only the private part, but also this
-     *   one is going to change in the future)
+     *   inside the ecp_keypair structure
      * - the following fields are used for all public key operations: signature
      *   verify, key pair check and key write.
      * Of course, when MBEDTLS_PK_USE_PSA_EC_DATA is not enabled, the legacy
