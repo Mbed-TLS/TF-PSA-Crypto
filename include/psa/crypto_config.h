@@ -516,7 +516,7 @@
  */
 //#define PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
 
-/** \def PSA_CRYPTO_ECC_NIST_OPTIM
+/** \def PSA_CRYPTO_ECP_NIST_OPTIM
  *
  * Enable specific 'modulo p' routines for each NIST prime.
  * Depending on the prime and architecture, makes operations 4 to 8 times
@@ -524,7 +524,7 @@
  *
  * Comment this macro to disable NIST curves optimisation.
  */
-#define PSA_CRYPTO_ECC_NIST_OPTIM
+#define PSA_CRYPTO_ECP_NIST_OPTIM
 
 /** \def PSA_CRYPTO_SHA256_SMALLER
  *
