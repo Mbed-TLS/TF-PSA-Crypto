@@ -412,6 +412,7 @@
  * Requires support for asm() in compiler.
  *
  * Used in:
+ *      builtin/src/aesni.h
  *      builtin/src/aria.c
  *      builtin/src/bn_mul.h
  *      builtin/src/constant_time.c
@@ -419,6 +420,38 @@
  * Comment to disable the use of assembly code.
  */
 #define PSA_CRYPTO_HAVE_ASM
+
+/**
+ * \def PSA_CRYPTO_AESNI_C
+ *
+ * Enable AES-NI support on x86-64 or x86-32.
+ *
+ * \note AESNI is only supported with certain compilers and target options:
+ * - Visual Studio 2013: supported.
+ * - GCC, x86-64, target not explicitly supporting AESNI:
+ *   requires MBEDTLS_HAVE_ASM.
+ * - GCC, x86-32, target not explicitly supporting AESNI:
+ *   not supported.
+ * - GCC, x86-64 or x86-32, target supporting AESNI: supported.
+ *   For this assembly-less implementation, you must currently compile
+ *   `library/aesni.c` and `library/aes.c` with machine options to enable
+ *   SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul` or
+ *   `clang -maes -mpclmul`.
+ * - Non-x86 targets: this option is silently ignored.
+ * - Other compilers: this option is silently ignored.
+ *
+ * \note
+ * Above, "GCC" includes compatible compilers such as Clang.
+ * The limitations on target support are likely to be relaxed in the future.
+ *
+ * Module:  builtin/src/aesni.c
+ * Caller:  builtin/src/aes.c
+ *
+ * Requires: PSA_CRYPTO_HAVE_ASM (on some platforms, see note)
+ *
+ * This modules adds support for the AES-NI instructions on x86.
+ */
+#define PSA_CRYPTO_AESNI_C
 
 /** \def PSA_CRYPTO_NO_UDBL_DIVISION
  *
