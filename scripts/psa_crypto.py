@@ -125,7 +125,8 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
 
     tests_suites_files = filter(lambda file_: re.match(
                                 "test_suite_psa_crypto.*|helpers\.function|"\
-                                "host_test\.function|main_test\.function", file_),
+                                "host_test\.function|main_test\.function|"\
+                                "test_suite_base64.*", file_),
                                 os.listdir(os.path.join(source_path, "suites")))
     for file_ in tests_suites_files:
         shutil.copy2(os.path.join(source_path, "suites", file_),
