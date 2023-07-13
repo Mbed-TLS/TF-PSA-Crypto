@@ -38,7 +38,7 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     destination_path = os.path.join(builtin_path, "include", "mbedtls")
 
     include_files = filter(lambda file_: not re.match(
-                           "x509.*|mps.*|ssl.*|nist_kw\.*|pem\.*|padlock\.*|pkcs.*|"\
+                           "x509.*|mps.*|ssl.*|pem\.*|padlock\.*|pkcs.*|"\
                            "\.gitignore|debug\.h|net_sockets\.h"\
                            "", file_),
                            os.listdir(source_path))
@@ -53,7 +53,7 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
 def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     library_files = filter(lambda file_: not re.match(
-                           ".*\.o|x509.*|mps.*|ssl.*|nist_kw\.*|pem\.*|padlock\.*|pkcs.*|"\
+                           ".*\.o|x509.*|mps.*|ssl.*|pem\.*|padlock\.*|pkcs.*|"\
                            "\.gitignore|Makefile|CMakeLists\.txt|"\
                            "debug\.c|error\.c|net_sockets\.c"\
                            "psa_crypto_core_common\.h", file_),
@@ -126,7 +126,9 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     tests_suites_files = filter(lambda file_: re.match(
                                 "test_suite_psa_crypto.*|helpers\.function|"\
                                 "host_test\.function|main_test\.function|"\
-                                "test_suite_base64.*", file_),
+                                "test_suite_base64.*|"\
+                                "test_suite_nist_kw.*", \
+                                file_),
                                 os.listdir(os.path.join(source_path, "suites")))
     for file_ in tests_suites_files:
         shutil.copy2(os.path.join(source_path, "suites", file_),
