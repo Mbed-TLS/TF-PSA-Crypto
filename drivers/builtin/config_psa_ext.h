@@ -162,6 +162,10 @@
 #define MBEDTLS_AESNI_C
 #endif
 
+#if defined(PSA_CRYPTO_AESCE_C)
+#define MBEDTLS_AESCE_C
+#endif
+
 #if defined(PSA_CRYPTO_NO_UDBL_DIVISION)
 #define MBEDTLS_NO_UDBL_DIVISION
 #endif
