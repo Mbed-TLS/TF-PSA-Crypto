@@ -66,6 +66,7 @@ namely at time of writing: Ubuntu 20.04, RHEL 8, SLES 15 ...
   code, and to generate sample programs.
 * Perl to run the tests, and to generate some source files in the main branch.
 * CMake 3.16.3 or later.
+* Microsoft Visual Studio 2019 or later (if using Visual Studio).
 * Doxygen 1.8.14 or later.
 
 ### Generated source files
@@ -199,6 +200,31 @@ The PSA-Crypto repository supports being built as a CMake subproject. One can
 use `add_subdirectory()` from a parent CMake project to include PSA-Crypto as a
 subproject.
 
+### Microsoft Visual Studio
+
+The PSA-Crypto library can be built with Microsoft Visual Studio Community
+suitably installed as a CMake project. For a general documentation about
+CMake projects in Visual Studio, please refer to its documentation.
+
+The following instructions have been tested on Microsoft Visual Studio Community
+2019 Version 16.11.26. The PSA-Crypto library and its tests build out of the box
+with:
+. Visual Studio Community installed with the default "Desktop development with C++"
+and "Python development" workloads.
+. Python libraries needed for code and test generation installed as defined
+in basic.requirements.txt. Refer to the Visual Studio documentation of Python
+environments.
+. When cloning the PSA-Crypto repository in Visual Studio, a CMakeSettings.json
+is created at the root of the repository. In that file, add the line
+`"environments": [ {"CC" : "cl"} ]` to the configuration. That way when
+building the library and its tests, a CC environment variable is set with
+value "cl". This is needed by Python scripts that generate test cases. The
+CMakeSettings.json file can be edited in Visual Studio by following
+Project > CMake Settings for PSA-Crypto > Edit JSON.
+. If necessary (it may have been done automatically when updating
+CMakeSettings.json), generate the CMake cache: Project > Generate Cache
+. Build the library: Build > Build All
+. The test suites can then be run: Test > Run CTests for PSA-Crypto
 
 Example programs
 ----------------

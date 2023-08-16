@@ -412,6 +412,7 @@
  * Requires support for asm() in compiler.
  *
  * Used in:
+ *      builtin/src/aesni.h
  *      builtin/src/aria.c
  *      builtin/src/bn_mul.h
  *      builtin/src/constant_time.c
@@ -419,6 +420,62 @@
  * Comment to disable the use of assembly code.
  */
 #define PSA_CRYPTO_HAVE_ASM
+
+/**
+ * \def PSA_CRYPTO_AESNI_C
+ *
+ * Enable AES-NI support on x86-64 or x86-32.
+ *
+ * \note AESNI is only supported with certain compilers and target options:
+ * - Visual Studio 2013: supported.
+ * - GCC, x86-64, target not explicitly supporting AESNI:
+ *   requires MBEDTLS_HAVE_ASM.
+ * - GCC, x86-32, target not explicitly supporting AESNI:
+ *   not supported.
+ * - GCC, x86-64 or x86-32, target supporting AESNI: supported.
+ *   For this assembly-less implementation, you must currently compile
+ *   `library/aesni.c` and `library/aes.c` with machine options to enable
+ *   SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul` or
+ *   `clang -maes -mpclmul`.
+ * - Non-x86 targets: this option is silently ignored.
+ * - Other compilers: this option is silently ignored.
+ *
+ * \note
+ * Above, "GCC" includes compatible compilers such as Clang.
+ * The limitations on target support are likely to be relaxed in the future.
+ *
+ * Module:  builtin/src/aesni.c
+ * Caller:  builtin/src/aes.c
+ *
+ * Requires: PSA_CRYPTO_HAVE_ASM (on some platforms, see note)
+ *
+ * This modules adds support for the AES-NI instructions on x86.
+ */
+#define PSA_CRYPTO_AESNI_C
+
+/**
+ * \def PSA_CRYPTO_AESCE_C
+ *
+ * Enable AES cryptographic extension support on 64-bit Arm.
+ *
+ * Module:  builtin/src/aesce.c
+ * Caller:  builtin/src/aes.c
+ *
+ * Requires: PSA_WANT_KEY_TYPE_AES
+ *
+ * \warning Runtime detection only works on Linux. For non-Linux operating
+ *          system, Armv8-A Cryptographic Extensions must be supported by
+ *          the CPU when this option is enabled.
+ *
+ * \note    Minimum compiler versions for this feature are Clang 4.0,
+ *          armclang 6.6, GCC 6.0 or MSVC 2019 version 16.11.2.
+ *
+ * \note \c CFLAGS must be set to a minimum of \c -march=armv8-a+crypto for
+ * armclang <= 6.9
+ *
+ * This module adds support for the AES Armv8-A Cryptographic Extensions on Aarch64 systems.
+ */
+#define PSA_CRYPTO_AESCE_C
 
 /** \def PSA_CRYPTO_NO_UDBL_DIVISION
  *
@@ -516,7 +573,7 @@
  */
 //#define PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
 
-/** \def PSA_CRYPTO_ECC_NIST_OPTIM
+/** \def PSA_CRYPTO_ECP_NIST_OPTIM
  *
  * Enable specific 'modulo p' routines for each NIST prime.
  * Depending on the prime and architecture, makes operations 4 to 8 times
@@ -524,7 +581,7 @@
  *
  * Comment this macro to disable NIST curves optimisation.
  */
-#define PSA_CRYPTO_ECC_NIST_OPTIM
+#define PSA_CRYPTO_ECP_NIST_OPTIM
 
 /** \def PSA_CRYPTO_SHA256_SMALLER
  *

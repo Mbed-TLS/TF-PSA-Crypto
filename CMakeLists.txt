@@ -67,11 +67,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
 option(ENABLE_PROGRAMS "Build PSA cryptography example programs." ON)
 
 option(PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
-if(CMAKE_HOST_WIN32)
-    option(GEN_FILES "Generate the auto-generated files as needed" OFF)
-else()
-    option(GEN_FILES "Generate the auto-generated files as needed" ON)
-endif()
+option(GEN_FILES "Generate the auto-generated files as needed." ON)
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.15.0)
     set(Python3_FIND_STRATEGY LOCATION)
@@ -90,8 +86,11 @@ option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target
 
 string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
 string(REGEX MATCH "GNU" CMAKE_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
+string(REGEX MATCH "MSVC" CMAKE_COMPILER_IS_MSVC "${CMAKE_C_COMPILER_ID}")
 
-if(NOT CMAKE_COMPILER_IS_CLANG AND NOT CMAKE_COMPILER_IS_GNU)
+if(NOT CMAKE_COMPILER_IS_CLANG AND
+   NOT CMAKE_COMPILER_IS_GNU AND
+   NOT CMAKE_COMPILER_IS_MSVC)
     message(FATAL_ERROR "Compiler ${CMAKE_C_COMPILER_ID} not supported.")
 endif()
 
@@ -106,6 +105,7 @@ endif()
 
 # Create a symbolic link from ${base_name} in the binary directory
 # to the corresponding path in the source directory.
+# Note: Copies the file(s) on Windows.
 function(link_to_source base_name)
     set(link "${CMAKE_CURRENT_BINARY_DIR}/${base_name}")
     set(target "${CMAKE_CURRENT_SOURCE_DIR}/${base_name}")
@@ -121,6 +121,15 @@ function(link_to_source base_name)
 
             if (NOT ${result} EQUAL 0)
                 message(FATAL_ERROR "Could not create symbolic link for: ${target} --> ${output}")
+            endif()
+        else()
+            if (IS_DIRECTORY ${target})
+                file(GLOB_RECURSE files FOLLOW_SYMLINKS LIST_DIRECTORIES false RELATIVE ${target} "${target}/*")
+                foreach(file IN LISTS files)
+                    configure_file("${target}/${file}" "${link}/${file}" COPYONLY)
+                endforeach(file)
+            else()
+                configure_file(${target} ${link} COPYONLY)
             endif()
         endif()
     endif()
@@ -195,7 +204,16 @@ if(CMAKE_COMPILER_IS_CLANG)
     set(CMAKE_C_FLAGS_CHECK       "-Os")
 endif(CMAKE_COMPILER_IS_CLANG)
 
+if(CMAKE_COMPILER_IS_MSVC)
+    # Strictest warnings, UTF-8 source and execution charset
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3 /utf-8")
+endif(CMAKE_COMPILER_IS_MSVC)
+
 if(PSA_CRYPTO_FATAL_WARNINGS)
+    if(CMAKE_COMPILER_IS_MSVC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX")
+    endif(CMAKE_COMPILER_IS_MSVC)
+
     if(CMAKE_COMPILER_IS_CLANG OR CMAKE_COMPILER_IS_GNU)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
     endif(CMAKE_COMPILER_IS_CLANG OR CMAKE_COMPILER_IS_GNU)

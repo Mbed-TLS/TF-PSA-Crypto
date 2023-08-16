@@ -151,3 +151,49 @@
 #if defined(PSA_CRYPTO_ENTROPY_NV_SEED_FILE)
 #define MBEDTLS_PLATFORM_STD_NV_SEED_FILE PSA_CRYPTO_ENTROPY_NV_SEED_FILE
 #endif
+
+/* PSA driver interface implementation configuration options */
+
+#if defined(PSA_CRYPTO_HAVE_ASM)
+#define MBEDTLS_HAVE_ASM
+#endif
+
+#if defined(PSA_CRYPTO_AESNI_C)
+#define MBEDTLS_AESNI_C
+#endif
+
+#if defined(PSA_CRYPTO_AESCE_C)
+#define MBEDTLS_AESCE_C
+#endif
+
+#if defined(PSA_CRYPTO_NO_UDBL_DIVISION)
+#define MBEDTLS_NO_UDBL_DIVISION
+#endif
+
+#if defined(PSA_CRYPTO_NO_64BIT_MULTIPLICATION)
+#define MBEDTLS_NO_64BIT_MULTIPLICATION
+#endif
+
+#if defined(PSA_CRYPTO_AES_ROM_TABLES)
+#define MBEDTLS_AES_ROM_TABLES
+#endif
+
+#if defined(PSA_CRYPTO_AES_FEWER_TABLES)
+#define MBEDTLS_AES_FEWER_TABLES
+#endif
+
+#if defined(PSA_CRYPTO_CAMELLIA_SMALL_MEMORY)
+#define MBEDTLS_CAMELLIA_SMALL_MEMORY
+#endif
+
+#if defined(PSA_CRYPTO_ECP_NIST_OPTIM)
+#define MBEDTLS_ECP_NIST_OPTIM
+#endif
+
+#if defined(PSA_CRYPTO_SHA256_SMALLER)
+#define MBEDTLS_SHA256_SMALLER
+#endif
+
+#if defined(PSA_CRYPTO_SHA512_SMALLER)
+#define MBEDTLS_SHA512_SMALLER
+#endif
