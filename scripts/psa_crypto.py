@@ -123,14 +123,17 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                     os.path.join(destination_path, "src"),
                     dirs_exist_ok=True)
 
-    tests_suites_files = filter(lambda file_: re.match(
-                                "test_suite_psa_crypto.*|helpers\.function|"\
-                                "host_test\.function|main_test\.function|"\
-                                "test_suite_base64.*|"\
-                                "test_suite_pem.*|"\
-                                "test_suite_pkcs5.*|"\
-                                "test_suite_pkcs12.*|"\
-                                "test_suite_nist_kw.*", \
+    tests_suites_files = filter(lambda file_: not re.match(
+                                "test_suite_x509.*|"\
+                                "test_suite_asn1.*|"\
+                                "test_suite_oid.*|"\
+                                "test_suite_net.*|"\
+                                "test_suite_mps.*|"\
+                                "test_suite_ssl.*|"\
+                                "test_suite_pkcs7.*|"\
+                                "test_suite_pkcs1_.*|"\
+                                "test_suite_pkparse.*|"\
+                                "test_suite_pkwrite.*",
                                 file_),
                                 os.listdir(os.path.join(source_path, "suites")))
     for file_ in tests_suites_files:
