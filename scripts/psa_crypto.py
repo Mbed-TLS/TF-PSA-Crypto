@@ -140,6 +140,9 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
         shutil.copy2(os.path.join(source_path, "suites", file_),
                      os.path.join(destination_path, "suites", file_))
 
+    shutil.copytree(os.path.join(source_path, "data_files"),
+                    os.path.join(destination_path, "data_files"))
+
 def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
     programs_psa_files = filter(lambda file_: not re.match("CMakeLists\.txt|Makefile", file_),
                                 os.listdir(os.path.join(mbedtls_root_path, "programs", "psa")))
