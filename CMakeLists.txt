@@ -34,9 +34,9 @@ cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0012 NEW)
 
 if(TEST_CPP)
-    project("PSA-Crypto" C CXX)
+    project("PSA-Crypto" LANGUAGES C CXX)
 else()
-    project("PSA-Crypto" C)
+    project("PSA-Crypto" LANGUAGES C)
 endif()
 
 include(GNUInstallDirs)
