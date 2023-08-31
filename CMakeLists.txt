@@ -275,10 +275,6 @@ if(ENABLE_TESTING)
     # additional convenience targets for Unix only
     if(UNIX)
 
-        ADD_CUSTOM_TARGET(covtest
-            COMMAND make test
-        )
-
 # Typical sequence using lcov target (out-of-tree build from (root)/build):
 # cmake -D CMAKE_BUILD_TYPE:String=Coverage ..
 # cmake --build .
