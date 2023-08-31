@@ -333,7 +333,7 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"
               "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfigVersion.cmake"
-        DESTINATION "cmake")
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PSACrypto")
 
     export(
         EXPORT PSACryptoTargets
@@ -343,7 +343,7 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
     install(
         EXPORT PSACryptoTargets
         NAMESPACE PSACrypto::
-        DESTINATION "cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PSACrypto"
         FILE "PSACryptoTargets.cmake")
 
     if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)

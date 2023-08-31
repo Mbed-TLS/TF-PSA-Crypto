@@ -26,7 +26,7 @@ execute_process(
 # Locate the package.
 #
 
-set(PSACrypto_DIR "${PSACrypto_INSTALL_DIR}/cmake")
+list(INSERT CMAKE_PREFIX_PATH 0 "${PSACrypto_INSTALL_DIR}")
 find_package(PSACrypto REQUIRED)
 
 #
