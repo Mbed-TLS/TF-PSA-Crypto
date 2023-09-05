@@ -1,0 +1,7 @@
+/**
+ * The version number x.y.z is split into three parts.
+ * Major, Minor, Patchlevel
+ */
+#define PSA_CRYPTO_VERSION_MAJOR  @PSA-Crypto_VERSION_MAJOR@
+#define PSA_CRYPTO_VERSION_MINOR  @PSA-Crypto_VERSION_MINOR@
+#define PSA_CRYPTO_VERSION_PATCH  @PSA-Crypto_VERSION_PATCH@

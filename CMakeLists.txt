@@ -54,6 +54,10 @@ endif()
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Put the version numbers into version.h
+configure_file(include/psa/version.h.in
+               ${PSA_CRYPTO_DIR}/include/psa/version.h)
+
 # Set-up configuration file
 set(PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
     "PSA-Crypto configuration file, absolute path or path relative to the root directory")

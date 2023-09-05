@@ -26,13 +26,7 @@
 #ifndef PSA_CRYPTO_BUILD_INFO_H
 #define PSA_CRYPTO_BUILD_INFO_H
 
-/**
- * The version number x.y.z is split into three parts.
- * Major, Minor, Patchlevel
- */
-#define PSA_CRYPTO_VERSION_MAJOR  0
-#define PSA_CRYPTO_VERSION_MINOR  1
-#define PSA_CRYPTO_VERSION_PATCH  0
+#include "version.h"
 
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x) STRINGIFY_(x)
