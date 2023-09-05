@@ -33,10 +33,12 @@ cmake_policy(SET CMP0011 NEW)
 # is deprecated and will be removed in future versions.
 cmake_policy(SET CMP0012 NEW)
 
+set(PSA_CRYPTO_VERSION 0.1.0)
+
 if(TEST_CPP)
-    project("PSA-Crypto" LANGUAGES C CXX)
+    project("PSA-Crypto" LANGUAGES C CXX VERSION ${PSA_CRYPTO_VERSION})
 else()
-    project("PSA-Crypto" LANGUAGES C)
+    project("PSA-Crypto" LANGUAGES C VERSION ${PSA_CRYPTO_VERSION})
 endif()
 
 include(GNUInstallDirs)
@@ -335,8 +337,7 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
 
     write_basic_package_version_file(
         "cmake/PSACryptoConfigVersion.cmake"
-            COMPATIBILITY SameMajorVersion
-            VERSION 0.1.0)
+            COMPATIBILITY SameMajorVersion)
 
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"
