@@ -107,6 +107,18 @@ component_test_psa_compliance () {
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
+support_test_psa_compliance () {
+    # psa-compliance-tests only supports CMake >= 3.10.0
+    ver="$(cmake --version)"
+    ver="${ver#cmake version }"
+    ver_major="${ver%%.*}"
+
+    ver="${ver#*.}"
+    ver_minor="${ver%%.*}"
+
+    [ "$ver_major" -eq 3 ] && [ "$ver_minor" -ge 10 ]
+}
+
 component_test_non_psa_modules () {
     msg "build: non-PSA modules, gcc"
 
