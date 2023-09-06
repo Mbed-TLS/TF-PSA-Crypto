@@ -27,3 +27,18 @@
 #define MBEDTLS_PSA_CRYPTO_C
 #define MBEDTLS_PSA_CRYPTO_CONFIG
 #define MBEDTLS_CIPHER_C /* Prerequisite of MBEDTLS_PSA_CRYPTO_C */
+
+/*
+ * Note: The below config options are used internally for testing only.
+ *       They are not meant to be used for configuring PSA Crypto.
+ */
+
+//#define MBEDTLS_BASE64_C                                                      
+//#define MBEDTLS_DHM_C                                                         
+//#define MBEDTLS_ECP_WITH_MPI_UINT                                             
+//#define MBEDTLS_LMS_C                                                         
+//#define MBEDTLS_NIST_KW_C                                                     
+//#define MBEDTLS_PEM_PARSE_C                                                   
+//#define MBEDTLS_PEM_WRITE_C                                                   
+//#define MBEDTLS_PKCS5_C                                                       
+//#define MBEDTLS_PKCS12_C
