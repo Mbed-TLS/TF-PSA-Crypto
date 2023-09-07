@@ -106,3 +106,26 @@ component_test_psa_compliance () {
 
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_test_non_psa_modules () {
+    msg "build: non-PSA modules, gcc"
+
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_BASE64_C                                                      
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_DHM_C                                                         
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_ECP_WITH_MPI_UINT                                             
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_LMS_C                                                         
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_NIST_KW_C                                                     
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_PARSE_C                                                   
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_WRITE_C                                                   
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PKCS5_C                                                       
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PKCS12_C
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: main suites"
+    make test
+}
