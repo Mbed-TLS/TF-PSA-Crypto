@@ -129,3 +129,21 @@ component_test_non_psa_modules () {
     msg "test: main suites"
     make test
 }
+
+component_test_psa_drivers () {                                                 
+    msg "build: default + PSA_CRYPTO_DRIVER_TEST, gcc"                          
+                                                                                
+    PSA_CRYPTO_ROOT_DIR="$PWD"                                                  
+    mkdir "$OUT_OF_SOURCE_DIR"                                                  
+    cd "$OUT_OF_SOURCE_DIR"                                                     
+    loc_cflags="-DPSA_CRYPTO_DRIVER_TEST"                                       
+    loc_cflags="${loc_cflags} -I$PSA_CRYPTO_ROOT_DIR/tests/include"             
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS="${loc_cflags}" ..   
+    make                                                                        
+                                                                                
+    msg "test: main suites"                                                     
+    make test                                                                   
+                                                                                
+    cd "$PSA_CRYPTO_ROOT_DIR"                                                   
+    rm -rf "$OUT_OF_SOURCE_DIR"                                                 
+}
