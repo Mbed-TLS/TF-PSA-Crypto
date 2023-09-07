@@ -115,7 +115,7 @@ int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_len)
     FILE *file;
     size_t n;
 
-    if ((file = fopen(MBEDTLS_PLATFORM_STD_NV_SEED_FILE, "rb")) == NULL) {
+    if ((file = fopen(PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "rb")) == NULL) {
         return -1;
     }
 
@@ -137,7 +137,7 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
     FILE *file;
     size_t n;
 
-    if ((file = fopen(MBEDTLS_PLATFORM_STD_NV_SEED_FILE, "w")) == NULL) {
+    if ((file = fopen(PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "w")) == NULL) {
         return -1;
     }
 
