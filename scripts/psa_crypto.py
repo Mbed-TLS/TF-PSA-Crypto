@@ -55,7 +55,7 @@ def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     library_files = filter(lambda file_: not re.match(
                            ".*\.o|x509.*|mps.*|ssl.*|padlock\.*|pkcs7.*|"\
                            "\.gitignore|Makefile|CMakeLists\.txt|"\
-                           "debug\.c|error\.c|net_sockets\.c"\
+                           "debug\.c|error\.c|net_sockets\.c|"\
                            "psa_crypto_core_common\.h", file_),
                            os.listdir(os.path.join(mbedtls_root_path, "library")))
 
