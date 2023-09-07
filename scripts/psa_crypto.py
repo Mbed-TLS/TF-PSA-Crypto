@@ -132,7 +132,8 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                                 "test_suite_error.*|"\
                                 "test_suite_timing.*|"\
                                 "test_suite_platform.*|"\
-                                "test_suite_pkcs7.*",
+                                "test_suite_pkcs7.*|"\
+                                "test_suite_psa_crypto_se_driver.*",
                                 file_),
                                 os.listdir(os.path.join(source_path, "suites")))
     for file_ in tests_suites_files:
