@@ -201,35 +201,14 @@ def extend_config_psa(psa_crypto_root_path):
     shutil.move(os.path.join(include_mbedtls_path, "config_psa.h"),
                 os.path.join(include_mbedtls_path, "config_psa.h.bak"))
 
-    if_defined_mbedtls_psa_crypto_config_file = re.compile("#if defined\(MBEDTLS_PSA_CRYPTO_CONFIG_FILE\)")
-    include_mbedtls_psa_crypto_config_file = re.compile("#include MBEDTLS_PSA_CRYPTO_CONFIG_FILE")
-    ext_placeholder = re.compile(".*BELOW THIS LINE - PLACEHOLDER FOR PSA-CRYPTO ADDITIONAL CONFIG OPTIONS TRANSLATION")
-    endif_mbedtls_psa_crypto_config = re.compile("#endif /\* MBEDTLS_PSA_CRYPTO_CONFIG \*/")
+    include_mbedtls_config_adjust_legacy_from_psa = re.compile("#include \"mbedtls/config_adjust_legacy_from_psa.h\"")
 
     with open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x') as new_config_psa, \
          open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt') as config_psa:
-
         for line in config_psa:
-            if if_defined_mbedtls_psa_crypto_config_file.match(line) != None:
-                new_config_psa.write("#if defined(PSA_CRYPTO_CONFIG_FILE)\n")
-            elif include_mbedtls_psa_crypto_config_file.match(line) != None:
-                new_config_psa.write("#include PSA_CRYPTO_CONFIG_FILE\n")
-            elif ext_placeholder.match(line) != None:
-                break
-            else:
-                new_config_psa.write(line)
-
-        with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
-            for line in ext:
-                new_config_psa.write(line)
-
-        trailer = False
-        for line in config_psa:
-            if endif_mbedtls_psa_crypto_config.match(line) != None:
-                new_config_psa.write("\n")
-                trailer = True
-            if trailer:
-                new_config_psa.write(line)
+            new_config_psa.write(line)
+            if include_mbedtls_config_adjust_legacy_from_psa.match(line) != None:
+                new_config_psa.write("#include \"mbedtls/config_adjust_mbedtls_from_psa_crypto.h\"\n")
 
 def main():
     parser = argparse.ArgumentParser(

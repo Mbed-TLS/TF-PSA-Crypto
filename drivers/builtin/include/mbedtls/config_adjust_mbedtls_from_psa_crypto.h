@@ -1,9 +1,11 @@
 /**
- * \file config_psa_ext.h
- * \brief PSA crypto configurations to Mbed TLS configurations extension
+ * \file config_adjust_mbedtls_from_psa_crypto.h
+ * \brief Adjust the configuration of the Mbed TLS builtin driver code from the
+ *        PSA-Crypto configuration.
  *
- *  Extension of the translation of the PSA crypto configurations to the Mbed
- *  TLS ones handling the PSA-Crypto specific configuration options.
+ * The PSA-Crypto repository defines configuration options beyond the
+ * PSA_WANT_ macros. This file enables the Mbed TLS configuration options as
+ * needed to fulfill the needs of te PSA-Crypto repository configuration.
  */
 /*
  *  Copyright The Mbed TLS Contributors
@@ -21,6 +23,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+
+#ifndef MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_PSA_CRYPTO_H
+#define MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_PSA_CRYPTO_H
 
 #if defined(PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
 #define MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
@@ -197,3 +202,5 @@
 #if defined(PSA_CRYPTO_SHA512_SMALLER)
 #define MBEDTLS_SHA512_SMALLER
 #endif
+
+#endif /* MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_PSA_CRYPTO_H */

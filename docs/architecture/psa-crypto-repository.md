@@ -190,18 +190,13 @@ commit. Just the first nine characters of the commit identifiers are used.
 
 An update follows the following flow:
 
-* A base-for-psa-crypto-PR\<psa-crypto-pr\> branch is created in
-  https://github.com/ronald-cron-arm/mbedtls/tree/psa-crypto-repository. The
-  branch is the Mbed TLS commit we want to update against plus a few additional
-  commits. This specific branch is created to keep track of those few
-  additional commits.
-* Checkout locally the base-for-psa-crypto-PR\<psa-crypto-pr\> branch.
+* Checkout locally \<mbedtls-commit-id\>.
 
 Build what we want to become the new head of the main branch:
 * cd path/to/my/psa/crypto/repo
 * git checkout -b new-main development
 * git clean -fdx
-* ./scripts/psa_crypto.py --mbedtls path/to/the/mbedtls/branch/checked/out/above
+* ./scripts/psa_crypto.py --mbedtls path/to/the/mbedtls/commit/checked/out/above
 * git add --all
 * git commit -s -m"New main head"
 
