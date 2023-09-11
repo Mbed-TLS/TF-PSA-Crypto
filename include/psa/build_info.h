@@ -36,9 +36,9 @@
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define PSA_CRYPTO_VERSION_NUMBER         (PSA_CRYPTO_VERSION_MAJOR << 24) | \
-                                          (PSA_CRYPTO_VERSION_MINOR << 16) | \
-                                          (PSA_CRYPTO_VERSION_PATCH <<  8)
+#define PSA_CRYPTO_VERSION_NUMBER         ((PSA_CRYPTO_VERSION_MAJOR << 24) | \
+                                           (PSA_CRYPTO_VERSION_MINOR << 16) | \
+                                           (PSA_CRYPTO_VERSION_PATCH <<  8))
 
 #define PSA_CRYPTO_VERSION_STRING         STRINGIFY(PSA_CRYPTO_VERSION_MAJOR) \
                                                     "."                       \
