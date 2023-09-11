@@ -128,6 +128,9 @@ component_test_non_psa_modules () {
 
     msg "test: main suites"
     make test
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
 component_test_psa_drivers () {
