@@ -34,9 +34,9 @@ cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0012 NEW)
 
 if(TEST_CPP)
-    project("PSA-Crypto" C CXX)
+    project("PSA-Crypto" LANGUAGES C CXX)
 else()
-    project("PSA-Crypto" C)
+    project("PSA-Crypto" LANGUAGES C)
 endif()
 
 include(GNUInstallDirs)
@@ -248,10 +248,22 @@ add_subdirectory(core)
 # to define the test executables.
 #
 if(ENABLE_TESTING OR ENABLE_PROGRAMS)
-    file(GLOB PSA_CRYPTO_TEST_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
+    file(GLOB PSA_CRYPTO_TEST_FILES
+         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c
+         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
     add_library(psa_crypto_test OBJECT ${PSA_CRYPTO_TEST_FILES})
     target_include_directories(psa_crypto_test
         PRIVATE ${CMAKE_BINARY_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/include)
+
+    file(GLOB PSA_CRYPTO_TEST_HELPER_FILES
+         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/test_helpers/*.c)
+    add_library(psa_crypto_test_helpers OBJECT ${PSA_CRYPTO_TEST_HELPER_FILES})
+    target_include_directories(psa_crypto_test_helpers
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src
@@ -274,10 +286,6 @@ if(ENABLE_TESTING)
 
     # additional convenience targets for Unix only
     if(UNIX)
-
-        ADD_CUSTOM_TARGET(covtest
-            COMMAND make test
-        )
 
 # Typical sequence using lcov target (out-of-tree build from (root)/build):
 # cmake -D CMAKE_BUILD_TYPE:String=Coverage ..
@@ -333,7 +341,7 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"
               "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfigVersion.cmake"
-        DESTINATION "cmake")
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PSACrypto")
 
     export(
         EXPORT PSACryptoTargets
@@ -343,7 +351,7 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
     install(
         EXPORT PSACryptoTargets
         NAMESPACE PSACrypto::
-        DESTINATION "cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PSACrypto"
         FILE "PSACryptoTargets.cmake")
 
     if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
