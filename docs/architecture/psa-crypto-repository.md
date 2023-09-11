@@ -12,8 +12,7 @@ currently PAKE.
 ## Requirements
 
 * The PSA-Crypto repository exposes as public interface the cryptographic
-  interface defined in the PSA cryptography API specification and solely this
-  interface.
+  interface defined in the PSA cryptography API specification.
 * The PSA-Crypto repository provides a way to build and test a C static and/or
   shared library exposing completely or partially the PSA cryptography API.
 * The PSA-Crypto repository provides a configuration mechanism to define
