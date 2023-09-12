@@ -78,7 +78,7 @@
 //#define PSA_CRYPTO_PLATFORM_ENTROPY
 //#define PSA_CRYPTO_HARDWARE_ENTROPY
 #define PSA_CRYPTO_ENTROPY_NV_SEED
-//#define PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
+#define PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
 
 /** \} name SECTION: PSA cryptography core configuration options */
 

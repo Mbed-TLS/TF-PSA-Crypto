@@ -39,8 +39,8 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
 
     include_files = filter(lambda file_: not re.match(
                            "x509.*|mps.*|ssl.*|padlock\.*|pkcs7.*|"\
-                           "\.gitignore|debug\.h|net_sockets\.h"\
-                           "", file_),
+                           "\.gitignore|debug\.h|net_sockets\.h|"\
+                           "hkdf\.h", file_),
                            os.listdir(source_path))
     for file_ in include_files:
         shutil.copy2(os.path.join(source_path, file_), destination_path)
@@ -55,8 +55,9 @@ def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     library_files = filter(lambda file_: not re.match(
                            ".*\.o|x509.*|mps.*|ssl.*|padlock\.*|pkcs7.*|"\
                            "\.gitignore|Makefile|CMakeLists\.txt|"\
-                           "debug\.c|error\.c|net_sockets\.c"\
-                           "psa_crypto_core_common\.h", file_),
+                           "debug\.c|error\.c|net_sockets\.c|hkdf.c|"\
+                           "psa_crypto_core_common\.h"\
+                           "", file_),
                            os.listdir(os.path.join(mbedtls_root_path, "library")))
 
     for file_ in library_files:
@@ -123,19 +124,26 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                     os.path.join(destination_path, "src"),
                     dirs_exist_ok=True)
 
-    tests_suites_files = filter(lambda file_: re.match(
-                                "test_suite_psa_crypto.*|helpers\.function|"\
-                                "host_test\.function|main_test\.function|"\
-                                "test_suite_base64.*|"\
-                                "test_suite_pem.*|"\
-                                "test_suite_pkcs5.*|"\
-                                "test_suite_pkcs12.*|"\
-                                "test_suite_nist_kw.*", \
+    tests_suites_files = filter(lambda file_: not re.match(
+                                "test_suite_x509.*|"\
+                                "test_suite_net.*|"\
+                                "test_suite_mps.*|"\
+                                "test_suite_ssl.*|"\
+                                "test_suite_debug.*|"\
+                                "test_suite_error.*|"\
+                                "test_suite_timing.*|"\
+                                "test_suite_platform.*|"\
+                                "test_suite_pkcs7.*|"\
+                                "test_suite_hkdf.*|"\
+                                "test_suite_psa_crypto_se_driver.*",
                                 file_),
                                 os.listdir(os.path.join(source_path, "suites")))
     for file_ in tests_suites_files:
         shutil.copy2(os.path.join(source_path, "suites", file_),
                      os.path.join(destination_path, "suites", file_))
+
+    shutil.copytree(os.path.join(source_path, "data_files"),
+                    os.path.join(destination_path, "data_files"))
 
 def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
     programs_psa_files = filter(lambda file_: not re.match("CMakeLists\.txt|Makefile", file_),

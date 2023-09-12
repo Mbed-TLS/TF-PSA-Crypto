@@ -105,8 +105,57 @@ int psa_crypto_hardware_entropy(void *data,
 }
 #endif
 
-#if defined(PSA_CRYPTO_ENTROPY_NV_SEED) && \
-    (!defined(PSA_CRYPTO_STD_FUNCTIONS) || !defined(PSA_CRYPTO_FS_IO))
+#if defined(PSA_CRYPTO_ENTROPY_NV_SEED)
+#if defined(PSA_CRYPTO_FS_IO)
+#if !defined(PSA_CRYPTO_STD_FUNCTIONS)
+#include <mbedtls/entropy.h>
+
+int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_len)
+{
+    FILE *file;
+    size_t n;
+
+    if ((file = fopen(PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "rb")) == NULL) {
+        return -1;
+    }
+
+    /* Ensure no stdio buffering of secrets, as such buffers cannot be wiped. */
+    psa_crypto_setbuf(file, NULL);
+
+    if ((n = fread(buf, 1, buf_len, file)) != buf_len) {
+        fclose(file);
+        memset(buf, 0, buf_len);
+        return -1;
+    }
+
+    fclose(file);
+    return (int) n;
+}
+
+int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len)
+{
+    FILE *file;
+    size_t n;
+
+    if ((file = fopen(PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "w")) == NULL) {
+        return -1;
+    }
+
+    /* Ensure no stdio buffering of secrets, as such buffers cannot be wiped. */
+    psa_crypto_setbuf(file, NULL);
+
+    if ((n = fwrite(buf, 1, buf_len, file)) != buf_len) {
+        fclose(file);
+        return -1;
+    }
+
+    fclose(file);
+    return (int) n;
+}
+#endif /* !PSA_CRYPTO_STD_FUNCTIONS */
+
+#else /* PSA_CRYPTO_FS_IO */
+
 #include <mbedtls/entropy.h>
 size_t psa_crypto_test_platform_entropy_nv_seed_len = MBEDTLS_ENTROPY_BLOCK_SIZE;
 
@@ -128,6 +177,6 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
 
     return (int) buf_len;
 }
-#endif /* PSA_CRYPTO_ENTROPY_NV_SEED && 
-          (!PSA_CRYPTO_STD_FUNCTIONS || !PSA_CRYPTO_FS_IO) */
+#endif /* PSA_CRYPTO_FS_IO */
+#endif /* PSA_CRYPTO_ENTROPY_NV_SEED */
 

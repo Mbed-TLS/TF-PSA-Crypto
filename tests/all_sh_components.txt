@@ -91,7 +91,7 @@ component_build_psa_crypto_spm () {
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
-component_test_psa_compliance () {                                              
+component_test_psa_compliance () {
     msg "build: default, gcc"
 
     PSA_CRYPTO_ROOT_DIR="$PWD"
@@ -101,8 +101,52 @@ component_test_psa_compliance () {
     make
 
     cd "$PSA_CRYPTO_ROOT_DIR"
-    msg "unit test: test_psa_compliance.py"                                     
-    ./tests/scripts/test_psa_compliance.py                                      
+    msg "unit test: test_psa_compliance.py"
+    ./tests/scripts/test_psa_compliance.py
 
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
+component_test_non_psa_modules () {
+    msg "build: non-PSA modules, gcc"
+
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_BASE64_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_DHM_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_ECP_WITH_MPI_UINT
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_LMS_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_NIST_KW_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_PARSE_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_WRITE_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PKCS5_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PKCS12_C
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: main suites"
+    make test
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
+component_test_psa_drivers () {
+    msg "build: default + PSA_CRYPTO_DRIVER_TEST, gcc"
+
+    PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    loc_cflags="-DPSA_CRYPTO_DRIVER_TEST"
+    loc_cflags="${loc_cflags} -I$PSA_CRYPTO_ROOT_DIR/tests/include"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS="${loc_cflags}" ..
+    make
+
+    msg "test: main suites"
+    make test
+
+    cd "$PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
