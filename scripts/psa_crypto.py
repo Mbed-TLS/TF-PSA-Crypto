@@ -121,9 +121,21 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                     os.path.join(destination_path, "include"),
                     dirs_exist_ok=True)
 
-    shutil.copytree(os.path.join(source_path, "scripts"),
-                    os.path.join(destination_path, "scripts"),
-                    dirs_exist_ok=True)
+    scripts_files = filter(lambda file_: re.match(
+                           "all.sh|"\
+                           "analyze_outcomes.py|"\
+                           "generate_bignum_tests.py|"\
+                           "generate_ecp_tests.py|"\
+                           "generate_psa_tests.py|"\
+                           "generate_test_code.py|"\
+                           "scripts_path.py|"\
+                           "test_generate_test_code.py|"\
+                           "test_psa_compliance.py",
+                           file_),
+                           os.listdir(os.path.join(source_path, "scripts")))
+    for file_ in scripts_files:
+        shutil.copy2(os.path.join(source_path, "scripts", file_),
+                     os.path.join(destination_path, "scripts", file_))
 
     shutil.copytree(os.path.join(source_path, "src"),
                     os.path.join(destination_path, "src"),
