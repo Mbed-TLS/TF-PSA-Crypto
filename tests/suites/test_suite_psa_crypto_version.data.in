@@ -1,0 +1,2 @@
+Check compile time library version
+check_compiletime_version:"@PSA-Crypto_VERSION@"

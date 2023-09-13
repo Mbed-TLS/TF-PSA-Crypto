@@ -54,9 +54,16 @@ endif()
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Put the version numbers into version.h
-configure_file(include/psa/version.h.in
-               ${PSA_CRYPTO_DIR}/include/psa/version.h)
+# Put the version numbers into relevant files
+set(version_number_files
+        include/psa/version.h
+        tests/suites/test_suite_psa_crypto_version.data
+        doxygen/input/doc_mainpage.h
+        doxygen/psacrypto.doxyfile)
+foreach(file ${version_number_files})
+    configure_file(${file}.in
+                   ${PSA_CRYPTO_DIR}/${file})
+endforeach(file)
 
 # Set-up configuration file
 set(PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
