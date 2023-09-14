@@ -3,11 +3,15 @@ PSA-Crypto repository
 
 ## Introduction
 
-The PSA-Crypto repository contains a reference implementation of the
-[PSA Cryptography API](https://arm-software.github.io/psa-api) and its
-[unified driver interface](https://armmbed.github.io/mbed-crypto/psa).
-This encompasses the on-going extensions to the PSA Cryptography API like
-currently PAKE.
+The PSA-Crypto repository provides a reference implementation of the
+[PSA Cryptography API] (https://arm-software.github.io/psa-api). This
+encompasses the on-going extensions to the PSA Cryptography API like
+currently PAKE. It is a reference implementation in the sense that it
+implements most features, and it is where new features are usually tried out.
+
+The PSA Cryptography API reference implementation is organized around the
+[PSA Cryptography driver interface](https://github.com/Mbed-TLS/mbedtls/blob/development/docs/proposed/psa-driver-interface.md)
+aiming to ease the support of cryptographic accelerators and processors.
 
 ## Requirements
 
@@ -24,7 +28,7 @@ currently PAKE.
   it does not mean that all its content comes from Mbed TLS. It may contain a
   marginal number of files on its own.
 * The PSA-Crypto repository must be able to evolve to be the development
-  repository of the PSA cryptography reference implementation.
+  repository of the PSA cryptography implementation.
 * The update of the PSA-Crypto repository from the Mbed TLS repository
   should be automated and done at a reasonably short cadence (i.e, at least
   monthly). It is expected that the automation itself evolves with the
@@ -169,8 +173,8 @@ library though.
 
 ## Updating the main branch
 
-The PSA-Crypto repository provides a reference implementation of the
-PSA cryptography API through its main branch.
+The PSA-Crypto repository provides an implementation of the PSA cryptography
+API through its main branch.
 
 The main branch head is built from a commit of the PSA-Crypto development
 branch and a commit of the Mbed TLS development branch. Updating the main
