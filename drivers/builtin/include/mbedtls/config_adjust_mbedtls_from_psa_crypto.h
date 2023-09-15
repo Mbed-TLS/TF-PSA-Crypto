@@ -5,7 +5,7 @@
  *
  * The PSA-Crypto repository defines configuration options beyond the
  * PSA_WANT_ macros. This file enables the Mbed TLS configuration options as
- * needed to fulfill the needs of te PSA-Crypto repository configuration.
+ * needed to fulfill the needs of the PSA-Crypto repository configuration.
  */
 /*
  *  Copyright The Mbed TLS Contributors
