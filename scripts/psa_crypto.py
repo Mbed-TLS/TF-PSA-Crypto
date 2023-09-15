@@ -153,6 +153,10 @@ def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
                      os.path.join(psa_crypto_root_path, "programs", "psa"))
 
 def copy_from_docs(mbedtls_root_path, psa_crypto_root_path):
+    source_path = os.path.join(mbedtls_root_path, "docs", "architecture")
+    destination_path = os.path.join(psa_crypto_root_path, "docs", "architecture")
+    shutil.copy2(os.path.join(source_path, "psa-crypto-implementation-structure.md"), destination_path)
+
     source_path = os.path.join(mbedtls_root_path, "docs", "proposed")
     destination_path = os.path.join(psa_crypto_root_path, "docs", "proposed")
     shutil.copy2(os.path.join(source_path, "psa-conditional-inclusion-c.md"), destination_path)
