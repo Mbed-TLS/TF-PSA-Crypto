@@ -131,11 +131,15 @@ the Mbed TLS one: `include/mbedtls/build_info.h`. It is based on the
 minimalist Mbed TLS configuration file `drivers/builtin/mbedtls_config.h`
 (copied by `scrips/psa_crypto.py` into `drivers/builtin/include/mbedtls/` to
 overwrite the Mbed TLS default configuration file). This minimalist Mbed TLS
-configuration file enables only the two Mbed TLS configuration options
-MBEDTLS_PSA_CRYPTO_C (enable the PSA cryptography interface) and
-MBEDTLS_PSA_CRYPTO_CONFIG (enable the selection of the cryptographic
+configuration file enables only four Mbed TLS configuration options:
+. MBEDTLS_PSA_CRYPTO_C, enable the PSA cryptography interface.
+. MBEDTLS_CIPHER_C, prerequisite of MBEDTLS_PSA_CRYPTO_C.
+. MBEDTLS_PSA_CRYPTO_CONFIG, enable the selection of the cryptographic
 mechanisms supported by the PSA cryptography interface through PSA_WANT_xxx
-macros). The other configuration options that need to be enabled are again
+macros.
+. MBEDTLS_USE_PSA_CRYPTO, use PSA cryptography API wherever possible.
+
+The other configuration options that need to be enabled are again
 enabled by the pre-processor logic in `drivers/builtin/include/mbedtls/config_psa.h`
 given `include/psa/crypto_config.h`.
 
@@ -190,18 +194,13 @@ commit. Just the first nine characters of the commit identifiers are used.
 
 An update follows the following flow:
 
-* A base-for-psa-crypto-PR\<psa-crypto-pr\> branch is created in
-  https://github.com/ronald-cron-arm/mbedtls/tree/psa-crypto-repository. The
-  branch is the Mbed TLS commit we want to update against plus a few additional
-  commits. This specific branch is created to keep track of those few
-  additional commits.
-* Checkout locally the base-for-psa-crypto-PR\<psa-crypto-pr\> branch.
+* Checkout locally \<mbedtls-commit-id\>.
 
 Build what we want to become the new head of the main branch:
 * cd path/to/my/psa/crypto/repo
 * git checkout -b new-main development
 * git clean -fdx
-* ./scripts/psa_crypto.py --mbedtls path/to/the/mbedtls/branch/checked/out/above
+* ./scripts/psa_crypto.py --mbedtls path/to/the/mbedtls/commit/checked/out/above
 * git add --all
 * git commit -s -m"New main head"
 

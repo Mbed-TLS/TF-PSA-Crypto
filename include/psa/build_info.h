@@ -58,4 +58,6 @@
 #define MBEDTLS_PSA_CRYPTO_CONFIG
 #include "mbedtls/config_psa.h"
 
+#include "mbedtls/config_adjust_legacy_crypto.h"
+
 #endif /* PSA_CRYPTO_BUILD_INFO_H */
