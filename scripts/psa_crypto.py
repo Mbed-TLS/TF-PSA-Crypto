@@ -167,10 +167,28 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
         shutil.copy2(os.path.join(scripts_source_path, file_),
                      os.path.join(scripts_destination_path, file_))
 
-    shutil.copytree(os.path.join(source_path, "src"),
-                    os.path.join(destination_path, "src"),
+    ## tests/src
+    src_source_path = os.path.join(source_path, "src")
+    src_destination_path = os.path.join(destination_path, "src")
+    if not os.path.exists(src_destination_path):
+        os.mkdir(src_destination_path)
+
+    src_files = filter(lambda file_: not re.match(
+                       ".*cert.*|"\
+                       "drivers|"\
+                       ".*ssl.*|"\
+                       "test_helpers",
+                       file_), os.listdir(src_source_path))
+    for file_ in src_files:
+        shutil.copy2(os.path.join(src_source_path, file_),
+                     os.path.join(src_destination_path, file_))
+
+    ## tests/src/drivers
+    shutil.copytree(os.path.join(src_source_path, "drivers"),
+                    os.path.join(src_destination_path, "drivers"),
                     dirs_exist_ok=True)
 
+    ## tests/suites
     suites_files = filter(lambda file_: not re.match(
                           "test_suite_x509.*|"\
                           "test_suite_net.*|"\
@@ -189,6 +207,7 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
         shutil.copy2(os.path.join(source_path, "suites", file_),
                      os.path.join(destination_path, "suites", file_))
 
+    ## tests/data_files
     shutil.copytree(os.path.join(source_path, "data_files"),
                     os.path.join(destination_path, "data_files"))
 
