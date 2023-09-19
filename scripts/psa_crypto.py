@@ -129,22 +129,21 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                     os.path.join(destination_path, "src"),
                     dirs_exist_ok=True)
 
-    tests_suites_files = filter(lambda file_: not re.match(
-                                "test_suite_x509.*|"\
-                                "test_suite_net.*|"\
-                                "test_suite_mps.*|"\
-                                "test_suite_ssl.*|"\
-                                "test_suite_debug.*|"\
-                                "test_suite_error.*|"\
-                                "test_suite_version.*|"\
-                                "test_suite_timing.*|"\
-                                "test_suite_platform.*|"\
-                                "test_suite_pkcs7.*|"\
-                                "test_suite_hkdf.*|"\
-                                "test_suite_psa_crypto_se_driver.*",
-                                file_),
-                                os.listdir(os.path.join(source_path, "suites")))
-    for file_ in tests_suites_files:
+    suites_files = filter(lambda file_: not re.match(
+                          "test_suite_x509.*|"\
+                          "test_suite_net.*|"\
+                          "test_suite_mps.*|"\
+                          "test_suite_ssl.*|"\
+                          "test_suite_debug.*|"\
+                          "test_suite_error.*|"\
+                          "test_suite_version.*|"\
+                          "test_suite_timing.*|"\
+                          "test_suite_platform.*|"\
+                          "test_suite_pkcs7.*|"\
+                          "test_suite_hkdf.*|"\
+                          "test_suite_psa_crypto_se_driver.*",
+                          file_), os.listdir(os.path.join(source_path, "suites")))
+    for file_ in suites_files:
         shutil.copy2(os.path.join(source_path, "suites", file_),
                      os.path.join(destination_path, "suites", file_))
 
