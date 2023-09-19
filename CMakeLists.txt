@@ -58,7 +58,6 @@ set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # Put the version numbers into relevant files
 set(version_number_files
         include/psa/version.h
-        tests/suites/test_suite_psa_crypto_version.data
         doxygen/input/doc_mainpage.h
         doxygen/psacrypto.doxyfile)
 foreach(file ${version_number_files})
