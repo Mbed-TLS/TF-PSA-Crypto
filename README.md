@@ -114,7 +114,7 @@ To configure CMake for building shared libraries, use:
 
     cmake -DUSE_SHARED_PSA_CRYPTO_LIBRARY=On /path/to/psa/crypto/source
 
-There are many different build modes available within the CMake buildsystem.
+There are many different build modes available within the CMake build system.
 Most of them are available for gcc and clang, though some are compiler-specific:
 
 - `Release`. This generates the default code without any unnecessary
@@ -153,22 +153,9 @@ for example:
 If you already invoked cmake and want to change those settings, you need to
 remove the build directory and create it again.
 
-Note that it is possible to build in-place; this will however overwrite the
-provided Makefiles (see `scripts/tmp_ignore_makefiles.sh` if you want to
-prevent `git status` from showing them as modified). In order to do so, from
-the PSA-Crypto source directory, use:
+Note that it is possible to build in-place, use:
 
     cmake .
-    make
-
-If you want to change `CC` or `CFLAGS` afterwards, you will need to remove the
-CMake cache. This can be done with the following command using GNU find:
-
-    find . -iname '*cmake*' -not -name CMakeLists.txt -exec rm -rf {} +
-
-You can now make the desired change:
-
-    CC=your_cc cmake .
     make
 
 Regarding variables, also note that if you set CFLAGS when invoking cmake,
