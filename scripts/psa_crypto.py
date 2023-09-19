@@ -131,6 +131,7 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                                 "test_suite_ssl.*|"\
                                 "test_suite_debug.*|"\
                                 "test_suite_error.*|"\
+                                "test_suite_version.*|"\
                                 "test_suite_timing.*|"\
                                 "test_suite_platform.*|"\
                                 "test_suite_pkcs7.*|"\
