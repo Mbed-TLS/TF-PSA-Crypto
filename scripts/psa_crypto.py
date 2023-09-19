@@ -115,10 +115,36 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "tests")
     destination_path = os.path.join(psa_crypto_root_path, "tests")
 
-    shutil.copytree(os.path.join(source_path, "include"),
-                    os.path.join(destination_path, "include"),
+    ## tests/include
+    include_source_path = os.path.join(source_path, "include")
+    include_destination_path = os.path.join(destination_path, "include")
+    if not os.path.exists(include_destination_path):
+        os.mkdir(include_destination_path)
+
+    ## tests/include/spe
+    shutil.copytree(os.path.join(include_source_path, "spe"),
+                    os.path.join(include_destination_path, "spe"),
                     dirs_exist_ok=True)
 
+    ## tests/include/test
+    include_test_source_path = os.path.join(include_source_path, "test")
+    include_test_destination_path = os.path.join(include_destination_path, "test")
+    if not os.path.exists(include_test_destination_path):
+        os.mkdir(include_test_destination_path)
+
+    include_test_files = filter(lambda file_:
+                                os.path.isfile(os.path.join(include_test_source_path, file_))
+                                and
+                                (not re.match( ".*cert.*|.*ssl.*", file_)),
+                                os.listdir(include_test_source_path))
+    for file_ in include_test_files:
+        shutil.copy2(os.path.join(include_test_source_path, file_),
+                     os.path.join(include_test_destination_path, file_))
+
+    ## tests/include/test/drivers
+    shutil.copytree(os.path.join(include_test_source_path, "drivers"),
+                    os.path.join(include_test_destination_path, "drivers"),
+                    dirs_exist_ok=True)
     scripts_files = filter(lambda file_: re.match(
                            "all.sh|"\
                            "analyze_outcomes.py|"\
