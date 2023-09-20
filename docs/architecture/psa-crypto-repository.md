@@ -5,13 +5,13 @@ PSA-Crypto repository
 
 The PSA-Crypto repository provides a reference implementation of the
 [PSA Cryptography API] (https://arm-software.github.io/psa-api). This
-encompasses the on-going extensions to the PSA Cryptography API like
-currently PAKE. It is a reference implementation in the sense that it
-implements most features, and it is where new features are usually tried out.
+encompasses the on-going extensions to the PSA Cryptography API like PAKE. It
+is a reference implementation in the sense that it implements most features,
+and it is where new features are usually tried out.
 
 The PSA Cryptography API reference implementation is organized around the
 [PSA Cryptography driver interface](https://github.com/Mbed-TLS/mbedtls/blob/development/docs/proposed/psa-driver-interface.md)
-aiming to ease the support of cryptographic accelerators and processors.
+which aims to ease the support of cryptographic accelerators and processors.
 
 ## Requirements
 
