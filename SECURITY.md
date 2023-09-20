@@ -15,7 +15,7 @@ goes public.
 
 ## Maintained branches
 
-Only the `main` branch get security fixes. Users are urged to always use the
+Only the `main` branch gets security fixes. Users are urged to always use the
 latest version of the `main` branch.
 
 ## Threat model
