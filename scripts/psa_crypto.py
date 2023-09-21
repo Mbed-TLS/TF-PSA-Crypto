@@ -20,9 +20,10 @@
 
 import argparse
 import os
-import stat
+import pathlib
 import re
 import shutil
+import stat
 
 def copy_of_psa_headers(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "include", "psa")
@@ -102,6 +103,10 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "generate_psa_constants.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "output_env.sh"), destination_path)
     shutil.copy2(os.path.join(source_path, "config.py"), destination_path)
+    shutil.copy2(os.path.join(source_path, "min_requirements.py"), destination_path)
+
+    for path in pathlib.Path(source_path).glob("*.requirements.txt"):
+        shutil.copy2(str(path), destination_path)
 
     shutil.copytree(os.path.join(source_path, "mbedtls_dev"),
                     os.path.join(destination_path, "mbedtls_dev"), dirs_exist_ok=True)
