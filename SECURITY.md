@@ -29,8 +29,10 @@ over the network. This includes observing the content and timing of individual
 packets, as well as suppressing or delaying legitimate messages, and injecting
 messages.
 
-The PSA-Crypto library aims to fully protect against remote attacks and to
-enable users of the library in providing full protection against remote attacks.
+The PSA-Crypto library aims to fully protect against remote attacks. More
+specifically, it aims to enable network protocol implementations that use it to
+perform cryptographic operations, as well as applications based on such network
+protocol implementations, to provide full protection against remote attacks.
 
 **Warning!** Block ciphers do not yet achieve full protection against attackers
 who can measure the timing of packets with sufficient precision. For details
