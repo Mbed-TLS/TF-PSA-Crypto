@@ -21,8 +21,18 @@ values.
 # limitations under the License.
 
 import argparse
+import os
 import re
 import sys
+
+# Note: This function is duplicated from scripts/mbedtls_dev/build_tree.py
+# so that this script may be run in the development branch and does not rely
+# on Mbed TLS. Once the PSA Crypto repo is no longer downstream from Mbed TLS
+# this script should be changed to import this function from mbedtls_dev
+def looks_like_psa_crypto_root(path: str) -> bool:
+    """Whether the given directory looks like the root of the PSA Crypto source tree."""
+    return all(os.path.isdir(os.path.join(path, subdir))
+               for subdir in ['include', 'core', 'drivers', 'programs', 'tests'])
 
 def bump_versions(new_version, new_soversion):
     CMAKE_VERSION_REGEX = \
@@ -51,6 +61,11 @@ def bump_versions(new_version, new_soversion):
     with open('tests/suites/test_suite_psa_crypto_version.data', 'w') as f:
         f.write(version_test)
 
+# Check if we are running from the project root
+current_dir = os.getcwd()
+if not looks_like_psa_crypto_root(current_dir):
+    print('Error: This script must be run from the PSA Crypto root directory')
+    sys.exit(1)
 
 # Get new version and SO version
 parser = argparse.ArgumentParser()
