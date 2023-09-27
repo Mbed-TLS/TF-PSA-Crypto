@@ -26,6 +26,27 @@
 #ifndef PSA_CRYPTO_BUILD_INFO_H
 #define PSA_CRYPTO_BUILD_INFO_H
 
+#include "version.h"
+
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
+
+/**
+ * The single version number has the following structure:
+ *    MMNNPP00
+ *    Major version | Minor version | Patch version
+ */
+#define PSA_CRYPTO_VERSION_NUMBER         ((PSA_CRYPTO_VERSION_MAJOR << 24) | \
+                                           (PSA_CRYPTO_VERSION_MINOR << 16) | \
+                                           (PSA_CRYPTO_VERSION_PATCH <<  8))
+
+#define PSA_CRYPTO_VERSION_STRING         STRINGIFY(PSA_CRYPTO_VERSION_MAJOR) \
+                                                    "."                       \
+                                          STRINGIFY(PSA_CRYPTO_VERSION_MINOR) \
+                                                    "."                       \
+                                          STRINGIFY(PSA_CRYPTO_VERSION_PATCH)
+#define PSA_CRYPTO_VERSION_STRING_FULL    ("PSA Crypto " PSA_CRYPTO_VERSION_STRING)
+
 /* Define `inline` on some non-C99-compliant compilers. */
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
     !defined(inline) && !defined(__cplusplus)

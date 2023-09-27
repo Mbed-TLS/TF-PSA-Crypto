@@ -72,12 +72,21 @@ extern "C" {
  * and free memory. There is thus no need to provide the psa_crypto_alloc()
  * psa_crypto_free() functions as part of the integration.
  */
+#if defined(PSA_CRYPTO_STD_FUNCTIONS)
+#define psa_crypto_calloc calloc
+#define psa_crypto_free free
+#define psa_crypto_printf printf
+#define psa_crypto_fprintf fprintf
+#define psa_crypto_snprintf snprintf
+#define psa_crypto_setbuf setbuf
+#else
 void *psa_crypto_calloc(size_t nmemb, size_t size);
 void psa_crypto_free(void *ptr);
 int psa_crypto_printf(const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(1, 2);
 int psa_crypto_fprintf(FILE *stream, const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(2, 3);
 int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(3, 4);
 void psa_crypto_setbuf(FILE *stream, char *buf);
+#endif
 
 /**
  * \brief  Poll entropy from a hardware source

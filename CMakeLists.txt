@@ -33,10 +33,13 @@ cmake_policy(SET CMP0011 NEW)
 # is deprecated and will be removed in future versions.
 cmake_policy(SET CMP0012 NEW)
 
+set(PSA_CRYPTO_VERSION 0.1.0)
+set(PSA_CRYPTO_SOVERSION 0)
+
 if(TEST_CPP)
-    project("PSA-Crypto" LANGUAGES C CXX)
+    project("PSA-Crypto" LANGUAGES C CXX VERSION ${PSA_CRYPTO_VERSION})
 else()
-    project("PSA-Crypto" LANGUAGES C)
+    project("PSA-Crypto" LANGUAGES C VERSION ${PSA_CRYPTO_VERSION})
 endif()
 
 include(GNUInstallDirs)
@@ -51,6 +54,16 @@ endif()
 
 # Set the project root directory.
 set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Put the version numbers into relevant files
+set(version_number_files
+        include/psa/version.h
+        doxygen/input/doc_mainpage.h
+        doxygen/psacrypto.doxyfile)
+foreach(file ${version_number_files})
+    configure_file(${file}.in
+                   ${PSA_CRYPTO_DIR}/${file})
+endforeach(file)
 
 # Set-up configuration file
 set(PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
@@ -335,8 +348,7 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
 
     write_basic_package_version_file(
         "cmake/PSACryptoConfigVersion.cmake"
-            COMPATIBILITY SameMajorVersion
-            VERSION 0.1.0)
+            COMPATIBILITY SameMajorVersion)
 
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"

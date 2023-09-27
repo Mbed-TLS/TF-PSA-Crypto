@@ -22,7 +22,7 @@
  */
 
 /**
- * @mainpage PSA-Crypto v0.1.0 source code documentation
+ * @mainpage PSA-Crypto v@PSA-Crypto_VERSION@ source code documentation
  *
  * This documentation describes the internal structure of ths PSA-Crypto
  * library. It was automatically generated from specially formatted comment

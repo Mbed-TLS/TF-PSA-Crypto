@@ -82,7 +82,7 @@ endif(USE_STATIC_PSA_CRYPTO_LIBRARY)
 if(USE_SHARED_PSA_CRYPTO_LIBRARY)
     set(CMAKE_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
     add_library(${psacrypto_target} SHARED ${src_psa_crypto_core} ${src_psa_crypto_builtin})
-    set_target_properties(${psacrypto_target} PROPERTIES VERSION 0.1.0 SOVERSION 0)
+    set_target_properties(${psacrypto_target} PROPERTIES VERSION ${PSA_CRYPTO_VERSION} SOVERSION ${PSA_CRYPTO_SOVERSION})
     target_link_libraries(${psacrypto_target} PUBLIC ${libs})
 endif(USE_SHARED_PSA_CRYPTO_LIBRARY)
 
