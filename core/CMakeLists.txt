@@ -10,23 +10,25 @@ set(src_psa_crypto_core
     psa_crypto_slot_management.c
     psa_crypto_storage.c
     psa_its_file.c
-    psa_crypto_driver_wrappers.c
+    psa_crypto_driver_wrappers_no_static.c
 )
 
 if(GEN_FILES)
     add_custom_command(
         OUTPUT
-            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.c
+            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h
+            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c
         COMMAND
             ${PSA_CRYPTO_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generate_driver_wrappers.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS
             ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generate_driver_wrappers.py
-            ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/data_files/driver_templates/psa_crypto_driver_wrappers.c.jinja
+            ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
+            ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
 else()
-    link_to_source(psa_crypto_driver_wrappers.c)
+    link_to_source(psa_crypto_driver_wrappers_no_static.c)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -95,7 +97,8 @@ foreach(target IN LISTS target_libraries)
                $<INSTALL_INTERFACE:include/>
         PUBLIC $<BUILD_INTERFACE:${PSA_CRYPTO_DIR}/drivers/builtin/include/>
         PRIVATE ${PSA_CRYPTO_DIR}/core
-        PRIVATE ${PSA_CRYPTO_DIR}/drivers/builtin/src)
+        PRIVATE ${PSA_CRYPTO_DIR}/drivers/builtin/src
+        PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     install(
         TARGETS ${target}
         EXPORT PSACryptoTargets
