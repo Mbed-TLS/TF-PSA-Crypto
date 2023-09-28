@@ -115,8 +115,6 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "tests")
     destination_path = os.path.join(psa_crypto_root_path, "tests")
 
-    shutil.copy2(os.path.join(source_path, "seedfile"), destination_path)
-
     shutil.copytree(os.path.join(source_path, "include"),
                     os.path.join(destination_path, "include"),
                     dirs_exist_ok=True)
