@@ -272,16 +272,6 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/include)
-
-    file(GLOB PSA_CRYPTO_TEST_HELPER_FILES
-         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/test_helpers/*.c)
-    add_library(psa_crypto_test_helpers OBJECT ${PSA_CRYPTO_TEST_HELPER_FILES})
-    target_include_directories(psa_crypto_test_helpers
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/src
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/include)
 endif()
 
 if(ENABLE_PROGRAMS)
