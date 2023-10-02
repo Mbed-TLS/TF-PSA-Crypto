@@ -78,7 +78,6 @@ def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
                               "psa_crypto_storage.c",
                               "psa_crypto_storage.h",
                               "psa_its_file.c",
-                              "psa_crypto_driver_wrappers.h",
                               "check_crypto_config.h" ]
 
     for file_ in psa_crypto_core_files:
