@@ -2,7 +2,7 @@ README for PSA-Crypto
 =====================
 
 The PSA-Crypto repository provides an implementation of the [PSA Cryptography API]
-(https://arm-software.github.io/psa-api) (version 1.0). This encompasses the
+(https://arm-software.github.io/psa-api) (version 1.1). This encompasses the
 on-going extensions to the PSA Cryptography API (e.g. PAKE).
 
 The PSA Cryptography API implementation is organized around the
