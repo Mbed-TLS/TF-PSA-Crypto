@@ -58,7 +58,7 @@ set(TF_PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Put the version numbers into relevant files
 set(version_number_files
-        include/psa/version.h
+        include/tf_psa_crypto/version.h
         doxygen/input/doc_mainpage.h
         doxygen/tfpsacrypto.doxyfile)
 foreach(file ${version_number_files})

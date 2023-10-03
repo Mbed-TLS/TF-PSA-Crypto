@@ -26,7 +26,7 @@
 #ifndef TF_PSA_CRYPTO_BUILD_INFO_H
 #define TF_PSA_CRYPTO_BUILD_INFO_H
 
-#include "version.h"
+#include <tf_psa_crypto/version.h>
 
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x) STRINGIFY_(x)
