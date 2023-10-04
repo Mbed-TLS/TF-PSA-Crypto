@@ -10,6 +10,6 @@ to integrate the Mbed TLS implementation of the PSA cryptography API into this
 repository. The main branch commits are the results of such integrations (see
 docs/architecture/psa-crypto-repository.md for more information). 
 
-The PSA-Crypto repository provides a reference implementation of the
-PSA cryptography API through its main branch. The main branch is updated
-regularly against the head of the Mbed TLS development branch.
+The PSA-Crypto repository provides an implementation of the PSA cryptography
+API through its main branch. The main branch is updated regularly against the
+head of the Mbed TLS development branch.
