@@ -103,7 +103,7 @@ thus PSA-Crypto provides a CMake based build system as well. Each build system
 is a significant amount of work thus the plan to just have a CMake build system.
 
 ### Configuration
-The build-time configuration information file is `include/psa/build_info.h`.
+The build-time configuration information header is `include/psa/build_info.h`.
 This file is included by the PSA headers (header files located in `include/psa`)
 and the PSA core files (located in `core`) to access the configuration options
 defined in
@@ -122,7 +122,7 @@ instead of their Mbed TLS equivalent.
 . For PSA core files, some code needs also to be restructured as the key
 derivation and key agreement code where support for driver is yet to be added.
 
-The build-time configuration information file for the builtin PSA driver
+The build-time configuration information header for the builtin PSA driver
 interface implementation is the Mbed TLS one: `include/mbedtls/build_info.h`.
 It is based on the minimalist Mbed TLS configuration file
 `drivers/builtin/mbedtls_config.h` (copied by `scripts/psa_crypto.py` into
