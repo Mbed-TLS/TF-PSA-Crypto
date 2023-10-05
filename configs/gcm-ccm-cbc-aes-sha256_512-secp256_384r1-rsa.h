@@ -23,8 +23,8 @@
  *  limitations under the License.
  */
 
-#ifndef PSA_CRYPTO_CONFIG_H
-#define PSA_CRYPTO_CONFIG_H
+#ifndef PSA_CRYPTO_GCM_CCM_CBC_AES_SHA256_512_SECP256_384R1_RSA_H
+#define PSA_CRYPTO_GCM_CCM_CBC_AES_SHA256_512_SECP256_384R1_RSA_H
 
 /**
  * \name SECTION: General configuration options
@@ -122,4 +122,4 @@
 
 /** \} name SECTION: PSA driver interface implementation configuration options */
 
-#endif /* PSA_CRYPTO_CONFIG_H */
+#endif /* PSA_CRYPTO_GCM_CCM_CBC_AES_SHA256_512_SECP256_384R1_RSA_H */
