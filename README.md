@@ -168,16 +168,16 @@ The PSA-Crypto repository provides a package config file for consumption as a
 dependency in other CMake projects. You can include PSA-Crypto CMake targets
 yourself with:
 
-    find_package(PSACrypto)
+    find_package(TF-PSA-Crypto)
 
-If prompted, set `PSACrypto_DIR` to `${YOUR_PSA_CRYPTO_INSTALL_DIR}/cmake`. This
-creates the `PSACrypto::psacrypto` target.
+If prompted, set `TF-PSA-Crypto_DIR` to `${YOUR_PSA_CRYPTO_INSTALL_DIR}/cmake`.
+This creates the `TF-PSA-Crypto::psacrypto` target.
 
 You can then use it directly through `target_link_libraries()`:
 
     add_executable(xyz)
 
-    target_link_libraries(xyz PUBLIC PSACrypto::psacrypto)
+    target_link_libraries(xyz PUBLIC TF-PSA-Crypto::psacrypto)
 
 This will link the PSA-Crypto library to your library or application, and
 add its include directories to your target (transitively, in the case of

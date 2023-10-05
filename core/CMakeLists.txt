@@ -89,7 +89,7 @@ if(USE_SHARED_PSA_CRYPTO_LIBRARY)
 endif(USE_SHARED_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
-    add_library(PSACrypto::${target} ALIAS ${target})  # add_subdirectory support
+    add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
         PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include/>
                $<INSTALL_INTERFACE:include/>
@@ -101,7 +101,7 @@ foreach(target IN LISTS target_libraries)
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     install(
         TARGETS ${target}
-        EXPORT PSACryptoTargets
+        EXPORT TF-PSA-CryptoTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

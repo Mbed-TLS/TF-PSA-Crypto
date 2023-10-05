@@ -332,35 +332,35 @@ endif()
 
 if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
     configure_package_config_file(
-        "cmake/PSACryptoConfig.cmake.in"
-        "cmake/PSACryptoConfig.cmake"
+        "cmake/TF-PSA-CryptoConfig.cmake.in"
+        "cmake/TF-PSA-CryptoConfig.cmake"
             INSTALL_DESTINATION "cmake")
 
     write_basic_package_version_file(
-        "cmake/PSACryptoConfigVersion.cmake"
+        "cmake/TF-PSA-CryptoConfigVersion.cmake"
             COMPATIBILITY SameMajorVersion)
 
     install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfigVersion.cmake"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PSACrypto")
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/TF-PSA-CryptoConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/cmake/TF-PSA-CryptoConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/TF-PSA-Crypto")
 
     export(
-        EXPORT PSACryptoTargets
-        NAMESPACE PSACrypto::
-        FILE "cmake/PSACryptoTargets.cmake")
+        EXPORT TF-PSA-CryptoTargets
+        NAMESPACE TF-PSA-Crypto::
+        FILE "cmake/TF-PSA-CryptoTargets.cmake")
 
     install(
-        EXPORT PSACryptoTargets
-        NAMESPACE PSACrypto::
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PSACrypto"
-        FILE "PSACryptoTargets.cmake")
+        EXPORT TF-PSA-CryptoTargets
+        NAMESPACE TF-PSA-Crypto::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/TF-PSA-Crypto"
+        FILE "TF-PSA-CryptoTargets.cmake")
 
     if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
         # Do not export the package by default
         cmake_policy(SET CMP0090 NEW)
 
         # Make this package visible to the system
-        export(PACKAGE PSACrypto)
+        export(PACKAGE TF-PSA-Crypto)
     endif()
 endif()
