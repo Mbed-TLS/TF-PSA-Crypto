@@ -1,11 +1,11 @@
 /**
  * \file config_adjust_mbedtls_from_tf_psa_crypto.h
  * \brief Adjust the configuration of the Mbed TLS builtin driver code from the
- *        PSA-Crypto configuration.
+ *        TF-PSA-Crypto configuration.
  *
- * The PSA-Crypto repository defines configuration options beyond the
+ * The TF-PSA-Crypto repository defines configuration options beyond the
  * PSA_WANT_ macros. This file enables the Mbed TLS configuration options as
- * needed to fulfill the needs of the PSA-Crypto repository configuration.
+ * needed to fulfill the needs of the TF-PSA-Crypto repository configuration.
  */
 /*
  *  Copyright The Mbed TLS Contributors

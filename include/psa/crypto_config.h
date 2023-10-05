@@ -1,6 +1,6 @@
 /**
  * \file psa/crypto_config.h
- * \brief PSA-Crypto configuration options (set of defines)
+ * \brief TF-PSA-Crypto configuration options (set of defines)
  *
  *  This set of compile-time options may be used to enable
  *  or disable features selectively, and reduce the global
@@ -115,8 +115,8 @@
 //#define TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC
 
 /**
- * Uncomment the macro to let PSA-Crypto use your alternate implementation of
- * psa_crypto_platform_zeroize() instead of the default implementation.
+ * Uncomment the macro to let TF-PSA-Crypto use your alternate implementation
+ * of psa_crypto_platform_zeroize() instead of the default implementation.
  *
  * psa_crypto_platform_zeroize() is a widely used function across the library
  * to zero a block of memory. The implementation is expected to be secure in the
@@ -376,7 +376,7 @@
 /**
  * \def TF_PSA_CRYPTO_HARDWARE_ENTROPY
  *
- * Uncomment the macro to let PSA-Crypto use your own hardware entropy
+ * Uncomment the macro to let TF-PSA-Crypto use your own hardware entropy
  * collector.
  *
  * Your hardware entropy collector function must be called

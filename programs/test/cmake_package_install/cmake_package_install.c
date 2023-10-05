@@ -1,5 +1,5 @@
 /*
- * Simple program to test that PSA-Crypto builds correctly as an installable
+ * Simple program to test that TF-PSA-Crypto builds correctly as an installable
  * CMake package.
  *
  *  Copyright The Mbed TLS Contributors

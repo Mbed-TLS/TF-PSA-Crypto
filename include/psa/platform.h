@@ -91,7 +91,7 @@ void psa_crypto_setbuf(FILE *stream, char *buf);
 /**
  * \brief  Poll entropy from a hardware source
  *
- * \warning  This is not provided by PSA-Crypto.
+ * \warning  This is not provided by TF-PSA-Crypto.
  *           See \c TF_PSA_CRYPTO_HARDWARE_ENTROPY in crypto_config.h.
  *
  * \param[in]  data    Pointer to function-specific data. NULL must be accepted.
@@ -110,16 +110,16 @@ int psa_crypto_hardware_entropy(void *data,
 /**
  * \brief   Read an entropy seed from a Non-Volatile (NV) storage.
  *
- * \note This platform abstraction function is used by the psa-crypto library
+ * \note This platform abstraction function is used by the TF-PSA-Crypto library
  *       if and only if the TF_PSA_CRYPTO_ENTROPY_NV_SEED configuration option
  *       is enabled. Furthermore, if both TF_PSA_CRYPTO_STD_FUNCTIONS and
- *       TF_PSA_CRYPTO_FS_IO configuration options are enabled then the psa-crypto
- *       library provides and uses its own implementation based on fopen() and
- *       a seed file (see TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE configuration option)
- *       on the file system accessed through fopen(). Otherwise, if
- *       TF_PSA_CRYPTO_STD_FUNCTIONS or TF_PSA_CRYPTO_FS_IO is not enabled, the
- *       function has to be provided as part of the integration of psa-crypto
- *       library.
+ *       TF_PSA_CRYPTO_FS_IO configuration options are enabled then the
+ *       TF-PSA-Crypto library provides and uses its own implementation based
+ *       on fopen() and a seed file (see TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE
+ *       configuration option) on the file system accessed through fopen().
+ *       Otherwise, if TF_PSA_CRYPTO_STD_FUNCTIONS or TF_PSA_CRYPTO_FS_IO is
+ *       not enabled, the function has to be provided as part of the
+ *       integration of TF-PSA-Crypto library.
  *
  * \param[out]  buf  Buffer to write the entropy seed into.
  * \param       buf_size  Size of \p buf in bytes.
@@ -133,16 +133,16 @@ int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_size
 /**
  * \brief Write an entropy seed to a Non-Volatile (NV) storage.
  *
- * \note This platform abstraction function is used by the psa-crypto library
+ * \note This platform abstraction function is used by the TF-PSA-Crypto library
  *       if and only if the TF_PSA_CRYPTO_ENTROPY_NV_SEED configuration option
  *       is enabled. Furthermore, if both TF_PSA_CRYPTO_STD_FUNCTIONS and
- *       TF_PSA_CRYPTO_FS_IO configuration options are enabled then the psa-crypto
- *       library provides and uses its own implementation based on fopen() and
- *       a seed file (see TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE configuration option)
- *       on the file system accessed through fopen(). Otherwise, if
- *       TF_PSA_CRYPTO_STD_FUNCTIONS or TF_PSA_CRYPTO_FS_IO is not enabled, the
- *       function has to be provided as part of the integration of psa-crypto
- *       library.
+ *       TF_PSA_CRYPTO_FS_IO configuration options are enabled then the
+ *       TF-PSA-Crypto library provides and uses its own implementation based
+ *       on fopen() and a seed file (see TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE
+ *       configuration option) on the file system accessed through fopen().
+ *       Otherwise, if TF_PSA_CRYPTO_STD_FUNCTIONS or TF_PSA_CRYPTO_FS_IO is
+ *       not enabled, the function has to be provided as part of the
+ *       integration of TF-PSA-Crypto library.
  *
  * \param[in]  buf  Buffer containing the data to write to the NV storage.
  * \param      buf_len  Length of the data to write in bytes.
@@ -165,8 +165,8 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
  *        psa_crypto_platform_zeroize() are not removed by aggressive
  *        compiler optimizations in a portable way. By enabling the
  *        TF_PSA_CRYPTO_PLATFORM_ZEROIZE configuration option, users of the
- *        psa-crypto library can provide their own implementation suitable for
- *        their platform and needs.
+ *        TF-PSA-Crypto library can provide their own implementation suitable
+ *        for their platform and needs.
  *
  * \param buf   Buffer to be zeroized
  * \param len   Length of the data in bytes

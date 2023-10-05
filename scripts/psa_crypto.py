@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""PSA-Crypto repository update from Mbed TLS
+"""TF-PSA-Crypto repository update from Mbed TLS
 """
 
 ## Copyright The Mbed TLS Contributors
@@ -46,7 +46,7 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     for file_ in include_files:
         shutil.copy2(os.path.join(source_path, file_), destination_path)
 
-    ## Overwrite Mbed TLS default configuration file with the PSA-Crypto
+    ## Overwrite Mbed TLS default configuration file with the TF-PSA-Crypto
     ## repository specific one.
     shutil.copy2(os.path.join(builtin_path, "mbedtls_config.h"), destination_path)
 
@@ -283,8 +283,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             """This script is for copying the PSA cryptography implementation
-            of Mbed TLS into the PSA-Crypto repository. Note: must be run from
-            the PSA-Crypto repository root."""
+            of Mbed TLS into the TF-PSA-Crypto repository. Note: must be run
+            from the TF-PSA-Crypto repository root."""
         )
     )
     parser.add_argument(

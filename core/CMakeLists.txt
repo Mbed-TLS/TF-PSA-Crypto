@@ -1,7 +1,7 @@
-option(USE_STATIC_TF_PSA_CRYPTO_LIBRARY "Build PSA-Crypto static library." ON)
-option(USE_SHARED_TF_PSA_CRYPTO_LIBRARY "Build PSA-Crypto shared library." OFF)
-option(LINK_WITH_PTHREAD "Explicitly link the PSA-Crypto library to pthread." OFF)
-option(LINK_WITH_TRUSTED_STORAGE "Explicitly link the PSA-Crypto library to trusted_storage." OFF)
+option(USE_STATIC_TF_PSA_CRYPTO_LIBRARY "Build TF-PSA-Crypto static library." ON)
+option(USE_SHARED_TF_PSA_CRYPTO_LIBRARY "Build TF-PSA-Crypto shared library." OFF)
+option(LINK_WITH_PTHREAD "Explicitly link the TF-PSA-Crypto library to pthread." OFF)
+option(LINK_WITH_TRUSTED_STORAGE "Explicitly link the TF-PSA-Crypto library to trusted_storage." OFF)
 
 set(src_psa_crypto_core
     psa_crypto.c
@@ -54,7 +54,7 @@ if(LINK_WITH_TRUSTED_STORAGE)
 endif()
 
 if (NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
-    message(FATAL_ERROR "Need to choose static or shared PSA-Crypto build!")
+    message(FATAL_ERROR "Need to choose static or shared TF-PSA-Crypto build!")
 endif(NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 set(tfpsacrypto_target "${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto")

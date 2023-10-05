@@ -37,14 +37,15 @@ set(TF_PSA_CRYPTO_VERSION 0.1.0)
 set(TF_PSA_CRYPTO_SOVERSION 0)
 
 if(TEST_CPP)
-    project("PSA-Crypto" LANGUAGES C CXX VERSION ${TF_PSA_CRYPTO_VERSION})
+    project("TF-PSA-Crypto" LANGUAGES C CXX VERSION ${TF_PSA_CRYPTO_VERSION})
 else()
-    project("PSA-Crypto" LANGUAGES C VERSION ${TF_PSA_CRYPTO_VERSION})
+    project("TF-PSA-Crypto" LANGUAGES C VERSION ${TF_PSA_CRYPTO_VERSION})
 endif()
 
 include(GNUInstallDirs)
 
-# Determine if PSA-Crypto is being built as a subproject using add_subdirectory()
+# Determine if TF-PSA-Crypto is being built as a subproject using
+# add_subdirectory()
 if(NOT DEFINED TF_PSA_CRYPTO_AS_SUBPROJECT)
   set(TF_PSA_CRYPTO_AS_SUBPROJECT ON)
   if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -67,7 +68,7 @@ endforeach(file)
 
 # Set-up configuration file
 set(TF_PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
-    "PSA-Crypto configuration file, absolute path or path relative to the root directory")
+    "TF-PSA-Crypto configuration file, absolute path or path relative to the root directory")
 get_filename_component(TF_PSA_CRYPTO_CONFIG_FILE_REALPATH
                        ${TF_PSA_CRYPTO_CONFIG_FILE} REALPATH BASE_DIR ${TF_PSA_CRYPTO_DIR})
 configure_file(${TF_PSA_CRYPTO_CONFIG_FILE_REALPATH}
@@ -107,7 +108,7 @@ if(NOT CMAKE_COMPILER_IS_CLANG AND
     message(FATAL_ERROR "Compiler ${CMAKE_C_COMPILER_ID} not supported.")
 endif()
 
-option(ENABLE_TESTING "Build PSA-Crypto tests." ON)
+option(ENABLE_TESTING "Build TF-PSA-Crypto tests." ON)
 
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -303,7 +304,7 @@ if(ENABLE_TESTING)
             COMMAND lcov --add-tracefile files.info --add-tracefile tests.info -o all.info
             COMMAND lcov --remove all.info -o final.info '*.h'
             COMMAND gendesc ${CMAKE_CURRENT_SOURCE_DIR}/tests/Descriptions.txt -o descriptions
-            COMMAND genhtml --title "PSA-Crypto" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
+            COMMAND genhtml --title "TF-PSA-Crypto" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
             COMMAND rm -f files.info tests.info all.info final.info descriptions
         )
 

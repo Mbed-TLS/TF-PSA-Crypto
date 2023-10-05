@@ -72,7 +72,7 @@
 #endif
 
 /*
- * Compute Mbed TLS configuration options from the PSA-Crypto ones as
+ * Compute Mbed TLS configuration options from the TF-PSA-Crypto ones as
  * PSA headers and core depends on some of them.
  */
 #define MBEDTLS_PSA_CRYPTO_C

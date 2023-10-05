@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 #
-# Simulate configuring and building PSA-Crypto as the user might do it.
+# Simulate configuring and building TF-PSA-Crypto as the user might do it.
 # We'll install into a directory inside our own build directory.
 #
 
@@ -30,7 +30,7 @@ list(INSERT CMAKE_PREFIX_PATH 0 "${TF-PSA-Crypto_INSTALL_DIR}")
 find_package(TF-PSA-Crypto REQUIRED)
 
 #
-# At this point, the PSA-Crypto targets should have been imported, and
+# At this point, the TF-PSA-Crypto targets should have been imported, and
 # we can now link to them from our own program.
 #
 
