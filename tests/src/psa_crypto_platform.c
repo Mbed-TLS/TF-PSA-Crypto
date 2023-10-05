@@ -23,13 +23,13 @@
 #include <psa/build_info.h>
 #include <psa/platform.h>
 
-#if !defined(PSA_CRYPTO_STD_FUNCTIONS)
+#if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS)
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(PSA_CRYPTO_MEMORY_BUFFER_ALLOC)
+#if !defined(TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC)
 void *psa_crypto_calloc(size_t nmemb, size_t size)
 {
     return calloc(nmemb, size);
@@ -81,9 +81,9 @@ void psa_crypto_setbuf(FILE *stream, char *buf)
 {
     setbuf(stream, buf);
 }
-#endif /* !PSA_CRYPTO_STD_FUNCTIONS */
+#endif /* !TF_PSA_CRYPTO_STD_FUNCTIONS */
 
-#if defined(PSA_CRYPTO_PLATFORM_ZEROIZE)
+#if defined(TF_PSA_CRYPTO_PLATFORM_ZEROIZE)
 void psa_crypto_platform_zeroize(void *buf, size_t len)
 {
     if (buf != NULL && len != 0)
@@ -91,7 +91,7 @@ void psa_crypto_platform_zeroize(void *buf, size_t len)
 }
 #endif
 
-#if defined(PSA_CRYPTO_HARDWARE_ENTROPY)
+#if defined(TF_PSA_CRYPTO_HARDWARE_ENTROPY)
 int psa_crypto_hardware_entropy(void *data,
                                 unsigned char *output, size_t size,
                                 size_t *len)
@@ -105,9 +105,9 @@ int psa_crypto_hardware_entropy(void *data,
 }
 #endif
 
-#if defined(PSA_CRYPTO_ENTROPY_NV_SEED)
-#if defined(PSA_CRYPTO_FS_IO)
-#if !defined(PSA_CRYPTO_STD_FUNCTIONS)
+#if defined(TF_PSA_CRYPTO_ENTROPY_NV_SEED)
+#if defined(TF_PSA_CRYPTO_FS_IO)
+#if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS)
 #include <mbedtls/entropy.h>
 
 int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_len)
@@ -115,7 +115,7 @@ int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_len)
     FILE *file;
     size_t n;
 
-    if ((file = fopen(PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "rb")) == NULL) {
+    if ((file = fopen(TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "rb")) == NULL) {
         return -1;
     }
 
@@ -137,7 +137,7 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
     FILE *file;
     size_t n;
 
-    if ((file = fopen(PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "w")) == NULL) {
+    if ((file = fopen(TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE, "w")) == NULL) {
         return -1;
     }
 
@@ -152,9 +152,9 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
     fclose(file);
     return (int) n;
 }
-#endif /* !PSA_CRYPTO_STD_FUNCTIONS */
+#endif /* !TF_PSA_CRYPTO_STD_FUNCTIONS */
 
-#else /* PSA_CRYPTO_FS_IO */
+#else /* TF_PSA_CRYPTO_FS_IO */
 
 #include <mbedtls/entropy.h>
 size_t psa_crypto_test_platform_entropy_nv_seed_len = MBEDTLS_ENTROPY_BLOCK_SIZE;
@@ -177,6 +177,5 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
 
     return (int) buf_len;
 }
-#endif /* PSA_CRYPTO_FS_IO */
-#endif /* PSA_CRYPTO_ENTROPY_NV_SEED */
-
+#endif /* TF_PSA_CRYPTO_FS_IO */
+#endif /* TF_PSA_CRYPTO_ENTROPY_NV_SEED */

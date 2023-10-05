@@ -4,7 +4,7 @@
  * \brief Build-time configuration info
  *
  *  Include this file if you need to depend on the
- *  configuration options defined in crypto_config.h or PSA_CRYPTO_CONFIG_FILE.
+ *  configuration options defined in crypto_config.h or TF_PSA_CRYPTO_CONFIG_FILE.
  */
  /*
   *  Copyright The Mbed TLS Contributors
@@ -23,8 +23,8 @@
   *  limitations under the License.
   */
 
-#ifndef PSA_CRYPTO_BUILD_INFO_H
-#define PSA_CRYPTO_BUILD_INFO_H
+#ifndef TF_PSA_CRYPTO_BUILD_INFO_H
+#define TF_PSA_CRYPTO_BUILD_INFO_H
 
 #include "version.h"
 
@@ -36,16 +36,16 @@
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define PSA_CRYPTO_VERSION_NUMBER         ((PSA_CRYPTO_VERSION_MAJOR << 24) | \
-                                           (PSA_CRYPTO_VERSION_MINOR << 16) | \
-                                           (PSA_CRYPTO_VERSION_PATCH <<  8))
+#define TF_PSA_CRYPTO_VERSION_NUMBER  ((TF_PSA_CRYPTO_VERSION_MAJOR << 24) | \
+                                       (TF_PSA_CRYPTO_VERSION_MINOR << 16) | \
+                                       (TF_PSA_CRYPTO_VERSION_PATCH <<  8))
 
-#define PSA_CRYPTO_VERSION_STRING         STRINGIFY(PSA_CRYPTO_VERSION_MAJOR) \
-                                                    "."                       \
-                                          STRINGIFY(PSA_CRYPTO_VERSION_MINOR) \
-                                                    "."                       \
-                                          STRINGIFY(PSA_CRYPTO_VERSION_PATCH)
-#define PSA_CRYPTO_VERSION_STRING_FULL    ("PSA Crypto " PSA_CRYPTO_VERSION_STRING)
+#define TF_PSA_CRYPTO_VERSION_STRING  STRINGIFY(TF_PSA_CRYPTO_VERSION_MAJOR) \
+                                                   "."                       \
+                                      STRINGIFY(TF_PSA_CRYPTO_VERSION_MINOR) \
+                                                   "."                       \
+                                      STRINGIFY(TF_PSA_CRYPTO_VERSION_PATCH)
+#define TF_PSA_CRYPTO_VERSION_STRING_FULL  ("PSA Crypto " TF_PSA_CRYPTO_VERSION_STRING)
 
 /* Define `inline` on some non-C99-compliant compilers. */
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
@@ -57,18 +57,18 @@
  * Configuration of the PSA cryptographic mechanisms to include in the PSA
  * cryptography interface.
  */
-#if !defined(PSA_CRYPTO_CONFIG_FILE)
+#if !defined(TF_PSA_CRYPTO_CONFIG_FILE)
 #include "psa/crypto_config.h"
 #else
-#include PSA_CRYPTO_CONFIG_FILE
+#include TF_PSA_CRYPTO_CONFIG_FILE
 #endif
 
 /*
  * Patch the configuration defined by `"psa/crypto_config.h"` or
- * #PSA_CRYPTO_CONFIG_FILE.
+ * #TF_PSA_CRYPTO_CONFIG_FILE.
  */
-#if defined(PSA_CRYPTO_CONFIG_PATCH)
-#include PSA_CRYPTO_CONFIG_PATCH
+#if defined(TF_PSA_CRYPTO_CONFIG_PATCH)
+#include TF_PSA_CRYPTO_CONFIG_PATCH
 #endif
 
 /*
@@ -81,4 +81,4 @@
 
 #include "mbedtls/config_adjust_legacy_crypto.h"
 
-#endif /* PSA_CRYPTO_BUILD_INFO_H */
+#endif /* TF_PSA_CRYPTO_BUILD_INFO_H */

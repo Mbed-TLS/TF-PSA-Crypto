@@ -107,7 +107,7 @@ The build-time configuration information header is `include/psa/build_info.h`.
 This file is included by the PSA headers (header files located in `include/psa`)
 and the PSA core files (located in `core`) to access the configuration options
 defined in
-`include/psa/crypto_config.h` or PSA_CRYPTO_CONFIG_FILE. The PSA core files do
+`include/psa/crypto_config.h` or TF_PSA_CRYPTO_CONFIG_FILE. The PSA core files do
 not include `include/psa/build_info.h` directly but through the `core/common.h`
 file.
 
@@ -161,7 +161,7 @@ standard function is `xyz`. These functions are:
   psa_crypto_snprintf()
 . other functions: psa_crypto_setbuf()
 
-If the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
+If the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
 these platform abstraction functions are just aliases to the corresponding
 standard C library functions. Otherwise, these platform abstraction functions
 have to be provided as part of the integration of the PSA cryptography library.
@@ -169,7 +169,7 @@ have to be provided as part of the integration of the PSA cryptography library.
 Finally, some platform abstraction functions are not just clones of standard C
 library functions, like psa_crypto_platform_entropy_nv_seed_read() for example,
 see include/psa/platform.h for more information. If the configuration option
-PSA_CRYPTO_STD_FUNCTIONS is enabled the PSA cryptography library provides an
+TF_PSA_CRYPTO_STD_FUNCTIONS is enabled the PSA cryptography library provides an
 implementation of most of those functions based on functions of the standard C
 library though.
 

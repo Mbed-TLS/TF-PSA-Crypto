@@ -277,7 +277,7 @@ def extend_config_psa(psa_crypto_root_path):
         for line in config_psa:
             new_config_psa.write(line)
             if include_mbedtls_config_adjust_legacy_from_psa.match(line) != None:
-                new_config_psa.write("#include \"mbedtls/config_adjust_mbedtls_from_psa_crypto.h\"\n")
+                new_config_psa.write("#include \"mbedtls/config_adjust_mbedtls_from_tf_psa_crypto.h\"\n")
 
 def main():
     parser = argparse.ArgumentParser(

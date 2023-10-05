@@ -36,8 +36,8 @@ def looks_like_psa_crypto_root(path: str) -> bool:
 
 def bump_versions(new_version, new_soversion):
     CMAKE_VERSION_REGEX = \
-        re.compile('(set\(PSA_CRYPTO_VERSION )[0-9]+\.[0-9]+\.[0-9]+(\))')
-    CMAKE_SOVERSION_REGEX = re.compile('(set\(PSA_CRYPTO_SOVERSION )[0-9]+(\))')
+        re.compile('(set\(TF_PSA_CRYPTO_VERSION )[0-9]+\.[0-9]+\.[0-9]+(\))')
+    CMAKE_SOVERSION_REGEX = re.compile('(set\(TF_PSA_CRYPTO_SOVERSION )[0-9]+(\))')
     TEST_VERSION_REGEX = re.compile('(check_compiletime_version:").*(")')
 
     # Bump version in CMakeLists.txt

@@ -38,7 +38,7 @@ extern "C" {
 #include <string.h>
 
 /**
- * \def PSA_CRYPTO_PRINTF_ATTRIBUTE
+ * \def TF_PSA_CRYPTO_PRINTF_ATTRIBUTE
  *
  * Mark a function as having printf attributes, and thus enable checking
  * via -wFormat and other flags. This does nothing on builds with compilers
@@ -49,30 +49,30 @@ extern "C" {
  */
 #if defined(__has_attribute)
 #if __has_attribute(format)
-#define PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)    \
+#define TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)    \
     __attribute__((format(printf, string_index, first_to_check)))
 #else /* __has_attribute(format) */
-#define PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)
+#define TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)
 #endif /* __has_attribute(format) */
 #else /* defined(__has_attribute) */
-#define PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)
+#define TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(string_index, first_to_check)
 #endif
 
 /*
- * If the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
+ * If the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
  * the following platform abstraction functions are just aliases to the
  * corresponding standard C library functions. Otherwise, these functions have
  * to be provided as part of the integration of the PSA cryptography library.
  * They should behave as the corresponding standard C library functions as
  * defined in the C99 specification.
  *
- * If the configuration option PSA_CRYPTO_STD_FUNCTIONS is disabled and
- * PSA_CRYPTO_MEMORY_BUFFER_ALLOC is enabled the library buffer allocator
+ * If the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is disabled and
+ * TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC is enabled the library buffer allocator
  * implementation is included in the build and the library uses it to allocate
  * and free memory. There is thus no need to provide the psa_crypto_alloc()
  * psa_crypto_free() functions as part of the integration.
  */
-#if defined(PSA_CRYPTO_STD_FUNCTIONS)
+#if defined(TF_PSA_CRYPTO_STD_FUNCTIONS)
 #define psa_crypto_calloc calloc
 #define psa_crypto_free free
 #define psa_crypto_printf printf
@@ -82,9 +82,9 @@ extern "C" {
 #else
 void *psa_crypto_calloc(size_t nmemb, size_t size);
 void psa_crypto_free(void *ptr);
-int psa_crypto_printf(const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(1, 2);
-int psa_crypto_fprintf(FILE *stream, const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(2, 3);
-int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) PSA_CRYPTO_PRINTF_ATTRIBUTE(3, 4);
+int psa_crypto_printf(const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(1, 2);
+int psa_crypto_fprintf(FILE *stream, const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(2, 3);
+int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(3, 4);
 void psa_crypto_setbuf(FILE *stream, char *buf);
 #endif
 
@@ -92,7 +92,7 @@ void psa_crypto_setbuf(FILE *stream, char *buf);
  * \brief  Poll entropy from a hardware source
  *
  * \warning  This is not provided by PSA-Crypto.
- *           See \c PSA_CRYPTO_HARDWARE_ENTROPY in crypto_config.h.
+ *           See \c TF_PSA_CRYPTO_HARDWARE_ENTROPY in crypto_config.h.
  *
  * \param[in]  data    Pointer to function-specific data. NULL must be accepted.
  * \param[out] output  Buffer to write data in
@@ -111,13 +111,13 @@ int psa_crypto_hardware_entropy(void *data,
  * \brief   Read an entropy seed from a Non-Volatile (NV) storage.
  *
  * \note This platform abstraction function is used by the psa-crypto library
- *       if and only if the PSA_CRYPTO_ENTROPY_NV_SEED configuration option
- *       is enabled. Furthermore, if both PSA_CRYPTO_STD_FUNCTIONS and
- *       PSA_CRYPTO_FS_IO configuration options are enabled then the psa-crypto
+ *       if and only if the TF_PSA_CRYPTO_ENTROPY_NV_SEED configuration option
+ *       is enabled. Furthermore, if both TF_PSA_CRYPTO_STD_FUNCTIONS and
+ *       TF_PSA_CRYPTO_FS_IO configuration options are enabled then the psa-crypto
  *       library provides and uses its own implementation based on fopen() and
- *       a seed file (see PSA_CRYPTO_ENTROPY_NV_SEED_FILE configuration option)
+ *       a seed file (see TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE configuration option)
  *       on the file system accessed through fopen(). Otherwise, if
- *       PSA_CRYPTO_STD_FUNCTIONS or PSA_CRYPTO_FS_IO is not enabled, the
+ *       TF_PSA_CRYPTO_STD_FUNCTIONS or TF_PSA_CRYPTO_FS_IO is not enabled, the
  *       function has to be provided as part of the integration of psa-crypto
  *       library.
  *
@@ -134,13 +134,13 @@ int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_size
  * \brief Write an entropy seed to a Non-Volatile (NV) storage.
  *
  * \note This platform abstraction function is used by the psa-crypto library
- *       if and only if the PSA_CRYPTO_ENTROPY_NV_SEED configuration option
- *       is enabled. Furthermore, if both PSA_CRYPTO_STD_FUNCTIONS and
- *       PSA_CRYPTO_FS_IO configuration options are enabled then the psa-crypto
+ *       if and only if the TF_PSA_CRYPTO_ENTROPY_NV_SEED configuration option
+ *       is enabled. Furthermore, if both TF_PSA_CRYPTO_STD_FUNCTIONS and
+ *       TF_PSA_CRYPTO_FS_IO configuration options are enabled then the psa-crypto
  *       library provides and uses its own implementation based on fopen() and
- *       a seed file (see PSA_CRYPTO_ENTROPY_NV_SEED_FILE configuration option)
+ *       a seed file (see TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE configuration option)
  *       on the file system accessed through fopen(). Otherwise, if
- *       PSA_CRYPTO_STD_FUNCTIONS or PSA_CRYPTO_FS_IO is not enabled, the
+ *       TF_PSA_CRYPTO_STD_FUNCTIONS or TF_PSA_CRYPTO_FS_IO is not enabled, the
  *       function has to be provided as part of the integration of psa-crypto
  *       library.
  *
@@ -164,7 +164,7 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
  *        It is extremely difficult to guarantee that calls to
  *        psa_crypto_platform_zeroize() are not removed by aggressive
  *        compiler optimizations in a portable way. By enabling the
- *        PSA_CRYPTO_PLATFORM_ZEROIZE configuration option, users of the
+ *        TF_PSA_CRYPTO_PLATFORM_ZEROIZE configuration option, users of the
  *        psa-crypto library can provide their own implementation suitable for
  *        their platform and needs.
  *

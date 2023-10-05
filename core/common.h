@@ -20,8 +20,8 @@
  *  limitations under the License.
  */
 
-#ifndef PSA_CRYPTO_COMMON_H
-#define PSA_CRYPTO_COMMON_H
+#ifndef TF_PSA_CRYPTO_COMMON_H
+#define TF_PSA_CRYPTO_COMMON_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -127,4 +127,4 @@ static inline const unsigned char *psa_crypto_buffer_offset_const(
     return( p == NULL ? NULL : p + n );
 }
 
-#endif /* PSA_CRYPTO_COMMON_H */
+#endif /* TF_PSA_CRYPTO_COMMON_H */

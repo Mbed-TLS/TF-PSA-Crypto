@@ -112,7 +112,7 @@ have one of these installed, you'll want to disable the test suites with:
 
 To configure CMake for building shared libraries, use:
 
-    cmake -DUSE_SHARED_PSA_CRYPTO_LIBRARY=On /path/to/psa/crypto/source
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On /path/to/psa/crypto/source
 
 There are many different build modes available within the CMake build system.
 Most of them are available for gcc and clang, though some are compiler-specific:
@@ -170,7 +170,7 @@ yourself with:
 
     find_package(TF-PSA-Crypto)
 
-If prompted, set `TF-PSA-Crypto_DIR` to `${YOUR_PSA_CRYPTO_INSTALL_DIR}/cmake`.
+If prompted, set `TF-PSA-Crypto_DIR` to `${YOUR_TF_PSA_CRYPTO_INSTALL_DIR}/cmake`.
 This creates the `TF-PSA-Crypto::tfpsacrypto` target.
 
 You can then use it directly through `target_link_libraries()`:
