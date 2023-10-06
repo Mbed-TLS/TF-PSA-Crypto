@@ -18,7 +18,7 @@ void check_compiletime_version(char *version_str)
                            TF_PSA_CRYPTO_VERSION_MINOR,
                            TF_PSA_CRYPTO_VERSION_PATCH);
 
-    tf_psa_crypto_snprintf(build_str_full, 100, "PSA Crypto %d.%d.%d",
+    tf_psa_crypto_snprintf(build_str_full, 100, "TF-PSA-Crypto %d.%d.%d",
                            TF_PSA_CRYPTO_VERSION_MAJOR,
                            TF_PSA_CRYPTO_VERSION_MINOR,
                            TF_PSA_CRYPTO_VERSION_PATCH);

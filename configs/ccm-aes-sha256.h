@@ -1,8 +1,8 @@
 /**
  * \file configs/ccm-aes-sha256.h
  *
- * \brief PSA crypto configuration with only symmetric cryptography: CCM-AES,
- *        SHA-256, HMAC and key derivation
+ * \brief TF-PSA-Crypto configuration with only symmetric cryptography:
+ *        CCM-AES, SHA-256, HMAC and key derivation
  */
 /*
  *  Copyright The Mbed TLS Contributors

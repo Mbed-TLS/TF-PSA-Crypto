@@ -45,7 +45,7 @@
                                       STRINGIFY(TF_PSA_CRYPTO_VERSION_MINOR) \
                                                    "."                       \
                                       STRINGIFY(TF_PSA_CRYPTO_VERSION_PATCH)
-#define TF_PSA_CRYPTO_VERSION_STRING_FULL  ("PSA Crypto " TF_PSA_CRYPTO_VERSION_STRING)
+#define TF_PSA_CRYPTO_VERSION_STRING_FULL  ("TF-PSA-Crypto " TF_PSA_CRYPTO_VERSION_STRING)
 
 /* Define `inline` on some non-C99-compliant compilers. */
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \

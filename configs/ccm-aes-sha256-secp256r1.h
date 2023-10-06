@@ -1,9 +1,9 @@
 /**
  * \file psa/ccm-aes-sha256-secp256r1.h
  *
- * \brief PSA crypto configuration with symmetric cryptography and asymmetric
- *        cryptography based on the secp256r1 elliptic curve: CCM-AES, SHA-256,
- *        HMAC, ECDSA, ECDH and key derivation.
+ * \brief TF-PSA-Crypto configuration with symmetric cryptography and
+ *        asymmetric cryptography based on the secp256r1 elliptic curve:
+ *        CCM-AES, SHA-256, HMAC, ECDSA, ECDH and key derivation.
  */
 /*
  *  Copyright The Mbed TLS Contributors

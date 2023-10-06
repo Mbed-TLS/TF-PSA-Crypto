@@ -1,9 +1,9 @@
 /**
  * \file psa/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa
  *
- * \brief PSA crypto configuration with symmetric cryptography and asymmetric
- *        cryptography based on the secp256r1 or secp384r1 elliptic curves or
- *        RSA: GCM/CCM/CBC-AES, SHA-256, SHA-512, HMAC, ECDSA, ECDH,
+ * \brief TF-PSA-Crypto configuration with symmetric cryptography and
+ *        asymmetric cryptography based on the secp256r1 or secp384r1 elliptic
+ *        curves or RSA: GCM/CCM/CBC-AES, SHA-256, SHA-512, HMAC, ECDSA, ECDH,
  *        RSA-PKCS#1 v1.5, RSA-OAEP, RSA-PSS and key derivation.
  */
 /*
