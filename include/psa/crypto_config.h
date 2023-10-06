@@ -116,18 +116,19 @@
 
 /**
  * Uncomment the macro to let TF-PSA-Crypto use your alternate implementation
- * of psa_crypto_platform_zeroize() instead of the default implementation.
+ * of tf_psa_crypto_platform_zeroize() instead of the default implementation.
  *
- * psa_crypto_platform_zeroize() is a widely used function across the library
+ * tf_psa_crypto_platform_zeroize() is a widely used function across the library
  * to zero a block of memory. The implementation is expected to be secure in the
  * sense that it has been written to prevent the compiler from removing calls
- * to psa_crypto_platform_zeroize() as part of redundant code elimination
+ * to tf_psa_crypto_platform_zeroize() as part of redundant code elimination
  * optimizations. However, it is difficult to guarantee that calls to
- * psa_crypto_platform_zeroize() will not be optimized by the compiler as older
- * versions of the C language standards do not provide a secure implementation
- * of memset(). Therefore, TF_PSA_CRYPTO_PLATFORM_ZEROIZE enables users to provide
- * their own implementation of psa_crypto_platform_zeroize(), for
- * example by using directives specific to their compiler.
+ * tf_psa_crypto_platform_zeroize() will not be optimized by the compiler as
+ * older versions of the C language standards do not provide a secure
+ * implementation of memset(). Therefore, TF_PSA_CRYPTO_PLATFORM_ZEROIZE
+ * enables users to provide their own implementation of
+ * tf_psa_crypto_platform_zeroize(), for example by using directives specific
+ * to their compiler.
  */
 //#define TF_PSA_CRYPTO_PLATFORM_ZEROIZE
 
@@ -380,7 +381,7 @@
  * collector.
  *
  * Your hardware entropy collector function must be called
- * \c psa_crypto_hardware_entropy(), see include/psa/platform.h for its
+ * \c tf_psa_crypto_hardware_entropy(), see include/psa/platform.h for its
  * prototype.
  */
 //#define TF_PSA_CRYPTO_HARDWARE_ENTROPY

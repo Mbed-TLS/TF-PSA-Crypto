@@ -69,23 +69,23 @@ extern "C" {
  * If the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is disabled and
  * TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC is enabled the library buffer allocator
  * implementation is included in the build and the library uses it to allocate
- * and free memory. There is thus no need to provide the psa_crypto_alloc()
- * psa_crypto_free() functions as part of the integration.
+ * and free memory. There is thus no need to provide the tf_psa_crypto_alloc()
+ * tf_psa_crypto_free() functions as part of the integration.
  */
 #if defined(TF_PSA_CRYPTO_STD_FUNCTIONS)
-#define psa_crypto_calloc calloc
-#define psa_crypto_free free
-#define psa_crypto_printf printf
-#define psa_crypto_fprintf fprintf
-#define psa_crypto_snprintf snprintf
-#define psa_crypto_setbuf setbuf
+#define tf_psa_crypto_calloc calloc
+#define tf_psa_crypto_free free
+#define tf_psa_crypto_printf printf
+#define tf_psa_crypto_fprintf fprintf
+#define tf_psa_crypto_snprintf snprintf
+#define tf_psa_crypto_setbuf setbuf
 #else
-void *psa_crypto_calloc(size_t nmemb, size_t size);
-void psa_crypto_free(void *ptr);
-int psa_crypto_printf(const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(1, 2);
-int psa_crypto_fprintf(FILE *stream, const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(2, 3);
-int psa_crypto_snprintf(char *s, size_t n, const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(3, 4);
-void psa_crypto_setbuf(FILE *stream, char *buf);
+void *tf_psa_crypto_calloc(size_t nmemb, size_t size);
+void tf_psa_crypto_free(void *ptr);
+int tf_psa_crypto_printf(const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(1, 2);
+int tf_psa_crypto_fprintf(FILE *stream, const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(2, 3);
+int tf_psa_crypto_snprintf(char *s, size_t n, const char *format, ...) TF_PSA_CRYPTO_PRINTF_ATTRIBUTE(3, 4);
+void tf_psa_crypto_setbuf(FILE *stream, char *buf);
 #endif
 
 /**
@@ -103,9 +103,9 @@ void psa_crypto_setbuf(FILE *stream, char *buf);
  * \return             0 if no critical failure occured, a negative value
  *                     otherwise.
  */
-int psa_crypto_hardware_entropy(void *data,
-                                unsigned char *output, size_t size,
-                                size_t *len);
+int tf_psa_crypto_hardware_entropy(void *data,
+                                   unsigned char *output, size_t size,
+                                   size_t *len);
 
 /**
  * \brief   Read an entropy seed from a Non-Volatile (NV) storage.
@@ -128,7 +128,8 @@ int psa_crypto_hardware_entropy(void *data,
  * \return  \c 0 if \p buf_size bytes have been read and written into \p buf,
  *          a negative value otherwise.
  */
-int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_size);
+int tf_psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf,
+                                                size_t buf_size);
 
 /**
  * \brief Write an entropy seed to a Non-Volatile (NV) storage.
@@ -150,7 +151,8 @@ int psa_crypto_platform_entropy_nv_seed_read(unsigned char *buf, size_t buf_size
  * \return  \c 0 if \p buf_len bytes have been written to the NV storage, a
  *          negative value otherwise.
  */
-int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len);
+int tf_psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf,
+                                                 size_t buf_len);
 
 /**
  * \brief Securely zeroize a buffer
@@ -162,7 +164,7 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
  *        heap before freeing the heap object.
  *
  *        It is extremely difficult to guarantee that calls to
- *        psa_crypto_platform_zeroize() are not removed by aggressive
+ *        tf_psa_crypto_platform_zeroize() are not removed by aggressive
  *        compiler optimizations in a portable way. By enabling the
  *        TF_PSA_CRYPTO_PLATFORM_ZEROIZE configuration option, users of the
  *        TF-PSA-Crypto library can provide their own implementation suitable
@@ -172,7 +174,7 @@ int psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf, size_t buf_len
  * \param len   Length of the data in bytes
  *
  */
-void psa_crypto_platform_zeroize(void *buf, size_t len);
+void tf_psa_crypto_platform_zeroize(void *buf, size_t len);
 
 #ifdef __cplusplus
 }

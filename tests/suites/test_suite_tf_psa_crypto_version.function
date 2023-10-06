@@ -13,12 +13,15 @@ void check_compiletime_version(char *version_str)
     memset(build_str, 0, 100);
     memset(build_str_full, 0, 100);
 
-    psa_crypto_snprintf(build_str, 100, "%d.%d.%d", TF_PSA_CRYPTO_VERSION_MAJOR,
-                        TF_PSA_CRYPTO_VERSION_MINOR, TF_PSA_CRYPTO_VERSION_PATCH);
+    tf_psa_crypto_snprintf(build_str, 100, "%d.%d.%d",
+                           TF_PSA_CRYPTO_VERSION_MAJOR,
+                           TF_PSA_CRYPTO_VERSION_MINOR,
+                           TF_PSA_CRYPTO_VERSION_PATCH);
 
-    psa_crypto_snprintf(build_str_full, 100, "PSA Crypto %d.%d.%d",
-                        TF_PSA_CRYPTO_VERSION_MAJOR, TF_PSA_CRYPTO_VERSION_MINOR,
-                        TF_PSA_CRYPTO_VERSION_PATCH);
+    tf_psa_crypto_snprintf(build_str_full, 100, "PSA Crypto %d.%d.%d",
+                           TF_PSA_CRYPTO_VERSION_MAJOR,
+                           TF_PSA_CRYPTO_VERSION_MINOR,
+                           TF_PSA_CRYPTO_VERSION_PATCH);
 
     build_int = TF_PSA_CRYPTO_VERSION_MAJOR << 24 |
                 TF_PSA_CRYPTO_VERSION_MINOR << 16 |

@@ -40,16 +40,16 @@
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
-#define MBEDTLS_PLATFORM_PRINTF_MACRO  psa_crypto_printf
-#define MBEDTLS_PLATFORM_FPRINTF_MACRO  psa_crypto_fprintf
-#define MBEDTLS_PLATFORM_SNPRINTF_MACRO  psa_crypto_snprintf
-#define MBEDTLS_PLATFORM_SETBUF_MACRO  psa_crypto_setbuf
+#define MBEDTLS_PLATFORM_PRINTF_MACRO  tf_psa_crypto_printf
+#define MBEDTLS_PLATFORM_FPRINTF_MACRO  tf_psa_crypto_fprintf
+#define MBEDTLS_PLATFORM_SNPRINTF_MACRO  tf_psa_crypto_snprintf
+#define MBEDTLS_PLATFORM_SETBUF_MACRO  tf_psa_crypto_setbuf
 #if defined(TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC)
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #define MBEDTLS_MEMORY_ALIGN_MULTIPLE 8
 #else
-#define MBEDTLS_PLATFORM_CALLOC_MACRO  psa_crypto_calloc
-#define MBEDTLS_PLATFORM_FREE_MACRO  psa_crypto_free
+#define MBEDTLS_PLATFORM_CALLOC_MACRO  tf_psa_crypto_calloc
+#define MBEDTLS_PLATFORM_FREE_MACRO  tf_psa_crypto_free
 #endif
 #endif /* !TF_PSA_CRYPTO_STD_FUNCTIONS */
 
@@ -59,7 +59,7 @@
 
 #if defined(TF_PSA_CRYPTO_PLATFORM_ZEROIZE)
 #define MBEDTLS_PLATFORM_ZEROIZE_ALT
-#define mbedtls_platform_zeroize psa_crypto_platform_zeroize
+#define mbedtls_platform_zeroize tf_psa_crypto_platform_zeroize
 #endif
 
 #if defined(TF_PSA_CRYPTO_BUILTIN_KEYS)
@@ -134,7 +134,7 @@
 
 #if defined(TF_PSA_CRYPTO_HARDWARE_ENTROPY)
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
-#define mbedtls_hardware_poll psa_crypto_hardware_entropy
+#define mbedtls_hardware_poll tf_psa_crypto_hardware_entropy
 #endif
 
 #if defined(TF_PSA_CRYPTO_ENTROPY_NV_SEED)
@@ -142,8 +142,8 @@
 #define MBEDTLS_ENTROPY_NV_SEED
 #if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS) || !defined(TF_PSA_CRYPTO_FS_IO)
 #include <psa/platform.h>
-#define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO  psa_crypto_platform_entropy_nv_seed_read
-#define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO  psa_crypto_platform_entropy_nv_seed_write
+#define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO  tf_psa_crypto_platform_entropy_nv_seed_read
+#define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO  tf_psa_crypto_platform_entropy_nv_seed_write
 #endif
 #endif /* TF_PSA_CRYPTO_ENTROPY_NV_SEED */
 

@@ -29,7 +29,7 @@ import sys
 # so that this script may be run in the development branch and does not rely
 # on Mbed TLS. Once the PSA Crypto repo is no longer downstream from Mbed TLS
 # this script should be changed to import this function from mbedtls_dev
-def looks_like_psa_crypto_root(path: str) -> bool:
+def looks_like_tf_psa_crypto_root(path: str) -> bool:
     """Whether the given directory looks like the root of the PSA Crypto source tree."""
     return all(os.path.isdir(os.path.join(path, subdir))
                for subdir in ['include', 'core', 'drivers', 'programs', 'tests'])
@@ -53,17 +53,17 @@ def bump_versions(new_version, new_soversion):
         f.write(cmake)
 
     # Bump version in test suite
-    with open('tests/suites/test_suite_psa_crypto_version.data', 'r') as f:
+    with open('tests/suites/test_suite_tf_psa_crypto_version.data', 'r') as f:
         version_test = f.read()
 
     version_test = re.sub(TEST_VERSION_REGEX, '\g<1>' + new_version + '\g<2>', version_test)
 
-    with open('tests/suites/test_suite_psa_crypto_version.data', 'w') as f:
+    with open('tests/suites/test_suite_tf_psa_crypto_version.data', 'w') as f:
         f.write(version_test)
 
 # Check if we are running from the project root
 current_dir = os.getcwd()
-if not looks_like_psa_crypto_root(current_dir):
+if not looks_like_tf_psa_crypto_root(current_dir):
     print('Error: This script must be run from the PSA Crypto root directory')
     sys.exit(1)
 

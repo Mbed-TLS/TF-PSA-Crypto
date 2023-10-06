@@ -154,13 +154,14 @@ C standard library functions:
 On another side, to ease the port of the library and its usage in an embedded
 context, the PSA cryptography implementation does not use directly some
 functions of the standard C library but rather their equivalent platform
-abstraction functions whose names are `psa_crypto_xyz` when the name of the
+abstraction functions whose names are `tf_psa_crypto_xyz` when the name of the
 standard function is `xyz`. These functions are:
 
-. dynamic memory allocation functions: psa_crypto_calloc(), psa_crypto_free()
-. formatted output functions: psa_crypto_printf(), psa_crypto_fprintf() and
-  psa_crypto_snprintf()
-. other functions: psa_crypto_setbuf()
+. dynamic memory allocation functions: tf_psa_crypto_calloc(),
+tf_psa_crypto_free()
+. formatted output functions: tf_psa_crypto_printf(), tf_psa_crypto_fprintf()
+and tf_psa_crypto_snprintf()
+. other functions: tf_psa_crypto_setbuf()
 
 If the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
 these platform abstraction functions are just aliases to the corresponding
@@ -168,11 +169,11 @@ standard C library functions. Otherwise, these platform abstraction functions
 have to be provided as part of the integration of the PSA cryptography library.
 
 Finally, some platform abstraction functions are not just clones of standard C
-library functions, like psa_crypto_platform_entropy_nv_seed_read() for example,
-see include/psa/platform.h for more information. If the configuration option
-TF_PSA_CRYPTO_STD_FUNCTIONS is enabled the PSA cryptography library provides an
-implementation of most of those functions based on functions of the standard C
-library though.
+library functions, like tf_psa_crypto_platform_entropy_nv_seed_read() for
+example, see include/psa/platform.h for more information. If the configuration
+option TF_PSA_CRYPTO_STD_FUNCTIONS is enabled the PSA cryptography library
+provides an implementation of most of those functions based on functions of the
+standard C library though.
 
 ## Updating the main branch
 

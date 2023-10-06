@@ -257,7 +257,7 @@ add_subdirectory(core)
 # the tfpsacrypto library and that there is as of today no portable way of
 # handling such dependencies (only toolchain specific solutions).
 #
-# Thus the below definition of the `psa_crypto_test` CMake library of objects
+# Thus the below definition of the `tf_psa_crypto_test` CMake library of objects
 # target. This library of objects is used by tests and programs CMake files
 # to define the test executables.
 #
@@ -265,8 +265,8 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     file(GLOB TF_PSA_CRYPTO_TEST_FILES
          ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c
          ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
-    add_library(psa_crypto_test OBJECT ${TF_PSA_CRYPTO_TEST_FILES})
-    target_include_directories(psa_crypto_test
+    add_library(tf_psa_crypto_test OBJECT ${TF_PSA_CRYPTO_TEST_FILES})
+    target_include_directories(tf_psa_crypto_test
         PRIVATE ${CMAKE_BINARY_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include

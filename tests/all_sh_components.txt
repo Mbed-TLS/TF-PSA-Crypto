@@ -70,7 +70,7 @@ check_renamed_symbols () {
       grep -x -F "$(sed -n 's/^ *# *define  *\([A-Z_a-z][0-9A-Z_a-z]*\)..*/\1/p' "$1")"
 }
 
-component_build_psa_crypto_spm () {
+component_build_tf_psa_crypto_spm () {
     msg "build: default config + TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER + TF_PSA_CRYPTO_SPM, make, gcc"
     scripts/config.py -f include/psa/crypto_config.h set TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
     scripts/config.py -f include/psa/crypto_config.h set TF_PSA_CRYPTO_SPM
