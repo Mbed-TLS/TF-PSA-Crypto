@@ -85,7 +85,7 @@ component_build_psa_crypto_spm () {
     # Check that if a symbol is renamed by crypto_spe.h, the non-renamed
     # version is not present.
     echo "Checking for renamed symbols in the library"
-    check_renamed_symbols $PSA_CRYPTO_ROOT_DIR/tests/include/spe/crypto_spe.h core/libpsacrypto.a
+    check_renamed_symbols $PSA_CRYPTO_ROOT_DIR/tests/include/spe/crypto_spe.h core/libtfpsacrypto.a
 
     cd "$PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"

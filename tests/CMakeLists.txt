@@ -1,5 +1,5 @@
 set(libs
-    ${psacrypto_target}
+    ${tfpsacrypto_target}
 )
 
 # Set the project root directory if it's not already defined, as may happen if
@@ -234,7 +234,7 @@ function(add_test_suite suite_name)
             ${CMAKE_CURRENT_SOURCE_DIR}/suites/main_test.function
             ${CMAKE_CURRENT_SOURCE_DIR}/suites/host_test.function
             ${CMAKE_CURRENT_SOURCE_DIR}/suites/helpers.function
-            ${psacrypto_target}
+            ${tfpsacrypto_target}
         BYPRODUCTS
             test_suite_${data_name}.datax
     )

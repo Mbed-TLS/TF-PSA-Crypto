@@ -27,7 +27,7 @@ endif()
 
 foreach(exe IN LISTS executables)
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:psa_crypto_test>)
-    target_link_libraries(${exe} ${psacrypto_target})
+    target_link_libraries(${exe} ${tfpsacrypto_target})
     target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 endforeach()
 

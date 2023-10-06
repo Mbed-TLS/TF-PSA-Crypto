@@ -52,7 +52,7 @@ Compiling
 ---------
 
 The build system is CMake.
-The CMake build system creates one library: libpsacrypto.
+The CMake build system creates one library: libtfpsacrypto.
 
 ### Tool versions
 
@@ -171,13 +171,13 @@ yourself with:
     find_package(TF-PSA-Crypto)
 
 If prompted, set `TF-PSA-Crypto_DIR` to `${YOUR_PSA_CRYPTO_INSTALL_DIR}/cmake`.
-This creates the `TF-PSA-Crypto::psacrypto` target.
+This creates the `TF-PSA-Crypto::tfpsacrypto` target.
 
 You can then use it directly through `target_link_libraries()`:
 
     add_executable(xyz)
 
-    target_link_libraries(xyz PUBLIC TF-PSA-Crypto::psacrypto)
+    target_link_libraries(xyz PUBLIC TF-PSA-Crypto::tfpsacrypto)
 
 This will link the PSA-Crypto library to your library or application, and
 add its include directories to your target (transitively, in the case of

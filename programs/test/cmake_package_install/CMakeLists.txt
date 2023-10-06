@@ -35,4 +35,4 @@ find_package(TF-PSA-Crypto REQUIRED)
 #
 
 add_executable(cmake_package_install cmake_package_install.c)
-target_link_libraries(cmake_package_install TF-PSA-Crypto::psacrypto)
+target_link_libraries(cmake_package_install TF-PSA-Crypto::tfpsacrypto)

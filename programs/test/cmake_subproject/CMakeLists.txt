@@ -12,4 +12,4 @@ set(PSA_CRYPTO_DIR ../../../)
 add_subdirectory(${PSA_CRYPTO_DIR} build)
 
 add_executable(cmake_subproject cmake_subproject.c)
-target_link_libraries(cmake_subproject subproject_test_psacrypto)
+target_link_libraries(cmake_subproject subproject_test_tfpsacrypto)

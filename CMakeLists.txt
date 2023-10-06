@@ -13,7 +13,7 @@
 # - PSA_CRYPTO_TARGET_PREFIX: CMake targets are designed to be alterable by
 #   calling CMake in order to avoid target name clashes, via the use of
 #   PSA_CRYPTO_TARGET_PREFIX. The value of this variable is prefixed to the
-#   psacrypto and apidoc targets.
+#   tfpsacrypto and apidoc targets.
 #
 
 # We specify a minimum requirement of 3.16.3, but for now use 3.5.1 here
@@ -251,9 +251,9 @@ add_subdirectory(core)
 # and programs. This shared test code is compiled and linked to test suites and
 # programs objects as a set of compiled objects. The compiled objects are NOT
 # built into a library that the test suite and program objects would link
-# against as they link against the psacrypto library.
+# against as they link against the tfpsacrypto library.
 # The reason is that such library is expected to have mutual dependencies with
-# the psacrypto library and that there is as of today no portable way of
+# the tfpsacrypto library and that there is as of today no portable way of
 # handling such dependencies (only toolchain specific solutions).
 #
 # Thus the below definition of the `psa_crypto_test` CMake library of objects
@@ -298,8 +298,8 @@ if(ENABLE_TESTING)
 # Browse `Coverage/index.html`
         ADD_CUSTOM_TARGET(lcov
             COMMAND rm -rf Coverage
-            COMMAND lcov --capture --initial --directory core/CMakeFiles/psacrypto.dir -o files.info
-            COMMAND lcov --capture --directory core/CMakeFiles/psacrypto.dir -o tests.info
+            COMMAND lcov --capture --initial --directory core/CMakeFiles/tfpsacrypto.dir -o files.info
+            COMMAND lcov --capture --directory core/CMakeFiles/tfpsacrypto.dir -o tests.info
             COMMAND lcov --add-tracefile files.info --add-tracefile tests.info -o all.info
             COMMAND lcov --remove all.info -o final.info '*.h'
             COMMAND gendesc ${CMAKE_CURRENT_SOURCE_DIR}/tests/Descriptions.txt -o descriptions
