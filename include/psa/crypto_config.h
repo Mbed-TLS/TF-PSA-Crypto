@@ -82,9 +82,9 @@
  * \def TF_PSA_CRYPTO_STD_FUNCTIONS
  *
  * If this option is enabled then most of the platform abstraction functions,
- * as defined in include/psa/platform.h are provided by the library. They are
- * aliases to standard C library functions or their implementation is based on
- * standard C library functions.
+ * as defined in include/tf_psa_crypto/platform.h are provided by the library.
+ * They are aliases to standard C library functions or their implementation is
+ * based on standard C library functions.
  *
  * Uncomment to provide your own implementations of the platform abstraction
  * functions.
@@ -381,8 +381,8 @@
  * collector.
  *
  * Your hardware entropy collector function must be called
- * \c tf_psa_crypto_hardware_entropy(), see include/psa/platform.h for its
- * prototype.
+ * \c tf_psa_crypto_hardware_entropy(), see include/tf_psa_crypto/platform.h
+ * for its prototype.
  */
 //#define TF_PSA_CRYPTO_HARDWARE_ENTROPY
 

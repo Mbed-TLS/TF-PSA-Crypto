@@ -1,6 +1,6 @@
 /* BEGIN_HEADER */
-#include "psa/platform.h"
 #include "psa/build_info.h"
+#include "tf_psa_crypto/platform.h"
 /* END_HEADER */
 
 /* BEGIN_CASE */
