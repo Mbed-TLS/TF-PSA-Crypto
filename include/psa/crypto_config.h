@@ -643,4 +643,23 @@
 
 /** \} name SECTION: PSA driver interface implementation configuration options */
 
+/**
+ * \name SECTION: Configuration of cryptographic algorithms and mechanisms
+ * beyond the current PSA cryptography API.
+ *
+ * \{
+ */
+
+/**
+ * \def TF_PSA_CRYPTO_WANT_LMS
+ *
+ * Enable the LMS stateful-hash asymmetric signature algorithm.
+ *
+ * Comment to disable the LMS verification algorithm and public key operations.
+ */
+#define TF_PSA_CRYPTO_WANT_LMS
+
+/** \} name SECTION: Configuration of cryptographic algorithms and mechanisms not
+ * planned to be supported in medium term by the PSA cryptography API */
+
 #endif /* TF_PSA_CRYPTO_CONFIG_H */

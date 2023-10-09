@@ -37,7 +37,6 @@
 //#define MBEDTLS_BASE64_C                                                      
 //#define MBEDTLS_DHM_C                                                         
 //#define MBEDTLS_ECP_WITH_MPI_UINT                                             
-//#define MBEDTLS_LMS_C                                                         
 //#define MBEDTLS_NIST_KW_C                                                     
 //#define MBEDTLS_PEM_PARSE_C                                                   
 //#define MBEDTLS_PEM_WRITE_C                                                   

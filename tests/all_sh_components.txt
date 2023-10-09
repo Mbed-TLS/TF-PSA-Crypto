@@ -125,7 +125,6 @@ component_test_non_psa_modules () {
     scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_BASE64_C
     scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_DHM_C
     scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_ECP_WITH_MPI_UINT
-    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_LMS_C
     scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_NIST_KW_C
     scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_PARSE_C
     scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_WRITE_C
