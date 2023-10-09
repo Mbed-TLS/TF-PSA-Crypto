@@ -197,7 +197,7 @@ An update follows the following flow:
 * Checkout locally \<mbedtls-commit-id\>.
 
 Build what we want to become the new head of the main branch:
-* cd path/to/my/psa/crypto/repo
+* cd path/to/my/tf/psa/crypto/repo
 * git checkout -b new-main development
 * git clean -fdx
 * ./scripts/psa_crypto.py --mbedtls path/to/the/mbedtls/commit/checked/out/above

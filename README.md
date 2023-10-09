@@ -44,7 +44,7 @@ To generate a local copy of the library documentation in HTML format:
 
 1. Make sure that [Doxygen](http://www.doxygen.nl/) is installed.
 1. Run `mkdir /path/to/build_dir && cd /path/to/build_dir`
-1. Run `cmake /path/to/psa/crypto/source`
+1. Run `cmake /path/to/tf/psa/crypto/source`
 1. Run `make apidoc`
 1. Browse `apidoc/index.html` or `apidoc/modules.html`.
 
@@ -98,7 +98,7 @@ In order to build the source using CMake in a separate directory (recommended),
 just enter at the command line:
 
     mkdir /path/to/build_dir && cd /path/to/build_dir
-    cmake /path/to/psa/crypto/source
+    cmake /path/to/tf/psa/crypto/source
     cmake --build .
 
 In order to run the tests, enter:
@@ -108,11 +108,11 @@ In order to run the tests, enter:
 The test suites need Python to be built and Perl to be executed. If you don't
 have one of these installed, you'll want to disable the test suites with:
 
-    cmake -DENABLE_TESTING=Off /path/to/psa/crypto/source
+    cmake -DENABLE_TESTING=Off /path/to/tf/psa/crypto/source
 
 To configure CMake for building shared libraries, use:
 
-    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On /path/to/psa/crypto/source
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On /path/to/tf/psa/crypto/source
 
 There are many different build modes available within the CMake build system.
 Most of them are available for gcc and clang, though some are compiler-specific:
@@ -136,7 +136,7 @@ Most of them are available for gcc and clang, though some are compiler-specific:
 Switching build modes in CMake is simple. For debug mode, enter at the command
 line:
 
-    cmake -D CMAKE_BUILD_TYPE=Debug /path/to/psa/crypto/source
+    cmake -D CMAKE_BUILD_TYPE=Debug /path/to/tf/psa/crypto/source
 
 To list other available CMake options, use:
 
@@ -148,7 +148,7 @@ CC=your_cc` will *not* work (similarly with `CFLAGS` and other variables).
 These variables need to be adjusted when invoking cmake for the first time,
 for example:
 
-    CC=your_cc cmake /path/to/psa/crypto/source
+    CC=your_cc cmake /path/to/tf/psa/crypto/source
 
 If you already invoked cmake and want to change those settings, you need to
 remove the build directory and create it again.
