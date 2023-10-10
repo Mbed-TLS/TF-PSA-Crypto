@@ -60,7 +60,7 @@ set(TF_PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(version_number_files
         include/psa/version.h
         doxygen/input/doc_mainpage.h
-        doxygen/psacrypto.doxyfile)
+        doxygen/tfpsacrypto.doxyfile)
 foreach(file ${version_number_files})
     configure_file(${file}.in
                    ${TF_PSA_CRYPTO_DIR}/${file})
@@ -280,7 +280,7 @@ if(ENABLE_PROGRAMS)
 endif()
 
 ADD_CUSTOM_TARGET(${TF_PSA_CRYPTO_TARGET_PREFIX}apidoc
-    COMMAND doxygen psacrypto.doxyfile
+    COMMAND doxygen tfpsacrypto.doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doxygen)
 
 if(ENABLE_TESTING)
