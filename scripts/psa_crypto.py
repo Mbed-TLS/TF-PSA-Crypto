@@ -154,6 +154,7 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     scripts_files = filter(lambda file_: re.match(
                            "all.sh|"\
                            "analyze_outcomes.py|"\
+                           "check_test_cases.py|"\
                            "generate_bignum_tests.py|"\
                            "generate_ecp_tests.py|"\
                            "generate_psa_tests.py|"\
