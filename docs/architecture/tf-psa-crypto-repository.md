@@ -118,10 +118,10 @@ options. Therefore, `include/psa/build_info.h` includes the header file
 configuration options as implied by the set of enabled PSA configuration
 options. The goal is to eventually get rid of the Mbed TLS configuration
 options, in two ways:
-. For PSA headers, use the configuration options of the TF-PSA-Crypto
-repository instead of their Mbed TLS equivalent.
-. For PSA core files, some code needs also to be restructured as the key
-derivation and key agreement code where support for driver is yet to be added.
+- For PSA headers, use the configuration options of the TF-PSA-Crypto
+  repository instead of their Mbed TLS equivalent.
+- For PSA core files, some code needs also to be restructured as the key
+  derivation and key agreement code where support for driver is yet to be added.
 
 The build-time configuration information header for the builtin PSA driver
 interface implementation is the Mbed TLS one: `include/mbedtls/build_info.h`.
@@ -130,12 +130,12 @@ It is based on the minimalist Mbed TLS configuration file
 `drivers/builtin/include/mbedtls/` to overwrite the Mbed TLS default
 configuration file). This minimalist Mbed TLS configuration file enables only
 four Mbed TLS configuration options:
-. MBEDTLS_PSA_CRYPTO_C, enable the PSA cryptography interface.
-. MBEDTLS_CIPHER_C, prerequisite of MBEDTLS_PSA_CRYPTO_C.
-. MBEDTLS_PSA_CRYPTO_CONFIG, enable the selection of the cryptographic
-mechanisms supported by the PSA cryptography interface through PSA_WANT_xxx
-macros.
-. MBEDTLS_USE_PSA_CRYPTO, use PSA cryptography API wherever possible.
+- MBEDTLS_PSA_CRYPTO_C, enable the PSA cryptography interface.
+- MBEDTLS_CIPHER_C, prerequisite of MBEDTLS_PSA_CRYPTO_C.
+- MBEDTLS_PSA_CRYPTO_CONFIG, enable the selection of the cryptographic
+  mechanisms supported by the PSA cryptography interface through PSA_WANT_xxx
+  macros.
+- MBEDTLS_USE_PSA_CRYPTO, use PSA cryptography API wherever possible.
 
 The other configuration options that need to be enabled are again enabled by
 the pre-processor logic in `drivers/builtin/include/mbedtls/config_psa.h`
@@ -148,20 +148,19 @@ C standard library.
 
 The PSA cryptography implementation assumes the availability of the following
 C standard library functions:
-. memory functions: memcmp(), memcpy(), memset() and memmove()
-. string functions: strcmp(), strlen(), strncmp(), strncpy() and strstr()
+- memory functions: memcmp(), memcpy(), memset() and memmove()
+- string functions: strcmp(), strlen(), strncmp(), strncpy() and strstr()
 
 On another side, to ease the port of the library and its usage in an embedded
 context, the PSA cryptography implementation does not use directly some
 functions of the standard C library but rather their equivalent platform
 abstraction functions whose names are `tf_psa_crypto_xyz` when the name of the
 standard function is `xyz`. These functions are:
-
-. dynamic memory allocation functions: tf_psa_crypto_calloc(),
-tf_psa_crypto_free()
-. formatted output functions: tf_psa_crypto_printf(), tf_psa_crypto_fprintf()
-and tf_psa_crypto_snprintf()
-. other functions: tf_psa_crypto_setbuf()
+- dynamic memory allocation functions: tf_psa_crypto_calloc(),
+  tf_psa_crypto_free()
+- formatted output functions: tf_psa_crypto_printf(), tf_psa_crypto_fprintf()
+  and tf_psa_crypto_snprintf()
+- other functions: tf_psa_crypto_setbuf()
 
 If the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is enabled (default),
 these platform abstraction functions are just aliases to the corresponding
@@ -232,21 +231,21 @@ keys.
 
 To be more specific, the following Mbed TLS C modules can be potentially
 included in the Mbed TLS cryptography library but not in the TF-PSA-Crypto one:
-. nist_kw.c
-. pem.c
-. pkcs5.c
-. pkcs7.c
-. pkcs12.c
+- nist_kw.c
+- pem.c
+- pkcs5.c
+- pkcs7.c
+- pkcs12.c
 
 Furthermore, the following Mbed TLS C modules can be potentially included in
 the TF-PSA-Crypto library as the builtin driver implementation relies on them
 but their interface is not public and thus may change without notice:
-. asn1parse.c
-. asn1write.c
-. oid.c
-. pk.c
-. pkparse.c
-. pkwrite.c
+- asn1parse.c
+- asn1write.c
+- oid.c
+- pk.c
+- pkparse.c
+- pkwrite.c
 
 Otherwise, the TF-PSA-Crypto library does not have support for alternative
 implementations of cryptography operations as Mbed TLS does through
