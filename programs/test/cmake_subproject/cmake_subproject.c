@@ -26,10 +26,15 @@
  * is not part of it, to ensure linkage works, but that is all. */
 int main()
 {
+#if defined(TF_PSA_CRYPTO_WANT_LMS)
     mbedtls_lms_public_t ctx;
+#endif
 
     psa_crypto_init();
+
+#if defined(TF_PSA_CRYPTO_WANT_LMS)
     mbedtls_lms_public_init(&ctx);
+#endif
 
     return 0;
 }
