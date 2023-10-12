@@ -22,10 +22,10 @@
  */
 
 /**
- * @mainpage PSA-Crypto v@PSA-Crypto_VERSION@ source code documentation
+ * @mainpage TF-PSA-Crypto v@TF-PSA-Crypto_VERSION@ source code documentation
  *
- * This documentation describes the internal structure of ths PSA-Crypto
+ * This documentation describes the internal structure of the TF-PSA-Crypto
  * library. It was automatically generated from specially formatted comment
- * blocks in PSA-Crypto source code using Doxygen (see
+ * blocks in TF-PSA-Crypto source code using Doxygen (see
  * http://www.stack.nl/~dimitri/doxygen/ for more information on Doxygen).
  */

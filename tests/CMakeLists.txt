@@ -1,15 +1,15 @@
 set(libs
-    ${psacrypto_target}
+    ${tfpsacrypto_target}
 )
 
 # Set the project root directory if it's not already defined, as may happen if
 # the tests folder is included directly by a parent project, without including
 # the top level CMakeLists.txt.
-if(NOT DEFINED PSA_CRYPTO_DIR)
-    set(PSA_CRYPTO_DIR ${CMAKE_SOURCE_DIR})
+if(NOT DEFINED TF_PSA_CRYPTO_DIR)
+    set(TF_PSA_CRYPTO_DIR ${CMAKE_SOURCE_DIR})
 endif()
 
-if(NOT PSA_CRYPTO_PYTHON_EXECUTABLE)
+if(NOT TF_PSA_CRYPTO_PYTHON_EXECUTABLE)
     message(FATAL_ERROR "Cannot build test suites without Python 3")
 endif()
 
@@ -43,7 +43,7 @@ string(REGEX REPLACE "[^;]*/" ""
 
 execute_process(
     COMMAND
-        ${PSA_CRYPTO_PYTHON_EXECUTABLE}
+        ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/../tests/scripts/generate_psa_tests.py
         --list-for-cmake
     WORKING_DIRECTORY
@@ -113,7 +113,7 @@ if(GEN_FILES)
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}/..
         COMMAND
-            ${PSA_CRYPTO_PYTHON_EXECUTABLE}
+            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/../tests/scripts/generate_psa_tests.py
             --directory ${CMAKE_CURRENT_BINARY_DIR}/suites
         DEPENDS
@@ -218,7 +218,7 @@ function(add_test_suite suite_name)
             # input argument.
             test_suite_${data_name}.c
         COMMAND
-            ${PSA_CRYPTO_PYTHON_EXECUTABLE}
+            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_test_code.py
             -f ${CMAKE_CURRENT_SOURCE_DIR}/suites/test_suite_${suite_name}.function
             -d ${data_file}
@@ -234,13 +234,13 @@ function(add_test_suite suite_name)
             ${CMAKE_CURRENT_SOURCE_DIR}/suites/main_test.function
             ${CMAKE_CURRENT_SOURCE_DIR}/suites/host_test.function
             ${CMAKE_CURRENT_SOURCE_DIR}/suites/helpers.function
-            ${psa_crypto_target}
+            ${tfpsacrypto_target}
         BYPRODUCTS
             test_suite_${data_name}.datax
     )
 
     add_executable(test_suite_${data_name} test_suite_${data_name}.c
-                   $<TARGET_OBJECTS:psa_crypto_test>)
+                   $<TARGET_OBJECTS:tf_psa_crypto_test>)
     add_dependencies(test_suite_${data_name} ${dependency})
     target_link_libraries(test_suite_${data_name} ${libs})
     # Include test-specific header files from ./include and private header

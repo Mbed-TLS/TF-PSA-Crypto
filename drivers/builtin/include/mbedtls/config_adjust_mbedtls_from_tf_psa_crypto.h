@@ -1,11 +1,11 @@
 /**
- * \file config_adjust_mbedtls_from_psa_crypto.h
+ * \file config_adjust_mbedtls_from_tf_psa_crypto.h
  * \brief Adjust the configuration of the Mbed TLS builtin driver code from the
- *        PSA-Crypto configuration.
+ *        TF-PSA-Crypto configuration.
  *
- * The PSA-Crypto repository defines configuration options beyond the
+ * The TF-PSA-Crypto repository defines configuration options beyond the
  * PSA_WANT_ macros. This file enables the Mbed TLS configuration options as
- * needed to fulfill the needs of the PSA-Crypto repository configuration.
+ * needed to fulfill the needs of the TF-PSA-Crypto repository configuration.
  */
 /*
  *  Copyright The Mbed TLS Contributors
@@ -24,71 +24,71 @@
  *  limitations under the License.
  */
 
-#ifndef MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_PSA_CRYPTO_H
-#define MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_PSA_CRYPTO_H
+#ifndef MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H
+#define MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H
 
-#if defined(PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+#if defined(TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
 #define MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
 #endif
 
-#if defined(PSA_CRYPTO_SPM)
+#if defined(TF_PSA_CRYPTO_SPM)
 #define MBEDTLS_PSA_CRYPTO_SPM
 #endif
 
-#if !defined(PSA_CRYPTO_STD_FUNCTIONS)
+#if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS)
 #include <psa/platform.h>
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
-#define MBEDTLS_PLATFORM_PRINTF_MACRO  psa_crypto_printf
-#define MBEDTLS_PLATFORM_FPRINTF_MACRO  psa_crypto_fprintf
-#define MBEDTLS_PLATFORM_SNPRINTF_MACRO  psa_crypto_snprintf
-#define MBEDTLS_PLATFORM_SETBUF_MACRO  psa_crypto_setbuf
-#if defined(PSA_CRYPTO_MEMORY_BUFFER_ALLOC)
+#define MBEDTLS_PLATFORM_PRINTF_MACRO  tf_psa_crypto_printf
+#define MBEDTLS_PLATFORM_FPRINTF_MACRO  tf_psa_crypto_fprintf
+#define MBEDTLS_PLATFORM_SNPRINTF_MACRO  tf_psa_crypto_snprintf
+#define MBEDTLS_PLATFORM_SETBUF_MACRO  tf_psa_crypto_setbuf
+#if defined(TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC)
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #define MBEDTLS_MEMORY_ALIGN_MULTIPLE 8
 #else
-#define MBEDTLS_PLATFORM_CALLOC_MACRO  psa_crypto_calloc
-#define MBEDTLS_PLATFORM_FREE_MACRO  psa_crypto_free
+#define MBEDTLS_PLATFORM_CALLOC_MACRO  tf_psa_crypto_calloc
+#define MBEDTLS_PLATFORM_FREE_MACRO  tf_psa_crypto_free
 #endif
-#endif /* !PSA_CRYPTO_STD_FUNCTIONS */
+#endif /* !TF_PSA_CRYPTO_STD_FUNCTIONS */
 
-#if defined(PSA_CRYPTO_FS_IO)
+#if defined(TF_PSA_CRYPTO_FS_IO)
 #define MBEDTLS_FS_IO
 #endif
 
-#if defined(PSA_CRYPTO_PLATFORM_ZEROIZE)
+#if defined(TF_PSA_CRYPTO_PLATFORM_ZEROIZE)
 #define MBEDTLS_PLATFORM_ZEROIZE_ALT
-#define mbedtls_platform_zeroize psa_crypto_platform_zeroize
+#define mbedtls_platform_zeroize tf_psa_crypto_platform_zeroize
 #endif
 
-#if defined(PSA_CRYPTO_BUILTIN_KEYS)
+#if defined(TF_PSA_CRYPTO_BUILTIN_KEYS)
 #define MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
 #endif
 
-#if defined(PSA_CRYPTO_STORAGE_C)
+#if defined(TF_PSA_CRYPTO_STORAGE_C)
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
 #endif
 
-#if defined(PSA_CRYPTO_ITS_FILE_C)
+#if defined(TF_PSA_CRYPTO_ITS_FILE_C)
 #define MBEDTLS_PSA_ITS_FILE_C
 #endif
 
-#if defined(PSA_CRYPTO_EXTERNAL_RNG)
+#if defined(TF_PSA_CRYPTO_EXTERNAL_RNG)
 #define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
-#else /* PSA_CRYPTO_EXTERNAL_RNG */
+#else /* TF_PSA_CRYPTO_EXTERNAL_RNG */
 #define MBEDTLS_ENTROPY_C
 
-#if defined(PSA_CRYPTO_HMAC_DRBG_HASH)
+#if defined(TF_PSA_CRYPTO_HMAC_DRBG_HASH)
 #define MBEDTLS_HMAC_DRBG_C
 #define MBEDTLS_MD_C
 
 /*
- * The macro PSA_CRYPTO_HMAC_DRBG_HASH defines the hash algorithm (SHA-256 or
+ * The macro TF_PSA_CRYPTO_HMAC_DRBG_HASH defines the hash algorithm (SHA-256 or
  * SHA-512) to be used for HMAC for the PSA DRBG. It defines it using the PSA
  * macro identifying the hash algorithm. Those macros are not part of the
  * configuration macros thus they may not be defined at that point. As we need
- * to use the value of PSA_CRYPTO_HMAC_DRBG_HASH, which is equal to
+ * to use the value of TF_PSA_CRYPTO_HMAC_DRBG_HASH, which is equal to
  * PSA_ALG_SHA_256 or PSA_ALG_SHA_512 we need those macros to be defined. Their
  * specific values are not important here, they just have to be different.
  */
@@ -98,19 +98,19 @@
 #define UNDEFINE_PSA_ALG_SHA_256_512
 #endif
 
-#if (PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_256)
+#if (TF_PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_256)
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
 #if !defined(MBEDTLS_SHA256_C)
 #define MBEDTLS_SHA256_C
 #endif
-#endif /* PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_256 */
+#endif /* TF_PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_256 */
 
-#if (PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_512)
+#if (TF_PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_512)
 #if !defined(MBEDTLS_SHA512_C)
 #define MBEDTLS_SHA512_C
 #endif
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA512
-#endif /* PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_512 */
+#endif /* TF_PSA_CRYPTO_HMAC_DRBG_HASH == PSA_ALG_SHA_512 */
 
 /* Clean-up of the dummy values for PSA_ALG_SHA_256 and PSA_ALG_SHA_512 */
 #if defined(UNDEFINE_PSA_ALG_SHA_256_512)
@@ -119,88 +119,88 @@
 #undef UNDEFINE_PSA_ALG_SHA_256_512
 #endif
 
-#else  /* PSA_CRYPTO_HMAC_DRBG_HASH */
+#else  /* TF_PSA_CRYPTO_HMAC_DRBG_HASH */
 
 #define MBEDTLS_CTR_DRBG_C
 #if !defined(MBEDTLS_AES_C)
 #define MBEDTLS_AES_C
 #endif
 
-#endif /* !PSA_CRYPTO_HMAC_DRBG_HASH */
+#endif /* !TF_PSA_CRYPTO_HMAC_DRBG_HASH */
 
-#if !defined(PSA_CRYPTO_PLATFORM_ENTROPY)
+#if !defined(TF_PSA_CRYPTO_PLATFORM_ENTROPY)
 #define MBEDTLS_NO_PLATFORM_ENTROPY
 #endif
 
-#if defined(PSA_CRYPTO_HARDWARE_ENTROPY)
+#if defined(TF_PSA_CRYPTO_HARDWARE_ENTROPY)
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
-#define mbedtls_hardware_poll psa_crypto_hardware_entropy
+#define mbedtls_hardware_poll tf_psa_crypto_hardware_entropy
 #endif
 
-#if defined(PSA_CRYPTO_ENTROPY_NV_SEED)
+#if defined(TF_PSA_CRYPTO_ENTROPY_NV_SEED)
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_ENTROPY_NV_SEED
-#if !defined(PSA_CRYPTO_STD_FUNCTIONS) || !defined(PSA_CRYPTO_FS_IO)
+#if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS) || !defined(TF_PSA_CRYPTO_FS_IO)
 #include <psa/platform.h>
-#define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO  psa_crypto_platform_entropy_nv_seed_read
-#define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO  psa_crypto_platform_entropy_nv_seed_write
+#define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO  tf_psa_crypto_platform_entropy_nv_seed_read
+#define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO  tf_psa_crypto_platform_entropy_nv_seed_write
 #endif
-#endif /* PSA_CRYPTO_ENTROPY_NV_SEED */
+#endif /* TF_PSA_CRYPTO_ENTROPY_NV_SEED */
 
-#endif /* !PSA_CRYPTO_EXTERNAL_RNG */
+#endif /* !TF_PSA_CRYPTO_EXTERNAL_RNG */
 
-#if defined(PSA_CRYPTO_KEY_SLOT_COUNT)
-#define MBEDTLS_PSA_KEY_SLOT_COUNT PSA_CRYPTO_KEY_SLOT_COUNT
+#if defined(TF_PSA_CRYPTO_KEY_SLOT_COUNT)
+#define MBEDTLS_PSA_KEY_SLOT_COUNT TF_PSA_CRYPTO_KEY_SLOT_COUNT
 #endif
 
-#if defined(PSA_CRYPTO_ENTROPY_NV_SEED_FILE)
-#define MBEDTLS_PLATFORM_STD_NV_SEED_FILE PSA_CRYPTO_ENTROPY_NV_SEED_FILE
+#if defined(TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE)
+#define MBEDTLS_PLATFORM_STD_NV_SEED_FILE TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE
 #endif
 
 /* PSA driver interface implementation configuration options */
 
-#if defined(PSA_CRYPTO_HAVE_ASM)
+#if defined(TF_PSA_CRYPTO_HAVE_ASM)
 #define MBEDTLS_HAVE_ASM
 #endif
 
-#if defined(PSA_CRYPTO_AESNI_C)
+#if defined(TF_PSA_CRYPTO_AESNI_C)
 #define MBEDTLS_AESNI_C
 #endif
 
-#if defined(PSA_CRYPTO_AESCE_C)
+#if defined(TF_PSA_CRYPTO_AESCE_C)
 #define MBEDTLS_AESCE_C
 #endif
 
-#if defined(PSA_CRYPTO_NO_UDBL_DIVISION)
+#if defined(TF_PSA_CRYPTO_NO_UDBL_DIVISION)
 #define MBEDTLS_NO_UDBL_DIVISION
 #endif
 
-#if defined(PSA_CRYPTO_NO_64BIT_MULTIPLICATION)
+#if defined(TF_PSA_CRYPTO_NO_64BIT_MULTIPLICATION)
 #define MBEDTLS_NO_64BIT_MULTIPLICATION
 #endif
 
-#if defined(PSA_CRYPTO_AES_ROM_TABLES)
+#if defined(TF_PSA_CRYPTO_AES_ROM_TABLES)
 #define MBEDTLS_AES_ROM_TABLES
 #endif
 
-#if defined(PSA_CRYPTO_AES_FEWER_TABLES)
+#if defined(TF_PSA_CRYPTO_AES_FEWER_TABLES)
 #define MBEDTLS_AES_FEWER_TABLES
 #endif
 
-#if defined(PSA_CRYPTO_CAMELLIA_SMALL_MEMORY)
+#if defined(TF_PSA_CRYPTO_CAMELLIA_SMALL_MEMORY)
 #define MBEDTLS_CAMELLIA_SMALL_MEMORY
 #endif
 
-#if defined(PSA_CRYPTO_ECP_NIST_OPTIM)
+#if defined(TF_PSA_CRYPTO_ECP_NIST_OPTIM)
 #define MBEDTLS_ECP_NIST_OPTIM
 #endif
 
-#if defined(PSA_CRYPTO_SHA256_SMALLER)
+#if defined(TF_PSA_CRYPTO_SHA256_SMALLER)
 #define MBEDTLS_SHA256_SMALLER
 #endif
 
-#if defined(PSA_CRYPTO_SHA512_SMALLER)
+#if defined(TF_PSA_CRYPTO_SHA512_SMALLER)
 #define MBEDTLS_SHA512_SMALLER
 #endif
 
-#endif /* MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_PSA_CRYPTO_H */
+#endif /* MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H */

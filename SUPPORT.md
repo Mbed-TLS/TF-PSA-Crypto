@@ -1,6 +1,6 @@
 ## Documentation
 
-Here are some useful sources of information about PSA-Crypto:
+Here are some useful sources of information about TF-PSA-Crypto:
 
 - API documentation, see the [Documentation section of the
   README](README.md#documentation);

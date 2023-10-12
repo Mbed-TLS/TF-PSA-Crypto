@@ -1,7 +1,7 @@
 ## Reporting Vulnerabilities
 
-If you think you have found a security vulnerability in PSA-Crypto, then please
-send an email to the security team at
+If you think you have found a security vulnerability in TF-PSA-Crypto, then
+please send an email to the security team at
 <mbed-tls-security@lists.trustedfirmware.org>.
 
 ## Security Incident Handling Process
@@ -29,7 +29,7 @@ over the network. This includes observing the content and timing of individual
 packets, as well as suppressing or delaying legitimate messages, and injecting
 messages.
 
-The PSA-Crypto library aims to fully protect against remote attacks. More
+The TF-PSA-Crypto library aims to fully protect against remote attacks. More
 specifically, it aims to enable network protocol implementations that use it to
 perform cryptographic operations, as well as applications based on such network
 protocol implementations, to provide full protection against remote attacks.
@@ -42,22 +42,22 @@ and workarounds see the [Block Ciphers](#block-ciphers) section.
 
 In this section, we consider an attacker who can run software on the same
 machine. The attacker has insufficient privileges to directly access the
-PSA-Crypto library assets such as memory and files.
+TF-PSA-Crypto library assets such as memory and files.
 
 #### Timing attacks
 
 The attacker is able to observe the timing of instructions executed by
-the PSA-Crypto library by leveraging shared hardware that both the PSA-Crypto
-library and the attacker have access to. Typical attack vectors include cache
-timings, memory bus contention and branch prediction.
+the TF-PSA-Crypto library by leveraging shared hardware that both the
+TF-PSA-Crypto library and the attacker have access to. Typical attack vectors
+include cache timings, memory bus contention and branch prediction.
 
-PSA-Crypto provides limited protection against timing attacks. The cost of
+TF-PSA-Crypto provides limited protection against timing attacks. The cost of
 protecting against timing attacks widely varies depending on the granularity of
-the measurements and the noise present. Therefore the protection in PSA-Crypto
-is limited. We are only aiming to provide protection against
+the measurements and the noise present. Therefore the protection in
+TF-PSA-Crypto is limited. We are only aiming to provide protection against
 **publicly documented attack techniques**.
 
-As attacks keep improving, so does PSA-Crypto's protection. PSA-Crypto is
+As attacks keep improving, so does TF-PSA-Crypto's protection. TF-PSA-Crypto is
 moving towards a model of fully timing-invariant code, but has not reached this
 point yet.
 
@@ -73,11 +73,11 @@ details and workarounds see the [Block Ciphers](#block-ciphers) section.
 
 The attacker code running on the platform has access to some sensor capable of
 picking up information on the physical state of the hardware while the
-PSA-Crypto library is running. This could for example be an analogue-to-digital
+TF-PSA-Crypto library is running. This could for example be an analogue-to-digital
 converter on the platform that is located unfortunately enough to pick up the
 CPU noise.
 
-PSA-Crypto doesn't make any security guarantees against local non-timing-based
+TF-PSA-Crypto doesn't make any security guarantees against local non-timing-based
 side channel attacks. If local non-timing attacks are present in a use case or
 a user application's threat model, they need to be mitigated by the platform.
 
@@ -86,18 +86,18 @@ a user application's threat model, they need to be mitigated by the platform.
 Software running on the same hardware can affect the physical state of the
 device and introduce faults.
 
-PSA-Crypto doesn't make any security guarantees against local fault injection
+TF-PSA-Crypto doesn't make any security guarantees against local fault injection
 attacks. If local fault injection attacks are present in a use case or a user
 application's threat model, they need to be mitigated by the platform.
 
 ### Physical attacks
 
 In this section, we consider an attacker who has access to physical information
-about the hardware the PSA-Crypto library is running on and/or can alter the
+about the hardware the TF-PSA-Crypto library is running on and/or can alter the
 physical state of the hardware (e.g. power analysis, radio emissions or fault
 injection).
 
-PSA-Crypto doesn't make any security guarantees against physical attacks. If
+TF-PSA-Crypto doesn't make any security guarantees against physical attacks. If
 physical attacks are present in a use case or a user application's threat
 model, they need to be mitigated by physical countermeasures.
 
@@ -105,18 +105,18 @@ model, they need to be mitigated by physical countermeasures.
 
 #### Out-of-scope countermeasures
 
-PSA-Crypto has evolved organically and a well defined threat model hasn't always
-been present. Therefore, PSA-Crypto might have countermeasures against attacks
-outside the above defined threat model.
+TF-PSA-Crypto has evolved organically and a well defined threat model hasn't
+always been present. Therefore, TF-PSA-Crypto might have countermeasures against
+attacks outside the above defined threat model.
 
-The presence of such countermeasures don't mean that PSA-Crypto provides
+The presence of such countermeasures don't mean that TF-PSA-Crypto provides
 protection against a class of attacks outside of the above described threat
 model. Neither does it mean that the failure of such a countermeasure is
 considered a vulnerability.
 
 #### Block ciphers
 
-Currently there are four block ciphers in PSA-Crypto: AES, CAMELLIA, ARIA and
+Currently there are four block ciphers in TF-PSA-Crypto: AES, CAMELLIA, ARIA and
 DES. The pure software implementation of these block ciphers uses lookup
 tables, which are vulnerable to timing attacks.
 
@@ -127,7 +127,7 @@ even remote. The attacks can result in key recovery.
 
 - Turn on hardware acceleration for AES. This is supported only on selected
   architectures and currently only available for AES. See configuration options
-  `PSA_CRYPTO_AESCE_C` and `PSA_CRYPTO_AESNI_C` for details.
+  `TF_PSA_CRYPTO_AESCE_C` and `TF_PSA_CRYPTO_AESNI_C` for details.
 - Add a secure alternative implementation (typically hardware acceleration) for
   the vulnerable cipher. See the [PSA Cryptography Driver Interface](
   docs/proposed/psa-driver-interface.md) for more information.

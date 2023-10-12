@@ -31,7 +31,7 @@
 
 /*
  * Note: The below config options are used internally for testing only.
- *       They are not meant to be used for configuring PSA Crypto.
+ *       They are not meant to be used for configuring TF-PSA-Crypto.
  */
 
 //#define MBEDTLS_BASE64_C                                                      
