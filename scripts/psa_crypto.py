@@ -37,6 +37,7 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "include", "mbedtls")
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     destination_path = os.path.join(builtin_path, "include", "mbedtls")
+    include_tf_psa_crypto_path = os.path.join(psa_crypto_root_path, "include", "tf_psa_crypto")
 
     include_files = filter(lambda file_: not re.match(
                            "x509.*|mps.*|ssl.*|padlock\.*|pkcs7.*|"\
@@ -50,6 +51,8 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     ## repository specific one.
     shutil.copy2(os.path.join(builtin_path, "mbedtls_config.h"), destination_path)
 
+    if os.path.isfile(os.path.join(source_path, "lms.h")):
+        shutil.copy2(os.path.join(source_path, "lms.h"), include_tf_psa_crypto_path)
 
 def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")

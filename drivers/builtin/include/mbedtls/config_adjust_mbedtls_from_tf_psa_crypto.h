@@ -36,7 +36,7 @@
 #endif
 
 #if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS)
-#include <psa/platform.h>
+#include <tf_psa_crypto/platform.h>
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
@@ -141,7 +141,7 @@
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_ENTROPY_NV_SEED
 #if !defined(TF_PSA_CRYPTO_STD_FUNCTIONS) || !defined(TF_PSA_CRYPTO_FS_IO)
-#include <psa/platform.h>
+#include <tf_psa_crypto/platform.h>
 #define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO  tf_psa_crypto_platform_entropy_nv_seed_read
 #define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO  tf_psa_crypto_platform_entropy_nv_seed_write
 #endif
@@ -201,6 +201,10 @@
 
 #if defined(TF_PSA_CRYPTO_SHA512_SMALLER)
 #define MBEDTLS_SHA512_SMALLER
+#endif
+
+#if defined(TF_PSA_CRYPTO_WANT_LMS)
+#define MBEDTLS_LMS_C
 #endif
 
 #endif /* MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H */

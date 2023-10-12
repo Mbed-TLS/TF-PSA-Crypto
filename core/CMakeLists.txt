@@ -96,6 +96,7 @@ foreach(target IN LISTS target_libraries)
         PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include/>
                $<INSTALL_INTERFACE:include/>
         PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
+               $<INSTALL_INTERFACE:drivers/builtin/include/>
         PRIVATE ${TF_PSA_CRYPTO_DIR}/core
         PRIVATE ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
