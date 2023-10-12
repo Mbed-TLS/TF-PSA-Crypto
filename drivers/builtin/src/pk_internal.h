@@ -34,7 +34,7 @@
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 #define PSA_PK_TO_MBEDTLS_ERR(status) psa_pk_status_to_mbedtls(status)
 #define PSA_PK_RSA_TO_MBEDTLS_ERR(status) PSA_TO_MBEDTLS_ERR_LIST(status,     \
                                                                   psa_to_pk_rsa_errors,            \
@@ -112,10 +112,19 @@ static inline mbedtls_ecp_group_id mbedtls_pk_get_group_id(const mbedtls_pk_cont
 }
 
 /* Helper for Montgomery curves */
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+#if defined(MBEDTLS_ECP_HAVE_CURVE25519) || defined(MBEDTLS_ECP_HAVE_CURVE448)
 #define MBEDTLS_PK_HAVE_RFC8410_CURVES
-#endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED || MBEDTLS_ECP_DP_CURVE448_ENABLED */
+#endif /* MBEDTLS_ECP_HAVE_CURVE25519 || MBEDTLS_ECP_DP_CURVE448 */
 #endif /* MBEDTLS_PK_HAVE_ECC_KEYS */
 
+#if defined(MBEDTLS_TEST_HOOKS)
+
+MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
+    mbedtls_pk_context *pk,
+    unsigned char *key, size_t keylen,
+    const unsigned char *pwd, size_t pwdlen,
+    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+
+#endif
 
 #endif /* MBEDTLS_PK_INTERNAL_H */

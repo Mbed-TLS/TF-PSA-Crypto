@@ -114,12 +114,12 @@ static int cmac_generate_subkeys(mbedtls_cipher_context_t *ctx,
                                  unsigned char *K1, unsigned char *K2)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char L[MBEDTLS_CIPHER_BLKSIZE_MAX];
+    unsigned char L[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
     size_t olen, block_size;
 
     mbedtls_platform_zeroize(L, sizeof(L));
 
-    block_size = ctx->cipher_info->block_size;
+    block_size = mbedtls_cipher_info_get_block_size(ctx->cipher_info);
 
     /* Calculate Ek(0) */
     if ((ret = mbedtls_cipher_update(ctx, L, block_size, L, &olen)) != 0) {
@@ -152,7 +152,7 @@ exit:
  * We can't use the padding option from the cipher layer, as it only works for
  * CBC and we use ECB mode, and anyway we need to XOR K1 or K2 in addition.
  */
-static void cmac_pad(unsigned char padded_block[MBEDTLS_CIPHER_BLKSIZE_MAX],
+static void cmac_pad(unsigned char padded_block[MBEDTLS_CMAC_MAX_BLOCK_SIZE],
                      size_t padded_block_len,
                      const unsigned char *last_block,
                      size_t last_block_len)
@@ -186,7 +186,7 @@ int mbedtls_cipher_cmac_starts(mbedtls_cipher_context_t *ctx,
         return retval;
     }
 
-    type = ctx->cipher_info->type;
+    type = mbedtls_cipher_info_get_type(ctx->cipher_info);
 
     switch (type) {
         case MBEDTLS_CIPHER_AES_128_ECB:
@@ -226,7 +226,7 @@ int mbedtls_cipher_cmac_update(mbedtls_cipher_context_t *ctx,
     }
 
     cmac_ctx = ctx->cmac_ctx;
-    block_size = ctx->cipher_info->block_size;
+    block_size = mbedtls_cipher_info_get_block_size(ctx->cipher_info);
     state = ctx->cmac_ctx->state;
 
     /* Is there data still to process from the last call, that's greater in
@@ -237,7 +237,7 @@ int mbedtls_cipher_cmac_update(mbedtls_cipher_context_t *ctx,
                input,
                block_size - cmac_ctx->unprocessed_len);
 
-        mbedtls_xor(state, cmac_ctx->unprocessed_block, state, block_size);
+        mbedtls_xor_no_simd(state, cmac_ctx->unprocessed_block, state, block_size);
 
         if ((ret = mbedtls_cipher_update(ctx, state, block_size, state,
                                          &olen)) != 0) {
@@ -255,7 +255,7 @@ int mbedtls_cipher_cmac_update(mbedtls_cipher_context_t *ctx,
     /* Iterate across the input data in block sized chunks, excluding any
      * final partial or complete block */
     for (j = 1; j < n; j++) {
-        mbedtls_xor(state, input, state, block_size);
+        mbedtls_xor_no_simd(state, input, state, block_size);
 
         if ((ret = mbedtls_cipher_update(ctx, state, block_size, state,
                                          &olen)) != 0) {
@@ -283,9 +283,9 @@ int mbedtls_cipher_cmac_finish(mbedtls_cipher_context_t *ctx,
 {
     mbedtls_cmac_context_t *cmac_ctx;
     unsigned char *state, *last_block;
-    unsigned char K1[MBEDTLS_CIPHER_BLKSIZE_MAX];
-    unsigned char K2[MBEDTLS_CIPHER_BLKSIZE_MAX];
-    unsigned char M_last[MBEDTLS_CIPHER_BLKSIZE_MAX];
+    unsigned char K1[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
+    unsigned char K2[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
+    unsigned char M_last[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t olen, block_size;
 
@@ -295,7 +295,7 @@ int mbedtls_cipher_cmac_finish(mbedtls_cipher_context_t *ctx,
     }
 
     cmac_ctx = ctx->cmac_ctx;
-    block_size = ctx->cipher_info->block_size;
+    block_size = mbedtls_cipher_info_get_block_size(ctx->cipher_info);
     state = cmac_ctx->state;
 
     mbedtls_platform_zeroize(K1, sizeof(K1));
@@ -332,7 +332,7 @@ exit:
     mbedtls_platform_zeroize(cmac_ctx->unprocessed_block,
                              sizeof(cmac_ctx->unprocessed_block));
 
-    mbedtls_platform_zeroize(state, MBEDTLS_CIPHER_BLKSIZE_MAX);
+    mbedtls_platform_zeroize(state, MBEDTLS_CMAC_MAX_BLOCK_SIZE);
     return ret;
 }
 
@@ -750,8 +750,8 @@ static int cmac_test_subkeys(int verbose,
     int i, ret = 0;
     mbedtls_cipher_context_t ctx;
     const mbedtls_cipher_info_t *cipher_info;
-    unsigned char K1[MBEDTLS_CIPHER_BLKSIZE_MAX];
-    unsigned char K2[MBEDTLS_CIPHER_BLKSIZE_MAX];
+    unsigned char K1[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
+    unsigned char K2[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
 
     cipher_info = mbedtls_cipher_info_from_type(cipher_type);
     if (cipher_info == NULL) {
@@ -845,7 +845,7 @@ static int cmac_test_wth_cipher(int verbose,
 {
     const mbedtls_cipher_info_t *cipher_info;
     int i, ret = 0;
-    unsigned char output[MBEDTLS_CIPHER_BLKSIZE_MAX];
+    unsigned char output[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
 
     cipher_info = mbedtls_cipher_info_from_type(cipher_type);
     if (cipher_info == NULL) {

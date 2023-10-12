@@ -81,7 +81,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
 option(ENABLE_PROGRAMS "Build PSA cryptography example programs." ON)
 
 option(TF_PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
-option(GEN_FILES "Generate the auto-generated files as needed." ON)
+option(GEN_FILES "Generate the auto-generated files as needed." OFF)
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.15.0)
     set(Python3_FIND_STRATEGY LOCATION)

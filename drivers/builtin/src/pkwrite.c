@@ -53,7 +53,7 @@
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 #endif
 #include "mbedtls/platform.h"
 
@@ -64,12 +64,12 @@ static inline int mbedtls_pk_is_rfc8410(const mbedtls_pk_context *pk)
 {
     mbedtls_ecp_group_id id = mbedtls_pk_get_group_id(pk);
 
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+#if defined(MBEDTLS_ECP_HAVE_CURVE25519)
     if (id == MBEDTLS_ECP_DP_CURVE25519) {
         return 1;
     }
 #endif
-#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+#if defined(MBEDTLS_ECP_HAVE_CURVE448)
     if (id == MBEDTLS_ECP_DP_CURVE448) {
         return 1;
     }
@@ -77,7 +77,7 @@ static inline int mbedtls_pk_is_rfc8410(const mbedtls_pk_context *pk)
     return 0;
 }
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
+#if defined(MBEDTLS_USE_PSA_CRYPTO) && defined(MBEDTLS_PEM_WRITE_C)
 /* It is assumed that the input key is opaque */
 static psa_ecc_family_t pk_get_opaque_ec_family(const mbedtls_pk_context *pk)
 {
@@ -92,7 +92,7 @@ static psa_ecc_family_t pk_get_opaque_ec_family(const mbedtls_pk_context *pk)
 
     return ec_family;
 }
-#endif /* MBETLS_USE_PSA_CRYPTO */
+#endif /* MBETLS_USE_PSA_CRYPTO && MBEDTLS_PEM_WRITE_C */
 #endif /* MBEDTLS_PK_HAVE_RFC8410_CURVES */
 #endif /* MBEDTLS_PK_HAVE_ECC_KEYS */
 
@@ -165,7 +165,7 @@ static int pk_write_ec_pubkey(unsigned char **p, unsigned char *start,
                               const mbedtls_pk_context *pk)
 {
     size_t len = 0;
-    uint8_t buf[PSA_EXPORT_KEY_PAIR_MAX_SIZE];
+    uint8_t buf[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
 
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
         if (psa_export_public_key(pk->priv_id, buf, sizeof(buf), &len) != PSA_SUCCESS) {
@@ -379,7 +379,7 @@ int mbedtls_pk_write_pubkey_der(const mbedtls_pk_context *key, unsigned char *bu
 #if defined(MBEDTLS_PK_HAVE_ECC_KEYS)
     mbedtls_ecp_group_id ec_grp_id = MBEDTLS_ECP_DP_NONE;
 #endif
-    const char *oid;
+    const char *oid = NULL;
 
     if (size == 0) {
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
@@ -688,7 +688,6 @@ end_of_export:
 int mbedtls_pk_write_key_der(const mbedtls_pk_context *key, unsigned char *buf, size_t size)
 {
     unsigned char *c;
-    size_t len = 0;
 #if defined(MBEDTLS_RSA_C)
     int is_rsa_opaque = 0;
 #endif /* MBEDTLS_RSA_C */
@@ -733,8 +732,6 @@ int mbedtls_pk_write_key_der(const mbedtls_pk_context *key, unsigned char *buf, 
     } else
 #endif /* MBEDTLS_PK_HAVE_ECC_KEYS */
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-
-    return (int) len;
 }
 
 #if defined(MBEDTLS_PEM_WRITE_C)

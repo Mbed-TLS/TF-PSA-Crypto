@@ -73,15 +73,22 @@ def execute_reference_driver_tests(ref_component, driver_component, outcome_file
         Results.log("Error: failed to run reference/driver components")
         sys.exit(ret_val)
 
-def analyze_coverage(results, outcomes):
+def analyze_coverage(results, outcomes, allow_list, full_coverage):
     """Check that all available test cases are executed at least once."""
     available = check_test_cases.collect_available_test_cases()
     for key in available:
         hits = outcomes[key].hits() if key in outcomes else 0
-        if hits == 0:
-            # Make this a warning, not an error, as long as we haven't
-            # fixed this branch to have full coverage of test cases.
-            results.warning('Test case not executed: {}', key)
+        if hits == 0 and key not in allow_list:
+            if full_coverage:
+                results.error('Test case not executed: {}', key)
+            else:
+                results.warning('Test case not executed: {}', key)
+        elif hits != 0 and key in allow_list:
+            # Test Case should be removed from the allow list.
+            if full_coverage:
+                results.error('Allow listed test case was executed: {}', key)
+            else:
+                results.warning('Allow listed test case was executed: {}', key)
 
 def analyze_driver_vs_reference(outcomes, component_ref, component_driver,
                                 ignored_suites, ignored_test=None):
@@ -122,10 +129,11 @@ def analyze_driver_vs_reference(outcomes, component_ref, component_driver,
             result = False
     return result
 
-def analyze_outcomes(outcomes):
+def analyze_outcomes(outcomes, args):
     """Run all analyses on the given outcome collection."""
     results = Results()
-    analyze_coverage(results, outcomes)
+    analyze_coverage(results, outcomes, args['allow_list'],
+                     args['full_coverage'])
     return results
 
 def read_outcome_file(outcome_file):
@@ -151,10 +159,9 @@ by a semicolon.
 
 def do_analyze_coverage(outcome_file, args):
     """Perform coverage analysis."""
-    del args # unused
     outcomes = read_outcome_file(outcome_file)
     Results.log("\n*** Analyze coverage ***\n")
-    results = analyze_outcomes(outcomes)
+    results = analyze_outcomes(outcomes, args)
     return results.error_count == 0
 
 def do_analyze_driver_vs_reference(outcome_file, args):
@@ -175,8 +182,16 @@ def do_analyze_driver_vs_reference(outcome_file, args):
 TASKS = {
     'analyze_coverage':                 {
         'test_function': do_analyze_coverage,
-        'args': {}
-        },
+        'args': {
+            'allow_list': [
+                # Algorithm not supported yet
+                'test_suite_psa_crypto_metadata;Asymmetric signature: pure EdDSA',
+                # Algorithm not supported yet
+                'test_suite_psa_crypto_metadata;Cipher: XTS',
+            ],
+            'full_coverage': False,
+        }
+    },
     # There are 2 options to use analyze_driver_vs_reference_xxx locally:
     # 1. Run tests and then analysis:
     #   - tests/scripts/all.sh --outcome-file "$PWD/out.csv" <component_ref> <component_driver>
@@ -191,6 +206,7 @@ TASKS = {
             'ignored_suites': [
                 'shax', 'mdx', # the software implementations that are being excluded
                 'md.psa',  # purposefully depends on whether drivers are present
+                'psa_crypto_low_hash.generated', # testing the builtins
             ],
             'ignored_tests': {
             }
@@ -248,19 +264,16 @@ TASKS = {
                     'ECP test vectors secp384r1 rfc 5114',
                     'ECP test vectors secp521r1 rfc 5114',
                 ],
-                'test_suite_pkparse': [
-                    # This is a known difference for Montgomery curves: in
-                    # reference component private keys are parsed using
-                    # mbedtls_mpi_read_binary_le(), while in driver version they
-                    # they are imported in PSA and there the parsing is done
-                    # through mbedtls_ecp_read_key(). Unfortunately the latter
-                    # fixes the errors which are intentionally set on the parsed
-                    # key and therefore the following test case is not failing
-                    # as expected.
-                    # This cause the following test to be guarded by ECP_C and
-                    # not being executed on the driver version.
-                    ('Key ASN1 (OneAsymmetricKey X25519, doesn\'t match masking '
-                     'requirements, from RFC8410 Appendix A but made into version 0)'),
+                'test_suite_psa_crypto': [
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1 (1 redraw)',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1, exercise ECDSA',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp384r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp521r1 #0',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp521r1 #1',
+                ],
+                'test_suite_ssl': [
+                    'Test configuration of groups for DHE through mbedtls_ssl_conf_curves()',
                 ],
             }
         }
@@ -298,10 +311,6 @@ TASKS = {
                     'PSA key derivation: bits=7 invalid for ECC SECT_R2 (ECC enabled)',
                 ],
                 'test_suite_pkparse': [
-                    # See description provided for the analyze_driver_vs_reference_all_ec_algs
-                    # case above.
-                    ('Key ASN1 (OneAsymmetricKey X25519, doesn\'t match masking '
-                     'requirements, from RFC8410 Appendix A but made into version 0)'),
                     # When PK_PARSE_C and ECP_C are defined then PK_PARSE_EC_COMPRESSED
                     # is automatically enabled in build_info.h (backward compatibility)
                     # even if it is disabled in config_psa_crypto_no_ecp_at_all(). As a
@@ -325,9 +334,310 @@ TASKS = {
                     'Parse Public EC Key #8a (RFC 5480, brainpoolP384r1, compressed)',
                     'Parse Public EC Key #9a (RFC 5480, brainpoolP512r1, compressed)',
                 ],
+                'test_suite_ssl': [
+                    'Test configuration of groups for DHE through mbedtls_ssl_conf_curves()',
+                ],
             }
         }
     },
+    'analyze_driver_vs_reference_ecc_no_bignum': {
+        'test_function': do_analyze_driver_vs_reference,
+        'args': {
+            'component_ref': 'test_psa_crypto_config_reference_ecc_no_bignum',
+            'component_driver': 'test_psa_crypto_config_accel_ecc_no_bignum',
+            'ignored_suites': [
+                # Ignore test suites for the modules that are disabled in the
+                # accelerated test case.
+                'ecp',
+                'ecdsa',
+                'ecdh',
+                'ecjpake',
+                'bignum_core',
+                'bignum_random',
+                'bignum_mod',
+                'bignum_mod_raw',
+                'bignum.generated',
+                'bignum.misc',
+            ],
+            'ignored_tests': {
+                'test_suite_random': [
+                    'PSA classic wrapper: ECDSA signature (SECP256R1)',
+                ],
+                'test_suite_psa_crypto': [
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1 (1 redraw)',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1, exercise ECDSA',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp384r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp521r1 #0',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp521r1 #1',
+                    'PSA key derivation: bits=7 invalid for ECC BRAINPOOL_P_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_K1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_R2 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_K1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_R2 (ECC enabled)',
+                ],
+                'test_suite_pkparse': [
+                    # See the description provided above in the
+                    # analyze_driver_vs_reference_no_ecp_at_all component.
+                    'Parse EC Key #10a (SEC1 PEM, secp384r1, compressed)',
+                    'Parse EC Key #11a (SEC1 PEM, secp521r1, compressed)',
+                    'Parse EC Key #12a (SEC1 PEM, bp256r1, compressed)',
+                    'Parse EC Key #13a (SEC1 PEM, bp384r1, compressed)',
+                    'Parse EC Key #14a (SEC1 PEM, bp512r1, compressed)',
+                    'Parse EC Key #2a (SEC1 PEM, secp192r1, compressed)',
+                    'Parse EC Key #8a (SEC1 PEM, secp224r1, compressed)',
+                    'Parse EC Key #9a (SEC1 PEM, secp256r1, compressed)',
+                    'Parse Public EC Key #2a (RFC 5480, PEM, secp192r1, compressed)',
+                    'Parse Public EC Key #3a (RFC 5480, secp224r1, compressed)',
+                    'Parse Public EC Key #4a (RFC 5480, secp256r1, compressed)',
+                    'Parse Public EC Key #5a (RFC 5480, secp384r1, compressed)',
+                    'Parse Public EC Key #6a (RFC 5480, secp521r1, compressed)',
+                    'Parse Public EC Key #7a (RFC 5480, brainpoolP256r1, compressed)',
+                    'Parse Public EC Key #8a (RFC 5480, brainpoolP384r1, compressed)',
+                    'Parse Public EC Key #9a (RFC 5480, brainpoolP512r1, compressed)',
+                ],
+                'test_suite_asn1parse': [
+                    # This test depends on BIGNUM_C
+                    'INTEGER too large for mpi',
+                ],
+                'test_suite_asn1write': [
+                    # Following tests depends on BIGNUM_C
+                    'ASN.1 Write mpi 0 (1 limb)',
+                    'ASN.1 Write mpi 0 (null)',
+                    'ASN.1 Write mpi 0x100',
+                    'ASN.1 Write mpi 0x7f',
+                    'ASN.1 Write mpi 0x7f with leading 0 limb',
+                    'ASN.1 Write mpi 0x80',
+                    'ASN.1 Write mpi 0x80 with leading 0 limb',
+                    'ASN.1 Write mpi 0xff',
+                    'ASN.1 Write mpi 1',
+                    'ASN.1 Write mpi, 127*8 bits',
+                    'ASN.1 Write mpi, 127*8+1 bits',
+                    'ASN.1 Write mpi, 127*8-1 bits',
+                    'ASN.1 Write mpi, 255*8 bits',
+                    'ASN.1 Write mpi, 255*8-1 bits',
+                    'ASN.1 Write mpi, 256*8-1 bits',
+                ],
+                'test_suite_debug': [
+                    # Following tests depends on BIGNUM_C
+                    'Debug print mbedtls_mpi #2: 3 bits',
+                    'Debug print mbedtls_mpi: 0 (empty representation)',
+                    'Debug print mbedtls_mpi: 0 (non-empty representation)',
+                    'Debug print mbedtls_mpi: 49 bits',
+                    'Debug print mbedtls_mpi: 759 bits',
+                    'Debug print mbedtls_mpi: 764 bits #1',
+                    'Debug print mbedtls_mpi: 764 bits #2',
+                ],
+                'test_suite_ssl': [
+                    'Test configuration of groups for DHE through mbedtls_ssl_conf_curves()',
+                ],
+            }
+        }
+    },
+    'analyze_driver_vs_reference_ecc_ffdh_no_bignum': {
+        'test_function': do_analyze_driver_vs_reference,
+        'args': {
+            'component_ref': 'test_psa_crypto_config_reference_ecc_ffdh_no_bignum',
+            'component_driver': 'test_psa_crypto_config_accel_ecc_ffdh_no_bignum',
+            'ignored_suites': [
+                # Ignore test suites for the modules that are disabled in the
+                # accelerated test case.
+                'ecp',
+                'ecdsa',
+                'ecdh',
+                'ecjpake',
+                'bignum_core',
+                'bignum_random',
+                'bignum_mod',
+                'bignum_mod_raw',
+                'bignum.generated',
+                'bignum.misc',
+                'dhm',
+            ],
+            'ignored_tests': {
+                'test_suite_random': [
+                    'PSA classic wrapper: ECDSA signature (SECP256R1)',
+                ],
+                'test_suite_psa_crypto': [
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1 (1 redraw)',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1, exercise ECDSA',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp384r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp521r1 #0',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp521r1 #1',
+                    'PSA key derivation: bits=7 invalid for ECC BRAINPOOL_P_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_K1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_R2 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_K1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_R2 (ECC enabled)',
+                ],
+                'test_suite_pkparse': [
+                    # See the description provided above in the
+                    # analyze_driver_vs_reference_no_ecp_at_all component.
+                    'Parse EC Key #10a (SEC1 PEM, secp384r1, compressed)',
+                    'Parse EC Key #11a (SEC1 PEM, secp521r1, compressed)',
+                    'Parse EC Key #12a (SEC1 PEM, bp256r1, compressed)',
+                    'Parse EC Key #13a (SEC1 PEM, bp384r1, compressed)',
+                    'Parse EC Key #14a (SEC1 PEM, bp512r1, compressed)',
+                    'Parse EC Key #2a (SEC1 PEM, secp192r1, compressed)',
+                    'Parse EC Key #8a (SEC1 PEM, secp224r1, compressed)',
+                    'Parse EC Key #9a (SEC1 PEM, secp256r1, compressed)',
+                    'Parse Public EC Key #2a (RFC 5480, PEM, secp192r1, compressed)',
+                    'Parse Public EC Key #3a (RFC 5480, secp224r1, compressed)',
+                    'Parse Public EC Key #4a (RFC 5480, secp256r1, compressed)',
+                    'Parse Public EC Key #5a (RFC 5480, secp384r1, compressed)',
+                    'Parse Public EC Key #6a (RFC 5480, secp521r1, compressed)',
+                    'Parse Public EC Key #7a (RFC 5480, brainpoolP256r1, compressed)',
+                    'Parse Public EC Key #8a (RFC 5480, brainpoolP384r1, compressed)',
+                    'Parse Public EC Key #9a (RFC 5480, brainpoolP512r1, compressed)',
+                ],
+                'test_suite_asn1parse': [
+                    # This test depends on BIGNUM_C
+                    'INTEGER too large for mpi',
+                ],
+                'test_suite_asn1write': [
+                    # Following tests depends on BIGNUM_C
+                    'ASN.1 Write mpi 0 (1 limb)',
+                    'ASN.1 Write mpi 0 (null)',
+                    'ASN.1 Write mpi 0x100',
+                    'ASN.1 Write mpi 0x7f',
+                    'ASN.1 Write mpi 0x7f with leading 0 limb',
+                    'ASN.1 Write mpi 0x80',
+                    'ASN.1 Write mpi 0x80 with leading 0 limb',
+                    'ASN.1 Write mpi 0xff',
+                    'ASN.1 Write mpi 1',
+                    'ASN.1 Write mpi, 127*8 bits',
+                    'ASN.1 Write mpi, 127*8+1 bits',
+                    'ASN.1 Write mpi, 127*8-1 bits',
+                    'ASN.1 Write mpi, 255*8 bits',
+                    'ASN.1 Write mpi, 255*8-1 bits',
+                    'ASN.1 Write mpi, 256*8-1 bits',
+                ],
+                'test_suite_debug': [
+                    # Following tests depends on BIGNUM_C
+                    'Debug print mbedtls_mpi #2: 3 bits',
+                    'Debug print mbedtls_mpi: 0 (empty representation)',
+                    'Debug print mbedtls_mpi: 0 (non-empty representation)',
+                    'Debug print mbedtls_mpi: 49 bits',
+                    'Debug print mbedtls_mpi: 759 bits',
+                    'Debug print mbedtls_mpi: 764 bits #1',
+                    'Debug print mbedtls_mpi: 764 bits #2',
+                ],
+                'test_suite_ssl': [
+                    'Test configuration of groups for DHE through mbedtls_ssl_conf_curves()',
+                ],
+            }
+        }
+    },
+    'analyze_driver_vs_reference_ffdh_alg': {
+        'test_function': do_analyze_driver_vs_reference,
+        'args': {
+            'component_ref': 'test_psa_crypto_config_reference_ffdh',
+            'component_driver': 'test_psa_crypto_config_accel_ffdh',
+            'ignored_suites': ['dhm'],
+            'ignored_tests': {}
+        }
+    },
+    'analyze_driver_vs_reference_tfm_config': {
+        'test_function':  do_analyze_driver_vs_reference,
+        'args': {
+            'component_ref': 'test_tfm_config',
+            'component_driver': 'test_tfm_config_p256m_driver_accel_ec',
+            'ignored_suites': [
+                # Ignore test suites for the modules that are disabled in the
+                # accelerated test case.
+                'ecp',
+                'ecdsa',
+                'ecdh',
+                'ecjpake',
+                'bignum_core',
+                'bignum_random',
+                'bignum_mod',
+                'bignum_mod_raw',
+                'bignum.generated',
+                'bignum.misc',
+            ],
+            'ignored_tests': {
+                # Ignore all tests that require DERIVE support which is disabled
+                # in the driver version
+                'test_suite_psa_crypto': [
+                    'PSA key agreement setup: ECDH + HKDF-SHA-256: good',
+                    ('PSA key agreement setup: ECDH + HKDF-SHA-256: good, key algorithm broader '
+                     'than required'),
+                    'PSA key agreement setup: ECDH + HKDF-SHA-256: public key not on curve',
+                    'PSA key agreement setup: KDF instead of a key agreement algorithm',
+                    'PSA key agreement setup: bad key agreement algorithm',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: capacity=8160',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: read 0+32',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: read 1+31',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: read 31+1',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: read 32+0',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: read 32+32',
+                    'PSA key agreement: ECDH SECP256R1 (RFC 5903) + HKDF-SHA-256: read 64+0',
+                    'PSA key derivation: ECDH on P256 with HKDF-SHA256, info first',
+                    'PSA key derivation: ECDH on P256 with HKDF-SHA256, key output',
+                    'PSA key derivation: ECDH on P256 with HKDF-SHA256, missing info',
+                    'PSA key derivation: ECDH on P256 with HKDF-SHA256, omitted salt',
+                    'PSA key derivation: ECDH on P256 with HKDF-SHA256, raw output',
+                    'PSA key derivation: ECDH on P256 with HKDF-SHA256, salt after secret',
+                    'PSA key derivation: ECDH with TLS 1.2 PRF SHA-256, good case',
+                    'PSA key derivation: ECDH with TLS 1.2 PRF SHA-256, missing label',
+                    'PSA key derivation: ECDH with TLS 1.2 PRF SHA-256, missing label and secret',
+                    'PSA key derivation: ECDH with TLS 1.2 PRF SHA-256, no inputs',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1 (1 redraw)',
+                    'PSA key derivation: HKDF-SHA-256 -> ECC secp256r1, exercise ECDSA',
+                    'PSA key derivation: TLS 1.2 Mix-PSK-to-MS, SHA-256, 0+48, ka',
+                    'PSA key derivation: TLS 1.2 Mix-PSK-to-MS, SHA-256, 24+24, ka',
+                    'PSA key derivation: TLS 1.2 Mix-PSK-to-MS, SHA-256, 48+0, ka',
+                    'PSA key derivation: TLS 1.2 Mix-PSK-to-MS, bad state #1, ka',
+                    'PSA key derivation: TLS 1.2 Mix-PSK-to-MS, bad state #3, ka',
+                    'PSA key derivation: TLS 1.2 Mix-PSK-to-MS, bad state #4, ka',
+                    'PSA key derivation: bits=7 invalid for ECC BRAINPOOL_P_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC MONTGOMERY (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_K1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECP_R2 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_K1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_R1 (ECC enabled)',
+                    'PSA key derivation: bits=7 invalid for ECC SECT_R2 (ECC enabled)',
+                    'PSA raw key agreement: ECDH SECP256R1 (RFC 5903)',
+                ],
+                'test_suite_random': [
+                    'PSA classic wrapper: ECDSA signature (SECP256R1)',
+                ],
+                'test_suite_psa_crypto_pake': [
+                    'PSA PAKE: ecjpake size macros',
+                ],
+                'test_suite_asn1parse': [
+                    # This test depends on BIGNUM_C
+                    'INTEGER too large for mpi',
+                ],
+                'test_suite_asn1write': [
+                    # Following tests depends on BIGNUM_C
+                    'ASN.1 Write mpi 0 (1 limb)',
+                    'ASN.1 Write mpi 0 (null)',
+                    'ASN.1 Write mpi 0x100',
+                    'ASN.1 Write mpi 0x7f',
+                    'ASN.1 Write mpi 0x7f with leading 0 limb',
+                    'ASN.1 Write mpi 0x80',
+                    'ASN.1 Write mpi 0x80 with leading 0 limb',
+                    'ASN.1 Write mpi 0xff',
+                    'ASN.1 Write mpi 1',
+                    'ASN.1 Write mpi, 127*8 bits',
+                    'ASN.1 Write mpi, 127*8+1 bits',
+                    'ASN.1 Write mpi, 127*8-1 bits',
+                    'ASN.1 Write mpi, 255*8 bits',
+                    'ASN.1 Write mpi, 255*8-1 bits',
+                    'ASN.1 Write mpi, 256*8-1 bits',
+                ],
+            }
+        }
+    }
 }
 
 def main():
@@ -342,6 +652,11 @@ def main():
                                  'comma/space-separated list of tasks. ')
         parser.add_argument('--list', action='store_true',
                             help='List all available tasks and exit.')
+        parser.add_argument('--require-full-coverage', action='store_true',
+                            dest='full_coverage', help="Require all available "
+                            "test cases to be executed and issue an error "
+                            "otherwise. This flag is ignored if 'task' is "
+                            "neither 'all' nor 'analyze_coverage'")
         options = parser.parse_args()
 
         if options.list:
@@ -360,6 +675,9 @@ def main():
                 if task not in TASKS:
                     Results.log('Error: invalid task: {}'.format(task))
                     sys.exit(1)
+
+        TASKS['analyze_coverage']['args']['full_coverage'] = \
+            options.full_coverage
 
         for task in TASKS:
             if task in tasks:

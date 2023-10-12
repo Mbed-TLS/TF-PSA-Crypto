@@ -39,7 +39,7 @@
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 #include "md_psa.h"
 #endif
 
@@ -181,10 +181,13 @@ int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
     type = psa_get_key_type(&attributes);
     psa_reset_key_attributes(&attributes);
 
+#if defined(MBEDTLS_PK_HAVE_ECC_KEYS)
     if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(type)) {
-        info = &mbedtls_pk_ecdsa_opaque_info;
-    } else if (type == PSA_KEY_TYPE_RSA_KEY_PAIR) {
-        info = &mbedtls_pk_rsa_opaque_info;
+        info = &mbedtls_ecdsa_opaque_info;
+    } else
+#endif /* MBEDTLS_PK_HAVE_ECC_KEYS */
+    if (type == PSA_KEY_TYPE_RSA_KEY_PAIR) {
+        info = &mbedtls_rsa_opaque_info;
     } else {
         return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
     }
@@ -511,9 +514,11 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     const mbedtls_pk_rsassa_pss_options *pss_opts;
 
+#if SIZE_MAX > UINT_MAX
     if (md_alg == MBEDTLS_MD_NONE && UINT_MAX < hash_len) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
+#endif
 
     if (options == NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
