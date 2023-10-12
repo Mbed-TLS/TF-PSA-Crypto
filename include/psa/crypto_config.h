@@ -1,6 +1,6 @@
 /**
  * \file psa/crypto_config.h
- * \brief PSA-Crypto configuration options (set of defines)
+ * \brief TF-PSA-Crypto configuration options (set of defines)
  *
  *  This set of compile-time options may be used to enable
  *  or disable features selectively, and reduce the global
@@ -23,8 +23,8 @@
  *  limitations under the License.
  */
 
-#ifndef PSA_CRYPTO_CONFIG_H
-#define PSA_CRYPTO_CONFIG_H
+#ifndef TF_PSA_CRYPTO_CONFIG_H
+#define TF_PSA_CRYPTO_CONFIG_H
 
 /**
  * \name SECTION: General configuration options.
@@ -34,7 +34,7 @@
  * \{
  */
 
-/** \def PSA_CRYPTO_CONFIG_FILE
+/** \def TF_PSA_CRYPTO_CONFIG_FILE
  *
  * If defined, this is a header which will be included instead of
  * `"psa/crypto_config.h"`.
@@ -50,14 +50,14 @@
  * The value of this symbol is typically a path in double quotes, either
  * absolute or relative to a directory on the include search path.
  */
-//#define PSA_CRYPTO_CONFIG_FILE "psa/crypto_config.h"
+//#define TF_PSA_CRYPTO_CONFIG_FILE "psa/crypto_config.h"
 
-/** \def PSA_CRYPTO_CONFIG_PATCH
+/** \def TF_PSA_CRYPTO_CONFIG_PATCH
  *
  * If defined, this is a header which will be included after
- * `"psa/crypto_config.h"` or #PSA_CRYPTO_CONFIG_FILE.
+ * `"psa/crypto_config.h"` or #TF_PSA_CRYPTO_CONFIG_FILE.
  * This allows you to modify the configuration as defined by
- * `"psa/crypto_config.h"` or #PSA_CRYPTO_CONFIG_FILE., including the ability
+ * `"psa/crypto_config.h"` or #TF_PSA_CRYPTO_CONFIG_FILE., including the ability
  * to undefine options that are enabled.
  *
  * This macro is expanded after an <tt>\#include</tt> directive. This is a popular but
@@ -67,32 +67,32 @@
  * The value of this symbol is typically a path in double quotes, either
  * absolute or relative to a directory on the include search path.
  */
-//#define PSA_CRYPTO_CONFIG_PATCH "/dev/null"
+//#define TF_PSA_CRYPTO_CONFIG_PATCH "/dev/null"
 
-/** \def PSA_CRYPTO_SPM
+/** \def TF_PSA_CRYPTO_SPM
  *
- * When PSA_CRYPTO_SPM is defined, the code is built for SPM (Secure Partition
+ * When TF_PSA_CRYPTO_SPM is defined, the code is built for SPM (Secure Partition
  * Manager) integration which separates the code into two parts: a NSPE
  * (Non-Secure Process Environment) and an SPE (Secure Process Environment).
  *
  */
-//#define PSA_CRYPTO_SPM
+//#define TF_PSA_CRYPTO_SPM
 
 /**
- * \def PSA_CRYPTO_STD_FUNCTIONS
+ * \def TF_PSA_CRYPTO_STD_FUNCTIONS
  *
  * If this option is enabled then most of the platform abstraction functions,
- * as defined in include/psa/platform.h are provided by the library. They are
- * aliases to standard C library functions or their implementation is based on
- * standard C library functions.
+ * as defined in include/tf_psa_crypto/platform.h are provided by the library.
+ * They are aliases to standard C library functions or their implementation is
+ * based on standard C library functions.
  *
  * Uncomment to provide your own implementations of the platform abstraction
  * functions.
  */
-#define PSA_CRYPTO_STD_FUNCTIONS
+#define TF_PSA_CRYPTO_STD_FUNCTIONS
 
 /**
- * \def PSA_CRYPTO_FS_IO
+ * \def TF_PSA_CRYPTO_FS_IO
  *
  * Enable functions that use the file system. The file system is accessed
  * through the standard C library file functions like fopen(), fclose() ...
@@ -100,36 +100,37 @@
  * Uncomment if there is no file system that can be accessed through the
  * standard C library file functions.
  */
-#define PSA_CRYPTO_FS_IO
+#define TF_PSA_CRYPTO_FS_IO
 
 /**
- * \def PSA_CRYPTO_MEMORY_BUFFER_ALLOC
+ * \def TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC
  *
  * Enable the buffer allocator implementation that makes use of a (stack)
  * based buffer to 'allocate' dynamic memory. (replaces calloc() and free()
  * calls)
  *
  * \note This configuration option does not have any effect on the build if
- *       the configuration option PSA_CRYPTO_STD_FUNCTIONS is enabled.
+ *       the configuration option TF_PSA_CRYPTO_STD_FUNCTIONS is enabled.
  */
-//#define PSA_CRYPTO_MEMORY_BUFFER_ALLOC
+//#define TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC
 
 /**
- * Uncomment the macro to let PSA-Crypto use your alternate implementation of
- * psa_crypto_platform_zeroize() instead of the default implementation.
+ * Uncomment the macro to let TF-PSA-Crypto use your alternate implementation
+ * of tf_psa_crypto_platform_zeroize() instead of the default implementation.
  *
- * psa_crypto_platform_zeroize() is a widely used function across the library
+ * tf_psa_crypto_platform_zeroize() is a widely used function across the library
  * to zero a block of memory. The implementation is expected to be secure in the
  * sense that it has been written to prevent the compiler from removing calls
- * to psa_crypto_platform_zeroize() as part of redundant code elimination
+ * to tf_psa_crypto_platform_zeroize() as part of redundant code elimination
  * optimizations. However, it is difficult to guarantee that calls to
- * psa_crypto_platform_zeroize() will not be optimized by the compiler as older
- * versions of the C language standards do not provide a secure implementation
- * of memset(). Therefore, PSA_CRYPTO_PLATFORM_ZEROIZE enables users to provide
- * their own implementation of psa_crypto_platform_zeroize(), for
- * example by using directives specific to their compiler.
+ * tf_psa_crypto_platform_zeroize() will not be optimized by the compiler as
+ * older versions of the C language standards do not provide a secure
+ * implementation of memset(). Therefore, TF_PSA_CRYPTO_PLATFORM_ZEROIZE
+ * enables users to provide their own implementation of
+ * tf_psa_crypto_platform_zeroize(), for example by using directives specific
+ * to their compiler.
  */
-//#define PSA_CRYPTO_PLATFORM_ZEROIZE
+//#define TF_PSA_CRYPTO_PLATFORM_ZEROIZE
 
 /** \} name SECTION: General configuration options */
 
@@ -149,6 +150,7 @@
 #define PSA_WANT_ALG_CBC_NO_PADDING             1
 #define PSA_WANT_ALG_CBC_PKCS7                  1
 #define PSA_WANT_ALG_CCM                        1
+#define PSA_WANT_ALG_CCM_STAR_NO_TAG            1
 #define PSA_WANT_ALG_CMAC                       1
 #define PSA_WANT_ALG_CFB                        1
 #define PSA_WANT_ALG_CHACHA20_POLY1305          1
@@ -156,6 +158,7 @@
 #define PSA_WANT_ALG_DETERMINISTIC_ECDSA        1
 #define PSA_WANT_ALG_ECB_NO_PADDING             1
 #define PSA_WANT_ALG_ECDH                       1
+#define PSA_WANT_ALG_FFDH                       1
 #define PSA_WANT_ALG_ECDSA                      1
 #define PSA_WANT_ALG_JPAKE                      1
 #define PSA_WANT_ALG_GCM                        1
@@ -165,9 +168,8 @@
 #define PSA_WANT_ALG_HMAC                       1
 #define PSA_WANT_ALG_MD5                        1
 #define PSA_WANT_ALG_OFB                        1
-/* PBKDF2-HMAC is not yet supported via the PSA API in Mbed TLS.
- * Note: when adding support, also adjust include/mbedtls/config_psa.h */
-//#define PSA_WANT_ALG_PBKDF2_HMAC                1
+#define PSA_WANT_ALG_PBKDF2_HMAC                1
+#define PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128    1
 #define PSA_WANT_ALG_RIPEMD160                  1
 #define PSA_WANT_ALG_RSA_OAEP                   1
 #define PSA_WANT_ALG_RSA_PKCS1V15_CRYPT         1
@@ -178,12 +180,16 @@
 #define PSA_WANT_ALG_SHA_256                    1
 #define PSA_WANT_ALG_SHA_384                    1
 #define PSA_WANT_ALG_SHA_512                    1
+#define PSA_WANT_ALG_SHA3_224                   1
+#define PSA_WANT_ALG_SHA3_256                   1
+#define PSA_WANT_ALG_SHA3_384                   1
+#define PSA_WANT_ALG_SHA3_512                   1
 #define PSA_WANT_ALG_STREAM_CIPHER              1
 #define PSA_WANT_ALG_TLS12_PRF                  1
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
 #define PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS       1
 
-/* PBKDF2-HMAC is not yet supported via the PSA API in Mbed TLS.
+/* XTS is not yet supported via the PSA API in Mbed TLS.
  * Note: when adding support, also adjust include/mbedtls/config_psa.h */
 //#define PSA_WANT_ALG_XTS                        1
 
@@ -207,17 +213,45 @@
 #define PSA_WANT_ECC_SECP_R1_521                1
 
 #define PSA_WANT_KEY_TYPE_DERIVE                1
+#define PSA_WANT_KEY_TYPE_PASSWORD              1
+#define PSA_WANT_KEY_TYPE_PASSWORD_HASH         1
 #define PSA_WANT_KEY_TYPE_HMAC                  1
 #define PSA_WANT_KEY_TYPE_AES                   1
 #define PSA_WANT_KEY_TYPE_ARIA                  1
 #define PSA_WANT_KEY_TYPE_CAMELLIA              1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_DES                   1
-#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1
+//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
-#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
+
+/*
+ * The following symbols extend and deprecate the legacy
+ * PSA_WANT_KEY_TYPE_xxx_KEY_PAIR ones. They include the usage of that key in
+ * the name's suffix. "_USE" is the most generic and it can be used to describe
+ * a generic suport, whereas other ones add more features on top of that and
+ * they are more specific.
+ */
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC      1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE   1
+
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC      1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE 1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_DERIVE   1 /* Not supported */
+
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC       1
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT    1
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT    1
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE  1
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_DERIVE    1 /* Not supported */
 
 /** \} name SECTION: PSA cryptography interface configuration */
 
@@ -230,7 +264,7 @@
  * \{
  */
 
-/** \def PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+/** \def TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
  *
  * Enable key identifiers that encode a key owner identifier.
  *
@@ -240,9 +274,9 @@
  * Note that this option is meant for internal use only and may be removed
  * without notice.
  */
-//#define PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+//#define TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
 
-/** \def PSA_CRYPTO_BUILTIN_KEYS
+/** \def TF_PSA_CRYPTO_BUILTIN_KEYS
  *
  * Enable support for platform built-in keys. If you enable this feature,
  * you must implement the function psa_platform_get_builtin_key().
@@ -254,9 +288,9 @@
  * \warning This interface is experimental and may change or be removed
  * without notice.
  */
-//#define PSA_CRYPTO_BUILTIN_KEYS
+//#define TF_PSA_CRYPTO_BUILTIN_KEYS
 
-/** \def PSA_CRYPTO_EXTERNAL_RNG
+/** \def TF_PSA_CRYPTO_EXTERNAL_RNG
  *
  * Use an external random generator provided by a driver, instead of the
  * builtin entropy and DRBG modules.
@@ -284,20 +318,20 @@
  *
  * \note This option is experimental and may be removed without notice.
  */
-//#define PSA_CRYPTO_EXTERNAL_RNG
+//#define TF_PSA_CRYPTO_EXTERNAL_RNG
 
-/** \def PSA_CRYPTO_STORAGE_C
+/** \def TF_PSA_CRYPTO_STORAGE_C
  *
  * Enable the Platform Security Architecture persistent key storage.
  *
  * Module:  library/psa_crypto_storage.c
  *
- * Requires: PSA_CRYPTO_ITS_FILE_C or a native implementation of
+ * Requires: TF_PSA_CRYPTO_ITS_FILE_C or a native implementation of
  *           the PSA ITS interface
  */
-#define PSA_CRYPTO_STORAGE_C
+#define TF_PSA_CRYPTO_STORAGE_C
 
-/** \def PSA_CRYPTO_ITS_FILE_C
+/** \def TF_PSA_CRYPTO_ITS_FILE_C
  *
  * Enable the emulation of the Platform Security Architecture
  * Internal Trusted Storage (PSA ITS) over files.
@@ -305,31 +339,31 @@
  * Module:  library/psa_its_file.c
  *
  */
-#define PSA_CRYPTO_ITS_FILE_C
+#define TF_PSA_CRYPTO_ITS_FILE_C
 
-/** \def PSA_CRYPTO_HMAC_DRBG_HASH
+/** \def TF_PSA_CRYPTO_HMAC_DRBG_HASH
  *
  * Use HMAC_DRBG with the specified hash algorithm for HMAC_DRBG for
  * PSA cryptography.
  *
  * If this option is unset, PSA cryptography uses CTR_DRBG.
  */
-//#define PSA_CRYPTO_HMAC_DRBG_HASH PSA_ALG_SHA_256
+//#define TF_PSA_CRYPTO_HMAC_DRBG_HASH PSA_ALG_SHA_256
 
-/** \def PSA_CRYPTO_KEY_SLOT_COUNT
+/** \def TF_PSA_CRYPTO_KEY_SLOT_COUNT
  *
  * Restrict the PSA library to supporting a maximum amount of simultaneously
- * loaded keys. A loaded key is a key stored by the PSA Crypto core as a
+ * loaded keys. A loaded key is a key stored by the PSA cryptography core as a
  * volatile key, or a persistent key which is loaded temporarily by the
  * library as part of a crypto operation in flight.
  *
  * If this option is unset, the library will fall back to a default value of
  * 32 keys.
  */
-//#define PSA_CRYPTO_KEY_SLOT_COUNT 32
+//#define TF_PSA_CRYPTO_KEY_SLOT_COUNT 32
 
 /**
- * \def PSA_CRYPTO_PLATFORM_ENTROPY
+ * \def TF_PSA_CRYPTO_PLATFORM_ENTROPY
  *
  * Enable the usage of standard platform entropy functions like /dev/urandom or
  * Windows CryptoAPI as a source of entropy.
@@ -338,22 +372,22 @@
  * functions as a source of entropy.
  *
  */
-#define PSA_CRYPTO_PLATFORM_ENTROPY
+#define TF_PSA_CRYPTO_PLATFORM_ENTROPY
 
 /**
- * \def PSA_CRYPTO_HARDWARE_ENTROPY
+ * \def TF_PSA_CRYPTO_HARDWARE_ENTROPY
  *
- * Uncomment the macro to let PSA-Crypto use your own hardware entropy
+ * Uncomment the macro to let TF-PSA-Crypto use your own hardware entropy
  * collector.
  *
  * Your hardware entropy collector function must be called
- * \c psa_crypto_hardware_entropy(), see include/psa/platform.h for its
- * prototype.
+ * \c tf_psa_crypto_hardware_entropy(), see include/tf_psa_crypto/platform.h
+ * for its prototype.
  */
-//#define PSA_CRYPTO_HARDWARE_ENTROPY
+//#define TF_PSA_CRYPTO_HARDWARE_ENTROPY
 
 /**
- * \def PSA_CRYPTO_ENTROPY_NV_SEED
+ * \def TF_PSA_CRYPTO_ENTROPY_NV_SEED
  *
  * Enable the non-volatile (NV) seed entropy source.
  * (Also enables the NV seed read/write functions in the platform abstraction
@@ -364,32 +398,32 @@
  * (in hardware or kernel) available.
  *
  * \note If you use the library default functions that read a seed file
- *       with regular fopen() (PSA_CRYPTO_STD_FUNCTIONS and PSA_CRYPTO_FS_IO
+ *       with regular fopen() (TF_PSA_CRYPTO_STD_FUNCTIONS and TF_PSA_CRYPTO_FS_IO
  *       enabled), please make sure you make a seed file with the proper name
- *       (defined by PSA_CRYPTO_ENTROPY_NV_SEED_FILE) and at least
- *       PSA_CRYPTO_ENTROPY_BLOCK_SIZE bytes in size that can be read from
+ *       (defined by TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE) and at least
+ *       TF_PSA_CRYPTO_ENTROPY_BLOCK_SIZE bytes in size that can be read from
  *       and written to or you will get an entropy source error. The default
- *       functions will only use the first PSA_CRYPTO_ENTROPY_BLOCK_SIZE bytes
+ *       functions will only use the first TF_PSA_CRYPTO_ENTROPY_BLOCK_SIZE bytes
  *       from the file.
  *
  * \note The entropy collector will write to the seed file before entropy is
  *       given to an external source, to update it.
  */
-//#define PSA_CRYPTO_ENTROPY_NV_SEED
+//#define TF_PSA_CRYPTO_ENTROPY_NV_SEED
 
 /**
- * \def PSA_CRYPTO_ENTROPY_NV_SEED_FILE
+ * \def TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE
  *
  * Define the path to the file to be used as non-volatile seed entropy source.
  *
- * \note See the PSA_CRYPTO_ENTROPY_NV_SEED configuration option for more
+ * \note See the TF_PSA_CRYPTO_ENTROPY_NV_SEED configuration option for more
  *       information.
  *
- * \note If PSA_CRYPTO_ENTROPY_NV_SEED or PSA_CRYPTO_STD_FUNCTIONS or
- *       PSA_CRYPTO_FS_IO is disabled, this option does not have any effect on
+ * \note If TF_PSA_CRYPTO_ENTROPY_NV_SEED or TF_PSA_CRYPTO_STD_FUNCTIONS or
+ *       TF_PSA_CRYPTO_FS_IO is disabled, this option does not have any effect on
  *       the build.
  */
-#define PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
+#define TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
 
 /** \} name SECTION: PSA cryptography core configuration options */
 
@@ -405,22 +439,79 @@
  * \{
  */
 
-/** \def PSA_CRYPTO_HAVE_ASM
+/** \def TF_PSA_CRYPTO_HAVE_ASM
  *
  * The compiler has support for asm().
  *
  * Requires support for asm() in compiler.
  *
  * Used in:
+ *      builtin/src/aesni.h
  *      builtin/src/aria.c
  *      builtin/src/bn_mul.h
  *      builtin/src/constant_time.c
  *
  * Comment to disable the use of assembly code.
  */
-#define PSA_CRYPTO_HAVE_ASM
+#define TF_PSA_CRYPTO_HAVE_ASM
 
-/** \def PSA_CRYPTO_NO_UDBL_DIVISION
+/**
+ * \def TF_PSA_CRYPTO_AESNI_C
+ *
+ * Enable AES-NI support on x86-64 or x86-32.
+ *
+ * \note AESNI is only supported with certain compilers and target options:
+ * - Visual Studio 2013: supported.
+ * - GCC, x86-64, target not explicitly supporting AESNI:
+ *   requires MBEDTLS_HAVE_ASM.
+ * - GCC, x86-32, target not explicitly supporting AESNI:
+ *   not supported.
+ * - GCC, x86-64 or x86-32, target supporting AESNI: supported.
+ *   For this assembly-less implementation, you must currently compile
+ *   `library/aesni.c` and `library/aes.c` with machine options to enable
+ *   SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul` or
+ *   `clang -maes -mpclmul`.
+ * - Non-x86 targets: this option is silently ignored.
+ * - Other compilers: this option is silently ignored.
+ *
+ * \note
+ * Above, "GCC" includes compatible compilers such as Clang.
+ * The limitations on target support are likely to be relaxed in the future.
+ *
+ * Module:  builtin/src/aesni.c
+ * Caller:  builtin/src/aes.c
+ *
+ * Requires: TF_PSA_CRYPTO_HAVE_ASM (on some platforms, see note)
+ *
+ * This modules adds support for the AES-NI instructions on x86.
+ */
+#define TF_PSA_CRYPTO_AESNI_C
+
+/**
+ * \def TF_PSA_CRYPTO_AESCE_C
+ *
+ * Enable AES cryptographic extension support on 64-bit Arm.
+ *
+ * Module:  builtin/src/aesce.c
+ * Caller:  builtin/src/aes.c
+ *
+ * Requires: PSA_WANT_KEY_TYPE_AES
+ *
+ * \warning Runtime detection only works on Linux. For non-Linux operating
+ *          system, Armv8-A Cryptographic Extensions must be supported by
+ *          the CPU when this option is enabled.
+ *
+ * \note    Minimum compiler versions for this feature are Clang 4.0,
+ *          armclang 6.6, GCC 6.0 or MSVC 2019 version 16.11.2.
+ *
+ * \note \c CFLAGS must be set to a minimum of \c -march=armv8-a+crypto for
+ * armclang <= 6.9
+ *
+ * This module adds support for the AES Armv8-A Cryptographic Extensions on Aarch64 systems.
+ */
+#define TF_PSA_CRYPTO_AESCE_C
+
+/** \def TF_PSA_CRYPTO_NO_UDBL_DIVISION
  *
  * The platform lacks support for double-width integer division (64-bit
  * division on a 32-bit platform, 128-bit division on a 64-bit platform).
@@ -445,9 +536,9 @@
  * example, if double-width division is implemented in software, disabling
  * it can reduce code size in some embedded targets.
  */
-//#define PSA_CRYPTO_NO_UDBL_DIVISION
+//#define TF_PSA_CRYPTO_NO_UDBL_DIVISION
 
-/** \def PSA_CRYPTO_NO_64BIT_MULTIPLICATION
+/** \def TF_PSA_CRYPTO_NO_64BIT_MULTIPLICATION
  *
  * The platform lacks support for 32x32 -> 64-bit multiplication.
  *
@@ -466,9 +557,9 @@
  * Note that depending on the compiler, this may decrease performance compared
  * to using the library function provided by the toolchain.
  */
-//#define PSA_CRYPTO_NO_64BIT_MULTIPLICATION
+//#define TF_PSA_CRYPTO_NO_64BIT_MULTIPLICATION
 
-/** \def PSA_CRYPTO_AES_ROM_TABLES
+/** \def TF_PSA_CRYPTO_AES_ROM_TABLES
  *
  * Use precomputed AES tables stored in ROM.
  *
@@ -476,23 +567,23 @@
  * Comment this macro to generate AES tables in RAM at runtime.
  *
  * Tradeoff: Using precomputed ROM tables reduces RAM usage by ~8kb
- * (or ~2kb if \c PSA_CRYPTO_AES_FEWER_TABLES is used) and reduces the
+ * (or ~2kb if \c TF_PSA_CRYPTO_AES_FEWER_TABLES is used) and reduces the
  * initialization time before the first AES operation can be performed.
  * It comes at the cost of additional ~8kb ROM use (resp. ~2kb if \c
- * PSA_CRYPTO_AES_FEWER_TABLES below is used), and potentially degraded
+ * TF_PSA_CRYPTO_AES_FEWER_TABLES below is used), and potentially degraded
  * performance if ROM access is slower than RAM access.
  *
- * This option is independent of \c PSA_CRYPTO_AES_FEWER_TABLES.
+ * This option is independent of \c TF_PSA_CRYPTO_AES_FEWER_TABLES.
  *
  */
-//#define PSA_CRYPTO_AES_ROM_TABLES
+//#define TF_PSA_CRYPTO_AES_ROM_TABLES
 
-/** \def PSA_CRYPTO_AES_FEWER_TABLES
+/** \def TF_PSA_CRYPTO_AES_FEWER_TABLES
  *
  * Use less ROM/RAM for AES tables.
  *
  * Uncommenting this macro omits 75% of the AES tables from
- * ROM / RAM (depending on the value of \c PSA_CRYPTO_AES_ROM_TABLES)
+ * ROM / RAM (depending on the value of \c TF_PSA_CRYPTO_AES_ROM_TABLES)
  * by computing their values on the fly during operations
  * (the tables are entry-wise rotations of one another).
  *
@@ -503,20 +594,20 @@
  * operations within the same table. The performance gain/loss
  * depends on the system and memory details.
  *
- * This option is independent of \c PSA_CRYPTO_AES_ROM_TABLES.
+ * This option is independent of \c TF_PSA_CRYPTO_AES_ROM_TABLES.
  *
  */
-//#define PSA_CRYPTO_AES_FEWER_TABLES
+//#define TF_PSA_CRYPTO_AES_FEWER_TABLES
 
-/** \def PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
+/** \def TF_PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
  *
  * Use less ROM for the Camellia implementation (saves about 768 bytes).
  *
  * Uncomment this macro to use less memory for Camellia.
  */
-//#define PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
+//#define TF_PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
 
-/** \def PSA_CRYPTO_ECC_NIST_OPTIM
+/** \def TF_PSA_CRYPTO_ECP_NIST_OPTIM
  *
  * Enable specific 'modulo p' routines for each NIST prime.
  * Depending on the prime and architecture, makes operations 4 to 8 times
@@ -524,9 +615,9 @@
  *
  * Comment this macro to disable NIST curves optimisation.
  */
-#define PSA_CRYPTO_ECC_NIST_OPTIM
+#define TF_PSA_CRYPTO_ECP_NIST_OPTIM
 
-/** \def PSA_CRYPTO_SHA256_SMALLER
+/** \def TF_PSA_CRYPTO_SHA256_SMALLER
  *
  * Enable an implementation of SHA-256 that has lower ROM footprint but also
  * lower performance.
@@ -539,17 +630,36 @@
  *
  * Uncomment to enable the smaller implementation of SHA256.
  */
-//#define PSA_CRYPTO_SHA256_SMALLER
+//#define TF_PSA_CRYPTO_SHA256_SMALLER
 
-/** \def PSA_CRYPTO_SHA512_SMALLER
+/** \def TF_PSA_CRYPTO_SHA512_SMALLER
  *
  * Enable an implementation of SHA-512 that has lower ROM footprint but also
  * lower performance.
  *
  * Uncomment to enable the smaller implementation of SHA512.
  */
-//#define PSA_CRYPTO_SHA512_SMALLER
+//#define TF_PSA_CRYPTO_SHA512_SMALLER
 
 /** \} name SECTION: PSA driver interface implementation configuration options */
 
-#endif /* PSA_CRYPTO_CONFIG_H */
+/**
+ * \name SECTION: Configuration of cryptographic algorithms and mechanisms
+ * beyond the current PSA cryptography API.
+ *
+ * \{
+ */
+
+/**
+ * \def TF_PSA_CRYPTO_WANT_LMS
+ *
+ * Enable the LMS stateful-hash asymmetric signature algorithm.
+ *
+ * Comment to disable the LMS verification algorithm and public key operations.
+ */
+#define TF_PSA_CRYPTO_WANT_LMS
+
+/** \} name SECTION: Configuration of cryptographic algorithms and mechanisms not
+ * planned to be supported in medium term by the PSA cryptography API */
+
+#endif /* TF_PSA_CRYPTO_CONFIG_H */

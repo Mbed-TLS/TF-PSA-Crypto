@@ -1,0 +1,7 @@
+/**
+ * The version number x.y.z is split into three parts.
+ * Major, Minor, Patchlevel
+ */
+#define TF_PSA_CRYPTO_VERSION_MAJOR  @TF-PSA-Crypto_VERSION_MAJOR@
+#define TF_PSA_CRYPTO_VERSION_MINOR  @TF-PSA-Crypto_VERSION_MINOR@
+#define TF_PSA_CRYPTO_VERSION_PATCH  @TF-PSA-Crypto_VERSION_PATCH@

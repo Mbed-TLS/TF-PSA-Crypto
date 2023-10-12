@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""PSA-Crypto repository update from Mbed TLS
+"""TF-PSA-Crypto repository update from Mbed TLS
 """
 
 ## Copyright The Mbed TLS Contributors
@@ -20,9 +20,10 @@
 
 import argparse
 import os
-import stat
+import pathlib
 import re
 import shutil
+import stat
 
 def copy_of_psa_headers(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "include", "psa")
@@ -36,27 +37,31 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "include", "mbedtls")
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     destination_path = os.path.join(builtin_path, "include", "mbedtls")
+    include_tf_psa_crypto_path = os.path.join(psa_crypto_root_path, "include", "tf_psa_crypto")
 
     include_files = filter(lambda file_: not re.match(
-                           "x509.*|mps.*|ssl.*|base64\.*|nist_kw\.*|pem\.*|padlock\.*|pkcs.*|"\
-                           "\.gitignore|debug\.h|net_sockets\.h"\
-                           "", file_),
+                           "x509.*|mps.*|ssl.*|padlock\.*|pkcs7.*|"\
+                           "\.gitignore|debug\.h|net_sockets\.h|"\
+                           "hkdf\.h", file_),
                            os.listdir(source_path))
     for file_ in include_files:
         shutil.copy2(os.path.join(source_path, file_), destination_path)
 
-    ## Overwrite Mbed TLS default configuration file with the PSA-Crypto
+    ## Overwrite Mbed TLS default configuration file with the TF-PSA-Crypto
     ## repository specific one.
     shutil.copy2(os.path.join(builtin_path, "mbedtls_config.h"), destination_path)
 
+    if os.path.isfile(os.path.join(source_path, "lms.h")):
+        shutil.copy2(os.path.join(source_path, "lms.h"), include_tf_psa_crypto_path)
 
 def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     library_files = filter(lambda file_: not re.match(
-                           ".*\.o|x509.*|mps.*|ssl.*|base64\.*|nist_kw\.*|pem\.*|padlock\.*|pkcs.*|"\
+                           ".*\.o|x509.*|mps.*|ssl.*|padlock\.*|pkcs7.*|"\
                            "\.gitignore|Makefile|CMakeLists\.txt|"\
-                           "debug\.c|error\.c|net_sockets\.c"\
-                           "psa_crypto_core_common\.h", file_),
+                           "debug\.c|error\.c|net_sockets\.c|hkdf.c|"\
+                           "psa_crypto_core_common\.h"\
+                           "", file_),
                            os.listdir(os.path.join(mbedtls_root_path, "library")))
 
     for file_ in library_files:
@@ -76,7 +81,6 @@ def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
                               "psa_crypto_storage.c",
                               "psa_crypto_storage.h",
                               "psa_its_file.c",
-                              "psa_crypto_driver_wrappers.h",
                               "check_crypto_config.h" ]
 
     for file_ in psa_crypto_core_files:
@@ -101,6 +105,10 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "generate_psa_constants.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "output_env.sh"), destination_path)
     shutil.copy2(os.path.join(source_path, "config.py"), destination_path)
+    shutil.copy2(os.path.join(source_path, "min_requirements.py"), destination_path)
+
+    for path in pathlib.Path(source_path).glob("*.requirements.txt"):
+        shutil.copy2(str(path), destination_path)
 
     shutil.copytree(os.path.join(source_path, "mbedtls_dev"),
                     os.path.join(destination_path, "mbedtls_dev"), dirs_exist_ok=True)
@@ -109,27 +117,102 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
     source_path = os.path.join(mbedtls_root_path, "tests")
     destination_path = os.path.join(psa_crypto_root_path, "tests")
 
-    shutil.copy2(os.path.join(source_path, "seedfile"), destination_path)
+    ## tests/include
+    include_source_path = os.path.join(source_path, "include")
+    include_destination_path = os.path.join(destination_path, "include")
+    if not os.path.exists(include_destination_path):
+        os.mkdir(include_destination_path)
 
-    shutil.copytree(os.path.join(source_path, "include"),
-                    os.path.join(destination_path, "include"),
+    ## tests/include/spe
+    shutil.copytree(os.path.join(include_source_path, "spe"),
+                    os.path.join(include_destination_path, "spe"),
                     dirs_exist_ok=True)
 
-    shutil.copytree(os.path.join(source_path, "scripts"),
-                    os.path.join(destination_path, "scripts"),
+    ## tests/include/test
+    include_test_source_path = os.path.join(include_source_path, "test")
+    include_test_destination_path = os.path.join(include_destination_path, "test")
+    if not os.path.exists(include_test_destination_path):
+        os.mkdir(include_test_destination_path)
+
+    include_test_files = filter(lambda file_:
+                                os.path.isfile(os.path.join(include_test_source_path, file_))
+                                and
+                                (not re.match( ".*cert.*|.*ssl.*", file_)),
+                                os.listdir(include_test_source_path))
+    for file_ in include_test_files:
+        shutil.copy2(os.path.join(include_test_source_path, file_),
+                     os.path.join(include_test_destination_path, file_))
+
+    ## tests/include/test/drivers
+    shutil.copytree(os.path.join(include_test_source_path, "drivers"),
+                    os.path.join(include_test_destination_path, "drivers"),
                     dirs_exist_ok=True)
 
-    shutil.copytree(os.path.join(source_path, "src"),
-                    os.path.join(destination_path, "src"),
+    ## tests/scripts
+    scripts_source_path = os.path.join(source_path, "scripts")
+    scripts_destination_path = os.path.join(destination_path, "scripts")
+    if not os.path.exists(scripts_destination_path):
+        os.mkdir(scripts_destination_path)
+
+    scripts_files = filter(lambda file_: re.match(
+                           "all.sh|"\
+                           "analyze_outcomes.py|"\
+                           "check_test_cases.py|"\
+                           "generate_bignum_tests.py|"\
+                           "generate_ecp_tests.py|"\
+                           "generate_psa_tests.py|"\
+                           "generate_test_code.py|"\
+                           "scripts_path.py|"\
+                           "test_generate_test_code.py|"\
+                           "test_psa_compliance.py",
+                           file_), os.listdir(scripts_source_path))
+    for file_ in scripts_files:
+        shutil.copy2(os.path.join(scripts_source_path, file_),
+                     os.path.join(scripts_destination_path, file_))
+
+    ## tests/src
+    src_source_path = os.path.join(source_path, "src")
+    src_destination_path = os.path.join(destination_path, "src")
+    if not os.path.exists(src_destination_path):
+        os.mkdir(src_destination_path)
+
+    src_files = filter(lambda file_: not re.match(
+                       ".*cert.*|"\
+                       "drivers|"\
+                       ".*ssl.*|"\
+                       "test_helpers",
+                       file_), os.listdir(src_source_path))
+    for file_ in src_files:
+        shutil.copy2(os.path.join(src_source_path, file_),
+                     os.path.join(src_destination_path, file_))
+
+    ## tests/src/drivers
+    shutil.copytree(os.path.join(src_source_path, "drivers"),
+                    os.path.join(src_destination_path, "drivers"),
                     dirs_exist_ok=True)
 
-    tests_suites_files = filter(lambda file_: re.match(
-                                "test_suite_psa_crypto.*|helpers\.function|"\
-                                "host_test\.function|main_test\.function", file_),
-                                os.listdir(os.path.join(source_path, "suites")))
-    for file_ in tests_suites_files:
+    ## tests/suites
+    suites_files = filter(lambda file_: not re.match(
+                          "test_suite_x509.*|"\
+                          "test_suite_net.*|"\
+                          "test_suite_mps.*|"\
+                          "test_suite_ssl.*|"\
+                          "test_suite_debug.*|"\
+                          "test_suite_error.*|"\
+                          "test_suite_version.*|"\
+                          "test_suite_timing.*|"\
+                          "test_suite_platform.*|"\
+                          "test_suite_pkcs7.*|"\
+                          "test_suite_hkdf.*|"\
+                          "test_suite_psa_crypto_se_driver.*",
+                          file_), os.listdir(os.path.join(source_path, "suites")))
+    for file_ in suites_files:
         shutil.copy2(os.path.join(source_path, "suites", file_),
                      os.path.join(destination_path, "suites", file_))
+
+    ## tests/data_files
+    shutil.copytree(os.path.join(source_path, "data_files"),
+                    os.path.join(destination_path, "data_files"))
 
 def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
     programs_psa_files = filter(lambda file_: not re.match("CMakeLists\.txt|Makefile", file_),
@@ -139,6 +222,10 @@ def copy_from_programs(mbedtls_root_path, psa_crypto_root_path):
                      os.path.join(psa_crypto_root_path, "programs", "psa"))
 
 def copy_from_docs(mbedtls_root_path, psa_crypto_root_path):
+    source_path = os.path.join(mbedtls_root_path, "docs", "architecture")
+    destination_path = os.path.join(psa_crypto_root_path, "docs", "architecture")
+    shutil.copy2(os.path.join(source_path, "psa-crypto-implementation-structure.md"), destination_path)
+
     source_path = os.path.join(mbedtls_root_path, "docs", "proposed")
     destination_path = os.path.join(psa_crypto_root_path, "docs", "proposed")
     shutil.copy2(os.path.join(source_path, "psa-conditional-inclusion-c.md"), destination_path)
@@ -187,42 +274,21 @@ def extend_config_psa(psa_crypto_root_path):
     shutil.move(os.path.join(include_mbedtls_path, "config_psa.h"),
                 os.path.join(include_mbedtls_path, "config_psa.h.bak"))
 
-    if_defined_mbedtls_psa_crypto_config_file = re.compile("#if defined\(MBEDTLS_PSA_CRYPTO_CONFIG_FILE\)")
-    include_mbedtls_psa_crypto_config_file = re.compile("#include MBEDTLS_PSA_CRYPTO_CONFIG_FILE")
-    ext_placeholder = re.compile(".*BELOW THIS LINE - PLACEHOLDER FOR PSA-CRYPTO ADDITIONAL CONFIG OPTIONS TRANSLATION")
-    endif_mbedtls_psa_crypto_config = re.compile("#endif /\* MBEDTLS_PSA_CRYPTO_CONFIG \*/")
+    include_mbedtls_config_adjust_legacy_from_psa = re.compile("#include \"mbedtls/config_adjust_legacy_from_psa.h\"")
 
     with open(os.path.join(include_mbedtls_path, "config_psa.h"), 'x') as new_config_psa, \
          open(os.path.join(include_mbedtls_path, "config_psa.h.bak"), 'rt') as config_psa:
-
         for line in config_psa:
-            if if_defined_mbedtls_psa_crypto_config_file.match(line) != None:
-                new_config_psa.write("#if defined(PSA_CRYPTO_CONFIG_FILE)\n")
-            elif include_mbedtls_psa_crypto_config_file.match(line) != None:
-                new_config_psa.write("#include PSA_CRYPTO_CONFIG_FILE\n")
-            elif ext_placeholder.match(line) != None:
-                break
-            else:
-                new_config_psa.write(line)
-
-        with open(os.path.join(psa_crypto_root_path, "drivers", "builtin", "config_psa_ext.h"), 'rt') as ext:
-            for line in ext:
-                new_config_psa.write(line)
-
-        trailer = False
-        for line in config_psa:
-            if endif_mbedtls_psa_crypto_config.match(line) != None:
-                new_config_psa.write("\n")
-                trailer = True
-            if trailer:
-                new_config_psa.write(line)
+            new_config_psa.write(line)
+            if include_mbedtls_config_adjust_legacy_from_psa.match(line) != None:
+                new_config_psa.write("#include \"mbedtls/config_adjust_mbedtls_from_tf_psa_crypto.h\"\n")
 
 def main():
     parser = argparse.ArgumentParser(
         description=(
             """This script is for copying the PSA cryptography implementation
-            of Mbed TLS into the PSA-Crypto repository. Note: must be run from
-            the PSA-Crypto repository root."""
+            of Mbed TLS into the TF-PSA-Crypto repository. Note: must be run
+            from the TF-PSA-Crypto repository root."""
         )
     )
     parser.add_argument(

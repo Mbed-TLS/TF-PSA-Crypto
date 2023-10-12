@@ -20,8 +20,8 @@
  *  limitations under the License.
  */
 
-#ifndef PSA_CRYPTO_COMMON_H
-#define PSA_CRYPTO_COMMON_H
+#ifndef TF_PSA_CRYPTO_COMMON_H
+#define TF_PSA_CRYPTO_COMMON_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -75,6 +75,20 @@ extern void (*mbedtls_test_hook_test_fail)( const char * test, int line, const c
  */
 #define MBEDTLS_ALLOW_PRIVATE_ACCESS
 
+/**
+ * \brief       Securely zeroize a buffer then free it.
+ *
+ *              Similar to making consecutive calls to
+ *              \c mbedtls_platform_zeroize() and \c mbedtls_free(), but has
+ *              code size savings, and potential for optimisation in the future.
+ *
+ *              Guaranteed to be a no-op if \p buf is \c NULL and \p len is 0.
+ *
+ * \param buf   Buffer to be zeroized then freed.
+ * \param len   Length of the buffer in bytes
+ */
+void mbedtls_zeroize_and_free(void *buf, size_t len);
+
 /** Return an offset into a buffer.
  *
  * This is just the addition of an offset to a pointer, except that this
@@ -113,4 +127,4 @@ static inline const unsigned char *psa_crypto_buffer_offset_const(
     return( p == NULL ? NULL : p + n );
 }
 
-#endif /* PSA_CRYPTO_COMMON_H */
+#endif /* TF_PSA_CRYPTO_COMMON_H */
