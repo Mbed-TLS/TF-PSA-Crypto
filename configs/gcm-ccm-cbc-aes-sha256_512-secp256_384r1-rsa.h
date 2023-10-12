@@ -1,9 +1,9 @@
 /**
  * \file psa/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa
  *
- * \brief PSA crypto configuration with symmetric cryptography and asymmetric
- *        cryptography based on the secp256r1 or secp384r1 elliptic curves or
- *        RSA: GCM/CCM/CBC-AES, SHA-256, SHA-512, HMAC, ECDSA, ECDH,
+ * \brief TF-PSA-Crypto configuration with symmetric cryptography and
+ *        asymmetric cryptography based on the secp256r1 or secp384r1 elliptic
+ *        curves or RSA: GCM/CCM/CBC-AES, SHA-256, SHA-512, HMAC, ECDSA, ECDH,
  *        RSA-PKCS#1 v1.5, RSA-OAEP, RSA-PSS and key derivation.
  */
 /*
@@ -23,8 +23,8 @@
  *  limitations under the License.
  */
 
-#ifndef PSA_CRYPTO_CONFIG_H
-#define PSA_CRYPTO_CONFIG_H
+#ifndef TF_PSA_CRYPTO_GCM_CCM_CBC_AES_SHA256_512_SECP256_384R1_RSA_H
+#define TF_PSA_CRYPTO_GCM_CCM_CBC_AES_SHA256_512_SECP256_384R1_RSA_H
 
 /**
  * \name SECTION: General configuration options
@@ -32,11 +32,11 @@
  * \{
  */
 
-//#define PSA_CRYPTO_SPM
-//#define PSA_CRYPTO_STD_FUNCTIONS
-#define PSA_CRYPTO_FS_IO
-#define PSA_CRYPTO_MEMORY_BUFFER_ALLOC
-//#define PSA_CRYPTO_PLATFORM_ZEROIZE
+//#define TF_PSA_CRYPTO_SPM
+//#define TF_PSA_CRYPTO_STD_FUNCTIONS
+#define TF_PSA_CRYPTO_FS_IO
+#define TF_PSA_CRYPTO_MEMORY_BUFFER_ALLOC
+//#define TF_PSA_CRYPTO_PLATFORM_ZEROIZE
 
 /** \} name SECTION: General configuration options */
 
@@ -88,17 +88,17 @@
  * \{
  */
 
-#define PSA_CRYPTO_KEY_ID_ENCODES_OWNER
-//#define PSA_CRYPTO_BUILTIN_KEYS
-//#define PSA_CRYPTO_EXTERNAL_RNG
-#define PSA_CRYPTO_STORAGE_C
-#define PSA_CRYPTO_ITS_FILE_C
-//#define PSA_CRYPTO_HMAC_DRBG_HASH PSA_ALG_SHA_256
-//#define PSA_CRYPTO_KEY_SLOT_COUNT 32
-//#define PSA_CRYPTO_PLATFORM_ENTROPY
-//#define PSA_CRYPTO_HARDWARE_ENTROPY
-#define PSA_CRYPTO_ENTROPY_NV_SEED
-#define PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
+#define TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+//#define TF_PSA_CRYPTO_BUILTIN_KEYS
+//#define TF_PSA_CRYPTO_EXTERNAL_RNG
+#define TF_PSA_CRYPTO_STORAGE_C
+#define TF_PSA_CRYPTO_ITS_FILE_C
+//#define TF_PSA_CRYPTO_HMAC_DRBG_HASH PSA_ALG_SHA_256
+//#define TF_PSA_CRYPTO_KEY_SLOT_COUNT 32
+//#define TF_PSA_CRYPTO_PLATFORM_ENTROPY
+//#define TF_PSA_CRYPTO_HARDWARE_ENTROPY
+#define TF_PSA_CRYPTO_ENTROPY_NV_SEED
+#define TF_PSA_CRYPTO_ENTROPY_NV_SEED_FILE "seedfile"
 
 /** \} name SECTION: PSA cryptography core configuration options */
 
@@ -110,16 +110,16 @@
  * \{
  */
 
-#define PSA_CRYPTO_HAVE_ASM
-//#define PSA_CRYPTO_NO_UDBL_DIVISION
-#define PSA_CRYPTO_NO_64BIT_MULTIPLICATION
-#define PSA_CRYPTO_AES_ROM_TABLES
-#define PSA_CRYPTO_AES_FEWER_TABLES
-//#define PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
-#define PSA_CRYPTO_ECC_NIST_OPTIM
-#define PSA_CRYPTO_SHA256_SMALLER
-//#define PSA_CRYPTO_SHA512_SMALLER
+#define TF_PSA_CRYPTO_HAVE_ASM
+//#define TF_PSA_CRYPTO_NO_UDBL_DIVISION
+#define TF_PSA_CRYPTO_NO_64BIT_MULTIPLICATION
+#define TF_PSA_CRYPTO_AES_ROM_TABLES
+#define TF_PSA_CRYPTO_AES_FEWER_TABLES
+//#define TF_PSA_CRYPTO_CAMELLIA_SMALL_MEMORY
+#define TF_PSA_CRYPTO_ECP_NIST_OPTIM
+#define TF_PSA_CRYPTO_SHA256_SMALLER
+//#define TF_PSA_CRYPTO_SHA512_SMALLER
 
 /** \} name SECTION: PSA driver interface implementation configuration options */
 
-#endif /* PSA_CRYPTO_CONFIG_H */
+#endif /* TF_PSA_CRYPTO_GCM_CCM_CBC_AES_SHA256_512_SECP256_384R1_RSA_H */

@@ -10,10 +10,10 @@
 #     directories. That way, a target linking to a library (using the
 #     target_link_libraries command) inherits from the library PUBLIC include
 #     directories and not from the PRIVATE ones.
-# - PSA_CRYPTO_TARGET_PREFIX: CMake targets are designed to be alterable by
+# - TF_PSA_CRYPTO_TARGET_PREFIX: CMake targets are designed to be alterable by
 #   calling CMake in order to avoid target name clashes, via the use of
-#   PSA_CRYPTO_TARGET_PREFIX. The value of this variable is prefixed to the
-#   psacrypto and apidoc targets.
+#   TF_PSA_CRYPTO_TARGET_PREFIX. The value of this variable is prefixed to the
+#   tfpsacrypto and apidoc targets.
 #
 
 # We specify a minimum requirement of 3.16.3, but for now use 3.5.1 here
@@ -33,31 +33,45 @@ cmake_policy(SET CMP0011 NEW)
 # is deprecated and will be removed in future versions.
 cmake_policy(SET CMP0012 NEW)
 
+set(TF_PSA_CRYPTO_VERSION 0.1.0)
+set(TF_PSA_CRYPTO_SOVERSION 0)
+
 if(TEST_CPP)
-    project("PSA-Crypto" C CXX)
+    project("TF-PSA-Crypto" LANGUAGES C CXX VERSION ${TF_PSA_CRYPTO_VERSION})
 else()
-    project("PSA-Crypto" C)
+    project("TF-PSA-Crypto" LANGUAGES C VERSION ${TF_PSA_CRYPTO_VERSION})
 endif()
 
 include(GNUInstallDirs)
 
-# Determine if PSA-Crypto is being built as a subproject using add_subdirectory()
-if(NOT DEFINED PSA_CRYPTO_AS_SUBPROJECT)
-  set(PSA_CRYPTO_AS_SUBPROJECT ON)
+# Determine if TF-PSA-Crypto is being built as a subproject using
+# add_subdirectory()
+if(NOT DEFINED TF_PSA_CRYPTO_AS_SUBPROJECT)
+  set(TF_PSA_CRYPTO_AS_SUBPROJECT ON)
   if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(PSA_CRYPTO_AS_SUBPROJECT OFF)
+    set(TF_PSA_CRYPTO_AS_SUBPROJECT OFF)
   endif()
 endif()
 
 # Set the project root directory.
-set(PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(TF_PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Put the version numbers into relevant files
+set(version_number_files
+        include/tf_psa_crypto/version.h
+        doxygen/input/doc_mainpage.h
+        doxygen/tfpsacrypto.doxyfile)
+foreach(file ${version_number_files})
+    configure_file(${file}.in
+                   ${TF_PSA_CRYPTO_DIR}/${file})
+endforeach(file)
 
 # Set-up configuration file
-set(PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
-    "PSA-Crypto configuration file, absolute path or path relative to the root directory")
-get_filename_component(PSA_CRYPTO_CONFIG_FILE_REALPATH
-                       ${PSA_CRYPTO_CONFIG_FILE} REALPATH BASE_DIR ${PSA_CRYPTO_DIR})
-configure_file(${PSA_CRYPTO_CONFIG_FILE_REALPATH}
+set(TF_PSA_CRYPTO_CONFIG_FILE include/psa/crypto_config.h CACHE STRING
+    "TF-PSA-Crypto configuration file, absolute path or path relative to the root directory")
+get_filename_component(TF_PSA_CRYPTO_CONFIG_FILE_REALPATH
+                       ${TF_PSA_CRYPTO_CONFIG_FILE} REALPATH BASE_DIR ${TF_PSA_CRYPTO_DIR})
+configure_file(${TF_PSA_CRYPTO_CONFIG_FILE_REALPATH}
                ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
                COPYONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
@@ -66,36 +80,35 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/psa/crypto_config.h
 
 option(ENABLE_PROGRAMS "Build PSA cryptography example programs." ON)
 
-option(PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
-if(CMAKE_HOST_WIN32)
-    option(GEN_FILES "Generate the auto-generated files as needed" OFF)
-else()
-    option(GEN_FILES "Generate the auto-generated files as needed" ON)
-endif()
+option(TF_PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
+option(GEN_FILES "Generate the auto-generated files as needed." OFF)
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.15.0)
     set(Python3_FIND_STRATEGY LOCATION)
     find_package(Python3 COMPONENTS Interpreter)
     if(Python3_Interpreter_FOUND)
-        set(PSA_CRYPTO_PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+        set(TF_PSA_CRYPTO_PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
     endif()
 else()
     find_package(PythonInterp 3)
     if(PYTHONINTERP_FOUND)
-        set(PSA_CRYPTO_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
+        set(TF_PSA_CRYPTO_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
     endif()
 endif()
 
-option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target export and installation" ${PSA_CRYPTO_AS_SUBPROJECT})
+option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target export and installation" ${TF_PSA_CRYPTO_AS_SUBPROJECT})
 
 string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
 string(REGEX MATCH "GNU" CMAKE_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
+string(REGEX MATCH "MSVC" CMAKE_COMPILER_IS_MSVC "${CMAKE_C_COMPILER_ID}")
 
-if(NOT CMAKE_COMPILER_IS_CLANG AND NOT CMAKE_COMPILER_IS_GNU)
+if(NOT CMAKE_COMPILER_IS_CLANG AND
+   NOT CMAKE_COMPILER_IS_GNU AND
+   NOT CMAKE_COMPILER_IS_MSVC)
     message(FATAL_ERROR "Compiler ${CMAKE_C_COMPILER_ID} not supported.")
 endif()
 
-option(ENABLE_TESTING "Build PSA-Crypto tests." ON)
+option(ENABLE_TESTING "Build TF-PSA-Crypto tests." ON)
 
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -106,6 +119,7 @@ endif()
 
 # Create a symbolic link from ${base_name} in the binary directory
 # to the corresponding path in the source directory.
+# Note: Copies the file(s) on Windows.
 function(link_to_source base_name)
     set(link "${CMAKE_CURRENT_BINARY_DIR}/${base_name}")
     set(target "${CMAKE_CURRENT_SOURCE_DIR}/${base_name}")
@@ -121,6 +135,15 @@ function(link_to_source base_name)
 
             if (NOT ${result} EQUAL 0)
                 message(FATAL_ERROR "Could not create symbolic link for: ${target} --> ${output}")
+            endif()
+        else()
+            if (IS_DIRECTORY ${target})
+                file(GLOB_RECURSE files FOLLOW_SYMLINKS LIST_DIRECTORIES false RELATIVE ${target} "${target}/*")
+                foreach(file IN LISTS files)
+                    configure_file("${target}/${file}" "${link}/${file}" COPYONLY)
+                endforeach(file)
+            else()
+                configure_file(${target} ${link} COPYONLY)
             endif()
         endif()
     endif()
@@ -195,11 +218,20 @@ if(CMAKE_COMPILER_IS_CLANG)
     set(CMAKE_C_FLAGS_CHECK       "-Os")
 endif(CMAKE_COMPILER_IS_CLANG)
 
-if(PSA_CRYPTO_FATAL_WARNINGS)
+if(CMAKE_COMPILER_IS_MSVC)
+    # Strictest warnings, UTF-8 source and execution charset
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3 /utf-8")
+endif(CMAKE_COMPILER_IS_MSVC)
+
+if(TF_PSA_CRYPTO_FATAL_WARNINGS)
+    if(CMAKE_COMPILER_IS_MSVC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX")
+    endif(CMAKE_COMPILER_IS_MSVC)
+
     if(CMAKE_COMPILER_IS_CLANG OR CMAKE_COMPILER_IS_GNU)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
     endif(CMAKE_COMPILER_IS_CLANG OR CMAKE_COMPILER_IS_GNU)
-endif(PSA_CRYPTO_FATAL_WARNINGS)
+endif(TF_PSA_CRYPTO_FATAL_WARNINGS)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if(CMAKE_COMPILER_IS_GNU OR CMAKE_COMPILER_IS_CLANG)
@@ -220,19 +252,21 @@ add_subdirectory(core)
 # and programs. This shared test code is compiled and linked to test suites and
 # programs objects as a set of compiled objects. The compiled objects are NOT
 # built into a library that the test suite and program objects would link
-# against as they link against the psacrypto library.
+# against as they link against the tfpsacrypto library.
 # The reason is that such library is expected to have mutual dependencies with
-# the psacrypto library and that there is as of today no portable way of
+# the tfpsacrypto library and that there is as of today no portable way of
 # handling such dependencies (only toolchain specific solutions).
 #
-# Thus the below definition of the `psa_crypto_test` CMake library of objects
+# Thus the below definition of the `tf_psa_crypto_test` CMake library of objects
 # target. This library of objects is used by tests and programs CMake files
 # to define the test executables.
 #
 if(ENABLE_TESTING OR ENABLE_PROGRAMS)
-    file(GLOB PSA_CRYPTO_TEST_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
-    add_library(psa_crypto_test OBJECT ${PSA_CRYPTO_TEST_FILES})
-    target_include_directories(psa_crypto_test
+    file(GLOB TF_PSA_CRYPTO_TEST_FILES
+         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c
+         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/drivers/*.c)
+    add_library(tf_psa_crypto_test OBJECT ${TF_PSA_CRYPTO_TEST_FILES})
+    target_include_directories(tf_psa_crypto_test
         PRIVATE ${CMAKE_BINARY_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/builtin/include
@@ -245,8 +279,8 @@ if(ENABLE_PROGRAMS)
     add_subdirectory(programs)
 endif()
 
-ADD_CUSTOM_TARGET(${PSA_CRYPTO_TARGET_PREFIX}apidoc
-    COMMAND doxygen psacrypto.doxyfile
+ADD_CUSTOM_TARGET(${TF_PSA_CRYPTO_TARGET_PREFIX}apidoc
+    COMMAND doxygen tfpsacrypto.doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doxygen)
 
 if(ENABLE_TESTING)
@@ -257,10 +291,6 @@ if(ENABLE_TESTING)
     # additional convenience targets for Unix only
     if(UNIX)
 
-        ADD_CUSTOM_TARGET(covtest
-            COMMAND make test
-        )
-
 # Typical sequence using lcov target (out-of-tree build from (root)/build):
 # cmake -D CMAKE_BUILD_TYPE:String=Coverage ..
 # cmake --build .
@@ -269,12 +299,12 @@ if(ENABLE_TESTING)
 # Browse `Coverage/index.html`
         ADD_CUSTOM_TARGET(lcov
             COMMAND rm -rf Coverage
-            COMMAND lcov --capture --initial --directory core/CMakeFiles/psacrypto.dir -o files.info
-            COMMAND lcov --capture --directory core/CMakeFiles/psacrypto.dir -o tests.info
+            COMMAND lcov --capture --initial --directory core/CMakeFiles/tfpsacrypto.dir -o files.info
+            COMMAND lcov --capture --directory core/CMakeFiles/tfpsacrypto.dir -o tests.info
             COMMAND lcov --add-tracefile files.info --add-tracefile tests.info -o all.info
             COMMAND lcov --remove all.info -o final.info '*.h'
             COMMAND gendesc ${CMAKE_CURRENT_SOURCE_DIR}/tests/Descriptions.txt -o descriptions
-            COMMAND genhtml --title "PSA-Crypto" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
+            COMMAND genhtml --title "TF-PSA-Crypto" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
             COMMAND rm -f files.info tests.info all.info final.info descriptions
         )
 
@@ -303,36 +333,35 @@ endif()
 
 if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
     configure_package_config_file(
-        "cmake/PSACryptoConfig.cmake.in"
-        "cmake/PSACryptoConfig.cmake"
+        "cmake/TF-PSA-CryptoConfig.cmake.in"
+        "cmake/TF-PSA-CryptoConfig.cmake"
             INSTALL_DESTINATION "cmake")
 
     write_basic_package_version_file(
-        "cmake/PSACryptoConfigVersion.cmake"
-            COMPATIBILITY SameMajorVersion
-            VERSION 0.1.0)
+        "cmake/TF-PSA-CryptoConfigVersion.cmake"
+            COMPATIBILITY SameMajorVersion)
 
     install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfig.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/cmake/PSACryptoConfigVersion.cmake"
-        DESTINATION "cmake")
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/TF-PSA-CryptoConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/cmake/TF-PSA-CryptoConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/TF-PSA-Crypto")
 
     export(
-        EXPORT PSACryptoTargets
-        NAMESPACE PSACrypto::
-        FILE "cmake/PSACryptoTargets.cmake")
+        EXPORT TF-PSA-CryptoTargets
+        NAMESPACE TF-PSA-Crypto::
+        FILE "cmake/TF-PSA-CryptoTargets.cmake")
 
     install(
-        EXPORT PSACryptoTargets
-        NAMESPACE PSACrypto::
-        DESTINATION "cmake"
-        FILE "PSACryptoTargets.cmake")
+        EXPORT TF-PSA-CryptoTargets
+        NAMESPACE TF-PSA-Crypto::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/TF-PSA-Crypto"
+        FILE "TF-PSA-CryptoTargets.cmake")
 
     if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
         # Do not export the package by default
         cmake_policy(SET CMP0090 NEW)
 
         # Make this package visible to the system
-        export(PACKAGE PSACrypto)
+        export(PACKAGE TF-PSA-Crypto)
     endif()
 endif()

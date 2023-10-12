@@ -4,7 +4,7 @@
  * \brief Build-time configuration info
  *
  *  Include this file if you need to depend on the
- *  configuration options defined in crypto_config.h or PSA_CRYPTO_CONFIG_FILE.
+ *  configuration options defined in crypto_config.h or TF_PSA_CRYPTO_CONFIG_FILE.
  */
  /*
   *  Copyright The Mbed TLS Contributors
@@ -23,8 +23,29 @@
   *  limitations under the License.
   */
 
-#ifndef PSA_CRYPTO_BUILD_INFO_H
-#define PSA_CRYPTO_BUILD_INFO_H
+#ifndef TF_PSA_CRYPTO_BUILD_INFO_H
+#define TF_PSA_CRYPTO_BUILD_INFO_H
+
+#include <tf_psa_crypto/version.h>
+
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
+
+/**
+ * The single version number has the following structure:
+ *    MMNNPP00
+ *    Major version | Minor version | Patch version
+ */
+#define TF_PSA_CRYPTO_VERSION_NUMBER  ((TF_PSA_CRYPTO_VERSION_MAJOR << 24) | \
+                                       (TF_PSA_CRYPTO_VERSION_MINOR << 16) | \
+                                       (TF_PSA_CRYPTO_VERSION_PATCH <<  8))
+
+#define TF_PSA_CRYPTO_VERSION_STRING  STRINGIFY(TF_PSA_CRYPTO_VERSION_MAJOR) \
+                                                   "."                       \
+                                      STRINGIFY(TF_PSA_CRYPTO_VERSION_MINOR) \
+                                                   "."                       \
+                                      STRINGIFY(TF_PSA_CRYPTO_VERSION_PATCH)
+#define TF_PSA_CRYPTO_VERSION_STRING_FULL  ("TF-PSA-Crypto " TF_PSA_CRYPTO_VERSION_STRING)
 
 /* Define `inline` on some non-C99-compliant compilers. */
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
@@ -36,26 +57,28 @@
  * Configuration of the PSA cryptographic mechanisms to include in the PSA
  * cryptography interface.
  */
-#if !defined(PSA_CRYPTO_CONFIG_FILE)
+#if !defined(TF_PSA_CRYPTO_CONFIG_FILE)
 #include "psa/crypto_config.h"
 #else
-#include PSA_CRYPTO_CONFIG_FILE
+#include TF_PSA_CRYPTO_CONFIG_FILE
 #endif
 
 /*
  * Patch the configuration defined by `"psa/crypto_config.h"` or
- * #PSA_CRYPTO_CONFIG_FILE.
+ * #TF_PSA_CRYPTO_CONFIG_FILE.
  */
-#if defined(PSA_CRYPTO_CONFIG_PATCH)
-#include PSA_CRYPTO_CONFIG_PATCH
+#if defined(TF_PSA_CRYPTO_CONFIG_PATCH)
+#include TF_PSA_CRYPTO_CONFIG_PATCH
 #endif
 
 /*
- * Compute Mbed TLS configuration options from the PSA-Crypto ones as
+ * Compute Mbed TLS configuration options from the TF-PSA-Crypto ones as
  * PSA headers and core depends on some of them.
  */
 #define MBEDTLS_PSA_CRYPTO_C
 #define MBEDTLS_PSA_CRYPTO_CONFIG
 #include "mbedtls/config_psa.h"
 
-#endif /* PSA_CRYPTO_BUILD_INFO_H */
+#include "mbedtls/config_adjust_legacy_crypto.h"
+
+#endif /* TF_PSA_CRYPTO_BUILD_INFO_H */

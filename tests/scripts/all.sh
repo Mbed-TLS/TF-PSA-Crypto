@@ -123,15 +123,27 @@ set -e -o pipefail -u
 # Enable ksh/bash extended file matching patterns
 shopt -s extglob
 
+in_mbedtls_repo () {
+    test -d include -a -d library -a -d programs -a -d tests
+}
+
+in_tf_psa_crypto_repo () {
+    test -d include -a -d core -a -d drivers -a -d programs -a -d tests
+}
+
 pre_check_environment () {
-    if [ -d core -a -d include -a -d tests ]; then :; else
-        echo "Must be run from mbed TLS root" >&2
+    if in_mbedtls_repo || in_tf_psa_crypto_repo; then :; else
+        echo "Must be run from Mbed TLS / TF-PSA-Crypto root" >&2
         exit 1
     fi
 }
 
 pre_initialize_variables () {
-    CONFIG_H='drivers/builtin/include/mbedtls/mbedtls_config.h'
+    if in_mbedtls_repo; then
+        CONFIG_H='include/mbedtls/mbedtls_config.h'
+    else
+        CONFIG_H='drivers/builtin/include/mbedtls/mbedtls_config.h'
+    fi
     CRYPTO_CONFIG_H='include/psa/crypto_config.h'
     CONFIG_TEST_DRIVER_H='tests/include/test/drivers/config_test_driver.h'
 
@@ -141,8 +153,10 @@ pre_initialize_variables () {
     backup_suffix='.all.bak'
     # Files clobbered by config.py
     files_to_back_up="$CONFIG_H $CRYPTO_CONFIG_H $CONFIG_TEST_DRIVER_H"
-    # Files clobbered by in-tree cmake
-    #files_to_back_up="$files_to_back_up Makefile library/Makefile programs/Makefile tests/Makefile programs/fuzz/Makefile"
+    if in_mbedtls_repo; then
+        # Files clobbered by in-tree cmake
+        files_to_back_up="$files_to_back_up Makefile library/Makefile programs/Makefile tests/Makefile programs/fuzz/Makefile"
+    fi
 
     append_outcome=0
     MEMORY=0
@@ -176,7 +190,10 @@ pre_initialize_variables () {
     : ${ARMC6_BIN_DIR:=/usr/bin}
     : ${ARM_NONE_EABI_GCC_PREFIX:=arm-none-eabi-}
     : ${ARM_LINUX_GNUEABI_GCC_PREFIX:=arm-linux-gnueabi-}
-
+    : ${CLANG_LATEST:="clang-latest"}
+    : ${CLANG_EARLIEST:="clang-earliest"}
+    : ${GCC_LATEST:="gcc-latest"}
+    : ${GCC_EARLIEST:="gcc-earliest"}
     # if MAKEFLAGS is not set add the -j option to speed up invocations of make
     if [ -z "${MAKEFLAGS+set}" ]; then
         export MAKEFLAGS="-j$(all_sh_nproc)"
@@ -189,11 +206,13 @@ pre_initialize_variables () {
     # default to -O2, use -Ox _after_ this if you want another level
     ASAN_CFLAGS='-O2 -Werror -fsanitize=address,undefined -fno-sanitize-recover=all'
 
+    # Platform tests have an allocation that returns null
+    export ASAN_OPTIONS="allocator_may_return_null=1"
+    export MSAN_OPTIONS="allocator_may_return_null=1"
+
     # Gather the list of available components. These are the functions
     # defined in this script whose name starts with "component_".
-    # Parse the script with sed. This way we get the functions in the order
-    # they are defined.
-    ALL_COMPONENTS=$(sed -n 's/^ *component_\([0-9A-Z_a-z]*\) *().*/\1/p' <"$0")
+    ALL_COMPONENTS=$(compgen -A function component_ | sed 's/component_//')
 
     # Exclude components that are not supported on this platform.
     SUPPORTED_COMPONENTS=
@@ -275,6 +294,10 @@ General options:
 Tool path options:
      --armc5-bin-dir=<ARMC5_bin_dir_path>       ARM Compiler 5 bin directory.
      --armc6-bin-dir=<ARMC6_bin_dir_path>       ARM Compiler 6 bin directory.
+     --clang-earliest=<Clang_earliest_path>     Earliest version of clang available
+     --clang-latest=<Clang_latest_path>         Latest version of clang available
+     --gcc-earliest=<GCC_earliest_path>         Earliest version of GCC available
+     --gcc-latest=<GCC_latest_path>             Latest version of GCC available
      --gnutls-cli=<GnuTLS_cli_path>             GnuTLS client executable to use for most tests.
      --gnutls-serv=<GnuTLS_serv_path>           GnuTLS server executable to use for most tests.
      --gnutls-legacy-cli=<GnuTLS_cli_path>      GnuTLS client executable to use for legacy tests.
@@ -290,7 +313,9 @@ EOF
 # Does not remove generated source files.
 cleanup()
 {
-    #command make clean
+    if in_mbedtls_repo; then
+        command make clean
+    fi
 
     # Remove CMake artefacts
     find . -name .git -prune -o \
@@ -403,9 +428,9 @@ err_msg()
 
 check_tools()
 {
-    for TOOL in "$@"; do
-        if ! `type "$TOOL" >/dev/null 2>&1`; then
-            err_msg "$TOOL not found!"
+    for tool in "$@"; do
+        if ! `type "$tool" >/dev/null 2>&1`; then
+            err_msg "$tool not found!"
             exit 1
         fi
     done
@@ -441,9 +466,13 @@ pre_parse_command_line () {
             --armcc) no_armcc=;;
             --armc5-bin-dir) shift; ;; # assignment to ARMC5_BIN_DIR done in pre_parse_command_line_for_dirs
             --armc6-bin-dir) shift; ;; # assignment to ARMC6_BIN_DIR done in pre_parse_command_line_for_dirs
+            --clang-earliest) shift; CLANG_EARLIEST="$1";;
+            --clang-latest) shift; CLANG_LATEST="$1";;
             --error-test) error_test=$((error_test + 1));;
             --except) all_except=1;;
             --force|-f) FORCE=1;;
+            --gcc-earliest) shift; GCC_EARLIEST="$1";;
+            --gcc-latest) shift; GCC_LATEST="$1";;
             --gnutls-cli) shift; GNUTLS_CLI="$1";;
             --gnutls-legacy-cli) shift; GNUTLS_LEGACY_CLI="$1";;
             --gnutls-legacy-serv) shift; GNUTLS_LEGACY_SERV="$1";;
@@ -542,8 +571,8 @@ pre_check_git () {
             exit 1
         fi
 
-        if ! git diff --quiet drivers/builtin/include/mbedtls/mbedtls_config.h; then
-            err_msg "Warning - the configuration file 'include/mbedtls/mbedtls_config.h' has been edited. "
+        if ! git diff --quiet "$CONFIG_H"; then
+            err_msg "Warning - the configuration file '$CONFIG_H' has been edited. "
             echo "You can either delete or preserve your work, or force the test by rerunning the"
             echo "script as: $0 --force"
             exit 1
@@ -799,7 +828,7 @@ pre_check_tools () {
 pre_generate_files() {
     # since make doesn't have proper dependencies, remove any possibly outdate
     # file that might be around before generating fresh ones
-    # make neat
+    make neat
     if [ $QUIET -eq 1 ]; then
         make generated_files >/dev/null
     else
@@ -855,10 +884,10 @@ pre_generate_files() {
 # Adjust the configuration - for both libtestdriver1 and main library,
 # as they should have the same PSA_WANT macros.
 helper_libtestdriver1_adjust_config() {
-    BASE_CONFIG=$1
+    base_config=$1
     # Select the base configuration
-    if [ "$BASE_CONFIG" != "default" ]; then
-        scripts/config.py "$BASE_CONFIG"
+    if [ "$base_config" != "default" ]; then
+        scripts/config.py "$base_config"
     fi
 
     # Enable PSA-based config (necessary to use drivers)
@@ -866,12 +895,53 @@ helper_libtestdriver1_adjust_config() {
 
     # Disable ALG_STREAM_CIPHER and ALG_ECB_NO_PADDING to avoid having
     # partial support for cipher operations in the driver test library.
-    scripts/config.py -f include/psa/crypto_config.h unset PSA_WANT_ALG_STREAM_CIPHER
-    scripts/config.py -f include/psa/crypto_config.h unset PSA_WANT_ALG_ECB_NO_PADDING
+    scripts/config.py -f "$CRYPTO_CONFIG_H" unset PSA_WANT_ALG_STREAM_CIPHER
+    scripts/config.py -f "$CRYPTO_CONFIG_H" unset PSA_WANT_ALG_ECB_NO_PADDING
 
     # Dynamic secure element support is a deprecated feature and needs to be disabled here.
     # This is done to have the same form of psa_key_attributes_s for libdriver and library.
     scripts/config.py unset MBEDTLS_PSA_CRYPTO_SE_C
+}
+
+# When called with no parameter this function disables all builtin curves.
+# The function optionally accepts 1 parameter: a space-separated list of the
+# curves that should be kept enabled.
+helper_disable_builtin_curves() {
+    allowed_list="${1:-}"
+    scripts/config.py unset-all "MBEDTLS_ECP_DP_[0-9A-Z_a-z]*_ENABLED"
+
+    for curve in $allowed_list; do
+        scripts/config.py set $curve
+    done
+}
+
+# Helper returning the list of supported elliptic curves from CRYPTO_CONFIG_H,
+# without the "PSA_WANT_" prefix. This becomes handy for accelerating curves
+# in the following helpers.
+helper_get_psa_curve_list () {
+    loc_list=""
+    for item in $(sed -n 's/^#define PSA_WANT_\(ECC_[0-9A-Z_a-z]*\).*/\1/p' <"$CRYPTO_CONFIG_H"); do
+        loc_list="$loc_list $item"
+    done
+
+    echo "$loc_list"
+}
+
+# Get the list of uncommented PSA_WANT_KEY_TYPE_xxx_ from CRYPTO_CONFIG_H. This
+# is useful to easily get a list of key type symbols to accelerate.
+# The function accepts a single argument which is the key type: ECC, DH, RSA.
+helper_get_psa_key_type_list() {
+    key_type="$1"
+    loc_list=""
+    for item in $(sed -n "s/^#define PSA_WANT_\(KEY_TYPE_${key_type}_[0-9A-Z_a-z]*\).*/\1/p" <"$CRYPTO_CONFIG_H"); do
+        # Skip DERIVE for elliptic keys since there is no driver dispatch for
+        # it so it cannot be accelerated.
+        if [ "$item" != "KEY_TYPE_ECC_KEY_PAIR_DERIVE" ]; then
+            loc_list="$loc_list $item"
+        fi
+    done
+
+    echo "$loc_list"
 }
 
 # Build the drivers library libtestdriver1.a (with ASan).
@@ -910,64 +980,64 @@ helper_libtestdriver1_make_main() {
 component_test_default_cmake_gcc_asan () {
     msg "build: default, gcc, ASan"
 
-    PSA_CRYPTO_ROOT_DIR="$PWD"
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites (ASan build)"
     make test
 
-    cd "$PSA_CRYPTO_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
 component_test_ccm_aes_sha256() {
     msg "build: ccm-aes-sha256.h, gcc, ASan"
 
-    PSA_CRYPTO_ROOT_DIR="$PWD"
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan -D PSA_CRYPTO_CONFIG_FILE="configs/ccm-aes-sha256.h" "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D TF_PSA_CRYPTO_CONFIG_FILE="configs/ccm-aes-sha256.h" "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites"
     make test
 
-    cd "$PSA_CRYPTO_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
 component_test_ccm_aes_sha256_secp256r1() {
     msg "build: ccm-aes-sha256-secp256r1.h, gcc, ASan"
 
-    PSA_CRYPTO_ROOT_DIR="$PWD"
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan -D PSA_CRYPTO_CONFIG_FILE="configs/ccm-aes-sha256-secp256r1.h" "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D TF_PSA_CRYPTO_CONFIG_FILE="configs/ccm-aes-sha256-secp256r1.h" "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites"
     make test
 
-    cd "$PSA_CRYPTO_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
 component_test_gcm_ccm_cbc_aes_sha256_512_secp256_384r1_rsa() {
     msg "build: gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h, gcc, ASan"
 
-    PSA_CRYPTO_ROOT_DIR="$PWD"
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Asan -D PSA_CRYPTO_CONFIG_FILE="configs/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h" "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D TF_PSA_CRYPTO_CONFIG_FILE="configs/gcm-ccm-cbc-aes-sha256_512-secp256_384r1-rsa.h" "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites"
     make test
 
-    cd "$PSA_CRYPTO_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
@@ -979,40 +1049,95 @@ check_renamed_symbols () {
       grep -x -F "$(sed -n 's/^ *# *define  *\([A-Z_a-z][0-9A-Z_a-z]*\)..*/\1/p' "$1")"
 }
 
-component_build_psa_crypto_spm () {
-    msg "build: default config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER + PSA_CRYPTO_SPM, make, gcc"
-    scripts/config.py -f include/psa/crypto_config.h set PSA_CRYPTO_KEY_ID_ENCODES_OWNER
-    scripts/config.py -f include/psa/crypto_config.h set PSA_CRYPTO_SPM
+component_build_tf_psa_crypto_spm () {
+    msg "build: default config + TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER + TF_PSA_CRYPTO_SPM, make, gcc"
+    scripts/config.py -f include/psa/crypto_config.h set TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+    scripts/config.py -f include/psa/crypto_config.h set TF_PSA_CRYPTO_SPM
 
-    PSA_CRYPTO_ROOT_DIR="$PWD"
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D ENABLE_TESTING=Off -D ENABLE_PROGRAMS=Off -D CMAKE_C_FLAGS="-I$PSA_CRYPTO_ROOT_DIR/tests/include/spe" ..
+    cmake -D ENABLE_TESTING=Off -D ENABLE_PROGRAMS=Off -D CMAKE_C_FLAGS="-I$TF_PSA_CRYPTO_ROOT_DIR/tests/include/spe" ..
 
     make
 
     # Check that if a symbol is renamed by crypto_spe.h, the non-renamed
     # version is not present.
     echo "Checking for renamed symbols in the library"
-    check_renamed_symbols $PSA_CRYPTO_ROOT_DIR/tests/include/spe/crypto_spe.h core/libpsacrypto.a
+    check_renamed_symbols $TF_PSA_CRYPTO_ROOT_DIR/tests/include/spe/crypto_spe.h core/libtfpsacrypto.a
 
-    cd "$PSA_CRYPTO_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
-component_test_psa_compliance () {                                              
+component_test_psa_compliance () {
     msg "build: default, gcc"
 
-    PSA_CRYPTO_ROOT_DIR="$PWD"
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -D CMAKE_BUILD_TYPE:String=Release "$PSA_CRYPTO_ROOT_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
-    cd "$PSA_CRYPTO_ROOT_DIR"
-    msg "unit test: test_psa_compliance.py"                                     
-    ./tests/scripts/test_psa_compliance.py                                      
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    msg "unit test: test_psa_compliance.py"
+    ./tests/scripts/test_psa_compliance.py
 
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
+support_test_psa_compliance () {
+    # psa-compliance-tests only supports CMake >= 3.10.0
+    ver="$(cmake --version)"
+    ver="${ver#cmake version }"
+    ver_major="${ver%%.*}"
+
+    ver="${ver#*.}"
+    ver_minor="${ver%%.*}"
+
+    [ "$ver_major" -eq 3 ] && [ "$ver_minor" -ge 10 ]
+}
+
+component_test_non_psa_modules () {
+    msg "build: non-PSA modules, gcc"
+
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_BASE64_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_DHM_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_ECP_WITH_MPI_UINT
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_NIST_KW_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_PARSE_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PEM_WRITE_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PKCS5_C
+    scripts/config.py -f drivers/builtin/include/mbedtls/mbedtls_config.h set MBEDTLS_PKCS12_C
+
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: main suites"
+    make test
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
+component_test_psa_drivers () {
+    msg "build: default + TF_PSA_CRYPTO_DRIVER_TEST, gcc"
+
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    loc_cflags="-DPSA_CRYPTO_DRIVER_TEST"
+    loc_cflags="${loc_cflags} -I$TF_PSA_CRYPTO_ROOT_DIR/tests/include"
+    cmake -D CMAKE_BUILD_TYPE:String=Asan -D CMAKE_C_FLAGS="${loc_cflags}" ..
+    make
+
+    msg "test: main suites"
+    make test
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
 
@@ -1122,7 +1247,9 @@ pre_prepare_outcome_file
 pre_print_configuration
 pre_check_tools
 cleanup
-#pre_generate_files
+if in_mbedtls_repo; then
+    pre_generate_files
+fi
 
 # Run the requested tests.
 for ((error_test_i=1; error_test_i <= error_test; error_test_i++)); do

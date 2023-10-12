@@ -11,7 +11,7 @@ if(GEN_FILES)
         OUTPUT
             ${CMAKE_CURRENT_BINARY_DIR}/psa_constant_names_generated.c
         COMMAND
-            ${PSA_CRYPTO_PYTHON_EXECUTABLE}
+            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/generate_psa_constants.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY
@@ -26,8 +26,8 @@ else()
 endif()
 
 foreach(exe IN LISTS executables)
-    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:psa_crypto_test>)
-    target_link_libraries(${exe} ${psacrypto_target})
+    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
+    target_link_libraries(${exe} ${tfpsacrypto_target})
     target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 endforeach()
 
