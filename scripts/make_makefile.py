@@ -21,8 +21,9 @@
 import argparse
 import os
 import pathlib
+import re
 import sys
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Union
+from typing import Dict, FrozenSet, Iterable, Iterator, List, Optional, Set, Union
 
 from mbedtls_dev import typing_util
 
@@ -117,6 +118,9 @@ class MakefileMaker:
         self.help = {} #type: Dict[str, str]
         # Directories containing targets
         self.target_directories = set() #type: Set[str]
+        # Dependencies of C files ({c_or_h_file: {h_file, ...}}). Paths are
+        # relative to the source or build directory.
+        self.c_dependency_cache = {} #type: Dict[str, FrozenSet[str]]
         # While generating, the output stream
         self.out = None #type: Optional[typing_util.Writable]
 
@@ -218,32 +222,80 @@ class MakefileMaker:
     @staticmethod
     def include_directories_for(source_dir: str) -> Iterable[str]:
         """Yield directories with header files to compile files in the specified directory."""
+        yield source_dir
         yield 'include'
-        yield '$(SOURCE_DIR)/' + source_dir
-        yield '$(SOURCE_DIR)/include'
         if source_dir == 'core' or \
            source_dir.startswith('drivers/builtin/'):
-            yield '$(SOURCE_DIR)/drivers/builtin/src'
-            yield '$(SOURCE_DIR)/drivers/builtin/include'
+            yield 'drivers/builtin/src'
+            yield 'drivers/builtin/include'
         if source_dir.startswith('drivers/'):
-            yield '$(SOURCE_DIR)/core'
+            yield 'core'
 
     def include_options_for(self, source_dir: str) -> str:
         """Emit include path options (-I...) to compile files in the specified directory."""
-        return sjoin(*('-I ' + d
-                       for d in self.include_directories_for(source_dir)))
+        return sjoin(*(['-I include'] +
+                       ['-I $(SOURCE_DIR)/' + d
+                        for d in self.include_directories_for(source_dir)]))
+
+    def collect_c_dependencies(self, c_file: str,
+                               stack=frozenset()) -> FrozenSet[str]:
+        """Find the build dependencies of the specified C source file.
+
+        c_file must be an existing C file in the source tree.
+        Return a set of directory paths from the root of the source tree.
+
+        The dependencies of a C source files are the files mentioned
+        in an #include directive that are present in the source tree,
+        as well as dependencies of dependencies recursively.
+        This function does not consider which preprocessor symbols
+        might be defined: it bases its analysis solely on the textual
+        presence of "#include".
+
+        Note that dependencies in the build tree are not supported yet.
+
+        This function uses a cache internally, so repeated calls with
+        the same argument return almost instantly.
+
+        The optional argument stack is only used for recursive calls
+        to prevent infinite loops.
+        """
+        if c_file in self.c_dependency_cache:
+            return self.c_dependency_cache[c_file]
+        if c_file in stack:
+            return frozenset()
+        stack |= {c_file}
+        include_path = list(self.include_directories_for(os.path.dirname(c_file)))
+        dependencies = set()
+        c_path = self.source_path.joinpath(c_file)
+        with c_path.open() as stream:
+            for line in stream:
+                m = re.match(r' *# *include *["<](.*?)[">]', line)
+                if m is None:
+                    continue
+                filename = m.group(1)
+                for subdir in include_path:
+                    if self.source_path.joinpath(subdir, filename).exists():
+                        dependencies.add('/'.join([subdir, filename]))
+                        break
+        for dep in frozenset(dependencies):
+            dependencies |= self.collect_c_dependencies(dep, stack)
+        frozen = frozenset(dependencies)
+        self.c_dependency_cache[c_file] = frozen
+        return frozen
 
     def targets_for_c(self,
                       src: SourceFile,
                       deps: Iterable[str] = ()) -> None:
         """Emit targets for a .c source file."""
-        all_dependencies = list(deps)
+        dep_set = set(deps)
+        for dep in self.collect_c_dependencies(src.relative_path()):
+            dep_set.add(self.source_file(dep).make_path())
         for switch, extension in [
                 ('-c', '$(OBJ_EXT)',),
                 ('-s', '$(ASM_EXT)',),
         ]:
             self.target(src.target(extension),
-                        all_dependencies,
+                        sorted(dep_set) + [src.make_path()],
                         [sjoin('$(CC)',
                                '$(CFLAGS)',
                                self.include_options_for(src.source_dir()),
