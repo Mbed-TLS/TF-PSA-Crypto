@@ -22,9 +22,67 @@ import argparse
 import os
 import pathlib
 import sys
-from typing import Dict, Iterable, Optional, Set, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Union
 
 from mbedtls_dev import typing_util
+
+
+def sjoin(*args: str) -> str:
+    """Join the arguments (strings) with a single space between each."""
+    return ' '.join(args)
+
+
+class SourceFile:
+    """A description of a file path in the source tree.
+    """
+
+    def __init__(self,
+                 root: pathlib.Path,
+                 inner_path: Union[pathlib.Path, str]) -> None:
+        self.root = root #type: pathlib.Path
+        self.inner_path = str(inner_path) #type: str
+
+    def _sort_key(self) -> str:
+        return self.inner_path
+
+    def __lt__(self, other: 'SourceFile') -> bool:
+        if self.root != other.root:
+            raise TypeError("Cannot compare source files under different roots"
+                            , self, other)
+        return self._sort_key() < other._sort_key()
+
+    def relative_path(self) -> str:
+        """Path to the file from the root of the source tree."""
+        return self.inner_path
+
+    def source_dir(self) -> str:
+        """Path to the directory containing the file, from the root of the
+        source tree."""
+        return os.path.dirname(self.relative_path())
+
+    def real_path(self) -> str:
+        """A path at which the file can be opened during makefile generation."""
+        return str(pathlib.Path(self.root, self.inner_path))
+
+    def make_path(self) -> str:
+        """A path to the file that is valid in the makefile."""
+        return '$(SOURCE_DIR)/' + self.inner_path
+
+    def target_dir(self) -> str:
+        """The target directory for build products of this source file.
+
+        This is the path to the directory containing the source file
+        inside the submodule.
+        """
+        return os.path.dirname(self.inner_path)
+
+    def base(self) -> str:
+        """The path to the file inside the submodule, without the extension."""
+        return os.path.splitext(self.inner_path)[0]
+
+    def target(self, extension) -> str:
+        """A build target for this source file, with the specified extension."""
+        return self.base() + extension
 
 
 class MakefileMaker:
@@ -73,6 +131,15 @@ class MakefileMaker:
         """Emit a makefile comment line containing the given text."""
         self.line('## ' + text)
 
+    def assign(self, name: str, *value_words: str) -> None:
+        """Emit a makefile line that contains an assignment.
+
+        The assignment is to the variable called name, and its value
+        is value_words joined with spaces as the separator.
+        """
+        nonempty_words = [word for word in value_words if word]
+        self.line(' '.join([name, '='] + nonempty_words))
+
     def help_lines(self) -> Iterable[str]:
         """Return the lines of text to show for the 'help' target."""
         return ['{:<14} : {}'.format(name, self.help[name])
@@ -114,12 +181,108 @@ class MakefileMaker:
         if phony:
             self.line('.PHONY: ' + name)
 
+    #### Analyze source files
+
+    def source_file(self, path: Union[pathlib.Path, str]) -> SourceFile:
+        """Construct a SourceFile object for the given path."""
+        return SourceFile(self.source_path, path)
+
+    def iterate_source_files(self, *patterns: str) -> Iterator[SourceFile]:
+        """List the source files matching any of the specified patterns.
+
+        This function returns an iterator of SourceFile objects in
+        an unspecified order.
+        """
+        for pattern in patterns:
+            for path in self.source_path.glob(pattern):
+                yield self.source_file(path.relative_to(self.source_path))
+
+    def list_source_files(self, *patterns: str) -> List[SourceFile]:
+        """List the source files matching any of the specified patterns.
+
+        This function returns a sorted list of SourceFile objects.
+        """
+        return sorted(self.iterate_source_files(*patterns))
+
+    #### C compilation ####
+
+    @staticmethod
+    def include_directories_for(source_dir: str) -> Iterable[str]:
+        """Yield directories with header files to compile files in the specified directory."""
+        yield 'include'
+        yield '$(SOURCE_DIR)/' + source_dir
+        yield '$(SOURCE_DIR)/include'
+        if source_dir == 'core' or \
+           source_dir.startswith('drivers/builtin/'):
+            yield '$(SOURCE_DIR)/drivers/builtin/src'
+            yield '$(SOURCE_DIR)/drivers/builtin/include'
+        if source_dir.startswith('drivers/'):
+            yield '$(SOURCE_DIR)/core'
+
+    def include_options_for(self, source_dir: str) -> str:
+        """Emit include path options (-I...) to compile files in the specified directory."""
+        return sjoin(*('-I ' + d
+                       for d in self.include_directories_for(source_dir)))
+
+    def targets_for_c(self,
+                      src: SourceFile,
+                      deps: Iterable[str] = ()) -> None:
+        """Emit targets for a .c source file."""
+        all_dependencies = list(deps)
+        for switch, extension in [
+                ('-c', '$(OBJ_EXT)',),
+                ('-s', '$(ASM_EXT)',),
+        ]:
+            self.target(src.target(extension),
+                        all_dependencies,
+                        [sjoin('$(CC)',
+                               '$(CFLAGS)',
+                               self.include_options_for(src.source_dir()),
+                               '-o $@',
+                               switch, src.make_path())])
+
     #### Generate makefile sections ####
+
+    def settings_section(self) -> None:
+        """Generate assignments to customizable and internal variables.
+
+        Some additional section-specified variables may be assigned in each
+        section.
+        """
+        self.comment('Path settings')
+        self.assign('SOURCE_DIR', str(self.source_from_build))
+        self.blank_line()
+        self.comment('File extensions')
+        self.assign('ASM_EXT', '.s')
+        self.assign('LIB_EXT', '.a')
+        self.assign('OBJ_EXT', '.o')
+        self.blank_line()
+        self.target('default', ['lib'], [], phony=True)
+
+    def library_section(self) -> None:
+        """Generate targets to build the library."""
+        c_files = self.list_source_files('core/*.c', 'drivers/builtin/src/*.c')
+        object_files = []
+        for c_file in c_files:
+            self.targets_for_c(c_file)
+            object_files.append(c_file.target('$(OBJ_EXT)'))
+        self.assign('LIBTFPSACRYPTO_OBJECTS', *object_files)
+        self.target('core/libtfpsacrypto$(LIB_EXT)',
+                    ['$(LIBTFPSACRYPTO_OBJECTS)'],
+                    ['$(AR) $(ARFLAGS) $@ $(LIBTFPSACRYPTO_OBJECTS)'])
+        self.target('lib',
+                    ['core/libtfpsacrypto$(LIB_EXT)'],
+                    [],
+                    phony=True)
 
     def output_all(self) -> None:
         """Generate the makefile content."""
         self.comment('Generated by ' + ' '.join(sys.argv))
         self.comment('Do not edit this file! All modifications will be lost.')
+        self.blank_line()
+        self.settings_section()
+        self.blank_line()
+        self.library_section()
         self.blank_line()
         # The help target must come last because it displays accumulated help
         # text set by previous calls to self.target. Set its own help manually
