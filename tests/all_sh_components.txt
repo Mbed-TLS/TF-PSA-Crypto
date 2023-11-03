@@ -228,3 +228,20 @@ component_test_cmake_as_package_install () {
 support_test_cmake_as_package_install () {
     support_test_cmake_out_of_source
 }
+
+component_test_cmake_shared () {
+    msg "build/test: cmake shared" # ~ 2min
+
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On ..
+    make
+    ldd programs/psa/aead_demo | grep libtfpsacrypto
+    make test
+    ./programs/test/dlopen
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
