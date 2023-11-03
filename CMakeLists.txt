@@ -298,14 +298,7 @@ if(ENABLE_TESTING)
 # make lcov
 # Browse `Coverage/index.html`
         ADD_CUSTOM_TARGET(lcov
-            COMMAND rm -rf Coverage
-            COMMAND lcov --capture --initial --directory core/CMakeFiles/tfpsacrypto.dir -o files.info
-            COMMAND lcov --capture --directory core/CMakeFiles/tfpsacrypto.dir -o tests.info
-            COMMAND lcov --add-tracefile files.info --add-tracefile tests.info -o all.info
-            COMMAND lcov --remove all.info -o final.info '*.h'
-            COMMAND gendesc ${CMAKE_CURRENT_SOURCE_DIR}/tests/Descriptions.txt -o descriptions
-            COMMAND genhtml --title "TF-PSA-Crypto" --description-file descriptions --keep-descriptions --legend --no-branch-coverage -o Coverage final.info
-            COMMAND rm -f files.info tests.info all.info final.info descriptions
+            COMMAND scripts/lcov.sh
         )
 
 # Typical sequence using memcheck target (out-of-tree build from (root)/build):
