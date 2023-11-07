@@ -237,8 +237,4 @@ as parameters that will be passed to the test function.
 License
 -------
 
-Unless specifically indicated otherwise in a file, TF-PSA-Crypto files are
-provided under the [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)
-license. See the [LICENSE](LICENSE) file for the full text of this license.
-Contributors must accept that their contributions are made under the
-Apache-2.0 license.
+Unless specifically indicated otherwise in a file, TF-PSA-Crypto files are provided under a dual [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) OR [GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html) license. See the [LICENSE](LICENSE) file for the full text of these licenses.
