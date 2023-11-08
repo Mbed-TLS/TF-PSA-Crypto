@@ -176,51 +176,24 @@ int tf_psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf,
  */
 void tf_psa_crypto_platform_zeroize(void *buf, size_t len);
 
-#if !defined(TF_PSA_CRYPTO_PLATFORM_STD_EXIT)
-#define TF_PSA_CRYPTO_PLATFORM_STD_EXIT      exit /**< The default \c exit function to use. */
-#endif
-#if !defined(TF_PSA_CRYPTO_PLATFORM_STD_EXIT_SUCCESS)
-#define TF_PSA_CRYPTO_PLATFORM_STD_EXIT_SUCCESS  EXIT_SUCCESS /**< The default exit value to use. */
-#endif
-#if !defined(TF_PSA_CRYPTO_PLATFORM_STD_EXIT_FAILURE)
-#define TF_PSA_CRYPTO_PLATFORM_STD_EXIT_FAILURE  EXIT_FAILURE /**< The default exit value to use. */
-#endif
-
 /*
- * The function pointers for exit
+ * Platform exit macros
  */
-#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT_ALT)
-extern void (*tf_psa_crypto_exit)(int status);
 
-/**
- * \brief             This function dynamically configures the exit
- *                    function that is called when the tf_psa_crypto_exit()
- *                    function is invoked by the library.
- *
- * \param exit_func   The \c exit function implementation.
- *
- * \return            \c 0 on success.
- */
-int tf_psa_crypto_platform_set_exit(void (*exit_func)(int status));
+#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT)
+#define tf_psa_crypto_exit TF_PSA_CRYPTO_PLATFORM_EXIT
 #else
-#undef tf_psa_crypto_exit
-#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT_MACRO)
-#define tf_psa_crypto_exit   TF_PSA_CRYPTO_PLATFORM_EXIT_MACRO
-#else
-#define tf_psa_crypto_exit   exit
-#endif /* MBEDTLS_PLATFORM_EXIT_MACRO */
-#endif /* MBEDTLS_PLATFORM_EXIT_ALT */
+#define tf_psa_crypto_exit exit
+#endif
 
-/*
- * The default exit values
- */
-#if defined(TF_PSA_CRYPTO_PLATFORM_STD_EXIT_SUCCESS)
-#define TF_PSA_CRYPTO_EXIT_SUCCESS TF_PSA_CRYPTO_PLATFORM_STD_EXIT_SUCCESS
+#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT_SUCCESS)
+#define TF_PSA_CRYPTO_EXIT_SUCCESS TF_PSA_CRYPTO_PLATFORM_EXIT_SUCCESS
 #else
 #define TF_PSA_CRYPTO_EXIT_SUCCESS 0
 #endif
-#if defined(TF_PSA_CRYPTO_PLATFORM_STD_EXIT_FAILURE)
-#define TF_PSA_CRYPTO_EXIT_FAILURE TF_PSA_CRYPTO_PLATFORM_STD_EXIT_FAILURE
+
+#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT_FAILURE)
+#define TF_PSA_CRYPTO_EXIT_FAILURE TF_PSA_CRYPTO_PLATFORM_EXIT_FAILURE
 #else
 #define TF_PSA_CRYPTO_EXIT_FAILURE 1
 #endif
