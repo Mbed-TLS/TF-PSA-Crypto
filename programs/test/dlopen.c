@@ -53,8 +53,8 @@ int main(void)
     psa_status_t (*psa_crypto_init_ptr)(void) = dlsym(crypto_so, "psa_crypto_init");
     CHECK_DLERROR("dlsym", "psa_crypto_init");
 
-    psa_status_t res = psa_crypto_init_ptr();
-    if (res == PSA_SUCCESS)
+    psa_status_t status = psa_crypto_init_ptr();
+    if (status == PSA_SUCCESS)
     {
         tf_psa_crypto_printf("dlopen(%s): Call to psa_crypto_init was successful.\n",
                              CRYPTO_SO_FILENAME);
