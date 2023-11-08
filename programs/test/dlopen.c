@@ -32,17 +32,17 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 
-#define CHECK_DLERROR(function, argument)                             \
-    do                                                                  \
-    {                                                                   \
-        char *CHECK_DLERROR_error = dlerror();                        \
+#define CHECK_DLERROR(function, argument)                              \
+    do                                                                 \
+    {                                                                  \
+        char *CHECK_DLERROR_error = dlerror();                         \
         if (CHECK_DLERROR_error != NULL)                               \
-        {                                                               \
+        {                                                              \
             fprintf(stderr, "Dynamic loading error for %s(%s): %s\n",  \
-                    function, argument, CHECK_DLERROR_error);         \
-            tf_psa_crypto_exit(TF_PSA_CRYPTO_EXIT_FAILURE);                       \
-        }                                                               \
-    }                                                                   \
+                    function, argument, CHECK_DLERROR_error);          \
+            tf_psa_crypto_exit(TF_PSA_CRYPTO_EXIT_FAILURE);            \
+        }                                                              \
+    }                                                                  \
     while (0)
 
 int main(void)
