@@ -136,9 +136,9 @@
  * Platform exit macros
  */
 
-//#define TF_PSA_CRYPTO_PLATFORM_STD_EXIT            exit /**< Default exit to use, can be undefined */
-//#define TF_PSA_CRYPTO_PLATFORM_STD_EXIT_SUCCESS       0 /**< Default exit value to use, can be undefined */
-//#define TF_PSA_CRYPTO_PLATFORM_STD_EXIT_FAILURE       1 /**< Default exit value to use, can be undefined */
+//#define TF_PSA_CRYPTO_PLATFORM_EXIT            exit /**< Default exit to use, can be undefined */
+//#define TF_PSA_CRYPTO_PLATFORM_EXIT_SUCCESS       0 /**< Default exit value to use, can be undefined */
+//#define TF_PSA_CRYPTO_PLATFORM_EXIT_FAILURE       1 /**< Default exit value to use, can be undefined */
 
 /** \} name SECTION: General configuration options */
 
