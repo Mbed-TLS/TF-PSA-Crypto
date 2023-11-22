@@ -197,7 +197,7 @@ component_test_cmake_shared () {
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
 
-    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On ..
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On -DUSE_STATIC_TF_PSA_CRYPTO_LIBRARY=Off ..
     make
     ldd programs/psa/aead_demo | grep libtfpsacrypto
     make test
