@@ -1,3 +1,15 @@
+component_check_changelog () {
+    msg "Check: changelog entries" # < 1s
+    rm -f ChangeLog.new
+    scripts/assemble_changelog.py -o ChangeLog.new
+    if [ -e ChangeLog.new ]; then
+        # Show the diff for information. It isn't an error if the diff is
+        # non-empty.
+        diff -u ChangeLog ChangeLog.new || true
+        rm ChangeLog.new
+    fi
+}
+
 component_test_default_cmake_gcc_asan () {
     msg "build: default, gcc, ASan"
 
