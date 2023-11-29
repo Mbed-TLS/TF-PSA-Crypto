@@ -164,13 +164,8 @@ component_test_psa_drivers () {
 
 component_check_generated_files () {
     msg "Check: check-generated-files, files generated with cmake" # ~2min
-    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
-    mkdir "$OUT_OF_SOURCE_DIR"
-    cd "$OUT_OF_SOURCE_DIR"
-
-    cmake -DGEN_FILES=On ..
+    cmake -DGEN_FILES=On .
     cmake --build .
-    cd -
     tests/scripts/check-generated-files.sh
 
     msg "Check: check-generated-files -u, files present" # 2s
@@ -179,23 +174,13 @@ component_check_generated_files () {
     tests/scripts/check-generated-files.sh
 
     # msg "Check: check-generated-files -u, files absent" # 2s
-    # #command make neat
-    cd "$TF_PSA_CRYPTO_ROOT_DIR"
-    rm -rf "$OUT_OF_SOURCE_DIR"
 
-    mkdir "$OUT_OF_SOURCE_DIR"
-    cd "$OUT_OF_SOURCE_DIR"
-
-    cmake -DGEN_FILES=Off ..
-    cmake --build .
-    cd -
+    cmake -DGEN_FILES=Off .
+    cmake --build . --clean-first
 
     tests/scripts/check-generated-files.sh -u
     # Check that the generated files are considered up to date.
     tests/scripts/check-generated-files.sh
-
-    cd "$TF_PSA_CRYPTO_ROOT_DIR"
-    rm -rf "$OUT_OF_SOURCE_DIR"
 
     # This component ends with the generated files present in the source tree.
     # This is necessary for subsequent components!
