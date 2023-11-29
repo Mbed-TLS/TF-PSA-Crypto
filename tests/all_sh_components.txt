@@ -161,3 +161,48 @@ component_test_psa_drivers () {
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_test_cmake_as_subdirectory () {
+
+    msg "build: cmake 'as-subdirectory' build"
+    cd programs/test/cmake_subproject
+    # Note: Explicitly generate files as these are turned off in releases
+    cmake -D GEN_FILES=ON .
+    make
+    ./cmake_subproject
+}
+
+component_test_cmake_as_package () {
+
+    msg "build: cmake 'as-package' build"
+    cd programs/test/cmake_package
+    cmake .
+    make
+    ./cmake_package
+}
+
+component_test_cmake_as_package_install () {
+
+    msg "build: cmake 'as-installed-package' build"
+    cd programs/test/cmake_package_install
+    cmake .
+    make
+    ./cmake_package_install
+}
+
+component_test_cmake_shared () {
+    msg "build/test: cmake shared" # ~ 2min
+
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=On -DUSE_STATIC_TF_PSA_CRYPTO_LIBRARY=Off ..
+    make
+    ldd programs/psa/aead_demo | grep libtfpsacrypto
+    make test
+    ./programs/test/dlopen
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}

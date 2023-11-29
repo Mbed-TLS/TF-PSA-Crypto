@@ -164,6 +164,28 @@ int tf_psa_crypto_platform_entropy_nv_seed_write(unsigned char *buf,
  */
 void tf_psa_crypto_platform_zeroize(void *buf, size_t len);
 
+/*
+ * Platform exit macros
+ */
+
+#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT)
+#define tf_psa_crypto_exit TF_PSA_CRYPTO_PLATFORM_EXIT
+#else
+#define tf_psa_crypto_exit exit
+#endif
+
+#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT_SUCCESS)
+#define TF_PSA_CRYPTO_EXIT_SUCCESS TF_PSA_CRYPTO_PLATFORM_EXIT_SUCCESS
+#else
+#define TF_PSA_CRYPTO_EXIT_SUCCESS 0
+#endif
+
+#if defined(TF_PSA_CRYPTO_PLATFORM_EXIT_FAILURE)
+#define TF_PSA_CRYPTO_EXIT_FAILURE TF_PSA_CRYPTO_PLATFORM_EXIT_FAILURE
+#else
+#define TF_PSA_CRYPTO_EXIT_FAILURE 1
+#endif
+
 #ifdef __cplusplus
 }
 #endif
