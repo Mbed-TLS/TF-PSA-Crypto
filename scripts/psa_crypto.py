@@ -96,6 +96,7 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "min_requirements.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "lcov.sh"), destination_path)
     shutil.copy2(os.path.join(source_path, "assemble_changelog.py"), destination_path)
+    shutil.copy2(os.path.join(source_path, "code_style.py"), destination_path)
 
     for path in pathlib.Path(source_path).glob("*.requirements.txt"):
         shutil.copy2(str(path), destination_path)
