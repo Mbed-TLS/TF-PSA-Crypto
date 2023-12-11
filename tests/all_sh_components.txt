@@ -206,3 +206,19 @@ component_test_cmake_shared () {
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_check_recursion () {
+    msg "Check: recursion.pl" # < 1s
+    tests/scripts/recursion.pl library/*.c
+}
+
+component_check_test_cases () {
+    msg "Check: test case descriptions" # < 1s
+    if [ $QUIET -eq 1 ]; then
+        opt='--quiet'
+    else
+        opt=''
+    fi
+    tests/scripts/check_test_cases.py -q $opt
+    unset opt
+}
