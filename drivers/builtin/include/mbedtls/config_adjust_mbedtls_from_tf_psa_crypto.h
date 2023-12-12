@@ -15,6 +15,8 @@
 #ifndef MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H
 #define MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H
 
+/* General configuration options. */
+
 #if defined(TF_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
 #define MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
 #endif
@@ -48,6 +50,14 @@
 #if defined(TF_PSA_CRYPTO_PLATFORM_ZEROIZE)
 #define MBEDTLS_PLATFORM_ZEROIZE_ALT
 #define mbedtls_platform_zeroize tf_psa_crypto_platform_zeroize
+#endif
+
+#if defined(PSA_CRYPTO_DEPRECATED_WARNING)
+#define MBEDTLS_DEPRECATED_WARNING
+#endif
+
+#if defined(PSA_CRYPTO_DEPRECATED_REMOVED)
+#define MBEDTLS_DEPRECATED_REMOVED
 #endif
 
 #if defined(TF_PSA_CRYPTO_BUILTIN_KEYS)
@@ -194,5 +204,7 @@
 #if defined(TF_PSA_CRYPTO_WANT_LMS)
 #define MBEDTLS_LMS_C
 #endif
+
+
 
 #endif /* MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H */
