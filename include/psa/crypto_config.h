@@ -120,6 +120,33 @@
  */
 //#define TF_PSA_CRYPTO_PLATFORM_ZEROIZE
 
+/**
+ * \def PSA_CRYPTO_DEPRECATED_WARNING
+ *
+ * Mark deprecated functions and features so that they generate a warning if
+ * used. Functionality deprecated in one version will usually be removed in the
+ * next version. You can enable this to help you prepare the transition to a
+ * new major version by making sure your code is not using this functionality.
+ *
+ * This only works with GCC and Clang. With other compilers, you may want to
+ * use PSA_CRYPTO_DEPRECATED_REMOVED
+ *
+ * Uncomment to get warnings on using deprecated functions and features.
+ */
+//#define PSA_CRYPTO_DEPRECATED_WARNING
+
+/**
+ * \def PSA_CRYPTO_DEPRECATED_REMOVED
+ *
+ * Remove deprecated functions and features so that they generate an error if
+ * used. Functionality deprecated in one version will usually be removed in the
+ * next version. You can enable this to help you prepare the transition to a
+ * new major version by making sure your code is not using this functionality.
+ *
+ * Uncomment to get errors on using deprecated functions and features.
+ */
+//#define PSA_CRYPTO_DEPRECATED_REMOVED
+
 /*
  * Platform exit macros
  */
