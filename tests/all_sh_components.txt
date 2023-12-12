@@ -206,3 +206,23 @@ component_test_cmake_shared () {
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_test_default_no_deprecated () {
+    # Test that removing the deprecated features from the default
+    # configuration leaves something consistent.
+    msg "build: make, default + PSA_CRYPTO_DEPRECATED_REMOVED" # ~ 30s
+    scripts/config.py -f "include/psa/crypto_config.h" set PSA_CRYPTO_DEPRECATED_REMOVED
+
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    CC=gcc cmake -DCMAKE_C_FLAGS="-O -Werror -Wall -Wextra" ..
+    make
+
+    msg "test: make, default + PSA_CRYPTO_DEPRECATED_REMOVED" # ~ 5s
+    make test
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
