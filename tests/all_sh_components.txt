@@ -209,7 +209,7 @@ component_test_cmake_shared () {
 
 component_check_recursion () {
     msg "Check: recursion.pl" # < 1s
-    tests/scripts/recursion.pl library/*.c
+    tests/scripts/recursion.pl core/*.c
 }
 
 component_check_test_cases () {
