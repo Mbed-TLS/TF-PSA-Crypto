@@ -210,6 +210,7 @@ component_test_cmake_shared () {
 component_check_recursion () {
     msg "Check: recursion.pl" # < 1s
     tests/scripts/recursion.pl core/*.c
+    tests/scripts/recursion.pl drivers/builtin/src/*.c
 }
 
 component_check_test_cases () {
