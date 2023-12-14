@@ -10,7 +10,7 @@ component_check_changelog () {
     fi
 }
 
-component_test_default_cmake_gcc_asan () {
+component_test_default_gcc_asan () {
     msg "build: default, gcc, ASan"
 
     TF_PSA_CRYPTO_ROOT_DIR="$PWD"
