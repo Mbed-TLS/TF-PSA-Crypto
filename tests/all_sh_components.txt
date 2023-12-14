@@ -218,3 +218,21 @@ component_test_cmake_shared () {
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 }
+
+component_test_default_gcc_asan_new_bignum () {
+    msg "build: cmake, gcc, ASan" # ~ 1 min 50s
+    scripts/config.py -f "include/psa/crypto_config.h" set TF_PSA_CRYPTO_ECP_WITH_MPI_UINT
+
+    TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan ..
+    make
+
+    msg "test: main suites (inc. selftests) (ASan build)" # ~ 50s
+    make test
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
