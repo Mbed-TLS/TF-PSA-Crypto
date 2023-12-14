@@ -153,6 +153,7 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                            "generate_test_code.py|"\
                            "scripts_path.py|"\
                            "test_generate_test_code.py|"\
+                           "check_generated_files.sh|"\
                            "test_psa_compliance.py",
                            file_), os.listdir(scripts_source_path))
     for file_ in scripts_files:
