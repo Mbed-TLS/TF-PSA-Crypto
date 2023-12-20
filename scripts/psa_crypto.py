@@ -42,6 +42,16 @@ def copy_of_mbedtls_headers(mbedtls_root_path, psa_crypto_root_path):
     if os.path.isfile(os.path.join(source_path, "lms.h")):
         shutil.copy2(os.path.join(source_path, "lms.h"), include_tf_psa_crypto_path)
 
+def copy_from_root(mbedtls_root_path, psa_crypto_root_path):
+    source_path = mbedtls_root_path
+    destination_path = psa_crypto_root_path
+
+    root_files_to_copy = [".uncrustify.cfg"]
+
+    for file_ in root_files_to_copy:
+        shutil.copy2(os.path.join(source_path, file_), destination_path)
+
+
 def copy_from_library(mbedtls_root_path, psa_crypto_root_path):
     builtin_path = os.path.join(psa_crypto_root_path, "drivers", "builtin")
     library_files = filter(lambda file_: not re.match(
@@ -96,6 +106,7 @@ def copy_from_scripts(mbedtls_root_path, psa_crypto_root_path):
     shutil.copy2(os.path.join(source_path, "min_requirements.py"), destination_path)
     shutil.copy2(os.path.join(source_path, "lcov.sh"), destination_path)
     shutil.copy2(os.path.join(source_path, "assemble_changelog.py"), destination_path)
+    shutil.copy2(os.path.join(source_path, "code_style.py"), destination_path)
 
     for path in pathlib.Path(source_path).glob("*.requirements.txt"):
         shutil.copy2(str(path), destination_path)
@@ -154,6 +165,7 @@ def copy_from_tests(mbedtls_root_path, psa_crypto_root_path):
                            "generate_test_code.py|"\
                            "scripts_path.py|"\
                            "test_generate_test_code.py|"\
+                           "check_generated_files.sh|"\
                            "test_psa_compliance.py",
                            file_), os.listdir(scripts_source_path))
     for file_ in scripts_files:
@@ -295,6 +307,7 @@ def main():
 
     copy_of_psa_headers(mbedtls_root_path, os.getcwd())
     copy_of_mbedtls_headers(mbedtls_root_path, os.getcwd())
+    copy_from_root(mbedtls_root_path, os.getcwd())
     copy_from_library(mbedtls_root_path, os.getcwd())
     copy_from_scripts(mbedtls_root_path, os.getcwd())
     copy_from_tests(mbedtls_root_path, os.getcwd())
