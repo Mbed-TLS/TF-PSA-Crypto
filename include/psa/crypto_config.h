@@ -637,6 +637,14 @@
  */
 //#define TF_PSA_CRYPTO_SHA512_SMALLER
 
+/**
+ * Uncomment to enable using new bignum code in the ECC modules.
+ *
+ * \warning This is currently experimental, incomplete and therefore should not
+ * be used in production.
+ */
+//#define TF_PSA_CRYPTO_ECP_WITH_MPI_UINT
+
 /** \} name SECTION: PSA driver interface implementation configuration options */
 
 /**
