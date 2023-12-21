@@ -205,6 +205,4 @@
 #define MBEDTLS_LMS_C
 #endif
 
-
-
 #endif /* MBEDTLS_CONFIG_ADJUST_MBEDTLS_FROM_TF_PSA_CRYPTO_H */
