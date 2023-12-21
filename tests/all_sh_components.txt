@@ -10,6 +10,11 @@ component_check_changelog () {
     fi
 }
 
+component_check_names () {
+    msg "Check: declared and exported names (builds the library)" # < 3s
+    tests/scripts/check_names.py -v
+}
+
 component_test_default_cmake_gcc_asan () {
     msg "build: default, gcc, ASan"
 
