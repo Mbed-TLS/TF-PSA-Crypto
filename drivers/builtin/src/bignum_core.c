@@ -511,6 +511,19 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
     }
 }
 
+void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
+                          const mbedtls_mpi_uint *A, size_t A_limbs,
+                          const mbedtls_mpi_uint *B, size_t B_limbs,
+                          mbedtls_mpi_uint *T)
+{
+    /* Not implemented yet */
+    (void) A;
+    (void) B;
+    (void) T;
+    memset(Q, 0, A_limbs * sizeof(*Q));
+    memset(R, 0, B_limbs * sizeof(*R));
+}
+
 /*
  * Fast Montgomery initialization (thanks to Tom St Denis).
  */
