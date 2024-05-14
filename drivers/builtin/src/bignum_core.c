@@ -511,17 +511,56 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
     }
 }
 
+/*
+ * This is the basic long division algorithm in base 2,
+ * slightly adapted to make it constant time.
+ *
+ * Brief recap of long division (see Wikipedia for more):
+ * we build Q bit by bit starting from the most significant bit.
+ * 1. Initially we select the leftmost bitlen(B) bits of A, call those X.
+ * 2. Then we see how many times B fits in X: since we're in base 2,
+ *    it's either 0 or 1, so the question boils down to whether X >= B.
+ * 3. The 0 or 1 above is the next bit of Q.
+ * 4. If X >= B, then X -= B.
+ * 5. Append the next bit of A to X, then go back to step 2.
+ * 6. When we've used all bits of A, the final value of X is R.
+ *
+ * So, normally the number of iterations would depend on bitlen(B) and
+ * bitlen(A), but we don't want to leak those. This is easy to fix:
+ * - we don't need to take bitlen(B) bits initially, we can shift them in
+ *   one by one: until we'll taken enough we'll just have X < B at step 2;
+ * - the algorithm works the same is A is 0-padded on the left, so we just
+ *   start from the top according to the number of limbs in A.
+ *
+ * With those minor changes, the algorithm becomes constant time.
+ * Its cost is A_limbs * biL * (shift + sub of B_limbs-sized values).
+ */
 void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
                           const mbedtls_mpi_uint *A, size_t A_limbs,
                           const mbedtls_mpi_uint *B, size_t B_limbs,
                           mbedtls_mpi_uint *T)
 {
-    /* Not implemented yet */
-    (void) A;
-    (void) B;
-    (void) T;
-    memset(Q, 0, A_limbs * sizeof(*Q));
-    memset(R, 0, B_limbs * sizeof(*R));
+    memset(Q, 0, A_limbs * sizeof(mbedtls_mpi_uint));
+    memset(R, 0, B_limbs * sizeof(mbedtls_mpi_uint));
+    for (long bit = (long) A_limbs * biL - 1; bit >= 0; bit--) {
+        /* Shift in next bit of A into R, retaining the overflow bit. */
+        mbedtls_mpi_uint carry = R[B_limbs - 1] >> (biL - 1);
+        mbedtls_mpi_core_shift_l(R, B_limbs, 1);
+        R[0] |= (A[bit / biL] >> (bit % biL)) & ((mbedtls_mpi_uint) 1);
+
+        /* The full shifted remainder is at least B if it overflowed R.
+         * Otherwise, it's >= B only if the subtraction does not borrow. */
+        mbedtls_mpi_uint borrow = mbedtls_mpi_core_sub(T, R, B, B_limbs);
+        mbedtls_ct_condition_t R_ge_B = mbedtls_ct_bool_or(
+            mbedtls_ct_uint_ne(carry, 0), mbedtls_ct_uint_eq(borrow, 0));
+
+        /* If R >= B, then R -= B; Q |= 1 << bit */
+        mbedtls_mpi_core_cond_assign(R, T, B_limbs, R_ge_B);
+        Q[bit / biL] = mbedtls_ct_mpi_uint_if(
+            R_ge_B,
+            Q[bit / biL] | (((mbedtls_mpi_uint) 1) << (bit % biL)),
+            Q[bit / biL]);
+    }
 }
 
 /*
