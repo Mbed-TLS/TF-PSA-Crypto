@@ -362,6 +362,7 @@ void key_agreement_fail(int key_type_arg, data_t *key_data,
     uint8_t output[PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE] = { 0 };
     size_t length = 0;
     psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_agreement_iop_t iop_operation = psa_key_agreement_iop_init();
 
     mbedtls_svc_key_id_t shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t shared_secret_attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -395,6 +396,33 @@ void key_agreement_fail(int key_type_arg, data_t *key_data,
                                                    &shared_secret_attributes,
                                                    &shared_secret_id));
 
+ #if defined(MBEDTLS_ECP_RESTARTABLE) && defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
+
+
+    if (PSA_KEY_TYPE_IS_ECC(key_type)) {
+
+        psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+        psa_interruptible_set_max_ops(1);
+
+        status = psa_key_agreement_iop_setup(&iop_operation, key_id, public_key,
+                                             public_key_length, alg,
+                                             &shared_secret_attributes);
+
+        if (expected_status != PSA_SUCCESS) {
+            TEST_STATUS(expected_status, status);
+        } else {
+
+            do {
+
+                status = psa_key_agreement_iop_complete(&iop_operation, &shared_secret_id);
+
+            } while (status == PSA_OPERATION_INCOMPLETE);
+
+            TEST_STATUS(expected_status, status);
+        }
+    }
+#endif // defined(MBEDTLS_ECP_RESTARTABLE) && defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
+
 #if defined(PSA_WANT_ALG_HKDF) && defined(PSA_WANT_ALG_SHA_256)
     PSA_ASSERT(psa_key_derivation_setup(&operation,
                                         PSA_ALG_HKDF(PSA_ALG_SHA_256)));
@@ -415,6 +443,8 @@ exit:
     psa_reset_key_attributes(&attributes);
     psa_destroy_key(shared_secret_id);
     psa_reset_key_attributes(&shared_secret_attributes);
+
+    psa_key_agreement_iop_abort(&iop_operation);
     PSA_DONE();
 }
 /* END_CASE */
