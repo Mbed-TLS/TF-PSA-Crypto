@@ -55,12 +55,23 @@
 // Select scalar implementation if Neon not available
     #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 0
 #elif !defined(MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
-// By default, select the best performing option that is smaller than the scalar implementation.
+// By default, select the best performing option that is not a code-size regression (based on
+// measurements from recent gcc and clang).
+#if defined(MBEDTLS_ARCH_IS_THUMB)
+    #if defined(MBEDTLS_COMPILER_IS_GCC)
+        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 1
+    #else
+        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 2
+    #endif
+#elif defined(MBEDTLS_ARCH_IS_ARM64)
+    #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 3
+#else
     #if defined(MBEDTLS_COMPILER_IS_GCC)
         #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 2
     #else
         #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 3
     #endif
+#endif
 #endif
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK != 0
