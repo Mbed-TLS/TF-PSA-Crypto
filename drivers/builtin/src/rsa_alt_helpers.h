@@ -3,6 +3,12 @@
  *
  * \brief Context-independent RSA helper functions
  *
+ *  Please note: The below explanation is historical and is no longer relevant
+ *  due to there being no compelling reason to keep these functions separate
+ *  since the RSA alt interface was removed. A future refactoring will address
+ *  this which is tracked by the following issue:
+ *  https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/105.
+ *
  *  This module declares some RSA-related helper functions useful when
  *  implementing the RSA interface. These functions are provided in a separate
  *  compilation unit in order to make it easy for designers of alternative RSA
@@ -36,24 +42,10 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-
-#ifndef MBEDTLS_RSA_INTERNAL_H
-#define MBEDTLS_RSA_INTERNAL_H
+#ifndef MBEDTLS_RSA_ALT_HELPERS_H
+#define MBEDTLS_RSA_ALT_HELPERS_H
 
 #include "mbedtls/build_info.h"
 

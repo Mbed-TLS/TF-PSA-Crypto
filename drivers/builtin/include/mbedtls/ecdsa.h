@@ -12,19 +12,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_ECDSA_H
@@ -223,7 +211,6 @@ int mbedtls_ecdsa_sign_det_ext(mbedtls_ecp_group *grp, mbedtls_mpi *r,
                                void *p_rng_blind);
 #endif /* MBEDTLS_ECDSA_DETERMINISTIC */
 
-#if !defined(MBEDTLS_ECDSA_SIGN_ALT)
 /**
  * \brief               This function computes the ECDSA signature of a
  *                      previously-hashed message, in a restartable way.
@@ -288,8 +275,6 @@ int mbedtls_ecdsa_sign_restartable(
     int (*f_rng_blind)(void *, unsigned char *, size_t),
     void *p_rng_blind,
     mbedtls_ecdsa_restart_ctx *rs_ctx);
-
-#endif /* !MBEDTLS_ECDSA_SIGN_ALT */
 
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC)
 
@@ -387,7 +372,6 @@ int mbedtls_ecdsa_verify(mbedtls_ecp_group *grp,
                          const mbedtls_ecp_point *Q, const mbedtls_mpi *r,
                          const mbedtls_mpi *s);
 
-#if !defined(MBEDTLS_ECDSA_VERIFY_ALT)
 /**
  * \brief           This function verifies the ECDSA signature of a
  *                  previously-hashed message, in a restartable manner
@@ -429,8 +413,6 @@ int mbedtls_ecdsa_verify_restartable(mbedtls_ecp_group *grp,
                                      const mbedtls_mpi *r,
                                      const mbedtls_mpi *s,
                                      mbedtls_ecdsa_restart_ctx *rs_ctx);
-
-#endif /* !MBEDTLS_ECDSA_VERIFY_ALT */
 
 /**
  * \brief           This function computes the ECDSA signature and writes it

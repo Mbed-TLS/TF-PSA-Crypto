@@ -12,19 +12,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_CONFIG_PSA_H
@@ -34,9 +22,9 @@
 
 #include "psa/crypto_adjust_config_synonyms.h"
 
-#include "mbedtls/config_adjust_psa_superset_legacy.h"
+#include "psa/crypto_adjust_config_dependencies.h"
 
-#if defined(MBEDTLS_PSA_CRYPTO_CONFIG)
+#include "mbedtls/config_adjust_psa_superset_legacy.h"
 
 /* Require built-in implementations based on PSA requirements */
 
@@ -44,24 +32,16 @@
  * before we deduce what built-ins are required. */
 #include "psa/crypto_adjust_config_key_pair_types.h"
 
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+/* If we are implementing PSA crypto ourselves, then we want to enable the
+ * required built-ins. Otherwise, PSA features will be provided by the server. */
 #include "mbedtls/config_adjust_legacy_from_psa.h"
-#include "mbedtls/config_adjust_mbedtls_from_tf_psa_crypto.h"
-
-#else /* MBEDTLS_PSA_CRYPTO_CONFIG */
-
-/* Infer PSA requirements from Mbed TLS capabilities */
-
-#include "mbedtls/config_adjust_psa_from_legacy.h"
-
-/* Hopefully the file above will have enabled keypair symbols in a consistent
- * way, but including this here fixes them if that wasn't the case. */
-#include "psa/crypto_adjust_config_key_pair_types.h"
-
-#endif /* MBEDTLS_PSA_CRYPTO_CONFIG */
-
-#if defined(PSA_WANT_ALG_JPAKE)
-#define PSA_WANT_ALG_SOME_PAKE 1
+#if defined(MBEDTLS_CONFIG_ADJUST_TEST_ACCELERATORS) //no-check-names
+#include "mbedtls/config_adjust_test_accelerators.h"
 #endif
+#endif /* MBEDTLS_PSA_CRYPTO_C */
+
+#include "psa/crypto_adjust_config_derived.h"
 
 #include "psa/crypto_adjust_auto_enabled.h"
 

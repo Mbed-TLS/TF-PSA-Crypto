@@ -15,19 +15,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef PSA_CRYPTO_BUILTIN_COMPOSITES_H
@@ -37,9 +25,17 @@
 #include <psa/crypto_driver_common.h>
 
 #include "mbedtls/cmac.h"
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
 #include "mbedtls/gcm.h"
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
 #include "mbedtls/ccm.h"
+#endif
 #include "mbedtls/chachapoly.h"
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
+#include "mbedtls/ecdh.h"
+#endif
 
 /*
  * MAC multi-part operation definitions.
@@ -218,5 +214,38 @@ typedef struct {
 } mbedtls_psa_pake_operation_t;
 
 #define MBEDTLS_PSA_PAKE_OPERATION_INIT { { 0 } }
+
+typedef struct {
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_keypair MBEDTLS_PRIVATE(ecp);
+    uint32_t num_ops;
+#else
+    /* Make the struct non-empty if algs not supported. */
+    unsigned MBEDTLS_PRIVATE(dummy);
+#endif
+} mbedtls_psa_generate_key_iop_t;
+
+#if defined(MBEDTLS_ECP_C)
+#define MBEDTLS_PSA_GENERATE_KEY_IOP_INIT { MBEDTLS_ECP_KEYPAIR_INIT, 0 }
+#else
+#define MBEDTLS_PSA_GENERATE_KEY_IOP_INIT { 0 }
+#endif
+
+/* Context structure for the Mbed TLS interruptible key agreement implementation. */
+typedef struct {
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH) && defined(MBEDTLS_ECP_RESTARTABLE)
+    mbedtls_ecdh_context MBEDTLS_PRIVATE(ctx);
+    uint32_t MBEDTLS_PRIVATE(num_ops);
+#else
+    /* Make the struct non-empty if algs not supported. */
+    unsigned MBEDTLS_PRIVATE(dummy);
+#endif
+} mbedtls_psa_key_agreement_interruptible_operation_t;
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH) && defined(MBEDTLS_ECP_RESTARTABLE)
+#define MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT { MBEDTLS_ECDH_CONTEXT_INIT, 0 }
+#else
+#define MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT { 0 }
+#endif
 
 #endif /* PSA_CRYPTO_BUILTIN_COMPOSITES_H */

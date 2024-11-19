@@ -22,19 +22,7 @@
 
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_AES_H
@@ -47,7 +35,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* padlock.c and aesni.c rely on these values! */
+/* aesni.c relies on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
 #define MBEDTLS_AES_DECRYPT     0 /**< AES decryption. */
 
@@ -65,10 +53,6 @@
 extern "C" {
 #endif
 
-#if !defined(MBEDTLS_AES_ALT)
-// Regular implementation
-//
-
 /**
  * \brief The AES context-type definition.
  */
@@ -76,19 +60,15 @@ typedef struct mbedtls_aes_context {
     int MBEDTLS_PRIVATE(nr);                     /*!< The number of rounds. */
     size_t MBEDTLS_PRIVATE(rk_offset);           /*!< The offset in array elements to AES
                                                     round keys in the buffer. */
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH) && !defined(MBEDTLS_PADLOCK_C)
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     uint32_t MBEDTLS_PRIVATE(buf)[44];           /*!< Aligned data buffer to hold
                                                     10 round keys for 128-bit case. */
 #else
     uint32_t MBEDTLS_PRIVATE(buf)[68];           /*!< Unaligned data buffer. This buffer can
                                                     hold 32 extra Bytes, which can be used for
-                                                    one of the following purposes:
-                                                    <ul><li>Alignment if VIA padlock is
-                                                    used.</li>
-                                                    <li>Simplifying key expansion in the 256-bit
-                                                    case by generating an extra round key.
-                                                    </li></ul> */
-#endif /* MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH && !MBEDTLS_PADLOCK_C */
+                                                    simplifying key expansion in the 256-bit
+                                                    case by generating an extra round key. */
+#endif /* MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
 }
 mbedtls_aes_context;
 
@@ -103,10 +83,6 @@ typedef struct mbedtls_aes_xts_context {
                                                    computation. */
 } mbedtls_aes_xts_context;
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
-
-#else  /* MBEDTLS_AES_ALT */
-#include "aes_alt.h"
-#endif /* MBEDTLS_AES_ALT */
 
 /**
  * \brief          This function initializes the specified AES context.
@@ -167,6 +143,7 @@ MBEDTLS_CHECK_RETURN_TYPICAL
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
                            unsigned int keybits);
 
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /**
  * \brief          This function sets the decryption key.
  *
@@ -185,6 +162,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
 MBEDTLS_CHECK_RETURN_TYPICAL
 int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
                            unsigned int keybits);
+#endif /* !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
@@ -587,38 +565,6 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
                           const unsigned char *input,
                           unsigned char *output);
 #endif /* MBEDTLS_CIPHER_MODE_CTR */
-
-/**
- * \brief           Internal AES block encryption function. This is only
- *                  exposed to allow overriding it using
- *                  \c MBEDTLS_AES_ENCRYPT_ALT.
- *
- * \param ctx       The AES context to use for encryption.
- * \param input     The plaintext block.
- * \param output    The output (ciphertext) block.
- *
- * \return          \c 0 on success.
- */
-MBEDTLS_CHECK_RETURN_TYPICAL
-int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
-                                 const unsigned char input[16],
-                                 unsigned char output[16]);
-
-/**
- * \brief           Internal AES block decryption function. This is only
- *                  exposed to allow overriding it using see
- *                  \c MBEDTLS_AES_DECRYPT_ALT.
- *
- * \param ctx       The AES context to use for decryption.
- * \param input     The ciphertext block.
- * \param output    The output (plaintext) block.
- *
- * \return          \c 0 on success.
- */
-MBEDTLS_CHECK_RETURN_TYPICAL
-int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx,
-                                 const unsigned char input[16],
-                                 unsigned char output[16]);
 
 #if defined(MBEDTLS_SELF_TEST)
 /**

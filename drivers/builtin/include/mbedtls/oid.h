@@ -5,19 +5,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 #ifndef MBEDTLS_OID_H
 #define MBEDTLS_OID_H
@@ -300,12 +288,17 @@
 #define MBEDTLS_OID_HMAC_RIPEMD160              MBEDTLS_OID_INTERNET "\x05\x05\x08\x01\x04" /**< id-hmacWithSHA1 OBJECT IDENTIFIER ::= {iso(1) iso-identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) ipsec(8) isakmpOakley(1) hmacRIPEMD160(4)} */
 
 /*
- * Encryption algorithms
+ * Encryption algorithms,
+ * the following standardized object identifiers are specified at
+ * https://datatracker.ietf.org/doc/html/rfc8018#appendix-C.
  */
 #define MBEDTLS_OID_DES_CBC                     MBEDTLS_OID_ISO_IDENTIFIED_ORG \
         MBEDTLS_OID_OIW_SECSIG_ALG "\x07"                                                                        /**< desCBC OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 7 } */
 #define MBEDTLS_OID_DES_EDE3_CBC                MBEDTLS_OID_RSA_COMPANY "\x03\x07" /**< des-ede3-cbc OBJECT IDENTIFIER ::= { iso(1) member-body(2) -- us(840) rsadsi(113549) encryptionAlgorithm(3) 7 } */
 #define MBEDTLS_OID_AES                         MBEDTLS_OID_NIST_ALG "\x01" /** aes OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) 1 } */
+#define MBEDTLS_OID_AES_128_CBC                 MBEDTLS_OID_AES "\x02" /** aes128-cbc-pad OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithms(4) aes(1) aes128-CBC-PAD(2) } */
+#define MBEDTLS_OID_AES_192_CBC                 MBEDTLS_OID_AES "\x16" /** aes192-cbc-pad OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithms(4) aes(1) aes192-CBC-PAD(22) } */
+#define MBEDTLS_OID_AES_256_CBC                 MBEDTLS_OID_AES "\x2a" /** aes256-cbc-pad OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithms(4) aes(1) aes256-CBC-PAD(42) } */
 
 /*
  * Key Wrapping algorithms
@@ -490,38 +483,6 @@ typedef struct mbedtls_oid_descriptor_t {
 } mbedtls_oid_descriptor_t;
 
 /**
- * \brief           Translate an ASN.1 OID into its numeric representation
- *                  (e.g. "\x2A\x86\x48\x86\xF7\x0D" into "1.2.840.113549")
- *
- * \param buf       buffer to put representation in
- * \param size      size of the buffer
- * \param oid       OID to translate
- *
- * \return          Length of the string written (excluding final NULL) or
- *                  MBEDTLS_ERR_OID_BUF_TOO_SMALL in case of error
- */
-int mbedtls_oid_get_numeric_string(char *buf, size_t size, const mbedtls_asn1_buf *oid);
-
-/**
- * \brief           Translate a string containing a dotted-decimal
- *                  representation of an ASN.1 OID into its encoded form
- *                  (e.g. "1.2.840.113549" into "\x2A\x86\x48\x86\xF7\x0D").
- *                  On success, this function allocates oid->buf from the
- *                  heap. It must be freed by the caller using mbedtls_free().
- *
- * \param oid       #mbedtls_asn1_buf to populate with the DER-encoded OID
- * \param oid_str   string representation of the OID to parse
- * \param size      length of the OID string, not including any null terminator
- *
- * \return          0 if successful
- * \return          #MBEDTLS_ERR_ASN1_INVALID_DATA if \p oid_str does not
- *                  represent a valid OID
- * \return          #MBEDTLS_ERR_ASN1_ALLOC_FAILED if the function fails to
- *                  allocate oid->buf
- */
-int mbedtls_oid_from_numeric_string(mbedtls_asn1_buf *oid, const char *oid_str, size_t size);
-
-/**
  * \brief          Translate an X.509 extension OID into local values
  *
  * \param oid      OID to use
@@ -564,7 +525,7 @@ int mbedtls_oid_get_pk_alg(const mbedtls_asn1_buf *oid, mbedtls_pk_type_t *pk_al
 int mbedtls_oid_get_oid_by_pk_alg(mbedtls_pk_type_t pk_alg,
                                   const char **oid, size_t *olen);
 
-#if defined(MBEDTLS_PK_HAVE_ECC_KEYS)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 /**
  * \brief          Translate NamedCurve OID into an EC group identifier
  *
@@ -610,7 +571,7 @@ int mbedtls_oid_get_ec_grp_algid(const mbedtls_asn1_buf *oid, mbedtls_ecp_group_
  */
 int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
                                         const char **oid, size_t *olen);
-#endif /* MBEDTLS_PK_HAVE_ECC_KEYS */
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
 /**
  * \brief          Translate SignatureAlgorithm OID into md_type and pk_type
@@ -710,7 +671,6 @@ int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_t *cipher_alg);
-#endif /* MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_PKCS12_C)
 /**
@@ -726,6 +686,7 @@ int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_
 int mbedtls_oid_get_pkcs12_pbe_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg,
                                    mbedtls_cipher_type_t *cipher_alg);
 #endif /* MBEDTLS_PKCS12_C */
+#endif /* MBEDTLS_CIPHER_C */
 
 #ifdef __cplusplus
 }

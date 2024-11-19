@@ -12,19 +12,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 #ifndef MBEDTLS_SHA1_H
 #define MBEDTLS_SHA1_H
@@ -42,10 +30,6 @@
 extern "C" {
 #endif
 
-#if !defined(MBEDTLS_SHA1_ALT)
-// Regular implementation
-//
-
 /**
  * \brief          The SHA-1 context structure.
  *
@@ -60,10 +44,6 @@ typedef struct mbedtls_sha1_context {
     unsigned char MBEDTLS_PRIVATE(buffer)[64];   /*!< The data block being processed. */
 }
 mbedtls_sha1_context;
-
-#else  /* MBEDTLS_SHA1_ALT */
-#include "sha1_alt.h"
-#endif /* MBEDTLS_SHA1_ALT */
 
 /**
  * \brief          This function initializes a SHA-1 context.
@@ -161,24 +141,6 @@ int mbedtls_sha1_update(mbedtls_sha1_context *ctx,
  */
 int mbedtls_sha1_finish(mbedtls_sha1_context *ctx,
                         unsigned char output[20]);
-
-/**
- * \brief          SHA-1 process data block (internal use only).
- *
- * \warning        SHA-1 is considered a weak message digest and its use
- *                 constitutes a security risk. We recommend considering
- *                 stronger message digests instead.
- *
- * \param ctx      The SHA-1 context to use. This must be initialized.
- * \param data     The data block being processed. This must be a
- *                 readable buffer of length \c 64 Bytes.
- *
- * \return         \c 0 on success.
- * \return         A negative error code on failure.
- *
- */
-int mbedtls_internal_sha1_process(mbedtls_sha1_context *ctx,
-                                  const unsigned char data[64]);
 
 /**
  * \brief          This function calculates the SHA-1 checksum of a buffer.

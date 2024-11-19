@@ -23,19 +23,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_CTR_DRBG_H
@@ -44,7 +32,29 @@
 
 #include "mbedtls/build_info.h"
 
+/* The CTR_DRBG implementation can either directly call the low-level AES
+ * module (gated by MBEDTLS_AES_C) or call the PSA API to perform AES
+ * operations. Calling the AES module directly is the default, both for
+ * maximum backward compatibility and because it's a bit more efficient
+ * (less glue code).
+ *
+ * When MBEDTLS_AES_C is disabled, the CTR_DRBG module calls PSA crypto and
+ * thus benefits from the PSA AES accelerator driver.
+ * It is technically possible to enable MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO
+ * to use PSA even when MBEDTLS_AES_C is enabled, but there is very little
+ * reason to do so other than testing purposes and this is not officially
+ * supported.
+ */
+#if !defined(MBEDTLS_AES_C)
+#define MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO
+#endif
+
+#if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
+#include "psa/crypto.h"
+#else
 #include "mbedtls/aes.h"
+#endif
+
 #include "entropy.h"
 
 #if defined(MBEDTLS_THREADING_C)
@@ -162,6 +172,13 @@ extern "C" {
 #define MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN (MBEDTLS_CTR_DRBG_ENTROPY_LEN + 1) / 2
 #endif
 
+#if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
+typedef struct mbedtls_ctr_drbg_psa_context {
+    mbedtls_svc_key_id_t key_id;
+    psa_cipher_operation_t operation;
+} mbedtls_ctr_drbg_psa_context;
+#endif
+
 /**
  * \brief          The CTR_DRBG context structure.
  */
@@ -187,7 +204,11 @@ typedef struct mbedtls_ctr_drbg_context {
                                                   * This is the maximum number of requests
                                                   * that can be made between reseedings. */
 
+#if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
+    mbedtls_ctr_drbg_psa_context MBEDTLS_PRIVATE(psa_ctx); /*!< The PSA context. */
+#else
     mbedtls_aes_context MBEDTLS_PRIVATE(aes_ctx);        /*!< The AES context. */
+#endif
 
     /*
      * Callbacks (Entropy)

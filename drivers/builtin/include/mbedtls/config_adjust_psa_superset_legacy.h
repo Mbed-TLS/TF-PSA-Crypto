@@ -2,6 +2,8 @@
  * \file mbedtls/config_adjust_psa_superset_legacy.h
  * \brief Adjust PSA configuration: automatic enablement from legacy
  *
+ * This is an internal header. Do not include it directly.
+ *
  * To simplify some edge cases, we automatically enable certain cryptographic
  * mechanisms in the PSA API if they are enabled in the legacy API. The general
  * idea is that if legacy module M uses mechanism A internally, and A has
@@ -11,23 +13,19 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_CONFIG_ADJUST_PSA_SUPERSET_LEGACY_H
 #define MBEDTLS_CONFIG_ADJUST_PSA_SUPERSET_LEGACY_H
+
+#if !defined(MBEDTLS_CONFIG_FILES_READ)
+#error "Do not include mbedtls/config_adjust_*.h manually! This can lead to problems, " \
+    "up to and including runtime errors such as buffer overflows. " \
+    "If you're trying to fix a complaint from check_config.h, just remove " \
+    "it from your configuration file: since Mbed TLS 3.0, it is included " \
+    "automatically at the right point."
+#endif /* */
 
 /****************************************************************/
 /* Hashes that are built in are also enabled in PSA.

@@ -2,19 +2,7 @@
  *  Constant-time functions
  *
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_CONSTANT_TIME_INTERNAL_H
@@ -445,7 +433,7 @@ static inline int mbedtls_ct_error_if_else_0(mbedtls_ct_condition_t condition, i
  * Block memory operations
  */
 
-#if defined(MBEDTLS_PKCS1_V15) && defined(MBEDTLS_RSA_C) && !defined(MBEDTLS_RSA_ALT)
+#if defined(MBEDTLS_PKCS1_V15) && defined(MBEDTLS_RSA_C)
 
 /** Conditionally set a block of memory to zero.
  *
@@ -478,7 +466,7 @@ void mbedtls_ct_memmove_left(void *start,
                              size_t total,
                              size_t offset);
 
-#endif /* defined(MBEDTLS_PKCS1_V15) && defined(MBEDTLS_RSA_C) && !defined(MBEDTLS_RSA_ALT) */
+#endif /* defined(MBEDTLS_PKCS1_V15) && defined(MBEDTLS_RSA_C) */
 
 /** Conditional memcpy.
  *

@@ -2,19 +2,7 @@
  *  FIPS-46-3 compliant Triple-DES implementation
  *
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 /*
  *  DES, on which TDES is based, was originally designed by Horst Feistel
@@ -28,14 +16,12 @@
 #if defined(MBEDTLS_DES_C)
 
 #include "mbedtls/des.h"
-#include "mbedtls/error.h"
+#include "mbedtls/error_common.h"
 #include "mbedtls/platform_util.h"
 
 #include <string.h>
 
 #include "mbedtls/platform.h"
-
-#if !defined(MBEDTLS_DES_ALT)
 
 /*
  * Expanded DES S-boxes
@@ -403,8 +389,7 @@ int mbedtls_des_key_check_weak(const unsigned char key[MBEDTLS_DES_KEY_SIZE])
     return 0;
 }
 
-#if !defined(MBEDTLS_DES_SETKEY_ALT)
-void mbedtls_des_setkey(uint32_t SK[32], const unsigned char key[MBEDTLS_DES_KEY_SIZE])
+static void mbedtls_des_setkey(uint32_t SK[32], const unsigned char key[MBEDTLS_DES_KEY_SIZE])
 {
     int i;
     uint32_t X, Y, T;
@@ -468,7 +453,6 @@ void mbedtls_des_setkey(uint32_t SK[32], const unsigned char key[MBEDTLS_DES_KEY
                 | ((Y <<  2) & 0x00000004) | ((Y >> 21) & 0x00000002);
     }
 }
-#endif /* !MBEDTLS_DES_SETKEY_ALT */
 
 /*
  * DES key schedule (56-bit, encryption)
@@ -602,7 +586,6 @@ int mbedtls_des3_set3key_dec(mbedtls_des3_context *ctx,
 /*
  * DES-ECB block encryption/decryption
  */
-#if !defined(MBEDTLS_DES_CRYPT_ECB_ALT)
 int mbedtls_des_crypt_ecb(mbedtls_des_context *ctx,
                           const unsigned char input[8],
                           unsigned char output[8])
@@ -629,7 +612,6 @@ int mbedtls_des_crypt_ecb(mbedtls_des_context *ctx,
 
     return 0;
 }
-#endif /* !MBEDTLS_DES_CRYPT_ECB_ALT */
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
 /*
@@ -690,7 +672,6 @@ exit:
 /*
  * 3DES-ECB block encryption/decryption
  */
-#if !defined(MBEDTLS_DES3_CRYPT_ECB_ALT)
 int mbedtls_des3_crypt_ecb(mbedtls_des3_context *ctx,
                            const unsigned char input[8],
                            unsigned char output[8])
@@ -727,7 +708,6 @@ int mbedtls_des3_crypt_ecb(mbedtls_des3_context *ctx,
 
     return 0;
 }
-#endif /* !MBEDTLS_DES3_CRYPT_ECB_ALT */
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
 /*
@@ -784,8 +764,6 @@ exit:
     return ret;
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
-
-#endif /* !MBEDTLS_DES_ALT */
 
 #if defined(MBEDTLS_SELF_TEST)
 /*

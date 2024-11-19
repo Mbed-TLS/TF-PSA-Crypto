@@ -5,19 +5,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 #ifndef MBEDTLS_ECJPAKE_H
 #define MBEDTLS_ECJPAKE_H
@@ -57,7 +45,6 @@ typedef enum {
     MBEDTLS_ECJPAKE_NONE,               /**< Undefined                      */
 } mbedtls_ecjpake_role;
 
-#if !defined(MBEDTLS_ECJPAKE_ALT)
 /**
  * EC J-PAKE context structure.
  *
@@ -86,10 +73,6 @@ typedef struct mbedtls_ecjpake_context {
 
     mbedtls_mpi MBEDTLS_PRIVATE(s);                      /**< Pre-shared secret (passphrase) */
 } mbedtls_ecjpake_context;
-
-#else  /* MBEDTLS_ECJPAKE_ALT */
-#include "ecjpake_alt.h"
-#endif /* MBEDTLS_ECJPAKE_ALT */
 
 /**
  * \brief           Initialize an ECJPAKE context.

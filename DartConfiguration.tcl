@@ -1,4 +1,4 @@
 Site: localhost
-BuildName: TF-PSA-Crypto-test
+BuildName: Mbed TLS-test
 CoverageCommand: /usr/bin/gcov
 MemoryCheckCommand: /usr/bin/valgrind

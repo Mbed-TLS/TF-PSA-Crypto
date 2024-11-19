@@ -15,19 +15,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef PSA_CRYPTO_TYPES_H
@@ -466,6 +454,30 @@ typedef uint64_t psa_key_slot_number_t;
  * `PSA_KEY_DERIVATION_INPUT_xxx`.
  */
 typedef uint16_t psa_key_derivation_step_t;
+
+/** \brief Custom parameters for key generation or key derivation.
+ *
+ * This is a structure type with at least the following field:
+ *
+ * - \c flags: an unsigned integer type. 0 for the default production parameters.
+ *
+ * Functions that take such a structure as input also take an associated
+ * input buffer \c custom_data of length \c custom_data_length.
+ *
+ * The interpretation of this structure and the associated \c custom_data
+ * parameter depend on the type of the created key.
+ *
+ * - #PSA_KEY_TYPE_RSA_KEY_PAIR:
+ *     - \c flags: must be 0.
+ *     - \c custom_data: the public exponent, in little-endian order.
+ *       This must be an odd integer and must not be 1.
+ *       Implementations must support 65537, should support 3 and may
+ *       support other values.
+ *       When not using a driver, Mbed TLS supports values up to \c INT_MAX.
+ *       If this is empty, the default value 65537 is used.
+ * - Other key types: reserved for future use. \c flags must be 0.
+ */
+typedef struct psa_custom_key_parameters_s psa_custom_key_parameters_t;
 
 /**@}*/
 

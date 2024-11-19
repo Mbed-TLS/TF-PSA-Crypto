@@ -1,14 +1,19 @@
-file(GLOB psa_headers "psa/*.h")
-file(GLOB tf_psa_crypto_headers "tf_psa_crypto/*.h")
+option(INSTALL_TF_PSA_CRYPTO_HEADERS "Install TF PSA Crypto headers." ON)
 
-# Do not install the default configuration file as a specific one may have
-# been defined through the TF_PSA_CRYPTO_CONFIG_FILE cached variable.
-list(REMOVE_ITEM psa_headers "${CMAKE_CURRENT_SOURCE_DIR}/psa/crypto_config.h")
+if(INSTALL_TF_PSA_CRYPTO_HEADERS)
+    file(GLOB psa_headers "psa/*.h")
+    file(GLOB mbedtls_crypto_headers "../drivers/builtin/include/mbedtls/*.h")
 
-install(FILES ${psa_headers}
-    DESTINATION include/psa
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    install(FILES ${psa_headers}
+        DESTINATION include/psa
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
-install(FILES ${tf_psa_crypto_headers}
-    DESTINATION include/tf_psa_crypto
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    install(FILES ${mbedtls_crypto_headers}
+        DESTINATION include/mbedtls
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
+
+# Make includes available in an out-of-source build. ssl-opt.sh requires it.
+if (ENABLE_TESTING AND NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    link_to_source(psa)
+endif()

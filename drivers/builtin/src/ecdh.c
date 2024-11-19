@@ -2,19 +2,7 @@
  *  Elliptic curve Diffie-Hellman
  *
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 /*
@@ -30,7 +18,7 @@
 
 #include "mbedtls/ecdh.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "mbedtls/error_common.h"
 
 #include <string.h>
 
@@ -55,7 +43,6 @@ int mbedtls_ecdh_can_do(mbedtls_ecp_group_id gid)
     return 1;
 }
 
-#if !defined(MBEDTLS_ECDH_GEN_PUBLIC_ALT)
 /*
  * Generate public key (restartable version)
  *
@@ -96,9 +83,7 @@ int mbedtls_ecdh_gen_public(mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp_
 {
     return ecdh_gen_public_restartable(grp, d, Q, f_rng, p_rng, NULL);
 }
-#endif /* !MBEDTLS_ECDH_GEN_PUBLIC_ALT */
 
-#if !defined(MBEDTLS_ECDH_COMPUTE_SHARED_ALT)
 /*
  * Compute shared secret (SEC1 3.3.1)
  */
@@ -141,7 +126,6 @@ int mbedtls_ecdh_compute_shared(mbedtls_ecp_group *grp, mbedtls_mpi *z,
     return ecdh_compute_shared_restartable(grp, z, Q, d,
                                            f_rng, p_rng, NULL);
 }
-#endif /* !MBEDTLS_ECDH_COMPUTE_SHARED_ALT */
 
 static void ecdh_init_internal(mbedtls_ecdh_context_mbed *ctx)
 {
@@ -153,6 +137,15 @@ static void ecdh_init_internal(mbedtls_ecdh_context_mbed *ctx)
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_ecp_restart_init(&ctx->rs);
+#endif
+}
+
+mbedtls_ecp_group_id mbedtls_ecdh_get_grp_id(mbedtls_ecdh_context *ctx)
+{
+#if defined(MBEDTLS_ECDH_LEGACY_CONTEXT)
+    return ctx->MBEDTLS_PRIVATE(grp).id;
+#else
+    return ctx->MBEDTLS_PRIVATE(grp_id);
 #endif
 }
 
@@ -375,7 +368,7 @@ static int ecdh_read_params_internal(mbedtls_ecdh_context_mbed *ctx,
                                      const unsigned char *end)
 {
     return mbedtls_ecp_tls_read_point(&ctx->grp, &ctx->Qp, buf,
-                                      end - *buf);
+                                      (size_t) (end - *buf));
 }
 
 /*
@@ -391,7 +384,7 @@ int mbedtls_ecdh_read_params(mbedtls_ecdh_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_ecp_group_id grp_id;
-    if ((ret = mbedtls_ecp_tls_read_group_id(&grp_id, buf, end - *buf))
+    if ((ret = mbedtls_ecp_tls_read_group_id(&grp_id, buf, (size_t) (end - *buf)))
         != 0) {
         return ret;
     }

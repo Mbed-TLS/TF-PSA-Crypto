@@ -2,19 +2,7 @@
  *  FIPS-180-2 compliant SHA-384/512 implementation
  *
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 /*
  *  The SHA-512 Secure Hash Standard was published by NIST in 2002.
@@ -31,7 +19,7 @@
  * By defining the macros ourselves we gain access to those declarations without
  * requiring -march on the command line.
  *
- * `arm_neon.h` could be included by any header file, so we put these defines
+ * `arm_neon.h` is included by common.h, so we put these defines
  * at the top of this file, before any includes.
  */
 #define __ARM_FEATURE_SHA512 1
@@ -44,7 +32,7 @@
 
 #include "mbedtls/sha512.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "mbedtls/error_common.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
   #define UL64(x) x##ui64
@@ -60,9 +48,7 @@
 #  if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
 /* *INDENT-OFF* */
-#   ifdef __ARM_NEON
-#       include <arm_neon.h>
-#   else
+#   if !defined(MBEDTLS_HAVE_NEON_INTRINSICS)
 #       error "Target does not support NEON instructions"
 #   endif
 /*
@@ -116,17 +102,20 @@
 #      if defined(__linux__)
 /* Our preferred method of detection is getauxval() */
 #        include <sys/auxv.h>
+#        if !defined(HWCAP_SHA512)
+/* The same header that declares getauxval() should provide the HWCAP_xxx
+ * constants to analyze its return value. However, the libc may be too
+ * old to have the constant that we need. So if it's missing, assume that
+ * the value is the same one used by the Linux kernel ABI.
+ */
+#          define HWCAP_SHA512 (1 << 21)
+#        endif
 #      endif
 /* Use SIGILL on Unix, and fall back to it on Linux */
 #      include <signal.h>
 #    endif
 #  endif
-#elif defined(_M_ARM64)
-#  if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
-    defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
-#    include <arm64_neon.h>
-#  endif
-#else
+#elif !defined(MBEDTLS_PLATFORM_IS_WINDOWS_ON_ARM64)
 #  undef MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY
 #  undef MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT
 #endif
@@ -154,7 +143,7 @@ static int mbedtls_a64_crypto_sha512_determine_support(void)
                            NULL, 0);
     return ret == 0 && value != 0;
 }
-#elif defined(_M_ARM64)
+#elif defined(MBEDTLS_PLATFORM_IS_WINDOWS_ON_ARM64)
 /*
  * As of March 2022, there don't appear to be any PF_ARM_V8_* flags
  * available to pass to IsProcessorFeaturePresent() to check for
@@ -215,8 +204,6 @@ static int mbedtls_a64_crypto_sha512_determine_support(void)
 #endif  /* HWCAP_SHA512, __APPLE__, __unix__ && SIG_SETMASK */
 
 #endif  /* MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT */
-
-#if !defined(MBEDTLS_SHA512_ALT)
 
 #define SHA512_BLOCK_SIZE 128
 
@@ -302,8 +289,6 @@ int mbedtls_sha512_starts(mbedtls_sha512_context *ctx, int is384)
     return 0;
 }
 
-#if !defined(MBEDTLS_SHA512_PROCESS_ALT)
-
 /*
  * Round constants
  */
@@ -350,7 +335,6 @@ static const uint64_t K[80] =
     UL64(0x4CC5D4BECB3E42B6),  UL64(0x597F299CFC657E2A),
     UL64(0x5FCB6FAB3AD6FAEC),  UL64(0x6C44198C4A475817)
 };
-#endif
 
 #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
@@ -567,15 +551,8 @@ static size_t mbedtls_internal_sha512_process_many_a64_crypto(
     return processed;
 }
 
-#if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT)
-/*
- * This function is for internal use only if we are building both C and A64
- * versions, otherwise it is renamed to be the public mbedtls_internal_sha512_process()
- */
-static
-#endif
-int mbedtls_internal_sha512_process_a64_crypto(mbedtls_sha512_context *ctx,
-                                               const unsigned char data[SHA512_BLOCK_SIZE])
+static int mbedtls_internal_sha512_process_a64_crypto(mbedtls_sha512_context *ctx,
+                                                      const unsigned char data[SHA512_BLOCK_SIZE])
 {
     return (mbedtls_internal_sha512_process_many_a64_crypto(ctx, data,
                                                             SHA512_BLOCK_SIZE) ==
@@ -600,17 +577,10 @@ int mbedtls_internal_sha512_process_a64_crypto(mbedtls_sha512_context *ctx,
 #endif
 
 
-#if !defined(MBEDTLS_SHA512_PROCESS_ALT) && !defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
+#if !defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
 
-#if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT)
-/*
- * This function is for internal use only if we are building both C and A64
- * versions, otherwise it is renamed to be the public mbedtls_internal_sha512_process()
- */
-static
-#endif
-int mbedtls_internal_sha512_process_c(mbedtls_sha512_context *ctx,
-                                      const unsigned char data[SHA512_BLOCK_SIZE])
+static int mbedtls_internal_sha512_process_c(mbedtls_sha512_context *ctx,
+                                             const unsigned char data[SHA512_BLOCK_SIZE])
 {
     int i;
     struct {
@@ -701,11 +671,6 @@ int mbedtls_internal_sha512_process_c(mbedtls_sha512_context *ctx,
     return 0;
 }
 
-#endif /* !MBEDTLS_SHA512_PROCESS_ALT && !MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY */
-
-
-#if !defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
-
 static size_t mbedtls_internal_sha512_process_many_c(
     mbedtls_sha512_context *ctx, const uint8_t *data, size_t len)
 {
@@ -753,8 +718,8 @@ static size_t mbedtls_internal_sha512_process_many(mbedtls_sha512_context *ctx,
     }
 }
 
-int mbedtls_internal_sha512_process(mbedtls_sha512_context *ctx,
-                                    const unsigned char data[SHA512_BLOCK_SIZE])
+static int mbedtls_internal_sha512_process(mbedtls_sha512_context *ctx,
+                                           const unsigned char data[SHA512_BLOCK_SIZE])
 {
     if (mbedtls_a64_crypto_sha512_has_support()) {
         return mbedtls_internal_sha512_process_a64_crypto(ctx, data);
@@ -889,8 +854,6 @@ exit:
     mbedtls_sha512_free(ctx);
     return ret;
 }
-
-#endif /* !MBEDTLS_SHA512_ALT */
 
 /*
  * output = SHA-512( input buffer )

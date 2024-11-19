@@ -4,19 +4,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef PSA_CRYPTO_H
@@ -131,8 +119,9 @@ static psa_key_attributes_t psa_key_attributes_init(void);
  * value in the structure.
  * The persistent key will be written to storage when the attribute
  * structure is passed to a key creation function such as
- * psa_import_key(), psa_generate_key(),
- * psa_key_derivation_output_key() or psa_copy_key().
+ * psa_import_key(), psa_generate_key(), psa_generate_key_custom(),
+ * psa_key_derivation_output_key(), psa_key_derivation_output_key_custom()
+ * or psa_copy_key().
  *
  * This function may be declared as `static` (i.e. without external
  * linkage). This function may be provided as a function-like macro,
@@ -140,6 +129,9 @@ static psa_key_attributes_t psa_key_attributes_init(void);
  *
  * \param[out] attributes  The attribute structure to write to.
  * \param key              The persistent identifier for the key.
+ *                         This can be any value in the range from
+ *                         #PSA_KEY_ID_USER_MIN to #PSA_KEY_ID_USER_MAX
+ *                         inclusive.
  */
 static void psa_set_key_id(psa_key_attributes_t *attributes,
                            mbedtls_svc_key_id_t key);
@@ -175,8 +167,9 @@ static void mbedtls_set_key_owner_id(psa_key_attributes_t *attributes,
  * value in the structure.
  * The persistent key will be written to storage when the attribute
  * structure is passed to a key creation function such as
- * psa_import_key(), psa_generate_key(),
- * psa_key_derivation_output_key() or psa_copy_key().
+ * psa_import_key(), psa_generate_key(), psa_generate_key_custom(),
+ * psa_key_derivation_output_key(), psa_key_derivation_output_key_custom()
+ * or psa_copy_key().
  *
  * This function may be declared as `static` (i.e. without external
  * linkage). This function may be provided as a function-like macro,
@@ -537,6 +530,11 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
  * If a key is currently in use in a multipart operation, then destroying the
  * key will cause the multipart operation to fail.
  *
+ * \warning    We can only guarantee that the the key material will
+ *             eventually be wiped from memory. With threading enabled
+ *             and during concurrent execution, copies of the key material may
+ *             still exist until all threads have finished using the key.
+ *
  * \param key  Identifier of the key to erase. If this is \c 0, do nothing and
  *             return #PSA_SUCCESS.
  *
@@ -876,7 +874,7 @@ psa_status_t psa_hash_compute(psa_algorithm_t alg,
  *                          such that #PSA_ALG_IS_HASH(\p alg) is true).
  * \param[in] input         Buffer containing the message to hash.
  * \param input_length      Size of the \p input buffer in bytes.
- * \param[out] hash         Buffer containing the expected hash value.
+ * \param[in] hash          Buffer containing the expected hash value.
  * \param hash_length       Size of the \p hash buffer in bytes.
  *
  * \retval #PSA_SUCCESS
@@ -1229,7 +1227,7 @@ psa_status_t psa_mac_compute(mbedtls_svc_key_id_t key,
  *                          such that #PSA_ALG_IS_MAC(\p alg) is true).
  * \param[in] input         Buffer containing the input message.
  * \param input_length      Size of the \p input buffer in bytes.
- * \param[out] mac          Buffer containing the expected MAC value.
+ * \param[in] mac           Buffer containing the expected MAC value.
  * \param mac_length        Size of the \p mac buffer in bytes.
  *
  * \retval #PSA_SUCCESS
@@ -2915,7 +2913,7 @@ psa_status_t psa_sign_message(mbedtls_svc_key_id_t key,
  *                              \p key.
  * \param[in]  input            The message whose signature is to be verified.
  * \param[in]  input_length     Size of the \p input buffer in bytes.
- * \param[out] signature        Buffer containing the signature to verify.
+ * \param[in] signature         Buffer containing the signature to verify.
  * \param[in]  signature_length Size of the \p signature buffer in bytes.
  *
  * \retval #PSA_SUCCESS \emptydescription
@@ -3238,7 +3236,8 @@ static psa_key_derivation_operation_t psa_key_derivation_operation_init(void);
  *    psa_key_derivation_set_capacity(). You may do this before, in the middle
  *    of or after providing inputs. For some algorithms, this step is mandatory
  *    because the output depends on the maximum capacity.
- * -# To derive a key, call psa_key_derivation_output_key().
+ * -# To derive a key, call psa_key_derivation_output_key() or
+ *    psa_key_derivation_output_key_custom().
  *    To derive a byte string for a different purpose, call
  *    psa_key_derivation_output_bytes().
  *    Successive calls to these functions use successive output bytes
@@ -3461,7 +3460,8 @@ psa_status_t psa_key_derivation_input_integer(
  * \note Once all inputs steps are completed, the operations will allow:
  * - psa_key_derivation_output_bytes() if each input was either a direct input
  *   or  a key with #PSA_KEY_USAGE_DERIVE set;
- * - psa_key_derivation_output_key() if the input for step
+ * - psa_key_derivation_output_key() or psa_key_derivation_output_key_custom()
+ *   if the input for step
  *   #PSA_KEY_DERIVATION_INPUT_SECRET or #PSA_KEY_DERIVATION_INPUT_PASSWORD
  *   was from a key slot with #PSA_KEY_USAGE_DERIVE and each other input was
  *   either a direct input or a key with #PSA_KEY_USAGE_DERIVE set;
@@ -3709,6 +3709,11 @@ psa_status_t psa_key_derivation_output_bytes(
  * Future versions of this specification may include additional restrictions
  * on the derived key based on the attributes and strength of the secret key.
  *
+ * \note This function is equivalent to calling
+ *       psa_key_derivation_output_key_custom()
+ *       with the custom production parameters #PSA_CUSTOM_KEY_PARAMETERS_INIT
+ *       and `custom_data_length == 0` (i.e. `custom_data` is empty).
+ *
  * \param[in] attributes    The attributes for the new key.
  *                          If the key type to be created is
  *                          #PSA_KEY_TYPE_PASSWORD_HASH then the algorithm in
@@ -3762,6 +3767,81 @@ psa_status_t psa_key_derivation_output_key(
     psa_key_derivation_operation_t *operation,
     mbedtls_svc_key_id_t *key);
 
+/** Derive a key from an ongoing key derivation operation with custom
+ *  production parameters.
+ *
+ * See the description of psa_key_derivation_out_key() for the operation of
+ * this function with the default production parameters.
+ * Mbed TLS currently does not currently support any non-default production
+ * parameters.
+ *
+ * \note This function is experimental and may change in future minor
+ *       versions of Mbed TLS.
+ *
+ * \param[in] attributes    The attributes for the new key.
+ *                          If the key type to be created is
+ *                          #PSA_KEY_TYPE_PASSWORD_HASH then the algorithm in
+ *                          the policy must be the same as in the current
+ *                          operation.
+ * \param[in,out] operation The key derivation operation object to read from.
+ * \param[in] custom        Customization parameters for the key generation.
+ *                          When this is #PSA_CUSTOM_KEY_PARAMETERS_INIT
+ *                          with \p custom_data_length = 0,
+ *                          this function is equivalent to
+ *                          psa_key_derivation_output_key().
+ * \param[in] custom_data   Variable-length data associated with \c custom.
+ * \param custom_data_length
+ *                          Length of `custom_data` in bytes.
+ * \param[out] key          On success, an identifier for the newly created
+ *                          key. For persistent keys, this is the key
+ *                          identifier defined in \p attributes.
+ *                          \c 0 on failure.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ *         If the key is persistent, the key material and the key's metadata
+ *         have been saved to persistent storage.
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is
+ *         already a persistent key with the given identifier.
+ * \retval #PSA_ERROR_INSUFFICIENT_DATA
+ *         There was not enough data to create the desired key.
+ *         Note that in this case, no output is written to the output buffer.
+ *         The operation's capacity is set to 0, thus subsequent calls to
+ *         this function will not succeed, even with a smaller output buffer.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The key type or key size is not supported, either by the
+ *         implementation in general or in this particular location.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The provided key attributes are not valid for the operation.
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         The #PSA_KEY_DERIVATION_INPUT_SECRET or
+ *         #PSA_KEY_DERIVATION_INPUT_PASSWORD input was not provided through a
+ *         key; or one of the inputs was a key whose policy didn't allow
+ *         #PSA_KEY_USAGE_DERIVE.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid (it must be active and completed
+ *         all required input steps), or the library has not been previously
+ *         initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+psa_status_t psa_key_derivation_output_key_custom(
+    const psa_key_attributes_t *attributes,
+    psa_key_derivation_operation_t *operation,
+    const psa_custom_key_parameters_t *custom,
+    const uint8_t *custom_data,
+    size_t custom_data_length,
+    mbedtls_svc_key_id_t *key);
+
 /** Compare output data from a key derivation operation to an expected value.
  *
  * This function calculates output bytes from a key derivation algorithm and
@@ -3786,8 +3866,8 @@ psa_status_t psa_key_derivation_output_key(
  * psa_key_derivation_abort().
  *
  * \param[in,out] operation The key derivation operation object to read from.
- * \param[in] expected_output Buffer containing the expected derivation output.
- * \param output_length     Length of the expected output; this is also the
+ * \param[in] expected      Buffer containing the expected derivation output.
+ * \param expected_length   Length of the expected output; this is also the
  *                          number of bytes that will be read.
  *
  * \retval #PSA_SUCCESS \emptydescription
@@ -3817,8 +3897,8 @@ psa_status_t psa_key_derivation_output_key(
  */
 psa_status_t psa_key_derivation_verify_bytes(
     psa_key_derivation_operation_t *operation,
-    const uint8_t *expected_output,
-    size_t output_length);
+    const uint8_t *expected,
+    size_t expected_length);
 
 /** Compare output data from a key derivation operation to an expected value
  * stored in a key object.
@@ -3847,7 +3927,8 @@ psa_status_t psa_key_derivation_verify_bytes(
  *                          and the permitted algorithm must match the
  *                          operation. The value of this key was likely
  *                          computed by a previous call to
- *                          psa_key_derivation_output_key().
+ *                          psa_key_derivation_output_key() or
+ *                          psa_key_derivation_output_key_custom().
  *
  * \retval #PSA_SUCCESS \emptydescription
  * \retval #PSA_ERROR_INVALID_SIGNATURE
@@ -3967,6 +4048,89 @@ psa_status_t psa_raw_key_agreement(psa_algorithm_t alg,
                                    size_t output_size,
                                    size_t *output_length);
 
+/** Perform a key agreement and return the shared secret as a derivation key.
+ *
+ * \param private_key             Identifier of the private key to use. It must
+ *                                allow the usage #PSA_KEY_USAGE_DERIVE.
+ * \param[in] peer_key            Public key of the peer. It must be
+ *                                in the same format that psa_import_key()
+ *                                accepts. The standard formats for public
+ *                                keys are documented in the documentation
+ *                                of psa_export_public_key().
+ * \param peer_key_length         Size of \p peer_key in bytes.
+ * \param alg                     The key agreement algorithm to compute
+ *                                (\c PSA_ALG_XXX value such that
+ *                                #PSA_ALG_IS_RAW_KEY_AGREEMENT(\p alg)
+ *                                is true).
+ * \param[in] attributes          The attributes for the new key. This function uses
+ *                                the attributes as follows:
+ *                                 * The key type must be one of #PSA_KEY_TYPE_DERIVE,
+ *                                   #PSA_KEY_TYPE_RAW_DATA, #PSA_KEY_TYPE_HMAC, or
+ *                                   #PSA_KEY_TYPE_PASSWORD.
+ *                                 * The size of the returned key is always the
+ *                                   bit-size of the shared secret, rounded up
+ *                                   to a whole number of bytes. The key size in
+ *                                   attributes can be zero; if it is nonzero, it
+ *                                   must be equal to the output size of the key
+ *                                   agreement, in bits.
+ *                                   The output size, in bits, of the key agreement
+ *                                   is 8 * PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(type, bits),
+ *                                   where type and bits are the type and bit-size of
+ *                                   private_key.
+ *                                 * The key permitted-algorithm policy is required for
+ *                                   keys that will be used for a cryptographic operation.
+ *                                 * The key usage flags define what operations are
+ *                                   permitted with the key.
+ *                                 * The key lifetime and identifier are required
+ *                                   for a persistent key.
+ * \param[out] key                On success, an identifier for the newly created
+ *                                key. #PSA_KEY_ID_NULL on failure.
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The library has not been previously initialized by psa_crypto_init().
+ * \retval #PSA_ERROR_INVALID_HANDLE
+ *          \p private_key is not a valid key identifier.
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         \p private_key does not have the PSA_KEY_USAGE_DERIVE flag,
+ *         or it does not permit the requested algorithm.
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is already
+ *         a persistent key with the given identifier.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         * \p alg is not a key agreement algorithm.
+ *         * \p private_key is not compatible with \p alg.
+ *         * \p peer_key is not valid for \p alg or not compatible with
+ *           \p private_key.
+ *         * The output key attributes in \p attributes are not valid:
+ *              * The key type is not valid for key agreement output.
+ *              * The key size is nonzero, and is not the size of the shared secret.
+ *              * The key lifetime is invalid.
+ *              * The key identifier is not valid for the key lifetime.
+ *              * The key usage flags include invalid values.
+ *              * The key’s permitted-usage algorithm is invalid.
+ *              * The key attributes, as a whole, are invalid.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         * \p alg is not a supported key agreement algorithm.
+ *         * \p private_key is not supported for use with alg.
+ *         * The output key attributes, as a whole, are not supported,
+ *           either by the implementation in general or in the specified
+ *           storage location.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ */
+psa_status_t psa_key_agreement(mbedtls_svc_key_id_t private_key,
+                               const uint8_t *peer_key,
+                               size_t peer_key_length,
+                               psa_algorithm_t alg,
+                               const psa_key_attributes_t *attributes,
+                               mbedtls_svc_key_id_t *key);
 /**@}*/
 
 /** \defgroup random Random generation
@@ -4015,6 +4179,10 @@ psa_status_t psa_generate_random(uint8_t *output,
  *   between 2^{n-1} and 2^n where n is the bit size specified in the
  *   attributes.
  *
+ * \note This function is equivalent to calling psa_generate_key_custom()
+ *       with the custom production parameters #PSA_CUSTOM_KEY_PARAMETERS_INIT
+ *       and `custom_data_length == 0` (i.e. `custom_data` is empty).
+ *
  * \param[in] attributes    The attributes for the new key.
  * \param[out] key          On success, an identifier for the newly created
  *                          key. For persistent keys, this is the key
@@ -4046,6 +4214,62 @@ psa_status_t psa_generate_random(uint8_t *output,
  */
 psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
                               mbedtls_svc_key_id_t *key);
+
+/**
+ * \brief Generate a key or key pair using custom production parameters.
+ *
+ * See the description of psa_generate_key() for the operation of this
+ * function with the default production parameters. In addition, this function
+ * supports the following production customizations, described in more detail
+ * in the documentation of ::psa_custom_key_parameters_t:
+ *
+ * - RSA keys: generation with a custom public exponent.
+ *
+ * \note This function is experimental and may change in future minor
+ *       versions of Mbed TLS.
+ *
+ * \param[in] attributes    The attributes for the new key.
+ * \param[in] custom        Customization parameters for the key generation.
+ *                          When this is #PSA_CUSTOM_KEY_PARAMETERS_INIT
+ *                          with \p custom_data_length = 0,
+ *                          this function is equivalent to
+ *                          psa_generate_key().
+ * \param[in] custom_data   Variable-length data associated with \c custom.
+ * \param custom_data_length
+ *                          Length of `custom_data` in bytes.
+ * \param[out] key          On success, an identifier for the newly created
+ *                          key. For persistent keys, this is the key
+ *                          identifier defined in \p attributes.
+ *                          \c 0 on failure.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ *         If the key is persistent, the key material and the key's metadata
+ *         have been saved to persistent storage.
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is
+ *         already a persistent key with the given identifier.
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
+                                     const psa_custom_key_parameters_t *custom,
+                                     const uint8_t *custom_data,
+                                     size_t custom_data_length,
+                                     mbedtls_svc_key_id_t *key);
 
 /**@}*/
 
@@ -4136,8 +4360,9 @@ typedef struct psa_verify_hash_interruptible_operation_s psa_verify_hash_interru
  *                              time. The only guarantee is that lower values
  *                              for \p max_ops means functions will block for a
  *                              lesser maximum amount of time. The functions
- *                              \c psa_sign_interruptible_get_num_ops() and
- *                              \c psa_verify_interruptible_get_num_ops() are
+ *                              \c psa_sign_interruptible_get_num_ops(),
+ *                              \c psa_verify_interruptible_get_num_ops() and
+ *                              \c psa_generate_key_iop_get_num_ops() are
  *                              provided to help with tuning this value.
  *
  * \note                        This value defaults to
@@ -4671,6 +4896,906 @@ psa_status_t psa_verify_hash_complete(
 psa_status_t psa_verify_hash_abort(
     psa_verify_hash_interruptible_operation_t *operation);
 
+
+/**@}*/
+
+/**@}*/
+
+/**
+ *  \defgroup interruptible_key_agreement Interruptible Key Agreement
+ * @{
+ */
+
+/**
+ *  The type of the state data structure for interruptible key agreement
+ *  operations.
+ *
+ *  Before calling any function on an interruptible key agreement object, the
+ *  application must initialize it by any of the following means:
+ * - Set the structure to all-bits-zero, for example:
+ *   \code
+ *   psa_key_agreement_iop_t operation;
+ *   memset(&operation, 0, sizeof(operation));
+ *   \endcode
+ * - Initialize the structure to logical zero values, for example:
+ *   \code
+ *   psa_key_agreement_iop_t operation = {0};
+ *   \endcode
+ * - Initialize the structure to the initializer #PSA_KEY_AGREEMENT_IOP_INIT,
+ *   for example:
+ * - \code
+ *   psa_key_agreement_iop_t operation = PSA_KEY_AGREEMENT_IOP_INIT;
+ *   \endcode
+ * - Assign the result of the function psa_key_agreement_iop_init() to the
+ *   structure, for example:
+ *   \code
+ *   psa_key_agreement_iop_t operation;
+ *   operation = psa_key_agreement_iop_init();
+ *   \endcode
+ *
+ * This is an implementation-defined \c struct. Applications should not
+ * make any assumptions about the content of this structure.
+ * Implementation details can change in future versions without notice.
+ */
+typedef struct psa_key_agreement_iop_s psa_key_agreement_iop_t;
+
+/**
+ * \brief                       Get the number of ops that a key agreement
+ *                              operation has taken so far. If the operation has
+ *                              completed, then this will represent the number of
+ *                              ops required for the entire operation.
+ *                              After initialization or calling \c
+ *                              psa_key_agreement_iop_abort() on the operation,
+ *                              a value of 0 will be returned.
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ *                              This is a helper provided to help you tune the
+ *                              value passed to \c
+ *                              psa_interruptible_set_max_ops().
+ *
+ * \param operation             The \c psa_key_agreement_iop_t to use. This must
+ *                              be initialized first.
+ *
+ * \return                      Number of ops that the operation has taken so
+ *                              far.
+ */
+uint32_t psa_key_agreement_iop_get_num_ops(psa_key_agreement_iop_t *operation);
+
+/**
+ * \brief                       Start a key agreement operation, in an
+ *                              interruptible manner.
+ *
+ * \see                         \c psa_key_agreement_iop_complete()
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \warning                     The raw result of a key agreement algorithm such
+ *                              elliptic curve Diffie-Hellman has biases
+ *                              and should not be used directly as key material.
+ *                              It should instead be passed as input to a key
+ *                              derivation algorithm.
+ *
+ * \note                        This function combined with \c
+ *                              psa_key_agreement_iop_complete() is equivalent
+ *                              to \c psa_raw_key_agreement() but \c
+ *                              psa_key_agreement_iop_complete() can return
+ *                              early and resume according to the limit set with
+ *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              maximum time spent in a function.
+ *
+ * \note                        Users should call
+ *                              \c psa_key_agreement_iop_complete() repeatedly
+ *                              on the same operation object after a successful
+ *                              call to this function until \c
+ *                              psa_key_agreement_iop_complete() either returns
+ *                              #PSA_SUCCESS or an error.
+ *                              \c psa_key_agreement_iop_complete() will return
+ *                              #PSA_OPERATION_INCOMPLETE if there is more work
+ *                              to do. Alternatively users can call
+ *                              \c psa_key_agreement_iop_abort() at any point
+ *                              if they no longer want the result.
+ *
+ * \note                        If this function returns an error status, the
+ *                              operation enters an error state and must be
+ *                              aborted by calling \c
+ *                              psa_key_agreement_iop_abort().
+ *
+ * \param[in, out] operation    The \c psa_key_agreement_iop_t to use. This must
+ *                              be initialized as per the documentation for
+ *                              \c psa_key_agreement_iop_t, and be inactive.
+
+ * \param private_key           Identifier of the private key to use. It must
+ *                              allow the usage #PSA_KEY_USAGE_DERIVE.
+ * \param[in] peer_key          Public key of the peer. It must be in the
+ *                              same format that psa_import_key() accepts. The
+ *                              standard formats for public keys are documented
+ *                              in the documentation of psa_export_public_key().
+ *                              The peer key data is parsed with the type
+ *                              #PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(\c type)
+ *                              where \c type is the type of \p private_key,
+ *                              and with the same bit-size as \p private_key.
+ * \param peer_key_length       Size of \p peer_key in bytes.
+ *
+ * \param alg                   The key agreement algorithm to compute
+ *                              (a \c PSA_ALG_XXX value such that
+ *                              #PSA_ALG_IS_KEY_AGREEMENT(\p alg) is true).
+ *
+ * \param[in] attributes        The attributes for the new key.
+ *                              The following attributes are required for all
+ *                              keys:
+ *                              * The key type, which must be one of
+ *                                #PSA_KEY_TYPE_DERIVE, #PSA_KEY_TYPE_RAW_DATA,
+ *                                #PSA_KEY_TYPE_HMAC or #PSA_KEY_TYPE_PASSWORD.
+ *                              The following attributes must be set for keys
+ *                              used in cryptographic operations:
+ *                              * The key permitted-algorithm policy
+ *                              * The key usage flags
+ *                              The following attributes must be set for keys
+ *                              that do not use the default volatile lifetime:
+ *                              * The key lifetime
+ *                              * The key identifier is required for a key with
+ *                                a persistent lifetime
+ *                              The following attributes are optional:
+ *                              * If the key size is nonzero, it must be equal
+ *                               to the output size of the key agreement,
+ *                               in bits.
+ *                              The output size, in bits, of the key agreement
+ *                              is 8 * #PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(\c
+ *                              type, \c bits), where \c type and \c bits are
+ *                              the type and bit-size of \p private_key.
+ *
+ * \note                        \p attributes is an input parameter, it is not
+ *                              updated with the final key attributes. The final
+ *                              attributes of the new key can be queried by
+ *                              calling `psa_get_key_attributes()` with
+ *                              the key's identifier.
+ *
+ * \note                        This function clears the number of ops completed
+ *                              as part of the operation. Please ensure you copy
+ *                              this value via
+ *                              \c psa_key_agreement_iop_get_num_ops() if
+ *                              required before calling.
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation started successfully.
+ *          Call \c psa_key_agreement_iop_complete() with the same context to
+ *          complete the operation.
+ *
+ * \retval #PSA_ERROR_BAD_STATE
+ *          Another operation has already been started on this context, and is
+ *          still in progress.
+ *
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *          The following conditions can result in this error:
+ *          * Either the \p private_key does not have the #PSA_KEY_USAGE_DERIVE`
+ *          flag, or it does not permit the requested algorithm.
+ *
+ * \retval #PSA_ERROR_INVALID_HANDLE
+ *          \p private_key is not a valid key identifier.
+ *
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *          This is an attempt to create a persistent key, and there is already
+ *          a persistent key with the given identifier.
+ *
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *          The following conditions can result in this error:
+ *          * \p alg is not a key agreement algorithm.
+ *          * \p private_key is not compatible with \p alg.
+ *          * \p peer_key is not a valid public key corresponding to
+ *            \p private_key.
+ *          * The output key attributes in \p attributes are not valid:
+ *              - The key type is not valid for key agreement output.
+ *              - The key size is nonzero, and is not the size of the shared
+ *                secret.
+ *              - The key lifetime is invalid.
+ *              - The key identifier is not valid for the key lifetime.
+ *              - The key usage flags include invalid values.
+ *              - The key's permitted-usage algorithm is invalid.
+ *              - The key attributes, as a whole, are invalid.
+ *
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *          The following conditions can result in this error:
+ *          * \p alg is not supported.
+ *          * \p private_key is not supported for use with \p alg.
+ *          * Only elliptic curve Diffie-Hellman with ECC keys is supported, not
+ *            finite field Diffie-Hellman with DH keys.
+ *
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         * The library has not been previously initialized by
+ *           \c psa_crypto_init().
+ *         * The operation state is not valid: it must be inactive.
+ */
+
+psa_status_t psa_key_agreement_iop_setup(
+    psa_key_agreement_iop_t *operation,
+    mbedtls_svc_key_id_t private_key,
+    const uint8_t *peer_key,
+    size_t peer_key_length,
+    psa_algorithm_t alg,
+    const psa_key_attributes_t *attributes);
+
+/**
+ * \brief                       Continue and eventually complete the action of
+ *                              key agreement, in an interruptible
+ *                              manner.
+ *
+ * \see                         \c psa_key_agreement_iop_setup()
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function combined with \c
+ *                              psa_key_agreement_iop_setup() is equivalent to
+ *                              \c psa_raw_key_agreement() but this
+ *                              function can return early and resume according
+ *                              to the limit set with \c
+ *                              psa_interruptible_set_max_ops() to reduce the
+ *                              maximum time spent in a function call.
+ *
+ * \note                        Users should call this function on the same
+ *                              operation object repeatedly while it returns
+ *                              #PSA_OPERATION_INCOMPLETE, stopping when it
+ *                              returns either #PSA_SUCCESS or an error.
+ *                              Alternatively users can call
+ *                              \c psa_key_agreement_iop_abort() at any point if
+ *                              they no longer want the result.
+ *
+ * \note                        When this function returns successfully, the
+ *                              operation becomes inactive. If this function
+ *                              returns an error status, the operation enters an
+ *                              error state and must be aborted by calling
+ *                              \c psa_key_agreement_iop_abort().
+ *
+ * \param[in, out] operation    The \c psa_key_agreement_iop_t to use. This must
+ *                              be initialized first, and have had \c
+ *                              psa_key_agreement_iop_start() called with it
+ *                              first.
+ *
+ * \param[out] key              On success, an identifier for the newly created
+ *                              key. On failure this will be set to
+ *                              #PSA_KEY_ID_NULL.
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation is complete and \p key contains the shared secret.
+ *          If the key is persistent, the key material and the key's metadata
+ *          have been saved to persistent storage.
+ *
+ * \retval #PSA_OPERATION_INCOMPLETE
+ *         Operation was interrupted due to the setting of \c
+ *         psa_interruptible_set_max_ops(). There is still work to be done.
+ *         Call this function again with the same operation object.
+ *
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is already a
+ *         persistent key with the given identifier.
+ * \retval #PSA_ERROR_INVALID_SIGNATURE
+ *         The calculation was performed successfully, but the passed
+ *         signature is not a valid signature.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         An operation was not previously started on this context via
+ *         \c psa_key_agreement_iop_start().
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         * The library has not been previously initialized by
+ *           \c psa_crypto_init().
+ *         * The operation state is not valid: it must be inactive.
+ */
+psa_status_t psa_key_agreement_iop_complete(
+    psa_key_agreement_iop_t *operation,
+    mbedtls_svc_key_id_t *key);
+
+/**
+ * \brief                       Abort a key agreement operation.
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function clears the number of ops completed
+ *                              as part of the operation. Please ensure you copy
+ *                              this value via
+ *                              \c psa_key_agreement_iop_get_num_ops() if
+ *                              required before calling.
+ *
+ * \note                        Aborting an operation frees all
+ *                              associated resources except for the operation
+ *                              structure itself. Once aborted, the operation
+ *                              object can be reused for another operation by
+ *                              calling \c psa_key_agreement_iop_setup() again.
+ *
+ * \note                        You may call this function any time after the
+ *                              operation object has been initialized.
+ *                              In particular, calling \c
+ *                              psa_key_agreement_iop_abort() after the
+ *                              operation has already been terminated by a call
+ *                              to \c psa_key_agreement_iop_abort() or
+ *                              psa_key_agreement_iop_complete() is safe.
+ *
+ * \param[in,out] operation     The \c psa_key_agreement_iop_t to use
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation was aborted successfully.
+ * \retval #PSA_ERROR_BAD_STATE
+ *          The library has not been previously initialized by
+ *          \c psa_crypto_init().
+ */
+psa_status_t psa_key_agreement_iop_abort(
+    psa_key_agreement_iop_t *operation);
+
+/**@}*/
+
+/**
+ *  \defgroup interruptible_generate_key Interruptible Key Generation
+ * @{
+ */
+
+/**
+ *  The type of the state data structure for interruptible key generation
+ *  operations.
+ *
+ *  Before calling any function on an interruptible key generation object, the
+ *  application must initialize it by any of the following means:
+ * - Set the structure to all-bits-zero, for example:
+ *   \code
+ *   psa_generate_key_iop_t operation;
+ *   memset(&operation, 0, sizeof(operation));
+ *   \endcode
+ * - Initialize the structure to logical zero values, for example:
+ *   \code
+ *   psa_generate_key_iop_t operation = {0};
+ *   \endcode
+ * - Initialize the structure to the initializer #PSA_GENERATE_KEY_IOP_INIT,
+ *   for example:
+ *   \code
+ *   psa_generate_key_iop_t operation = PSA_GENERATE_KEY_IOP_INIT;
+ *   \endcode
+ * - Assign the result of the function psa_generate_key_iop_init() to the
+ *   structure, for example:
+ *   \code
+ *   psa_generate_key_iop_t operation;
+ *   operation = psa_generate_key_iop_init();
+ *   \endcode
+ *
+ * This is an implementation-defined \c struct. Applications should not
+ * make any assumptions about the content of this structure.
+ * Implementation details can change in future versions without notice.
+ */
+typedef struct psa_generate_key_iop_s psa_generate_key_iop_t;
+
+/**
+ * \brief                       Get the number of ops that a key generation
+ *                              operation has taken so far. If the operation has
+ *                              completed, then this will represent the number
+ *                              of ops required for the entire operation. After
+ *                              initialization or calling \c
+ *                              psa_generate_key_iop_abort() on the operation,
+ *                              a value of 0 will be returned.
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *                              This is a helper provided to help you tune the
+ *                              value passed to \c
+ *                              psa_interruptible_set_max_ops().
+ *
+ * \param operation             The \c psa_generate_key_iop_t to use. This must
+ *                              be initialized first.
+ *
+ * \return                      Number of ops that the operation has taken so
+ *                              far.
+ */
+uint32_t psa_generate_key_iop_get_num_ops(psa_generate_key_iop_t *operation);
+
+/**
+ * \brief                       Start a key generation operation, in an
+ *                              interruptible manner.
+ *
+ * \see                         \c psa_generate_key_iop_complete()
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function combined with \c
+ *                              psa_generate_key_iop_complete() is equivalent
+ *                              to \c psa_generate_key() but \c
+ *                              psa_generate_key_iop_complete() can return
+ *                              early and resume according to the limit set with
+ *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              maximum time spent in a function.
+ *
+ * \note                        Users should call
+ *                              \c psa_generate_key_iop_complete() repeatedly
+ *                              on the same operation object after a successful
+ *                              call to this function until \c
+ *                              psa_generate_key_iop_complete() either returns
+ *                              #PSA_SUCCESS or an error.
+ *                              \c psa_generate_key_iop_complete() will return
+ *                              #PSA_OPERATION_INCOMPLETE if there is more work
+ *                              to do. Alternatively users can call
+ *                              \c psa_generate_key_iop_abort() at any point
+ *                              if they no longer want the result.
+ *
+ * \note                        This function clears the number of ops completed
+ *                              as part of the operation. Please ensure you copy
+ *                              this value via
+ *                              \c psa_generate_key_iop_get_num_ops() if
+ *                              required before calling.
+ *
+ * \note                        If this function returns an error status, the
+ *                              operation enters an error state and must be
+ *                              aborted by calling \c
+ *                              psa_generate_key_iop_abort().
+ *
+ * \note                        Only asymmetric key pairs are supported. (See \p attributes.)
+ *
+ * \param[in, out] operation    The \c psa_generate_key_iop_t to use.
+ *                              This must be initialized as per the
+ *                              documentation for
+ *                              \c psa_generate_key_iop_t, and be inactive.
+ *
+ * \param[in] attributes        The attributes for the new key.
+ *                              The following attributes are required for all
+ *                              keys:
+ *                              * The key type. It must be an asymmetric key-pair.
+ *                              * The key size. It must be a valid size for the
+ *                                key type.
+ *                              The following attributes must be set for keys
+ *                              used in cryptographic operations:
+ *                              * The key permitted-algorithm policy.
+ *                              * The key usage flags.
+ *                              The following attributes must be set for keys
+ *                              that do not use the default volatile lifetime:
+ *                              * The key lifetime.
+ *                              * The key identifier is required for a key with
+ *                                a persistent lifetime,
+ *
+ * \note                        \p attributes is an input parameter, it is not
+ *                              updated with the final key attributes. The final
+ *                              attributes of the new key can be queried by
+ *                              calling `psa_get_key_attributes()` with
+ *                              the key's identifier.
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation started successfully.
+ *          Call \c psa_generate_key_iop_complete() with the same context to
+ *          complete the operation.
+ *
+ * \retval PSA_ERROR_ALREADY_EXISTS
+ *          This is an attempt to create a persistent key, and there is already
+ *          a persistent key with the given identifier
+ * \retval PSA_ERROR_NOT_SUPPORTED
+ *          The key attributes, as a whole, are not supported, either in general
+ *          or in the specified storage location.
+ * \retval PSA_ERROR_INVALID_ARGUMENT
+ *          The following conditions can result in this error:
+ *          * The key type is invalid, or is an asymmetric public key type.
+ *          * The key size is not valid for the key type.
+ *          * The key lifetime is invalid.
+ *          * The key identifier is not valid for the key lifetime.
+ *          * The key usage flags include invalid values.
+ *          * The key's permitted-usage algorithm is invalid.
+ *          * The key attributes, as a whole, are invalid.
+ * \retval PSA_ERROR_NOT_PERMITTED
+ *          Creating a key with the specified attributes is not permitted.
+ *
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         * The library has not been previously initialized by
+ *           \c psa_crypto_init().
+ *         * The operation state is not valid: it must be inactive.
+ */
+
+psa_status_t psa_generate_key_iop_setup(
+    psa_generate_key_iop_t *operation,
+    const psa_key_attributes_t *attributes);
+
+/**
+ * \brief                       Continue and eventually complete the action of
+ *                              key generation, in an interruptible
+ *                              manner.
+ *
+ * \see                         \c psa_generate_key_iop_setup()
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function combined with \c
+ *                              psa_generate_key_iop_setup() is equivalent to
+ *                              \c psa_generate_key() but this
+ *                              function can return early and resume according
+ *                              to the limit set with \c
+ *                              psa_interruptible_set_max_ops() to reduce the
+ *                              maximum time spent in a function call.
+ *
+ * \note                        Users should call this function on the same
+ *                              operation object repeatedly whilst it returns
+ *                              #PSA_OPERATION_INCOMPLETE, stopping when it
+ *                              returns either #PSA_SUCCESS or an error.
+ *                              Alternatively users can call
+ *                              \c psa_generate_key_iop_abort() at any
+ *                              point if they no longer want the result.
+ *
+ * \note                        When this function returns successfully, the
+ *                              operation becomes inactive. If this function
+ *                              returns an error status, the operation enters an
+ *                              error state and must be aborted by calling
+ *                              \c psa_generate_key_iop_abort().
+ *
+ * \param[in, out] operation    The \c psa_generate_key_iop_t to use.
+ *                              This must be initialized first, and have had \c
+ *                              psa_generate_key_iop_setup() called
+ *                              with it first.
+ *
+ * \param[out] key              On success, an identifier for the newly created
+ *                              key, on failure this will be set to
+ *                              #PSA_KEY_ID_NULL.
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation is complete and \p key contains the new key.
+ *          If the key is persistent, the key material and the key's metadata
+ *          have been saved to persistent storage.
+ *
+ * \retval #PSA_OPERATION_INCOMPLETE
+ *         Operation was interrupted due to the setting of \c
+ *         psa_interruptible_set_max_ops(). There is still work to be done.
+ *         Call this function again with the same operation object.
+ *
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is already a
+ *         persistent key with the given identifier.
+ *
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         * The library has not been previously initialized by
+ *           \c psa_crypto_init().
+ *         * The operation state is not valid: it must be active.
+ */
+psa_status_t psa_generate_key_iop_complete(
+    psa_generate_key_iop_t *operation,
+    mbedtls_svc_key_id_t *key);
+
+/**
+ * \brief                       Abort a key generation operation.
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function clears the number of ops completed
+ *                              as part of the operation. Please ensure you copy
+ *                              this value via
+ *                              \c psa_generate_key_iop_get_num_ops() if
+ *                              required before calling.
+ *
+ * \note                        Aborting an operation frees all
+ *                              associated resources except for the operation
+ *                              structure itself. Once aborted, the operation
+ *                              object can be reused for another operation by
+ *                              calling \c psa_generate_key_iop_setup() again.
+ *
+ * \note                        You may call this function any time after the
+ *                              operation object has been initialized.
+ *                              In particular, calling \c
+ *                              psa_generate_key_iop_abort() after the
+ *                              operation has already been terminated by a call
+ *                              to \c psa_generate_key_iop_abort() or
+ *                              \c psa_generate_key_iop_complete() is safe.
+ *
+ * \param[in,out] operation     The \c psa_key_agreement_iop_t to use
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation was aborted successfully.
+ * \retval #PSA_ERROR_BAD_STATE
+ *          The library has not been previously initialized by
+ *          \c psa_crypto_init().
+ */
+psa_status_t psa_generate_key_iop_abort(
+    psa_generate_key_iop_t *operation);
+
+/**@}*/
+
+/**
+ *  \defgroup interruptible_export_public_key Interruptible public-key export
+ * @{
+ */
+
+/**
+ *  The type of the state data structure for interruptible public-key export
+ *  operations.
+ *
+ *  Before calling any function on an interruptible export public-key object, the
+ *  application must initialize it by any of the following means:
+ * - Set the structure to all-bits-zero, for example:
+ * \code
+ * psa_export_public_key_iop_t operation;
+ * memset(&operation, 0, sizeof(operation));
+ * \endcode
+ * - Initialize the structure to logical zero values, for example:
+ * \code
+ * psa_export_public_key_iop_t operation = {0};
+ * \endcode
+ * - Initialize the structure to the initializer #PSA_EXPORT_PUBLIC_KEY_IOP_INIT,
+ *   for example:
+ * \code
+ * psa_export_public_key_iop_t operation = PSA_EXPORT_PUBLIC_KEY_IOP_INIT;
+ * \endcode
+ * - Assign the result of the function psa_export_public_key_iop_init() to the
+ *   structure, for example:
+ * \code
+ * psa_export_public_key_iop_t operation;
+ * operation = psa_export_public_key_iop_init();
+ * \endcode
+ *
+ * This is an implementation-defined \c struct. Applications should not
+ * make any assumptions about the content of this structure.
+ * Implementation details can change in future versions without notice.
+ */
+typedef struct psa_export_public_key_iop_s psa_export_public_key_iop_t;
+
+/**
+ * \brief                       Get the number of ops that an export public-key
+ *                              operation has taken so far. If the operation has
+ *                              completed, then this will represent the number
+ *                              of ops required for the entire operation. After
+ *                              initialization or calling
+ *                              \c psa_export_public_key_iop_abort() on the operation,
+ *                              a value of 0 will be returned.
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *                              This is a helper provided to help you tune the
+ *                              value passed to
+ *                              \c psa_interruptible_set_max_ops().
+ *
+ * \param operation             The \c psa_export_public_key_iop_t to use. This must
+ *                              be initialized first.
+ *
+ * \return                      Number of ops that the operation has taken so
+ *                              far.
+ */
+uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *operation);
+
+/**
+ * \brief                       Start an interruptible operation to export a
+ *                              public key or the public part of a key pair in
+ *                              binary format.
+
+ *
+ * \see                         \c psa_export_public_key_iop_complete()
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function combined with
+ *                              \c psa_export_public_key_iop_complete() is equivalent
+ *                              to \c psa_export_public_key() but
+ *                               \c psa_export_public_key_iop_complete() can return
+ *                              early and resume according to the limit set with
+ *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              maximum time spent in a function.
+ *
+ * \note                        Users should call
+ *                              \c psa_export_public_key_iop_complete() repeatedly
+ *                              on the same operation object after a successful
+ *                              call to this function until
+ *                              \c psa_export_public_key_iop_complete() either returns
+ *                              #PSA_SUCCESS or an error.
+ *                              \c psa_export_public_key_iop_complete() will return
+ *                              #PSA_OPERATION_INCOMPLETE if there is more work
+ *                              to do. Alternatively users can call
+ *                              \c psa_export_public_key_iop_abort() at any point
+ *                              if they no longer want the result.
+ *
+ *  \note                       This function clears the number of ops completed
+ *                              as part of the operation. Please ensure you copy
+ *                              this value via
+ *                              \c psa_export_public_key_iop_get_num_ops() if
+ *                              required before calling.
+ *
+ * \note                        If this function returns an error status, the
+ *                              operation enters an error state and must be
+ *                              aborted by calling
+ *                              \c psa_export_public_key_iop_abort().
+ *
+ * \param[in, out] operation    The \c psa_export_public_key_iop_t to use.
+ *                              This must be initialized as per the
+ *                              documentation for
+ *                              \c psa_export_public_key_iop_t, and be inactive.
+ *
+ * \param[in]      key          Identifier of the key to export.
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation started successfully.
+ *          Call \c psa_export_public_key_iop_complete() with the same context to
+ *          complete the operation.
+ * \retval #PSA_ERROR_INVALID_HANDLE
+ *          \c key is not a valid key identifier.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key is neither a public key nor a key pair.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The following conditions can result in this error:
+ *          * The key's storage location does not support export of the key.
+ *          * The implementation does not support export of keys with this key type.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         * The library has not been previously initialized by
+ *           \c psa_crypto_init().
+ *         * The operation state is not valid: it must be inactive.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ */
+psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operation,
+                                             psa_key_id_t key);
+
+/**
+ * \brief                       Continue and eventually complete the action of
+ *                              exporting a public key, in an interruptible
+ *                              manner.
+ * \see                         \c psa_export_public_key_iop_setup()
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function combined with
+ *                              \c psa_export_public_key_iop_setup() is equivalent to
+ *                              \c psa_export_public_key() but this
+ *                              function can return early and resume according
+ *                              to the limit set with
+ *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              maximum time spent in a function call.
+ *
+ * \note                        Users should call this function on the same
+ *                              operation object repeatedly whilst it returns
+ *                              #PSA_OPERATION_INCOMPLETE, stopping when it
+ *                              returns either #PSA_SUCCESS or an error.
+ *                              Alternatively users can call
+ *                              \c psa_export_public_key_iop_abort() at any
+ *                              point if they no longer want the result.
+ *
+ * \note                        When this function returns successfully, the
+ *                              operation becomes inactive. If this function
+ *                              returns an error status, the operation enters an
+ *                              error state and must be aborted by calling
+ *                              \c psa_export_public_key_iop_abort().
+ *
+ * \param[in, out] operation    The \c psa_export_public_key_iop_t to use.
+ *                              This must be initialized first, and have had
+ *                              \c psa_export_public_key_iop_setup() called
+ *                              with it first.
+ *
+ * \param[out] data             Buffer where the key data is to be written.
+ *
+ * \param[in] data_size         Size of the \c data buffer in bytes.
+ *                              This must be appropriate for the key:
+ *                               * The required output size is
+ *                                 \c PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE(type, bits)
+ *                                 where type is the key type and bits is the key
+ *                                 size in bits.
+ *                               * \c PSA_EXPORT_PUBLIC_KEY_MAX_SIZE evaluates to the maximum
+ *                                 output size of any supported public key or public part
+ *                                 of a key pair.
+ *
+ * \param[out] data_length      On success, the number of bytes that make up the key data.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success. The first (*\c data_length) bytes of data contain the exported
+           public key.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         * The library has not been previously initialized by
+ *           \c psa_crypto_init().
+ *         * The operation state is not valid: it must be active.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *          The size of the data buffer is too small.
+ *          \c PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE(),
+ *          \c PSA_EXPORT_PUBLIC_KEY_MAX_SIZE.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_OPERATION_INCOMPLETE
+ *         Operation was interrupted due to the setting of
+ *         \c psa_interruptible_set_max_ops(). There is still work to be done.
+ *         Call this function again with the same operation object.
+ */
+psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *operation,
+                                                uint8_t *data,
+                                                size_t data_size,
+                                                size_t *data_length);
+
+/**
+ * \brief                       Abort an interruptible public-key export operation.
+ *
+ * \warning                     This is a beta API, and thus subject to change
+ *                              at any point. It is not bound by the usual
+ *                              interface stability promises.
+ *
+ * \note                        This function clears the number of ops completed
+ *                              as part of the operation. Please ensure you copy
+ *                              this value via
+ *                              \c psa_export_public_key_iop_get_num_ops() if
+ *                              required before calling.
+ *
+ * \note                        Aborting an operation frees all
+ *                              associated resources except for the operation
+ *                              structure itself. Once aborted, the operation
+ *                              object can be reused for another operation by
+ *                              calling \c psa_export_public_key_iop_setup() again.
+ *
+ * \note                        You may call this function any time after the
+ *                              operation object has been initialized.
+ *                              In particular, calling
+ *                              \c psa_export_public_key_iop_abort() after the
+ *                              operation has already been terminated by a call
+ *                              to \c psa_export_public_key_iop_abort() or
+ *                              \c psa_export_public_key_iop_complete() is safe.
+ *
+ * \param[in,out] operation     The \c psa_export_public_key_iop_t to use
+ *
+ * \retval #PSA_SUCCESS
+ *          The operation was aborted successfully.
+ * \retval #PSA_ERROR_BAD_STATE
+ *          The library has not been previously initialized by
+ *          \c psa_crypto_init().
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ *
+ */
+psa_status_t psa_export_public_key_iop_abort(psa_export_public_key_iop_t *operation);
 
 /**@}*/
 

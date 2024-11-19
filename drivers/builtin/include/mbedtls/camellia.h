@@ -5,19 +5,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 #ifndef MBEDTLS_CAMELLIA_H
 #define MBEDTLS_CAMELLIA_H
@@ -43,10 +31,6 @@
 extern "C" {
 #endif
 
-#if !defined(MBEDTLS_CAMELLIA_ALT)
-// Regular implementation
-//
-
 /**
  * \brief          CAMELLIA context structure
  */
@@ -55,10 +39,6 @@ typedef struct mbedtls_camellia_context {
     uint32_t MBEDTLS_PRIVATE(rk)[68];            /*!<  CAMELLIA round keys    */
 }
 mbedtls_camellia_context;
-
-#else  /* MBEDTLS_CAMELLIA_ALT */
-#include "camellia_alt.h"
-#endif /* MBEDTLS_CAMELLIA_ALT */
 
 /**
  * \brief          Initialize a CAMELLIA context.
@@ -93,6 +73,7 @@ int mbedtls_camellia_setkey_enc(mbedtls_camellia_context *ctx,
                                 const unsigned char *key,
                                 unsigned int keybits);
 
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /**
  * \brief          Perform a CAMELLIA key schedule operation for decryption.
  *
@@ -108,6 +89,7 @@ int mbedtls_camellia_setkey_enc(mbedtls_camellia_context *ctx,
 int mbedtls_camellia_setkey_dec(mbedtls_camellia_context *ctx,
                                 const unsigned char *key,
                                 unsigned int keybits);
+#endif /* !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 /**
  * \brief          Perform a CAMELLIA-ECB block encryption/decryption operation.

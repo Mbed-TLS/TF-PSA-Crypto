@@ -3,19 +3,7 @@
  *  only
  *
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 /*
  * Definition of Key Wrapping:
@@ -33,7 +21,7 @@
 
 #include "mbedtls/nist_kw.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "mbedtls/error_common.h"
 #include "mbedtls/constant_time.h"
 #include "constant_time_internal.h"
 
@@ -41,8 +29,6 @@
 #include <string.h>
 
 #include "mbedtls/platform.h"
-
-#if !defined(MBEDTLS_NIST_KW_ALT)
 
 #define KW_SEMIBLOCK_LENGTH    8
 #define MIN_SEMIBLOCKS_COUNT   3
@@ -114,6 +100,10 @@ int mbedtls_nist_kw_setkey(mbedtls_nist_kw_context *ctx,
  */
 void mbedtls_nist_kw_free(mbedtls_nist_kw_context *ctx)
 {
+    if (ctx == NULL) {
+        return;
+    }
+
     mbedtls_cipher_free(&ctx->cipher_ctx);
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_nist_kw_context));
 }
@@ -456,8 +446,6 @@ cleanup:
 
     return ret;
 }
-
-#endif /* !MBEDTLS_NIST_KW_ALT */
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
 

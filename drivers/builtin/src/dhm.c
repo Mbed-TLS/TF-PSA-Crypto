@@ -2,19 +2,7 @@
  *  Diffie-Hellman-Merkle key exchange
  *
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 /*
  *  The following sources were referenced in the design of this implementation
@@ -31,7 +19,7 @@
 
 #include "mbedtls/dhm.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "mbedtls/error_common.h"
 
 #include <string.h>
 
@@ -44,8 +32,6 @@
 #endif
 
 #include "mbedtls/platform.h"
-
-#if !defined(MBEDTLS_DHM_ALT)
 
 /*
  * helper to validate the mbedtls_mpi size and import it
@@ -60,10 +46,10 @@ static int dhm_read_bignum(mbedtls_mpi *X,
         return MBEDTLS_ERR_DHM_BAD_INPUT_DATA;
     }
 
-    n = ((*p)[0] << 8) | (*p)[1];
+    n = MBEDTLS_GET_UINT16_BE(*p, 0);
     (*p) += 2;
 
-    if ((int) (end - *p) < n) {
+    if ((size_t) (end - *p) < (size_t) n) {
         return MBEDTLS_ERR_DHM_BAD_INPUT_DATA;
     }
 
@@ -269,7 +255,7 @@ int mbedtls_dhm_make_params(mbedtls_dhm_context *ctx, int x_size,
     DHM_MPI_EXPORT(&ctx->G, n2);
     DHM_MPI_EXPORT(&ctx->GX, n3);
 
-    *olen = p - output;
+    *olen = (size_t) (p - output);
 
 cleanup:
     if (ret != 0 && ret > -128) {
@@ -654,7 +640,6 @@ int mbedtls_dhm_parse_dhmfile(mbedtls_dhm_context *dhm, const char *path)
 }
 #endif /* MBEDTLS_FS_IO */
 #endif /* MBEDTLS_ASN1_PARSE_C */
-#endif /* MBEDTLS_DHM_ALT */
 
 #if defined(MBEDTLS_SELF_TEST)
 

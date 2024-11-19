@@ -14,19 +14,7 @@
 
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_CHACHAPOLY_H
@@ -53,8 +41,6 @@ typedef enum {
 }
 mbedtls_chachapoly_mode_t;
 
-#if !defined(MBEDTLS_CHACHAPOLY_ALT)
-
 #include "mbedtls/chacha20.h"
 
 typedef struct mbedtls_chachapoly_context {
@@ -66,10 +52,6 @@ typedef struct mbedtls_chachapoly_context {
     mbedtls_chachapoly_mode_t MBEDTLS_PRIVATE(mode);         /**< Cipher mode (encrypt or decrypt). */
 }
 mbedtls_chachapoly_context;
-
-#else /* !MBEDTLS_CHACHAPOLY_ALT */
-#include "chachapoly_alt.h"
-#endif /* !MBEDTLS_CHACHAPOLY_ALT */
 
 /**
  * \brief           This function initializes the specified ChaCha20-Poly1305 context.

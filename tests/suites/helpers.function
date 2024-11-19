@@ -8,6 +8,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -15,9 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(MBEDTLS_ERROR_C)
-#include "mbedtls/error.h"
-#endif
+#include "mbedtls/error_common.h"
 #include "mbedtls/platform.h"
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
@@ -54,8 +53,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif

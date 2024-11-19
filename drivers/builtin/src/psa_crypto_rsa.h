@@ -3,19 +3,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef PSA_CRYPTO_RSA_H
@@ -117,10 +105,13 @@ psa_status_t mbedtls_psa_rsa_export_public_key(
 /**
  * \brief Generate an RSA key.
  *
- * \note The signature of the function is that of a PSA driver generate_key
- *       entry point.
- *
  * \param[in]  attributes         The attributes for the RSA key to generate.
+ * \param[in]  custom_data        The public exponent to use.
+ *                                This can be a null pointer if
+ *                                \c params_data_length is 0.
+ * \param custom_data_length      Length of \p custom_data in bytes.
+ *                                This can be 0, in which case the
+ *                                public exponent will be 65537.
  * \param[out] key_buffer         Buffer where the key data is to be written.
  * \param[in]  key_buffer_size    Size of \p key_buffer in bytes.
  * \param[out] key_buffer_length  On success, the number of bytes written in
@@ -135,6 +126,7 @@ psa_status_t mbedtls_psa_rsa_export_public_key(
  */
 psa_status_t mbedtls_psa_rsa_generate_key(
     const psa_key_attributes_t *attributes,
+    const uint8_t *custom_data, size_t custom_data_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length);
 
 /** Sign an already-calculated hash with an RSA private key.

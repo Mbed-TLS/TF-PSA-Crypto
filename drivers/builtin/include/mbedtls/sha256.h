@@ -8,19 +8,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 #ifndef MBEDTLS_SHA256_H
 #define MBEDTLS_SHA256_H
@@ -37,10 +25,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#if !defined(MBEDTLS_SHA256_ALT)
-// Regular implementation
-//
 
 /**
  * \brief          The SHA-256 context structure.
@@ -59,10 +43,6 @@ typedef struct mbedtls_sha256_context {
 #endif
 }
 mbedtls_sha256_context;
-
-#else  /* MBEDTLS_SHA256_ALT */
-#include "sha256_alt.h"
-#endif /* MBEDTLS_SHA256_ALT */
 
 /**
  * \brief          This function initializes a SHA-256 context.
@@ -138,21 +118,6 @@ int mbedtls_sha256_update(mbedtls_sha256_context *ctx,
  */
 int mbedtls_sha256_finish(mbedtls_sha256_context *ctx,
                           unsigned char *output);
-
-/**
- * \brief          This function processes a single data block within
- *                 the ongoing SHA-256 computation. This function is for
- *                 internal use only.
- *
- * \param ctx      The SHA-256 context. This must be initialized.
- * \param data     The buffer holding one block of data. This must
- *                 be a readable buffer of length \c 64 Bytes.
- *
- * \return         \c 0 on success.
- * \return         A negative error code on failure.
- */
-int mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx,
-                                    const unsigned char data[64]);
 
 /**
  * \brief          This function calculates the SHA-224 or SHA-256

@@ -11,19 +11,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_ARIA_H
@@ -54,10 +42,6 @@
 extern "C" {
 #endif
 
-#if !defined(MBEDTLS_ARIA_ALT)
-// Regular implementation
-//
-
 /**
  * \brief The ARIA context-type definition.
  */
@@ -67,10 +51,6 @@ typedef struct mbedtls_aria_context {
     uint32_t MBEDTLS_PRIVATE(rk)[MBEDTLS_ARIA_MAX_ROUNDS + 1][MBEDTLS_ARIA_BLOCKSIZE / 4];
 }
 mbedtls_aria_context;
-
-#else  /* MBEDTLS_ARIA_ALT */
-#include "aria_alt.h"
-#endif /* MBEDTLS_ARIA_ALT */
 
 /**
  * \brief          This function initializes the specified ARIA context.
@@ -110,6 +90,7 @@ int mbedtls_aria_setkey_enc(mbedtls_aria_context *ctx,
                             const unsigned char *key,
                             unsigned int keybits);
 
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /**
  * \brief          This function sets the decryption key.
  *
@@ -128,6 +109,7 @@ int mbedtls_aria_setkey_enc(mbedtls_aria_context *ctx,
 int mbedtls_aria_setkey_dec(mbedtls_aria_context *ctx,
                             const unsigned char *key,
                             unsigned int keybits);
+#endif /* !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 /**
  * \brief          This function performs an ARIA single-block encryption or
