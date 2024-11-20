@@ -15,13 +15,7 @@ guide](psa-driver-example-and-guide.md) for information on writing a
 driver.
 
 In order to have some mechanism provided only by a driver, you'll want
-the following compile-time configuration options enabled:
-
-- `MBEDTLS_PSA_CRYPTO_C` (enabled by default) - this enables PSA Crypto.
-- `MBEDTLS_USE_PSA_CRYPTO` (disabled by default) - this makes PK, X.509 and
-  TLS use PSA Crypto. You need to enable this if you're using PK, X.509 or TLS
-and want them to have access to the algorithms provided by your driver. (See
-[the dedicated document](use-psa-crypto.md) for details.)
+the `MBEDTLS_PSA_CRYPTO_C` option enabled (enabled by default).
 
 In addition, for each mechanism you want provided only by your driver:
 
@@ -41,9 +35,8 @@ For example, if you want SHA-256 to be provided only by a driver, you'll want
 In addition to these compile-time considerations, at runtime you'll need to
 make sure you call `psa_crypto_init()` before any function that uses the
 driver-only mechanisms. Note that this is already a requirement for any use of
-the PSA Crypto API, as well as for use of the PK, X.509 and TLS modules when
-`MBEDTLS_USE_PSA_CRYPTO` is enabled, so in most cases your application will
-already be doing this.
+the PSA Crypto API, as well as for use of the PK, X.509 and TLS modules, so in
+most cases your application will already be doing this.
 
 Mechanisms covered
 ------------------
@@ -66,10 +59,9 @@ For each family listed above, all the mentioned alorithms/key types are also
 all the mechanisms that exist in PSA API.
 
 Supported means that when those are provided only by drivers, everything
-(including PK, X.509 and TLS if `MBEDTLS_USE_PSA_CRYPTO` is enabled) should
-work in the same way as if the mechanisms where built-in, except as documented
-in the "Limitations" sub-sections of the sections dedicated to each family
-below.
+(including PK, X.509 and TLS) should work in the same way as if the mechanisms
+where built-in, except as documented in the "Limitations" sub-sections of the
+sections dedicated to each family below.
 
 Hashes
 ------
@@ -168,8 +160,7 @@ In addition, if:
 then you can also disable `MBEDTLS_BIGNUM_C`.
 
 In such builds, all crypto operations via the PSA Crypto API will work as
-usual, as well as the PK, X.509 and TLS modules if `MBEDTLS_USE_PSA_CRYPTO` is
-enabled, with the following exceptions:
+usual, as well as the PK, X.509 and TLS modules, with the following exceptions:
 
 - direct calls to APIs from the disabled modules are not possible;
 - PK, X.509 and TLS will not support restartable ECC operations (see
@@ -215,8 +206,7 @@ consequence these are not supported in builds without `MBEDTLS_ECDSA_C`.
 
 Similarly, there is no PSA support for interruptible ECDH operations so these
 are not supported without `ECDH_C`. See also limitations regarding
-restartable operations with `MBEDTLS_USE_PSA_CRYPTO` in [its
-documentation](use-psa-crypto.md).
+restartable operations in [its documentation](use-psa-crypto.md).
 
 Again, we have plans to support this in the future but not with an established
 timeline, please let us know if you're interested.
@@ -265,8 +255,8 @@ removing builtin support (i.e. `MBEDTLS_DHM_C`).
 
 Note that the PSA API only supports FFDH with RFC 7919 groups, whereas the
 Mbed TLS legacy API supports custom groups. As a consequence, the TLS layer
-of Mbed TLS only supports DHE cipher suites if built-in FFDH
-(`MBEDTLS_DHM_C`) is present, even when `MBEDTLS_USE_PSA_CRYPTO` is enabled.
+of Mbed TLS only supports DHE cipher suites if built-in FFDH (`MBEDTLS_DHM_C`)
+is present.
 
 RSA
 ---
@@ -287,7 +277,7 @@ then you can disable `MBEDTLS_RSA_C`, `MBEDTLS_PKCS1_V15` and
 
 Unlike other mechanisms, for now in configurations with driver-only RSA, only
 PSA Crypto works. In particular, PK, X.509 and TLS will _not_ work with
-driver-only RSA even if `MBEDTLS_USE_PSA_CRYPTO` is enabled.
+driver-only RSA.
 
 Currently (early 2024) we don't have plans to extend this support. If you're
 interested in wider driver-only support for RSA, please let us know.
@@ -339,9 +329,8 @@ algorithm/mode you can:
   - `MBEDTLS_NULL_CIPHER`.
 
 Once a key type and related algorithm are accelerated, all the PSA Crypto APIs
-will work, as well as X.509 and TLS (with `MBEDTLS_USE_PSA_CRYPTO` enabled) but
-some non-PSA APIs will be absent or have reduced functionality, see
-[Restrictions](#restrictions) for details.
+will work, as well as X.509 and TLS but some non-PSA APIs will be absent or
+have reduced functionality, see [Restrictions](#restrictions) for details.
 
 ### Restrictions
 
@@ -424,13 +413,12 @@ from PSA acceleration if both of the following conditions are met:
 
 ### Disabling `MBEDTLS_CIPHER_C`
 
-It is possible to save code size by disabling MBEDTLS_CIPHER_C when all of the 
+It is possible to save code size by disabling MBEDTLS_CIPHER_C when all of the
 following conditions are met:
 
 - The application is not using the `mbedtls_cipher_` API.
 - In PSA, all unauthenticated (that is, non-AEAD) ciphers are either disabled or
   fully accelerated (that is, all compatible key types are accelerated too).
-- Either TLS is disabled, or `MBEDTLS_USE_PSA_CRYPTO` is enabled.
 - `MBEDTLS_NIST_KW` is disabled.
 - `MBEDTLS_CMAC_C` is disabled. (Note: support for CMAC in PSA can be provided by
   a driver.)
