@@ -1,3 +1,0 @@
-test_suites
-    The various 'test_suite_XXX' programs from the 'tests' directory, executed
-    'make test', include test cases for all PSA cryptography APIs.
