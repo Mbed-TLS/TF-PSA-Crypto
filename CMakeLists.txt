@@ -65,7 +65,7 @@ endif()
 # Set the project, Mbed TLS and framework root directory.
 set(TF_PSA_CRYPTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MBEDTLS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-set(TF_PSA_CRYPTO_FRAMEWORK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../framework)
+set(TF_PSA_CRYPTO_FRAMEWORK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/framework)
 
 # Put the version numbers into relevant files
 set(version_number_files
@@ -386,6 +386,7 @@ if (NOT EXISTS "${TF_PSA_CRYPTO_FRAMEWORK_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "${TF_PSA_CRYPTO_FRAMEWORK_DIR}/CMakeLists.txt not found. Run `git submodule update --init` from the source tree to fetch the submodule contents.")
 endif()
 
+add_subdirectory(framework)
 add_subdirectory(include)
 add_subdirectory(core)
 add_subdirectory(drivers)
