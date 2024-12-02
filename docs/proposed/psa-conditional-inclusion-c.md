@@ -67,7 +67,7 @@ A PSA Crypto configuration symbol is a C preprocessor symbol whose name starts w
 The presence of a symbol `PSA_WANT_xxx` in the Mbed TLS configuration determines whether a feature is available through the PSA API. These symbols should be used in any place that requires conditional compilation based on the availability of a cryptographic mechanism through the PSA API, including:
 
 * In Mbed TLS test code.
-* In Mbed TLS library code using `MBEDTLS_USE_PSA_CRYPTO`, for example in TLS to determine which cipher suites to enable.
+* In Mbed TLS library code, for example in TLS to determine which cipher suites to enable.
 * In application code that provides additional features based on cryptographic capabilities, for example additional key parsing and formatting functions, or cipher suite availability for network protocols.
 
 #### Configuration symbol semantics
