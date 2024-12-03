@@ -10434,6 +10434,7 @@ void iop_export_public_key(
     int bits_arg,
     int usage_arg,
     int alg_arg,
+    int max_ops_arg,
     int expected_status_arg)
 {
     mbedtls_svc_key_id_t iop_key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -10450,6 +10451,10 @@ void iop_export_public_key(
     { 0 };
     size_t refrence_output_len = 0;
     psa_status_t status;
+    uint32_t num_ops_prior = 0;
+    uint32_t num_ops = 0;
+    uint32_t max_ops = max_ops_arg;
+    uint32_t min_num_ops = 0;
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -10493,11 +10498,32 @@ void iop_export_public_key(
         expected_status = PSA_ERROR_BAD_STATE;
     }
 
+    num_ops_prior = psa_export_public_key_iop_get_num_ops(&export_key_operation);
+    TEST_EQUAL(num_ops_prior, 0);
+
+    psa_interruptible_set_max_ops(max_ops);
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    min_num_ops = interruptible_operations_get_min_num_ops(bits);
+#endif
+
     do {
         status = psa_export_public_key_iop_complete(&export_key_operation,
                                                     output,
                                                     sizeof(output),
                                                     &output_len);
+
+        if (status == PSA_SUCCESS || status == PSA_OPERATION_INCOMPLETE) {
+            num_ops = psa_export_public_key_iop_get_num_ops(&export_key_operation);
+            TEST_LE_U(num_ops_prior + 1, num_ops);
+            if (max_ops <= min_num_ops) {
+                TEST_LE_U(num_ops - num_ops_prior, min_num_ops);
+            } else {
+                TEST_LE_U(num_ops - num_ops_prior, max_ops);
+            }
+            num_ops_prior = num_ops;
+        }
+
     } while (status == PSA_OPERATION_INCOMPLETE);
     TEST_EQUAL(status, expected_status);
 
@@ -10507,6 +10533,11 @@ void iop_export_public_key(
                                                 sizeof(output),
                                                 &output_len);
     TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+
+    PSA_ASSERT(psa_export_public_key_iop_abort(&export_key_operation));
+
+    num_ops = psa_export_public_key_iop_get_num_ops(&export_key_operation);
+    TEST_EQUAL(num_ops, 0);
 
     if (expected_status == PSA_SUCCESS) {
         status = psa_export_public_key(iop_key,
@@ -10519,8 +10550,6 @@ void iop_export_public_key(
 
         /* Test psa_export_public_key_iop_complete() returns right error code when
            output buffer is not enough. */
-        PSA_ASSERT(psa_export_public_key_iop_abort(&export_key_operation));
-
         status = psa_export_public_key_iop_setup(&export_key_operation, iop_key);
         TEST_EQUAL(status, PSA_SUCCESS);
 
