@@ -1246,11 +1246,13 @@ static void interruptible_signverify_get_minmax_completes(uint32_t max_ops,
 /*  ECP need to block for a minimum number of operations even if max_ops is set to a
     lower value. This functions calculates this minimum value given the curve size
     and the window size. */
-static uint32_t interruptible_key_agreement_get_min_num_ops(size_t key_bits)
+static uint32_t interruptible_operations_get_min_num_ops(size_t key_bits)
 {
     /* Those values are taken from documentation of mbedtls_ecp_set_max_ops()
        in ecp.h. Those values can change at any time. */
     switch (key_bits) {
+        case 192:
+        case 255:
         case 256:
         {
             const uint32_t min_values[5] = { 208, 208, 160, 136, 124 }; // P-256
@@ -1263,6 +1265,7 @@ static uint32_t interruptible_key_agreement_get_min_num_ops(size_t key_bits)
             return min_values[6 - MBEDTLS_ECP_WINDOW_SIZE];
             break;
         }
+        case 448:
         case 512:
         case 521:
         {
@@ -9968,7 +9971,7 @@ void key_agreement_interruptible(int alg_arg,
        mbedtls_ecp_check_pubkey() */
     TEST_EQUAL(num_ops_prior, MBEDTLS_ECP_OPS_CHK);
 
-    min_num_ops = interruptible_key_agreement_get_min_num_ops(key_bits);
+    min_num_ops = interruptible_operations_get_min_num_ops(key_bits);
 
     do {
 
