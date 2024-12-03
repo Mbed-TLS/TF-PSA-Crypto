@@ -1686,8 +1686,12 @@ static psa_status_t psa_export_public_key_iop_abort_internal(psa_export_public_k
 
 uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *operation)
 {
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    return operation->num_ops;
+#else
     (void) operation;
     return 0;
+#endif
 }
 
 psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operation,
@@ -1760,6 +1764,8 @@ psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *ope
 
     status = mbedtls_psa_ecp_export_public_key_iop_complete(&operation->ctx, data, data_size,
                                                             data_length);
+
+    operation->num_ops = mbedtls_psa_ecp_export_public_key_iop_get_num_ops(&operation->ctx);
 
     if (status != PSA_OPERATION_INCOMPLETE) {
         psa_export_public_key_iop_abort_internal(operation);
