@@ -14,10 +14,7 @@ Otherwise, please see the [PSA driver example and
 guide](psa-driver-example-and-guide.md) for information on writing a
 driver.
 
-In order to have some mechanism provided only by a driver, you'll want
-the `MBEDTLS_PSA_CRYPTO_C` option enabled (enabled by default).
-
-In addition, for each mechanism you want provided only by your driver:
+For each mechanism you want provided only by your driver:
 
 - Define the corresponding `PSA_WANT` macro in `psa/crypto_config.h` - this
   means the algorithm will be available in the PSA Crypto API.
@@ -32,11 +29,8 @@ For example, if you want SHA-256 to be provided only by a driver, you'll want
 `PSA_WANT_ALG_SHA_256` and `MBEDTLS_PSA_ACCEL_SHA_256` defined, and
 `MBEDTLS_SHA256_C` undefined.
 
-In addition to these compile-time considerations, at runtime you'll need to
-make sure you call `psa_crypto_init()` before any function that uses the
-driver-only mechanisms. Note that this is already a requirement for any use of
-the PSA Crypto API, as well as for use of the PK, X.509 and TLS modules, so in
-most cases your application will already be doing this.
+Recall that applications must call `psa_crypto_init()` prior to performing any
+cryptographic or key management operation.
 
 Mechanisms covered
 ------------------
@@ -206,7 +200,7 @@ consequence these are not supported in builds without `MBEDTLS_ECDSA_C`.
 
 Similarly, there is no PSA support for interruptible ECDH operations so these
 are not supported without `ECDH_C`. See also limitations regarding
-restartable operations in [its documentation](use-psa-crypto.md).
+restartable operations in [the documentation about using PSA Crypto](use-psa-crypto.md).
 
 Again, we have plans to support this in the future but not with an established
 timeline, please let us know if you're interested.
@@ -254,8 +248,8 @@ The same holds for the associated algorithm:
 removing builtin support (i.e. `MBEDTLS_DHM_C`).
 
 Note that the PSA API only supports FFDH with RFC 7919 groups, whereas the
-Mbed TLS legacy API supports custom groups. As a consequence, the TLS layer
-of Mbed TLS only supports DHE cipher suites if built-in FFDH (`MBEDTLS_DHM_C`)
+Mbed TLS legacy API supports custom groups. As a consequence, the TLS 1.2
+in Mbed TLS only supports DHE cipher suites if built-in FFDH (`MBEDTLS_DHM_C`)
 is present.
 
 RSA
