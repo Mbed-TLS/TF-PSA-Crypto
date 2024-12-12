@@ -8143,7 +8143,7 @@ psa_status_t psa_key_agreement_iop_complete(
                                 key_len, key);
     }
 
-    if (status != PSA_SUCCESS && status != PSA_OPERATION_INCOMPLETE) {
+    if (status != PSA_OPERATION_INCOMPLETE) {
         operation->error_occurred = 1;
         psa_key_agreement_iop_abort_internal(operation);
     }
