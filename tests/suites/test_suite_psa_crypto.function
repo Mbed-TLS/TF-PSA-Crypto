@@ -10553,6 +10553,21 @@ void export_public_key_iop_init()
 /* END_CASE */
 
 /* BEGIN_CASE */
+void key_agreement_iop_init()
+{
+    psa_key_agreement_iop_t init = PSA_KEY_AGREEMENT_IOP_INIT;
+    psa_key_agreement_iop_t func = psa_key_agreement_iop_init();
+    psa_key_agreement_iop_t zero;
+
+    memset(&zero, 0, sizeof(zero));
+
+    PSA_ASSERT(psa_key_agreement_iop_abort(&init));
+    PSA_ASSERT(psa_key_agreement_iop_abort(&func));
+    PSA_ASSERT(psa_key_agreement_iop_abort(&zero));
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void generate_key_custom(int type_arg,
                          int bits_arg,
                          int usage_arg,
