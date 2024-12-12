@@ -9960,8 +9960,17 @@ void key_agreement_interruptible(int alg_arg,
     num_ops_prior = psa_key_agreement_iop_get_num_ops(&operation);
     TEST_EQUAL(num_ops_prior, 0);
 
+    /* Test calling complete before setup fails. */
+    TEST_EQUAL(psa_key_agreement_iop_complete(&operation, &output_key),
+               PSA_ERROR_BAD_STATE);
+
     PSA_ASSERT(psa_key_agreement_iop_setup(&operation, our_key, peer_key_data->x,
                                            peer_key_data->len, alg, &shared_secret_attributes));
+
+    /* Test that calling setup twice fails. */
+    TEST_EQUAL(psa_key_agreement_iop_setup(&operation, our_key, peer_key_data->x,
+                                           peer_key_data->len, alg, &shared_secret_attributes),
+               PSA_ERROR_BAD_STATE);
 
     num_ops_prior = psa_key_agreement_iop_get_num_ops(&operation);
     /* psa_key_agreement_iop_setup() takes a number of ops because it calls
@@ -9998,6 +10007,10 @@ void key_agreement_interruptible(int alg_arg,
 
     TEST_EQUAL(status, PSA_SUCCESS);
 
+    /* Test that calling complete after a successful complete fails. */
+    TEST_EQUAL(psa_key_agreement_iop_complete(&operation, &output_key),
+               PSA_ERROR_BAD_STATE);
+
     PSA_ASSERT(psa_export_key(output_key, output, expected_output->len, &output_length));
 
     TEST_MEMORY_COMPARE(output, output_length,
@@ -10008,7 +10021,16 @@ void key_agreement_interruptible(int alg_arg,
     num_ops = psa_key_agreement_iop_get_num_ops(&operation);
     TEST_EQUAL(num_ops, 0);
 
+    /* Test that abort cleared ok, try setup again. */
+    PSA_ASSERT(psa_key_agreement_iop_setup(&operation, our_key, peer_key_data->x,
+                                           peer_key_data->len, alg, &shared_secret_attributes));
+
+    PSA_ASSERT(psa_key_agreement_iop_abort(&operation));
+
 exit:
+
+    psa_key_agreement_iop_abort(&operation);
+
     psa_destroy_key(our_key);
     psa_destroy_key(output_key);
     mbedtls_free(output);
