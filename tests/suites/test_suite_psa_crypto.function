@@ -10548,6 +10548,25 @@ void iop_export_public_key(
 
         TEST_MEMORY_COMPARE(refrence_output, refrence_output_len, output, output_len);
 
+        /* Test that calling psa_export_public_key_iop_setup() resets number of ops. */
+        PSA_ASSERT(psa_export_public_key_iop_setup(&export_key_operation, iop_key));
+
+        do {
+            status = psa_export_public_key_iop_complete(&export_key_operation,
+                                                        output,
+                                                        sizeof(output),
+                                                        &output_len);
+        } while (status == PSA_OPERATION_INCOMPLETE);
+        TEST_EQUAL(status, PSA_SUCCESS);
+
+        status = psa_export_public_key_iop_setup(&export_key_operation, iop_key);
+        TEST_EQUAL(status, PSA_SUCCESS);
+
+        num_ops = psa_export_public_key_iop_get_num_ops(&export_key_operation);
+        TEST_EQUAL(num_ops, 0);
+
+        PSA_ASSERT(psa_export_public_key_iop_abort(&export_key_operation));
+
         /* Test psa_export_public_key_iop_complete() returns right error code when
            output buffer is not enough. */
         status = psa_export_public_key_iop_setup(&export_key_operation, iop_key);
