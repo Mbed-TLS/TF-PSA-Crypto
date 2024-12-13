@@ -1711,6 +1711,8 @@ psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operat
     /* We only support the builtin/Mbed TLS driver for now. */
     operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
 
+    operation->num_ops = 0;
+
     status = psa_get_and_lock_transparent_key_slot_with_policy(key, &slot,
                                                                0,
                                                                0);
