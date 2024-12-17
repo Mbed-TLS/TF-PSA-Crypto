@@ -199,9 +199,9 @@ At the moment, there is no driver support for interruptible operations
 consequence these are not supported in builds without `MBEDTLS_ECDSA_C`.
 
 Similarly, there is no PSA support for interruptible ECDH operations so these
-are not supported without `ECDH_C`. See also limitations regarding
-restartable operations in [the documentation about PSA Crypto
-limitations](docs/architecture/psa-migration/psa-limitations.md).
+are not supported without `ECDH_C`. See also limitations regarding restartable
+operations in [the documentation of
+MBEDTLS_ECP_RESTARTABLE](include/psa/crypto_config.h).
 
 Again, we have plans to support this in the future but not with an established
 timeline, please let us know if you're interested.
