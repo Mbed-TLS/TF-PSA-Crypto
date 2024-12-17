@@ -4,14 +4,16 @@ set(executables
     hmac_demo
     key_ladder_demo
     psa_constant_names
+    psa_hash
 )
+add_dependencies(${programs_target} ${executables})
 
 if(GEN_FILES)
     add_custom_command(
         OUTPUT
             ${CMAKE_CURRENT_BINARY_DIR}/psa_constant_names_generated.c
         COMMAND
-            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
+            ${MBEDTLS_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/generate_psa_constants.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY
@@ -27,8 +29,9 @@ endif()
 
 foreach(exe IN LISTS executables)
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
-    target_link_libraries(${exe} ${tfpsacrypto_target})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    set_base_compile_options(${exe})
+    target_link_libraries(${exe} ${tfpsacrypto_target} ${CMAKE_THREAD_LIBS_INIT})
+    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include)
 endforeach()
 
 target_include_directories(psa_constant_names PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

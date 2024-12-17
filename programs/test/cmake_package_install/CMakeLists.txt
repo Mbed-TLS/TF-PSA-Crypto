@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5.1)
 
 #
-# Simulate configuring and building TF-PSA-Crypto as the user might do it.
-# We'll install into a directory inside our own build directory.
+# Simulate configuring and building Mbed TLS as the user might do it. We'll
+# install into a directory inside our own build directory.
 #
 
 set(TF-PSA-Crypto_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../..")
@@ -15,6 +15,8 @@ execute_process(
         "-B${TF-PSA-Crypto_BINARY_DIR}"
         "-DENABLE_PROGRAMS=NO"
         "-DENABLE_TESTING=NO"
+        # Turn on generated files explicitly in case this is a release
+        "-DGEN_FILES=ON"
         "-DCMAKE_INSTALL_PREFIX=${TF-PSA-Crypto_INSTALL_DIR}")
 
 execute_process(
@@ -30,8 +32,8 @@ list(INSERT CMAKE_PREFIX_PATH 0 "${TF-PSA-Crypto_INSTALL_DIR}")
 find_package(TF-PSA-Crypto REQUIRED)
 
 #
-# At this point, the TF-PSA-Crypto targets should have been imported, and
-# we can now link to them from our own program.
+# At this point, the TF-PSA-Crypto targets should have been imported, and we
+# can now link to them from our own program.
 #
 
 add_executable(cmake_package_install cmake_package_install.c)

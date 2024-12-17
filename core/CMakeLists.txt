@@ -1,16 +1,11 @@
-option(USE_STATIC_TF_PSA_CRYPTO_LIBRARY "Build TF-PSA-Crypto static library." ON)
-option(USE_SHARED_TF_PSA_CRYPTO_LIBRARY "Build TF-PSA-Crypto shared library." OFF)
-option(LINK_WITH_PTHREAD "Explicitly link the TF-PSA-Crypto library to pthread." OFF)
-option(LINK_WITH_TRUSTED_STORAGE "Explicitly link the TF-PSA-Crypto library to trusted_storage." OFF)
-
-set(src_psa_crypto_core
+set(src_crypto
     psa_crypto.c
     psa_crypto_client.c
+    psa_crypto_driver_wrappers_no_static.c
     psa_crypto_se.c
     psa_crypto_slot_management.c
     psa_crypto_storage.c
     psa_its_file.c
-    psa_crypto_driver_wrappers_no_static.c
 )
 
 if(GEN_FILES)
@@ -20,33 +15,49 @@ if(GEN_FILES)
             ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
-                ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generate_driver_wrappers.py
+                ${TF_PSA_CRYPTO_DIR}/scripts/generate_driver_wrappers.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS
-            ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/generate_driver_wrappers.py
-            ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
-            ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
+            ${TF_PSA_CRYPTO_DIR}/scripts/generate_driver_wrappers.py
+            ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
+            ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
 else()
+    link_to_source(psa_crypto_driver_wrappers.h)
     link_to_source(psa_crypto_driver_wrappers_no_static.c)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wmissing-declarations -Wmissing-prototypes")
+    set(LIBS_C_FLAGS -Wmissing-declarations -Wmissing-prototypes)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if(CMAKE_COMPILER_IS_CLANG)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wmissing-declarations -Wmissing-prototypes -Wdocumentation -Wno-documentation-deprecated-sync -Wunreachable-code")
+    set(LIBS_C_FLAGS -Wmissing-declarations -Wmissing-prototypes -Wdocumentation -Wno-documentation-deprecated-sync -Wunreachable-code)
 endif(CMAKE_COMPILER_IS_CLANG)
 
 if(CMAKE_COMPILER_IS_MSVC)
-    # Disable warning that a function is deprecated. Added to avoid the warnings
-    # associated to the usage of file related functions fopen(), fclose() ...
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
-endif(CMAKE_COMPILER_IS_MSVC)
+    option(MSVC_STATIC_RUNTIME "Build the libraries with /MT compiler flag" OFF)
+    if(MSVC_STATIC_RUNTIME)
+        foreach(flag_var
+            CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+            CMAKE_C_FLAGS_CHECK)
+            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+        endforeach(flag_var)
+    endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID MATCHES "AppleClang")
+    set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_C_ARCHIVE_FINISH   "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+    set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+endif()
 
 if(LINK_WITH_PTHREAD)
-    set(libs ${libs} pthread)
+    set(libs ${libs} ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 if(LINK_WITH_TRUSTED_STORAGE)
@@ -58,48 +69,84 @@ if (NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRAR
 endif(NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 set(tfpsacrypto_target "${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto")
-set(tfpsacrypto_target  ${tfpsacrypto_target} PARENT_SCOPE)
+set(builtin_target "${TF_PSA_CRYPTO_TARGET_PREFIX}builtin")
 
-if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(tfpsacrypto_static_target ${tfpsacrypto_target})
+    set(builtin_static_target ${builtin_target})
 endif()
 
 set(target_libraries ${tfpsacrypto_target})
 
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     string(APPEND tfpsacrypto_static_target "_static")
+    string(APPEND builtin_static_target "_static")
 
     list(APPEND target_libraries
         ${tfpsacrypto_static_target})
 endif()
 
-file(GLOB src_psa_crypto_builtin ${CMAKE_CURRENT_SOURCE_DIR}/../drivers/builtin/src/*.c)
+set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
+set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
 
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${tfpsacrypto_static_target} STATIC ${src_psa_crypto_core} ${src_psa_crypto_builtin})
+    add_library(${tfpsacrypto_static_target} STATIC ${src_crypto})
+    set_base_compile_options(${tfpsacrypto_static_target})
+    target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${libs})
+
+    target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${builtin_static_target})
+
+    if(TARGET ${everest_target})
+        target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${everest_target})
+    endif()
+
+    if(TARGET ${p256m_target})
+        target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${p256m_target})
+    endif()
 endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     set(CMAKE_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
-    add_library(${tfpsacrypto_target} SHARED ${src_psa_crypto_core} ${src_psa_crypto_builtin})
-    set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION ${TF_PSA_CRYPTO_VERSION} SOVERSION ${TF_PSA_CRYPTO_SOVERSION})
+    add_library(${tfpsacrypto_target} SHARED ${src_crypto})
+    set_base_compile_options(${tfpsacrypto_target})
+    target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
+    set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION 4.0.0 SOVERSION 16)
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
+
+    target_link_libraries(${tfpsacrypto_target} PUBLIC ${builtin_target})
+
+    if(TARGET ${everest_target})
+        target_link_libraries(${tfpsacrypto_target} PUBLIC ${everest_target})
+    endif()
+
+    if(TARGET ${p256m_target})
+        target_link_libraries(${tfpsacrypto_target} PUBLIC ${p256m_target})
+    endif()
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
+    # Include public header files include/, drivers/builtin/include/ and
+    # ${MBEDTLS_DIR}/include/ as we still need it. Include private header files
+    # from core/ and drivers/builtin/src/.
     target_include_directories(${target}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include/>
-               $<INSTALL_INTERFACE:include/>
         PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include/>
+               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
                $<INSTALL_INTERFACE:include/>
-        PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
-               $<INSTALL_INTERFACE:drivers/builtin/include/>
         PRIVATE ${TF_PSA_CRYPTO_DIR}/core
-        PRIVATE ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
-        PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+                ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
+                # Needed to include psa_crypto_driver_wrappers.h
+                ${CMAKE_CURRENT_BINARY_DIR})
+    set_config_files_compile_definitions(${target})
+    install(
+        TARGETS ${target}
+        EXPORT MbedTLSTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     install(
         TARGETS ${target}
         EXPORT TF-PSA-CryptoTargets
@@ -108,10 +155,3 @@ foreach(target IN LISTS target_libraries)
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endforeach(target)
-
-set(lib_target "${TF_PSA_CRYPTO_TARGET_PREFIX}lib")
-
-add_custom_target(${lib_target} DEPENDS ${tfpsacrypto_target})
-if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
-    add_dependencies(${lib_target} ${tfpsacrypto_static_target})
-endif()
