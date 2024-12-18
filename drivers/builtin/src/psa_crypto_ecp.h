@@ -121,6 +121,17 @@ psa_status_t mbedtls_psa_ecp_export_public_key(
     uint8_t *data, size_t data_size, size_t *data_length);
 
 /**
+ * \brief Get the total number of ops that an export public-key operation has taken
+ *        Since it's start.
+ *
+ * \param[in] operation                 The \c mbedtls_psa_export_public_key_iop_t to use.
+ *
+ * \return Total number of operations.
+ */
+uint32_t mbedtls_psa_ecp_export_public_key_iop_get_num_ops(
+    mbedtls_psa_export_public_key_iop_t *operation);
+
+/**
  * \brief Setup a new interruptible export public-key operation.
  *
  *  \param[in] operation                 The \c mbedtls_psa_export_public_key_iop_t to use.

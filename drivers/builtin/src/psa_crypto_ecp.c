@@ -664,6 +664,12 @@ psa_status_t mbedtls_psa_ecp_generate_key_iop_abort(
     return PSA_SUCCESS;
 }
 
+uint32_t mbedtls_psa_ecp_export_public_key_iop_get_num_ops(
+    mbedtls_psa_export_public_key_iop_t *operation)
+{
+    return operation->num_ops;
+}
+
 psa_status_t mbedtls_psa_ecp_export_public_key_iop_setup(
     mbedtls_psa_export_public_key_iop_t *operation,
     uint8_t *key,
