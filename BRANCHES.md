@@ -1,15 +1,17 @@
-The TF-PSA-Crypto repository contains two maintained branches:
+# Maintained branches
 
-- [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development)
-- [`main`](https://github.com/Mbed-TLS/TF-PSA-Crypto)
+At any point in time, we have a number of maintained branches, currently consisting of:
 
-The development of the TF-PSA-Crypto repository code occurs on the development
-branch. No cryptography code development occurs on this branch though. The
-development branch just contains a framework, a CMake build system and scripts
-to integrate the Mbed TLS implementation of the PSA cryptography API into this
-repository. The main branch commits are the results of such integrations (see
-docs/architecture/tf-psa-crypto-repository.md for more information). 
+- The [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto) branch:
+  this is where the next major version of TF-PSA-Crypto (version 1.0) is being
+  prepared.
 
-The TF-PSA-Crypto repository provides an implementation of the PSA cryptography
-API through its main branch. The main branch is updated regularly against the
-head of the Mbed TLS development branch.
+We retain an historical branch [`main`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/main)
+which was providing a mirror of the Mbed TLS implementation of the PSA
+cryptography API. This branch will not receive any changes or updates.
+
+## Current Branches
+
+The following branch is currently maintained:
+
+- [`development`](https://github.com/Mbed-TLS/mbedtls/)
