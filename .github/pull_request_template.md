@@ -10,8 +10,8 @@ Please remove the segment/s on either side of the | symbol as appropriate, and a
 If the provided content is part of the present PR remove the # symbol.
 
 - [ ] **changelog** provided | not required because: 
-- [ ] **development PR** provided # | not required because: 
 - [ ] **framework PR** provided Mbed-TLS/mbedtls-framework# | not required
+- [ ] **mbedtls PR** provided Mbed-TLS/mbedtls# | not required
 - **tests**  provided | not required because: 
 
 
