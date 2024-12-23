@@ -1,7 +1,10 @@
 /**
  * \file private_access.h
  *
- * \brief Macro wrapper for struct's members.
+ * \brief Optionally activate declarations of private identifiers
+ *        in public headers.
+ *
+ * This header is reserved for internal use in TF-PSA-Crypto and Mbed TLS.
  */
 /*
  *  Copyright The Mbed TLS Contributors
@@ -12,9 +15,27 @@
 #define MBEDTLS_PRIVATE_ACCESS_H
 
 #ifndef MBEDTLS_ALLOW_PRIVATE_ACCESS
+/* Public use: do not declare private identifiers. */
+
+/* Pseudo-hide an identifier (typically a struct or union member) by giving
+ * it the prefix `private_`.
+ *
+ * Typical usage:
+ * ```
+ * typedef struct {
+ *     int MBEDTLS_PRIVATE(foo); // private member (not part of the public API,
+ *                               // but part of the ABI)
+ *     int bar; // public member (covered by API stability guarantees)
+ * } mbedtls_some_type_t;
+ * ```
+ */
 #define MBEDTLS_PRIVATE(member) private_##member
+
 #else
+/* Private use: declare private identifiers. */
+
 #define MBEDTLS_PRIVATE(member) member
+
 #endif
 
 #endif /* MBEDTLS_PRIVATE_ACCESS_H */
