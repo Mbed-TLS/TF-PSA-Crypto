@@ -17,13 +17,7 @@ if [ -d tf-psa-crypto -a -d include/mbedtls ]; then
     exit 255
 fi
 
-if [ -d ../include/mbedtls -a -d ../framework ]; then
-    # Running inside an mbedtls checkout: get the framework from mbedtls.
-    FRAMEWORK="$PWD/../framework"
-else
-    # Running standalone: use our own framework.
-    FRAMEWORK="$PWD/framework"
-fi
+FRAMEWORK="$PWD/framework"
 
 source $FRAMEWORK/scripts/all-core.sh
 
