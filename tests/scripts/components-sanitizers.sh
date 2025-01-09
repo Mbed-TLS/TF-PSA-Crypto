@@ -131,16 +131,6 @@ component_tf_psa_crypto_test_memsan () {
 
     msg "test: main suites (MSan)" # ~ 10s
     make test
-
-    msg "test: ssl-opt.sh (MSan)" # ~ 1 min
-    tests/ssl-opt.sh
-
-    # Optional part(s)
-
-    if [ "$MEMORY" -gt 0 ]; then
-        msg "test: compat.sh (MSan)" # ~ 6 min 20s
-        tests/compat.sh
-    fi
 }
 
 component_tf_psa_crypto_release_test_valgrind () {
@@ -152,24 +142,6 @@ component_tf_psa_crypto_release_test_valgrind () {
 
     msg "test: main suites, Valgrind (default config)"
     make memcheck
-
-    # Optional parts (slow; currently broken on OS X because programs don't
-    # seem to receive signals under valgrind on OS X).
-    # These optional parts don't run on the CI.
-    if [ "$MEMORY" -gt 0 ]; then
-        msg "test: ssl-opt.sh --memcheck (default config)"
-        tests/ssl-opt.sh --memcheck
-    fi
-
-    if [ "$MEMORY" -gt 1 ]; then
-        msg "test: compat.sh --memcheck (default config)"
-        tests/compat.sh --memcheck
-    fi
-
-    if [ "$MEMORY" -gt 0 ]; then
-        msg "test: context-info.sh --memcheck (default config)"
-        tests/context-info.sh --memcheck
-    fi
 }
 
 component_tf_psa_crypto_release_test_valgrind_psa () {
