@@ -553,7 +553,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
     }
 
 #if defined(MBEDTLS_RSA_C)
-    if (pk_alg == MBEDTLS_PK_RSA) {
+    if (pk_alg == MBEDTLS_PK_RSA || pk_alg == MBEDTLS_PK_RSASSA_PSS) {
         ret = mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(*pk), *p, (size_t) (end - *p));
         if (ret == 0) {
             /* On success all the input has been consumed by the parsing function. */
@@ -811,7 +811,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
     }
 
 #if defined(MBEDTLS_RSA_C)
-    if (pk_alg == MBEDTLS_PK_RSA) {
+    if (pk_alg == MBEDTLS_PK_RSA || pk_alg == MBEDTLS_PK_RSASSA_PSS) {
         if ((ret = mbedtls_rsa_parse_key(mbedtls_pk_rsa(*pk), p, len)) != 0) {
             mbedtls_pk_free(pk);
             return ret;
