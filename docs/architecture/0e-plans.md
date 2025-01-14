@@ -19,9 +19,9 @@ This document uses a few unusual terms, and a few generic terms with a specific 
 
 **1.0**: The first ever stable release of TF-PSA-Crypto. Its publicly documented APIs will remain supported throughout the lifecycle of TF-PSA-Crypto 1.x.
 
-**4.0**: The first stable release of Mbed TLS consuming TF-PSA-Crypto. Its publicly documented APIs will remain supported throughout the lifecycle of Mbed TLS 4.x.
-
 **3ε**: A version of Mbed TLS corresponding to TF-PSA-Crypto 0ε.
+
+**4.0**: The first stable release of Mbed TLS consuming TF-PSA-Crypto. Its publicly documented APIs will remain supported throughout the lifecycle of Mbed TLS 4.x.
 
 **Alpha**: A release of TF-PSA-Crypto or Mbed TLS that is not widely advertized and that may have known major gaps that make it unsuitable for **MVP** or even **0ε/3ε**. There are no commitments to API stability.
 
