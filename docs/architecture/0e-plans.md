@@ -55,8 +55,8 @@ By removing legacy crypto interfaces, we are removing many features for which no
 
 * Configuring an entropy source relies on `<mbedtls/entropy.h>`
 * Parsing or formatting a key in common formats relies on `<mbedtls/pk.h>`.
-* Parsing a key or certificate in PEM format relies on `<mbedtls/pem.h>`.
-* Many use cases of X.509 parsing and writing rely on access to ASN.1 interfaces in `<mbedtls/asn1.h>` and `<mbedtls/asn1write.h>`.
+* X.509 fundamentally relies on some features that are not strictly speaking cryptography, but are implemented in TF-PSA-Crypto which needs them for its own use as well: ASN.1 (`<mbedtls/asn1.h>` and `<mbedtls/asn1write.h>`), PEM (`<mbedtls/pem.h>`).
+* Parsing or constructing X.509 extensions tends to require ASN.1 functions.
 
 Given the available time and resources, we cannot ensure that 1.0/4.0 will be suitable for all the same use cases as 3.6. However, compared to the project starting point, we will bring back essential use cases. The use cases listed just above are examples of essential features that we want to provide in 0ε. More use cases can be brought back later by exposing more internal legacy interfaces or designing new PSA interfaces.
 
@@ -206,8 +206,9 @@ The header files listed in this section define cryptographic mechanisms which do
 The following header files define cryptography-adjacent interfaces which we have no plans to replace.
 
 * `asn1.`, `asn1write.h`: ASN.1, needed for key parsing/writing as well as for X.509.
-* `base64.h`, `pem.h`: Encoding help, needed for key parsing/writing as well as for X.509. Arguably Base64 could be made private, for the use of PEM only, but it is currently used for non-PEM purposes in Mbed TLS. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
+* `pem.h`: Encoding help, needed for key parsing/writing as well as for X.509. Arguably Base64 could be made private, for the use of PEM only, but it is currently used for non-PEM purposes in Mbed TLS. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
 * `constant_time.h`: This header defines `mbedtls_ct_memcmp()` which is in the public API because it is useful to application code (including but not limited to the TLS layer in Mbed TLS).
+* `pem.h`: Encoding help, intrinsically needed inside X.509. Arguably PEM could be made private in 1.0, since most applications have no use for the PEM API. But a PEM API would need to be reintroduced eventually in order for Mbed TLS 4.x to stop relying on private interfaces of TF-PSA-Crypto. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
 * `pk.h`: There is no equivalent PSA API. This is critical for parsing and writing keys. We plan to keep parts of the existing `pk.h` for parsing, writing and signature, and to remove `mbedtls_pk_type_t`, encrypt/decrypt and a few other bits. For 0ε, `pk.h` goes into the public category, and we will remove parts of it. Continued in https://github.com/Mbed-TLS/mbedtls/issues/8452 .
 
 #### OID interface
