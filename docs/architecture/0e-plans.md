@@ -141,38 +141,38 @@ The following table lists the headers that, as of the repository split, are loca
 
 | Header | Function prefix | Fate | Notes |
 | ------ | --------------- | ---- | ----- |
-| `aes.h` | `mbedtls_aes_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `aria.h` | `mbedtls_aria_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `aes.h` | `mbedtls_aes_` | Expose | [context types](#headers-with-context-types) |
+| `aria.h` | `mbedtls_aria_` | Expose | [context types](#headers-with-context-types) |
 | `asn1.h` | `mbedtls_asn1_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `asn1write.h` | `mbedtls_asn1_write_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `base64.h` | `mbedtls_base64_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
-| `bignum.h` | `mbedtls_mpi_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `block_ciper.h` | `mbedtls_block_cipher_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `camellia.h` | `mbedtls_camellia_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `ccm.h` | `mbedtls_ccm_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `chacha20.h` | `mbedtls_chacha20_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `chachapoly.h` | `mbedtls_chachapoly_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `cipher.h` | `mbedtls_cipher_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `cmac.h` | `mbedtls_cipher_cmac_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `config_adjust_*.h` | N/A | Exposed | [Only for private macros ](#headers-that-remain-public-for-private-macros) |
-| `config_psa.h` | N/A | Exposed | [Only for private macros ](#headers-that-remain-public-for-private-macros) |
+| `bignum.h` | `mbedtls_mpi_` | Expose | [context types](#headers-with-context-types) |
+| `block_ciper.h` | `mbedtls_block_cipher_` | Expose | [context types](#headers-with-context-types) |
 | `build_info.h` | `MBEDTLS_` | Exposed | [can be made fully private](#headers-that-can-be-made-fully-private) |
+| `camellia.h` | `mbedtls_camellia_` | Expose | [context types](#headers-with-context-types) |
+| `ccm.h` | `mbedtls_ccm_` | Expose | [context types](#headers-with-context-types) |
+| `chacha20.h` | `mbedtls_chacha20_` | Expose | [context types](#headers-with-context-types) |
+| `chachapoly.h` | `mbedtls_chachapoly_` | Expose | [context types](#headers-with-context-types) |
+| `cipher.h` | `mbedtls_cipher_` | Expose | [context types](#headers-with-context-types) |
+| `cmac.h` | `mbedtls_cipher_cmac_` | Expose | [context types](#headers-with-context-types) |
+| `config_adjust_*.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
+| `config_psa.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
 | `constant_time.h` | `mbedtls_ct_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [RNG header privatization](#rng-header-privatization) |
-| `des.h` | `mbedtls_des_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `des.h` | `mbedtls_des_` | Expose | [context types](#headers-with-context-types) |
 | `dhm.h` | `mbedtls_dhm_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
-| `ecdh.h` | `mbedtls_ecdh_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `ecdsa.h` | `mbedtls_ecdsa_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `ecjpake.h` | `mbedtls_ecjpake_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `ecp.h` | `mbedtls_ecp_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `ecdh.h` | `mbedtls_ecdh_` | Expose | [context types](#headers-with-context-types) |
+| `ecdsa.h` | `mbedtls_ecdsa_` | Expose | [context types](#headers-with-context-types) |
+| `ecjpake.h` | `mbedtls_ecjpake_` | Expose | [context types](#headers-with-context-types) |
+| `ecp.h` | `mbedtls_ecp_` | Expose | [context types](#headers-with-context-types) |
 | `entropy.h` | `mbedtls_entropy_` | Private | [RNG header privatization](#rng-header-privatization) |
 | `error_common.h` | `mbedtls_*err*` | Private | TODO |
-| `gcm.h` | `mbedtls_gcm_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `gcm.h` | `mbedtls_gcm_` | Expose | [context types](#headers-with-context-types) |
 | `hkdf.h` | `mbedtls_hkdf_` | Delete | https://github.com/Mbed-TLS/mbedtls/issues/9150 |
 | `hmac_drbg.h` | `mbedtls_hmac_drbg_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work for [RNG header privatization](#rng-header-privatization) |
 | `lms.h` | `mbedtls_lms_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-PSA-equivalent) |
-| `md.h` | `mbedtls_md_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types), but likely [Public hash-only `md.h`](#public-hash-only-md.h) |
-| `md5.h` | `mbedtls_md5_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `md.h` | `mbedtls_md_` | Expose | [context types](#headers-with-context-types), but likely [Public hash-only `md.h`](#public-hash-only-md.h) |
+| `md5.h` | `mbedtls_md5_` | Expose | [context types](#headers-with-context-types) |
 | `memory_buffer_alloc.h` | `mbedtls_memory_buffer_alloc_` | Public | [Platform headers](#platform-headers) |
 | `nist_kw.h` | `mbedtls_nist_kw_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-PSA-equivalent) |
 | `oid.h` | `mbedtls_oid_` | Private | [OID interface](#oid-interface) |
@@ -183,15 +183,15 @@ The following table lists the headers that, as of the repository split, are loca
 | `platform.h` | `mbedtls_platform_` | Public | [Platform headers](#platform-headers) |
 | `platform_time.h` | `mbedtls_*time*` | Public | [Platform headers](#platform-headers) |
 | `platform_util.h` | `mbedtls_platform_` | Public | [Platform headers](#platform-headers) |
-| `poly1305.h` | `mbedtls_poly1305_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `private_access.h` | N/A | Exposed | [Only for private macros ](#headers-that-remain-public-for-private-macros) |
+| `poly1305.h` | `mbedtls_poly1305_` | Expose | [context types](#headers-with-context-types) |
+| `private_access.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
 | `psa_util.h` | N/A | Public | [Evolution of `psa_util.h`](#evolution-of-psa-util.h) |
-| `ripemd160.h` | `mbedtls_ripemd160_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `ripemd160.h` | `mbedtls_ripemd160_` | Expose | [context types](#headers-with-context-types) |
 | `rsa.h` | `mbedtls_rsa_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work (TODO) |
-| `sha1.h` | `mbedtls_sha1_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `sha256.h` | `mbedtls_sha256_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `sha3.h` | `mbedtls_sha3_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `sha512.h` | `mbedtls_sha512_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
+| `sha1.h` | `mbedtls_sha1_` | Expose | [context types](#headers-with-context-types) |
+| `sha256.h` | `mbedtls_sha256_` | Expose | [context types](#headers-with-context-types) |
+| `sha3.h` | `mbedtls_sha3_` | Expose | [context types](#headers-with-context-types) |
+| `sha512.h` | `mbedtls_sha512_` | Expose | [context types](#headers-with-context-types) |
 | `threading.h` | `mbedtls_threading_` | Public | [Platform headers](#platform-headers) |
 
 #### Cryptographic mechanisms with no PSA equivalent
@@ -296,7 +296,7 @@ psa_util.h
 threading.h
 ```
 
-#### Headers that remain public for private macros
+#### Headers that remain public for exposed macros
 
 The following headers solely define exposed macros, and must remain exposed. They can be
 
@@ -308,7 +308,7 @@ config_psa.h
 private_access.h
 ```
 
-#### Privatization of built-in cryptographic headers with context types
+#### Headers with context types
 
 The headers listed below are used in operation context types. The types that they define must remain exposed, and possibly some macros as well. The functions that they declare will be made private by guarding them with `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`.
 
@@ -344,6 +344,8 @@ Main loss of functionality:
 * Self-test functions. See TODO
 * Access to bignum and ECC arithmetic. We've decided that this is acceptable.
 
+Note: see also [Everest](#privatization-of-everest-headers).
+
 #### Headers that can be made fully private
 
 The headers listed below are not used in Mbed TLS, except in places that should be removed and can be removed easily.
@@ -373,6 +375,8 @@ Main loss of functionality:
 * HMAC\_DRBG in itself (i.e. outside of deterministic ECDSA and for the PSA Crypto RNG instance). We intend to restore this functionality through a PSA API, but the API isn't designed yet, so this will happen after 1.0 and not with the existing API.
 
 `drivers/builtin/include/mbedtls/build_info.h` is a special case that exists only as a transition for the sake of our source files contains `#include <mbedtls/build_info.h>` and that must be buildable against either TF-PSA-Crypto or Mbed TLS. It should be removed: https://github.com/Mbed-TLS/mbedtls/issues/9862 .
+
+The [p256-m headers](#privatization-of-p256-m-headers) fall in the same category.
 
 #### Headers that will become private eventually
 
