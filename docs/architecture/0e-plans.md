@@ -252,7 +252,7 @@ TODO: Task to set up the Doxygen build
 
 #### Hiding functions in an exposed header
 
-For TF-PSA-Crypto 0ε, all private functions defined in private headers will be guarded by `defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)`. We define this macro when building TF-PSA-Crypto and Mbed TLS, but applications should not define it.
+For TF-PSA-Crypto 0ε, all private functions defined in private headers will be guarded by `defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)`. We define this macro when building TF-PSA-Crypto and Mbed TLS, but applications should not define it, and our Doxygen build will not define it.
 
 This is similar to `MBEDTLS_ALLOW_PRIVATE_ACCESS` to “bless” access to structure fields.
 
@@ -265,13 +265,13 @@ Rationale:
 * This is a small amount of work.
 * This requires few changes to the code, and they are very localized, so it will not disrupt other work happening in parallel.
 
-TODO: this leaves Doxygen comments around
+TODO: this leaves Doxygen comments around, e.g. `\file` comments and the documentation of exposed types.
 
 #### Separating private interfaces from exposed interfaces
 
 If a private interface of TF-PSA-Crypto is declared in an exposed header, in the medium term, we should move it to a private header. Note that we can only do that if the interface is not called from Mbed TLS code.
 
-When none the functions declared in an exposed header file are either public or called by Mbed TLS, we can move all the declarations gated by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` to a private header file and adjust `#include` directives accordingly. This can be done by a script.
+At some point, perhaps after the 1.0 release, we expect that all the functions declared in an exposed header will be private and will not be called by Mbed TLS. That point may be reached at different times for different headers. When we reach that point for a header, we can run a script to move the declarations guarded by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` to a private header file and adjust `#include` directives accordingly.
 
 ### Analysis of privatization by header
 
@@ -298,7 +298,7 @@ threading.h
 
 #### Headers that remain public for exposed macros
 
-The following headers solely define exposed macros, and must remain exposed. They can be
+The following headers solely define exposed macros, and must remain exposed. They can be excluded from Doxygen parsing.
 
 ```
 config_adjust_legacy_from_psa.h
