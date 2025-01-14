@@ -148,7 +148,6 @@ The following table lists the headers that, as of the repository split, are loca
 | `base64.h` | `mbedtls_base64_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `bignum.h` | `mbedtls_mpi_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
 | `block_ciper.h` | `mbedtls_block_cipher_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
-| `build_info.h` | `MBEDTLS_` | Exposed | [Only for private macros ](#headers-that-remain-public-for-private-macros) |
 | `camellia.h` | `mbedtls_camellia_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
 | `ccm.h` | `mbedtls_ccm_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
 | `chacha20.h` | `mbedtls_chacha20_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
@@ -157,6 +156,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `cmac.h` | `mbedtls_cipher_cmac_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
 | `config_adjust_*.h` | N/A | Exposed | [Only for private macros ](#headers-that-remain-public-for-private-macros) |
 | `config_psa.h` | N/A | Exposed | [Only for private macros ](#headers-that-remain-public-for-private-macros) |
+| `build_info.h` | `MBEDTLS_` | Exposed | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `constant_time.h` | `mbedtls_ct_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [RNG header privatization](#rng-header-privatization) |
 | `des.h` | `mbedtls_des_` | Expose | [context types](#privatization-of-built-in-cryptographic-headers-with-context-types) |
@@ -301,7 +301,6 @@ threading.h
 The following headers solely define exposed macros, and must remain exposed. They can be
 
 ```
-build_info.h
 config_adjust_legacy_from_psa.h
 config_adjust_psa_superset_legacy.h
 config_adjust_test_accelerators.h
@@ -350,6 +349,7 @@ Main loss of functionality:
 The headers listed below are not used in Mbed TLS, except in places that should be removed and can be removed easily.
 
 ```
+build_info.h
 dhm.h
 hmac_drbg.h
 pkcs12.h
@@ -371,6 +371,8 @@ Main loss of functionality:
 * Custom RSA mechanisms. We've decided that this is acceptable.
 * PKCS5 and PKCS12 mechanisms except as exposed by the pk module. We've decided that this is acceptable.
 * HMAC\_DRBG in itself (i.e. outside of deterministic ECDSA and for the PSA Crypto RNG instance). We intend to restore this functionality through a PSA API, but the API isn't designed yet, so this will happen after 1.0 and not with the existing API.
+
+`drivers/builtin/include/mbedtls/build_info.h` is a special case that exists only as a transition for the sake of our source files contains `#include <mbedtls/build_info.h>` and that must be buildable against either TF-PSA-Crypto or Mbed TLS. It should be removed: https://github.com/Mbed-TLS/mbedtls/issues/9862 .
 
 #### Headers that will become private eventually
 
