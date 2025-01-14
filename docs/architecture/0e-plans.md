@@ -361,6 +361,7 @@ rsa.h
 
 Places where some of these headers are used:
 
+* `library/ssl_*.c` (for DHM in TLS 1.2, which is going to be removed: https://github.com/Mbed-TLS/mbedtls/issues/9685)
 * `programs/fuzz/fuzz_*key.c` (to fuzz RSA functions that are now private)
 * `programs/ssl/ssl_test_lib.c` (HMAC\_DRBG; can move to only using the PSA RNG)
 * `programs/test/benchmark.c` (HMAC\_DRBG)
