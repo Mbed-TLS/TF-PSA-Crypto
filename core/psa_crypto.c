@@ -8085,6 +8085,13 @@ psa_status_t psa_key_agreement_iop_setup(
         return PSA_ERROR_BAD_STATE;
     }
 
+    /* We only support raw key agreement here, not combined with a key
+     * derivation. Also, for the time being, we only allow ECDH, not
+     * other key agreement algorithms. */
+    if (alg != PSA_ALG_ECDH) {
+        operation->error_occurred = 1;
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
     status = validate_key_agreement_params(attributes, alg);
     if (status != PSA_SUCCESS) {
         operation->error_occurred = 1;
