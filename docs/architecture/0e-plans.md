@@ -206,7 +206,7 @@ The header files listed in this section define cryptographic mechanisms which do
 The following header files define cryptography-adjacent interfaces which we have no plans to replace.
 
 * `asn1.`, `asn1write.h`: ASN.1, needed for key parsing/writing as well as for X.509.
-* `pem.h`: Encoding help, needed for key parsing/writing as well as for X.509. Arguably Base64 could be made private, for the use of PEM only, but it is currently used for non-PEM purposes in Mbed TLS. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
+* `base64.h`: Encoding help, needed for key parsing/writing as well as for X.509. Arguably Base64 could be made private, for the use of PEM only, but it is currently used for non-PEM purposes in Mbed TLS. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
 * `constant_time.h`: This header defines `mbedtls_ct_memcmp()` which is in the public API because it is useful to application code (including but not limited to the TLS layer in Mbed TLS).
 * `pem.h`: Encoding help, intrinsically needed inside X.509. Arguably PEM could be made private in 1.0, since most applications have no use for the PEM API. But a PEM API would need to be reintroduced eventually in order for Mbed TLS 4.x to stop relying on private interfaces of TF-PSA-Crypto. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
 * `pk.h`: There is no equivalent PSA API. This is critical for parsing and writing keys. We plan to keep parts of the existing `pk.h` for parsing, writing and signature, and to remove `mbedtls_pk_type_t`, encrypt/decrypt and a few other bits. For 0ε, `pk.h` goes into the public category, and we will remove parts of it. Continued in https://github.com/Mbed-TLS/mbedtls/issues/8452 .
