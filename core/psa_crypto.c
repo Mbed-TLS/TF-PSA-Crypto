@@ -8085,13 +8085,6 @@ psa_status_t psa_key_agreement_iop_setup(
         return PSA_ERROR_BAD_STATE;
     }
 
-    /* We only support raw key agreement here, not combined with a key
-     * derivation. Also, for the time being, we only allow ECDH, not
-     * other key agreement algorithms. */
-    if (alg != PSA_ALG_ECDH) {
-        operation->error_occurred = 1;
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
     status = validate_key_agreement_params(attributes, alg);
     if (status != PSA_SUCCESS) {
         operation->error_occurred = 1;
@@ -8101,6 +8094,21 @@ psa_status_t psa_key_agreement_iop_setup(
     status = psa_get_and_lock_transparent_key_slot_with_policy(
         private_key, &slot, PSA_KEY_USAGE_DERIVE, alg);
     if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    /* We only support raw key agreement here, not combined with a key
+     * derivation. Also, for the time being, we only allow ECDH, not
+     * other key agreement algorithms.
+     *
+     * This check could come slightly earlier or later. Having it here
+     * gives consistent error codes with non-interruptible key agreement
+     * (psa_raw_key_agreement(), psa_key_agreement()) when the input
+     * parameters (including the key) are also invalid for
+     * non-interruptible key agreement.
+     */
+    if (alg != PSA_ALG_ECDH) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }
 
