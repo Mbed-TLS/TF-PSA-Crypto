@@ -145,7 +145,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `aria.h` | `mbedtls_aria_` | Expose | [context types](#headers-with-context-types) |
 | `asn1.h` | `mbedtls_asn1_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `asn1write.h` | `mbedtls_asn1_write_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
-| `base64.h` | `mbedtls_base64_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
+| `base64.h` | `mbedtls_base64_` | TBD | [Base64 and PEM](#base64-and-pem) |
 | `bignum.h` | `mbedtls_mpi_` | Expose | [context types](#headers-with-context-types) |
 | `block_ciper.h` | `mbedtls_block_cipher_` | Expose | [context types](#headers-with-context-types) |
 | `build_info.h` | `MBEDTLS_` | Exposed | [can be made fully private](#headers-that-can-be-made-fully-private) |
@@ -176,7 +176,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `memory_buffer_alloc.h` | `mbedtls_memory_buffer_alloc_` | Public | [Platform headers](#platform-headers) |
 | `nist_kw.h` | `mbedtls_nist_kw_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-PSA-equivalent) |
 | `oid.h` | `mbedtls_oid_` | Private | [OID interface](#oid-interface) |
-| `pem.h` | `mbedtls_pem_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
+| `pem.h` | `mbedtls_pem_` | TBD | [Base64 and PEM](#base64-and-pem) |
 | `pk.h` | `mbedtls_pk_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `pkcs12.h` | `mbedtls_pkcs12_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `pkcs5.h` | `mbedtls_pkcs5_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
@@ -206,10 +206,34 @@ The header files listed in this section define cryptographic mechanisms which do
 The following header files define cryptography-adjacent interfaces which we have no plans to replace.
 
 * `asn1.`, `asn1write.h`: ASN.1, needed for key parsing/writing as well as for X.509.
-* `base64.h`: Encoding help, needed for key parsing/writing as well as for X.509. Arguably Base64 could be made private, for the use of PEM only, but it is currently used for non-PEM purposes in Mbed TLS. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
 * `constant_time.h`: This header defines `mbedtls_ct_memcmp()` which is in the public API because it is useful to application code (including but not limited to the TLS layer in Mbed TLS).
-* `pem.h`: Encoding help, intrinsically needed inside X.509. Arguably PEM could be made private in 1.0, since most applications have no use for the PEM API. But a PEM API would need to be reintroduced eventually in order for Mbed TLS 4.x to stop relying on private interfaces of TF-PSA-Crypto. Thus I propose to keep it officially public in TF-PSA-Crypto 1.x.
-* `pk.h`: There is no equivalent PSA API. This is critical for parsing and writing keys. We plan to keep parts of the existing `pk.h` for parsing, writing and signature, and to remove `mbedtls_pk_type_t`, encrypt/decrypt and a few other bits. For 0ε, `pk.h` goes into the public category, and we will remove parts of it. Continued in https://github.com/Mbed-TLS/mbedtls/issues/8452 .
+* `pk.h`: There is no equivalent PSA API. (One is planned, but the design won't be ready until after 1.0.) This is critical for parsing and writing keys. We plan to keep parts of the existing `pk.h` for parsing, writing and signature, and to remove `mbedtls_pk_type_t`, encrypt/decrypt and a few other bits. For 0ε, `pk.h` goes into the public category, and we will remove parts of it. Continued in https://github.com/Mbed-TLS/mbedtls/issues/8452 .
+
+We will therefore keep those headers public in TF-PSA-Crypto 0ε and 1.x.
+
+#### Base64 and PEM
+
+Base64 and PEM are cryptography-adjacent interfaces which we have no plans to replace. In particular, they are outside the scope of PSA APIs.
+
+PEM is used:
+
+* Inside the crypto library, to parse and write keys.
+* Inside the Mbed TLS library, to parse and write X.509 objects.
+* In application code, very occasionally. (Examples: [Fire-evacuation-guidance-system-IoT](https://github.com/2nd-Chance/Fire-evacuation-guidance-system-IoT/blob/33031a8255fe1ae516ddd58f1baa808801cd3abf/iotivity/resource/csdk/security/src/credresource.c#L3185) (dead project), [SiLabs Bluetooth attestation server](https://github.com/SiliconLabs/bluetooth_applications/blob/3eb0f3c9e234ada1f10714fb9376fcbc8e95807f/bluetooth_secure_attestation/bt_secure_attestation_server/src/ecdh_util3.c#L375))
+
+The use of PEM inside the Mbed TLS is intrinsic. It doesn't leak through the API of Mbed TLS, but Mbed TLS cannot be implemented without PEM. This is different from other private modules that Mbed TLS currently calls internally, but will no longer need to call once Mbed TLS has fully migrated to PSA. Thus, in the long term, TF-PSA-Crypto needs to expose its PEM API to Mbed TLS. (We reject the hypotheses of independent PEM implementations, or of making PEM its own library, as too much maintenance work.)
+
+The current PEM interface is unsatisfactory. We would like to improve it (https://github.com/Mbed-TLS/mbedtls/issues/9374) but it is unlikely that we will have enough bandwidth to do so before the 1.0 release. We need to make the PEM interface public to reach the milestone where Mbed TLS stops relying on private interfaces of TF-PSA-Crypto. We can choose to make it public now, or wait until later. Waiting is only advantageous if we believe that we will have enough bandwidth to actually clean up the PEM interface.
+
+Base64 is used:
+
+* Inside the crypto library, to implement PEM.
+* In the `pem2der` sample program.
+* In Mbed TLS SSL test programs, for context serialization. (It's not clear to me why we encode in Base64 rather than binary.)
+* In the Mbed TLS sample program `ssl_mail_client`, for a tiny bit of SMTP that requires Base64.
+* In application code, sometimes, for miscellaneous things, often not directly related to cryptography. On the one hand, many of these uses are out of scope. On the other hand, since TF-PSA-Crypto has a Base64 implementation anyway, users who like TF-PSA-Crypto for its small code size would be justifiably disappointed not to have a Base64 interface.
+
+TODO: decide.
 
 #### OID interface
 
@@ -456,6 +480,36 @@ The functions `mbedtls_ecc_group_to_psa()` and mbedtls_ecc_group_from_psa()` are
 ### Private types in `ssl_ticket.h`
 
 `ssl_ticket.h` uses a legacy cipher type to specify the AEAD mechanism to use for tickets. Switch to a PSA key type and algorithm: https://github.com/Mbed-TLS/mbedtls/issues/9874.
+
+### Leaking error codes
+
+TODO
+
+#### Publicly documented private error codes
+
+Output of `grep -P 'MBEDTLS_ERR_(?!ASN1_|BASE64_|LMS_|NET_|NIST_KW_|PEM_|PKCS7_|PK_|PLATFORM_|SSL_|THREADING_|X509_)' include/mbedtls/*.h tf-psa-crypto/drivers/builtin/include/mbedtls/{asn1.h,asn1write.h,base64.h,constant_time.h,lms.h,memory_buffer_alloc.h,nist_kw.h,pem.h,pk.h,platform.h,platform_time.h,platform_util.h,psa_util.h,threading.h}`.
+
+```
+include/mbedtls/ssl.h: *                  or a specific MBEDTLS_ERR_XXX code, which will cause
+include/mbedtls/ssl.h: *                  a specific MBEDTLS_ERR_XXX code.
+include/mbedtls/ssl.h: *                 MBEDTLS_ERR_XXX_ALLOC_FAILED on memory allocation error.
+include/mbedtls/ssl_ticket.h: *                  or a specific MBEDTLS_ERR_XXX error code
+include/mbedtls/ssl_ticket.h: *                  or a specific MBEDTLS_ERR_XXX error code
+include/mbedtls/x509.h: *                  MBEDTLS_ERR_OID_BUF_TOO_SMALL in case of error
+include/mbedtls/x509_crt.h: * \return         #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
+tf-psa-crypto/drivers/builtin/include/mbedtls/nist_kw.h: * \return          \c MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA for any invalid input.
+tf-psa-crypto/drivers/builtin/include/mbedtls/nist_kw.h: * \return          \c MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE for 128-bit block ciphers
+tf-psa-crypto/drivers/builtin/include/mbedtls/nist_kw.h: * \return          \c MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA for invalid input length.
+tf-psa-crypto/drivers/builtin/include/mbedtls/nist_kw.h: * \return          \c MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA for invalid input length.
+tf-psa-crypto/drivers/builtin/include/mbedtls/nist_kw.h: * \return          \c MBEDTLS_ERR_CIPHER_AUTH_FAILED for verification failure of the ciphertext.
+tf-psa-crypto/drivers/builtin/include/mbedtls/pk.h: * \return          #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
+tf-psa-crypto/drivers/builtin/include/mbedtls/pk.h: * \return          #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
+tf-psa-crypto/drivers/builtin/include/mbedtls/psa_util.h: * \return              An `MBEDTLS_ERR_ENTROPY_xxx`,
+tf-psa-crypto/drivers/builtin/include/mbedtls/psa_util.h: *                      `MBEDTLS_ERR_CTR_DRBG_xxx` or
+tf-psa-crypto/drivers/builtin/include/mbedtls/psa_util.h: *                      `MBEDTLS_ERR_HMAC_DRBG_xxx` on error.
+```
+
+This tells us which error codes are documented in public headers but defined in private headers. Note that there are likely to be many error codes that are not specifically documented (or only vaguely, e.g. “a low-level error code”), but in such cases we can change which error is returned in a minor release.
 
 ## Changes to compilation options
 
