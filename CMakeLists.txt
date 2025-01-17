@@ -524,3 +524,14 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
         export(PACKAGE TF-PSA-Crypto)
     endif()
 endif()
+
+add_custom_target(
+    generated_files
+    COMMAND echo "  Gen   ./core/psa_crypto_driver_wrappers.h ./core/psa_crypto_driver_wrappers.c"
+    COMMAND ${MBEDTLS_PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_driver_wrappers.py ${TF_PSA_CRYPTO_DIR}/core
+    COMMAND echo "  Gen   ./programs/psa/psa_constant_names_generated.c"
+    COMMAND ${MBEDTLS_PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_psa_constants.py
+    COMMAND echo "  Gen   ./tests/suites/test_suite_bignum.generated.data ./tests/suites/test_suite_bignum_core.generated.data ./tests/suites/test_suite_bignum_mod.generated.data ./tests/suites/test_suite_bignum_mod_raw.generated.data"
+    COMMAND echo "  Gen   ./tests/suites/test_suite_ecp.generated.data ./tests/suites/test_suite_psa_crypto_generate_key.generated.data ./tests/suites/test_suite_psa_crypto_low_hash.generated.data ./tests/suites/test_suite_psa_crypto_not_supported.generated.data ./tests/suites/test_suite_psa_crypto_op_fail.generated.data ./tests/suites/test_suite_psa_crypto_storage_format.current.data ./tests/suites/test_suite_psa_crypto_storage_format.v0.data ..."
+    COMMAND ${MBEDTLS_PYTHON_EXECUTABLE} ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_bignum_tests.py --directory ${TF_PSA_CRYPTO_DIR}/tests/suites
+)
