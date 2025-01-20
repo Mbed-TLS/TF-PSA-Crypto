@@ -8097,6 +8097,21 @@ psa_status_t psa_key_agreement_iop_setup(
         goto exit;
     }
 
+    /* We only support raw key agreement here, not combined with a key
+     * derivation. Also, for the time being, we only allow ECDH, not
+     * other key agreement algorithms.
+     *
+     * This check could come slightly earlier or later. Having it here
+     * gives consistent error codes with non-interruptible key agreement
+     * (psa_raw_key_agreement(), psa_key_agreement()) when the input
+     * parameters (including the key) are also invalid for
+     * non-interruptible key agreement.
+     */
+    if (alg != PSA_ALG_ECDH) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
     operation->attributes = *attributes;
 
     operation->num_ops = 0;

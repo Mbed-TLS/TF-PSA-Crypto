@@ -764,6 +764,12 @@ psa_status_t mbedtls_psa_key_agreement_iop_setup(
        complete operation which doesn't reset it after finsishing. */
     operation->num_ops = 0;
 
+    psa_key_type_t private_key_type = psa_get_key_type(private_key_attributes);
+    if (!PSA_KEY_TYPE_IS_ECC_KEY_PAIR(private_key_type)) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
     status = mbedtls_psa_ecp_load_representation(
         psa_get_key_type(private_key_attributes),
         psa_get_key_bits(private_key_attributes),
@@ -785,7 +791,7 @@ psa_status_t mbedtls_psa_key_agreement_iop_setup(
     our_key = NULL;
 
     status = mbedtls_psa_ecp_load_representation(
-        PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(psa_get_key_type(private_key_attributes)),
+        PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(private_key_type),
         psa_get_key_bits(private_key_attributes),
         peer_key,
         peer_key_length,
