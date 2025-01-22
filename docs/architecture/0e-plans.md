@@ -524,13 +524,15 @@ TODO
 
 ### Public hash-only `md.h`
 
-To be considered for 1.0: make a subset of `md.h` public. Only hashes, not HMAC.
+To be considered for 1.0: make a subset of `md.h` public. Only hashes, not HMAC. As a starting point, this would be `MBEDTLS_MD_LIGHT`, which is known to work in many configurations, although we don't have to stick to it.
 
 Reasons to do this:
 
 * The upfront cost is small: we can take the existing `md.h` and just remove the HMAC-related code and some of the metadata-related interfaces.
+* This is already tested as `MBEDTLS_MD_LIGHT`.
 * As a thin wrapper over PSA (we would not keep direct calls to low-level modules), the maintenance cost is very small.
 * It is used in a very large number of places, both in Mbed TLS and in third-party code. Keeping it around will both save us work during the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x, and facilitate the transition for our users.
+* If we don't do this, then we'll have to change some code in Mbed TLS. In the `full` configuration, Mbed TLS links to several md functions: `mbedtls_md`, `mbedtls_md_error_from_psa`, `mbedtls_md_get_size`, `mbedtls_md_info_from_type` (in addition to macros, enum constants and static inline functions from `mbedtls/md.h`).
 
 https://github.com/Mbed-TLS/mbedtls/issues/8450
 
