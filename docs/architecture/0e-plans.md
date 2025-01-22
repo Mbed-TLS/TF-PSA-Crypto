@@ -158,23 +158,23 @@ The following table lists the headers that, as of the repository split, are loca
 | `config_adjust_*.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
 | `config_psa.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
 | `constant_time.h` | `mbedtls_ct_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
-| `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [RNG header privatization](#rng-header-privatization) |
+| `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
 | `des.h` | `mbedtls_des_` | Expose | [context types](#headers-with-context-types) |
 | `dhm.h` | `mbedtls_dhm_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `ecdh.h` | `mbedtls_ecdh_` | Expose | [context types](#headers-with-context-types) |
 | `ecdsa.h` | `mbedtls_ecdsa_` | Expose | [context types](#headers-with-context-types) |
 | `ecjpake.h` | `mbedtls_ecjpake_` | Expose | [context types](#headers-with-context-types) |
 | `ecp.h` | `mbedtls_ecp_` | Expose | [context types](#headers-with-context-types) |
-| `entropy.h` | `mbedtls_entropy_` | Private | [RNG header privatization](#rng-header-privatization) |
-| `error_common.h` | `mbedtls_*err*` | Private | TODO |
+| `entropy.h` | `mbedtls_entropy_` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
+| `error_common.h` | `mbedtls_*err*` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
 | `gcm.h` | `mbedtls_gcm_` | Expose | [context types](#headers-with-context-types) |
 | `hkdf.h` | `mbedtls_hkdf_` | Delete | https://github.com/Mbed-TLS/mbedtls/issues/9150 |
-| `hmac_drbg.h` | `mbedtls_hmac_drbg_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work for [RNG header privatization](#rng-header-privatization) |
-| `lms.h` | `mbedtls_lms_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-PSA-equivalent) |
-| `md.h` | `mbedtls_md_` | Expose | [context types](#headers-with-context-types), but likely [Public hash-only `md.h`](#public-hash-only-md.h) |
+| `hmac_drbg.h` | `mbedtls_hmac_drbg_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work |
+| `lms.h` | `mbedtls_lms_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-psa-equivalent) |
+| `md.h` | `mbedtls_md_` | Expose | [context types](#headers-with-context-types), but likely [Public hash-only `md.h`](#public-hash-only-mdh) |
 | `md5.h` | `mbedtls_md5_` | Expose | [context types](#headers-with-context-types) |
 | `memory_buffer_alloc.h` | `mbedtls_memory_buffer_alloc_` | Public | [Platform headers](#platform-headers) |
-| `nist_kw.h` | `mbedtls_nist_kw_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-PSA-equivalent) |
+| `nist_kw.h` | `mbedtls_nist_kw_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-psa-equivalent) |
 | `oid.h` | `mbedtls_oid_` | Private | [OID interface](#oid-interface) |
 | `pem.h` | `mbedtls_pem_` | TBD | [Base64 and PEM](#base64-and-pem) |
 | `pk.h` | `mbedtls_pk_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
@@ -185,7 +185,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `platform_util.h` | `mbedtls_platform_` | Public | [Platform headers](#platform-headers) |
 | `poly1305.h` | `mbedtls_poly1305_` | Expose | [context types](#headers-with-context-types) |
 | `private_access.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
-| `psa_util.h` | N/A | Public | [Evolution of `psa_util.h`](#evolution-of-psa-util.h) |
+| `psa_util.h` | N/A | Public | [remains public](#headers-that-remain-public) but see [Private types in `psa_util.h`](#private-types-in-psa_utilh) |
 | `ripemd160.h` | `mbedtls_ripemd160_` | Expose | [context types](#headers-with-context-types) |
 | `rsa.h` | `mbedtls_rsa_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work (TODO) |
 | `sha1.h` | `mbedtls_sha1_` | Expose | [context types](#headers-with-context-types) |
@@ -193,6 +193,11 @@ The following table lists the headers that, as of the repository split, are loca
 | `sha3.h` | `mbedtls_sha3_` | Expose | [context types](#headers-with-context-types) |
 | `sha512.h` | `mbedtls_sha512_` | Expose | [context types](#headers-with-context-types) |
 | `threading.h` | `mbedtls_threading_` | Public | [Platform headers](#platform-headers) |
+
+For contributed drivers, see:
+
+* Everest: Expose [Everest](#privatization-of-everest-headers).
+* p256-m: [fully private](#headers-that-can-be-made-fully-private).
 
 #### Cryptographic mechanisms with no PSA equivalent
 
@@ -401,11 +406,11 @@ Main loss of functionality:
 
 `drivers/builtin/include/mbedtls/build_info.h` is a special case that exists only as a transition for the sake of our source files contains `#include <mbedtls/build_info.h>` and that must be buildable against either TF-PSA-Crypto or Mbed TLS. It should be removed: https://github.com/Mbed-TLS/mbedtls/issues/9862 .
 
-The [p256-m headers](#privatization-of-p256-m-headers) fall in the same category.
+The p256-m headers fall in the same category.
 
-#### Headers that will become private eventually
+#### Headers that will become internal eventually
 
-The headers listed below should be private, but are currently used in Mbed TLS to an extent that makes it hard to remove before the 1.0/4.0 release. As a result, they need to remain visible to Mbed TLS, but should be clearly indicated as not part of the stable API.
+The headers listed below should be private, but are currently used in Mbed TLS to an extent that makes it hard to remove before the 1.0/4.0 release. As a result, they need to remain exposed to Mbed TLS, but should be clearly indicated as not part of the stable API.
 
 ```
 ctr_drbg.h
@@ -463,7 +468,7 @@ tf-psa-crypto/drivers/builtin/include/mbedtls/psa_util.h:102:22: mbedtls_ecc_gro
 
 ### Private types in `pk.h`
 
-`pk.h` only exposes private types through deprecated functions which will be removed from the [Shrunk-down `pk.h`](#shrunk-down-pk.h).
+`pk.h` only exposes private types through deprecated functions which will be removed from the [Shrunk-down `pk.h`](#shrunk-down-pkh).
 
 ### Private types in `asn1.h` and `asn1write.h`
 
