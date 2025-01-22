@@ -205,7 +205,7 @@ The header files listed in this section define cryptographic mechanisms which do
 
 The following header files define cryptography-adjacent interfaces which we have no plans to replace.
 
-* `asn1.`, `asn1write.h`: ASN.1, needed for key parsing/writing as well as for X.509.
+* `asn1.h`, `asn1write.h`: ASN.1, needed for key parsing/writing as well as for X.509.
 * `constant_time.h`: This header defines `mbedtls_ct_memcmp()` which is in the public API because it is useful to application code (including but not limited to the TLS layer in Mbed TLS).
 * `pk.h`: There is no equivalent PSA API. (One is planned, but the design won't be ready until after 1.0.) This is critical for parsing and writing keys. We plan to keep parts of the existing `pk.h` for parsing, writing and signature, and to remove `mbedtls_pk_type_t`, encrypt/decrypt and a few other bits. For 0ε, `pk.h` goes into the public category, and we will remove parts of it. Continued in https://github.com/Mbed-TLS/mbedtls/issues/8452 .
 
@@ -475,7 +475,7 @@ The ASN.1 interfaces use `mbedtls_mpi` for INTEGER parsing/writing. This must ch
 
 ### Private types in `psa_util.h`
 
-The functions `mbedtls_ecc_group_to_psa()` and mbedtls_ecc_group_from_psa()` are no longer relevant for public use since the legacy side of the conversion is no longer a public interface. They are not used in Mbed TLS. They should be moved to an internal header.
+The functions `mbedtls_ecc_group_to_psa()` and `mbedtls_ecc_group_from_psa()` are no longer relevant for public use since the legacy side of the conversion is no longer a public interface. They are not used in Mbed TLS. They should be moved to an internal header.
 
 ### Private types in `ssl_ticket.h`
 
