@@ -92,10 +92,7 @@
     defined(MBEDTLS_ENTROPY_C) || \
     defined(MBEDTLS_PK_C) || \
     defined(MBEDTLS_PKCS12_C) || \
-    defined(MBEDTLS_RSA_C) || \
-    defined(MBEDTLS_SSL_TLS_C) || \
-    defined(MBEDTLS_X509_USE_C) || \
-    defined(MBEDTLS_X509_CREATE_C)
+    defined(MBEDTLS_RSA_C)
 #define MBEDTLS_MD_LIGHT
 #endif
 
