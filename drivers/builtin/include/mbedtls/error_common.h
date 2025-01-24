@@ -130,13 +130,26 @@ extern void (*mbedtls_test_hook_error_add)(int, int, const char *, int);
  *        error code (that denotes success) and can be combined with both a
  *        negative error code or another value of zero.
  *
+ * \note  The distinction between low-level and high-level error codes is
+ *        obsolete since TF-PSA-Crypto 1.0 and Mbed TLS 4.0. It is still
+ *        present in the code due to the heritage from Mbed TLS <=3,
+ *        where low-level and high-level error codes could be added.
+ *        New code should not make this distinction and should just
+ *        propagate errors returned by lower-level modules unless there
+ *        is a good reason to report a different error code in the
+ *        higher-level module.
+ *
  * \note  When invasive testing is enabled via #MBEDTLS_TEST_HOOKS, also try to
  *        call \link mbedtls_test_hook_error_add \endlink.
  *
- * \param high      high-level error code. See error.h for more details.
- * \param low       low-level error code. See error.h for more details.
- * \param file      file where this error code addition occurred.
- * \param line      line where this error code addition occurred.
+ * \param high      High-level error code, i.e. error code from the module
+ *                  that is reporting the error.
+ *                  This can be 0 to just propagate a low-level error.
+ * \param low       Low-level error code, i.e. error code returned by
+ *                  a lower-level function.
+ *                  This can be 0 to just return a high-level error.
+ * \param file      file where this error code combination occurred.
+ * \param line      line where this error code combination occurred.
  */
 static inline int mbedtls_error_add(int high, int low,
                                     const char *file, int line)
@@ -149,7 +162,10 @@ static inline int mbedtls_error_add(int high, int low,
     (void) file;
     (void) line;
 
-    return high + low;
+    /* We give priority to the lower-level error code, because this
+     * is usually the right choice. For example, if a low-level module
+     * runs out of memory, this should not be converted to a  */
+    return low ? low : high;
 }
 
 #ifdef __cplusplus
