@@ -1,0 +1,6 @@
+API changes
+   * The PSA and Mbed TLS error space are now unified. This means that
+     psa_xxx() functions can now potentially return MBEDTLS_ERR_xxx
+     values and mbedtls_xxx() functions can return PSA_ERROR_xxx values.
+     This will not affect most applications since in both cases, the
+     error values are between -32767 and -1 as before.
