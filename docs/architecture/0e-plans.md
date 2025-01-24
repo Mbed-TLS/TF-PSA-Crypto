@@ -590,3 +590,24 @@ https://github.com/Mbed-TLS/mbedtls/issues/8452
 
 ### Shrunk-down `psa_util.h`
 
+Only some of the interface elements in `mbedtls/psa_util.h` remain useful.
+
+| Name | Uses | Fate |
+| ---- | ---- | ---- |
+| `mbedtls_psa_get_random` | crypto internal, `ssl_test_lib.c` | Deprecate |
+| `MBEDTLS_PSA_RANDOM_STATE` | same as `mbedtls_psa_get_random` | Deprecate |
+| `mbedtls_ecc_group_to_psa` | crypto internal | Internalize |
+| `mbedtls_ecc_group_from_psa` | crypto internal | Internalize |
+| `mbedtls_md_psa_alg_from_type` | crypto internal, SSL library | Privatize, deprecate or remove? |
+| `mbedtls_md_type_from_psa_alg` | crypto internal, SSL library | Privatize, deprecate or remove? |
+| `mbedtls_ecdsa_raw_to_der` | crypto internal | Keep public |
+| `mbedtls_ecdsa_der_to_raw` | crypto internal | Keep public |
+
+The RNG wrapper function `mbedtls_psa_get_random` (and the associated constant `MBEDTLS_PSA_RANDOM_STATE`) has a negligible cost for us and can help users transition their code. Keep it, but mark it as deprecated, possibly inlined, and change it (code and documentation) to just return the return value of `psa_get_random`.
+
+The ECC group conversion functions are now purely private since the type `mbedtls_ecp_group_id` is private. They aren't used by Mbed TLS, so move their declaration to an internal header.
+
+The digest algorithm conversion functions are heavily used in TLS code (mostly if not exclusively TLS 1.3). They perform a very simple conversion, so it should be easy to get rid of them. However, as long as `mbedtls_md_type_t` still exists (see [Public hash-only `md.h`](public-hash-only-mdh)), it could make sense to have them as public functions in `md.h`.
+
+The ECDSA signature format conversion functions are used to implement `mbedtls_pk_{sign,verify}`, but they are also useful to applications. Keep them. We may move them to a different header name though (`psa/crypto_extra.h`?).
+
