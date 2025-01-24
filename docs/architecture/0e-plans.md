@@ -425,6 +425,7 @@ Main loss of functionality:
 * CTR\_DRBG in itself (i.e. other than for the PSA Crypto RNG instance). We intend to restore this functionality through a PSA API, but the API isn't designed yet, so this will happen after 1.0 and not with the existing API.
 * Direct access to entropy sources. We've decided that this is acceptable.
 * The ability to configure entropy sources on a platform. This is not an acceptable loss. In the long term (likely after 1.0), this will be resolved by the PSA crypto random driver API. In the short term, we will expose a modified `mbedtls_hardware_poll()` (https://github.com/Mbed-TLS/mbedtls/issues/9618).
+* `MBEDTLS_ERROR_ADD` will no longer be used after https://github.com/Mbed-TLS/mbedtls/pull/9926 .
 
 #### Privatization of Everest headers
 
@@ -489,18 +490,47 @@ The functions `mbedtls_ecc_group_to_psa()` and `mbedtls_ecc_group_from_psa()` ar
 
 ### Leaking error codes
 
-TODO
+#### About leaking error codes
+
+Non-PSA functions signal errors by returning an `MBEDTLS_ERR_xxx` error code. They return the type `int`, so this does not appear in type-based analyses.
+
+In Mbed TLS 3, all error codes are declared and documented in public headers. Since all error codes are part of the official API, functions cannot return undocumented error codes, by construction. (This assumes that we use `MBEDTLS_ERR_xxx` constants when we decide which error code to return, which we do.)
+
+Many of the error codes in TF-PSA-Crypto are declared in headers that are becoming private, either exposed or not. These error codes are generally intended for functions declared in the same module, however they may also be used in other modules, in particular when module A calls functions from module B and forwards error codes from module B. This can cause three problems:
+
+* Mbed TLS code checks for specific error codes from crypto functions. These error codes must remain exposed.
+* Specific error codes appear in TF-PSA-Crypto or Mbed TLS documentation. These error codes are thus effectively public, and the declaration of the `MBEDTLS_ERR_xxx` constant should remain public.
+* Public functions return error codes that are now private, thus undocumented. This is a quality problem for users. It is not critical to resolve this problem before the 1.0 release, because if the specific error code is not documented, a future minor release either start documenting the error code or change the function's behavior to make it return a documented error code instead.
+
+#### Assumptions on error codes
+
+In Mbed TLS up to 3.x, all error codes are values between -32767 and -1, with 0 meaning success. There are two types of status codes:
+
+* `psa_status_t`, returned by PSA functions (`psa_xxx()` or `mbedtls_psa_xxx()`). Success is `PSA_SUCCESS == 0` and errors are `PSA_ERROR_xxx` constants.
+* `int`, returned by Mbed TLS functions (`mbedtls_xxx()` except `mbedtls_psa_xxx()`). Success is 0. Mbed TLS error codes (legacy errors) have the form `low + high` where `-127 <= low <= 0` and `high` is of the form `-128 * n` for `0 <= n <= 255` (this is an unambiguous decomposition) (`low == high == 0` is the success value).
+
+Having to convert between the two error code spaces costs significant code size. It also adds complexity and we occasionally have bugs where we forget to convert. Thus it would be desirable not to have this distinction.
+
+It is already the case in Mbed TLS 3.x that a PSA error value cannot be equal to a legacy error, because we avoid assigning values in a range that would overlap.
+
+In many places, a high-level module adds a constant to the error code returned by a low-level module. This requires the low-level module to return a low-level error (where the high part is 0). If the low-level module changes to return a PSA error, the addition will not result in an unambiguous value.
+
+#### Unified error code space
+
+To avoid constraining the refactoring of low-level interfaces and low-level modules, as well as simplify the rework of high-level modules, we will do a little upfront work to unify the error code space: https://github.com/Mbed-TLS/mbedtls/issues/9619#issuecomment-2612664288
+
+Once that is done:
+
+* `MBEDTLS_ERROR_ADD` is a no-op (it just returns one of its arguments — currently the low-level code). New code does not need to bother.
+* Any legacy error code can be removed from the public documentation and made an alias of a PSA error code.
+* New code can just pick PSA error codes when convenient.
+* All conversions between error codes can be removed. (This can, but probably shouldn't, be done all at once. If done piecewise, this needs to be divided adequately in the sense that when a function stops converting its error codes, its callers must stop expecting converted error codes.)
 
 #### Publicly documented private error codes
 
-Output of `grep -P 'MBEDTLS_ERR_(?!ASN1_|BASE64_|LMS_|NET_|NIST_KW_|PEM_|PKCS7_|PK_|PLATFORM_|SSL_|THREADING_|X509_)' include/mbedtls/*.h tf-psa-crypto/drivers/builtin/include/mbedtls/{asn1.h,asn1write.h,base64.h,constant_time.h,lms.h,memory_buffer_alloc.h,nist_kw.h,pem.h,pk.h,platform.h,platform_time.h,platform_util.h,psa_util.h,threading.h}`.
+Output of `grep -P 'MBEDTLS_ERR_(?!ASN1_|BASE64_|LMS_|NET_|NIST_KW_|PEM_|PKCS7_|PK_|PLATFORM_|SSL_|THREADING_|X509_|XXX)' include/mbedtls/*.h tf-psa-crypto/drivers/builtin/include/mbedtls/{asn1.h,asn1write.h,base64.h,constant_time.h,lms.h,memory_buffer_alloc.h,nist_kw.h,pem.h,pk.h,platform.h,platform_time.h,platform_util.h,psa_util.h,threading.h}`:
 
 ```
-include/mbedtls/ssl.h: *                  or a specific MBEDTLS_ERR_XXX code, which will cause
-include/mbedtls/ssl.h: *                  a specific MBEDTLS_ERR_XXX code.
-include/mbedtls/ssl.h: *                 MBEDTLS_ERR_XXX_ALLOC_FAILED on memory allocation error.
-include/mbedtls/ssl_ticket.h: *                  or a specific MBEDTLS_ERR_XXX error code
-include/mbedtls/ssl_ticket.h: *                  or a specific MBEDTLS_ERR_XXX error code
 include/mbedtls/x509.h: *                  MBEDTLS_ERR_OID_BUF_TOO_SMALL in case of error
 include/mbedtls/x509_crt.h: * \return         #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
 tf-psa-crypto/drivers/builtin/include/mbedtls/nist_kw.h: * \return          \c MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA for any invalid input.
@@ -515,7 +545,22 @@ tf-psa-crypto/drivers/builtin/include/mbedtls/psa_util.h: *                     
 tf-psa-crypto/drivers/builtin/include/mbedtls/psa_util.h: *                      `MBEDTLS_ERR_HMAC_DRBG_xxx` on error.
 ```
 
-This tells us which error codes are documented in public headers but defined in private headers. Note that there are likely to be many error codes that are not specifically documented (or only vaguely, e.g. “a low-level error code”), but in such cases we can change which error is returned in a minor release.
+This tells us which error codes are documented in public headers but defined in private headers. Note that there are likely to be many error codes that are not specifically documented (or only vaguely, e.g. “a specific X509 or PEM error code”), but in such cases we can change which error is returned in a minor release.
+
+To fix these cases:
+
+* Make `MBEDTLS_ERR_OID_BUF_TOO_SMALL` an alias of `PSA_ERROR_BUFFER_TOO_SMALL`.
+* Make `MBEDTLS_ERR_ECP_IN_PROGRESS` an alias of `PSA_OPERATION_INCOMPLETE`.
+* When moving NIST\_KW to the PSA API (https://github.com/Mbed-TLS/mbedtls/issues/9382), for error conditions that are discovered inside `nist_kw.c`, make it return PSA error codes. Errors from lower-level functions can just be propagated without conversion.
+* In `psa_util.h`, the documented legacy error code categories are for `mbedtls_psa_get_random`, which is no longer needed. See [Shrunk-down `psa_util.h`]((#shrunk-down-psa_utilh)).
+
+#### Unifying error codes
+
+Ideally we should unify legacy error codes with PSA error codes that have the same meaning. Note that this includes unifying legacy error codes since these tend to be per-module. For example, ideally, all `MBEDTLS_ERR_xxx_ALLOC_FAILED` errors would change to `PSA_ERROR_INSUFFICIENT_MEMORY`.
+
+A legacy error name (`MBEDTLS_ERR_xxx`) can be made an alias for a PSA error: just change `#define MBEDTLS_ERR_xxx -0xNNN` to `#define MBEDTLS_ERR_xxx PSA_ERROR_yyy`. https://github.com/Mbed-TLS/mbedtls/pull/9926 does a few to show that it works.
+
+See https://github.com/Mbed-TLS/mbedtls/issues/8501 . This is beyond the code of 0ε and 4ε, but we may do some of it on an ad hoc basis.
 
 ## Changes to compilation options
 
@@ -542,3 +587,6 @@ https://github.com/Mbed-TLS/mbedtls/issues/8450
 TODO
 
 https://github.com/Mbed-TLS/mbedtls/issues/8452
+
+### Shrunk-down `psa_util.h`
+
