@@ -168,7 +168,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `entropy.h` | `mbedtls_entropy_` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
 | `error_common.h` | `mbedtls_*err*` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
 | `gcm.h` | `mbedtls_gcm_` | Expose | [context types](#headers-with-context-types) |
-| `hkdf.h` | `mbedtls_hkdf_` | Delete | https://github.com/Mbed-TLS/mbedtls/issues/9150 |
+| `hkdf.h` | `mbedtls_hkdf_` | Delete | [Mbed-TLS/mbedtls#9150](https://github.com/Mbed-TLS/mbedtls/issues/9150) |
 | `hmac_drbg.h` | `mbedtls_hmac_drbg_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work |
 | `lms.h` | `mbedtls_lms_` | Public | [no PSA equivalent](#cryptographic-mechanisms-with-no-psa-equivalent) |
 | `md.h` | `mbedtls_md_` | Expose | [context types](#headers-with-context-types), but likely [Public hash-only `md.h`](#public-hash-only-mdh) |
@@ -227,7 +227,7 @@ PEM is used:
 * Inside the Mbed TLS library, to parse and write X.509 objects.
 * In application code, very occasionally. (Examples: [Fire-evacuation-guidance-system-IoT](https://github.com/2nd-Chance/Fire-evacuation-guidance-system-IoT/blob/33031a8255fe1ae516ddd58f1baa808801cd3abf/iotivity/resource/csdk/security/src/credresource.c#L3185) (dead project), [SiLabs Bluetooth attestation server](https://github.com/SiliconLabs/bluetooth_applications/blob/3eb0f3c9e234ada1f10714fb9376fcbc8e95807f/bluetooth_secure_attestation/bt_secure_attestation_server/src/ecdh_util3.c#L375))
 
-The use of PEM inside the Mbed TLS is intrinsic. It doesn't leak through the API of Mbed TLS, but Mbed TLS cannot be implemented without PEM. This is different from other private modules that Mbed TLS currently calls internally, but will no longer need to call once Mbed TLS has fully migrated to PSA. Thus, in the long term, TF-PSA-Crypto needs to expose its PEM API to Mbed TLS. (We reject the hypotheses of independent PEM implementations, or of making PEM its own library, as too much maintenance work.)
+The use of PEM inside the Mbed TLS library is intrinsic. It doesn't leak through the API of Mbed TLS, but Mbed TLS cannot be implemented without PEM. This is different from other private modules that Mbed TLS currently calls internally, but will no longer need to call once Mbed TLS has fully migrated to PSA. Thus, in the long term, TF-PSA-Crypto needs to expose its PEM API to Mbed TLS. (We reject the hypotheses of independent PEM implementations, or of making PEM its own library, as too much maintenance work.)
 
 The current PEM interface is unsatisfactory. We would like to improve it (https://github.com/Mbed-TLS/mbedtls/issues/9374) but it is unlikely that we will have enough bandwidth to do so before the 1.0 release. We need to make the PEM interface public to reach the milestone where Mbed TLS stops relying on private interfaces of TF-PSA-Crypto. We can choose to make it public now, or wait until later. Waiting is only advantageous if we believe that we will have enough bandwidth to actually clean up the PEM interface.
 
@@ -552,7 +552,7 @@ To fix these cases:
 * Make `MBEDTLS_ERR_OID_BUF_TOO_SMALL` an alias of `PSA_ERROR_BUFFER_TOO_SMALL`.
 * Make `MBEDTLS_ERR_ECP_IN_PROGRESS` an alias of `PSA_OPERATION_INCOMPLETE`.
 * When moving NIST\_KW to the PSA API (https://github.com/Mbed-TLS/mbedtls/issues/9382), for error conditions that are discovered inside `nist_kw.c`, make it return PSA error codes. Errors from lower-level functions can just be propagated without conversion.
-* In `psa_util.h`, the documented legacy error code categories are for `mbedtls_psa_get_random`, which is no longer needed. See [Shrunk-down `psa_util.h`]((#shrunk-down-psa_utilh)).
+* In `psa_util.h`, the documented legacy error code categories are for `mbedtls_psa_get_random`, which is no longer needed. See [Shrunk-down `psa_util.h`](#shrunk-down-psa_utilh).
 
 #### Unifying error codes
 
@@ -607,7 +607,7 @@ The RNG wrapper function `mbedtls_psa_get_random` (and the associated constant `
 
 The ECC group conversion functions are now purely private since the type `mbedtls_ecp_group_id` is private. They aren't used by Mbed TLS, so move their declaration to an internal header.
 
-The digest algorithm conversion functions are heavily used in TLS code (mostly if not exclusively TLS 1.3). They perform a very simple conversion, so it should be easy to get rid of them. However, as long as `mbedtls_md_type_t` still exists (see [Public hash-only `md.h`](public-hash-only-mdh)), it could make sense to have them as public functions in `md.h`.
+The digest algorithm conversion functions are heavily used in TLS code (mostly if not exclusively TLS 1.3). They perform a very simple conversion, so it should be easy to get rid of them. However, as long as `mbedtls_md_type_t` still exists (see [Public hash-only `md.h`](#public-hash-only-mdh)), it could make sense to have them as public functions in `md.h`.
 
 The ECDSA signature format conversion functions are used to implement `mbedtls_pk_{sign,verify}`, but they are also useful to applications. Keep them. We may move them to a different header name though (`psa/crypto_extra.h`?).
 
