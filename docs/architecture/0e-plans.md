@@ -193,7 +193,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `sha3.h` | `mbedtls_sha3_` | Expose | [context types](#headers-with-context-types) |
 | `sha512.h` | `mbedtls_sha512_` | Expose | [context types](#headers-with-context-types) |
 | `threading.h` | `mbedtls_threading_` | Public | [Platform headers](#platform-headers) |
-| `timing.h` | `mbedtls_timing_` | Delete | Move to mbedtls? (TODO) |
+| `timing.h` | `mbedtls_timing_` | Delete | Move to mbedtls (done) |
 
 For contributed drivers, see:
 
