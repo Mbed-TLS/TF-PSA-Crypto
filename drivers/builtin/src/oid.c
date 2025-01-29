@@ -29,13 +29,13 @@
 /*
  * Macro to generate mbedtls_oid_descriptor_t
  */
-#if !defined(MBEDTLS_X509_REMOVE_INFO)
+#if 1 /* OID_INFO_STRINGS */
 #define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s), name, description }
 #define NULL_OID_DESCRIPTOR                   { NULL, 0, NULL, NULL }
 #else
 #define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s) }
 #define NULL_OID_DESCRIPTOR                   { NULL, 0 }
-#endif
+#endif /* OID_INFO_STRINGS */
 
 /*
  * Macro to generate an internal function for oid_XXX_from_asn1() (used by
@@ -60,7 +60,7 @@
         return NULL;                                                 \
     }
 
-#if !defined(MBEDTLS_X509_REMOVE_INFO)
+#if 1 /* OID_INFO_STRINGS */
 /*
  * Macro to generate a function for retrieving a single attribute from the
  * descriptor of an mbedtls_oid_descriptor_t wrapper.
@@ -73,7 +73,7 @@
         *ATTR1 = data->descriptor.ATTR1;                                    \
         return 0;                                                        \
     }
-#endif /* MBEDTLS_X509_REMOVE_INFO */
+#endif /* OID_INFO_STRINGS */
 
 /*
  * Macro to generate a function for retrieving a single attribute from an
@@ -327,7 +327,7 @@ static const oid_x509_ext_t oid_x509_ext[] =
 FN_OID_TYPED_FROM_ASN1(oid_x509_ext_t, x509_ext, oid_x509_ext)
 FN_OID_GET_ATTR1(mbedtls_oid_get_x509_ext_type, oid_x509_ext_t, x509_ext, int, ext_type)
 
-#if !defined(MBEDTLS_X509_REMOVE_INFO)
+#if 1 /* OID_INFO_STRINGS */
 static const mbedtls_oid_descriptor_t oid_ext_key_usage[] =
 {
     OID_DESCRIPTOR(MBEDTLS_OID_SERVER_AUTH,
@@ -365,7 +365,7 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_certificate_policies,
                  certificate_policies,
                  const char *,
                  description)
-#endif /* MBEDTLS_X509_REMOVE_INFO */
+#endif /* OID_INFO_STRINGS */
 
 /*
  * For SignatureAlgorithmIdentifier
@@ -472,13 +472,13 @@ static const oid_sig_alg_t oid_sig_alg[] =
 
 FN_OID_TYPED_FROM_ASN1(oid_sig_alg_t, sig_alg, oid_sig_alg)
 
-#if !defined(MBEDTLS_X509_REMOVE_INFO)
+#if 1 /* OID_INFO_STRINGS */
 FN_OID_GET_DESCRIPTOR_ATTR1(mbedtls_oid_get_sig_alg_desc,
                             oid_sig_alg_t,
                             sig_alg,
                             const char *,
                             description)
-#endif
+#endif /* OID_INFO_STRINGS */
 
 FN_OID_GET_ATTR2(mbedtls_oid_get_sig_alg,
                  oid_sig_alg_t,
