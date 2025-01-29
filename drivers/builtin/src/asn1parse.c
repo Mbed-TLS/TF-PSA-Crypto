@@ -7,7 +7,7 @@
 
 #include "common.h"
 
-#if defined(MBEDTLS_ASN1_PARSE_C) || defined(MBEDTLS_X509_CREATE_C) || \
+#if defined(MBEDTLS_ASN1_PARSE_C) || defined(MBEDTLS_ASN1_WRITE_C) || \
     defined(PSA_HAVE_ALG_SOME_ECDSA)
 
 #include "mbedtls/asn1.h"
@@ -74,7 +74,7 @@ int mbedtls_asn1_get_tag(unsigned char **p,
 
     return mbedtls_asn1_get_len(p, end, len);
 }
-#endif /* MBEDTLS_ASN1_PARSE_C || MBEDTLS_X509_CREATE_C || PSA_HAVE_ALG_SOME_ECDSA */
+#endif /* MBEDTLS_ASN1_PARSE_C || MBEDTLS_ASN1_WRITE_C || PSA_HAVE_ALG_SOME_ECDSA */
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 int mbedtls_asn1_get_bool(unsigned char **p,
