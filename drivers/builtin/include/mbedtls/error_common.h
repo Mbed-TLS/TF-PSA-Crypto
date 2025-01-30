@@ -89,7 +89,8 @@ static inline int mbedtls_error_add(int high, int low,
 
     /* We give priority to the lower-level error code, because this
      * is usually the right choice. For example, if a low-level module
-     * runs out of memory, this should not be converted to a  */
+     * runs out of memory, this should not be converted to a high-level
+     * error code such as invalid-signature. */
     return low ? low : high;
 }
 
