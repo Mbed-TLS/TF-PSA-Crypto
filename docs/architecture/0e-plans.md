@@ -500,18 +500,18 @@ Many of the error codes in TF-PSA-Crypto are declared in headers that are becomi
 
 * Mbed TLS code checks for specific error codes from crypto functions. These error codes must remain exposed.
 * Specific error codes appear in TF-PSA-Crypto or Mbed TLS documentation. These error codes are thus effectively public, and the declaration of the `MBEDTLS_ERR_xxx` constant should remain public.
-* Public functions return error codes that are now private, thus undocumented. This is a quality problem for users. It is not critical to resolve this problem before the 1.0 release, because if the specific error code is not documented, a future minor release either start documenting the error code or change the function's behavior to make it return a documented error code instead.
+* Public functions return error codes that are now private, thus undocumented. This is a quality problem for users. It is not critical to resolve this problem before the 1.0 release, because if the specific error code is not documented, a future minor release can either start documenting the error code or change the function's behavior to make it return a documented error code instead.
 
 #### Assumptions on error codes
 
 In Mbed TLS up to 3.x, all error codes are values between -32767 and -1, with 0 meaning success. There are two types of status codes:
 
 * `psa_status_t`, returned by PSA functions (`psa_xxx()` or `mbedtls_psa_xxx()`). Success is `PSA_SUCCESS == 0` and errors are `PSA_ERROR_xxx` constants.
-* `int`, returned by Mbed TLS functions (`mbedtls_xxx()` except `mbedtls_psa_xxx()`). Success is 0. Mbed TLS error codes (legacy errors) have the form `low + high` where `-127 <= low <= 0` and `high` is of the form `-128 * n` for `0 <= n <= 255` (this is an unambiguous decomposition) (`low == high == 0` is the success value).
+* `int`, returned by Mbed TLS functions (`mbedtls_xxx()` except `mbedtls_psa_xxx()`). Success is 0. Mbed TLS error codes (legacy errors) have the form `low + high` where `-127 <= low <= 0` and `high` is either 0 or of the form `-128 * n` for `16 <= n <= 255` (this is an unambiguous decomposition) (`low == high == 0` is the success value).
 
 Having to convert between the two error code spaces costs significant code size. It also adds complexity and we occasionally have bugs where we forget to convert. Thus it would be desirable not to have this distinction.
 
-It is already the case in Mbed TLS 3.x that a PSA error value cannot be equal to a legacy error, because we avoid assigning values in a range that would overlap.
+It is already the case in Mbed TLS 3.x that a PSA error value cannot be equal to a legacy error, because we avoid assigning values in a range that would overlap. (PSA error codes are in the range [-255, -128], while legacy error codes are either in the range [-127, -1] (low) or [-32767, -4096] (high or high+low).)
 
 In many places, a high-level module adds a constant to the error code returned by a low-level module. This requires the low-level module to return a low-level error (where the high part is 0). If the low-level module changes to return a PSA error, the addition will not result in an unambiguous value.
 
