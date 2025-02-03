@@ -371,7 +371,7 @@ sha512.h
 
 Main loss of functionality:
 
-* Self-test functions. See TODO
+* Self-test functions. See [PSA self-test interface](#psa-self-test-interface)
 * Access to bignum and ECC arithmetic. We've decided that this is acceptable.
 
 Note: see also [Everest](#privatization-of-everest-headers).
@@ -400,7 +400,7 @@ Places where some of these headers are used:
 
 Main loss of functionality:
 
-* Finite-field Diffie-Hellman with arbitrary groups. We've decided that this is acceptable.
+* Finite-field Diffie-Hellman with arbitrary groups. We've decided that this is acceptable. See “[Removal of low-level DHM](#removal-of-low-level-dhm)”.
 * Custom RSA mechanisms. We've decided that this is acceptable.
 * PKCS5 and PKCS12 mechanisms except as exposed by the pk module. We've decided that this is acceptable.
 * HMAC\_DRBG in itself (i.e. outside of deterministic ECDSA and for the PSA Crypto RNG instance). We intend to restore this functionality through a PSA API, but the API isn't designed yet, so this will happen after 1.0 and not with the existing API.
@@ -568,6 +568,513 @@ Note that if we want to be able to remove all error code translations (to save c
 
 TODO
 
+### Analysis of legacy crypto options
+
+#### List of boolean legacy crypto options
+
+Legacy crypto boolean options: `perl -l -ne 'print $1 if /#define +(MBEDTLS_\w+)($| *\/)/' tf-psa-crypto/include/psa/crypto_config.h | sort`
+
+```
+MBEDTLS_AESCE_C
+MBEDTLS_AESNI_C
+MBEDTLS_AES_C
+MBEDTLS_AES_FEWER_TABLES
+MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+MBEDTLS_AES_ROM_TABLES
+MBEDTLS_AES_USE_HARDWARE_ONLY
+MBEDTLS_ARIA_C
+MBEDTLS_ASN1_PARSE_C
+MBEDTLS_ASN1_WRITE_C
+MBEDTLS_BASE64_C
+MBEDTLS_BIGNUM_C
+MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
+MBEDTLS_CAMELLIA_C
+MBEDTLS_CAMELLIA_SMALL_MEMORY
+MBEDTLS_CCM_C
+MBEDTLS_CHACHA20_C
+MBEDTLS_CHACHAPOLY_C
+MBEDTLS_CHECK_RETURN_WARNING
+MBEDTLS_CIPHER_C
+MBEDTLS_CIPHER_MODE_CBC
+MBEDTLS_CIPHER_MODE_CFB
+MBEDTLS_CIPHER_MODE_CTR
+MBEDTLS_CIPHER_MODE_OFB
+MBEDTLS_CIPHER_MODE_XTS
+MBEDTLS_CIPHER_NULL_CIPHER
+MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
+MBEDTLS_CIPHER_PADDING_PKCS7
+MBEDTLS_CIPHER_PADDING_ZEROS
+MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
+MBEDTLS_CMAC_C
+MBEDTLS_CTR_DRBG_C
+MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
+MBEDTLS_DEPRECATED_REMOVED
+MBEDTLS_DEPRECATED_WARNING
+MBEDTLS_DES_C
+MBEDTLS_DHM_C
+MBEDTLS_ECDH_C
+MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED
+MBEDTLS_ECDSA_C
+MBEDTLS_ECDSA_DETERMINISTIC
+MBEDTLS_ECJPAKE_C
+MBEDTLS_ECP_C
+MBEDTLS_ECP_DP_BP256R1_ENABLED
+MBEDTLS_ECP_DP_BP384R1_ENABLED
+MBEDTLS_ECP_DP_BP512R1_ENABLED
+MBEDTLS_ECP_DP_CURVE25519_ENABLED
+MBEDTLS_ECP_DP_CURVE448_ENABLED
+MBEDTLS_ECP_DP_SECP192K1_ENABLED
+MBEDTLS_ECP_DP_SECP192R1_ENABLED
+MBEDTLS_ECP_DP_SECP224K1_ENABLED
+MBEDTLS_ECP_DP_SECP224R1_ENABLED
+MBEDTLS_ECP_DP_SECP256K1_ENABLED
+MBEDTLS_ECP_DP_SECP256R1_ENABLED
+MBEDTLS_ECP_DP_SECP384R1_ENABLED
+MBEDTLS_ECP_DP_SECP521R1_ENABLED
+MBEDTLS_ECP_NIST_OPTIM
+MBEDTLS_ECP_RESTARTABLE
+MBEDTLS_ECP_WITH_MPI_UINT
+MBEDTLS_ENTROPY_C
+MBEDTLS_ENTROPY_FORCE_SHA256
+MBEDTLS_ENTROPY_HARDWARE_ALT
+MBEDTLS_ENTROPY_NV_SEED
+MBEDTLS_FS_IO
+MBEDTLS_GCM_C
+MBEDTLS_GCM_LARGE_TABLE
+MBEDTLS_GENPRIME
+MBEDTLS_HAVE_ASM
+MBEDTLS_HAVE_SSE2
+MBEDTLS_HAVE_TIME
+MBEDTLS_HAVE_TIME_DATE
+MBEDTLS_HKDF_C
+MBEDTLS_HMAC_DRBG_C
+MBEDTLS_LMS_C
+MBEDTLS_LMS_PRIVATE
+MBEDTLS_MD5_C
+MBEDTLS_MD_C
+MBEDTLS_MEMORY_BACKTRACE
+MBEDTLS_MEMORY_BUFFER_ALLOC_C
+MBEDTLS_MEMORY_DEBUG
+MBEDTLS_NIST_KW_C
+MBEDTLS_NO_64BIT_MULTIPLICATION
+MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+MBEDTLS_NO_PLATFORM_ENTROPY
+MBEDTLS_NO_UDBL_DIVISION
+MBEDTLS_OID_C
+MBEDTLS_PEM_PARSE_C
+MBEDTLS_PEM_WRITE_C
+MBEDTLS_PKCS12_C
+MBEDTLS_PKCS1_V15
+MBEDTLS_PKCS1_V21
+MBEDTLS_PKCS5_C
+MBEDTLS_PK_C
+MBEDTLS_PK_PARSE_C
+MBEDTLS_PK_PARSE_EC_COMPRESSED
+MBEDTLS_PK_PARSE_EC_EXTENDED
+MBEDTLS_PK_RSA_ALT_SUPPORT
+MBEDTLS_PK_WRITE_C
+MBEDTLS_PLATFORM_C
+MBEDTLS_PLATFORM_EXIT_ALT
+MBEDTLS_PLATFORM_FPRINTF_ALT
+MBEDTLS_PLATFORM_GMTIME_R_ALT
+MBEDTLS_PLATFORM_MEMORY
+MBEDTLS_PLATFORM_MS_TIME_ALT
+MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
+MBEDTLS_PLATFORM_NV_SEED_ALT
+MBEDTLS_PLATFORM_PRINTF_ALT
+MBEDTLS_PLATFORM_SETBUF_ALT
+MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT
+MBEDTLS_PLATFORM_SNPRINTF_ALT
+MBEDTLS_PLATFORM_TIME_ALT
+MBEDTLS_PLATFORM_VSNPRINTF_ALT
+MBEDTLS_PLATFORM_ZEROIZE_ALT
+MBEDTLS_POLY1305_C
+MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
+MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
+MBEDTLS_PSA_CRYPTO_C
+MBEDTLS_PSA_CRYPTO_CLIENT
+MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+MBEDTLS_PSA_CRYPTO_SE_C
+MBEDTLS_PSA_CRYPTO_SPM
+MBEDTLS_PSA_CRYPTO_STORAGE_C
+MBEDTLS_PSA_INJECT_ENTROPY
+MBEDTLS_PSA_ITS_FILE_C
+MBEDTLS_PSA_KEY_STORE_DYNAMIC
+MBEDTLS_PSA_P256M_DRIVER_ENABLED
+MBEDTLS_PSA_STATIC_KEY_SLOTS
+MBEDTLS_RIPEMD160_C
+MBEDTLS_RSA_C
+MBEDTLS_RSA_NO_CRT
+MBEDTLS_SELF_TEST
+MBEDTLS_SHA1_C
+MBEDTLS_SHA224_C
+MBEDTLS_SHA256_C
+MBEDTLS_SHA256_SMALLER
+MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT
+MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY
+MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
+MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
+MBEDTLS_SHA384_C
+MBEDTLS_SHA3_C
+MBEDTLS_SHA512_C
+MBEDTLS_SHA512_SMALLER
+MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT
+MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY
+MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN
+MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
+MBEDTLS_TEST_HOOKS
+MBEDTLS_THREADING_ALT
+MBEDTLS_THREADING_C
+MBEDTLS_THREADING_PTHREAD
+```
+
+#### Boolean options that can be set indirectly
+
+Options that can be set via adjustment, and can currently also be set directly. Such options are likely to be redundant, however not all of them are.
+
+`perl -l -ne 'print $1 if /#define +(MBEDTLS_\w+)($| *\/)/' tf-psa-crypto/include/psa/crypto_adjust_* tf-psa-crypto/drivers/builtin/include/mbedtls/*adjust* | sort -u | comm -12 - <(perl -l -ne 'print $1 if /#define +(MBEDTLS_\w+)($| *\/)/' tf-psa-crypto/include/psa/crypto_config.h | sort)`
+
+| Option | Replacement | Notes |
+| ------ | ----------- | ----- |
+| `MBEDTLS_AES_C` | `PSA_WANT_KEY_TYPE_AES` |  |
+| `MBEDTLS_ARIA_C` | `PSA_WANT_KEY_TYPE_ARIA` |  |
+| `MBEDTLS_ASN1_PARSE_C` | Keep | [Changes to ASN.1 enablement](#changes-to-asn1-enablement) |
+| `MBEDTLS_ASN1_WRITE_C` | Keep | [Changes to ASN.1 enablement](#changes-to-asn1-enablement) |
+| `MBEDTLS_BIGNUM_C` | Remove | Enabled as needed by asymmetric crypto |
+| `MBEDTLS_CAMELLIA_C` | `PSA_WANT_KEY_TYPE_CAMELLIA` |  |
+| `MBEDTLS_CCM_C` | `PSA_WANT_ALG_CCM` |  |
+| `MBEDTLS_CHACHA20_C` | `PSA_WANT_KEY_TYPE_CHACHA20` |  |
+| `MBEDTLS_CHACHAPOLY_C` | `PSA_WANT_ALG_CHACHA20_POLY1305` |  |
+| `MBEDTLS_CIPHER_C` | Remove | Enabled as needed by cipher modes |
+| `MBEDTLS_CIPHER_MODE_CBC` | `PSA_WANT_ALG_CBC_PKCS7`, `PSA_WANT_ALG_CBC_NO_PADDING` |  |
+| `MBEDTLS_CIPHER_MODE_CFB` | `PSA_WANT_ALG_CFB` |  |
+| `MBEDTLS_CIPHER_MODE_CTR` | `PSA_WANT_ALG_CTR` |  |
+| `MBEDTLS_CIPHER_MODE_OFB` | `PSA_WANT_ALG_OFB` |  |
+| `MBEDTLS_CIPHER_PADDING_PKCS7` | `PSA_WANT_ALG_CBC_PKCS7` |  |
+| `MBEDTLS_CMAC_C` | `PSA_WANT_ALG_CMAC` |  |
+| `MBEDTLS_DES_C` | `PSA_WANT_KEY_TYPE_DES` | May be removed: [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164) |
+| `MBEDTLS_ECDH_C` | `PSA_WANT_ALG_ECDH` |  |
+| `MBEDTLS_ECDSA_C` | `PSA_WANT_ALG_ECDSA`, `PSA_WANT_ALG_DETERMINISTIC_ECDSA` |  |
+| `MBEDTLS_ECDSA_DETERMINISTIC` | `PSA_WANT_ALG_DETERMINISTIC_ECDSA` |  |
+| `MBEDTLS_ECJPAKE_C` | `PSA_WANT_ALG_JPAKE` + `PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE` |  |
+| `MBEDTLS_ECP_C` | Remove | Enabled as needed by ECC mechanisms |
+| `MBEDTLS_ECP_DP_BP256R1_ENABLED` | `PSA_WANT_ECC_BRAINPOOL_P_R1_256` |  |
+| `MBEDTLS_ECP_DP_BP384R1_ENABLED` | `PSA_WANT_ECC_BRAINPOOL_P_R1_384` |  |
+| `MBEDTLS_ECP_DP_BP512R1_ENABLED` | `PSA_WANT_ECC_BRAINPOOL_P_R1_512` |  |
+| `MBEDTLS_ECP_DP_CURVE25519_ENABLED` | `PSA_WANT_ECC_MONTGOMERY_255` |  |
+| `MBEDTLS_ECP_DP_CURVE448_ENABLED` | `PSA_WANT_ECC_MONTGOMERY_448` |  |
+| `MBEDTLS_ECP_DP_SECP192K1_ENABLED` | `PSA_WANT_ECC_SECP_K1_192` | May be removed: [Mbed-TLS/mbedtls#8136](https://github.com/Mbed-TLS/mbedtls/issues/8136) |
+| `MBEDTLS_ECP_DP_SECP192R1_ENABLED` | `PSA_WANT_ECC_SECP_R1_192` | May be removed: [Mbed-TLS/mbedtls#8136](https://github.com/Mbed-TLS/mbedtls/issues/8136) |
+| `MBEDTLS_ECP_DP_SECP224R1_ENABLED` | `PSA_WANT_ECC_SECP_R1_224` | May be removed: [Mbed-TLS/mbedtls#8136](https://github.com/Mbed-TLS/mbedtls/issues/8136) |
+| `MBEDTLS_ECP_DP_SECP256K1_ENABLED` | `PSA_WANT_ECC_SECP_K1_256` |  |
+| `MBEDTLS_ECP_DP_SECP256R1_ENABLED` | `PSA_WANT_ECC_SECP_R1_256` |  |
+| `MBEDTLS_ECP_DP_SECP384R1_ENABLED` | `PSA_WANT_ECC_SECP_R1_384` |  |
+| `MBEDTLS_ECP_DP_SECP521R1_ENABLED` | `PSA_WANT_ECC_SECP_R1_521` |  |
+| `MBEDTLS_GCM_C` | `PSA_WANT_ALG_GCM` |  |
+| `MBEDTLS_GENPRIME` | `PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE` |  |
+| `MBEDTLS_HMAC_DRBG_C` | TBD | [Changes to RNG options](#changes-to-rng-options) |
+| `MBEDTLS_MD5_C` | `PSA_WANT_ALG_MD5` |  |
+| `MBEDTLS_MD_C` | Keep | Reduced to what was `MBEDTLS_MD_LIGHT`: [Public hash-only `md.h`](#public-hash-only-mdh) |
+| `MBEDTLS_OID_C` | Keep | [OID conditional compilation](#oid-conditional-compilation) |
+| `MBEDTLS_PKCS1_V15` | `PSA_WANT_ALG_RSA_PKCS1V15_CRYPT`, `PSA_WANT_ALG_RSA_PKCS1V15_SIGN` |  |
+| `MBEDTLS_PKCS1_V21` | `PSA_WANT_ALG_RSA_OAEP`, `PSA_WANT_ALG_RSA_PSS` |  |
+| `MBEDTLS_PK_PARSE_EC_COMPRESSED` | Keep |  |
+| `MBEDTLS_PLATFORM_SNPRINTF_ALT` | Keep |  |
+| `MBEDTLS_PLATFORM_VSNPRINTF_ALT` | Keep |  |
+| `MBEDTLS_POLY1305_C` | `PSA_WANT_ALG_CHACHA20_POLY1305` |  |
+| `MBEDTLS_PSA_CRYPTO_CLIENT` | Keep | maybe [revise client/server inclusion](#revise-clientserver-inclusion) |
+| `MBEDTLS_RIPEMD160_C` | `PSA_WANT_ALG_RIPEMD160` |  |
+| `MBEDTLS_RSA_C` | `PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY` |  |
+| `MBEDTLS_SHA1_C` | `PSA_WANT_ALG_SHA_1` |  |
+| `MBEDTLS_SHA224_C` | `PSA_WANT_ALG_SHA_224` |  |
+| `MBEDTLS_SHA256_C` | `PSA_WANT_ALG_SHA_256` |  |
+| `MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT` | Keep | Only currently auto-enabled from a deprecated synonym |
+| `MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY` | Keep | Only currently auto-enabled from a deprecated synonym |
+| `MBEDTLS_SHA384_C` | `PSA_WANT_ALG_SHA_384` |  |
+| `MBEDTLS_SHA3_C` | `PSA_WANT_ALG_SHA_3` |  |
+| `MBEDTLS_SHA512_C` | `PSA_WANT_ALG_SHA_512` |  |
+
+#### Boolean options that cannot be set indirectly
+
+Options that can currently be set directly, and cannot be set via adjustment. Such options are likely to be still relevant. However, some may have become irrelevant, for example if they configure a module that is being removed.
+
+`perl -l -ne 'print $1 if /#define +(MBEDTLS_\w+)($| *\/)/' tf-psa-crypto/include/psa/crypto_adjust_* tf-psa-crypto/drivers/builtin/include/mbedtls/*adjust* | sort -u | comm -13 - <(perl -l -ne 'print $1 if /#define +(MBEDTLS_\w+)($| *\/)/' tf-psa-crypto/include/psa/crypto_config.h | sort)`
+
+| Option | Fate | Notes |
+| ------ | ---- | ----- |
+| `MBEDTLS_AESCE_C` | Keep | Tune built-in crypto |
+| `MBEDTLS_AESNI_C` | Keep | Tune built-in crypto |
+| `MBEDTLS_AES_FEWER_TABLES` | Keep | Tune built-in crypto |
+| `MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH` | Keep | Feature selection not available through `PSA_WANT` |
+| `MBEDTLS_AES_ROM_TABLES` | Keep | Tune built-in crypto |
+| `MBEDTLS_AES_USE_HARDWARE_ONLY` | Keep | Tune built-in crypto |
+| `MBEDTLS_BASE64_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
+| `MBEDTLS_BLOCK_CIPHER_NO_DECRYPT` | Keep in 0ε | Should be deduced from `PSA_WANT`: [Mbed-TLS/mbedtls#9163](https://github.com/Mbed-TLS/mbedtls/issues/9163) |
+| `MBEDTLS_CAMELLIA_SMALL_MEMORY` | Keep | Tune built-in crypto |
+| `MBEDTLS_CHECK_RETURN_WARNING` | Keep | Platform feature |
+| `MBEDTLS_CIPHER_MODE_XTS` | Remove (keep the code) | [XTS migration](#xts-migration) |
+| `MBEDTLS_CIPHER_NULL_CIPHER` | Remove | No longer used by TLS |
+| `MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS` | Remove | [Obsolete cipher padding modes](#obsolete-cipher-padding-modes) |
+| `MBEDTLS_CIPHER_PADDING_ZEROS` | Remove | [Obsolete cipher padding modes](#obsolete-cipher-padding-modes) |
+| `MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN` | Remove | [Obsolete cipher padding modes](#obsolete-cipher-padding-modes) |
+| `MBEDTLS_CTR_DRBG_C` | TBD | [Changes to RNG options](#changes-to-rng-options) |
+| `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY` | TBD | [Changes to RNG options](#changes-to-rng-options) |
+| `MBEDTLS_DEPRECATED_REMOVED` | Keep | Generic feature support |
+| `MBEDTLS_DEPRECATED_WARNING` | Keep | Generic feature support |
+| `MBEDTLS_DHM_C` | Remove | Dead code: [removal of low-level DHM](#removal-of-low-level-dhm) |
+| `MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED` | Keep | Tune built-in crypto |
+| `MBEDTLS_ECP_DP_SECP224K1_ENABLED` | Remove | [Removal of small elliptic curves](#removal-of-small-elliptic-curves) |
+| `MBEDTLS_ECP_NIST_OPTIM` | Keep | Tune built-in crypto |
+| `MBEDTLS_ECP_RESTARTABLE` | Keep | No corresponding PSA option yet |
+| `MBEDTLS_ECP_WITH_MPI_UINT` | Keep | Tune built-in crypto |
+| `MBEDTLS_ENTROPY_C` | Remove (now implied) | See [Builds without entropy](#builds-without-entropy) |
+| `MBEDTLS_ENTROPY_FORCE_SHA256` | TBD | [Changes to RNG options](#changes-to-rng-options) |
+| `MBEDTLS_ENTROPY_HARDWARE_ALT` | Keep | Now enables a slightly different callback: [Mbed-TLS/mbedtls#9618](https://github.com/Mbed-TLS/mbedtls/issues/9618) |
+| `MBEDTLS_ENTROPY_NV_SEED` | Keep | Platform feature |
+| `MBEDTLS_FS_IO` | Keep | Platform configuration |
+| `MBEDTLS_GCM_LARGE_TABLE` | Keep | Tune built-in crypto |
+| `MBEDTLS_HAVE_ASM` | Keep | Tune built-in crypto |
+| `MBEDTLS_HAVE_SSE2` | Keep | Tune built-in crypto |
+| `MBEDTLS_HAVE_TIME` | Move | [Move time options back to Mbed TLS](#move-time-options-back-to-mbed-tls) |
+| `MBEDTLS_HAVE_TIME_DATE` | Move | [Move time options back to Mbed TLS](#move-time-options-back-to-mbed-tls) |
+| `MBEDTLS_HKDF_C` | Remove | Not used by PSA: [Mbed-TLS/mbedtls#9150](https://github.com/Mbed-TLS/mbedtls/issues/9150) |
+| `MBEDTLS_LMS_C` | Keep | Crypto not yet in PSA |
+| `MBEDTLS_LMS_PRIVATE` | Keep | Crypto not yet in PSA |
+| `MBEDTLS_MEMORY_BACKTRACE` | Keep | Platform feature |
+| `MBEDTLS_MEMORY_BUFFER_ALLOC_C` | Keep | Platform feature |
+| `MBEDTLS_MEMORY_DEBUG` | Keep | Platform feature |
+| `MBEDTLS_NIST_KW_C` | Keep | Crypto not yet in PSA |
+| `MBEDTLS_NO_64BIT_MULTIPLICATION` | Keep | Tune built-in crypto |
+| `MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES` | TBD | [Changes to RNG options](#changes-to-rng-options) |
+| `MBEDTLS_NO_PLATFORM_ENTROPY` | TBD | [Changes to RNG options](#changes-to-rng-options) |
+| `MBEDTLS_NO_UDBL_DIVISION` | Keep | Tune built-in crypto |
+| `MBEDTLS_PEM_PARSE_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
+| `MBEDTLS_PEM_WRITE_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
+| `MBEDTLS_PKCS12_C` | Keep | No longer an exposed API, but functionality accessed through PK. Need doc update. |
+| `MBEDTLS_PKCS5_C` | Keep | No longer an exposed API, but functionality accessed through PK. Need doc update. |
+| `MBEDTLS_PK_C` | Keep | No PSA equivalent yet |
+| `MBEDTLS_PK_PARSE_C` | Keep | No PSA equivalent yet |
+| `MBEDTLS_PK_PARSE_EC_EXTENDED` | Keep | No PSA equivalent yet |
+| `MBEDTLS_PK_RSA_ALT_SUPPORT` | Remove | Feature subsumed by PSA drivers |
+| `MBEDTLS_PK_WRITE_C` | Keep | No PSA equivalent yet |
+| `MBEDTLS_PLATFORM_C` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_EXIT_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_FPRINTF_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_GMTIME_R_ALT` | Move | [Move time options back to Mbed TLS](#move-time-options-back-to-mbed-tls) |
+| `MBEDTLS_PLATFORM_MEMORY` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_MS_TIME_ALT` | Move | [Move time options back to Mbed TLS](#move-time-options-back-to-mbed-tls) |
+| `MBEDTLS_PLATFORM_NO_STD_FUNCTIONS` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_NV_SEED_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_PRINTF_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_SETBUF_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PLATFORM_TIME_ALT` | Move | [Move time options back to Mbed TLS](#move-time-options-back-to-mbed-tls) |
+| `MBEDTLS_PLATFORM_ZEROIZE_ALT` | Keep | Platform configuration |
+| `MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS` | Keep | Tune built-in crypto |
+| `MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS` | Keep | Core feature |
+| `MBEDTLS_PSA_CRYPTO_C` | Keep | Core feature; maybe [revise client/server inclusion](#revise-clientserver-inclusion) |
+| `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` | Keep | Platform configuration |
+| `MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER` | Keep | Platform configuration |
+| `MBEDTLS_PSA_CRYPTO_SE_C` | Remove | [Mbed-TLS/mbedtls#8151](https://github.com/Mbed-TLS/mbedtls/issues/8151) |
+| `MBEDTLS_PSA_CRYPTO_SPM` | Keep | Core feature; maybe [revise client/server inclusion](#revise-clientserver-inclusion) |
+| `MBEDTLS_PSA_CRYPTO_STORAGE_C` | Keep | Core feature |
+| `MBEDTLS_PSA_INJECT_ENTROPY` | Remove | [Mbed-TLS/mbedtls#9707](https://github.com/Mbed-TLS/mbedtls/issues/9707) |
+| `MBEDTLS_PSA_ITS_FILE_C` | Keep | Platform configuration |
+| `MBEDTLS_PSA_KEY_STORE_DYNAMIC` | Keep | Core feature; maybe [revise key store selection](#revise-key-store-selection) |
+| `MBEDTLS_PSA_P256M_DRIVER_ENABLED` | Keep | Tune built-in crypto |
+| `MBEDTLS_PSA_STATIC_KEY_SLOTS` | Keep | Core feature; maybe [revise key store selection](#revise-key-store-selection) |
+| `MBEDTLS_RSA_NO_CRT` | Remove | [Mbed-TLS/TF-PSA-Crypto#114](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/114); not in 0ε because it can become a no-op after 1.0 |
+| `MBEDTLS_SELF_TEST` | Remove | [PSA self-test interface](#psa-self-test-interface) |
+| `MBEDTLS_SHA256_SMALLER` | Keep | Tune built-in crypto |
+| `MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT` | Keep | Tune built-in crypto |
+| `MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY` | Keep | Tune built-in crypto |
+| `MBEDTLS_SHA512_SMALLER` | Keep | Tune built-in crypto |
+| `MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT` | Keep | Tune built-in crypto |
+| `MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY` | Keep | Tune built-in crypto |
+| `MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN` | Remove (for test only) | [Remove test-related platform options](#remove-test-related-platform-options) |
+| `MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND` | Remove (for test only) | [Remove test-related platform options](#remove-test-related-platform-options) |
+| `MBEDTLS_TEST_HOOKS` | Keep | Test injection feature (discussed in [Remove test-related platform options](#remove-test-related-platform-options)) |
+| `MBEDTLS_THREADING_ALT` | Keep | as `MBEDTLS_THREADING_C` |
+| `MBEDTLS_THREADING_C` | Keep | We plan to revise the threading abstraction after 0ε: [Mbed-TLS/mbedtls#8455](https://github.com/Mbed-TLS/mbedtls/issues/8455) |
+| `MBEDTLS_THREADING_PTHREAD` | Keep | as `MBEDTLS_THREADING_C` |
+
+#### Legacy options in `all.sh`
+
+We have finished migrating `all.sh` to `MBEDTLS_PSA_CRYPTO_CONFIG`, so in principle, it should not rely on setting legacy options. There are still many occurrences of [boolean options that cannot be set indirectly](#boolean-options-that-can-be-set-indirectly), but almost all are `config.py unset` that should now be no-ops.
+
+TODO: validate this. Remove the `unset` statements and compare the outcome files?
+
+#### Legacy options in `depends.py`
+
+At the time of writing, `depends.py` still works with legacy options. A migration to PSA options is in progress ([“TF-PSA-Crypto all.sh components” epic](https://github.com/orgs/Mbed-TLS/projects/18)). For the 0ε work, we assume that this migration is finished.
+
+#### Non-boolean options
+
+Non-boolean options are likely to remain relevant since PSA has no equivalent. However, some may have become irrelevant, for example if they configure a module that is being removed.
+
+TODO
+
+### Changes to RNG options
+
+#### Impacted RNG options
+
+The following boolean options inherited from Mbed TLS 3.x control the random generator used by PSA, and are not tied to any function or callback exposed by TF-PSA-Crypto 0ε or 1.0.
+
+```
+MBEDTLS_CTR_DRBG_C
+MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
+MBEDTLS_ENTROPY_FORCE_SHA256
+MBEDTLS_HMAC_DRBG_C
+MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+MBEDTLS_NO_PLATFORM_ENTROPY
+```
+
+They are complemented by the following non-boolean options:
+
+```
+MBEDTLS_CTR_DRBG_ENTROPY_LEN
+MBEDTLS_CTR_DRBG_MAX_INPUT
+MBEDTLS_CTR_DRBG_MAX_REQUEST
+MBEDTLS_CTR_DRBG_MAX_SEED_INPUT
+MBEDTLS_CTR_DRBG_RESEED_INTERVAL
+MBEDTLS_ENTROPY_MAX_GATHER
+MBEDTLS_ENTROPY_MAX_SOURCES
+MBEDTLS_ENTROPY_MIN_HARDWARE
+MBEDTLS_HMAC_DRBG_MAX_INPUT
+MBEDTLS_HMAC_DRBG_MAX_REQUEST
+MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT
+MBEDTLS_HMAC_DRBG_RESEED_INTERVAL
+MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
+```
+
+#### High-level view of RNG interfaces
+
+The random generator subsystem is not directly exposed to applications. It exists only to feed `psa_get_random()` and other APIs that require randomness (either for their result or for blinding).
+
+The random generator subsystem has an interface with drivers, which is not implemented yet and will likely not be implemented until after TF-PSA-Crypto 1.0. This interface is described in the [PSA Cryptoprocessor Driver Interface draft specification](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md): [entropy collection entry point](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md#entropy-collection-entry-point) and [random generation entry points](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md#random-generation-entry-points).
+
+Beyond the entry points, the random generator also has a configuration interface which tunes its security parameters and performance/code-size/memory-usage compromises:
+
+* Which DRBG to use (we offer CTR\_DRBG and HMAC\_DRBG). [security, code size, performance]
+* Which low-level algorithms and key sizes to use (AES size for CTR\_DRBG, hash used in HMAC\_DRBG, hash used to accumulate entropy). [security, performance]
+* How much entropy is considered good enough — in total and for each source. [security, performance]
+* Whether to use entropy sources, a seed file, or both.
+* Various sizes of intermediate buffers. [performance, memory usage]
+
+#### Evolution of RNG options
+
+TODO
+
+#### Builds without entropy
+
+TF-PSA-Crypto 0ε and in all likelihood TF-PSA-Crypto 1.0 cannot be built without either an entropy source, or entropy stored in a file (NV seed). Builds without entropy are useful, for example, to only perform signature verification, so this is something we plan to support in the future.
+
+For the time being, any build of the PSA core will continue to require `MBEDTLS_ENTROPY_C` which requires either an entropy source or an NV seed.
+
+Task: auto-enable `MBEDTLS_ENTROPY_C` except in client-only builds.
+
+### Changes to platform support options
+
+Due to a lack of bandwidth, we do not plan any significant changes in the platform support layer.
+
+#### Remove test-related platform options
+
+For historical reasons, a few test-specific options are present in `mbedtls_config.h` in Mbed TLS 3.6, and have made their way into `crypto_config.h` in TF-PSA-Crypto. These options have no effect on the build of the library, only on test framework code and unit tests.
+
+Task: Remove the following options from `crypto_config.h` and adjust the corresponding test code to pass `-D` to the compiler instead of calling `crypto_config.h`:
+
+```
+MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN
+MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
+```
+
+Note: `MBEDTLS_TEST_HOOKS` is different because it does influence the build of the library. Going by our invasive testing guidelines, all invasive testing is gated by this single option plus a runtime activation mechanism. Since `MBEDTLS_TEST_HOOKS` is enabled by `config.py full`, it needs to remain in the official configuration file (or else we would need to add nontrivial code to take care of it). Thus we are not changing anything related to `MBEDTLS_TEST_HOOKS`. It will gate the test hooks both in TF-PSA-Crypto and Mbed TLS since there is no reason to separate the two.
+
+#### Move time options back to Mbed TLS
+
+The options `MBEDTLS_HAVE_TIME`, `MBEDTLS_HAVE_TIME_DATE` are not used in crypto, only in X.509 and TLS.
+
+`MBEDTLS_HAVE_TIME` is used in the timing module which was historically used in the crypto library, but only for the sake of being a weak entropy source (removed in Mbed TLS 3.0) and for the benchmark program. The benchmark program is still relevant, but that doesn't justify a timing abstraction in TF-PSA-Crypto, and the timing module went into the Mbed TLS repository.
+
+Task:
+
+* Move `MBEDTLS_HAVE_TIME` and `MBEDTLS_HAVE_TIME_DATE` back to Mbed TLS.
+* Move time-related platform function options (`MBEDTLS_PLATFORM_TIME_ALT`, `MBEDTLS_PLATFORM_MS_TIME_ALT`, `MBEDTLS_PLATFORM_MS_TIME_TYPE_MACRO`, `MBEDTLS_PLATFORM_MS_TIME_ALT`, `MBEDTLS_PLATFORM_GMTIME_R_ALT`)  back to Mbed TLS.
+* Move the declaration of `mbedtls_platform_gmtime_r` to `platform_time.h`.
+* Move `platform_time.h` back to Mbed TLS.
+* Move the corresponding function definitions from `platform*.c` to Mbed TLS.
+* Move the corresponding tests in `test_suite_platform` to Mbed TLS.
+
+Rationale: saves maintenance complexity and simplifies the user interface, compared to the current situation where time-related interfaces are split between the two repositories.
+
+### Compilation options for non-cryptographic features
+
+#### Counter inclusions in ASN.1
+
+The functions `mbedtls_asn1_get_len` and `mbedtls_asn1_get_tag` are enabled when `MBEDTLS_ASN1_WRITE_C` is enabled, even if `MBEDTLS_ASN1_PARSE_C` is disabled. The functions `mbedtls_asn1_write_len` and `mbedtls_asn1_write_tag` are enabled when `MBEDTLS_ASN1_WRITE_C` is enabled, even if `MBEDTLS_ASN1_PARSE_C` is disabled. This is for the sake of X.509 code, and until [Mbed-TLS/TF-PSA-Crypto#143](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/143), the dependencies were `MBEDTLS_X509_CREATE_C` for the get functions and `MBEDTLS_X509_USE_C` for the write functions.
+
+The counter-direction uses of these functions in X.509 arose from hexstring support in distinguished names which was introduced in [Mbed-TLS/mbedtls#8025](https://github.com/Mbed-TLS/mbedtls/pull/8025). At this point, it is not clear to me whether counter-direction functions are intrinsically needed to support this aspect of X.509, or if it's a logical consequence of a plausible design decision we made on data representation, or if it's just an implementation convenience that is no longer so convenient when ASN.1 and X.509 are in separate projects. The counter-direction uses are:
+
+* In `mbedtls_x509_dn_gets`, which is used to inspect X.509 parsing results, we use `mbedtls_asn1_write_len` and `mbedtls_asn1_write_tag` to format a name containing special characters as a hexstring. `mbedtls_asn1_write_tag` is trivial and could be made a simple assignment. `mbedtls_asn1_write_len` is less trivial because it needs logic to encode lengths (different encoding methods under and over 128, per DER rules), but it could reasonably be reimplemented. Using ASN.1 functions there adds overhead to conform to their interface, and so doesn't make the code smaller or simpler.
+* In `mbedtls_x509_string_to_names`, which is used to prepare data for X.509 writing, we use `mbedtls_asn1_get_len` to parse a hex-encoded name. We don't use `mbedtls_asn1_get_tag` because several tags are permitted. We could reimplement the length parsing logic here, but it's nontrivial and would make the code here slightly more complex.
+
+Although names are typically shorter than 128 bytes, there is no official limit. Per https://stackoverflow.com/questions/1253575/does-the-ldap-protocol-limit-the-length-of-a-dn there is no limit for X.509 or LDAP, and ActiveDirectory allows 255 characters, so we should at least support up to 65535 octets (the next length encoding threshold after 128).
+
+In the short term, we have an undocumented interface: `MBEDTLS_ASN1_PARSE_C` enables two write functions and `MBEDTLS_ASN1_WRITE_C` enables two parse functions.
+
+In the longer term, plausible solutions include:
+
+* Making the short-term workaround of enabling counter-direction functions official.
+* Having `MBEDTLS_X509_USE_C` require `MBEDTLS_ASN1_WRITE_C` in addition to `MBEDTLS_ASN1_PARSE_C`, and having `MBEDTLS_X509_CREATE_C` require `MBEDTLS_ASN1_PARSE_C` in addition to `MBEDTLS_ASN1_WRITE_C`.
+* Changing the X.509 code to reimplement the logic it needs, rather than use ASN.1 functions which don't fit the calling code well.
+* One of the above solutions for USE and a different one for CREATE.
+
+#### OID conditional compilation
+
+The compilation option `MBEDTLS_OID_C` guards the whole OID module (`oid.c`). Some OID table and support functions are further guarded according to the cryptographic mechanisms and library interfaces that are enabled. However, some OIDs that are generically useful in X.509 and not used directly by any other crypto code (e.g. `MBEDTLS_OID_X509_EXT_xxx`) are always included when `MBEDTLS_OID_C` is enabled. Furthermore, many OIDs for X.509 are guarded by `!defined(MBEDTLS_X509_REMOVE_INFO)`, which is a not a crypto option and therefore cannot appear in TF-PSA-Crypto (since we want to make it possible to build TF-PSA-Crypto independently of the crypto implementation).
+
+From the perspective of the TF-PSA-Crypto build, there are three levels of OID inclusion:
+
+1. Only as needed in crypto.
+2. (1) plus the core set for X.509 (subject to available cryptographic mechanisms where relevant).
+3. (2) plus the extra data for `mbedtls_x509_crt_info()` and friends.
+
+We either need public compilation options with this level of inclusion, or to move the X.509 parts of `oid.c` to the X.509 library (obviously preferable, but requiring more upfront work). TODO
+
+### Changes to option implications
+
+#### Changes to ASN.1 enablement
+
+Currently, `MBEDTLS_ASN1_PARSE_C` and `MBEDTLS_ASN1_WRITE_C` are automatically enabled:
+
+* If `MBEDTLS_RSA_C` is enabled. This is needed for RSA key import and export. We don't try to optimize code size when import or export of a key type is disabled, so this can stay. As part of internal refactoring, it will change to `PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY` eventually.
+* If `PSA_WANT_ALG_ECDSA` or `PSA_WANT_ALG_DETERMINISTIC_ECDSA` is built in. This used to be required to convert between ASN.1 and raw signature formats internally back when PSA was built on top of the legacy API, but today I think it isn't needed. However, it is needed for `MBEDTLS_ECDSA_C`. We do expose the signature conversion functions `mbedtls_ecdsa_raw_to_der` and `mbedtls_ecdsa_der_to_raw` when an ECDSA signature is enabled through PSA (built-in or not), but we automatically enable the necessary ASN.1 functions regardless of the ASN.1 configuration.
+
+So we have an optimization here to not auto-enable all of ASN.1 for built-in ECDSA. This will require removing or changing the guards on `mbedtls_ecdsa_read_signature()` and `mbedtls_ecdsa_write_signature()` and friends, which are now private functions.
+
+### Non-critical changes to compilation options
+
+The changes discussed in this section would make for a more user-friendly API, but would not reduce our maintenance burden. As a consequence, we are treating them as low priority. They may not be fully fleshed out.
+
+#### Revise client/server inclusion
+
+Now that PSA is “always on”, what does it mean for `MBEDTLS_PSA_CRYPTO_C`, `MBEDTLS_PSA_CRYPTO_CLIENT` and `MBEDTLS_PSA_CRYPTO_SPM`? We no longer officially support builds without any PSA parts, but we do support server-only or client-only builds, so there is no part of the code that is actually mandatory.
+
+* A library build (the most common case) defines `MBEDTLS_PSA_CRYPTO_C` (which implies `MBEDTLS_PSA_CRYPTO_CLIENT`).
+* A client-only build defines `MBEDTLS_PSA_CRYPTO_CLIENT` and little to no else.
+* A server-only build defines `MBEDTLS_PSA_CRYPTO_C` and `MBEDTLS_PSA_CRYPTO_SPM`.
+
+#### Revise key store selection
+
+For historical reasons, we have three key store architectures:
+
+* Purely static, when `MBEDTLS_PSA_STATIC_KEY_SLOTS` is enabled. Key slots are allocated statically, and the core does not use `malloc()`. This only allows a small number of keys determined at compile time, and keys have a size limit that is determined at compile time. This achieves the smallest code size, but has major limitations.
+* Hybrid, when neither `MBEDTLS_PSA_KEY_STORE_DYNAMIC` nor `MBEDTLS_PSA_STATIC_KEY_SLOTS` is enabled. This is the original design, with a static array of key slots (for simplicity) and dynamic allocation of key data. This only allows a small number of keys determined at compile time, but achieves a small code size (almost on par with the static key store if `malloc()` is present anyway).
+* Fully dynamic, when `MBEDTLS_PSA_KEY_STORE_DYNAMIC` is enabled (default). Key slots and key data are both allocated dynamically. This has no practical limitations, but larger code size.
+
+Should we keep all three? Since `MBEDTLS_PSA_KEY_STORE_DYNAMIC` is the default (because that's what you need e.g. in a Linux distribution package), should we change to defining a symbol for the hybrid key store?
+
 ## Changes to public crypto headers
 
 ### Public hash-only `md.h`
@@ -613,3 +1120,50 @@ The digest algorithm conversion functions are heavily used in TLS code (mostly i
 
 The ECDSA signature format conversion functions are used to implement `mbedtls_pk_{sign,verify}`, but they are also useful to applications. Keep them. We may move them to a different header name though (`psa/crypto_extra.h`?).
 
+## Loss of functionality
+
+Some loss of functionality is accepted in TF-PSA-Crypto 1.x and Mbed TLS 4.x compared to Mbed TLS 3.6. This section discusses some of the loss, with no expectation of exhaustivity.
+
+### Loss of cipher modes
+
+#### XTS migration
+
+As of Mbed TLS 3.6, the PSA API specification includes XTS mode (`PSA_ALG_XTS`), but the Mbed TLS implementation does not support it yet. It is planned to be added ([Mbed-TLS/mbedtls#6384](https://github.com/Mbed-TLS/mbedtls/issues/6384)) but we currently plan to do that after the TF-PSA-Crypto 1.0 release.
+
+In the meantime, XTS code remains in `cipher.c` and low-level crypto modules, but it is unreachable.
+
+#### Obsolete cipher padding modes
+
+We plan to remove all cipher padding modes other than PKCS7. We are not aware of a compelling use case for these modes. If there is a need for them, we would require them to be added to the PSA API specification.
+
+```
+MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
+MBEDTLS_CIPHER_PADDING_ZEROS
+MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
+```
+
+### Loss of asymmetric cryptography
+
+#### Removal of small elliptic curves
+
+We would like to remove all elliptic curves smaller than 250 bits, because they are largely unused and uncomfortably close to being insecure. This is planned in [Mbed-TLS/mbedtls#8136](https://github.com/Mbed-TLS/mbedtls/issues/8136).
+
+In the specific case of secp224k1, it is annoying to implement (because it is the only curve where private keys and public coordinates do not have the same bit size). We have not implemented it in PSA and do not plan to do so. As a consequence, all code guarded by `MBEDTLS_ECP_DP_SECP224K1_ENABLED` is now dead code.
+
+#### Removal of low-level DHM
+
+We are removing the low-level DHM module for finite-field Diffie-Hellman (FFDH). FFDH remains available in the PSA API, but only with a small set of predefined groups, whereas the legacy API supports arbitrary groups.
+
+The PSA code is not based on the DHM module (it calls bignum directly), so the DHM module is now dead code.
+
+Task: Remove `dhm.h`, `dhm.c`, `MBEDTLS_DHM_C`, `test_suite_dhm`.
+
+### PSA self-test interface
+
+TF-PSA-Crypto 0ε, and in all likelihood 1.0, will not have a self-test interface. This feature is necessary for some security certifications, and otherwise useless. It is good to have because it's a commonly expected feature in a crypto provider, but it's also acceptable to wait until we see how important it is for our users.
+
+The current implementation is not available for all mechanisms and is tied to the legacy interface, so it would be of limited usefuless to expose it. A PSA interface should work for all mechanisms and should not be tied to the built-in interface. We would have to rewrite most of the code anyway.
+
+Keeping the self-test code around with a promise that it keeps working will slow us down when we refactor low-level crypto. Keeping the self-test code around as dead code is not useful.
+
+Hence for 0ε we will remove `MBEDTLS_SELF_TEST` and the guarded code.
