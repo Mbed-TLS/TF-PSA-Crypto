@@ -562,6 +562,8 @@ A legacy error name (`MBEDTLS_ERR_xxx`) can be made an alias for a PSA error: ju
 
 See https://github.com/Mbed-TLS/mbedtls/issues/8501 . This is beyond the code of 0ε and 4ε, but we may do some of it on an ad hoc basis.
 
+Note that if we want to be able to remove all error code translations (to save code size and complexity), we need to use PSA errors in all low-level modules, including ones that remain public such as ASN.1. In a 1.x minor release, we can declare that `MBEDTLS_ERR_xxx` is now a PSA error by giving it a new name `PSA_ERROR_xxx`, but not by making it an alias of an existing `PSA_ERROR_xxx`, since aliasing errors is an API break.
+
 ## Changes to compilation options
 
 TODO
