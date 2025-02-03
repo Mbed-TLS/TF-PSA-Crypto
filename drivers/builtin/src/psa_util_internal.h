@@ -60,10 +60,6 @@ extern const mbedtls_error_pair_t psa_to_cipher_errors[4];
 extern const mbedtls_error_pair_t psa_to_lms_errors[3];
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO) || defined(MBEDTLS_SSL_PROTO_TLS1_3)
-extern const mbedtls_error_pair_t psa_to_ssl_errors[7];
-#endif
-
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) ||    \
     defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
 extern const mbedtls_error_pair_t psa_to_pk_rsa_errors[8];

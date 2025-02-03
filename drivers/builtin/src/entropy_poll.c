@@ -22,9 +22,6 @@
 #include "entropy_poll.h"
 #include "mbedtls/error_common.h"
 
-#if defined(MBEDTLS_TIMING_C)
-#include "mbedtls/timing.h"
-#endif
 #include "mbedtls/platform.h"
 
 #if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)

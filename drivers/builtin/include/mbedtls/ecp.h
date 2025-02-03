@@ -470,9 +470,8 @@ mbedtls_ecp_keypair;
  *                  returns 0.
  *
  *                  This only applies to functions whose documentation
- *                  mentions they may return #MBEDTLS_ERR_ECP_IN_PROGRESS (or
- *                  #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS for functions in the
- *                  SSL module). For functions that accept a "restart context"
+ *                  mentions they may return #MBEDTLS_ERR_ECP_IN_PROGRESS.
+ *                  For functions that accept a "restart context"
  *                  argument, passing NULL disables restart and makes the
  *                  function equivalent to the function with the same name
  *                  with \c _restartable removed. For functions in the ECDH
