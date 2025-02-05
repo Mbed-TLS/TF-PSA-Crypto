@@ -1065,6 +1065,8 @@ Now that PSA is “always on”, what does it mean for `MBEDTLS_PSA_CRYPTO_C`, `
 * A client-only build defines `MBEDTLS_PSA_CRYPTO_CLIENT` and little to no else.
 * A server-only build defines `MBEDTLS_PSA_CRYPTO_C` and `MBEDTLS_PSA_CRYPTO_SPM`.
 
+Strongly related: https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/112
+
 #### Revise key store selection
 
 For historical reasons, we have three key store architectures:
