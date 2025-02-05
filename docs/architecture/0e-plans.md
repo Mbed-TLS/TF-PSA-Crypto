@@ -901,9 +901,9 @@ Options that can currently be set directly, and cannot be set via adjustment. Su
 
 #### Legacy options in `all.sh`
 
-We have finished migrating `all.sh` to `MBEDTLS_PSA_CRYPTO_CONFIG`, so in principle, it should not rely on setting legacy options. There are still many occurrences of [boolean options that cannot be set indirectly](#boolean-options-that-can-be-set-indirectly), but almost all are `config.py unset` that should now be no-ops.
+We have finished migrating `all.sh` to `MBEDTLS_PSA_CRYPTO_CONFIG`, so in principle, it should not rely on setting legacy options. There are still many occurrences of [boolean options that can be set indirectly](#boolean-options-that-can-be-set-indirectly) (and thus are likely to be removed). Almost all are `config.py unset` that are only present because we're disabling a mechanism through PSA and we want to avoid it coming back through the legacy API where it's enabled by default or by `full`, hence we can remove the `unset` statements once the option is no longer present in `crypto_config.h`.
 
-TODO: validate this. Remove the `unset` statements and compare the outcome files?
+TODO: validate this. By making the legacy option default-off and excluded from `full`, then comparing the outcome files? (Removing the option may affect [`depends.py`](#legacy-options-in-dependspy) until the ongoing work there is finished.)
 
 #### Legacy options in `depends.py`
 
