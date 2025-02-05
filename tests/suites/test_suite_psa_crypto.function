@@ -223,7 +223,7 @@ static int test_operations_on_invalid_key(mbedtls_svc_key_id_t key)
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 0x6964);
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-    psa_export_public_key_iop_t export_key_iop = PSA_EXPORT_PUBLIC_KEY_IOP_INIT;
+    psa_export_public_key_iop_t export_key_iop = psa_export_public_key_iop_init_short();
 #endif
     uint8_t buffer[1];
     size_t length;
@@ -334,7 +334,7 @@ static int aead_multipart_internal_func(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     unsigned char *output_data = NULL;
     unsigned char *part_data = NULL;
     unsigned char *final_data = NULL;
@@ -589,7 +589,7 @@ static int mac_multipart_internal_func(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     unsigned char mac[PSA_MAC_MAX_SIZE];
     size_t part_offset = 0;
     size_t part_length = 0;
@@ -1876,7 +1876,7 @@ void import_export_public_key(data_t *data,
     size_t export_size = expected_public_key->len + export_size_delta;
     size_t exported_length = INVALID_EXPORT_LENGTH;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_export_public_key_iop_t export_key_operation = PSA_EXPORT_PUBLIC_KEY_IOP_INIT;
+    psa_export_public_key_iop_t export_key_operation = psa_export_public_key_iop_init_short();
 
 
     PSA_ASSERT(psa_crypto_init());
@@ -2187,7 +2187,7 @@ void mac_key_policy(int policy_usage_arg,
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t policy_alg = policy_alg_arg;
     psa_algorithm_t exercise_alg = exercise_alg_arg;
@@ -2287,7 +2287,7 @@ void cipher_key_policy(int policy_usage_arg,
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_usage_t policy_usage = policy_usage_arg;
     size_t output_buffer_size = 0;
     size_t input_buffer_size = 0;
@@ -2378,7 +2378,7 @@ void aead_key_policy(int policy_usage_arg,
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     psa_key_usage_t policy_usage = policy_usage_arg;
     psa_status_t status;
     psa_status_t expected_status = expected_status_arg;
@@ -2636,7 +2636,7 @@ void derive_key_policy(int policy_usage,
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_status_t status;
 
     PSA_ASSERT(psa_crypto_init());
@@ -2687,7 +2687,7 @@ void agreement_key_policy(int policy_usage,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_type_t key_type = key_type_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_status_t status;
     psa_status_t expected_status = expected_status_arg;
 
@@ -2770,7 +2770,7 @@ void raw_agreement_key_policy(int policy_usage,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_type_t key_type = key_type_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_status_t status;
     psa_status_t expected_status = expected_status_arg;
 
@@ -2957,8 +2957,8 @@ void hash_operation_init()
      * Clang 5 complains when `-Wmissing-field-initializers` is used, even
      * though it's OK by the C standard. We could test for this, but we'd need
      * to suppress the Clang warning for the test. */
-    psa_hash_operation_t func = psa_hash_operation_init();
-    psa_hash_operation_t init = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t func = psa_hash_operation_init_short();
+    psa_hash_operation_t init = psa_hash_operation_init_short();
     psa_hash_operation_t zero;
 
     memset(&zero, 0, sizeof(zero));
@@ -2987,7 +2987,7 @@ void hash_setup(int alg_arg,
     size_t output_size = 0;
     size_t output_length = 0;
     psa_status_t expected_status = expected_status_arg;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     psa_status_t status;
 
     PSA_ASSERT(psa_crypto_init());
@@ -3033,7 +3033,7 @@ void hash_compute_fail(int alg_arg, data_t *input,
     uint8_t *output = NULL;
     size_t output_size = output_size_arg;
     size_t output_length = INVALID_EXPORT_LENGTH;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     psa_status_t expected_status = expected_status_arg;
     psa_status_t status;
 
@@ -3080,7 +3080,7 @@ void hash_compare_fail(int alg_arg, data_t *input,
 {
     psa_algorithm_t alg = alg_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     psa_status_t status;
 
     PSA_ASSERT(psa_crypto_init());
@@ -3118,7 +3118,7 @@ void hash_compute_compare(int alg_arg, data_t *input,
     psa_algorithm_t alg = alg_arg;
     uint8_t output[PSA_HASH_MAX_SIZE + 1];
     size_t output_length = INVALID_EXPORT_LENGTH;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     size_t i;
 
     PSA_ASSERT(psa_crypto_init());
@@ -3228,7 +3228,7 @@ void hash_bad_order()
     };
     unsigned char hash[sizeof(valid_hash)] = { 0 };
     size_t hash_len;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -3332,7 +3332,7 @@ void hash_verify_bad_args()
         0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55, 0xaa, 0xbb
     };
     size_t expected_size = PSA_HASH_LENGTH(alg);
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -3366,7 +3366,7 @@ void hash_finish_bad_args()
     psa_algorithm_t alg = PSA_ALG_SHA_256;
     unsigned char hash[PSA_HASH_MAX_SIZE];
     size_t expected_size = PSA_HASH_LENGTH(alg);
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     size_t hash_len;
 
     PSA_ASSERT(psa_crypto_init());
@@ -3387,11 +3387,11 @@ void hash_clone_source_state()
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
     unsigned char hash[PSA_HASH_MAX_SIZE];
-    psa_hash_operation_t op_source = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_init = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_setup = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_finished = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_aborted = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t op_source = psa_hash_operation_init_short();
+    psa_hash_operation_t op_init = psa_hash_operation_init_short();
+    psa_hash_operation_t op_setup = psa_hash_operation_init_short();
+    psa_hash_operation_t op_finished = psa_hash_operation_init_short();
+    psa_hash_operation_t op_aborted = psa_hash_operation_init_short();
     size_t hash_len;
 
     PSA_ASSERT(psa_crypto_init());
@@ -3432,11 +3432,11 @@ void hash_clone_target_state()
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
     unsigned char hash[PSA_HASH_MAX_SIZE];
-    psa_hash_operation_t op_init = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_setup = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_finished = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_aborted = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t op_target = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t op_init = psa_hash_operation_init_short();
+    psa_hash_operation_t op_setup = psa_hash_operation_init_short();
+    psa_hash_operation_t op_finished = psa_hash_operation_init_short();
+    psa_hash_operation_t op_aborted = psa_hash_operation_init_short();
+    psa_hash_operation_t op_target = psa_hash_operation_init_short();
     size_t hash_len;
 
     PSA_ASSERT(psa_crypto_init());
@@ -3477,8 +3477,8 @@ void mac_operation_init()
      * Clang 5 complains when `-Wmissing-field-initializers` is used, even
      * though it's OK by the C standard. We could test for this, but we'd need
      * to suppress the Clang warning for the test. */
-    psa_mac_operation_t func = psa_mac_operation_init();
-    psa_mac_operation_t init = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t func = psa_mac_operation_init_short();
+    psa_mac_operation_t init = psa_mac_operation_init_short();
     psa_mac_operation_t zero;
 
     memset(&zero, 0, sizeof(zero));
@@ -3510,7 +3510,7 @@ void mac_setup(int key_type_arg,
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
 #if defined(KNOWN_SUPPORTED_MAC_ALG)
     const uint8_t smoke_test_key_data[16] = "kkkkkkkkkkkkkkkk";
@@ -3553,7 +3553,7 @@ void mac_bad_order()
         0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa
     };
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     uint8_t sign_mac[PSA_MAC_MAX_SIZE + 10] = { 0 };
     size_t sign_mac_length = 0;
     const uint8_t input[] = { 0xbb, 0xbb, 0xbb, 0xbb };
@@ -3718,7 +3718,7 @@ void mac_sign(int key_type_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *actual_mac = NULL;
     size_t mac_buffer_size =
@@ -3804,7 +3804,7 @@ void mac_verify(int key_type_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *perturbed_mac = NULL;
 
@@ -3902,8 +3902,8 @@ void cipher_operation_init()
      * Clang 5 complains when `-Wmissing-field-initializers` is used, even
      * though it's OK by the C standard. We could test for this, but we'd need
      * to suppress the Clang warning for the test. */
-    psa_cipher_operation_t func = psa_cipher_operation_init();
-    psa_cipher_operation_t init = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t func = psa_cipher_operation_init_short();
+    psa_cipher_operation_t init = psa_cipher_operation_init_short();
     psa_cipher_operation_t zero;
 
     memset(&zero, 0, sizeof(zero));
@@ -3941,7 +3941,7 @@ void cipher_setup(int key_type_arg,
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_status_t status;
 #if defined(KNOWN_SUPPORTED_CIPHER_ALG)
     const uint8_t smoke_test_key_data[16] = "kkkkkkkkkkkkkkkk";
@@ -3980,7 +3980,7 @@ void cipher_bad_order()
     psa_key_type_t key_type = PSA_KEY_TYPE_AES;
     psa_algorithm_t alg = PSA_ALG_CBC_PKCS7;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     unsigned char iv[PSA_BLOCK_CIPHER_BLOCK_LENGTH(PSA_KEY_TYPE_AES)] = { 0 };
     const uint8_t key_data[] = {
         0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
@@ -4166,7 +4166,7 @@ void cipher_encrypt_fail(int alg_arg,
     size_t output_buffer_size = 0;
     size_t output_length = 0;
     size_t function_output_length;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     if (PSA_ERROR_BAD_STATE != expected_status) {
@@ -4231,7 +4231,7 @@ void cipher_encrypt_validate_iv_length(int alg, int key_type, data_t *key_data,
                                        int expected_result)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     size_t output_buffer_size = 0;
     unsigned char *output = NULL;
@@ -4266,7 +4266,7 @@ void cipher_alg_without_iv(int alg_arg, int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     uint8_t iv[1] = { 0x5a };
     unsigned char *output = NULL;
     size_t output_buffer_size = 0;
@@ -4383,7 +4383,7 @@ void cipher_bad_key(int alg_arg, int key_type_arg, data_t *key_data)
     psa_algorithm_t alg = alg_arg;
     psa_key_type_t key_type = key_type_arg;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_status_t status;
 
     PSA_ASSERT(psa_crypto_init());
@@ -4433,7 +4433,7 @@ void cipher_encrypt_validation(int alg_arg,
     size_t output2_buffer_size = 0;
     size_t output2_length = 0;
     size_t function_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     PSA_ASSERT(psa_crypto_init());
@@ -4517,7 +4517,7 @@ void cipher_encrypt_multipart(int alg_arg, int key_type_arg,
     size_t output_buffer_size = 0;
     size_t function_output_length = 0;
     size_t total_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     PSA_ASSERT(psa_crypto_init());
@@ -4616,7 +4616,7 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
     size_t output_buffer_size = 0;
     size_t function_output_length = 0;
     size_t total_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     PSA_ASSERT(psa_crypto_init());
@@ -4715,7 +4715,7 @@ void cipher_decrypt_fail(int alg_arg,
     size_t output_buffer_size = 0;
     size_t output_length = 0;
     size_t function_output_length;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     if (PSA_ERROR_BAD_STATE != expected_status) {
@@ -4928,8 +4928,8 @@ void cipher_verify_output_multipart(int alg_arg,
     size_t output2_buffer_size = 0;
     size_t output2_length = 0;
     size_t function_output_length;
-    psa_cipher_operation_t operation1 = PSA_CIPHER_OPERATION_INIT;
-    psa_cipher_operation_t operation2 = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation1 = psa_cipher_operation_init_short();
+    psa_cipher_operation_t operation2 = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     PSA_ASSERT(psa_crypto_init());
@@ -5484,7 +5484,7 @@ void aead_multipart_generate_nonce(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     /* Some tests try to get more than the maximum nonce length,
      * so allocate double. */
     uint8_t nonce_buffer[PSA_AEAD_NONCE_MAX_SIZE * 2];
@@ -5588,7 +5588,7 @@ void aead_multipart_set_nonce(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     uint8_t *nonce_buffer = NULL;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
@@ -5711,7 +5711,7 @@ void aead_multipart_update_buffer_test(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t expected_status = expected_status_arg;
@@ -5795,7 +5795,7 @@ void aead_multipart_finish_buffer_test(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t expected_status = expected_status_arg;
@@ -5882,7 +5882,7 @@ void aead_multipart_verify(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t expected_status = expected_status_arg;
@@ -5975,7 +5975,7 @@ void aead_multipart_setup(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t expected_status = expected_status_arg;
@@ -6017,7 +6017,7 @@ void aead_multipart_state_test(int key_type_arg, data_t *key_data,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
+    psa_aead_operation_t operation = psa_aead_operation_init_short();
     unsigned char *output_data = NULL;
     unsigned char *final_data = NULL;
     size_t output_size = 0;
@@ -6919,7 +6919,7 @@ void sign_hash_interruptible(int key_type_arg, data_t *key_data,
     size_t max_completes = 0;
 
     psa_sign_hash_interruptible_operation_t operation =
-        psa_sign_hash_interruptible_operation_init();
+        psa_sign_hash_interruptible_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -7101,7 +7101,7 @@ void sign_hash_fail_interruptible(int key_type_arg, data_t *key_data,
 
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_sign_hash_interruptible_operation_t operation =
-        psa_sign_hash_interruptible_operation_init();
+        psa_sign_hash_interruptible_operation_init_short();
 
     TEST_CALLOC(signature, signature_size);
 
@@ -7312,9 +7312,9 @@ void sign_verify_hash_interruptible(int key_type_arg, data_t *key_data,
     size_t max_completes = 0;
 
     psa_sign_hash_interruptible_operation_t sign_operation =
-        psa_sign_hash_interruptible_operation_init();
+        psa_sign_hash_interruptible_operation_init_short();
     psa_verify_hash_interruptible_operation_t verify_operation =
-        psa_verify_hash_interruptible_operation_init();
+        psa_verify_hash_interruptible_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -7407,7 +7407,7 @@ void sign_verify_hash_interruptible(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_verify_hash_abort(&verify_operation));
 
-    verify_operation = psa_verify_hash_interruptible_operation_init();
+    verify_operation = psa_verify_hash_interruptible_operation_init_short();
 
     if (input_data->len != 0) {
         /* Flip a bit in the input and verify that the signature is now
@@ -7515,7 +7515,7 @@ void verify_hash_interruptible(int key_type_arg, data_t *key_data,
     size_t max_completes = 0;
 
     psa_verify_hash_interruptible_operation_t operation =
-        psa_verify_hash_interruptible_operation_init();
+        psa_verify_hash_interruptible_operation_init_short();
 
     TEST_LE_U(signature_data->len, PSA_SIGNATURE_MAX_SIZE);
 
@@ -7685,7 +7685,7 @@ void verify_hash_fail_interruptible(int key_type_arg, data_t *key_data,
     size_t min_completes = 0;
     size_t max_completes = 0;
     psa_verify_hash_interruptible_operation_t operation =
-        psa_verify_hash_interruptible_operation_init();
+        psa_verify_hash_interruptible_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -7794,9 +7794,9 @@ void interruptible_signverify_hash_state_test(int key_type_arg,
     size_t signature_length = 0xdeadbeef;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_sign_hash_interruptible_operation_t sign_operation =
-        psa_sign_hash_interruptible_operation_init();
+        psa_sign_hash_interruptible_operation_init_short();
     psa_verify_hash_interruptible_operation_t verify_operation =
-        psa_verify_hash_interruptible_operation_init();
+        psa_verify_hash_interruptible_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -7950,9 +7950,9 @@ void interruptible_signverify_hash_edgecase_tests(int key_type_arg,
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *input_buffer = NULL;
     psa_sign_hash_interruptible_operation_t sign_operation =
-        psa_sign_hash_interruptible_operation_init();
+        psa_sign_hash_interruptible_operation_init_short();
     psa_verify_hash_interruptible_operation_t verify_operation =
-        psa_verify_hash_interruptible_operation_init();
+        psa_verify_hash_interruptible_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -8081,9 +8081,9 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     psa_sign_hash_interruptible_operation_t sign_operation =
-        psa_sign_hash_interruptible_operation_init();
+        psa_sign_hash_interruptible_operation_init_short();
     psa_verify_hash_interruptible_operation_t verify_operation =
-        psa_verify_hash_interruptible_operation_init();
+        psa_verify_hash_interruptible_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -8776,8 +8776,8 @@ void key_derivation_init()
      * though it's OK by the C standard. We could test for this, but we'd need
      * to suppress the Clang warning for the test. */
     size_t capacity;
-    psa_key_derivation_operation_t func = psa_key_derivation_operation_init();
-    psa_key_derivation_operation_t init = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t func = psa_key_derivation_operation_init_short();
+    psa_key_derivation_operation_t init = psa_key_derivation_operation_init_short();
     psa_key_derivation_operation_t zero;
 
     memset(&zero, 0, sizeof(zero));
@@ -8802,7 +8802,7 @@ void derive_setup(int alg_arg, int expected_status_arg)
 {
     psa_algorithm_t alg = alg_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -8822,7 +8822,7 @@ void derive_set_capacity(int alg_arg, int64_t capacity_arg,
     psa_algorithm_t alg = alg_arg;
     size_t capacity = capacity_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -8866,7 +8866,7 @@ void derive_input(int alg_arg,
     mbedtls_svc_key_id_t keys[] = { MBEDTLS_SVC_KEY_ID_INIT,
                                     MBEDTLS_SVC_KEY_ID_INIT,
                                     MBEDTLS_SVC_KEY_ID_INIT };
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     size_t i;
     psa_key_type_t output_key_type = output_key_type_arg;
@@ -8949,7 +8949,7 @@ exit:
 void derive_input_invalid_cost(int alg_arg, int64_t cost)
 {
     psa_algorithm_t alg = alg_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
 
     PSA_ASSERT(psa_crypto_init());
     PSA_ASSERT(psa_key_derivation_setup(&operation, alg));
@@ -8971,7 +8971,7 @@ void derive_over_capacity(int alg_arg)
     psa_algorithm_t alg = alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     size_t key_type = PSA_KEY_TYPE_DERIVE;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     unsigned char input1[] = "Input 1";
     size_t input1_length = sizeof(input1);
     unsigned char input2[] = "Input 2";
@@ -9023,7 +9023,7 @@ void derive_actions_without_setup()
     uint8_t output_buffer[16];
     size_t buffer_size = 16;
     size_t capacity = 0;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
 
     TEST_ASSERT(psa_key_derivation_output_bytes(&operation,
                                                 output_buffer, buffer_size)
@@ -9070,7 +9070,7 @@ void derive_output(int alg_arg,
     psa_status_t statuses[] = { expected_status_arg1, expected_status_arg2,
                                 expected_status_arg3, expected_status_arg4 };
     size_t requested_capacity = requested_capacity_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     uint8_t *expected_outputs[2] =
     { expected_output1->x, expected_output2->x };
     size_t output_sizes[2] =
@@ -9298,7 +9298,7 @@ void derive_full(int alg_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_algorithm_t alg = alg_arg;
     size_t requested_capacity = requested_capacity_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     unsigned char output_buffer[32];
     size_t expected_capacity = requested_capacity;
     size_t current_capacity;
@@ -9360,7 +9360,7 @@ void derive_ecjpake_to_pms(data_t *input, int expected_input_status_arg,
                            int expected_output_status_arg)
 {
     psa_algorithm_t alg = PSA_ALG_TLS12_ECJPAKE_TO_PMS;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_derivation_step_t step = (psa_key_derivation_step_t) derivation_step;
     uint8_t *output_buffer = NULL;
     psa_status_t status;
@@ -9417,7 +9417,7 @@ void derive_key_exercise(int alg_arg,
     psa_key_usage_t derived_usage = derived_usage_arg;
     psa_algorithm_t derived_alg = derived_alg_arg;
     size_t capacity = PSA_BITS_TO_BYTES(derived_bits);
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_attributes_t got_attributes = PSA_KEY_ATTRIBUTES_INIT;
 
@@ -9482,7 +9482,7 @@ void derive_key_export(int alg_arg,
     size_t bytes1 = bytes1_arg;
     size_t bytes2 = bytes2_arg;
     size_t capacity = bytes1 + bytes2;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     uint8_t *output_buffer = NULL;
     uint8_t *export_buffer = NULL;
     psa_key_attributes_t base_attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -9566,7 +9566,7 @@ void derive_key_type(int alg_arg,
     const psa_algorithm_t alg = alg_arg;
     const psa_key_type_t key_type = key_type_arg;
     const size_t bits = bits_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     const size_t export_buffer_size =
         PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, bits);
     uint8_t *export_buffer = NULL;
@@ -9631,7 +9631,7 @@ void derive_key_custom(int alg_arg,
     const size_t bits = bits_arg;
     psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
     custom.flags = flags_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     const size_t export_buffer_size =
         PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, bits);
     uint8_t *export_buffer = NULL;
@@ -9697,7 +9697,7 @@ void derive_key(int alg_arg,
     psa_key_type_t type = type_arg;
     size_t bits = bits_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t base_attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_attributes_t derived_attributes = PSA_KEY_ATTRIBUTES_INIT;
 
@@ -9748,7 +9748,7 @@ void key_agreement_setup(int alg_arg,
     psa_algorithm_t alg = alg_arg;
     psa_algorithm_t our_key_alg = our_key_alg_arg;
     psa_key_type_t our_key_type = our_key_type_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t expected_status = expected_status_arg;
     psa_status_t status;
@@ -10033,7 +10033,7 @@ void key_agreement_capacity(int alg_arg,
     mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_algorithm_t alg = alg_arg;
     psa_key_type_t our_key_type = our_key_type_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     size_t actual_capacity;
     unsigned char output[16];
@@ -10130,7 +10130,7 @@ void key_agreement_output(int alg_arg,
     mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_algorithm_t alg = alg_arg;
     psa_key_type_t our_key_type = our_key_type_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *actual_output = NULL;
 
@@ -10296,7 +10296,7 @@ void generate_key(int type_arg,
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_attributes_t got_attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_attributes_t iop_attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_generate_key_iop_t operation = PSA_GENERATE_KEY_IOP_INIT;
+    psa_generate_key_iop_t operation = psa_generate_key_iop_init_short();
     size_t num_ops_prior = 0;
     size_t num_ops = 0;
 
@@ -10419,7 +10419,7 @@ exit:
 /* BEGIN_CASE */
 void generate_key_iop_init()
 {
-    psa_generate_key_iop_t init = PSA_GENERATE_KEY_IOP_INIT;
+    psa_generate_key_iop_t init = psa_generate_key_iop_init_short();
     psa_generate_key_iop_t func = psa_generate_key_iop_init();
     psa_generate_key_iop_t zero;
 
@@ -10449,7 +10449,7 @@ void iop_export_public_key(
     psa_status_t expected_status = expected_status_arg;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_attributes_t public_key_attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_export_public_key_iop_t export_key_operation = PSA_EXPORT_PUBLIC_KEY_IOP_INIT;
+    psa_export_public_key_iop_t export_key_operation = psa_export_public_key_iop_init_short();
     uint8_t output[PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)] = { 0 };
     size_t output_len = 0;
     uint8_t refrence_output[PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)] =
@@ -10629,7 +10629,7 @@ exit:
 /* BEGIN_CASE */
 void export_public_key_iop_init()
 {
-    psa_export_public_key_iop_t init = PSA_EXPORT_PUBLIC_KEY_IOP_INIT;
+    psa_export_public_key_iop_t init = psa_export_public_key_iop_init_short();
     psa_export_public_key_iop_t fun = psa_export_public_key_iop_init();
     psa_export_public_key_iop_t zero;
 
@@ -10644,7 +10644,7 @@ void export_public_key_iop_init()
 /* BEGIN_CASE */
 void key_agreement_iop_init()
 {
-    psa_key_agreement_iop_t init = PSA_KEY_AGREEMENT_IOP_INIT;
+    psa_key_agreement_iop_t init = psa_key_agreement_iop_init_short();
     psa_key_agreement_iop_t func = psa_key_agreement_iop_init();
     psa_key_agreement_iop_t zero;
 
@@ -10735,7 +10735,7 @@ void persistent_key_load_key_from_storage(data_t *data,
     size_t bits = bits_arg;
     psa_key_usage_t usage_flags = usage_flags_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     unsigned char *first_export = NULL;
     unsigned char *second_export = NULL;
     size_t export_size = PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits);
@@ -10872,7 +10872,7 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
                    int expected_error_arg)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
-    psa_pake_operation_t operation = psa_pake_operation_init();
+    psa_pake_operation_t operation = psa_pake_operation_init_short();
     psa_algorithm_t alg = alg_arg;
     psa_pake_primitive_t primitive = primitive_arg;
     psa_key_type_t key_type_pw = key_type_pw_arg;
@@ -11096,8 +11096,8 @@ void ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
                            data_t *pw_data)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
-    psa_pake_operation_t server = psa_pake_operation_init();
-    psa_pake_operation_t client = psa_pake_operation_init();
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    psa_pake_operation_t client = psa_pake_operation_init_short();
     psa_algorithm_t alg = alg_arg;
     psa_algorithm_t hash_alg = hash_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -11149,17 +11149,17 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
                     int client_input_first, int inj_err_type_arg)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
-    psa_pake_operation_t server = psa_pake_operation_init();
-    psa_pake_operation_t client = psa_pake_operation_init();
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    psa_pake_operation_t client = psa_pake_operation_init_short();
     psa_algorithm_t alg = alg_arg;
     psa_algorithm_t hash_alg = hash_arg;
     psa_algorithm_t derive_alg = derive_alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_derivation_operation_t server_derive =
-        PSA_KEY_DERIVATION_OPERATION_INIT;
+        psa_key_derivation_operation_init_short();
     psa_key_derivation_operation_t client_derive =
-        PSA_KEY_DERIVATION_OPERATION_INIT;
+        psa_key_derivation_operation_init_short();
     ecjpake_injected_failure_t inj_err_type = inj_err_type_arg;
 
     PSA_INIT();
