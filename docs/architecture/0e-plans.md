@@ -1012,7 +1012,7 @@ Rationale: saves maintenance complexity and simplifies the user interface, compa
 
 #### Counter inclusions in ASN.1
 
-The functions `mbedtls_asn1_get_len` and `mbedtls_asn1_get_tag` are enabled when `MBEDTLS_ASN1_WRITE_C` is enabled, even if `MBEDTLS_ASN1_PARSE_C` is disabled. The functions `mbedtls_asn1_write_len` and `mbedtls_asn1_write_tag` are enabled when `MBEDTLS_ASN1_WRITE_C` is enabled, even if `MBEDTLS_ASN1_PARSE_C` is disabled. This is for the sake of X.509 code, and until [Mbed-TLS/TF-PSA-Crypto#143](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/143), the dependencies were `MBEDTLS_X509_CREATE_C` for the get functions and `MBEDTLS_X509_USE_C` for the write functions.
+The functions `mbedtls_asn1_get_len` and `mbedtls_asn1_get_tag` are enabled when `MBEDTLS_ASN1_WRITE_C` is enabled, even if `MBEDTLS_ASN1_PARSE_C` is disabled. The functions `mbedtls_asn1_write_len` and `mbedtls_asn1_write_tag` are enabled when `MBEDTLS_ASN1_PARSE_C` is enabled, even if `MBEDTLS_ASN1_WRITE_C` is disabled. This is for the sake of X.509 code, and until [Mbed-TLS/TF-PSA-Crypto#143](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/143), the dependencies were `MBEDTLS_X509_CREATE_C` for the get functions and `MBEDTLS_X509_USE_C` for the write functions.
 
 The counter-direction uses of these functions in X.509 arose from hexstring support in distinguished names which was introduced in [Mbed-TLS/mbedtls#8025](https://github.com/Mbed-TLS/mbedtls/pull/8025). At this point, it is not clear to me whether counter-direction functions are intrinsically needed to support this aspect of X.509, or if it's a logical consequence of a plausible design decision we made on data representation, or if it's just an implementation convenience that is no longer so convenient when ASN.1 and X.509 are in separate projects. The counter-direction uses are:
 
@@ -1032,7 +1032,7 @@ In the longer term, plausible solutions include:
 
 #### OID conditional compilation
 
-The compilation option `MBEDTLS_OID_C` guards the whole OID module (`oid.c`). Some OID table and support functions are further guarded according to the cryptographic mechanisms and library interfaces that are enabled. However, some OIDs that are generically useful in X.509 and not used directly by any other crypto code (e.g. `MBEDTLS_OID_X509_EXT_xxx`) are always included when `MBEDTLS_OID_C` is enabled. Furthermore, many OIDs for X.509 are guarded by `!defined(MBEDTLS_X509_REMOVE_INFO)`, which is a not a crypto option and therefore cannot appear in TF-PSA-Crypto (since we want to make it possible to build TF-PSA-Crypto independently of the crypto implementation).
+The compilation option `MBEDTLS_OID_C` guards the whole OID module (`oid.c`). Some OID table and support functions are further guarded according to the cryptographic mechanisms and library interfaces that are enabled. However, some OIDs that are generically useful in X.509 and not used directly by any other crypto code (e.g. `MBEDTLS_OID_X509_EXT_xxx`) are always included when `MBEDTLS_OID_C` is enabled. Furthermore, many OIDs for X.509 are guarded by `!defined(MBEDTLS_X509_REMOVE_INFO)`, which is a not a crypto option and therefore cannot appear in TF-PSA-Crypto (since we want to make it possible to build TF-PSA-Crypto independently of Mbed TLS).
 
 From the perspective of the TF-PSA-Crypto build, there are three levels of OID inclusion:
 
