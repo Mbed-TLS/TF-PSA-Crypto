@@ -2256,9 +2256,6 @@
  *          library/ssl*_client.c
  *          library/ssl*_server.c
  *
- * This module is used by the following key exchanges:
- *      DHE-RSA, DHE-PSK
- *
  * \warning    Using DHE constitutes a security risk as it
  *             is not possible to validate custom DH parameters.
  *             If possible, it is recommended users should consider
@@ -2280,7 +2277,7 @@
  *          library/ssl*_server.c
  *
  * This module is used by the following key exchanges:
- *      ECDHE-ECDSA, ECDHE-RSA, DHE-PSK
+ *      ECDHE-ECDSA, ECDHE-RSA
  *
  * Requires: MBEDTLS_ECP_C
  */
@@ -2530,7 +2527,7 @@
  *          library/ssl*_server.c
  *
  * This module is used by the following key exchanges:
- *      RSA, DHE-RSA, ECDHE-RSA
+ *      RSA, ECDHE-RSA
  *
  * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
  */
