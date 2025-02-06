@@ -133,6 +133,15 @@ def full_adapter(name, value, active):
         return active
     return include_in_full(name)
 
+def realfull_adapter(_name, _value, _active):
+    """Activate all symbols.
+
+    This is intended for building the documentation, including the
+    documentation of settings that are activated by defining an optional
+    preprocessor macro. There is no expectation that the resulting
+    configuration can be built.
+    """
+    return True
 
 class TFPSACryptoConfigFile(config_common.ConfigFile):
     """Representation of a TF PSA Crypto configuration file."""
@@ -197,7 +206,11 @@ class TFPSACryptoConfigTool(config_common.ConfigTool):
             Exclude alternative implementations and platform support options, as well as
             some options that are awkward to test.
             """)
-
+        self.add_adapter(
+            'realfull', realfull_adapter,
+            """Uncomment all boolean #defines.
+            Suitable for generating documentation, but not for building.
+            """)
 
 if __name__ == '__main__':
     sys.exit(TFPSACryptoConfigTool().main())
