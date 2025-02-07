@@ -7276,13 +7276,11 @@ static psa_status_t psa_tls12_prf_psk_to_ms_set_key(
      * uint16 with the value N, and the PSK itself.
      *
      * mixed-PSK:
-     * In a DHE-PSK, ECDHE-PSK the premaster secret is formed as
-     * follows: concatenate a uint16 with the length of the other secret,
+     * In a ECDHE-PSK the premaster secret is formed as follows:
+     * concatenate a uint16 with the length of the other secret,
      * the other secret itself, uint16 with the length of PSK, and the
      * PSK itself.
-     * For details please check:
-     * - RFC 4279, Section 3 for the definition of DHE-PSK,
-     * - RFC 5489 for the definition of ECDHE-PSK.
+     * For details please check RFC 5489 for the definition of ECDHE-PSK.
      */
 
     if (prf->state == PSA_TLS12_PRF_STATE_OTHER_KEY_SET) {
