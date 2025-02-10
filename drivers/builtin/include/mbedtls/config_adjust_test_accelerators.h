@@ -1,4 +1,4 @@
-/*
+/**
  * \file mbedtls/config_adjust_test_accelerators.h
  * \brief Declare the transparent test drivers as accelerators
  *

@@ -58,7 +58,6 @@
  * - 0x02 -- tag indicating INTEGER
  * - 0x01 -- length in octets
  * - 0x05 -- value
- * Such sequences are typically read into \c ::mbedtls_x509_buf.
  * \{
  */
 #define MBEDTLS_ASN1_BOOLEAN                 0x01

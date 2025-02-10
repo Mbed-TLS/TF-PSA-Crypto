@@ -1,8 +1,10 @@
-/*
- *  Context structure declaration of the Mbed TLS software-based PSA drivers
- *  called through the PSA Crypto driver dispatch layer.
- *  This file contains the context structures of those algorithms which do not
- *  rely on other algorithms, i.e. are 'primitive' algorithms.
+/**
+ * \file crypto_builtin_primitives.h
+ *
+ * \brief Context structure declaration of the Mbed TLS software-based PSA
+ * drivers called through the PSA Crypto driver dispatch layer. This file
+ * contains the context structures of those algorithms which do not rely on
+ * other algorithms, i.e. are 'primitive' algorithms.
  *
  * \note This file may not be included directly. Applications must
  * include psa/crypto.h.
