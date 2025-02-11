@@ -124,3 +124,13 @@ component_tf_psa_crypto_check_names () {
     ./scripts/generate_driver_wrappers.py
     $FRAMEWORK/scripts/check_names.py -v
 }
+
+component_tf_psa_crypto_check_doxy_blocks () {
+    msg "Check: doxygen markup outside doxygen blocks" # < 1s
+    $FRAMEWORK/scripts/check-doxy-blocks.pl
+}
+
+component_tf_psa_crypto_check_doxygen_warnings () {
+    msg "Check: doxygen warnings (builds the documentation)" # ~ 3s
+    $FRAMEWORK/scripts/doxygen.sh
+}
