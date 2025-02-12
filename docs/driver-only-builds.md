@@ -246,14 +246,14 @@ Key management and usage can be enabled by means of the usual `PSA_WANT` +
 
 The same holds for the associated algorithm:
 `[PSA_WANT|MBEDTLS_PSA_ACCEL]_ALG_FFDH` allow builds accelerating FFDH and
-removing builtin support (i.e. `MBEDTLS_DHM_C`).
+removing builtin support.
 
-Note that the PSA API only supports FFDH with RFC 7919 groups, whereas the
-Mbed TLS legacy API supports custom groups. As a consequence, the TLS 1.2
-layer of Mbed TLS only supports DHE cipher suites if built-in FFDH
-(`MBEDTLS_DHM_C`) is present, even when `MBEDTLS_USE_PSA_CRYPTO` is enabled.
-(The TLS 1.3 layer uses PSA, and this is not a limitation because the
-protocol does not allow custom FFDH groups.)
+Note that the PSA API only supports FFDH with RFC 7919 groups.
+In theory TLS 1.2 allows custom FFDH groups to be used in DHE key exchanges, but
+since DHE-RSA and DHE-PSK key exchanges support has been removed from Mbed TLS,
+PSA API limitation to RFC 7919 groups is not a problem.
+TLS 1.3 is also fine because the protocol itself does not allows custom FFDH
+groups.
 
 RSA
 ---
