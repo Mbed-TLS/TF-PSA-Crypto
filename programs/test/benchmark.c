@@ -42,7 +42,6 @@ int main(void)
 #include "mbedtls/hmac_drbg.h"
 
 #include "mbedtls/rsa.h"
-#include "mbedtls/dhm.h"
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/ecdh.h"
 
@@ -113,7 +112,7 @@ static unsigned long mbedtls_timing_hardclock(void);
     "aes_cbc, aes_cfb128, aes_cfb8, aes_gcm, aes_ccm, aes_xts, chachapoly\n" \
     "aes_cmac, des3_cmac, poly1305\n"                                        \
     "ctr_drbg, hmac_drbg\n"                                                  \
-    "rsa, dhm, ecdsa, ecdh.\n"
+    "rsa, ecdsa, ecdh.\n"
 
 #if defined(MBEDTLS_ERROR_C)
 #define PRINT_ERROR                                                     \
@@ -511,7 +510,7 @@ typedef struct {
          aria, camellia, chacha20,
          poly1305,
          ctr_drbg, hmac_drbg,
-         rsa, dhm, ecdsa, ecdh;
+         rsa, ecdsa, ecdh;
 } todo_list;
 
 
@@ -598,8 +597,6 @@ int main(int argc, char *argv[])
                 todo.hmac_drbg = 1;
             } else if (strcmp(argv[i], "rsa") == 0) {
                 todo.rsa = 1;
-            } else if (strcmp(argv[i], "dhm") == 0) {
-                todo.dhm = 1;
             } else if (strcmp(argv[i], "ecdsa") == 0) {
                 todo.ecdsa = 1;
             } else if (strcmp(argv[i], "ecdh") == 0) {
@@ -1061,68 +1058,6 @@ int main(int argc, char *argv[])
                         ret = mbedtls_rsa_private(&rsa, myrand, NULL, buf, buf));
 
             mbedtls_rsa_free(&rsa);
-        }
-    }
-#endif
-
-#if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_BIGNUM_C)
-    if (todo.dhm) {
-        int dhm_sizes[] = { 2048, 3072 };
-        static const unsigned char dhm_P_2048[] =
-            MBEDTLS_DHM_RFC3526_MODP_2048_P_BIN;
-        static const unsigned char dhm_P_3072[] =
-            MBEDTLS_DHM_RFC3526_MODP_3072_P_BIN;
-        static const unsigned char dhm_G_2048[] =
-            MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
-        static const unsigned char dhm_G_3072[] =
-            MBEDTLS_DHM_RFC3526_MODP_3072_G_BIN;
-
-        const unsigned char *dhm_P[] = { dhm_P_2048, dhm_P_3072 };
-        const size_t dhm_P_size[] = { sizeof(dhm_P_2048),
-                                      sizeof(dhm_P_3072) };
-
-        const unsigned char *dhm_G[] = { dhm_G_2048, dhm_G_3072 };
-        const size_t dhm_G_size[] = { sizeof(dhm_G_2048),
-                                      sizeof(dhm_G_3072) };
-
-        mbedtls_dhm_context dhm;
-        size_t olen;
-        size_t n;
-        mbedtls_mpi P, G;
-        mbedtls_mpi_init(&P); mbedtls_mpi_init(&G);
-
-        for (i = 0; (size_t) i < sizeof(dhm_sizes) / sizeof(dhm_sizes[0]); i++) {
-            mbedtls_dhm_init(&dhm);
-
-            if (mbedtls_mpi_read_binary(&P, dhm_P[i],
-                                        dhm_P_size[i]) != 0 ||
-                mbedtls_mpi_read_binary(&G, dhm_G[i],
-                                        dhm_G_size[i]) != 0 ||
-                mbedtls_dhm_set_group(&dhm, &P, &G) != 0) {
-                mbedtls_exit(1);
-            }
-
-            n = mbedtls_dhm_get_len(&dhm);
-            mbedtls_dhm_make_public(&dhm, (int) n, buf, n, myrand, NULL);
-
-            if (mbedtls_dhm_read_public(&dhm, buf, n) != 0) {
-                mbedtls_exit(1);
-            }
-
-            mbedtls_snprintf(title, sizeof(title), "DHE-%d", dhm_sizes[i]);
-            TIME_PUBLIC(title, "handshake",
-                        ret |= mbedtls_dhm_make_public(&dhm, (int) n, buf, n,
-                                                       myrand, NULL);
-                        ret |=
-                            mbedtls_dhm_calc_secret(&dhm, buf, sizeof(buf), &olen, myrand, NULL));
-
-            mbedtls_snprintf(title, sizeof(title), "DH-%d", dhm_sizes[i]);
-            TIME_PUBLIC(title, "handshake",
-                        ret |=
-                            mbedtls_dhm_calc_secret(&dhm, buf, sizeof(buf), &olen, myrand, NULL));
-
-            mbedtls_dhm_free(&dhm);
-            mbedtls_mpi_free(&P), mbedtls_mpi_free(&G);
         }
     }
 #endif
