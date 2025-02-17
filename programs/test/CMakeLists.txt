@@ -1,0 +1,15 @@
+set(executables
+    benchmark
+)
+add_dependencies(${programs_target} ${executables})
+
+foreach(exe IN LISTS executables)
+    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
+    set_base_compile_options(${exe})
+    target_link_libraries(${exe} ${tfpsacrypto_target} ${CMAKE_THREAD_LIBS_INIT})
+    target_include_directories(${exe} PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/framework/tests/include)
+endforeach()
+
+install(TARGETS ${executables}
+        DESTINATION "bin"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
