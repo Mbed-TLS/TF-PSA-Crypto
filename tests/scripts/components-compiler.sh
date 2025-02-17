@@ -10,7 +10,7 @@
 ################################################################
 
 support_build_tf_psa_crypto_tfm_armcc () {
-    support_build_armcc
+    support_build_tf_psa_crypto_armcc
 }
 
 component_build_tf_psa_crypto_tfm_armcc () {
@@ -18,7 +18,7 @@ component_build_tf_psa_crypto_tfm_armcc () {
     cp configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
 
     msg "build: TF-M config, armclang armv7-m thumb2"
-    helper_armc6_build_test "--target=arm-arm-none-eabi -march=armv7-m -mthumb -Os -std=c99 -Werror -Wall -Wextra -Wwrite-strings -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral -Wshadow -Wasm-operand-widths -Wunused -I../framework/tests/include/spe"
+    helper_armc6_build_test "--target=arm-arm-none-eabi -mcpu=cortex-m0 -mthumb -Os -std=c99 -Werror -Wall -Wextra -Wwrite-strings -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral -Wshadow -Wasm-operand-widths -Wunused -I../framework/tests/include/spe"
 }
 
 test_build_opt () {
