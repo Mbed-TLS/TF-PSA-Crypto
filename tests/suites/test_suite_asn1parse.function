@@ -455,6 +455,42 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void get_integer_raw(const data_t *input,
+                     const data_t *expected_output, int expected_result)
+{
+    int ret;
+    unsigned char *p = input->x;
+    /* Initialize pointer and length to nonsense values so that we can
+     * distinguish leaving them unchanged from setting them in the error
+     * case. */
+    unsigned char *integer_head = (unsigned char *)0x1234;
+    size_t integer_length = 5;
+
+    ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
+                                   &integer_head, &integer_length);
+
+    TEST_EQUAL(ret, expected_result);
+
+    if (expected_result == 0) {
+        /* On success, check that the returned number matches what we expect */
+        TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
+                            integer_head, integer_length);
+        /* And check that p is sensible. The minimum length of an
+         * encoded INTEGER is 3 bytes */
+        TEST_LE_U((uintptr_t)input->x + 3, (uintptr_t)p);
+    } else {
+        /* On failure we'd like the pointer and length to be
+         * obviously invalid */
+        TEST_EQUAL(integer_head, NULL);
+        TEST_EQUAL(integer_length, 0);
+
+        /* We'd also like p not to have advanced at all */
+        TEST_EQUAL(p, input->x);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void get_enum(const data_t *input,
               const char *expected_hex, int expected_result)
 {
