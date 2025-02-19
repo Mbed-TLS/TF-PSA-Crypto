@@ -12,20 +12,20 @@
 
 set -eu
 
-CONFIG_H='include/mbedtls/mbedtls_config.h'
+CONFIG_H='include/psa/crypto_config.h'
 
 if [ -r $CONFIG_H ]; then :; else
     echo "$CONFIG_H not found" >&2
     exit 1
 fi
 
-if grep -i cmake Makefile >/dev/null; then :; else
+if cmake --version >/dev/null  ; then :; else
     echo "Needs Cmake" >&2
     exit 1
 fi
 
 if git status | grep -F $CONFIG_H >/dev/null 2>&1; then
-    echo "mbedtls_config.h not clean" >&2
+    echo "$CONFIG_H not clean" >&2
     exit 1
 fi
 
@@ -74,6 +74,7 @@ for F in 0 1; do
     for W in 2 3 4; do
         scripts/config.py set MBEDTLS_ECP_WINDOW_SIZE $W
         scripts/config.py set MBEDTLS_ECP_FIXED_POINT_OPTIM $F
+        cmake . >/dev/null 2>&1
         make benchmark >/dev/null 2>&1
         echo "fixed point optim = $F, max window size = $W"
         echo "--------------------------------------------"
