@@ -84,6 +84,7 @@ component_tf_psa_crypto_build_tfm () {
     msg "build: TF-M config, clang, armv7-m thumb2"
     cmake -DCMAKE_C_COMPILER=clang \
         -DCMAKE_C_FLAGS="--target=arm-linux-gnueabihf -march=armv7-m -mthumb -Os -std=c99 -Werror -Wall -Wextra -Wwrite-strings -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral -Wshadow -Wasm-operand-widths -Wunused -I../framework/tests/include/spe" \
+        -DCMAKE_C_COMPILER_WORKS=TRUE \
         -DENABLE_TESTING=OFF \
         -DENABLE_PROGRAMS=OFF \
         "$TF_PSA_CRYPTO_ROOT_DIR"
