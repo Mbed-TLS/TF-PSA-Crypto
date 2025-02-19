@@ -4,6 +4,7 @@ psa/hmac_demo
 psa/key_ladder_demo
 psa/psa_constant_names
 psa/psa_hash
+test/benchmark
 
 ###START_GENERATED_FILES###
 # Generated source files
