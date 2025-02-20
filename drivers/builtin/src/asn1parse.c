@@ -179,6 +179,22 @@ int mbedtls_asn1_get_mpi(unsigned char **p,
 }
 #endif /* MBEDTLS_BIGNUM_C */
 
+int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
+                             unsigned char **head, size_t *length)
+{
+    int ret;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, length, MBEDTLS_ASN1_INTEGER)) != 0) {
+        return ret;
+    }
+
+    *head = *p;
+
+    *p += *length;
+
+    return 0;
+}
+
 int mbedtls_asn1_get_bitstring(unsigned char **p, const unsigned char *end,
                                mbedtls_asn1_bitstring *bs)
 {

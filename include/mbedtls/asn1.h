@@ -543,6 +543,12 @@ int mbedtls_asn1_get_mpi(unsigned char **p,
 #endif /* MBEDTLS_BIGNUM_C */
 
 /**
+ * TODO
+ */
+int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
+                             unsigned char **head, size_t *length);
+
+/**
  * \brief       Retrieve an AlgorithmIdentifier ASN.1 sequence.
  *              Updates the pointer to immediately behind the full
  *              AlgorithmIdentifier.
