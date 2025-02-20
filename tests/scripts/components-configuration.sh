@@ -76,6 +76,20 @@ component_tf_psa_crypto_test_full_clang () {
     make test
 }
 
+component_tf_psa_crypto_test_default_no_deprecated () {
+    # Test that removing the deprecated features from the default
+    # configuration leaves something consistent.
+    msg "build: make, default + MBEDTLS_DEPRECATED_REMOVED" # ~ 30s
+    scripts/config.py set MBEDTLS_DEPRECATED_REMOVED
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: make, default + MBEDTLS_DEPRECATED_REMOVED" # ~ 5s
+    make test
+}
+
 component_tf_psa_crypto_build_tfm () {
     # TF-M configuration needs a TF-M platform.
     cp configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
