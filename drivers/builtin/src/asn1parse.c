@@ -183,14 +183,25 @@ int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
                              unsigned char **head, size_t *length)
 {
     int ret;
+    size_t integer_length;
+    unsigned char *start = *p;
 
-    if ((ret = mbedtls_asn1_get_tag(p, end, length, MBEDTLS_ASN1_INTEGER)) != 0) {
+    if ((ret = mbedtls_asn1_get_tag(p, end, &integer_length, MBEDTLS_ASN1_INTEGER)) != 0) {
         return ret;
     }
 
-    *head = *p;
+    int negative = ((**p & 0x80) != 0);
 
-    *p += *length;
+    if (integer_length == 0 || negative) {
+        *length = 0;
+        *head = NULL;
+        *p = start;
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
+
+    *head = *p;
+    *p += integer_length;
+    *length = integer_length;
 
     return 0;
 }
