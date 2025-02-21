@@ -10,19 +10,19 @@
 ################################################################
 
 component_tf_psa_crypto_test_default_out_of_box () {
-    msg "build: cmake, default config (out-of-box)" # ~1min
+    msg "build: default config (out-of-box)" # ~1min
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_BUILD_TYPE:String=Check "$TF_PSA_CRYPTO_ROOT_DIR"
     make
     # Disable fancy stuff
     unset MBEDTLS_TEST_OUTCOME_FILE
 
-    msg "test: main suites make, default config (out-of-box)" # ~10s
+    msg "test: main suites, default config (out-of-box)" # ~10s
     make test
 }
 
 component_tf_psa_crypto_test_default_gcc_asan () {
-    msg "build: cmake, gcc, ASan" # ~ 1 min 50s
+    msg "build: gcc, ASan" # ~ 1 min 50s
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
     make
@@ -32,7 +32,7 @@ component_tf_psa_crypto_test_default_gcc_asan () {
 }
 
 component_tf_psa_crypto_test_default_gcc_asan_new_bignum () {
-    msg "build: cmake, gcc, ASan" # ~ 1 min 50s
+    msg "build: gcc, ASan" # ~ 1 min 50s
     scripts/config.py set MBEDTLS_ECP_WITH_MPI_UINT
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
@@ -43,7 +43,7 @@ component_tf_psa_crypto_test_default_gcc_asan_new_bignum () {
 }
 
 component_tf_psa_crypto_test_full_gcc_asan () {
-    msg "build: full config, cmake, gcc, ASan"
+    msg "build: full config, gcc, ASan"
     scripts/config.py full
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
@@ -54,7 +54,7 @@ component_tf_psa_crypto_test_full_gcc_asan () {
 }
 
 component_tf_psa_crypto_test_full_gcc_asan_new_bignum () {
-    msg "build: full config, cmake, gcc, ASan"
+    msg "build: full config, gcc, ASan"
     scripts/config.py full
     scripts/config.py set MBEDTLS_ECP_WITH_MPI_UINT
     cd $OUT_OF_SOURCE_DIR
@@ -66,7 +66,7 @@ component_tf_psa_crypto_test_full_gcc_asan_new_bignum () {
 }
 
 component_tf_psa_crypto_test_full_clang () {
-    msg "build: cmake, full config, clang" # ~ 50s
+    msg "build: full config, clang" # ~ 50s
     scripts/config.py full
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang -DCMAKE_BUILD_TYPE:String=Release -DTEST_CPP=1 "$TF_PSA_CRYPTO_ROOT_DIR"
@@ -79,14 +79,14 @@ component_tf_psa_crypto_test_full_clang () {
 component_tf_psa_crypto_test_default_no_deprecated () {
     # Test that removing the deprecated features from the default
     # configuration leaves something consistent.
-    msg "build: make, default + MBEDTLS_DEPRECATED_REMOVED" # ~ 30s
+    msg "build: default + MBEDTLS_DEPRECATED_REMOVED" # ~ 30s
     scripts/config.py set MBEDTLS_DEPRECATED_REMOVED
 
     cd $OUT_OF_SOURCE_DIR
     cmake "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
-    msg "test: make, default + MBEDTLS_DEPRECATED_REMOVED" # ~ 5s
+    msg "test: default + MBEDTLS_DEPRECATED_REMOVED" # ~ 5s
     make test
 }
 
