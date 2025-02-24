@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include "psa/build_info.h"
+#include "tf-psa-crypto/build_info.h"
 #include "psa/crypto.h"
-#include "tf_psa_crypto/platform.h"
+#include "mbedtls/platform.h"
 
 #if defined(__APPLE__)
 #define SO_SUFFIX ".dylib"
@@ -28,7 +28,7 @@
         {                                                              \
             fprintf(stderr, "Dynamic loading error for %s(%s): %s\n",  \
                     function, argument, CHECK_DLERROR_error);          \
-            tf_psa_crypto_exit(TF_PSA_CRYPTO_EXIT_FAILURE);            \
+            mbedtls_exit(MBEDTLS_EXIT_FAILURE);            \
         }                                                              \
     }                                                                  \
     while (0)
@@ -44,12 +44,12 @@ int main(void)
     psa_status_t status = psa_crypto_init_ptr();
     if (status == PSA_SUCCESS)
     {
-        tf_psa_crypto_printf("dlopen(%s): Call to psa_crypto_init was successful.\n",
+        mbedtls_printf("dlopen(%s): Call to psa_crypto_init was successful.\n",
                              CRYPTO_SO_FILENAME);
     }
     else
     {
-        tf_psa_crypto_printf("dlopen(%s): Call to psa_crypto_init failed.\n",
+        mbedtls_printf("dlopen(%s): Call to psa_crypto_init failed.\n",
                              CRYPTO_SO_FILENAME);
     }
 
