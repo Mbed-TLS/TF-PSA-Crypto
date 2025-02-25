@@ -16,9 +16,9 @@ target_link_libraries(benchmark PRIVATE ${tfpsacrypto_target} ${CMAKE_THREAD_LIB
 
 # dlopen
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "[Ww][Ii][Nn]")
-    tfpsacrypto_build_program_common(dlopen)
-    target_include_directories(dlopen PRIVATE ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/)
-    target_link_libraries(dlopen PRIVATE ${CMAKE_DL_LIBS} ${tfpsacrypto_target})
+    tfpsacrypto_build_program_common(tfpsacrypto_dlopen)
+    target_include_directories(tfpsacrypto_dlopen PRIVATE ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/)
+    target_link_libraries(tfpsacrypto_dlopen PRIVATE ${CMAKE_DL_LIBS} ${tfpsacrypto_target})
 endif()
 
 install(TARGETS ${executables}
