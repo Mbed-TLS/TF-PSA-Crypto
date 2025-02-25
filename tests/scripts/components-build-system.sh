@@ -28,10 +28,10 @@ component_test_tf_psa_crypto_cmake_as_subdirectory () {
     ./cmake_subproject
 }
 
-component_test_tf_psa_crypto_cmake_as_package () {
+component_test_tf_psa_crypto_as_package () {
     msg "build: cmake 'as-package' build"
     root_dir="$(pwd)"
-    cd tf-psa-crypto/programs/test/cmake_package
+    cd programs/test/cmake_package
     build_variant_dir="$(pwd)"
     cmake .
     make
