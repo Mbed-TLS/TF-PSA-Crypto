@@ -28,6 +28,23 @@ component_test_tf_psa_crypto_cmake_as_subdirectory () {
     ./cmake_subproject
 }
 
+component_test_tf_psa_crypto_cmake_as_package () {
+    msg "build: cmake 'as-package' build"
+    root_dir="$(pwd)"
+    cd tf-psa-crypto/programs/test/cmake_package
+    build_variant_dir="$(pwd)"
+    cmake .
+    make
+    ./cmake_package
+    if [[ "$OSTYPE" == linux* ]]; then
+        PKG_CONFIG_PATH="${build_variant_dir}/tf-psa-crypto/pkgconfig" \
+        ${root_dir}/framework/scripts/pkgconfig.sh \
+        tfpsacrypto
+        # This is the EXPECTED package name. Renaming it could break consumers
+        # of pkg-config, consider carefully.
+    fi
+}
+
 component_test_tf_psa_crypto_cmake_as_package_install () {
     msg "build: cmake 'as-installed-package' build"
     cd programs/test/cmake_package_install
