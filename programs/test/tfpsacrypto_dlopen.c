@@ -16,7 +16,6 @@
 #endif
 
 #define CRYPTO_SO_FILENAME "libtfpsacrypto" SO_SUFFIX
-#define CRYPTO_SO_PATH "core/" CRYPTO_SO_FILENAME
 #include <stdlib.h>
 #include <dlfcn.h>
 
@@ -35,8 +34,8 @@
 
 int main(void)
 {
-    void *crypto_so = dlopen(CRYPTO_SO_PATH, RTLD_NOW);
-    CHECK_DLERROR("dlopen", CRYPTO_SO_PATH);
+    void *crypto_so = dlopen(CRYPTO_SO_FILENAME, RTLD_NOW);
+    CHECK_DLERROR("dlopen", CRYPTO_SO_FILENAME);
 
     psa_status_t (*psa_crypto_init_ptr)(void) = dlsym(crypto_so, "psa_crypto_init");
     CHECK_DLERROR("dlsym", "psa_crypto_init");
@@ -54,6 +53,6 @@ int main(void)
     }
 
     dlclose(crypto_so);
-    CHECK_DLERROR("dlclose", CRYPTO_SO_PATH);
+    CHECK_DLERROR("dlclose", CRYPTO_SO_FILENAME);
     return 0;
 }
