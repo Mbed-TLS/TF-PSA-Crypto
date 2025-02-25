@@ -54,73 +54,72 @@ component_test_tf_psa_crypto_cmake_as_package_install () {
     ./cmake_package_install
 }
 
-component_build_cmake_custom_config_file () {
-    # Make a copy of config file to use for the in-tree test
-    cp "$CONFIG_H" include/mbedtls_config_in_tree_copy.h
-    cp "$CRYPTO_CONFIG_H" include/mbedtls_crypto_config_in_tree_copy.h
+component_tf_psa_crypto_build_custom_config_file () {
+    # Make a copy of config file
+    cp "$CRYPTO_CONFIG_H" include/psa/crypto_config_default.h
 
-    MBEDTLS_ROOT_DIR="$PWD"
-    mkdir "$OUT_OF_SOURCE_DIR"
+    # Build once to get the generated files (for which need an intact config file)
+    msg "build: cmake out-of-source with default config file"
     cd "$OUT_OF_SOURCE_DIR"
-
-    # Build once to get the generated files (which need an intact config file)
-    cmake "$MBEDTLS_ROOT_DIR"
+    cmake "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
-    msg "build: cmake with -DMBEDTLS_CONFIG_FILE"
-    cd "$MBEDTLS_ROOT_DIR"
-    scripts/config.py full
-    cp include/mbedtls/mbedtls_config.h $OUT_OF_SOURCE_DIR/full_config.h
-    cp tf-psa-crypto/include/psa/crypto_config.h $OUT_OF_SOURCE_DIR/full_crypto_config.h
+    msg "build: cmake out-of-source with -DMBEDTLS_CONFIG_FILE"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    cp "$CRYPTO_CONFIG_H" "$OUT_OF_SOURCE_DIR/crypto_config_custom.h"
     cd "$OUT_OF_SOURCE_DIR"
-    echo '#error "cmake -DMBEDTLS_CONFIG_FILE is not working."' > "$MBEDTLS_ROOT_DIR/$CONFIG_H"
-    cmake -DGEN_FILES=OFF -DMBEDTLS_CONFIG_FILE=full_config.h -DTF_PSA_CRYPTO_CONFIG_FILE=full_crypto_config.h "$MBEDTLS_ROOT_DIR"
+    # Force a build failure if the default crypto_config.h header file is included
+    # in the build instead of the one we pass to CMake on the command line.
+    echo '#error "cmake -DMBEDTLS_CONFIG_FILE is not working."' > "$TF_PSA_CRYPTO_ROOT_DIR/$CRYPTO_CONFIG_H"
+    cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=crypto_config_custom.h "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
-    msg "build: cmake with -DMBEDTLS/TF_PSA_CRYPTO_CONFIG_FILE + -DMBEDTLS/TF_PSA_CRYPTO_USER_CONFIG_FILE"
+    msg "build: cmake out-of-source with -DTF_PSA_CRYPTO_CONFIG_FILE + -DTF_PSA_CRYPTO_USER_CONFIG_FILE"
     # In the user config, disable one feature (for simplicity, pick a feature
     # that nothing else depends on).
-    echo '#undef MBEDTLS_SSL_ALL_ALERT_MESSAGES' >user_config.h
-    echo '#undef MBEDTLS_NIST_KW_C' >crypto_user_config.h
-
-    cmake -DGEN_FILES=OFF -DMBEDTLS_CONFIG_FILE=full_config.h -DMBEDTLS_USER_CONFIG_FILE=user_config.h -DTF_PSA_CRYPTO_CONFIG_FILE=full_crypto_config.h -DTF_PSA_CRYPTO_USER_CONFIG_FILE=crypto_user_config.h "$MBEDTLS_ROOT_DIR"
+    echo '#undef MBEDTLS_NIST_KW_C' >crypto_config_user.h
+    # Before rebuilding the library let's verify that the feature was present in the previous build.
+    grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
+    cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=crypto_config_custom.h \
+            -DTF_PSA_CRYPTO_USER_CONFIG_FILE=crypto_config_user.h "$TF_PSA_CRYPTO_ROOT_DIR"
     make
-    not programs/test/query_compile_time_config MBEDTLS_SSL_ALL_ALERT_MESSAGES
-    not programs/test/query_compile_time_config MBEDTLS_NIST_KW_C
+    # Verify that MBEDTLS_NIST_KW_C was really disabled, i.e. crypto_config_user.h was included
+    # correctly in the build.
+    not grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
 
-    rm -f user_config.h full_config.h full_crypto_config.h
-
-    cd "$MBEDTLS_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
 
     # Now repeat the test for an in-tree build:
 
     # Restore config for the in-tree test
-    mv include/mbedtls_config_in_tree_copy.h "$CONFIG_H"
-    mv include/mbedtls_crypto_config_in_tree_copy.h "$CRYPTO_CONFIG_H"
+    cp include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
 
-    # Build once to get the generated files (which need an intact config)
+    # Build once to get the generated files (for which need an intact config)
+    msg "build: cmake in-tree with default config file"
     cmake .
     make
 
-    msg "build: cmake (in-tree) with -DMBEDTLS_CONFIG_FILE"
-    cp include/mbedtls/mbedtls_config.h full_config.h
-    cp tf-psa-crypto/include/psa/crypto_config.h full_crypto_config.h
+    msg "build: cmake in-tree with -DTF_PSA_CRYPTO_CONFIG_FILE"
+    cp include/psa/crypto_config.h crypto_config_custom.h
 
-    echo '#error "cmake -DMBEDTLS_CONFIG_FILE is not working."' > "$MBEDTLS_ROOT_DIR/$CONFIG_H"
-    cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=full_crypto_config.h -DMBEDTLS_CONFIG_FILE=full_config.h .
+    echo '#error "cmake -DMBEDTLS_CONFIG_FILE is not working."' > "$TF_PSA_CRYPTO_ROOT_DIR/$CRYPTO_CONFIG_H"
+    cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=crypto_config_custom.h .
     make
 
-    msg "build: cmake (in-tree) with -DMBEDTLS/TF_PSA_CRYPTO_CONFIG_FILE + -DMBEDTLS/TF_PSA_CRYPTO_USER_CONFIG_FILE"
+    msg "build: cmake in-tree with -DTF_PSA_CRYPTO_CONFIG_FILE + -DTF_PSA_CRYPTO_USER_CONFIG_FILE"
     # In the user config, disable one feature (for simplicity, pick a feature
     # that nothing else depends on).
-    echo '#undef MBEDTLS_SSL_ALL_ALERT_MESSAGES' >user_config.h
-    echo '#undef MBEDTLS_NIST_KW_C' >crypto_user_config.h
-
-    cmake -DGEN_FILES=OFF -DMBEDTLS_CONFIG_FILE=full_config.h -DMBEDTLS_USER_CONFIG_FILE=user_config.h -DTF_PSA_CRYPTO_CONFIG_FILE=full_crypto_config.h -DTF_PSA_CRYPTO_USER_CONFIG_FILE=crypto_user_config.h .
+    echo '#undef MBEDTLS_NIST_KW_C' >crypto_config_user.h
+    # Before rebuilding the library let's verify that the feature was present in the previous build.
+    grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
+    cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=crypto_config_custom.h -DTF_PSA_CRYPTO_USER_CONFIG_FILE=crypto_config_user.h .
     make
-    not programs/test/query_compile_time_config MBEDTLS_SSL_ALL_ALERT_MESSAGES
-    not programs/test/query_compile_time_config MBEDTLS_NIST_KW_C
+    # Verify that MBEDTLS_NIST_KW_C was really disabled, i.e. crypto_config_user.h was included
+    # correctly in the build.
+    not grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
 
-    rm -f user_config.h full_config.h
+    # Restore default crypto config file and remove generated ones
+    mv include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
+    rm -f crypto_config_custom.h crypto_config_user.h
 }
