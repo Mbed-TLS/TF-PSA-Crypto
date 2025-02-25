@@ -763,7 +763,7 @@
  *
  * Module:  library/nist_kw.c
  *
- * Requires: MBEDTLS_AES_C and MBEDTLS_CIPHER_C
+ * Requires: PSA_WANT_ALG_ECB_NO_PADDING and WANT_ALG_AES
  */
 #define MBEDTLS_NIST_KW_C
 

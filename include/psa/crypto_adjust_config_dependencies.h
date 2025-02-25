@@ -48,4 +48,9 @@
 #define PSA_WANT_ALG_CMAC 1
 #endif
 
+#if (defined(NIST_KW_C))
+#define PSA_WANT_ALG_ECB_NO_PADDING
+#define WANT_ALG_AES
+#endif
+
 #endif /* PSA_CRYPTO_ADJUST_CONFIG_DEPENDENCIES_H */
