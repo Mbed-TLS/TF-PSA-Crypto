@@ -40,7 +40,8 @@ typedef enum {
 /**
  * \brief                    This function encrypts a buffer using key wrapping.
  *
- * \param key                The key wrapping psa key ID to use for encryption.
+ * \param key                The key wrapping psa key ID to use for encryption. The key must be for AES
+ *                           and with ECB_NO_PADDING. It must also allow USAGE_ENCRYPT.
  * \param mode               The key wrapping mode to use (MBEDTLS_KW_MODE_KW or MBEDTLS_KW_MODE_KWP)
  * \param input              The buffer holding the input data.
  * \param input_length       The length of the input data in Bytes.
@@ -66,7 +67,8 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
 /**
  * \brief           This function decrypts a buffer using key wrapping.
  *
- * \param key                The key wrapping psa key ID to use for decryption.
+ * \param key                The key wrapping psa key ID to use for decryption. The key must be for AES
+ *                           and with ECB_NO_PADDING. It must also allow USAGE_ENCRYPT.
  * \param mode               The key wrapping mode to use (MBEDTLS_KW_MODE_KW or MBEDTLS_KW_MODE_KWP)
  * \param input              The buffer holding the input data.
  * \param input_length       The length of the input data in Bytes.
