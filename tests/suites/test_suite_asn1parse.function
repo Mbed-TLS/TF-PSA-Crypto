@@ -478,15 +478,15 @@ void get_integer_raw(const data_t *input,
                             integer_head, integer_length);
         /* And check that p is sensible. The minimum length of an
          * encoded INTEGER is 3 bytes */
-        TEST_LE_U((uintptr_t)input->x + 3, (uintptr_t)p);
+        TEST_LE_U((uintptr_t) input->x + 3, (uintptr_t) p);
     } else {
         /* On failure we'd like the pointer and length to be
          * obviously invalid */
-        TEST_EQUAL(integer_head, NULL);
+        TEST_EQUAL((uintptr_t) integer_head, (uintptr_t) NULL);
         TEST_EQUAL(integer_length, 0);
 
         /* We'd also like p not to have advanced at all */
-        TEST_EQUAL(p, input->x);
+        TEST_EQUAL((uintptr_t) p, (uintptr_t) input->x);
     }
 }
 /* END_CASE */
