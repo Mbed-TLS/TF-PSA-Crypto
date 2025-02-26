@@ -1,0 +1,3 @@
+API changes
+   * Remove the rng parameters from lms.* and lmots.*
+
