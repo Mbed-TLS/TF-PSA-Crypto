@@ -288,6 +288,28 @@ int mbedtls_asn1_get_int(unsigned char **p,
                          int *val);
 
 /**
+ * \brief               Parse an Integer and return a (pointer, length) pair that
+ *                      refer to its big-endian value as an array of bytes.
+ * \param[in,out] p     On entry, \c *p points to the start of the ASN.1 element.
+ *                      On successful completion, \c *p points to the first byte
+ *                      beyond the ASN.1 element.
+ *                      On error, the value of \c *p is undefined.
+ * \param[in] end       End of data.
+ * \param[out] head     On success, set to point to the start of the big-endian
+ *                      value of the integer. On failure, set to NULL.
+ * \param[out] length   On success, set to the length of the big-endian value of
+ *                      the Integer, measured in bytes.
+ *
+ * \return              0 if successful.
+ * \return              An ASN.1 error code if the input does not start with
+ *                      a valid ASN.1 INTEGER.
+ * \return              #MBEDTLS_ERR_ASN1_INVALID_DATA if the parsed value is
+ *                      negative.
+ */
+
+int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
+                             unsigned char **head, size_t *length);
+/**
  * \brief       Retrieve an enumerated ASN.1 tag and its value.
  *              Updates the pointer to immediately behind the full tag.
  *
@@ -518,12 +540,6 @@ int mbedtls_asn1_traverse_sequence_of(
               unsigned char *start, size_t len),
     void *ctx);
 
-
-/**
- * TODO
- */
-int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
-                             unsigned char **head, size_t *length);
 
 /**
  * \brief       Retrieve an AlgorithmIdentifier ASN.1 sequence.
