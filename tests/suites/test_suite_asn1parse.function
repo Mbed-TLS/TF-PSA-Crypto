@@ -491,7 +491,7 @@ void get_integer_raw(const data_t *input,
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:MBEDTLS_BIGNUM_C */
 void get_integer_raw_parse(const data_t *input,
                            int expected_result)
 {
