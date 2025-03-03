@@ -6,6 +6,10 @@
 #include "test/constant_flow.h"
 #include "test/bignum_codepath_check.h"
 
+#if defined(MBEDTLS_ASN1_PARSE_C)
+#include "mbedtls/asn1.h"
+#endif
+
 /** Verifies mbedtls_mpi_core_add().
  *
  * \param[in] A       Little-endian presentation of the left operand.
