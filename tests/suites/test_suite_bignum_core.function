@@ -1457,9 +1457,9 @@ void asn1_get_and_parse_integer(const data_t *input,
     if (expected_result == 0) {
         /* On success, try parsing the resulting integer */
 
-        /* Overcalculate number of limbs needed for simplicity. Integer
-         * flooring falls over with a zero-length integer. */
-        size_t limbs = integer_length / sizeof(mbedtls_mpi_uint) + 1;
+        /* Calculate the number of limbs required (int ceil operation) */
+        TEST_ASSERT(integer_length > 0);
+        size_t limbs = 1 + (integer_length - 1) / sizeof(mbedtls_mpi_uint);
         TEST_CALLOC(integer, limbs);
 
         ret = mbedtls_mpi_core_read_be(integer, limbs,
