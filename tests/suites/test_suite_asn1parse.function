@@ -491,43 +491,6 @@ void get_integer_raw(const data_t *input,
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_BIGNUM_C */
-void get_integer_raw_parse(const data_t *input,
-                           int expected_result)
-{
-    int ret;
-    unsigned char *p = input->x;
-    /* Initialize pointer and length to nonsense values so that we can
-     * distinguish leaving them unchanged from setting them in the error
-     * case. */
-    unsigned char *integer_head;
-    size_t integer_length;
-
-    mbedtls_mpi_uint *integer = NULL;
-
-    ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
-                                   &integer_head, &integer_length);
-
-    TEST_EQUAL(ret, expected_result);
-
-    if (expected_result == 0) {
-        /* On success, try parsing the resulting integer */
-
-        /* Overcalculate number of limbs needed for simplicity. Integer
-         * flooring falls over with a zero-length integer. */
-        size_t limbs = integer_length / sizeof(mbedtls_mpi_uint) + 1;
-        TEST_CALLOC(integer, limbs);
-
-        ret = mbedtls_mpi_core_read_be(integer, limbs,
-                                       integer_head, integer_length);
-        TEST_EQUAL(ret, 0);
-    }
-
-exit:
-    mbedtls_free(integer);
-}
-/* END_CASE */
-
 /* BEGIN_CASE */
 void get_enum(const data_t *input,
               const char *expected_hex, int expected_result)
