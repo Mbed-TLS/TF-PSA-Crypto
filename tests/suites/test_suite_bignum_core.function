@@ -1428,8 +1428,9 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C */
 /* Get a raw bignum with mbedtls_asn1_get_integer() and parse
  * it with mbedtls_mpi_core_read_be(). */
-void get_integer_raw_parse(const data_t *input,
-                           int expected_result)
+void asn1_get_and_parse_integer(const data_t *input,
+                                int expected_result,
+                                const char *output_arg)
 {
     int ret;
     unsigned char *p = input->x;
@@ -1440,6 +1441,9 @@ void get_integer_raw_parse(const data_t *input,
     size_t integer_length;
 
     mbedtls_mpi_uint *integer = NULL;
+
+    mbedtls_mpi_uint *output = NULL;
+    size_t output_limbs = 0;
 
     ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
                                    &integer_head, &integer_length);
@@ -1457,9 +1461,19 @@ void get_integer_raw_parse(const data_t *input,
         ret = mbedtls_mpi_core_read_be(integer, limbs,
                                        integer_head, integer_length);
         TEST_EQUAL(ret, 0);
+
+        ret = mbedtls_test_read_mpi_core(&output, &output_limbs,
+                                         output_arg);
+        TEST_EQUAL(ret, 0);
+
+        /* Check that the integer we get is the same as the one we
+         * expected to get. */
+        TEST_MEMORY_COMPARE(integer, limbs * sizeof(*integer),
+                            output, output_limbs * sizeof(*output));
     }
 
 exit:
     mbedtls_free(integer);
+    mbedtls_free(output);
 }
 /* END_CASE */
