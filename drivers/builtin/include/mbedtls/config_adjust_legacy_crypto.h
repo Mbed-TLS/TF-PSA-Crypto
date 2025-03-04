@@ -48,6 +48,12 @@
 #endif
 #endif /* _MINGW32__ || (_MSC_VER && (_MSC_VER <= 1900)) */
 
+/* If MBEDTLS_PSA_CRYPTO_C is defined, make sure MBEDTLS_PSA_CRYPTO_CLIENT
+ * is defined as well to include all PSA code.
+ */
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#define MBEDTLS_PSA_CRYPTO_CLIENT
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /**
  * \def MBEDTLS_USE_PSA_CRYPTO
@@ -157,7 +163,55 @@
 #define MBEDTLS_MD_SHA3_512_VIA_PSA
 #define MBEDTLS_MD_SOME_PSA
 #endif
-#endif /* MBEDTLS_PSA_CRYPTO_C */
+
+#elif defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+
+#if defined(PSA_WANT_ALG_MD5)
+#define MBEDTLS_MD_MD5_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA_1)
+#define MBEDTLS_MD_SHA1_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA_224)
+#define MBEDTLS_MD_SHA224_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA_256)
+#define MBEDTLS_MD_SHA256_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA_384)
+#define MBEDTLS_MD_SHA384_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA_512)
+#define MBEDTLS_MD_SHA512_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_RIPEMD160)
+#define MBEDTLS_MD_RIPEMD160_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA3_224)
+#define MBEDTLS_MD_SHA3_224_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
+#define MBEDTLS_MD_SHA3_256_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
+#define MBEDTLS_MD_SHA3_384_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
+#define MBEDTLS_MD_SHA3_512_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+
+#endif /* !MBEDTLS_PSA_CRYPTO_CLIENT && !MBEDTLS_PSA_CRYPTO_C */
 
 /* Built-in implementations */
 #if defined(MBEDTLS_MD5_C) || \
@@ -299,13 +353,6 @@
     (!defined(MBEDTLS_USE_PSA_CRYPTO) && defined(MBEDTLS_ECDH_C))
 #define MBEDTLS_CAN_ECDH
 #endif
-
-/* If MBEDTLS_PSA_CRYPTO_C is defined, make sure MBEDTLS_PSA_CRYPTO_CLIENT
- * is defined as well to include all PSA code.
- */
-#if defined(MBEDTLS_PSA_CRYPTO_C)
-#define MBEDTLS_PSA_CRYPTO_CLIENT
-#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /* Historically pkparse did not check the CBC padding when decrypting
  * a key. This was a bug, which is now fixed. As a consequence, pkparse
