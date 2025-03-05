@@ -40,9 +40,7 @@ struct mbedtls_pk_info_t {
     /** Make signature */
     int (*sign_func)(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                      const unsigned char *hash, size_t hash_len,
-                     unsigned char *sig, size_t sig_size, size_t *sig_len,
-                     int (*f_rng)(void *, unsigned char *, size_t),
-                     void *p_rng);
+                     unsigned char *sig, size_t sig_size, size_t *sig_len);
 
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     /** Verify signature (restartable) */
@@ -55,26 +53,19 @@ struct mbedtls_pk_info_t {
     int (*sign_rs_func)(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
                         unsigned char *sig, size_t sig_size, size_t *sig_len,
-                        int (*f_rng)(void *, unsigned char *, size_t),
-                        void *p_rng, void *rs_ctx);
+                        void *rs_ctx);
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
 
     /** Decrypt message */
     int (*decrypt_func)(mbedtls_pk_context *pk, const unsigned char *input, size_t ilen,
-                        unsigned char *output, size_t *olen, size_t osize,
-                        int (*f_rng)(void *, unsigned char *, size_t),
-                        void *p_rng);
+                        unsigned char *output, size_t *olen, size_t osize);
 
     /** Encrypt message */
     int (*encrypt_func)(mbedtls_pk_context *pk, const unsigned char *input, size_t ilen,
-                        unsigned char *output, size_t *olen, size_t osize,
-                        int (*f_rng)(void *, unsigned char *, size_t),
-                        void *p_rng);
+                        unsigned char *output, size_t *olen, size_t osize);
 
     /** Check public-private key pair */
-    int (*check_pair_func)(mbedtls_pk_context *pub, mbedtls_pk_context *prv,
-                           int (*f_rng)(void *, unsigned char *, size_t),
-                           void *p_rng);
+    int (*check_pair_func)(mbedtls_pk_context *pub, mbedtls_pk_context *prv);
 
     /** Allocate a new context */
     void * (*ctx_alloc_func)(void);
