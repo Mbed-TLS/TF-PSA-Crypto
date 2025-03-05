@@ -19,6 +19,16 @@ components_tf_psa_crypto_check_python_files () {
     $FRAMEWORK/scripts/check-python-files.sh
 }
 
+component_tf_psa_crypto_check_generated_files () {
+    msg "Check generated files"
+    cd $OUT_OF_SOURCE_DIR
+    cmake -D GEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    cd $TF_PSA_CRYPTO_ROOT_DIR
+    $FRAMEWORK/scripts/make_generated_files.py --root $OUT_OF_SOURCE_DIR --check
+}
+
 component_tf_psa_crypto_check_recursion () {
     msg "Check: recursion.pl" # < 1s
     $FRAMEWORK/scripts/recursion.pl ${PSA_CORE_PATH}/*.c
