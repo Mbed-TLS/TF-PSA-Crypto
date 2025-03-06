@@ -124,7 +124,7 @@ component_tf_psa_crypto_build_custom_config_file () {
     rm -f crypto_config_custom.h crypto_config_user.h
 }
 
-component_tf_psa_crypto_build_cmake_programs_no_testing () {
+component_tf_psa_crypto_build_programs_no_testing () {
     # Verify that the type of builds performed by oss-fuzz don't get accidentally broken
     msg "build: cmake with -DENABLE_PROGRAMS=ON and -DENABLE_TESTING=OFF"
     cd "$OUT_OF_SOURCE_DIR"
