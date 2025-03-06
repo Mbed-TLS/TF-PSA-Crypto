@@ -11178,6 +11178,7 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     psa_key_derivation_operation_t client_derive =
         psa_key_derivation_operation_init_short();
     ecjpake_injected_failure_t inj_err_type = inj_err_type_arg;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     PSA_INIT();
 
@@ -11211,9 +11212,9 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     PSA_ASSERT(psa_pake_set_role(&client, PSA_PAKE_ROLE_CLIENT));
 
     if (inj_err_type == INJECT_ANTICIPATE_KEY_DERIVATION_1) {
-        TEST_EQUAL(psa_pake_get_implicit_key(&server, &server_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&server, &attributes, &key_id),
                    PSA_ERROR_BAD_STATE);
-        TEST_EQUAL(psa_pake_get_implicit_key(&client, &client_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&client, &attributes, &key_id),
                    PSA_ERROR_BAD_STATE);
         goto exit;
     }
@@ -11223,9 +11224,9 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
                      client_input_first, 1, 0);
 
     if (inj_err_type == INJECT_ANTICIPATE_KEY_DERIVATION_2) {
-        TEST_EQUAL(psa_pake_get_implicit_key(&server, &server_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&server, &attributes, &key_id),
                    PSA_ERROR_BAD_STATE);
-        TEST_EQUAL(psa_pake_get_implicit_key(&client, &client_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&client, &attributes, &key_id),
                    PSA_ERROR_BAD_STATE);
         goto exit;
     }
@@ -11234,8 +11235,11 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     ecjpake_do_round(alg, primitive_arg, &server, &client,
                      client_input_first, 2, 0);
 
-    PSA_ASSERT(psa_pake_get_implicit_key(&server, &server_derive));
-    PSA_ASSERT(psa_pake_get_implicit_key(&client, &client_derive));
+    PSA_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key_id));
+    psa_destroy_key(key_id);
+
+    PSA_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key_id));
+    psa_destroy_key(key_id);
 
 exit:
     psa_key_derivation_abort(&server_derive);

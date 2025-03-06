@@ -3136,24 +3136,32 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
             }
             break;
 
-        case 4: /* get_implicit_key */
+        case 4: /* get_shared_key */
             /* Call driver setup indirectly */
             TEST_EQUAL(psa_pake_input(&operation, PSA_PAKE_STEP_KEY_SHARE,
                                       input_buffer, size_key_share),
                        PSA_SUCCESS);
 
-            /* Simulate that we are ready to get implicit key. */
+            /* Simulate that we are ready to get shared key. */
             operation.computation_stage.jpake.round = PSA_JPAKE_FINISHED;
             operation.computation_stage.jpake.inputs = 0;
             operation.computation_stage.jpake.outputs = 0;
             operation.computation_stage.jpake.step = PSA_PAKE_STEP_KEY_SHARE;
 
-            /* --- psa_pake_get_implicit_key --- */
+            /* --- psa_pake_get_shared_key --- */
             mbedtls_test_driver_pake_hooks.forced_status = forced_status;
             memset(&mbedtls_test_driver_pake_hooks.hits, 0,
                    sizeof(mbedtls_test_driver_pake_hooks.hits));
-            TEST_EQUAL(psa_pake_get_implicit_key(&operation, &implicit_key),
+
+            mbedtls_svc_key_id_t shared_key_id;
+
+            TEST_EQUAL(psa_pake_get_shared_key(&operation, &attributes, &shared_key_id),
                        expected_status);
+
+            psa_key_derivation_input_key(&implicit_key, PSA_KEY_DERIVATION_INPUT_SECRET, shared_key_id);
+
+            psa_destroy_key(shared_key_id);
+
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 2);
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.implicit_key, 1);
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.abort, 1);

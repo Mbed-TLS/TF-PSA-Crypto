@@ -1138,13 +1138,14 @@ psa_status_t mbedtls_test_wrap_psa_pake_abort(
 }
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
-/* Wrapper for psa_pake_get_implicit_key */
+/* Wrapper for psa_pake_get_shared_key */
 #if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_get_implicit_key(
+psa_status_t mbedtls_test_wrap_psa_pake_get_shared_key(
     psa_pake_operation_t *arg0_operation,
-    psa_key_derivation_operation_t *arg1_output)
+    psa_key_attributes_t *arg1_key_attributes,
+    mbedtls_svc_key_id_t *arg2_output)
 {
-    psa_status_t status = (psa_pake_get_implicit_key)(arg0_operation, arg1_output);
+    psa_status_t status = (psa_pake_get_shared_key)(arg0_operation, arg1_key_attributes, arg2_output);
     return status;
 }
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */

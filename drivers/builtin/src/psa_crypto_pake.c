@@ -62,7 +62,7 @@
  *   |           | psa_pake_input(PSA_PAKE_STEP_ZK_PUBLIC)
  *   |           | psa_pake_input(PSA_PAKE_STEP_ZK_PROOF)
  *   |
- *   psa_pake_get_implicit_key()
+ *   psa_pake_get_shared_key()
  *   psa_pake_abort()
  */
 

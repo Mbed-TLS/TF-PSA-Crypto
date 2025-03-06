@@ -530,7 +530,7 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * -# To access the shared secret call
  *    \code
  *    // Get Ka=Kb=K
- *    psa_pake_get_implicit_key()
+ *    psa_pake_get_shared_key()
  *    \endcode
  *
  * For more information consult the documentation of the individual
@@ -1256,7 +1256,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  *    the key share that was received from the peer.
  * -# Depending on the algorithm additional calls to #psa_pake_output() and
  *    #psa_pake_input() might be necessary.
- * -# Call #psa_pake_get_implicit_key() to access the shared secret.
+ * -# Call #psa_pake_get_shared_key() to access the shared secret.
  *
  * Refer to the documentation of individual PAKE algorithms for details on the
  * required set up and operation for each algorithm, and for constraints on the
@@ -1265,7 +1265,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  * After a successful call to #psa_pake_setup(), the operation is active, and
  * the application must eventually terminate the operation. The following events
  * terminate an operation:
- * - A successful call to #psa_pake_get_implicit_key().
+ * - A successful call to #psa_pake_get_shared_key().
  * - A call to #psa_pake_abort().
  *
  * If #psa_pake_setup() returns an error, the operation object is unchanged. If
@@ -1714,7 +1714,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
  * object has been initialized as described in #psa_pake_operation_t.
  *
  * In particular, calling psa_pake_abort() after the operation has been
- * terminated by a call to psa_pake_abort() or psa_pake_get_implicit_key()
+ * terminated by a call to psa_pake_abort() or psa_pake_get_shared_key()
  * is safe and has no effect.
  *
  * \param[in,out] operation    The operation to abort.

@@ -610,9 +610,9 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     uint8_t *peer = (uint8_t *) peer_arg;
     size_t user_len = strlen(user_arg);
     size_t peer_len = strlen(peer_arg);
+    
+    mbedtls_svc_key_id_t key_id;
 
-    psa_key_derivation_operation_t key_derivation =
-        PSA_KEY_DERIVATION_OPERATION_INIT;
 
     PSA_INIT();
 
@@ -644,7 +644,9 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
         TEST_EQUAL(psa_pake_input(&operation, PSA_PAKE_STEP_KEY_SHARE,
                                   output_buffer, 0),
                    expected_error);
-        TEST_EQUAL(psa_pake_get_implicit_key(&operation, &key_derivation),
+
+        TEST_EQUAL(psa_pake_get_shared_key(&operation, &attributes,
+                                           &key_id),
                    expected_error);
         goto exit;
     }
@@ -842,6 +844,7 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     psa_key_derivation_operation_t client_derive =
         PSA_KEY_DERIVATION_OPERATION_INIT;
     ecjpake_error_stage_t err_stage = err_stage_arg;
+    mbedtls_svc_key_id_t shared_key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     PSA_INIT();
 
@@ -881,9 +884,9 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     }
 
     if (err_stage == ERR_INJECT_ANTICIPATE_KEY_DERIVATION_1) {
-        TEST_EQUAL(psa_pake_get_implicit_key(&server, &server_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&server, &attributes, &shared_key_id),
                    PSA_ERROR_BAD_STATE);
-        TEST_EQUAL(psa_pake_get_implicit_key(&client, &client_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&client, &attributes, &shared_key_id),
                    PSA_ERROR_BAD_STATE);
         goto exit;
     }
@@ -894,9 +897,9 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
                      ERR_NONE, PSA_SUCCESS);
 
     if (err_stage == ERR_INJECT_ANTICIPATE_KEY_DERIVATION_2) {
-        TEST_EQUAL(psa_pake_get_implicit_key(&server, &server_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&server, &attributes, &shared_key_id),
                    PSA_ERROR_BAD_STATE);
-        TEST_EQUAL(psa_pake_get_implicit_key(&client, &client_derive),
+        TEST_EQUAL(psa_pake_get_shared_key(&client, &attributes, &shared_key_id),
                    PSA_ERROR_BAD_STATE);
         goto exit;
     }
@@ -906,8 +909,11 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
                      client_input_first, PAKE_ROUND_TWO,
                      ERR_NONE, PSA_SUCCESS);
 
-    PSA_ASSERT(psa_pake_get_implicit_key(&server, &server_derive));
-    PSA_ASSERT(psa_pake_get_implicit_key(&client, &client_derive));
+    PSA_ASSERT(psa_pake_get_shared_key(&server, &attributes, &shared_key_id));
+    psa_destroy_key(shared_key_id);
+
+    PSA_ASSERT(psa_pake_get_shared_key(&client, &attributes, &shared_key_id));
+    psa_destroy_key(shared_key_id);
 
 exit:
     psa_key_derivation_abort(&server_derive);

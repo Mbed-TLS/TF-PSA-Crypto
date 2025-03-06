@@ -9384,11 +9384,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
         goto exit;
     }
 
-    if (attributes->lifetime == PSA_KEY_LIFETIME_VOLATILE) {
-        status = psa_import_key(attributes, shared_key, shared_key_len, key);
-    } else {
-        status = psa_save_persistent_key(attributes, shared_key, shared_key_len);
-    }
+    status = psa_import_key(attributes, shared_key, shared_key_len, key);
 
 exit:
 
