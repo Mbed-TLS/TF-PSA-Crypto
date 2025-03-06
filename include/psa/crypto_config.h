@@ -933,7 +933,6 @@
  *
  * Module:  library/asn1.c
  * Caller:  library/x509.c
- *          library/dhm.c
  *          library/pkcs12.c
  *          library/pkcs5.c
  *          library/pkparse.c
@@ -995,8 +994,7 @@
  * Enable PEM decoding / parsing.
  *
  * Module:  library/pem.c
- * Caller:  library/dhm.c
- *          library/pkparse.c
+ * Caller:  library/pkparse.c
  *          library/x509_crl.c
  *          library/x509_crt.c
  *          library/x509_csr.c
@@ -2037,14 +2035,13 @@
  *          library/bignum_core.c
  *          library/bignum_mod.c
  *          library/bignum_mod_raw.c
- * Caller:  library/dhm.c
- *          library/ecp.c
+ * Caller:  library/ecp.c
  *          library/ecdsa.c
  *          library/rsa.c
  *          library/rsa_alt_helpers.c
  *          library/ssl_tls.c
  *
- * This module is required for RSA, DHM and ECC (ECDH, ECDSA) support.
+ * This module is required for RSA and ECC (ECDH, ECDSA) support.
  */
 #define MBEDTLS_BIGNUM_C
 
@@ -2245,25 +2242,6 @@
  *            security risk. We recommend considering stronger ciphers instead.
  */
 #define MBEDTLS_DES_C
-
-/**
- * \def MBEDTLS_DHM_C
- *
- * Enable the Diffie-Hellman-Merkle module.
- *
- * Module:  library/dhm.c
- * Caller:  library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * \warning    Using DHE constitutes a security risk as it
- *             is not possible to validate custom DH parameters.
- *             If possible, it is recommended users should consider
- *             preferring other methods of key exchange.
- *             See dhm.h for more details.
- *
- */
-#define MBEDTLS_DHM_C
 
 /**
  * \def MBEDTLS_ECDH_C
