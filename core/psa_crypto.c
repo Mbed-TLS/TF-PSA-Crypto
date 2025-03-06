@@ -2349,6 +2349,44 @@ exit:
 }
 #endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
+psa_status_t psa_register_opaque_key(const psa_key_attributes_t *attributes,
+                                     const uint8_t *label, size_t label_length,
+                                     mbedtls_svc_key_id_t *key_id)
+{
+    psa_status_t status;
+    psa_key_slot_t *slot = NULL;
+    psa_se_drv_table_entry_t *driver = NULL;
+
+    if ((attributes == NULL) || (label == NULL) || (label_length == 0) ||
+        (key_id == NULL)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (!psa_key_lifetime_is_external(psa_get_key_lifetime(attributes))) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    status = psa_start_key_creation(PSA_KEY_CREATION_IMPORT, attributes,
+                                    &slot, &driver);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_copy_key_material_into_slot(slot, label, label_length);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_finish_key_creation(slot, driver, key_id);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_fail_key_creation(slot, driver);
+    }
+
+    return status;
+}
+
 psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
                           const psa_key_attributes_t *specified_attributes,
                           mbedtls_svc_key_id_t *target_key)
