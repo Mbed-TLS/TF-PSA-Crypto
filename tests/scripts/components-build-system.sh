@@ -9,7 +9,7 @@
 #### Build System Testing
 ################################################################
 
-component_test_tf_psa_crypto_cmake_out_of_source () {
+component_test_tf_psa_crypto_out_of_source () {
     msg "build: cmake tf-psa-crypto 'out-of-source' build"
     cd $OUT_OF_SOURCE_DIR
     # Note: Explicitly generate files as these are turned off in releases
@@ -19,7 +19,7 @@ component_test_tf_psa_crypto_cmake_out_of_source () {
     make test
 }
 
-component_test_tf_psa_crypto_cmake_as_subdirectory () {
+component_test_tf_psa_crypto_as_subdirectory () {
     msg "build: cmake 'as-subdirectory' build"
     cd programs/test/cmake_subproject
     # Note: Explicitly generate files as these are turned off in releases
