@@ -6530,7 +6530,7 @@ cleanup:
         status = mbedtls_to_psa_error(ret);
     }
     if (status != PSA_SUCCESS) {
-        mbedtls_free(*data);
+        mbedtls_zeroize_and_free(*data, m_bytes);
         *data = NULL;
     }
     mbedtls_mpi_free(&k);
@@ -6705,7 +6705,7 @@ static psa_status_t psa_generate_derived_key_internal(
     }
 
 exit:
-    mbedtls_free(data);
+    mbedtls_zeroize_and_free(data, bytes);
     return status;
 }
 
