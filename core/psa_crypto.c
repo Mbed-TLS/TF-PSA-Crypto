@@ -9348,12 +9348,13 @@ exit:
     return status;
 }
 
-psa_status_t psa_pake_get_implicit_key(
-    psa_pake_operation_t *operation,
-    psa_key_derivation_operation_t *output)
+psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
+    const psa_key_attributes_t * attributes,
+    mbedtls_svc_key_id_t * key)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t abort_status = PSA_ERROR_CORRUPTION_DETECTED;
+
     uint8_t shared_key[MBEDTLS_PSA_JPAKE_BUFFER_SIZE];
     size_t shared_key_len = 0;
 
@@ -9377,23 +9378,26 @@ psa_status_t psa_pake_get_implicit_key(
         goto exit;
     }
 
-    status = psa_driver_wrapper_pake_get_implicit_key(operation,
-                                                      shared_key,
-                                                      sizeof(shared_key),
-                                                      &shared_key_len);
+    status = psa_driver_wrapper_pake_get_implicit_key(operation, shared_key, sizeof(shared_key), &shared_key_len);
 
     if (status != PSA_SUCCESS) {
         goto exit;
     }
 
-    status = psa_key_derivation_input_bytes(output,
-                                            PSA_KEY_DERIVATION_INPUT_SECRET,
-                                            shared_key,
-                                            shared_key_len);
+    if (attributes->lifetime == PSA_KEY_LIFETIME_VOLATILE) {
+        status = psa_import_key(attributes, shared_key, shared_key_len, key);
+    } else {
+        status = psa_save_persistent_key(attributes, shared_key, shared_key_len);
+    }
 
-    mbedtls_platform_zeroize(shared_key, sizeof(shared_key));
 exit:
+
+    if (status != PSA_SUCCESS) {
+        *key = PSA_KEY_ID_NULL;
+    }
+
     abort_status = psa_pake_abort(operation);
+
     return status == PSA_SUCCESS ? abort_status : status;
 }
 

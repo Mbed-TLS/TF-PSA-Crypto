@@ -1575,66 +1575,134 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
                             const uint8_t *input,
                             size_t input_length);
 
-/** Get implicitly confirmed shared secret from a PAKE.
- *
- * At this point there is a cryptographic guarantee that only the authenticated
- * party who used the same password is able to compute the key. But there is no
- * guarantee that the peer is the party it claims to be and was able to do so.
- *
- * That is, the authentication is only implicit. Since the peer is not
- * authenticated yet, no action should be taken yet that assumes that the peer
- * is who it claims to be. For example, do not access restricted files on the
- * peer's behalf until an explicit authentication has succeeded.
- *
- * This function can be called after the key exchange phase of the operation
- * has completed. It imports the shared secret output of the PAKE into the
- * provided derivation operation. The input step
- * #PSA_KEY_DERIVATION_INPUT_SECRET is used when placing the shared key
- * material in the key derivation operation.
- *
- * The exact sequence of calls to perform a password-authenticated key
- * exchange depends on the algorithm in use.  Refer to the documentation of
- * individual PAKE algorithm types (`PSA_ALG_XXX` values of type
- * ::psa_algorithm_t such that #PSA_ALG_IS_PAKE(\c alg) is true) for more
- * information.
- *
- * When this function returns successfully, \p operation becomes inactive.
- * If this function returns an error status, both \p operation
- * and \c key_derivation operations enter an error state and must be aborted by
- * calling psa_pake_abort() and psa_key_derivation_abort() respectively.
- *
- * \param[in,out] operation    Active PAKE operation.
- * \param[out] output          A key derivation operation that is ready
- *                             for an input step of type
- *                             #PSA_KEY_DERIVATION_INPUT_SECRET.
- *
+/** Extract the shared secret from the PAKE as a key.
+ * 
+ * This is the final call in a PAKE operation, which retrieves the shared
+ * secret as a key. It is recommended that this key is used as an input to
+ * a key derivation operation to produce additional cryptographic keys. For
+ * some PAKE algorithms, the shared secret is also suitable for use as a key
+ * in cryptographic operations such as encryption. Refer to the documentation 
+ * of individual PAKE algorithms for more information, see PAKE algorithms.
+ * 
+ * Depending on the key confirmation requested in the cipher suite,
+ * psa_pake_get_shared_key() must be called either before or after the 
+ * key-confirmation output and input steps for the PAKE algorithm. The key
+ * confirmation affects the guarantees that can be made about the shared key:
+ * 
+ * Unconfirmed key:
+ * 
+ * If the cipher suite used to set up the operation requested an unconfirmed
+ * key, the application must call psa_pake_get_shared_key() after the
+ * key-exchange output and input steps are completed. The PAKE algorithm
+ * provides a cryptographic guarantee that only a peer who used the same
+ * password, and identity inputs, is able to compute the same key. However,
+ * there is no guarantee that the peer is the participant it claims to be,
+ * and was able to compute the same key.
+ * 
+ * Since the peer is not authenticated, no action should be taken that assumes
+ * that the peer is who it claims to be. For example, do not access restricted
+ * resources on the peer’s behalf until an explicit authentication has succeeded.
+ * 
+ * \note Some PAKE algorithms do not enable the output of the shared secret
+ * until it has been confirmed.
+ * 
+ * Confirmed key:
+ * 
+ * If the cipher suite used to set up the operation requested a confirmed key,
+ * the application must call psa_pake_get_shared_key() after the key-exchange
+ * and key-confirmation output and input steps are completed.
+ * 
+ * Following key confirmation, the PAKE algorithm provides a cryptographic
+ * guarantee that the peer used the same password and identity inputs, and
+ * has computed the identical shared secret key.
+ * 
+ * Since the peer is not authenticated, no action should be taken that assumes
+ * that the peer is who it claims to be. For example, do not access restricted
+ * resources on the peer’s behalf until an explicit authentication has succeeded.
+ * 
+ * \note Some PAKE algorithms do not include any key-confirmation steps.
+ * 
+ * The exact sequence of calls to perform a password-authenticated key exchange
+ * depends on the algorithm in use. Refer to the documentation of individual PAKE
+ * algorithms for more information. See PAKE algorithms.
+ * 
+ * When this function returns successfully, operation becomes inactive. If this
+ * function returns an error status, the operation enters an error state and must
+ * be aborted by calling psa_pake_abort().
+ * 
+ * \param[in,out]   operation   Active PAKE operation.
+ * \param[in]       attributes  The attributes for the new key. This function uses
+ *                              the attributes as follows:
+ *                              The key type is required. All PAKE algorithms can
+ *                              output a key of type #PSA_KEY_TYPE_DERIVE or
+ *                              #PSA_KEY_TYPE_HMAC. PAKE algorithms that produce a
+ *                              pseudo-random shared secret, can also output
+ *                              block-cipher key types, for example
+ *                              #PSA_KEY_TYPE_AES. Refer to the documentation of
+ *                              individual PAKE algorithms for more information.
+ *                              See PAKE algorithms.
+ * 
+ *                              The key size in #attributes must be zero. The
+ *                              returned key size is always determined from the
+ *                              PAKE shared secret.
+ * 
+ *                              The key permitted-algorithm policy is required for
+ *                              keys that will be used for a cryptographic operation.
+ * 
+ *                              The key usage flags define what operations are permitted
+ *                              with the key.
+ * 
+ *                              The key lifetime and identifier are required for a
+ *                              persistent key.
+ * 
+ *                              \note This is an input parameter: it is not updated
+ *                              with the final key attributes. The final attributes
+ *                              of the new key can be queried by calling
+ *                              psa_get_key_attributes() with the key’s identifier.
+ * \param[out]      key         On success, an identifier for the newly created key.
+ *                              #PSA_KEY_ID_NULL on failure.
+ * 
  * \retval #PSA_SUCCESS
- *         Success.
+ *         Success. If the key is persistent, the key material and the key’s metadata have
+ *         been saved to persistent storage.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The following conditions can result in this error:
+ *         The state of PAKE operation operation is not valid: it must be ready to return
+ *         the shared secret.
+ *         For an unconfirmed key, this will be when the key-exchange output and input
+ *         steps are complete, but prior to any key-confirmation output and input steps.
+ *         For a confirmed key, this will be when all key-exchange and key-confirmation
+ *         output and input steps are complete.
+ *         The library requires initializing by a call to #psa_crypto_init().
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         The implementation does not permit creating a key with the specified attributes
+ *         due to some implementation-specific policy.
+ * \retval #PSA_ERROR_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is already a persistent
+ *         key with the given identifier.
+ * 
  * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         #PSA_KEY_DERIVATION_INPUT_SECRET is not compatible with the
- *         algorithm in the \p output key derivation operation.
+ *         The following conditions can result in this error:
+ *         The key type is not valid for output from this operation’s algorithm.
+ *         The key size is nonzero.
+ *         The key lifetime is invalid.
+ *         The key identifier is not valid for the key lifetime.
+ *         The key usage flags include invalid values.
+ *         The key’s permitted-usage algorithm is invalid.
+ *         The key attributes, as a whole, are invalid.
  * \retval #PSA_ERROR_NOT_SUPPORTED
- *         Input from a PAKE is not supported by the algorithm in the \p output
- *         key derivation operation.
+ *         The key attributes, as a whole, are not supported for creation from a PAKE secret,
+ *         either by the implementation in general or in the specified storage location.
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
  * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
  * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
  * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
  * \retval #PSA_ERROR_DATA_INVALID \emptydescription
- * \retval #PSA_ERROR_BAD_STATE
- *         The PAKE operation state is not valid (it must be active, but beyond
- *         that validity is specific to the algorithm), or
- *         the library has not been previously initialized by psa_crypto_init(),
- *         or the state of \p output is not valid for
- *         the #PSA_KEY_DERIVATION_INPUT_SECRET step. This can happen if the
- *         step is out of order or the application has done this step already
- *         and it may not be repeated.
- *         It is implementation-dependent whether a failure to initialize
- *         results in this error code.
  */
-psa_status_t psa_pake_get_implicit_key(psa_pake_operation_t *operation,
-                                       psa_key_derivation_operation_t *output);
+psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
+                                     const psa_key_attributes_t * attributes,
+                                     mbedtls_svc_key_id_t * key);
 
 /** Abort a PAKE operation.
  *
