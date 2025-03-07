@@ -359,6 +359,14 @@ static inline void mbedtls_xor_no_simd(unsigned char *r,
  */
 #if defined(static_assert) && !defined(__FreeBSD__)
 #define MBEDTLS_STATIC_ASSERT(expr, msg)    static_assert(expr, msg)
+/* The GCC compiler supports _Static_assert since version 4.6 even with C99 so checking the
+ * compiler version should suffice.
+ * For non GCC compilers we check that C>=11 is used since C11 introduced _Static_assert.
+ */
+#elif !defined(__cplusplus) && \
+    ((defined(__GNUC__) && ((__GNUC__ == 4 && __GNUC_MINOR >= 6) || __GNUC__ > 4)) || \
+    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L))
+#define MBEDTLS_STATIC_ASSERT(expr, msg)    _Static_assert(expr, msg)
 #else
 /* Make sure `MBEDTLS_STATIC_ASSERT(expr, msg);` is valid both inside and
  * outside a function. We choose a struct declaration, which can be repeated
