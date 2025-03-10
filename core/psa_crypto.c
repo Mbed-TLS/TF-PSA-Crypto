@@ -8534,31 +8534,6 @@ void mbedtls_psa_crypto_free(void)
 
 }
 
-#if defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS)
-/** Recover a transaction that was interrupted by a power failure.
- *
- * This function is called during initialization, before psa_crypto_init()
- * returns. If this function returns a failure status, the initialization
- * fails.
- */
-static psa_status_t psa_crypto_recover_transaction(
-    const psa_crypto_transaction_t *transaction)
-{
-    switch (transaction->unknown.type) {
-        case PSA_CRYPTO_TRANSACTION_CREATE_KEY:
-        case PSA_CRYPTO_TRANSACTION_DESTROY_KEY:
-        /* TODO - fall through to the failure case until this
-         * is implemented.
-         * https://github.com/ARMmbed/mbed-crypto/issues/218
-         */
-        default:
-            /* We found an unsupported transaction in the storage.
-             * We don't know what state the storage is in. Give up. */
-            return PSA_ERROR_DATA_INVALID;
-    }
-}
-#endif /* PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS */
-
 static psa_status_t mbedtls_psa_crypto_init_subsystem(mbedtls_psa_crypto_subsystem subsystem)
 {
     psa_status_t status = PSA_SUCCESS;
@@ -8653,23 +8628,8 @@ static psa_status_t mbedtls_psa_crypto_init_subsystem(mbedtls_psa_crypto_subsyst
 #endif /* defined(MBEDTLS_THREADING_C) */
 
             if (!(global_data.initialized & PSA_CRYPTO_SUBSYSTEM_TRANSACTION_INITIALIZED)) {
-#if defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS)
-                status = psa_crypto_load_transaction();
-                if (status == PSA_SUCCESS) {
-                    status = psa_crypto_recover_transaction(&psa_crypto_transaction);
-                    if (status == PSA_SUCCESS) {
-                        global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_TRANSACTION_INITIALIZED;
-                    }
-                    status = psa_crypto_stop_transaction();
-                } else if (status == PSA_ERROR_DOES_NOT_EXIST) {
-                    /* There's no transaction to complete. It's all good. */
-                    global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_TRANSACTION_INITIALIZED;
-                    status = PSA_SUCCESS;
-                }
-#else /* defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS) */
                 global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_TRANSACTION_INITIALIZED;
                 status = PSA_SUCCESS;
-#endif /* defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS) */
             }
 
 #if defined(MBEDTLS_THREADING_C)
