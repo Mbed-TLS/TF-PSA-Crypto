@@ -861,6 +861,29 @@ static psa_algorithm_t psa_pake_cs_get_hash(
 static void psa_pake_cs_set_hash(psa_pake_cipher_suite_t *cipher_suite,
                                  psa_algorithm_t hash);
 
+/** Retrieve the key confirmation from a PAKE cipher suite.
+ *
+ * \param[in] cipher_suite      The cipher suite structure to query.
+ *
+ * \return A key confirmation value: either #PSA_PAKE_CONFIRMED_KEY or
+ *         #PSA_PAKE_UNCONFIRMED_KEY.
+ */
+static uint32_t psa_pake_cs_get_key_confirmation(const psa_pake_cipher_suite_t *cipher_suite);
+
+/** Declare the key confirmation for a PAKE cipher suite.
+ *
+ * This function overwrites any key confirmation previously set in \p cipher_suite.
+ *
+ * The documentation of individual PAKE algorithms specifies which key confirmation values
+ * are valid for the algorithm.
+ *
+ * \param[out] cipher_suite     The cipher suite structure to write to.
+ * \param[in]  key_confirmation The key confirmation value to write: either
+ *                              #PSA_PAKE_CONFIRMED_KEY or #PSA_PAKE_UNCONFIRMED_KEY.
+ */
+static void psa_pake_cs_set_key_confirmation(psa_pake_cipher_suite_t *cipher_suite,
+                                             uint32_t key_confirmation);
+
 /** The type of the state data structure for PAKE operations.
  *
  * Before calling any function on a PAKE operation object, the application
@@ -1546,7 +1569,7 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 /** Returns a suitable initializer for a PAKE cipher suite object of type
  * psa_pake_cipher_suite_t.
  */
-#define PSA_PAKE_CIPHER_SUITE_INIT { PSA_ALG_NONE, 0, 0, 0, PSA_ALG_NONE }
+#define PSA_PAKE_CIPHER_SUITE_INIT { PSA_ALG_NONE, 0, 0, 0, 0 }
 
 /** Returns a suitable initializer for a PAKE operation object of type
  * psa_pake_operation_t.
@@ -1564,6 +1587,7 @@ struct psa_pake_cipher_suite_s {
     psa_pake_family_t family;
     uint16_t  bits;
     psa_algorithm_t hash;
+    uint32_t key_confirmation;
 };
 
 static inline psa_algorithm_t psa_pake_cs_get_algorithm(
@@ -1625,6 +1649,17 @@ static inline void psa_pake_cs_set_hash(psa_pake_cipher_suite_t *cipher_suite,
     } else {
         cipher_suite->hash = hash;
     }
+}
+
+static inline uint32_t psa_pake_cs_get_key_confirmation(const psa_pake_cipher_suite_t *cipher_suite)
+{
+    return cipher_suite->key_confirmation;
+}
+
+static inline void psa_pake_cs_set_key_confirmation(psa_pake_cipher_suite_t *cipher_suite,
+                                                    uint32_t key_confirmation)
+{
+    cipher_suite->key_confirmation = key_confirmation;
 }
 
 struct psa_crypto_driver_pake_inputs_s {
