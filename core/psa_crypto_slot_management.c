@@ -16,9 +16,6 @@
 #include "psa_crypto_driver_wrappers_no_static.h"
 #include "psa_crypto_slot_management.h"
 #include "psa_crypto_storage.h"
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#include "psa_crypto_se.h"
-#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -691,25 +688,6 @@ static psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot)
         goto exit;
     }
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    /* Special handling is required for loading keys associated with a
-     * dynamically registered SE interface. */
-    const psa_drv_se_t *drv;
-    psa_drv_se_context_t *drv_context;
-    if (psa_get_se_driver(slot->attr.lifetime, &drv, &drv_context)) {
-        psa_se_key_data_storage_t *data;
-
-        if (key_data_length != sizeof(*data)) {
-            status = PSA_ERROR_DATA_INVALID;
-            goto exit;
-        }
-        data = (psa_se_key_data_storage_t *) key_data;
-        status = psa_copy_key_material_into_slot(
-            slot, data->slot_number, sizeof(data->slot_number));
-        goto exit;
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
     status = psa_copy_key_material_into_slot(slot, key_data, key_data_length);
     if (status != PSA_SUCCESS) {
         goto exit;
@@ -943,20 +921,8 @@ psa_status_t psa_unregister_read_under_mutex(psa_key_slot_t *slot)
 psa_status_t psa_validate_key_location(psa_key_lifetime_t lifetime,
                                        psa_se_drv_table_entry_t **p_drv)
 {
+    (void) p_drv;
     if (psa_key_lifetime_is_external(lifetime)) {
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-        /* Check whether a driver is registered against this lifetime */
-        psa_se_drv_table_entry_t *driver = psa_get_se_driver_entry(lifetime);
-        if (driver != NULL) {
-            if (p_drv != NULL) {
-                *p_drv = driver;
-            }
-            return PSA_SUCCESS;
-        }
-#else /* MBEDTLS_PSA_CRYPTO_SE_C */
-        (void) p_drv;
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
         /* Key location for external keys gets checked by the wrapper */
         return PSA_SUCCESS;
     } else {

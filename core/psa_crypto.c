@@ -26,9 +26,6 @@
 #include "psa_crypto_mac.h"
 #include "psa_crypto_rsa.h"
 #include "psa_crypto_ecp.h"
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#include "psa_crypto_se.h"
-#endif
 #include "psa_crypto_slot_management.h"
 /* Include internal declarations that are useful for implementing persistently
  * stored keys. */
@@ -1276,9 +1273,6 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
     psa_key_slot_t *slot;
     psa_status_t status; /* status of the last operation */
     psa_status_t overall_status = PSA_SUCCESS;
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    psa_se_drv_table_entry_t *driver;
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
     if (mbedtls_svc_key_id_is_null(key)) {
         return PSA_SUCCESS;
@@ -1340,40 +1334,6 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
         goto exit;
     }
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    driver = psa_get_se_driver_entry(slot->attr.lifetime);
-    if (driver != NULL) {
-        /* For a key in a secure element, we need to do three things:
-         * remove the key file in internal storage, destroy the
-         * key inside the secure element, and update the driver's
-         * persistent data. Start a transaction that will encompass these
-         * three actions. */
-        psa_crypto_prepare_transaction(PSA_CRYPTO_TRANSACTION_DESTROY_KEY);
-        psa_crypto_transaction.key.lifetime = slot->attr.lifetime;
-        psa_crypto_transaction.key.slot = psa_key_slot_get_slot_number(slot);
-        psa_crypto_transaction.key.id = slot->attr.id;
-        status = psa_crypto_save_transaction();
-        if (status != PSA_SUCCESS) {
-            (void) psa_crypto_stop_transaction();
-            /* We should still try to destroy the key in the secure
-             * element and the key metadata in storage. This is especially
-             * important if the error is that the storage is full.
-             * But how to do it exactly without risking an inconsistent
-             * state after a reset?
-             * https://github.com/ARMmbed/mbed-crypto/issues/215
-             */
-            overall_status = status;
-            goto exit;
-        }
-
-        status = psa_destroy_se_key(driver,
-                                    psa_key_slot_get_slot_number(slot));
-        if (overall_status == PSA_SUCCESS) {
-            overall_status = status;
-        }
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
     if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
         /* Destroy the copy of the persistent key from storage.
@@ -1385,19 +1345,6 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
         }
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) */
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    if (driver != NULL) {
-        status = psa_save_se_persistent_data(driver);
-        if (overall_status == PSA_SUCCESS) {
-            overall_status = status;
-        }
-        status = psa_crypto_stop_transaction();
-        if (overall_status == PSA_SUCCESS) {
-            overall_status = status;
-        }
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
 exit:
     /* Unregister from reading the slot. If we are the last active reader
@@ -1436,29 +1383,8 @@ psa_status_t psa_get_key_attributes(mbedtls_svc_key_id_t key,
 
     *attributes = slot->attr;
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    if (psa_get_se_driver_entry(slot->attr.lifetime) != NULL) {
-        psa_set_key_slot_number(attributes,
-                                psa_key_slot_get_slot_number(slot));
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
     return psa_unregister_read_under_mutex(slot);
 }
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-psa_status_t psa_get_key_slot_number(
-    const psa_key_attributes_t *attributes,
-    psa_key_slot_number_t *slot_number)
-{
-    if (attributes->has_slot_number) {
-        *slot_number = attributes->slot_number;
-        return PSA_SUCCESS;
-    } else {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-}
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
 static psa_status_t psa_export_key_buffer_internal(const uint8_t *key_buffer,
                                                    size_t key_buffer_size,
@@ -1968,57 +1894,6 @@ static psa_status_t psa_start_key_creation(
 #endif
     }
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    /* For a key in a secure element, we need to do three things
-     * when creating or registering a persistent key:
-     * create the key file in internal storage, create the
-     * key inside the secure element, and update the driver's
-     * persistent data. This is done by starting a transaction that will
-     * encompass these three actions.
-     * For registering a volatile key, we just need to find an appropriate
-     * slot number inside the SE. Since the key is designated volatile, creating
-     * a transaction is not required. */
-    /* The first thing to do is to find a slot number for the new key.
-     * We save the slot number in persistent storage as part of the
-     * transaction data. It will be needed to recover if the power
-     * fails during the key creation process, to clean up on the secure
-     * element side after restarting. Obtaining a slot number from the
-     * secure element driver updates its persistent state, but we do not yet
-     * save the driver's persistent state, so that if the power fails,
-     * we can roll back to a state where the key doesn't exist. */
-    if (*p_drv != NULL) {
-        psa_key_slot_number_t slot_number;
-        status = psa_find_se_slot_for_key(attributes, method, *p_drv,
-                                          &slot_number);
-        if (status != PSA_SUCCESS) {
-            return status;
-        }
-
-        if (!PSA_KEY_LIFETIME_IS_VOLATILE(attributes->lifetime)) {
-            psa_crypto_prepare_transaction(PSA_CRYPTO_TRANSACTION_CREATE_KEY);
-            psa_crypto_transaction.key.lifetime = slot->attr.lifetime;
-            psa_crypto_transaction.key.slot = slot_number;
-            psa_crypto_transaction.key.id = slot->attr.id;
-            status = psa_crypto_save_transaction();
-            if (status != PSA_SUCCESS) {
-                (void) psa_crypto_stop_transaction();
-                return status;
-            }
-        }
-
-        status = psa_copy_key_material_into_slot(
-            slot, (uint8_t *) (&slot_number), sizeof(slot_number));
-        if (status != PSA_SUCCESS) {
-            return status;
-        }
-    }
-
-    if (*p_drv == NULL && method == PSA_KEY_CREATION_REGISTER) {
-        /* Key registration only makes sense with a secure element. */
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
     return PSA_SUCCESS;
 }
 
@@ -2068,53 +1943,13 @@ static psa_status_t psa_finish_key_creation(
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
     if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-        if (driver != NULL) {
-            psa_se_key_data_storage_t data;
-            psa_key_slot_number_t slot_number =
-                psa_key_slot_get_slot_number(slot);
-
-            MBEDTLS_STATIC_ASSERT(sizeof(slot_number) ==
-                                  sizeof(data.slot_number),
-                                  "Slot number size does not match psa_se_key_data_storage_t");
-
-            memcpy(&data.slot_number, &slot_number, sizeof(slot_number));
-            status = psa_save_persistent_key(&slot->attr,
-                                             (uint8_t *) &data,
-                                             sizeof(data));
-        } else
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-        {
-            /* Key material is saved in export representation in the slot, so
-             * just pass the slot buffer for storage. */
-            status = psa_save_persistent_key(&slot->attr,
-                                             slot->key.data,
-                                             slot->key.bytes);
-        }
+        /* Key material is saved in export representation in the slot, so
+         * just pass the slot buffer for storage. */
+        status = psa_save_persistent_key(&slot->attr,
+                                         slot->key.data,
+                                         slot->key.bytes);
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) */
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    /* Finish the transaction for a key creation. This does not
-     * happen when registering an existing key. Detect this case
-     * by checking whether a transaction is in progress (actual
-     * creation of a persistent key in a secure element requires a transaction,
-     * but registration or volatile key creation doesn't use one). */
-    if (driver != NULL &&
-        psa_crypto_transaction.unknown.type == PSA_CRYPTO_TRANSACTION_CREATE_KEY) {
-        status = psa_save_se_persistent_data(driver);
-        if (status != PSA_SUCCESS) {
-            psa_destroy_persistent_key(slot->attr.id);
-
-#if defined(MBEDTLS_THREADING_C)
-            PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
-                                      &mbedtls_threading_key_slot_mutex));
-#endif
-            return status;
-        }
-        status = psa_crypto_stop_transaction();
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
     if (status == PSA_SUCCESS) {
         *key = slot->attr.id;
@@ -2159,23 +1994,6 @@ static void psa_fail_key_creation(psa_key_slot_t *slot,
      * but we still need to wipe the slot of confidential data. */
     mbedtls_mutex_lock(&mbedtls_threading_key_slot_mutex);
 #endif
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    /* TODO: If the key has already been created in the secure
-     * element, and the failure happened later (when saving metadata
-     * to internal storage), we need to destroy the key in the secure
-     * element.
-     * https://github.com/ARMmbed/mbed-crypto/issues/217
-     */
-
-    /* Abort the ongoing transaction if any (there may not be one if
-     * the creation process failed before starting one, or if the
-     * key creation is a registration of a key in a secure element).
-     * Earlier functions must already have done what it takes to undo any
-     * partial creation. All that's left is to update the transaction data
-     * itself. */
-    (void) psa_crypto_stop_transaction();
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
     psa_wipe_key_slot(slot);
 
@@ -2247,9 +2065,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
     }
 
     /* In the case of a transparent key or an opaque key stored in local
-     * storage ( thus not in the case of importing a key in a secure element
-     * with storage ( MBEDTLS_PSA_CRYPTO_SE_C ) ),we have to allocate a
-     * buffer to hold the imported key material. */
+     * storage,we have to allocate a buffer to hold the imported key material. */
     if (slot->key.bytes == 0) {
         if (psa_key_lifetime_is_external(attributes->lifetime)) {
             status = psa_driver_wrapper_get_key_buffer_size_from_key_data(
@@ -2301,53 +2117,6 @@ exit:
 
     return status;
 }
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-psa_status_t mbedtls_psa_register_se_key(
-    const psa_key_attributes_t *attributes)
-{
-    psa_status_t status;
-    psa_key_slot_t *slot = NULL;
-    psa_se_drv_table_entry_t *driver = NULL;
-    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
-
-    /* Leaving attributes unspecified is not currently supported.
-     * It could make sense to query the key type and size from the
-     * secure element, but not all secure elements support this
-     * and the driver HAL doesn't currently support it. */
-    if (psa_get_key_type(attributes) == PSA_KEY_TYPE_NONE) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-    if (psa_get_key_bits(attributes) == 0) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-
-    /* Not usable with volatile keys, even with an appropriate location,
-     * due to the API design.
-     * https://github.com/Mbed-TLS/mbedtls/issues/9253
-     */
-    if (PSA_KEY_LIFETIME_IS_VOLATILE(psa_get_key_lifetime(attributes))) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-
-    status = psa_start_key_creation(PSA_KEY_CREATION_REGISTER, attributes,
-                                    &slot, &driver);
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-    status = psa_finish_key_creation(slot, driver, &key);
-
-exit:
-    if (status != PSA_SUCCESS) {
-        psa_fail_key_creation(slot, driver);
-    }
-
-    /* Registration doesn't keep the key in RAM. */
-    psa_close_key(key);
-    return status;
-}
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
 psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
                           const psa_key_attributes_t *specified_attributes,
@@ -6760,12 +6529,6 @@ psa_status_t psa_key_derivation_output_key_custom(
 
     status = psa_start_key_creation(PSA_KEY_CREATION_DERIVE, attributes,
                                     &slot, &driver);
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    if (driver != NULL) {
-        /* Deriving a key in a secure element is not implemented yet. */
-        status = PSA_ERROR_NOT_SUPPORTED;
-    }
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
     if (status == PSA_SUCCESS) {
         status = psa_generate_derived_key_internal(slot,
                                                    attributes->bits,
@@ -8493,9 +8256,7 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
     }
 
     /* In the case of a transparent key or an opaque key stored in local
-     * storage ( thus not in the case of generating a key in a secure element
-     * with storage ( MBEDTLS_PSA_CRYPTO_SE_C ) ),we have to allocate a
-     * buffer to hold the generated key material. */
+     * storage, we have to allocate a buffer to hold the generated key material. */
     if (slot->key.bytes == 0) {
         if (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime) ==
             PSA_KEY_LOCATION_LOCAL_STORAGE) {

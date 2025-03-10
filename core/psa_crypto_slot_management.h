@@ -11,7 +11,6 @@
 
 #include "psa/crypto.h"
 #include "psa_crypto_core.h"
-#include "psa_crypto_se.h"
 
 /** Range of volatile key identifiers.
  *
