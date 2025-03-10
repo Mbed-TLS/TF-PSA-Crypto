@@ -113,9 +113,6 @@ component_tf_psa_crypto_test_tsan () {
     # Interruptible ECC tests are not thread safe
     scripts/config.py unset MBEDTLS_ECP_RESTARTABLE
 
-    # The deprecated MBEDTLS_PSA_CRYPTO_SE_C interface is not thread safe.
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_SE_C
-
     cd $OUT_OF_SOURCE_DIR
     CC=clang cmake -DCMAKE_BUILD_TYPE:String=TSan "$TF_PSA_CRYPTO_ROOT_DIR"
     make
@@ -158,4 +155,3 @@ component_tf_psa_crypto_release_test_valgrind_psa () {
     msg "test: main suites, Valgrind (full config)"
     make memcheck
 }
-
