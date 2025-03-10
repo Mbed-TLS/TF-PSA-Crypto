@@ -19,6 +19,7 @@
 
 #include "crypto_types.h"
 #include "crypto_compat.h"
+#include "crypto_values.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -451,7 +452,6 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * psa_pake_cs_set_algorithm(cipher_suite, PSA_ALG_JPAKE);
  * psa_pake_cs_set_primitive(cipher_suite,
  *                           PSA_PAKE_PRIMITIVE(type, family, bits));
- * psa_pake_cs_set_hash(cipher_suite, hash);
  * \endcode
  *
  * For more information on how to set a specific curve or field, refer to the
@@ -548,7 +548,11 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * of RFC 8236 for two examples.
  *
  */
-#define PSA_ALG_JPAKE                   ((psa_algorithm_t) 0x0a000100)
+#define PSA_ALG_JPAKE_BASE                      ((psa_algorithm_t) 0x0a000100)
+
+#define PSA_ALG_JPAKE(hash_alg)                 (PSA_ALG_JPAKE_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
+
+#define PSA_ALG_IS_JPAKE(alg)                   (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_JPAKE_BASE)
 
 /** @} */
 
@@ -778,7 +782,7 @@ typedef uint32_t psa_pake_primitive_t;
  *                      return 0.
  */
 #define PSA_PAKE_OUTPUT_SIZE(alg, primitive, output_step)               \
-    (alg == PSA_ALG_JPAKE &&                                           \
+    (alg == PSA_ALG_IS_JPAKE(alg) &&                                           \
      primitive == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,      \
                                      PSA_ECC_FAMILY_SECP_R1, 256) ?    \
      (                                                                 \
@@ -808,7 +812,7 @@ typedef uint32_t psa_pake_primitive_t;
  *                      the parameters are incompatible, return 0.
  */
 #define PSA_PAKE_INPUT_SIZE(alg, primitive, input_step)                 \
-    (alg == PSA_ALG_JPAKE &&                                           \
+    (alg == PSA_ALG_IS_JPAKE(alg) &&                                           \
      primitive == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,      \
                                      PSA_ECC_FAMILY_SECP_R1, 256) ?    \
      (                                                                 \
@@ -845,7 +849,7 @@ typedef uint32_t psa_pake_primitive_t;
 /** Returns a suitable initializer for a PAKE cipher suite object of type
  * psa_pake_cipher_suite_t.
  */
-#define PSA_PAKE_CIPHER_SUITE_INIT { PSA_ALG_NONE, 0, 0, 0, PSA_ALG_NONE, 0 }
+#define PSA_PAKE_CIPHER_SUITE_INIT { PSA_ALG_NONE, 0, 0, 0, 0 }
 
 /** Returns a suitable initializer for a PAKE operation object of type
  * psa_pake_operation_t.
@@ -1057,36 +1061,6 @@ static psa_pake_family_t psa_pake_cs_get_family(
  */
 static uint16_t psa_pake_cs_get_bits(
     const psa_pake_cipher_suite_t *cipher_suite);
-
-/** Retrieve the hash algorithm from a PAKE cipher suite.
- *
- * \param[in] cipher_suite      The cipher suite structure to query.
- *
- * \return The hash algorithm stored in the cipher suite structure. The return
- *         value is 0 if the PAKE is not parametrised by a hash algorithm or if
- *         the hash algorithm is not set.
- */
-static psa_algorithm_t psa_pake_cs_get_hash(
-    const psa_pake_cipher_suite_t *cipher_suite);
-
-/** Declare the hash algorithm for a PAKE cipher suite.
- *
- * This function overwrites any hash algorithm
- * previously set in \p cipher_suite.
- *
- * Refer to the documentation of individual PAKE algorithm types (`PSA_ALG_XXX`
- * values of type ::psa_algorithm_t such that #PSA_ALG_IS_PAKE(\c alg) is true)
- * for more information.
- *
- * \param[out] cipher_suite     The cipher suite structure to write to.
- * \param hash                  The hash involved in the cipher suite.
- *                              (`PSA_ALG_XXX` values of type ::psa_algorithm_t
- *                              such that #PSA_ALG_IS_HASH(\c alg) is true.)
- *                              If this is 0, the hash algorithm in
- *                              \p cipher_suite becomes unspecified.
- */
-static void psa_pake_cs_set_hash(psa_pake_cipher_suite_t *cipher_suite,
-                                 psa_algorithm_t hash);
 
 /** Retrieve the key confirmation from a PAKE cipher suite.
  *
@@ -1734,21 +1708,6 @@ static inline uint16_t psa_pake_cs_get_bits(
     return cipher_suite->bits;
 }
 
-static inline psa_algorithm_t psa_pake_cs_get_hash(
-    const psa_pake_cipher_suite_t *cipher_suite)
-{
-    return cipher_suite->hash;
-}
-
-static inline void psa_pake_cs_set_hash(psa_pake_cipher_suite_t *cipher_suite,
-                                        psa_algorithm_t hash)
-{
-    if (!PSA_ALG_IS_HASH(hash)) {
-        cipher_suite->hash = 0;
-    } else {
-        cipher_suite->hash = hash;
-    }
-}
 
 static inline uint32_t psa_pake_cs_get_key_confirmation(const psa_pake_cipher_suite_t *cipher_suite)
 {
