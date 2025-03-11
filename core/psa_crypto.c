@@ -1764,13 +1764,9 @@ static psa_status_t psa_validate_key_policy(const psa_key_policy_t *policy)
  * Call this function early in the key creation process.
  *
  * \param[in] attributes    Key attributes for the new key.
- * \param[out] p_drv        On any return, the driver for the key, if any.
- *                          NULL for a transparent key.
  *
  */
-static psa_status_t psa_validate_key_attributes(
-    const psa_key_attributes_t *attributes,
-    psa_se_drv_table_entry_t **p_drv)
+static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attributes)
 {
     psa_status_t status = PSA_ERROR_INVALID_ARGUMENT;
     psa_key_lifetime_t lifetime = psa_get_key_lifetime(attributes);
@@ -1848,7 +1844,7 @@ static psa_status_t psa_start_key_creation(
     (void) method;
     *p_drv = NULL;
 
-    status = psa_validate_key_attributes(attributes, p_drv);
+    status = psa_validate_key_attributes(attributes);
     if (status != PSA_SUCCESS) {
         return status;
     }
