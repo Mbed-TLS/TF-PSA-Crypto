@@ -31,16 +31,10 @@ execute_process(
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_SOURCE_DIR}/..
     OUTPUT_VARIABLE
-        base_config_generated_data_files_raw)
+        base_config_generated_data_files)
 string(REGEX REPLACE "[^;]*/" ""
-       base_config_generated_data_files_raw
-       "${base_config_generated_data_files_raw}")
-# Can be replace by list(FILTER ...) when CI CMake version is >=3.6
-foreach(file ${base_config_generated_data_files_raw})
-    if(${file} MATCHES "psa")
-        list(APPEND base_config_generated_data_files ${file})
-    endif()
-endforeach()
+       base_config_generated_data_files
+       "${base_config_generated_data_files}")
 
 execute_process(
     COMMAND
@@ -118,7 +112,6 @@ if(GEN_FILES)
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_config_tests.py
             --directory ${CMAKE_CURRENT_BINARY_DIR}/suites
-            ${config_generated_data_files}
         DEPENDS
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_config_tests.py
             # Do not declare the configuration files as dependencies: they
