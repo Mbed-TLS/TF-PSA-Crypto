@@ -742,6 +742,14 @@ psa_status_t mbedtls_test_wrap_psa_raw_key_agreement(
 #define psa_raw_key_agreement(arg0_alg, arg1_private_key, arg2_peer_key, arg3_peer_key_length, arg4_output, arg5_output_size, arg6_output_length) \
     mbedtls_test_wrap_psa_raw_key_agreement(arg0_alg, arg1_private_key, arg2_peer_key, arg3_peer_key_length, arg4_output, arg5_output_size, arg6_output_length)
 
+psa_status_t mbedtls_test_wrap_psa_register_opaque_key(
+    const psa_key_attributes_t *arg0_attributes,
+    const uint8_t *arg1_label,
+    size_t arg2_label_length,
+    mbedtls_svc_key_id_t *arg3_key_id);
+#define psa_register_opaque_key(arg0_attributes, arg1_label, arg2_label_length, arg3_key_id) \
+    mbedtls_test_wrap_psa_register_opaque_key(arg0_attributes, arg1_label, arg2_label_length, arg3_key_id)
+
 psa_status_t mbedtls_test_wrap_psa_sign_hash(
     mbedtls_svc_key_id_t arg0_key,
     psa_algorithm_t arg1_alg,

@@ -1308,6 +1308,23 @@ psa_status_t mbedtls_test_wrap_psa_raw_key_agreement(
     return status;
 }
 
+/* Wrapper for psa_register_opaque_key */
+psa_status_t mbedtls_test_wrap_psa_register_opaque_key(
+    const psa_key_attributes_t *arg0_attributes,
+    const uint8_t *arg1_label,
+    size_t arg2_label_length,
+    mbedtls_svc_key_id_t *arg3_key_id)
+{
+#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
+    MBEDTLS_TEST_MEMORY_POISON(arg1_label, arg2_label_length);
+#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
+    psa_status_t status = (psa_register_opaque_key)(arg0_attributes, arg1_label, arg2_label_length, arg3_key_id);
+#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
+    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_label, arg2_label_length);
+#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
+    return status;
+}
+
 /* Wrapper for psa_sign_hash */
 psa_status_t mbedtls_test_wrap_psa_sign_hash(
     mbedtls_svc_key_id_t arg0_key,
