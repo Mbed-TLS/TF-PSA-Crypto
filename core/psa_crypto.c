@@ -1825,8 +1825,6 @@ static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attr
  * \param method            An identification of the calling function.
  * \param[in] attributes    Key attributes for the new key.
  * \param[out] p_slot       On success, a pointer to the prepared slot.
- * \param[out] p_drv        On any return, the driver for the key, if any.
- *                          NULL for a transparent key.
  *
  * \retval #PSA_SUCCESS
  *         The key slot is ready to receive key material.
@@ -1836,13 +1834,11 @@ static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attr
 static psa_status_t psa_start_key_creation(
     psa_key_creation_method_t method,
     const psa_key_attributes_t *attributes,
-    psa_key_slot_t **p_slot,
-    psa_se_drv_table_entry_t **p_drv)
+    psa_key_slot_t **p_slot)
 {
     psa_status_t status;
 
     (void) method;
-    *p_drv = NULL;
 
     status = psa_validate_key_attributes(attributes);
     if (status != PSA_SUCCESS) {
@@ -2049,8 +2045,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
 
     LOCAL_INPUT_ALLOC(data_external, data_length, data);
 
-    status = psa_start_key_creation(PSA_KEY_CREATION_IMPORT, attributes,
-                                    &slot, &driver);
+    status = psa_start_key_creation(PSA_KEY_CREATION_IMPORT, attributes, &slot);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
@@ -2152,7 +2147,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
     }
 
     status = psa_start_key_creation(PSA_KEY_CREATION_COPY, &actual_attributes,
-                                    &target_slot, &driver);
+                                    &target_slot);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
@@ -6519,7 +6514,7 @@ psa_status_t psa_key_derivation_output_key_custom(
     }
 
     status = psa_start_key_creation(PSA_KEY_CREATION_DERIVE, attributes,
-                                    &slot, &driver);
+                                    &slot);
     if (status == PSA_SUCCESS) {
         status = psa_generate_derived_key_internal(slot,
                                                    attributes->bits,
@@ -8241,7 +8236,7 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
     }
 
     status = psa_start_key_creation(PSA_KEY_CREATION_GENERATE, attributes,
-                                    &slot, &driver);
+                                    &slot);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
