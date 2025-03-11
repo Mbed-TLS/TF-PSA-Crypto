@@ -1822,7 +1822,6 @@ static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attr
  * It is the responsibility of the caller to change the slot's state to
  * PSA_SLOT_EMPTY/FULL once key creation has finished.
  *
- * \param method            An identification of the calling function.
  * \param[in] attributes    Key attributes for the new key.
  * \param[out] p_slot       On success, a pointer to the prepared slot.
  *
@@ -1832,13 +1831,10 @@ static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attr
  *         You must call psa_fail_key_creation() to wipe and free the slot.
  */
 static psa_status_t psa_start_key_creation(
-    psa_key_creation_method_t method,
     const psa_key_attributes_t *attributes,
     psa_key_slot_t **p_slot)
 {
     psa_status_t status;
-
-    (void) method;
 
     status = psa_validate_key_attributes(attributes);
     if (status != PSA_SUCCESS) {
@@ -2035,7 +2031,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
 
     LOCAL_INPUT_ALLOC(data_external, data_length, data);
 
-    status = psa_start_key_creation(PSA_KEY_CREATION_IMPORT, attributes, &slot);
+    status = psa_start_key_creation(attributes, &slot);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
@@ -2135,8 +2131,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
         goto exit;
     }
 
-    status = psa_start_key_creation(PSA_KEY_CREATION_COPY, &actual_attributes,
-                                    &target_slot);
+    status = psa_start_key_creation(&actual_attributes, &target_slot);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
@@ -6501,8 +6496,7 @@ psa_status_t psa_key_derivation_output_key_custom(
         return PSA_ERROR_NOT_PERMITTED;
     }
 
-    status = psa_start_key_creation(PSA_KEY_CREATION_DERIVE, attributes,
-                                    &slot);
+    status = psa_start_key_creation(attributes, &slot);
     if (status == PSA_SUCCESS) {
         status = psa_generate_derived_key_internal(slot,
                                                    attributes->bits,
@@ -8222,8 +8216,7 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    status = psa_start_key_creation(PSA_KEY_CREATION_GENERATE, attributes,
-                                    &slot);
+    status = psa_start_key_creation(attributes, &slot);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
