@@ -1959,14 +1959,9 @@ static psa_status_t psa_finish_key_creation(
  * of this function. Sets the slot's state to PSA_SLOT_EMPTY.
  *
  * \param[in,out] slot  Pointer to the slot with key material.
- * \param[in] driver    The secure element driver for the key,
- *                      or NULL for a transparent key.
  */
-static void psa_fail_key_creation(psa_key_slot_t *slot,
-                                  psa_se_drv_table_entry_t *driver)
+static void psa_fail_key_creation(psa_key_slot_t *slot)
 {
-    (void) driver;
-
     if (slot == NULL) {
         return;
     }
@@ -2021,7 +2016,6 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
     psa_status_t status;
     LOCAL_INPUT_DECLARE(data_external, data);
     psa_key_slot_t *slot = NULL;
-    psa_se_drv_table_entry_t *driver = NULL;
     size_t bits;
     size_t storage_size = data_length;
 
@@ -2094,7 +2088,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
 exit:
     LOCAL_INPUT_FREE(data_external, data);
     if (status != PSA_SUCCESS) {
-        psa_fail_key_creation(slot, driver);
+        psa_fail_key_creation(slot);
     }
 
     return status;
@@ -2109,7 +2103,6 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
     psa_key_slot_t *source_slot = NULL;
     psa_key_slot_t *target_slot = NULL;
     psa_key_attributes_t actual_attributes = *specified_attributes;
-    psa_se_drv_table_entry_t *driver = NULL;
     size_t storage_size = 0;
 
     *target_key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -2197,7 +2190,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
     status = psa_finish_key_creation(target_slot, target_key);
 exit:
     if (status != PSA_SUCCESS) {
-        psa_fail_key_creation(target_slot, driver);
+        psa_fail_key_creation(target_slot);
     }
 
     unlock_status = psa_unregister_read_under_mutex(source_slot);
@@ -6486,7 +6479,6 @@ psa_status_t psa_key_derivation_output_key_custom(
 {
     psa_status_t status;
     psa_key_slot_t *slot = NULL;
-    psa_se_drv_table_entry_t *driver = NULL;
 
     *key = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -6520,7 +6512,7 @@ psa_status_t psa_key_derivation_output_key_custom(
         status = psa_finish_key_creation(slot, key);
     }
     if (status != PSA_SUCCESS) {
-        psa_fail_key_creation(slot, driver);
+        psa_fail_key_creation(slot);
     }
 
     return status;
@@ -8204,7 +8196,6 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
 {
     psa_status_t status;
     psa_key_slot_t *slot = NULL;
-    psa_se_drv_table_entry_t *driver = NULL;
     size_t key_buffer_size;
 
     *key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -8279,7 +8270,7 @@ exit:
         status = psa_finish_key_creation(slot, key);
     }
     if (status != PSA_SUCCESS) {
-        psa_fail_key_creation(slot, driver);
+        psa_fail_key_creation(slot);
     }
 
     return status;
