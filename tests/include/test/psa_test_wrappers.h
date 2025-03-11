@@ -38,13 +38,6 @@ psa_status_t mbedtls_test_wrap_mbedtls_psa_platform_get_builtin_key(
     mbedtls_test_wrap_mbedtls_psa_platform_get_builtin_key(arg0_key_id, arg1_lifetime, arg2_slot_number)
 #endif /* defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) */
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-psa_status_t mbedtls_test_wrap_mbedtls_psa_register_se_key(
-    const psa_key_attributes_t *arg0_attributes);
-#define mbedtls_psa_register_se_key(arg0_attributes) \
-    mbedtls_test_wrap_mbedtls_psa_register_se_key(arg0_attributes)
-#endif /* defined(MBEDTLS_PSA_CRYPTO_SE_C) */
-
 psa_status_t mbedtls_test_wrap_psa_aead_abort(
     psa_aead_operation_t *arg0_operation);
 #define psa_aead_abort(arg0_operation) \

@@ -37,16 +37,6 @@ psa_status_t mbedtls_test_wrap_mbedtls_psa_platform_get_builtin_key(
 }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) */
 
-/* Wrapper for mbedtls_psa_register_se_key */
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-psa_status_t mbedtls_test_wrap_mbedtls_psa_register_se_key(
-    const psa_key_attributes_t *arg0_attributes)
-{
-    psa_status_t status = (mbedtls_psa_register_se_key)(arg0_attributes);
-    return status;
-}
-#endif /* defined(MBEDTLS_PSA_CRYPTO_SE_C) */
-
 /* Wrapper for psa_aead_abort */
 psa_status_t mbedtls_test_wrap_psa_aead_abort(
     psa_aead_operation_t *arg0_operation)
