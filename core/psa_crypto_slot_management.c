@@ -918,19 +918,6 @@ psa_status_t psa_unregister_read_under_mutex(psa_key_slot_t *slot)
     return status;
 }
 
-psa_status_t psa_validate_key_location(psa_key_lifetime_t lifetime,
-                                       psa_se_drv_table_entry_t **p_drv)
-{
-    (void) p_drv;
-    if (psa_key_lifetime_is_external(lifetime)) {
-        /* Key location for external keys gets checked by the wrapper */
-        return PSA_SUCCESS;
-    } else {
-        /* Local/internal keys are always valid */
-        return PSA_SUCCESS;
-    }
-}
-
 psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime)
 {
     if (PSA_KEY_LIFETIME_IS_VOLATILE(lifetime)) {

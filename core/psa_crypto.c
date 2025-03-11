@@ -1776,11 +1776,6 @@ static psa_status_t psa_validate_key_attributes(
     psa_key_lifetime_t lifetime = psa_get_key_lifetime(attributes);
     mbedtls_svc_key_id_t key = psa_get_key_id(attributes);
 
-    status = psa_validate_key_location(lifetime, p_drv);
-    if (status != PSA_SUCCESS) {
-        return status;
-    }
-
     status = psa_validate_key_persistence(lifetime);
     if (status != PSA_SUCCESS) {
         return status;
