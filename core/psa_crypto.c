@@ -1897,8 +1897,6 @@ static psa_status_t psa_start_key_creation(
  * key creation process.
  *
  * \param[in,out] slot  Pointer to the slot with key material.
- * \param[in] driver    The secure element driver for the key,
- *                      or NULL for a transparent key.
  * \param[out] key      On success, identifier of the key. Note that the
  *                      key identifier is also stored in the key slot.
  *
@@ -1916,12 +1914,10 @@ static psa_status_t psa_start_key_creation(
  */
 static psa_status_t psa_finish_key_creation(
     psa_key_slot_t *slot,
-    psa_se_drv_table_entry_t *driver,
     mbedtls_svc_key_id_t *key)
 {
     psa_status_t status = PSA_SUCCESS;
     (void) slot;
-    (void) driver;
 
 #if defined(MBEDTLS_THREADING_C)
     PSA_THREADING_CHK_RET(mbedtls_mutex_lock(
@@ -2094,7 +2090,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
         goto exit;
     }
 
-    status = psa_finish_key_creation(slot, driver, key);
+    status = psa_finish_key_creation(slot, key);
 exit:
     LOCAL_INPUT_FREE(data_external, data);
     if (status != PSA_SUCCESS) {
@@ -2198,7 +2194,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
             goto exit;
         }
     }
-    status = psa_finish_key_creation(target_slot, driver, target_key);
+    status = psa_finish_key_creation(target_slot, target_key);
 exit:
     if (status != PSA_SUCCESS) {
         psa_fail_key_creation(target_slot, driver);
@@ -6521,7 +6517,7 @@ psa_status_t psa_key_derivation_output_key_custom(
                                                    operation);
     }
     if (status == PSA_SUCCESS) {
-        status = psa_finish_key_creation(slot, driver, key);
+        status = psa_finish_key_creation(slot, key);
     }
     if (status != PSA_SUCCESS) {
         psa_fail_key_creation(slot, driver);
@@ -8280,7 +8276,7 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
 
 exit:
     if (status == PSA_SUCCESS) {
-        status = psa_finish_key_creation(slot, driver, key);
+        status = psa_finish_key_creation(slot, key);
     }
     if (status != PSA_SUCCESS) {
         psa_fail_key_creation(slot, driver);
