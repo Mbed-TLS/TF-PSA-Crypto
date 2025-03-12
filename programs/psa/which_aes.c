@@ -1,4 +1,4 @@
-/*  
+/*
  *  A program that prints the current AES implementation, namely one of:
  *  software, AESCE, AESNI assembly, or AESNI intrinsics.
  */
@@ -21,9 +21,8 @@ int main(void)
 #else
 int main(void)
 {
-    mbedtls_aes_implementation *aes_imp = NULL;
-    mbedtls_aes_get_implementation(&aes_imp);
-    switch (*aes_imp) {
+    mbedtls_aes_implementation aes_imp = mbedtls_aes_get_implementation();
+    switch (aes_imp) {
         case MBEDTLS_AES_IMP_SOFTWARE:
             mbedtls_printf("AES using SOFTWARE implementation\n");
             break;

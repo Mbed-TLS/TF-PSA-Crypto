@@ -117,10 +117,9 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx);
  *                 The options are: unknown, software AES, AESCE, AESNI
  *                 assembly, and AESNI intrinsics.
  *
- * \param aes_imp_out  The variable holding the output data, namely the AES
- *                     implementation currently in use.
+ * \return         The enum corresponding to the AES implementation.
  */
-void mbedtls_aes_get_implementation(mbedtls_aes_implementation **aes_imp_out);
+mbedtls_aes_implementation mbedtls_aes_get_implementation(void);
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**

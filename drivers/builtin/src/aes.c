@@ -480,34 +480,28 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx)
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_aes_context));
 }
 
-void mbedtls_aes_get_implementation(mbedtls_aes_implementation **aes_imp_out)
+mbedtls_aes_implementation mbedtls_aes_get_implementation(void)
 {
-    int aes_imp = MBEDTLS_AES_IMP_UNKNOWN;
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
 #if MBEDTLS_AESNI_HAVE_CODE == 1
-        aes_imp = MBEDTLS_AES_IMP_AESNI_ASM;
+        return MBEDTLS_AES_IMP_AESNI_ASM;
 #elif MBEDTLS_AESNI_HAVE_CODE == 2
-        aes_imp = MBEDTLS_AES_IMP_AESNI_INTRINSICS;
+        return MBEDTLS_AES_IMP_AESNI_INTRINSICS;
 #endif /* MBEDTLS_AESNI_HAVE_CODE == 1 || 2 */
-        goto exit;
     }
 #endif /* MBEDTLS_AESNI_HAVE_CODE */
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
     if (MBEDTLS_AESCE_HAS_SUPPORT()) {
-        aes_imp = MBEDTLS_AES_IMP_AESCE;
-        goto exit;
+        return MBEDTLS_AES_IMP_AESCE;
     }
 #endif
 
 #if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
-    aes_imp = MBEDTLS_AES_IMP_SOFTWARE;
-    goto exit;
+    return MBEDTLS_AES_IMP_SOFTWARE;
 #endif
-
-exit:
-    *aes_imp_out = &aes_imp;
+    return MBEDTLS_AES_IMP_UNKNOWN;
 }
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
