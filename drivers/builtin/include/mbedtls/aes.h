@@ -84,6 +84,14 @@ typedef struct mbedtls_aes_xts_context {
 } mbedtls_aes_xts_context;
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
+typedef enum {
+    MBEDTLS_AES_IMP_UNKNOWN = -1,
+    MBEDTLS_AES_IMP_SOFTWARE,
+    MBEDTLS_AES_IMP_AESCE,
+    MBEDTLS_AES_IMP_AESNI_ASM,
+    MBEDTLS_AES_IMP_AESNI_INTRINSICS,
+} mbedtls_aes_implementation;
+
 /**
  * \brief          This function initializes the specified AES context.
  *
@@ -102,6 +110,17 @@ void mbedtls_aes_init(mbedtls_aes_context *ctx);
  *                 Otherwise, the context must have been at least initialized.
  */
 void mbedtls_aes_free(mbedtls_aes_context *ctx);
+
+/**
+ * \brief          This function returns the AES implementation.
+ *
+ *                 The options are: unknown, software AES, AESCE, AESNI
+ *                 assembly, and AESNI intrinsics.
+ *
+ * \param aes_imp_out  The variable holding the output data, namely the AES
+ *                     implementation currently in use.
+ */
+void mbedtls_aes_get_implementation(mbedtls_aes_implementation **aes_imp_out);
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
