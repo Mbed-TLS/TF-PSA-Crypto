@@ -9,6 +9,18 @@
 #### Basic checks
 ################################################################
 
+component_tf_psa_crypto_check_code_style () {
+    msg "Check C code style"
+    $FRAMEWORK/scripts/code_style.py
+}
+
+support_tf_psa_crypto_check_code_style () {
+    case $(uncrustify --version) in
+        *0.75.1*) true;;
+        *) false;;
+    esac
+}
+
 component_tf_psa_crypto_check_files () {
     msg "Check: file sanity checks (permissions, encodings)" # < 1s
     $FRAMEWORK/scripts/check_files.py

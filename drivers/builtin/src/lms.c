@@ -585,7 +585,7 @@ int mbedtls_lms_generate_private_key(mbedtls_lms_private_t *ctx,
     ctx->have_private_key = 1;
 
     ret = psa_generate_random(ctx->params.I_key_identifier,
-                MBEDTLS_LMOTS_I_KEY_ID_LEN);
+                              MBEDTLS_LMOTS_I_KEY_ID_LEN);
     if (ret != 0) {
         goto exit;
     }
