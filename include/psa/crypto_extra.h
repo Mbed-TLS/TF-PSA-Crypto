@@ -1581,6 +1581,31 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
                                   { 0 }, { { 0 } } }
 #endif
 
+/**
+ * A key confirmation value that indicates an confirmed key in a PAKE cipher suite.
+ *
+ * This key confirmation value will result in the PAKE algorithm exchanging data
+ * to verify that the shared key is identical for both parties. This is the default
+ * key confirmation value in an initialized PAKE cipher suite object.
+ *
+ * Some algorithms do not include confirmation of the shared key.
+ */
+#define PSA_PAKE_CONFIRMED_KEY 0
+
+/**
+ * A key confirmation value that indicates an unconfirmed key in a PAKE cipher suite.
+ *
+ * This key confirmation value will result in the PAKE algorithm terminating prior to
+ * confirming that the resulting shared key is identical for both parties.
+ *
+ * Some algorithms do not support returning an unconfirmed shared key.
+ *
+ * \warning When the shared key is not confirmed as part of the PAKE operation, the
+ *          application is responsible for mitigating risks that arise from the possible
+ *          mismatch in the output keys.
+ */
+#define PSA_PAKE_UNCONFIRMED_KEY 1
+
 struct psa_pake_cipher_suite_s {
     psa_algorithm_t algorithm;
     psa_pake_primitive_type_t type;
