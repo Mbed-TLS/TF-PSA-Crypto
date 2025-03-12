@@ -12,6 +12,7 @@
 #define MBEDTLS_PK_INTERNAL_H
 
 #include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include "mbedtls/ecp.h"

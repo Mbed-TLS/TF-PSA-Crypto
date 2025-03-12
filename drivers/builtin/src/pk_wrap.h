@@ -13,7 +13,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
