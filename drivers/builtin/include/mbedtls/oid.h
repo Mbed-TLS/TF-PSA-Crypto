@@ -511,7 +511,7 @@ int mbedtls_oid_get_attr_short_name(const mbedtls_asn1_buf *oid, const char **sh
  *
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
-int mbedtls_oid_get_pk_alg(const mbedtls_asn1_buf *oid, mbedtls_pk_type_t *pk_alg);
+int mbedtls_oid_get_pk_alg(const mbedtls_asn1_buf *oid, mbedtls_pk_spki_alg_t *pk_alg);
 
 /**
  * \brief          Translate pk_type into PublicKeyAlgorithm OID
@@ -522,7 +522,7 @@ int mbedtls_oid_get_pk_alg(const mbedtls_asn1_buf *oid, mbedtls_pk_type_t *pk_al
  *
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
-int mbedtls_oid_get_oid_by_pk_alg(mbedtls_pk_type_t pk_alg,
+int mbedtls_oid_get_oid_by_pk_alg(mbedtls_pk_spki_alg_t pk_alg,
                                   const char **oid, size_t *olen);
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)

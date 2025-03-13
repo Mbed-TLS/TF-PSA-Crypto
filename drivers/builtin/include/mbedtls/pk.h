@@ -81,6 +81,14 @@ typedef enum {
     MBEDTLS_PK_OPAQUE,
 } mbedtls_pk_type_t;
 
+/** Key type encoded in SubjectPublicKeyInfo. */
+typedef enum {
+    MBEDTLS_PK_SPKI_NONE = MBEDTLS_PK_NONE,
+    MBEDTLS_PK_SPKI_RSA = MBEDTLS_PK_RSA,
+    MBEDTLS_PK_SPKI_ECKEY = MBEDTLS_PK_ECKEY,
+    MBEDTLS_PK_SPKI_ECKEY_DH = MBEDTLS_PK_ECKEY_DH,
+} mbedtls_pk_spki_alg_t;
+
 /** Key type encoded in X.509 SignatureAlgorithm. */
 typedef enum {
     MBEDTLS_PK_SIGALG_NONE = MBEDTLS_PK_NONE,

@@ -470,7 +470,7 @@ static int pk_parse_key_rfc8410_der(mbedtls_pk_context *pk,
  */
 static int pk_get_pk_alg(unsigned char **p,
                          const unsigned char *end,
-                         mbedtls_pk_type_t *pk_alg, mbedtls_asn1_buf *params,
+                         mbedtls_pk_spki_alg_t *pk_alg, mbedtls_asn1_buf *params,
                          mbedtls_ecp_group_id *ec_grp_id)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -487,7 +487,7 @@ static int pk_get_pk_alg(unsigned char **p,
     if (ret == MBEDTLS_ERR_OID_NOT_FOUND) {
         ret = mbedtls_oid_get_ec_grp_algid(&alg_oid, ec_grp_id);
         if (ret == 0) {
-            *pk_alg = MBEDTLS_PK_ECKEY;
+            *pk_alg = MBEDTLS_PK_SPKI_ECKEY;
         }
     }
 #else
@@ -500,7 +500,7 @@ static int pk_get_pk_alg(unsigned char **p,
     /*
      * No parameters with RSA (only for EC)
      */
-    if (*pk_alg == MBEDTLS_PK_RSA &&
+    if (*pk_alg == MBEDTLS_PK_SPKI_RSA &&
         ((params->tag != MBEDTLS_ASN1_NULL && params->tag != 0) ||
          params->len != 0)) {
         return MBEDTLS_ERR_PK_INVALID_ALG;
@@ -520,7 +520,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t len;
     mbedtls_asn1_buf alg_params;
-    mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
+    mbedtls_pk_spki_alg_t pk_alg = MBEDTLS_PK_SPKI_NONE;
     mbedtls_ecp_group_id ec_grp_id = MBEDTLS_ECP_DP_NONE;
     const mbedtls_pk_info_t *pk_info;
 
@@ -544,7 +544,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
                                  MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
     }
 
-    if ((pk_info = mbedtls_pk_info_from_type(pk_alg)) == NULL) {
+    if ((pk_info = mbedtls_pk_info_from_type((mbedtls_pk_type_t) pk_alg)) == NULL) {
         return MBEDTLS_ERR_PK_UNKNOWN_PK_ALG;
     }
 
@@ -553,7 +553,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
     }
 
 #if defined(MBEDTLS_RSA_C)
-    if (pk_alg == MBEDTLS_PK_RSA) {
+    if (pk_alg == MBEDTLS_PK_SPKI_RSA) {
         ret = mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(*pk), *p, (size_t) (end - *p));
         if (ret == 0) {
             /* On success all the input has been consumed by the parsing function. */
@@ -568,7 +568,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
     } else
 #endif /* MBEDTLS_RSA_C */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-    if (pk_alg == MBEDTLS_PK_ECKEY_DH || pk_alg == MBEDTLS_PK_ECKEY) {
+    if (pk_alg == MBEDTLS_PK_SPKI_ECKEY_DH || pk_alg == MBEDTLS_PK_SPKI_ECKEY) {
 #if defined(MBEDTLS_PK_HAVE_RFC8410_CURVES)
         if (MBEDTLS_PK_IS_RFC8410_GROUP_ID(ec_grp_id)) {
             ret = pk_use_ecparams_rfc8410(&alg_params, ec_grp_id, pk);
@@ -749,7 +749,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
     mbedtls_asn1_buf params;
     unsigned char *p = (unsigned char *) key;
     unsigned char *end = p + keylen;
-    mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
+    mbedtls_pk_spki_alg_t pk_alg = MBEDTLS_PK_SPKI_NONE;
     mbedtls_ecp_group_id ec_grp_id = MBEDTLS_ECP_DP_NONE;
     const mbedtls_pk_info_t *pk_info;
 
@@ -802,7 +802,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
                                  MBEDTLS_ERR_ASN1_OUT_OF_DATA);
     }
 
-    if ((pk_info = mbedtls_pk_info_from_type(pk_alg)) == NULL) {
+    if ((pk_info = mbedtls_pk_info_from_type((mbedtls_pk_type_t) pk_alg)) == NULL) {
         return MBEDTLS_ERR_PK_UNKNOWN_PK_ALG;
     }
 
@@ -811,7 +811,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
     }
 
 #if defined(MBEDTLS_RSA_C)
-    if (pk_alg == MBEDTLS_PK_RSA) {
+    if (pk_alg == MBEDTLS_PK_SPKI_RSA) {
         if ((ret = mbedtls_rsa_parse_key(mbedtls_pk_rsa(*pk), p, len)) != 0) {
             mbedtls_pk_free(pk);
             return ret;
@@ -819,7 +819,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
     } else
 #endif /* MBEDTLS_RSA_C */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-    if (pk_alg == MBEDTLS_PK_ECKEY || pk_alg == MBEDTLS_PK_ECKEY_DH) {
+    if (pk_alg == MBEDTLS_PK_SPKI_ECKEY || pk_alg == MBEDTLS_PK_SPKI_ECKEY_DH) {
 #if defined(MBEDTLS_PK_HAVE_RFC8410_CURVES)
         if (MBEDTLS_PK_IS_RFC8410_GROUP_ID(ec_grp_id)) {
             if ((ret =

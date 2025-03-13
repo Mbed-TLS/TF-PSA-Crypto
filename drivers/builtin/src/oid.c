@@ -500,35 +500,35 @@ FN_OID_GET_OID_BY_ATTR2(mbedtls_oid_get_oid_by_sig_alg,
  */
 typedef struct {
     mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_pk_type_t           pk_alg;
+    mbedtls_pk_spki_alg_t           pk_alg;
 } oid_pk_alg_t;
 
 static const oid_pk_alg_t oid_pk_alg[] =
 {
     {
         OID_DESCRIPTOR(MBEDTLS_OID_PKCS1_RSA,           "rsaEncryption",    "RSA"),
-        MBEDTLS_PK_RSA,
+        MBEDTLS_PK_SPKI_RSA,
     },
     {
         OID_DESCRIPTOR(MBEDTLS_OID_EC_ALG_UNRESTRICTED, "id-ecPublicKey",   "Generic EC key"),
-        MBEDTLS_PK_ECKEY,
+        MBEDTLS_PK_SPKI_ECKEY,
     },
     {
         OID_DESCRIPTOR(MBEDTLS_OID_EC_ALG_ECDH,         "id-ecDH",          "EC key for ECDH"),
-        MBEDTLS_PK_ECKEY_DH,
+        MBEDTLS_PK_SPKI_ECKEY_DH,
     },
     {
         NULL_OID_DESCRIPTOR,
-        MBEDTLS_PK_NONE,
+        MBEDTLS_PK_SPKI_NONE,
     },
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_pk_alg_t, pk_alg, oid_pk_alg)
-FN_OID_GET_ATTR1(mbedtls_oid_get_pk_alg, oid_pk_alg_t, pk_alg, mbedtls_pk_type_t, pk_alg)
+FN_OID_GET_ATTR1(mbedtls_oid_get_pk_alg, oid_pk_alg_t, pk_alg, mbedtls_pk_spki_alg_t, pk_alg)
 FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_pk_alg,
                         oid_pk_alg_t,
                         oid_pk_alg,
-                        mbedtls_pk_type_t,
+                        mbedtls_pk_spki_alg_t,
                         pk_alg)
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
