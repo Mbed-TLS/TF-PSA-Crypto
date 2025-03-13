@@ -70,6 +70,9 @@ extern "C" {
 /**
  * \brief          Public key types
  */
+/* Note that the values must match the corresponding enum constants in
+ * mbedtls_pk_spki_alg_t and mbedtls_pk_sigalg_t until we stop using
+ * mbedtls_pk_type_t in mbedtls_pk_context and mbedtls_pk_can_do(). */
 typedef enum {
     MBEDTLS_PK_NONE=0,
     MBEDTLS_PK_RSA,
@@ -82,19 +85,25 @@ typedef enum {
 } mbedtls_pk_type_t;
 
 /** Key type encoded in SubjectPublicKeyInfo. */
+/* Note that the values must match the corresponding enum constants in
+ * mbedtls_pk_type_t until we stop using that type in mbedtls_pk_context
+ * and mbedtls_pk_can_do(). */
 typedef enum {
-    MBEDTLS_PK_SPKI_NONE = MBEDTLS_PK_NONE,
-    MBEDTLS_PK_SPKI_RSA = MBEDTLS_PK_RSA,
-    MBEDTLS_PK_SPKI_ECKEY = MBEDTLS_PK_ECKEY,
-    MBEDTLS_PK_SPKI_ECKEY_DH = MBEDTLS_PK_ECKEY_DH,
+    MBEDTLS_PK_SPKI_NONE = 0,
+    MBEDTLS_PK_SPKI_RSA = 1,
+    MBEDTLS_PK_SPKI_ECKEY = 2,
+    MBEDTLS_PK_SPKI_ECKEY_DH = 3,
 } mbedtls_pk_spki_alg_t;
 
 /** Key type encoded in X.509 SignatureAlgorithm. */
+/* Note that the values must match the corresponding enum constants in
+ * mbedtls_pk_type_t until we stop using that type in mbedtls_pk_context
+ * and mbedtls_pk_can_do(). */
 typedef enum {
-    MBEDTLS_PK_SIGALG_NONE = MBEDTLS_PK_NONE,
-    MBEDTLS_PK_SIGALG_RSA = MBEDTLS_PK_RSA,
-    MBEDTLS_PK_SIGALG_ECDSA = MBEDTLS_PK_ECDSA,
-    MBEDTLS_PK_SIGALG_RSASSA_PSS = MBEDTLS_PK_RSASSA_PSS,
+    MBEDTLS_PK_SIGALG_NONE = 0,
+    MBEDTLS_PK_SIGALG_RSA = 1,
+    MBEDTLS_PK_SIGALG_ECDSA = 4,
+    MBEDTLS_PK_SIGALG_RSASSA_PSS = 6,
 } mbedtls_pk_sigalg_t;
 
 /**
