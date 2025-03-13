@@ -42,7 +42,7 @@ void lmots_sign_verify_test(data_t *msg, data_t *key_id, int leaf_id,
     TEST_EQUAL(mbedtls_lmots_generate_private_key(&priv_ctx, MBEDTLS_LMOTS_SHA256_N32_W8,
                                                   key_id->x, leaf_id, seed->x, seed->len), 0);
     TEST_EQUAL(mbedtls_lmots_calculate_public_key(&pub_ctx, &priv_ctx), 0);
-    TEST_EQUAL(mbedtls_lmots_sign(&priv_ctx, &mbedtls_test_rnd_std_rand, NULL,
+    TEST_EQUAL(mbedtls_lmots_sign(&priv_ctx,
                                   msg->x, msg->len, sig, sizeof(sig), NULL), 0);
     TEST_EQUAL(mbedtls_lmots_verify(&pub_ctx, msg->x, msg->len, sig, sizeof(sig)), 0);
 
@@ -67,7 +67,7 @@ void lmots_sign_verify_null_msg_test(data_t *key_id, int leaf_id, data_t *seed)
     TEST_EQUAL(mbedtls_lmots_generate_private_key(&priv_ctx, MBEDTLS_LMOTS_SHA256_N32_W8,
                                                   key_id->x, leaf_id, seed->x, seed->len), 0);
     TEST_EQUAL(mbedtls_lmots_calculate_public_key(&pub_ctx, &priv_ctx), 0);
-    TEST_EQUAL(mbedtls_lmots_sign(&priv_ctx, &mbedtls_test_rnd_std_rand, NULL,
+    TEST_EQUAL(mbedtls_lmots_sign(&priv_ctx,
                                   NULL, 0, sig, sizeof(sig), NULL), 0);
     TEST_EQUAL(mbedtls_lmots_verify(&pub_ctx, NULL, 0, sig, sizeof(sig)), 0);
 
@@ -215,13 +215,13 @@ void lmots_reuse_test(data_t *msg, data_t *key_id, int leaf_id, data_t *seed)
     TEST_EQUAL(mbedtls_lmots_generate_private_key(&ctx, MBEDTLS_LMOTS_SHA256_N32_W8,
                                                   key_id->x, leaf_id, seed->x,
                                                   seed->len), 0);
-    TEST_EQUAL(mbedtls_lmots_sign(&ctx, mbedtls_test_rnd_std_rand, NULL,
+    TEST_EQUAL(mbedtls_lmots_sign(&ctx,
                                   msg->x, msg->len, sig, sizeof(sig), NULL), 0);
 
     /* Running another sign operation should fail, since the key should now have
      * been erased.
      */
-    TEST_EQUAL(mbedtls_lmots_sign(&ctx, mbedtls_test_rnd_std_rand, NULL,
+    TEST_EQUAL(mbedtls_lmots_sign(&ctx,
                                   msg->x, msg->len, sig, sizeof(sig), NULL),
                MBEDTLS_ERR_LMS_BAD_INPUT_DATA);
 
@@ -248,7 +248,7 @@ void lmots_signature_leak_test(data_t *msg, data_t *key_id, int leaf_id,
     TEST_EQUAL(mbedtls_lmots_generate_private_key(&ctx, MBEDTLS_LMOTS_SHA256_N32_W8,
                                                   key_id->x, leaf_id, seed->x,
                                                   seed->len), 0);
-    TEST_EQUAL(mbedtls_lmots_sign(&ctx, mbedtls_test_rnd_std_rand, NULL,
+    TEST_EQUAL(mbedtls_lmots_sign(&ctx,
                                   msg->x, msg->len, sig, sizeof(sig), NULL), 0);
 
 exit:
