@@ -583,7 +583,7 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_sig_alg(const mbedtls_asn1_buf *oid,
-                            mbedtls_md_type_t *md_alg, mbedtls_pk_type_t *pk_alg);
+                            mbedtls_md_type_t *md_alg, mbedtls_pk_sigalg_t *pk_alg);
 
 /**
  * \brief          Translate SignatureAlgorithm OID into description
@@ -605,7 +605,7 @@ int mbedtls_oid_get_sig_alg_desc(const mbedtls_asn1_buf *oid, const char **desc)
  *
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
-int mbedtls_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
+int mbedtls_oid_get_oid_by_sig_alg(mbedtls_pk_sigalg_t pk_alg, mbedtls_md_type_t md_alg,
                                    const char **oid, size_t *olen);
 
 /**

@@ -81,6 +81,14 @@ typedef enum {
     MBEDTLS_PK_OPAQUE,
 } mbedtls_pk_type_t;
 
+/** Key type encoded in X.509 SignatureAlgorithm. */
+typedef enum {
+    MBEDTLS_PK_SIGALG_NONE = MBEDTLS_PK_NONE,
+    MBEDTLS_PK_SIGALG_RSA = MBEDTLS_PK_RSA,
+    MBEDTLS_PK_SIGALG_ECDSA = MBEDTLS_PK_ECDSA,
+    MBEDTLS_PK_SIGALG_RSASSA_PSS = MBEDTLS_PK_RSASSA_PSS,
+} mbedtls_pk_sigalg_t;
+
 /**
  * \brief           Options for RSASSA-PSS signature verification.
  *                  See \c mbedtls_rsa_rsassa_pss_verify_ext()
