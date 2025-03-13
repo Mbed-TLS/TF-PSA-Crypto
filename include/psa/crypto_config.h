@@ -429,11 +429,12 @@
  * \def MBEDTLS_THREADING_C
  *
  * Enable the threading abstraction layer.
- * By default Mbed TLS assumes it is used in a non-threaded environment or that
- * contexts are not shared between threads. If you do intend to use contexts
- * between threads, you will need to enable this layer to prevent race
- * conditions. See also our Knowledge Base article about threading:
- * https://mbed-tls.readthedocs.io/en/latest/kb/development/thread-safety-and-multi-threading
+ *
+ * \note You must enable this option if TF-PSA-Crypto runs in a
+ * multithreaded environment. Otherwise the PSA cryptography subsystem is
+ * not thread-safe. As an exception, this option can be disabled if all
+ * PSA crypto functions are ever called from a single thread. Note that
+ * this includes indirect calls, for example through PK.
  *
  * Module:  library/threading.c
  *
