@@ -1,3 +1,35 @@
+# Check that mbedtls_pk_spki_alg_t enum values are equal to the
+# legacy mbedtls_pk_type_t values. This is necessary until we update all
+# the places that assume this internally: `(mbedtls_pk_type_t)` casts,
+# maybe more.
+enum value MBEDTLS_PK_SPKI_NONE
+enum_value_equal:MBEDTLS_PK_SPKI_NONE:MBEDTLS_PK_NONE
+
+enum value MBEDTLS_PK_SPKI_RSA
+enum_value_equal:MBEDTLS_PK_SPKI_RSA:MBEDTLS_PK_RSA
+
+enum value MBEDTLS_PK_SPKI_ECKEY
+enum_value_equal:MBEDTLS_PK_SPKI_ECKEY:MBEDTLS_PK_ECKEY
+
+enum value MBEDTLS_PK_SPKI_ECKEY_DH
+enum_value_equal:MBEDTLS_PK_SPKI_ECKEY_DH:MBEDTLS_PK_ECKEY_DH
+
+# Check that mbedtls_pk_sigalg_t enum values are equal to the
+# legacy mbedtls_pk_type_t values. This is necessary until we update all
+# the places that assume this internally: `(mbedtls_pk_type_t)` casts,
+# bit positions in `mbedtls_x509_crt_profile.allowed_pks`, maybe more.
+enum value MBEDTLS_PK_SIGALG_NONE
+enum_value_equal:MBEDTLS_PK_SIGALG_NONE:MBEDTLS_PK_NONE
+
+enum value MBEDTLS_PK_SIGALG_RSA
+enum_value_equal:MBEDTLS_PK_SIGALG_RSA:MBEDTLS_PK_RSA
+
+enum value MBEDTLS_PK_SIGALG_ECDSA
+enum_value_equal:MBEDTLS_PK_SIGALG_ECDSA:MBEDTLS_PK_ECDSA
+
+enum value MBEDTLS_PK_SIGALG_RSASSA_PSS
+enum_value_equal:MBEDTLS_PK_SIGALG_RSASSA_PSS:MBEDTLS_PK_RSASSA_PSS
+
 PK invalid parameters
 pk_invalid_param:
 

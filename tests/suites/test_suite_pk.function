@@ -636,6 +636,13 @@ exit:
  * END_DEPENDENCIES
  */
 
+/* BEGIN_CASE */
+void enum_value_equal(int x, int y)
+{
+    TEST_EQUAL(x, y);
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_USE_PSA_CRYPTO */
 void pk_psa_utils(int key_is_rsa)
 {
