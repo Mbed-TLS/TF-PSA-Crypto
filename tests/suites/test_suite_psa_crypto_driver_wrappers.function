@@ -3217,6 +3217,7 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     psa_algorithm_t alg = alg_arg;
     psa_algorithm_t derive_alg = derive_alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t shared_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_derivation_operation_t server_derive =
         psa_key_derivation_operation_init_short();
@@ -3287,9 +3288,11 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
         pake_expected_hit_count++;
     }
 
-    PSA_ASSERT(psa_pake_get_implicit_key(&server, &server_derive));
+    PSA_ASSERT(psa_pake_get_shared_key(&server, &attributes, &shared_key_id));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total,
                pake_in_driver ? pake_expected_hit_count++ : pake_expected_hit_count);
+
+    psa_destroy_key(shared_key_id);
 
     /* After the key is obtained operation is aborted.
        Adapt counter of expected hits. */
@@ -3297,9 +3300,11 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
         pake_expected_hit_count++;
     }
 
-    PSA_ASSERT(psa_pake_get_implicit_key(&client, &client_derive));
+    PSA_ASSERT(psa_pake_get_shared_key(&client, &attributes, &shared_key_id));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total,
                pake_in_driver ? pake_expected_hit_count++ : pake_expected_hit_count);
+
+    psa_destroy_key(shared_key_id);
 exit:
     psa_key_derivation_abort(&server_derive);
     psa_key_derivation_abort(&client_derive);
