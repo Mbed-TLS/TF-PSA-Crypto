@@ -2248,6 +2248,61 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void register_opaque_key(int persistence, int location, int _key_label, int key_type,
+                         int key_bits, int key_alg, int register_result, int export_result)
+{
+    psa_drv_slot_number_t key_label = _key_label;
+    psa_key_lifetime_t lifetime =
+            PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(persistence, location);
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t key_content[PSA_BITS_TO_BYTES(PSA_MAX_KEY_BITS)] = { 0 };
+    size_t key_len = 0;
+    psa_status_t status;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_lifetime(&attr, lifetime);
+    psa_set_key_type(&attr, key_type);
+    psa_set_key_bits(&attr, key_bits);
+    psa_set_key_algorithm(&attr, key_alg);
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_EXPORT);
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(lifetime)) {
+        psa_set_key_id(&attr, mbedtls_svc_key_id_make(0, PSA_KEY_ID_USER_MIN));
+    }
+
+    status = psa_register_opaque_key(&attr, (uint8_t *) &key_label, sizeof(key_label), &key);
+    TEST_EQUAL(status, register_result);
+    if (register_result != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_export_key(key, key_content, sizeof(key_content), &key_len);
+    TEST_EQUAL(status, export_result);
+    if (export_result != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    switch (key_label) {
+        case PSA_CRYPTO_TEST_DRIVER_BUILTIN_AES_KEY_SLOT:
+            TEST_MEMORY_COMPARE(key_content, key_len, mbedtls_test_driver_aes_key,
+                                sizeof(mbedtls_test_driver_aes_key));
+            break;
+        case PSA_CRYPTO_TEST_DRIVER_BUILTIN_ECDSA_KEY_SLOT:
+            TEST_MEMORY_COMPARE(key_content, key_len, mbedtls_test_driver_ecdsa_key,
+                                sizeof(mbedtls_test_driver_ecdsa_key));
+            break;
+        default:
+            TEST_FAIL("Key label is unknown so it cannot be compared for verification.");
+    }
+
+exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void hash_compute(int alg_arg,
                   data_t *input, data_t *hash,
                   int forced_status_arg,

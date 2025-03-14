@@ -208,6 +208,31 @@ psa_status_t mbedtls_psa_register_se_key(
 
 #endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
+/** Register a key that is already present in a secure element.
+ *
+ * This basically maps a driver's internal key (identified by the \p label
+ * parameter) to a PSA opaque key.
+ *
+ * \param[in] attributes        Attributes of the opaque key to be created.
+ * \param[in] label             This can be whatever the driver expects to
+ *                              uniquely identify the key internally.
+ * \param[in] label_length      Length of the \p label attribute.
+ * \param[out] key_id           On success, this will be the key ID of the
+ *                              created opaque key.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_ALREADY_EXISTS \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ */
+psa_status_t psa_register_opaque_key(const psa_key_attributes_t *attributes,
+                                     const uint8_t *label, size_t label_length,
+                                     mbedtls_svc_key_id_t *key_id);
+
 /**@}*/
 
 /**
