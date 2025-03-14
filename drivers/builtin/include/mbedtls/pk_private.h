@@ -11,6 +11,10 @@
 #ifndef MBEDTLS_PK_PRIVATE_H
 #define MBEDTLS_PK_PRIVATE_H
 
+/* This file only contains private definitions, but it still contains Doxygen
+ * markup. Exclude it from the rendered documentation. */
+#if !defined(__DOXYGEN__)
+
 #include <mbedtls/pk.h>
 
 #if defined(MBEDTLS_RSA_C)
@@ -418,5 +422,7 @@ int mbedtls_pk_write_pubkey(unsigned char **p, unsigned char *start,
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* !defined(__DOXYGEN__) */
 
 #endif /* MBEDTLS_PK_PRIVATE_H */
