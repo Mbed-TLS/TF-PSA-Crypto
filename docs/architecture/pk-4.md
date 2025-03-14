@@ -105,7 +105,7 @@ In TF-PSA-Crypto, we don't want to expose the distinction between `MBEDTLS_PK_OP
 Public headers and sample programs are considered public. Library code (including Mbed TLS), test code and test programs are not considered public.
 
 * In X.509 types, to specify an X.509 signature algorithm. See “[New type for signature algorithms](#new-type-for-signature-algorithms)”.
-* In several of `programs/pkey/*.c`, to differentiate between RSA and ECC. See “[Use PSA APIs to distinguish between RSA and ECC in sample programs](#use-psa-apis-to-distinguish-between-rsa-and-ecc-in-sample-programs)”.
+* In several of `programs/pkey/*.c`, to differentiate between RSA and ECC. See “[Use new APIs to distinguish between RSA and ECC in sample programs](#use-new-apis-to-distinguish-between-rsa-and-ecc-in-sample-programs)”.
 
 #### New type for signature algorithms
 
@@ -262,7 +262,7 @@ mbedtls_pk_parse_subpubkey()
 mbedtls_pk_write_pubkey()
 ```
 
-Follow-up: [Make private API elements internal](#make-private-API-elements-internal)
+Follow-up: [Make private API elements internal](#make-private-api-elements-internal)
 
 #### Documentation update after privatization
 
