@@ -267,18 +267,8 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  * This function creates a PK context which wraps a PSA key. The PSA wrapped
  * key must be an EC or RSA key pair (DH is not suported in the PK module).
  *
- * Under the hood PSA functions will be used to perform the required
- * operations and, based on the key type, used algorithms will be:
- * * EC:
- *     * verify, verify_ext, sign, sign_ext: ECDSA.
- * * RSA:
- *     * sign, decrypt: use the primary algorithm in the wrapped PSA key;
- *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_RSASSA_PSS, otherwise
- *       it falls back to the sign() case;
- *     * verify, verify_ext, encrypt: not supported.
- *
- * In order for the above operations to succeed, the policy of the wrapped PSA
- * key must allow the specified algorithm.
+ * The context's algorithm is determined by the primary algorithm policy
+ * in the attributes of the underlying key.
  *
  * Opaque PK contexts wrapping an EC keys also support \c mbedtls_pk_check_pair(),
  * whereas RSA ones do not.
@@ -444,40 +434,29 @@ void mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
  *                    \p usage, exporting and copying the key, and
  *                    possibly other permissions as documented for the
  *                    \p usage parameter.
- *                    The permitted algorithm policy is determined as follows
- *                    based on the #mbedtls_pk_type_t type of \p pk,
- *                    the chosen \p usage and other factors:
- *                      - #MBEDTLS_PK_RSA whose underlying
- *                        #mbedtls_rsa_context has the padding mode
- *                        #MBEDTLS_RSA_PKCS_V15:
- *                        #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH)
- *                        if \p usage is SIGN/VERIFY, and
- *                        #PSA_ALG_RSA_PKCS1V15_CRYPT
- *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_RSA whose underlying
- *                        #mbedtls_rsa_context has the padding mode
- *                        #MBEDTLS_RSA_PKCS_V21 and the digest type
- *                        corresponding to the PSA algorithm \c hash:
- *                        #PSA_ALG_RSA_PSS_ANY_SALT(#PSA_ALG_ANY_HASH)
- *                        if \p usage is SIGN/VERIFY, and
- *                        #PSA_ALG_RSA_OAEP(\c hash)
- *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_RSA_ALT: not supported.
- *                      - #MBEDTLS_PK_ECDSA or #MBEDTLS_PK_ECKEY
- *                        if \p usage is SIGN/VERIFY:
- *                        #PSA_ALG_DETERMINISTIC_ECDSA(#PSA_ALG_ANY_HASH)
- *                        if #MBEDTLS_ECDSA_DETERMINISTIC is enabled,
- *                        otherwise #PSA_ALG_ECDSA(#PSA_ALG_ANY_HASH).
- *                      - #MBEDTLS_PK_ECKEY_DH or #MBEDTLS_PK_ECKEY
- *                        if \p usage is DERIVE:
- *                        #PSA_ALG_ECDH.
- *                      - #MBEDTLS_PK_OPAQUE: same as the primary algorithm
- *                        set for the underlying PSA key, except that
+ *                    The permitted algorithm policy is determined as follows:
+ *                      - If an algorithm policy was set by calling
+ *                        mbedtls_pk_set_algorithm() on this context,
+ *                        and this algorithm is compatible with the
+ *                        \p usage parameter, then this algorithm policy
+ *                        applies.
+ *                      - Otherwise, if the context has an underlying PSA key,
+ *                        the algorithm policy is the same as the primary
+ *                        algorithm of the underlying PSA key, except that
  *                        sign/decrypt flags are removed if the type is
  *                        set to a public key type.
- *                        The underlying key must allow \p usage.
  *                        Note that the enrollment algorithm set with
  *                        psa_set_key_enrollment_algorithm() is not copied.
+ *                      - Otherwise, for an RSA key, use
+ *                        #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH)
+ *                        if \p usage is SIGN/VERIFY, or
+ *                        #PSA_ALG_RSA_PKCS1V15_CRYPT
+ *                        if \p usage is ENCRYPT/DECRYPT.
+ *                      - Otherwise, for an ECC key, use
+ *                        #MBEDTLS_PK_ALG_ECDSA(#PSA_ALG_ANY_HASH)
+ *                        if \p usage is SIGN/VERIFY and the key is not
+ *                        ECDH-only,
+ *                        or #PSA_ALG_ECDH if \p usage is DERIVE.
  *
  * \return          0 on success.
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if \p pk does not contain
@@ -541,25 +520,12 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  - must be exportable and
  *                  - must be an RSA or EC key pair or public key (FFDH is not supported in PK).
  *
- *                  The resulting PK object will be a transparent type:
- *                  - #MBEDTLS_PK_RSA for RSA keys or
- *                  - #MBEDTLS_PK_ECKEY for EC keys.
- *
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_sign(), mbedtls_pk_verify(),
- *                  mbedtls_pk_encrypt(), mbedtls_pk_decrypt() on the resulting
- *                  PK context will perform the corresponding algorithm for that
- *                  PK context type.
- *                  * For ECDSA, the choice of deterministic vs randomized will
- *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
- *                  * For an RSA key, the output PK context will allow both
- *                    encrypt/decrypt and sign/verify regardless of the original
- *                    key's policy.
- *                    The original key's policy determines the output key's padding
- *                    mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
- *                    otherwise PKCS1 v1.5 is set.
+ *
+ *                  The PK object's PSA algorithm is set to the
+ *                  primary algorithm policy in the source key's attributes.
  *
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
@@ -576,23 +542,13 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *
  *                  The key must be an RSA or ECC key. It can be either a
  *                  public key or a key pair, and only the public key is copied.
- *                  The resulting PK object will be a transparent type:
- *                  - #MBEDTLS_PK_RSA for RSA keys or
- *                  - #MBEDTLS_PK_ECKEY for EC keys.
  *
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_verify() or
- *                  mbedtls_pk_encrypt() on the resulting
- *                  PK context will perform the corresponding algorithm for that
- *                  PK context type.
  *
- *                  For an RSA key, the output PK context will allow both
- *                  encrypt and verify regardless of the original key's policy.
- *                  The original key's policy determines the output key's padding
- *                  mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
- *                  otherwise PKCS1 v1.5 is set.
+ *                  The PK object's PSA algorithm is set to the
+ *                  primary algorithm policy in the source key's attributes.
  *
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
@@ -623,12 +579,17 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  * \param sig       Signature to verify
  * \param sig_len   Signature length
  *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or PSS (accepting any salt length),
- *                  depending on the padding mode in the underlying RSA context.
- *                  For a pk object constructed by parsing, this is PKCS#1 v1.5
- *                  by default. Use mbedtls_pk_verify_ext() to explicitly select
- *                  a different algorithm.
+ * \note            The signature algorithm is the one specified in the
+ *                  context, with the hash determined by \p md_alg. The base
+ *                  signature algorithm is determined by the first applicable
+ *                  clause in the following list:
+ *                  - The algorithm set by calling mbedtls_pk_set_algorithm().
+ *                  - The PSA key's primary algorithm policy, for a context
+ *                    populated by copying or wrapping a PSA key.
+ *                  - Metadata in the key format, for a context populated
+ *                    by parsing.
+ *                  - #MBEDTLS_PK_ALG_ECDSA for an ECDSA key.
+ *                  - #PSA_ALG_RSA_PKCS1V15_SIGN for an RSA key.
  *
  * \return          0 on success (signature is valid),
  *                  #MBEDTLS_ERR_PK_SIG_LEN_MISMATCH if there is a valid
@@ -684,13 +645,8 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  * \param f_rng     RNG function, must not be \c NULL.
  * \param p_rng     RNG parameter
  *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or PSS (using the largest possible salt
- *                  length up to the hash length), depending on the padding mode
- *                  in the underlying RSA context. For a pk object constructed
- *                  by parsing, this is PKCS#1 v1.5 by default. Use
- *                  mbedtls_pk_verify_ext() to explicitly select a different
- *                  algorithm.
+ * \note            See the note on mbedtls_pk_verify() regarding the
+ *                  choice of signature algorithm.
  *
  * \return          0 on success, or a specific error code.
  *

@@ -1001,6 +1001,8 @@ static int copy_from_psa(mbedtls_svc_key_id_t key_id,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
+    pk->psa_algorithm = psa_get_key_algorithm(&key_attr);
+
 exit:
     psa_reset_key_attributes(&key_attr);
     mbedtls_platform_zeroize(exp_key, sizeof(exp_key));
