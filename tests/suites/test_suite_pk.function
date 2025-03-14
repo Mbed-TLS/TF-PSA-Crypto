@@ -1086,8 +1086,18 @@ void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
     rsa = mbedtls_pk_rsa(pk);
 
     rsa->len = (mod + 7) / 8;
-    if (padding >= 0) {
-        TEST_EQUAL(mbedtls_rsa_set_padding(rsa, padding, MBEDTLS_MD_NONE), 0);
+
+    switch (padding) {
+        case -1:
+            break;
+        case MBEDTLS_RSA_PKCS_V15:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+            break;
+        case MBEDTLS_RSA_PKCS_V21:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH));
+            break;
+        default:
+            TEST_FAIL("Unsupported padding specifier");
     }
 
     TEST_ASSERT(mbedtls_test_read_mpi(&rsa->N, input_N) == 0);
@@ -1346,7 +1356,19 @@ void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_
 
 #if defined(MBEDTLS_RSA_C)
     if (type == MBEDTLS_PK_RSA) {
-        TEST_ASSERT(mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), rsa_padding, rsa_md_alg) == 0);
+        psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(rsa_md_alg);
+        switch (rsa_padding) {
+            case -1:
+                break;
+            case MBEDTLS_RSA_PKCS_V15:
+                mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg));
+                break;
+            case MBEDTLS_RSA_PKCS_V21:
+                mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PSS(hash_alg));
+                break;
+            default:
+                TEST_FAIL("Unsupported padding specifier");
+        }
     }
 #else
     (void) rsa_padding;
@@ -1439,7 +1461,18 @@ void pk_rsa_encrypt_decrypt_test(data_t *message, int mod, int padding,
     /* init pk-rsa context */
     TEST_ASSERT(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)) == 0);
     rsa = mbedtls_pk_rsa(pk);
-    mbedtls_rsa_set_padding(rsa, padding, MBEDTLS_MD_SHA1);
+    switch (padding) {
+        case -1:
+            break;
+        case MBEDTLS_RSA_PKCS_V15:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_CRYPT);
+            break;
+        case MBEDTLS_RSA_PKCS_V21:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_1));
+            break;
+        default:
+            TEST_FAIL("Unsupported padding specifier");
+    }
 
     /* load public key */
     rsa->len = (mod + 7) / 8;
@@ -1459,7 +1492,18 @@ void pk_rsa_encrypt_decrypt_test(data_t *message, int mod, int padding,
     TEST_ASSERT(mbedtls_pk_setup(&pk,
                                  mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)) == 0);
     rsa = mbedtls_pk_rsa(pk);
-    mbedtls_rsa_set_padding(rsa, padding, MBEDTLS_MD_SHA1);
+    switch (padding) {
+        case -1:
+            break;
+        case MBEDTLS_RSA_PKCS_V15:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_CRYPT);
+            break;
+        case MBEDTLS_RSA_PKCS_V21:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_1));
+            break;
+        default:
+            TEST_FAIL("Unsupported padding specifier");
+    }
 
     /* load public key */
     TEST_ASSERT(mbedtls_test_read_mpi(&N, input_N) == 0);
@@ -1532,8 +1576,17 @@ void pk_rsa_decrypt_test_vec(data_t *cipher, int mod, int padding, int md_alg,
     TEST_EQUAL(mbedtls_pk_get_len(&pk), (mod + 7) / 8);
 
     /* set padding mode */
-    if (padding >= 0) {
-        TEST_EQUAL(mbedtls_rsa_set_padding(rsa, padding, md_alg), 0);
+    switch (padding) {
+        case -1:
+            break;
+        case MBEDTLS_RSA_PKCS_V15:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_CRYPT);
+            break;
+        case MBEDTLS_RSA_PKCS_V21:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_OAEP(mbedtls_md_psa_alg_from_type(md_alg)));
+            break;
+        default:
+            TEST_FAIL("Unsupported padding specifier");
     }
 
     /* decryption test */
@@ -1596,7 +1649,7 @@ void pk_wrap_rsa_decrypt_test_vec(data_t *cipher, int mod,
 
     /* Set padding mode */
     if (padding_mode == MBEDTLS_RSA_PKCS_V21) {
-        TEST_EQUAL(mbedtls_rsa_set_padding(rsa, padding_mode, MBEDTLS_MD_SHA1), 0);
+        mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_1));
     }
 
     /* Turn PK context into an opaque one. */
@@ -1837,7 +1890,18 @@ void pk_psa_sign(int psa_type, int bits, int rsa_padding)
 #if defined(MBEDTLS_RSA_C)
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
         TEST_EQUAL(pk_setup(&pk, MBEDTLS_PK_RSA, bits), 0);
-        TEST_EQUAL(mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), rsa_padding, MBEDTLS_MD_NONE), 0);
+        switch (rsa_padding) {
+            case -1:
+                break;
+            case MBEDTLS_RSA_PKCS_V15:
+                mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+                break;
+            case MBEDTLS_RSA_PKCS_V21:
+                mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH));
+                break;
+            default:
+                TEST_FAIL("Unsupported padding specifier");
+        }
     }
 #else /* MBEDTLS_RSA_C */
     (void) rsa_padding;
@@ -1953,7 +2017,18 @@ void pk_psa_sign(int psa_type, int bits, int rsa_padding)
 
 #if defined(MBEDTLS_RSA_C)
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
-        TEST_EQUAL(mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), rsa_padding, MBEDTLS_MD_NONE), 0);
+        switch (rsa_padding) {
+            case -1:
+                break;
+            case MBEDTLS_RSA_PKCS_V15:
+                mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+                break;
+            case MBEDTLS_RSA_PKCS_V21:
+                mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH));
+                break;
+            default:
+                TEST_FAIL("Unsupported padding specifier");
+        }
     }
 #endif /* MBEDTLS_RSA_C */
     TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
@@ -2028,7 +2103,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     TEST_EQUAL(pk_setup(&pk, pk_type, key_bits), 0);
 
     if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE);
+        mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH));
     }
 
     /* Export underlying public key for re-importing in a legacy context.
@@ -2189,8 +2264,18 @@ void pk_rsa_v21_get_psa_attributes(int md_type, int from_pair,
     psa_key_type_t expected_psa_type = 0;
     TEST_EQUAL(pk_setup_for_type(MBEDTLS_PK_RSA, from_pair,
                                  &pk, &expected_psa_type), 0);
-    mbedtls_rsa_context *rsa = mbedtls_pk_rsa(pk);
-    TEST_EQUAL(mbedtls_rsa_set_padding(rsa, MBEDTLS_RSA_PKCS_V21, md_type), 0);
+    psa_algorithm_t hash_policy = (md_type == MBEDTLS_MD_NONE ?
+                                   PSA_ALG_ANY_HASH :
+                                   mbedtls_md_psa_alg_from_type(md_type));
+    switch (usage_arg) {
+        case PSA_KEY_USAGE_DECRYPT:
+        case PSA_KEY_USAGE_ENCRYPT:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_OAEP(hash_policy));
+            break;
+        default:
+            mbedtls_pk_set_algorithm(&pk, PSA_ALG_RSA_PSS_ANY_SALT(hash_policy));
+            break;
+    }
     if (!to_pair) {
         expected_psa_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(expected_psa_type);
     }

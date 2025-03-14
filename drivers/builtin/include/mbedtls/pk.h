@@ -134,13 +134,18 @@ typedef enum {
 #define MBEDTLS_PK_USE_PSA_EC_DATA
 #endif
 
-/**
- * \brief           Public key information and operations
+/** The default ECDSA variant used in keys constructed through the PK module.
  *
- * \note        The library does not support custom pk info structures,
- *              only built-in structures returned by
- *              mbedtls_cipher_info_from_type().
+ * This is currently deterministic ECDSA if available and randomized ECDSA
+ * otherwise. This choice may change in a future version of the library.
  */
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_DETERMINISTIC_ECDSA(hash_alg)
+#else
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_ECDSA(hash_alg)
+#endif
+
+/* Key method table. Only objects defined inside the library are supported. */
 typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
@@ -149,8 +154,16 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
  * \brief           Public key container
  */
 typedef struct mbedtls_pk_context {
-    const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
-    void *MBEDTLS_PRIVATE(pk_ctx);                        /**< Underlying public key context  */
+    const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);
+    void *MBEDTLS_PRIVATE(pk_ctx);
+
+    /* PSA algorithm or algorithm policy.
+     *
+     * By default, this is a signature algorithm policy, with a wildcard for
+     * the hash.
+     */
+    psa_algorithm_t psa_algorithm;
+
     /* The following field is used to store the ID of a private key in the
      * following cases:
      * - opaque key
@@ -328,6 +341,38 @@ size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
 int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
                           psa_key_usage_t usage);
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
+
+/**
+ * \brief               Change the PSA algorithm associated with a key.
+ *
+ * \param[in,out] ctx   The PK context to modify.
+ * \param alg           The new policy associated with the key.
+ *                      This may be a PSA algorithm, or a PSA signature
+ *                      algorithm policy where the hash algorithm is
+ *                      the wildcard #PSA_ALG_ANY_HASH.
+ *                      This is the algorithm that
+ *                      mbedtls_pk_get_psa_attributes() will use if it
+ *                      matches the requested usage.
+ *                      This is the algorithm that mbedtls_pk_sign() and
+ *                      mbedtls_pk_verify() will use. These functions will
+ *                      error out if the algorithm is not a signature
+ *                      algorithm.
+ *
+ * \note                This function does not validate that \p alg is
+ *                      compatible with the context. Using an incompatible
+ *                      algorithm may result in an error when trying to
+ *                      use the key, but it will never result in the
+ *                      algorithm being used on a key with an incompatible
+ *                      type.
+ *
+ * \note                The PK module does not enforce key policies.
+ *                      For example, after parsing an ECC key that is
+ *                      designated as ECDH-only through the OID
+ *                      id-ecDH, you can call this function to allow the
+ *                      key to be used for ECDSA (but you probably should not).
+ */
+void mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
+                              psa_algorithm_t alg);
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 /**

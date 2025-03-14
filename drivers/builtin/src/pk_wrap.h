@@ -20,8 +20,11 @@
 #endif
 
 struct mbedtls_pk_info_t {
-    /** Public key type */
+    /** Legacy key type */
     mbedtls_pk_type_t type;
+
+    /** Default signature policy */
+    psa_algorithm_t psa_algorithm;
 
     /** Type name */
     const char *name;

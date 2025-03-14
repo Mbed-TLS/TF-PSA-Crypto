@@ -145,6 +145,7 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info)
     }
 
     ctx->pk_info = info;
+    ctx->psa_algorithm = info->psa_algorithm;
 
     return 0;
 }
@@ -168,6 +169,7 @@ int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
     type = psa_get_key_type(&attributes);
+    ctx->psa_algorithm = psa_get_key_algorithm(&attributes);
     psa_reset_key_attributes(&attributes);
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
@@ -209,6 +211,7 @@ int mbedtls_pk_setup_rsa_alt(mbedtls_pk_context *ctx, void *key,
     }
 
     ctx->pk_info = info;
+    ctx->psa_algorithm = info->psa_algorithm;
 
     rsa_alt = (mbedtls_rsa_alt_context *) ctx->pk_ctx;
 
@@ -375,6 +378,12 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
 }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
+void mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
+                              psa_algorithm_t alg)
+{
+    ctx->psa_algorithm = alg;
+}
+
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #if defined(MBEDTLS_RSA_C)
 static psa_algorithm_t psa_algorithm_for_rsa(const mbedtls_rsa_context *rsa,
@@ -396,6 +405,24 @@ static psa_algorithm_t psa_algorithm_for_rsa(const mbedtls_rsa_context *rsa,
     }
 }
 #endif /* MBEDTLS_RSA_C */
+
+static int psa_is_algorithm_compatible_with_usage(psa_algorithm_t alg,
+                                                  psa_key_usage_t usage)
+{
+    if (PSA_ALG_IS_SIGN(alg)) {
+        return (usage & (PSA_KEY_USAGE_SIGN_HASH |
+                         PSA_KEY_USAGE_SIGN_MESSAGE |
+                         PSA_KEY_USAGE_VERIFY_HASH |
+                         PSA_KEY_USAGE_VERIFY_MESSAGE)) != 0;
+    }
+    if (PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg)) {
+        return (usage & (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT)) != 0;
+    }
+    if (PSA_ALG_IS_KEY_AGREEMENT(alg)) {
+        return (usage & PSA_KEY_USAGE_DERIVE) != 0;
+    }
+    return 0;
+}
 
 int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                                   psa_key_usage_t usage,
@@ -572,6 +599,13 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
     }
 
     psa_set_key_usage_flags(attributes, more_usage);
+
+    /* If the context already has a compatible algorithm, it takes
+     * precedence. */
+    if (psa_is_algorithm_compatible_with_usage(pk->psa_algorithm, usage)) {
+        psa_set_key_algorithm(attributes, pk->psa_algorithm);
+    }
+
     /* Key's enrollment is available only when an Mbed TLS implementation of PSA
      * Crypto is being used, i.e. when MBEDTLS_PSA_CRYPTO_C is defined.
      * Even though we don't officially support using other implementations of PSA
@@ -1078,7 +1112,20 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    return ctx->pk_info->verify_func(ctx, md_alg, hash, hash_len,
+    psa_algorithm_t alg = ctx->psa_algorithm;
+    if (!PSA_ALG_IS_SIGN(alg)) {
+        return MBEDTLS_ERR_PK_INVALID_ALG;
+    }
+    if (PSA_ALG_IS_SIGN_HASH(alg)) {
+        /* We override the hash specified in the context, if any.
+         * This is deliberate: PK doesn't enforce policies.
+         * If there is an underlying PSA key, it may enforce a policy.
+         */
+        alg &= ~PSA_ALG_HASH_MASK;
+        alg |= PSA_ALG_HASH_MASK & mbedtls_md_psa_alg_from_type(md_alg);
+    }
+
+    return ctx->pk_info->verify_func(ctx, alg, hash, hash_len,
                                      sig, sig_len);
 }
 
@@ -1271,7 +1318,20 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    return ctx->pk_info->sign_func(ctx, md_alg,
+    psa_algorithm_t alg = ctx->psa_algorithm;
+    if (!PSA_ALG_IS_SIGN(alg)) {
+        return MBEDTLS_ERR_PK_INVALID_ALG;
+    }
+    if (PSA_ALG_IS_SIGN_HASH(alg)) {
+        /* We override the hash specified in the context, if any.
+         * This is deliberate: PK doesn't enforce policies.
+         * If there is an underlying PSA key, it may enforce a policy.
+         */
+        alg &= ~PSA_ALG_HASH_MASK;
+        alg |= PSA_ALG_HASH_MASK & mbedtls_md_psa_alg_from_type(md_alg);
+    }
+
+    return ctx->pk_info->sign_func(ctx, alg,
                                    hash, hash_len,
                                    sig, sig_size, sig_len,
                                    f_rng, p_rng);
