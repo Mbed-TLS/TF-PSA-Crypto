@@ -128,16 +128,16 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
     TEST_MEMORY_COMPARE(start_buf, buf_len, check_buf, check_buf_len);
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-    /* Verify that pk_write works also for opaque private keys */
+    /* Verify that pk_write works also for wrapped private keys */
     if (!is_public_key) {
         memset(buf, 0, check_buf_len);
-        /* Turn the key PK context into an opaque one.
+        /* Turn the key PK context into a wrapping one.
          * Note: set some practical usage for the key to make get_psa_attributes() happy. */
         TEST_EQUAL(mbedtls_pk_get_psa_attributes(&key, PSA_KEY_USAGE_SIGN_MESSAGE, &key_attr), 0);
         TEST_EQUAL(mbedtls_pk_import_into_psa(&key, &key_attr, &opaque_id), 0);
         mbedtls_pk_free(&key);
         mbedtls_pk_init(&key);
-        TEST_EQUAL(mbedtls_pk_setup_opaque(&key, opaque_id), 0);
+        TEST_EQUAL(mbedtls_pk_wrap_psa(&key, opaque_id), 0);
         start_buf = buf;
         buf_len = check_buf_len;
         /* Intentionally pass a wrong size for the provided output buffer and check
@@ -218,12 +218,12 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_platform_zeroize(derived_key_raw, derived_key_len);
 
-    /* Turn the priv_key PK context into an opaque one. */
+    /* Turn the priv_key PK context into a wrapping one. */
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&priv_key, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
     TEST_EQUAL(mbedtls_pk_import_into_psa(&priv_key, &key_attr, &opaque_key_id), 0);
     mbedtls_pk_free(&priv_key);
     mbedtls_pk_init(&priv_key);
-    TEST_EQUAL(mbedtls_pk_setup_opaque(&priv_key, opaque_key_id), 0);
+    TEST_EQUAL(mbedtls_pk_wrap_psa(&priv_key, opaque_key_id), 0);
 
     TEST_EQUAL(mbedtls_pk_write_pubkey_der(&priv_key, derived_key_raw,
                                            derived_key_len), pub_key_len);

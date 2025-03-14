@@ -14,6 +14,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
+#include "mbedtls/platform_util.h"
 #include "mbedtls/md.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
@@ -166,7 +167,7 @@ typedef struct mbedtls_pk_context {
 
     /* The following field is used to store the ID of a private key in the
      * following cases:
-     * - opaque key
+     * - wrapped PSA key
      * - normal key when MBEDTLS_PK_USE_PSA_EC_DATA is defined. In this case:
      *    - the pk_ctx above is not not used to store the private key anymore.
      *      Actually that field not populated at all in this case because also
@@ -178,7 +179,7 @@ typedef struct mbedtls_pk_context {
      *       other ones. The latters still use the pk_ctx to store their own
      *       context. */
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-    mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);      /**< Key ID for opaque keys */
+    mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);      /**< wrapped PSA key, if any */
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
     /* The following fields are meant for storing the public key in raw format
      * which is handy for:
@@ -236,7 +237,7 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx);
  *                  If this is \c NULL, this function does nothing.
  *
  * \note            For contexts that have been set up with
- *                  mbedtls_pk_setup_opaque(), this does not free the underlying
+ *                  mbedtls_pk_wrap_psa(), this does not free the underlying
  *                  PSA key and you still need to call psa_destroy_key()
  *                  independently if you want to destroy that key.
  */
@@ -287,8 +288,16 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  *            RSA key pair.
  * \return    #MBEDTLS_ERR_PK_ALLOC_FAILED on allocation failure.
  */
-int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
-                            const mbedtls_svc_key_id_t key);
+int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
+                        const mbedtls_svc_key_id_t key);
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+static inline int MBEDTLS_DEPRECATED mbedtls_pk_setup_opaque(
+    mbedtls_pk_context *ctx,
+    const mbedtls_svc_key_id_t key) {
+    return mbedtls_pk_wrap_psa(ctx, key);
+}
+#endif
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /**
