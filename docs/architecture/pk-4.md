@@ -73,15 +73,15 @@ mbedtls_pk_free()
 
 We explicitly associate an algorithm with each PK context. This is intended to match the algorithm in the underlying PSA key when there is one. Having an algorithm stored in the context lets us treat PK contexts more uniformly regardless of whether they contain a PSA key or a direct pointer to key material.
 
-ACTION: populate the field `pk->psa_algorithm` when populating `pk`. Use the same approach as the existing function `mbedtls_pk_get_psa_attributes()` for a signature usage.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): populate the field `pk->psa_algorithm` when populating `pk`. Use the same approach as the existing function `mbedtls_pk_get_psa_attributes()` for a signature usage.
 
-ACTION: implement a new function to change the algorithm associated with a PK context:
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): implement a new function to change the algorithm associated with a PK context:
 ```
 void mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
                               psa_algorithm_t alg);
 ```
 
-ACTION: change PK operation functions to honor the algorithm set in the context.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): change PK operation functions to honor the algorithm set in the context.
 
 Keep:
 ```
@@ -109,7 +109,7 @@ Public headers and sample programs are considered public. Library code (includin
 
 #### New type for signature algorithms
 
-ACTION: Define a new type `mbedtls_pk_sigalg_t` which is a subset of `mbedtls_pk_type_t`, containing only the values that are meaningful as a signature algorithm in an X.509 structure.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): Define a new type `mbedtls_pk_sigalg_t` which is a subset of `mbedtls_pk_type_t`, containing only the values that are meaningful as a signature algorithm in an X.509 structure.
 
 ```
 typedef enum {
@@ -162,11 +162,11 @@ Given a key in one form, there are two ways to obtain a key in the other form:
 
 Keep `mbedtls_pk_get_psa_attributes()`.
 
-ACTION: update the documentation of `mbedtls_pk_get_psa_attributes()`.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): update the documentation of `mbedtls_pk_get_psa_attributes()`.
 
 Notes:
 
-* An ECC public key in SubjectPublicKeyInfo format (possibly embedded in a key pair) can specify one of two algorithms: id-ecPublicKey (allows ECDSA signature) or id-ecDH (should not be used for signature). This is encoded in the old API through the PK type: id-ecDH leads to `MBEDTLS_PK_ECKEY_DH`. This is untested (we have no test key with id-ecDH). In the new API, you can find out whether a key had id-ecPublicKey or id-ecDH by looking at the algorithm chosen by `mbedtls_pk_get_psa_attributes()`.
+* An ECC public key in SubjectPublicKeyInfo format (possibly embedded in a key pair) can specify one of two algorithms: id-ecPublicKey (allows ECDSA signature) or id-ecDH (should not be used for signature). This is encoded in the old API through the PK type: id-ecDH leads to `MBEDTLS_PK_ECKEY_DH`. This is untested (we have no test key with id-ecDH; backlog issue: https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/206). In the new API, you can find out whether a key had id-ecPublicKey or id-ecDH by looking at the algorithm chosen by `mbedtls_pk_get_psa_attributes()`.
 
 * Arguably, since PK is now specialized towards signatures, we could remove the `usage` argument from `mbedtls_pk_get_psa_attributes()`, and make the function work only for a sign/verify usage. However, I don't think this would be right, especially because PK only handles signature: after parsing a key, to use it for something other than signature, you need to use PK, which means you need to call `mbedtls_pk_get_psa_attributes()` then `mbedtls_pk_import_into_psa()` to create a PSA key with your desired non-signature algorithm. Also, the usage parameter allows for extracting the public part of a key when you don't know whether you have a public key or a key pair, which is very convenient in some cases such as managing a key store.
 
@@ -183,9 +183,9 @@ mbedtls_pk_copy_public_from_psa()
 
 There is already a function to wrap a PSA private key in a PK context: `mbedtls_pk_setup_opaque()`. The function's name no longer makes sense, since there is no longer a concept of “opaque” PK contexts, and no longer a ”setup“ operation on PK contexts.
 
-ACTION: rename `mbedtls_pk_setup_opaque()` to `mbedtls_pk_wrap_psa()` and adjust the documentation accordingly. (Updating internal references to “opaque” is out of scope and will be done later: [Update terminology from “opaque” to “wrapped”](#update-terminology-from-opaque-to-wrapped).)
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): rename `mbedtls_pk_setup_opaque()` to `mbedtls_pk_wrap_psa()` and adjust the documentation accordingly. (Updating internal references to “opaque” is out of scope and will be done later: [Update terminology from “opaque” to “wrapped”](#update-terminology-from-opaque-to-wrapped).)
 
-ACTION: remove mentions of operations other than sign and verify from the documentation.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): remove mentions of operations other than sign and verify from the documentation.
 
 The current function has some limitations. We should lift them soon (“[Remove limitations of `mbedtls_pk_wrap_psa()`](#remove-limitations-of-mbedtls_pk_wrap_psa)”), but it isn't a deal breaker for TF-PSA-Crypto 1.0.
 
@@ -218,7 +218,7 @@ mbedtls_pk_verify()
 mbedtls_pk_sign()
 ```
 
-ACTION: remove `MBEDTLS_ERR_PK_SIG_LEN_MISMATCH`.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/5544): remove `MBEDTLS_ERR_PK_SIG_LEN_MISMATCH`. It's mostly useless for RSA, and it doesn't even work for ECDSA.
 
 #### Restartable signature functionality
 
@@ -237,7 +237,7 @@ mbedtls_pk_sign_restartable()
 
 #### Privatization
 
-ACTION: Move all private API elements to an private header:
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): Move all private API elements to an private header:
 
 ```
 mbedtls_pk_type_t
@@ -266,21 +266,21 @@ Follow-up: [Make private API elements internal](#make-private-api-elements-inter
 
 #### Documentation update after privatization
 
-ACTION: remove all mentions of private API elements from the public documentation.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/205): remove all mentions of private API elements from the public documentation.
 
 This includes both direct mentions (where a type name, constant name or function name is mentioned), and indirect mentions (e.g. “verify\_ext”, “context has been set up”).
 
-ACTION: update unit tests to validate the new interfaces.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/207): update unit tests to validate the new interfaces.
 
 #### Remove RSA-ALT
 
-ACTION: Remove the option `MBEDTLS_PK_RSA_ALT_SUPPORT` and all code guarded by it, as well as `MBEDTLS_PK_RSA_ALT`.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/208): Remove the option `MBEDTLS_PK_RSA_ALT_SUPPORT` and all code guarded by it, as well as `MBEDTLS_PK_RSA_ALT`.
 
 ### Documentation updates
 
-ACTION: update the PSA transition guide.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): update the PSA transition guide.
 
-ACTION: write changelog entries.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): write changelog entries.
 
 ## Open questions
 
