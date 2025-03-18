@@ -35,11 +35,11 @@ The following features are deliberately removed from the PK API. (They may remai
 
 * The ability to inspect how data is stored in PK contexts: opaque-or-not, `mbedtls_pk_ec()`, `mbedtls_pk_rsa()`, `mbedtls_pk_get_type()`, `mbedtls_pk_info_t`, etc.
 * The ability to construct a PK context manually: `mbedtls_pk_setup()`.
-* Direct support for opaque keys. Go via PSA instead.
+* Direct support for opaque keys (`mbedtls_pk_setup_opaque()`, `mbedtls_pk_setup_rsa_alt()`, etc.). Go via PSA instead.
 * The poorly defined type `mbedtls_pk_type_t` and the associated function `mbedtls_pk_can_do()`. Use PSA metadata instead.
 * Mechanism names: `mbedtls_pk_get_name()`.
 * The RSA-oriented length function: `mbedtls_pk_get_len()`. Use `mbedtls_pk_get_bitlen()`.
-* PSS-extended functions: `mbedtls_pk_sign_ext()`, `mbedtls_pk_verify_ext()`. PSA has less flexibility than the PK API. Use PSA APIs to get all the flexibility that PSA can have.
+* PSS-extended functions: `mbedtls_pk_sign_ext()`, `mbedtls_pk_verify_ext()`. PSA has less flexibility than the PK API. Use PSA APIs to get all the flexibility that PSA can have. Use separate key objects if you need multiple algorithms with the same key (e.g. PKCS#1v1.5 and PSS for a TLS server that supports both TLS 1.2 and 1.3).
 * Encrypt/decrypt: `mbedtls_pk_decrypt()`, `mbedtls_pk_encrypt()`. Use PSA.
 
 ### Design philosophy for the new PK
@@ -54,6 +54,12 @@ A PK context has the following conceptual properties:
 * Optionally, an associated PSA key identifier. The PSA key may be owned by the PK context and destroyed when the context is destroyed, or it may be referenced by the PK context and left alone when the context is destroyed.
 
 The PK module does not enforce key policies. In particular, it is possible to copy a PK context into a context with a different signature algorithm.
+
+### Private interfaces
+
+In this document, a ***private*** interfaces is one that is not documented. Applications should not use private interfaces, and we do not promise any kind of stability about them. Mbed TLS can use private interfaces of TF-PSA-Crypto, but in the medium term (over the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x), it should stop doing so. Public interfaces must not rely on private interfaces, for example a private type cannot be used in the prototype of a public functions. However, public types can have a private implementation (we guarantee that the type will keep existing, but it may be implemented differently, typically adding and removing fields in a structure).
+
+An ***internal*** interface is only usable inside TF-PSA-Crypto.
 
 ## API elements
 
@@ -88,6 +94,8 @@ Keep:
 mbedtls_pk_get_bitlen()
 mbedtls_pk_can_do_ext()
 ```
+
+We keep `mbedtls_pk_can_do_ext()` as is because it's useful to check what a key can do after parsing it. It is partially redundant with `mbedtls_pk_get_psa_attributes()`, but it's sometimes more convenient, already implemented, and easy to implement for any evolution of PK that can accommodate `mbedtls_pk_get_psa_attributes()`.
 
 #### Meaning of `mbedtls_pk_type_t`
 
@@ -156,7 +164,9 @@ The new PK needs to have bridges between PK contexts and PSA keys.
 Given a key in one form, there are two ways to obtain a key in the other form:
 
 * Make a copy of the key data, so that the destination object lives independently from the source object. This is far easier to use in terms of resource management. However, it may not be possible if the source object's policy makes it impossible to copy. This can be the case with PSA keys, and also with PK contexts if they wrap around a non-copiable PSA key.
-* Create an object that wraps the source object. The wrapper object is only valid as long as the source object is valid, and destroying the wrapper object does not affect the source object. Resource management is tricky, but this has a low overhead and works for keys whose material cannot be copied.
+* Create an object that aliases the source object: wrap a PSA key in a PK context, or peek at the underlying PSA key of a PK context. The wrapper/underlying object is only valid as long as the source object is valid. A PK context created by wrapping an existing PSA key does not destroy the PSA key. Resource management is tricky, but this has a low overhead and works for keys whose material cannot be copied.
+
+There is currently no way to access the underlying PSA key of a PK context. A nw function to [access the underlying PSA key of a PK context](#access-the-underlying-psa-key-of-a-pk-context) is not planned for TF-PSA-Crypto 1.0.
 
 #### `mbedtls_pk_get_psa_attributes()`
 
@@ -297,6 +307,10 @@ These functions are used in test code and sample programs.
 #### Access the underlying PSA key of a PK context
 
 Should we provide a function to access the underlying PSA key of a PSA context, if there is one?
+
+This would be new work, and does not seem to be needed at the moment. If the PK context was created from a PSA key, the application might as well use the original PSA key. If the PK context was created by parsing, `mbedtls_pk_import_into_psa()` works, and does not require a special case if the PK context does not have an underlying PSA key.
+
+If we add this in the future, it will be considerably easier if all PK contexts have an underlying PSA key, or at least all PK contexts containing a private key have an underlying PSA key.
 
 ## Later tasks
 
