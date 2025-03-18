@@ -11,7 +11,7 @@ The goal of the PK-4.0 project is to make minimal changes to the `pk.h` interfac
 
 In the short term, before the 1.0/4.0 releases, we will make parts of `pk.h` private, and provide replacements where needed. The goal of the project is to make the desired parts private (i.e. no longer part of the documented API), and to ensure that the replacements are working. The old API can still be used under the hood in Mbed TLS.
 
-In the medium term, in TF-PSA-Crypto 1.x and Mbed TLS 4.x, we will remove the internal uses of private APIs from Mbed TLS and TF-PSA-Crypto, then remove the implementation those private APIs.
+In the medium term, in TF-PSA-Crypto 1.x and Mbed TLS 4.x, we will remove the internal uses of private APIs from Mbed TLS and TF-PSA-Crypto, then remove the implementation of those private APIs.
 
 In the long term, we want to fully replace `pk.h` with PSA APIs. This is a work topic for the PSA Crypto API working group. The API design is still at an early stage, far too early to be taken into account here.
 
@@ -27,7 +27,7 @@ In addition, we choose to retain the following functionality, because it is easi
 
 * A sign/verify interface, using a signature format that's ready for X.509 and TLS.
 
-Any other functionality in the `pk.h` interface in TF-PSA-Crypto will either be justified by these needs (e.g. metadata queries, object creation and descruction), or left over from Mbed TLS 3.x if there's no particular reason to remove it. Everything else will be made private.
+Any other functionality in the `pk.h` interface in TF-PSA-Crypto will either be justified by these needs (e.g. metadata queries, object creation and destruction), or left over from Mbed TLS 3.x if there's no particular reason to remove it. Everything else will be made private.
 
 ### Functionality that is removed from PK
 
@@ -168,7 +168,7 @@ Notes:
 
 * An ECC public key in SubjectPublicKeyInfo format (possibly embedded in a key pair) can specify one of two algorithms: id-ecPublicKey (allows ECDSA signature) or id-ecDH (should not be used for signature). This is encoded in the old API through the PK type: id-ecDH leads to `MBEDTLS_PK_ECKEY_DH`. This is untested (we have no test key with id-ecDH; backlog issue: https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/206). In the new API, you can find out whether a key had id-ecPublicKey or id-ecDH by looking at the algorithm chosen by `mbedtls_pk_get_psa_attributes()`.
 
-* Arguably, since PK is now specialized towards signatures, we could remove the `usage` argument from `mbedtls_pk_get_psa_attributes()`, and make the function work only for a sign/verify usage. However, I don't think this would be right, especially because PK only handles signature: after parsing a key, to use it for something other than signature, you need to use PK, which means you need to call `mbedtls_pk_get_psa_attributes()` then `mbedtls_pk_import_into_psa()` to create a PSA key with your desired non-signature algorithm. Also, the usage parameter allows for extracting the public part of a key when you don't know whether you have a public key or a key pair, which is very convenient in some cases such as managing a key store.
+* Arguably, since PK is now specialized towards signatures, we could remove the `usage` argument from `mbedtls_pk_get_psa_attributes()`, and make the function work only for a sign/verify usage. However, I don't think this would be right, especially because PK only handles signature: after parsing a key, to use it for something other than signature, you need to use PSA, which means you need to call `mbedtls_pk_get_psa_attributes()` then `mbedtls_pk_import_into_psa()` to create a PSA key with your desired non-signature algorithm. Also, the usage parameter allows for extracting the public part of a key when you don't know whether you have a public key or a key pair, which is very convenient in some cases such as managing a key store.
 
 #### Copy between PK and PSA
 
