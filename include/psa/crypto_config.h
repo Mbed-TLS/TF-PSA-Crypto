@@ -1059,14 +1059,10 @@
 /**
  * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
  *
- * Uncomment this macro to let Mbed TLS use your own implementation of a
- * hardware entropy collector.
- *
- * Your function must be called \c mbedtls_platform_get_entropy_alt(), have the same
- * prototype as declared in library/entropy_poll.h, and accept NULL as first
- * argument.
- *
- * Uncomment to use your own hardware entropy collector.
+ * Uncomment this to let Mbed TLS call your custom hardware polling function
+ * when it's gathering entropy data.
+ * Public header `mbedtls/platform.h` provides the prototype for the callback
+ * function and also the documentation for its parameters.
  */
 //#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 

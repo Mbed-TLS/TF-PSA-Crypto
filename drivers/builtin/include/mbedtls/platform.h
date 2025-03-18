@@ -448,15 +448,28 @@ mbedtls_platform_context;
 
 #if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
 /**
- * \brief           Entropy poll callback for a hardware source
+ * \brief       User defined callback function that is used from the entropy
+ *              module to gather entropy data from some hardware device.
+ *              The function's prototype is only available when
+ *              `MBEDTLS_PLATFORM_GET_ENTROPY_ALT` is defined.
  *
- * \warning         This is not provided by Mbed TLS!
- *                  See \c MBEDTLS_PLATFORM_GET_ENTROPY_ALT in mbedtls_config.h.
+ * \param[out] output           Output buffer where the entropy data will be
+ *                              stored.
+ * \param[in] output_size       Size of the \p output buffer in bytes.
+ * \param[out] output_len       Amount of bytes effectively written in the
+ *                              \p output buffer.
+ * \param[out] entropy_content  Measure of the entropy content (in bits) of the
+ *                              data written in the \p output buffer.
  *
- * \note            This must accept NULL as its first argument.
+ * \warning     For the time being TF-PSA-Crypto assumes that the function provides
+ *              a maximum entropy output, i.e. \p entropy_content is equal to
+ *              `8 * output_len`. In the future TF-PSA-Crypto will be smarter
+ *              and capable to cope with entropy sources with lower entropy
+ *              content (i.e. 0 < \p entropy_content < 8 * output_len) by
+ *              calling the callback function in loop.
  */
-int mbedtls_platform_get_entropy_alt(void *data,
-                                     unsigned char *output, size_t len, size_t *olen);
+int mbedtls_platform_get_entropy_alt(unsigned char *output, size_t output_size,
+                                     size_t *output_len, size_t *entropy_content);
 #endif
 
 /**
