@@ -248,7 +248,7 @@ int mbedtls_entropy_update_seed_file(mbedtls_entropy_context *ctx, const char *p
  */
 int mbedtls_entropy_self_test(int verbose);
 
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
 /**
  * \brief          Checkup routine
  *
@@ -263,7 +263,7 @@ int mbedtls_entropy_self_test(int verbose);
  * \return         0 if successful, or 1 if a test failed
  */
 int mbedtls_entropy_source_self_test(int verbose);
-#endif /* MBEDTLS_ENTROPY_HARDWARE_ALT */
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 #endif /* MBEDTLS_SELF_TEST */
 
 #ifdef __cplusplus

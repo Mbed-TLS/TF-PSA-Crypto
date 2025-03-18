@@ -45,7 +45,7 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
                                MBEDTLS_ENTROPY_MIN_PLATFORM,
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
 #endif
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
     mbedtls_entropy_add_source(ctx, mbedtls_hardware_poll, NULL,
                                MBEDTLS_ENTROPY_MIN_HARDWARE,
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
@@ -494,7 +494,7 @@ static int entropy_dummy_source(void *data, unsigned char *output,
     return 0;
 }
 
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
 
 static int mbedtls_entropy_source_self_test_gather(unsigned char *buf, size_t buf_len)
 {
@@ -593,7 +593,7 @@ cleanup:
     return ret != 0;
 }
 
-#endif /* MBEDTLS_ENTROPY_HARDWARE_ALT */
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 
 /*
  * The actual entropy quality is hard to test, but we can at least
@@ -654,7 +654,7 @@ int mbedtls_entropy_self_test(int verbose)
         }
     }
 
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
     if ((ret = mbedtls_entropy_source_self_test(0)) != 0) {
         goto cleanup;
     }
