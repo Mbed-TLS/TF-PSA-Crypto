@@ -1,0 +1,9 @@
+Removals
+   * Previously deprecated build symbol `MBEDTLS_ENTROPY_HARDWARE_ALT` is
+     removed.
+
+Features
+   * The new symbol `MBEDTLS_PLATFORM_GET_ENTROPY_ALT` is added to allow the
+     defintion of a custom callback function named
+     `mbedtls_platform_get_entropy_alt()` which allows to gather entropy
+     data from some hardware device.
