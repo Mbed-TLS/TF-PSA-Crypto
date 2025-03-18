@@ -243,6 +243,10 @@ mbedtls_pk_verify_restartable()
 mbedtls_pk_sign_restartable()
 ```
 
+No changes to the function's implementation: restartable behavior is only available for built-in ECDSA when built-in restartable ECC is enabled, but the function always works (in a non-restartable way if restartable is not possible).
+
+There is a risk that the current API will be suboptimal when we port its implementation. However, I think this risk is low, since this is basically the interface that X.509 likes, and the primary goal of PK is to support X.509. If X.509 needs more adaptation than expected to migrate to PSA, PK is the natural place for the adaptation code.
+
 ### Removals
 
 #### Privatization
