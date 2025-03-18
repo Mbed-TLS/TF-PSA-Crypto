@@ -1,0 +1,4 @@
+Removals
+   * Removed the MBEDTLS_PSA_INJECT_ENTROPY option from crypto_config.h, as
+     well as any code or tests conditioned by it, so that it can be replaced
+     by a better interface.
