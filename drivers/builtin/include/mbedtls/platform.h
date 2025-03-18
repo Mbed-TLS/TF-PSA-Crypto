@@ -446,6 +446,23 @@ mbedtls_platform_context;
 #include "platform_alt.h"
 #endif /* !MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
 
+#if !defined(MBEDTLS_ENTROPY_MIN_HARDWARE)
+#define MBEDTLS_ENTROPY_MIN_HARDWARE     32     /**< Minimum for the hardware source */
+#endif
+
+#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+/**
+ * \brief           Entropy poll callback for a hardware source
+ *
+ * \warning         This is not provided by Mbed TLS!
+ *                  See \c MBEDTLS_ENTROPY_HARDWARE_ALT in mbedtls_config.h.
+ *
+ * \note            This must accept NULL as its first argument.
+ */
+int mbedtls_hardware_poll(void *data,
+                          unsigned char *output, size_t len, size_t *olen);
+#endif
+
 /**
  * \brief   This function performs any platform-specific initialization
  *          operations.

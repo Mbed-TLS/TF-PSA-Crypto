@@ -22,9 +22,6 @@ extern "C" {
  * Default thresholds for built-in sources, in bytes
  */
 #define MBEDTLS_ENTROPY_MIN_PLATFORM     32     /**< Minimum for platform source    */
-#if !defined(MBEDTLS_ENTROPY_MIN_HARDWARE)
-#define MBEDTLS_ENTROPY_MIN_HARDWARE     32     /**< Minimum for the hardware source */
-#endif
 
 #if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
 /**
@@ -32,19 +29,6 @@ extern "C" {
  */
 int mbedtls_platform_entropy_poll(void *data,
                                   unsigned char *output, size_t len, size_t *olen);
-#endif
-
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
-/**
- * \brief           Entropy poll callback for a hardware source
- *
- * \warning         This is not provided by Mbed TLS!
- *                  See \c MBEDTLS_ENTROPY_HARDWARE_ALT in mbedtls_config.h.
- *
- * \note            This must accept NULL as its first argument.
- */
-int mbedtls_hardware_poll(void *data,
-                          unsigned char *output, size_t len, size_t *olen);
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
