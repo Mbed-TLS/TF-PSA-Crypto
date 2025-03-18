@@ -21,14 +21,6 @@ extern "C" {
 #include <test/psa_crypto_helpers.h>
 #include <test/psa_test_wrappers.h>
 
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY)
-psa_status_t mbedtls_test_wrap_mbedtls_psa_inject_entropy(
-    const uint8_t *arg0_seed,
-    size_t arg1_seed_size);
-#define mbedtls_psa_inject_entropy(arg0_seed, arg1_seed_size) \
-    mbedtls_test_wrap_mbedtls_psa_inject_entropy(arg0_seed, arg1_seed_size)
-#endif /* defined(MBEDTLS_PSA_INJECT_ENTROPY) */
-
 #if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
 psa_status_t mbedtls_test_wrap_mbedtls_psa_platform_get_builtin_key(
     mbedtls_svc_key_id_t arg0_key_id,
