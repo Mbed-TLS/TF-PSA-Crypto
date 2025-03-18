@@ -27,10 +27,6 @@ void mbedtls_nist_kw_self_test(int verbose, int mode, data_t *kw_key,
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
     mbedtls_printf("\n");
 
-    if (verbose != 0) {
-        mbedtls_printf("  KW-AES-%u ", (unsigned int) kw_key->len * 8);
-    }
-
     PSA_ASSERT(psa_import_key(&attributes, kw_key->x, kw_key->len, &key_id));
     PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, kw_msg->x,
                                kw_msg->len, out, sizeof(out), &olen));
