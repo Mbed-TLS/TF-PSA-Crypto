@@ -1351,11 +1351,11 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  *           compatible, with the PAKE algorithm and primitive.
  *         - The key type or key size of password_key is not supported with
  *           cipher_suite.
- * \retval #PSA_ERROR_COMMUNICATION_FAILURE
- * \retval #PSA_ERROR_CORRUPTION_DETECTED
- * \retval #PSA_ERROR_STORAGE_FAILURE
- * \retval #PSA_ERROR_DATA_CORRUPT
- * \retval #PSA_ERROR_DATA_INVALID
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
  */
 psa_status_t psa_pake_setup(psa_pake_operation_t *operation,
                             mbedtls_svc_key_id_t password_key,
