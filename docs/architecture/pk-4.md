@@ -278,6 +278,16 @@ mbedtls_pk_write_pubkey()
 
 Follow-up: [Make private API elements internal](#make-private-api-elements-internal)
 
+#### Loss of sign/verify-ext functions
+
+We are deliberately removing `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()`: the extra parameters should be encoded in a PSA algorithm (or hash-agnostic policy).
+
+This creates a problem for TLS servers that have an RSA key. TLS 1.2 uses PKCS#1v1.5 to sign the handshake, while TLS 1.3 uses PSS. In Mbed TLS 3.6, this works because RSA keys have a non-constraining policy (their padding mode) which `mbedtls_pk_sign_ext()` overrides. With an opaque key, i.e. when the PK object wraps a PSA key, this only works if the underlying PSA policy allows the desired algorithm. In TF-PSA-Crypto 1.x, we want to change PK so that all PK objects with a private key go through PSA, i.e. that all PK key pairs are opaque in the old PK sense. This will break TLS 1.2+1.3 servers that expect to parse an RSA key and then use it indifferently with both protocols.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10075): resolve this for TF-PSA-Crypto 1.0 and Mbed TLS 4.0, in the sense of documenting an official way to do it, ensuring that this way works, and ensuring that applications using the old way fails (unless we decide to preserve the old way throughout the lifetime of Mbed TLS 4.x and TF-PSA-Crypto 1.x).
+
+This isn't a problem for verification because as a last resort, it's always possible to export a public key and re-import it with a different policy.
+
 #### Documentation update after privatization
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/205): remove all mentions of private API elements from the public documentation.
