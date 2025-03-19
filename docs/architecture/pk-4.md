@@ -83,9 +83,11 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): populate the field 
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): implement a new function to change the algorithm associated with a PK context:
 ```
-void mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
-                              psa_algorithm_t alg);
+int mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
+                             psa_algorithm_t alg);
 ```
+
+This function is intended to be used after parsing a key, but it currently only works effectively for keys that are not backed by PSA. See “[Effectiveness `mbedtls_pk_set_algorithm`](#effectiveness-of-mbedtls_pk_set_algorithm)”.
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): change PK operation functions to honor the algorithm set in the context.
 
@@ -315,6 +317,18 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): write changelog e
 Should we remove the file parsing functions `mbedtls_pk_parse_keyfile()` and `mbedtls_pk_parse_public_keyfile()`? They look misplaced in a library that generally doesn't access files. But it isn't really difficult to keep them.
 
 These functions are used in test code and sample programs.
+
+#### Effectiveness `mbedtls_pk_set_algorithm`
+
+How do I parse an RSA key, and then select PSS? More generally, how do I indicate what policy to use after parsing a key?
+
+In my original draft, you can parse an RSA key and then call `mbedtls_pk_set_algorithm()` to select an algorithm other than the default (which is PKCS#1v1.5 signature). This may not be the right design: it won't work when we change PK to always go through PSA for RSA key pairs (i.e. making them systematically opaque in the old sense).
+
+An alternative approach is to require copying the key after parsing. This is what we're effectively doing when the application wants to use the key through PSA: it calls `mbedtls_pk_parse_xxx()`, then `mbedtls_pk_import_into_psa()` (after which it can free the intermediate PK object). But what if the application wants to use the key through PK? The current workflow can be:
+
+* `mbedtls_pk_set_algorithm()` — but as noted above this is not future-proof.
+* `mbedtls_pk_import_into_psa()` then `mbedtls_pk_copy_from_psa()`. Inefficient but ok. If that's the intended way to do it, we need to document it clearly, and maybe we should remove `mbedtls_pk_set_algorithm()`?
+* A new function `mbedtls_pk_copy()` allowing a policy change?
 
 ### Resource management
 
