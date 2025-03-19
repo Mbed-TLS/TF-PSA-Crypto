@@ -57,7 +57,7 @@ The PK module does not enforce key policies. In particular, it is possible to co
 
 ### Private interfaces
 
-In this document, a ***private*** interfaces is one that is not documented. Applications should not use private interfaces, and we do not promise any kind of stability about them. Mbed TLS can use private interfaces of TF-PSA-Crypto, but in the medium term (over the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x), it should stop doing so. Public interfaces must not rely on private interfaces, for example a private type cannot be used in the prototype of a public functions. However, public types can have a private implementation (we guarantee that the type will keep existing, but it may be implemented differently, typically adding and removing fields in a structure).
+In this document, a ***private*** interface is one that is not documented. Applications should not use private interfaces, and we do not promise any kind of stability about them. Mbed TLS can use private interfaces of TF-PSA-Crypto, but in the medium term (over the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x), it should stop doing so. Public interfaces must not rely on private interfaces, for example a private type cannot be used in the prototype of a public function. However, public types can have a private implementation (we guarantee that the type will keep existing, but it may be implemented differently, typically adding and removing fields in a structure).
 
 An ***internal*** interface is only usable inside TF-PSA-Crypto.
 
@@ -334,7 +334,7 @@ An alternative approach is to require copying the key after parsing. This is wha
 
 #### Access the underlying PSA key of a PK context
 
-Should we provide a function to access the underlying PSA key of a PSA context, if there is one?
+Should we provide a function to access the underlying PSA key of a PK context, if there is one?
 
 This would be new work, and does not seem to be needed at the moment. If the PK context was created from a PSA key, the application might as well use the original PSA key. If the PK context was created by parsing, `mbedtls_pk_import_into_psa()` works, and does not require a special case if the PK context does not have an underlying PSA key.
 
