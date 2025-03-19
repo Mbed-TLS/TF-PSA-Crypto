@@ -49,7 +49,7 @@ We retain the concept of a “PK context”, which can either be empty or contai
 A PK context has the following conceptual properties:
 
 * A PSA key type (key pair or public key). This is `PSA_KEY_TYPE_NONE` for an empty context.
-* A PSA algorithm used for signing. This is `PSA_ALG_NONE` for an empty context, or a signature algorithm, or a signature wildcard algorithm policy (which specifies a signature mechanism, but leaves a hash algorithm unspecified).
+* A PSA algorithm used for signing and verification. This is `PSA_ALG_NONE` for an empty context. When a key is set, this is a signature algorithm or a signature wildcard algorithm policy (which specifies a signature mechanism, but leaves a hash algorithm unspecified).
 * Key material that matches the key type. This can be directly in the PK object, or indirectly via a PSA key identifier.
 * Optionally, an associated PSA key identifier. The PSA key may be owned by the PK context and destroyed when the context is destroyed, or it may be referenced by the PK context and left alone when the context is destroyed.
 
@@ -142,7 +142,7 @@ This task removes the need for `mbedtls_pk_type_t` to be in the public API of Mb
 
 Remove `mbedtls_pk_can_do()` from the public API.
 
-Everyone should use PSA metadata instead.
+Everyone should use PSA metadata instead. For example, the question “can this key do RSA?” (`mbedtls_pk_can_do(pk, MBEDTLS_PK_RSA)`) is ambiguous since the answer depends on the desired algorithm, so users should instead call `mbedtls_pk_can_do_ext()` which takes an algorithm as a parameter.
 
 #### `mbedtls_pk_get_name()`
 
@@ -370,6 +370,8 @@ It is no longer possible to construct a PK object with the legacy type `MBEDTLS_
 #### Replace all uses of `mbedtls_pk_type_t`, `mbedtls_pk_get_type()` and `mbedtls_pk_can_do()` in TLS library and test code
 
 #### Get rid of `mbedtls_pk_can_do()`
+
+Once it's no longer used anywhere, we can stop implementing it.
 
 #### Get rid of `mbedtls_pk_info`
 
