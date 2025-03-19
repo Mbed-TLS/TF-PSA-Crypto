@@ -698,9 +698,10 @@ psa_status_t mbedtls_test_wrap_psa_pake_set_user(
 #if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t mbedtls_test_wrap_psa_pake_setup(
     psa_pake_operation_t *arg0_operation,
-    const psa_pake_cipher_suite_t *arg1_cipher_suite);
-#define psa_pake_setup(arg0_operation, arg1_cipher_suite) \
-    mbedtls_test_wrap_psa_pake_setup(arg0_operation, arg1_cipher_suite)
+    mbedtls_svc_key_id_t arg1_password_key,
+    const psa_pake_cipher_suite_t *arg2_cipher_suite);
+#define psa_pake_setup(arg0_operation, arg1_password_key, arg2_cipher_suite) \
+    mbedtls_test_wrap_psa_pake_setup(arg0_operation, arg1_password_key, arg2_cipher_suite)
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
 psa_status_t mbedtls_test_wrap_psa_purge_key(
