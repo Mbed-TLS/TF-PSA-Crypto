@@ -8831,8 +8831,56 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     return PSA_SUCCESS;
 }
 
+static psa_status_t psa_pake_set_password_key(
+    psa_pake_operation_t *operation,
+    mbedtls_svc_key_id_t password)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *slot = NULL;
+    psa_key_type_t type;
+
+    if (operation->stage != PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(password, &slot,
+                                                   PSA_KEY_USAGE_DERIVE,
+                                                   operation->alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    type = psa_get_key_type(&slot->attr);
+
+    if (type != PSA_KEY_TYPE_PASSWORD &&
+        type != PSA_KEY_TYPE_PASSWORD_HASH) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+        }
+
+    operation->data.inputs.password = mbedtls_calloc(1, slot->key.bytes);
+    if (operation->data.inputs.password == NULL) {
+        status = PSA_ERROR_INSUFFICIENT_MEMORY;
+        goto exit;
+    }
+
+    memcpy(operation->data.inputs.password, slot->key.data, slot->key.bytes);
+    operation->data.inputs.password_len = slot->key.bytes;
+    operation->data.inputs.attributes = slot->attr;
+
+    exit:
+        if (status != PSA_SUCCESS) {
+            psa_pake_abort(operation);
+        }
+    unlock_status = psa_unregister_read_under_mutex(slot);
+    return (status == PSA_SUCCESS) ? unlock_status : status;
+}
+
 psa_status_t psa_pake_setup(
     psa_pake_operation_t *operation,
+    mbedtls_svc_key_id_t password_key,
     const psa_pake_cipher_suite_t *cipher_suite)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -8875,57 +8923,10 @@ psa_status_t psa_pake_setup(
 
     operation->stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
 
-    return PSA_SUCCESS;
+    return psa_pake_set_password_key(operation, password_key);
 exit:
     psa_pake_abort(operation);
     return status;
-}
-
-psa_status_t psa_pake_set_password_key(
-    psa_pake_operation_t *operation,
-    mbedtls_svc_key_id_t password)
-{
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
-    psa_key_slot_t *slot = NULL;
-    psa_key_type_t type;
-
-    if (operation->stage != PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS) {
-        status = PSA_ERROR_BAD_STATE;
-        goto exit;
-    }
-
-    status = psa_get_and_lock_key_slot_with_policy(password, &slot,
-                                                   PSA_KEY_USAGE_DERIVE,
-                                                   operation->alg);
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-    type = psa_get_key_type(&slot->attr);
-
-    if (type != PSA_KEY_TYPE_PASSWORD &&
-        type != PSA_KEY_TYPE_PASSWORD_HASH) {
-        status = PSA_ERROR_INVALID_ARGUMENT;
-        goto exit;
-    }
-
-    operation->data.inputs.password = mbedtls_calloc(1, slot->key.bytes);
-    if (operation->data.inputs.password == NULL) {
-        status = PSA_ERROR_INSUFFICIENT_MEMORY;
-        goto exit;
-    }
-
-    memcpy(operation->data.inputs.password, slot->key.data, slot->key.bytes);
-    operation->data.inputs.password_len = slot->key.bytes;
-    operation->data.inputs.attributes = slot->attr;
-
-exit:
-    if (status != PSA_SUCCESS) {
-        psa_pake_abort(operation);
-    }
-    unlock_status = psa_unregister_read_under_mutex(slot);
-    return (status == PSA_SUCCESS) ? unlock_status : status;
 }
 
 psa_status_t psa_pake_set_user(

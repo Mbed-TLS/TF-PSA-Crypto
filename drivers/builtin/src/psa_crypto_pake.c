@@ -28,7 +28,6 @@
  *   psa_pake_setup()
  *   |
  *   |-- In any order:
- *   |   | psa_pake_set_password_key()
  *   |   | psa_pake_set_user()
  *   |   | psa_pake_set_peer()
  *   |   | psa_pake_set_role()

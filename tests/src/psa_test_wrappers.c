@@ -1188,17 +1188,6 @@ psa_status_t mbedtls_test_wrap_psa_pake_output(
 }
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
-/* Wrapper for psa_pake_set_password_key */
-#if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_set_password_key(
-    psa_pake_operation_t *arg0_operation,
-    mbedtls_svc_key_id_t arg1_password)
-{
-    psa_status_t status = (psa_pake_set_password_key)(arg0_operation, arg1_password);
-    return status;
-}
-#endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
-
 /* Wrapper for psa_pake_set_peer */
 #if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t mbedtls_test_wrap_psa_pake_set_peer(

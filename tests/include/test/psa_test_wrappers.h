@@ -670,14 +670,6 @@ psa_status_t mbedtls_test_wrap_psa_pake_output(
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
 #if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_set_password_key(
-    psa_pake_operation_t *arg0_operation,
-    mbedtls_svc_key_id_t arg1_password);
-#define psa_pake_set_password_key(arg0_operation, arg1_password) \
-    mbedtls_test_wrap_psa_pake_set_password_key(arg0_operation, arg1_password)
-#endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
-
-#if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t mbedtls_test_wrap_psa_pake_set_peer(
     psa_pake_operation_t *arg0_operation,
     const uint8_t *arg1_peer_id,

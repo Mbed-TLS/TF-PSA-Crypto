@@ -463,7 +463,6 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * psa_pake_setup(operation, cipher_suite);
  * psa_pake_set_user(operation, ...);
  * psa_pake_set_peer(operation, ...);
- * psa_pake_set_password_key(operation, ...);
  * \endcode
  *
  * The password is provided as a key. This can be the password text itself,
@@ -474,7 +473,7 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * Section 2.3.8 of _SEC 1: Elliptic Curve Cryptography_
  * (https://www.secg.org/sec1-v2.pdf), before reducing it modulo \c q. Here
  * \c q is order of the group defined by the primitive set in the cipher suite.
- * The \c psa_pake_set_password_key() function returns an error if the result
+ * The \c psa_pake_setup() function returns an error if the result
  * of the reduction is 0.)
  *
  * The key exchange flow for J-PAKE is as follows:
@@ -1260,126 +1259,107 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     const psa_crypto_driver_pake_inputs_t *inputs,
     psa_pake_cipher_suite_t *cipher_suite);
 
-/** Set the session information for a password-authenticated key exchange.
+/** Setup a password-authenticated key exchange.
  *
  * The sequence of operations to set up a password-authenticated key exchange
- * is as follows:
- * -# Allocate an operation object which will be passed to all the functions
+ * operation is as follows:
+ * -# Allocate a PAKE operation object which will be passed to all the functions
  *    listed here.
  * -# Initialize the operation object with one of the methods described in the
- *    documentation for #psa_pake_operation_t, e.g.
+ *    documentation for #psa_pake_operation_t. For example, using
  *    #PSA_PAKE_OPERATION_INIT.
- * -# Call psa_pake_setup() to specify the cipher suite.
+ * -# Call #psa_pake_setup() to specify the cipher suite.
  * -# Call \c psa_pake_set_xxx() functions on the operation to complete the
  *    setup. The exact sequence of \c psa_pake_set_xxx() functions that needs
  *    to be called depends on the algorithm in use.
  *
- * Refer to the documentation of individual PAKE algorithm types (`PSA_ALG_XXX`
- * values of type ::psa_algorithm_t such that #PSA_ALG_IS_PAKE(\c alg) is true)
- * for more information.
- *
  * A typical sequence of calls to perform a password-authenticated key
  * exchange:
- * -# Call psa_pake_output(operation, #PSA_PAKE_STEP_KEY_SHARE, ...) to get the
+ * -# Call #psa_pake_output(operation, #PSA_PAKE_STEP_KEY_SHARE, ...) to get the
  *    key share that needs to be sent to the peer.
- * -# Call psa_pake_input(operation, #PSA_PAKE_STEP_KEY_SHARE, ...) to provide
+ * -# Call #psa_pake_input(operation, #PSA_PAKE_STEP_KEY_SHARE, ...) to provide
  *    the key share that was received from the peer.
- * -# Depending on the algorithm additional calls to psa_pake_output() and
- *    psa_pake_input() might be necessary.
- * -# Call psa_pake_get_implicit_key() for accessing the shared secret.
+ * -# Depending on the algorithm additional calls to #psa_pake_output() and
+ *    #psa_pake_input() might be necessary.
+ * -# Call #psa_pake_get_shared_key() to access the shared secret.
  *
- * Refer to the documentation of individual PAKE algorithm types (`PSA_ALG_XXX`
- * values of type ::psa_algorithm_t such that #PSA_ALG_IS_PAKE(\c alg) is true)
- * for more information.
+ * Refer to the documentation of individual PAKE algorithms for details on the
+ * required set up and operation for each algorithm, and for constraints on the
+ * format and content of valid passwords. See PAKE algorithms.
  *
- * If an error occurs at any step after a call to psa_pake_setup(),
- * the operation will need to be reset by a call to psa_pake_abort(). The
- * application may call psa_pake_abort() at any time after the operation
- * has been initialized.
+ * After a successful call to #psa_pake_setup(), the operation is active, and
+ * the application must eventually terminate the operation. The following events
+ * terminate an operation:
+ * - A successful call to #psa_pake_get_shared_key().
+ * - A call to #psa_pake_abort().
  *
- * After a successful call to psa_pake_setup(), the application must
- * eventually terminate the operation. The following events terminate an
- * operation:
- * - A call to psa_pake_abort().
- * - A successful call to psa_pake_get_implicit_key().
+ * If #psa_pake_setup() returns an error, the operation object is unchanged. If
+ * a subsequent function call with an active operation returns an error, the operation
+ * enters an error state.
  *
- * \param[in,out] operation     The operation object to set up. It must have
- *                              been initialized but not set up yet.
- * \param[in] cipher_suite      The cipher suite to use. (A cipher suite fully
- *                              characterizes a PAKE algorithm and determines
- *                              the algorithm as well.)
+ * To abandon an active operation, or reset an operation in an error state, call
+ * #psa_pake_abort().
+ *
+ * \param[in,out] operation     The operation object to set up. It must have been
+ *                              initialized as per the documentation for
+ *                              psa_pake_operation_t and not yet in use.
+ * \param[in] password_key      Identifier of the key holding the password or a
+ *                              value derived from the password. It must remain
+ *                              valid until the operation terminates.
+ *
+ *                              The valid key types depend on the PAKE algorithm,
+ *                              and participant role. Refer to the documentation of
+ *                              individual PAKE algorithms for more information, see
+ *                              PAKE algorithms.
+ *
+ *                              The key must permit the usage PSA_KEY_USAGE_DERIVE.
+ * \param[in] cipher_suite      The cipher suite to use. A PAKE cipher suite fully
+ *                              characterizes a PAKE algorithm, including the PAKE
+ *                              algorithm.
+ *
+ *                              The cipher suite must be compatible with the key type
+ *                              of password_key.
  *
  * \retval #PSA_SUCCESS
- *         Success.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         The algorithm in \p cipher_suite is not a PAKE algorithm, or the
- *         PAKE primitive in \p cipher_suite is not compatible with the
- *         PAKE algorithm, or the hash algorithm in \p cipher_suite is invalid
- *         or not compatible with the PAKE algorithm and primitive.
- * \retval #PSA_ERROR_NOT_SUPPORTED
- *         The algorithm in \p cipher_suite is not a supported PAKE algorithm,
- *         or the PAKE primitive in \p cipher_suite is not supported or not
- *         compatible with the PAKE algorithm, or the hash algorithm in
- *         \p cipher_suite is not supported or not compatible with the PAKE
- *         algorithm and primitive.
- * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
- * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ *         Success. The operation is now active.
  * \retval #PSA_ERROR_BAD_STATE
- *         The operation state is not valid, or
- *         the library has not been previously initialized by psa_crypto_init().
- *         It is implementation-dependent whether a failure to initialize
- *         results in this error code.
+ *         The following conditions can result in this error:
+ *         - The operation state is not valid: it must be inactive.
+ *         - The library requires initializing by a call to psa_crypto_init().
+ * \retval #PSA_ERROR_INVALID_HANDLE
+ *         password_key is not a valid key identifier.
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         password_key does not have the PSA_KEY_USAGE_DERIVE flag, or it does
+ *         not permit the algorithm in cipher_suite.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The following conditions can result in this error:
+ *         - The algorithm in cipher_suite is not a PAKE algorithm, or encodes an
+ *           invalid hash algorithm.
+ *         - The PAKE primitive in cipher_suite is not compatible with the PAKE
+ *           algorithm.
+ *         - The key confirmation value in cipher_suite is not compatible with the
+ *           PAKE algorithm and primitive.
+ *         - The key type or key size of password_key is not compatible with
+ *           cipher_suite.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The following conditions can result in this error:
+ *         - The algorithm in cipher_suite is not a supported PAKE algorithm, or
+ *           encodes an unsupported hash algorithm.
+ *         - The PAKE primitive in cipher_suite is not supported or not compatible
+ *           with the PAKE algorithm.
+ *         - The key confirmation value in cipher_suite is not supported, or not
+ *           compatible, with the PAKE algorithm and primitive.
+ *         - The key type or key size of password_key is not supported with
+ *           cipher_suite.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED
+ * \retval #PSA_ERROR_STORAGE_FAILURE
+ * \retval #PSA_ERROR_DATA_CORRUPT
+ * \retval #PSA_ERROR_DATA_INVALID
  */
 psa_status_t psa_pake_setup(psa_pake_operation_t *operation,
+                            mbedtls_svc_key_id_t password_key,
                             const psa_pake_cipher_suite_t *cipher_suite);
-
-/** Set the password for a password-authenticated key exchange from key ID.
- *
- * Call this function when the password, or a value derived from the password,
- * is already present in the key store.
- *
- * \param[in,out] operation     The operation object to set the password for. It
- *                              must have been set up by psa_pake_setup() and
- *                              not yet in use (neither psa_pake_output() nor
- *                              psa_pake_input() has been called yet). It must
- *                              be on operation for which the password hasn't
- *                              been set yet (psa_pake_set_password_key()
- *                              hasn't been called yet).
- * \param password              Identifier of the key holding the password or a
- *                              value derived from the password (eg. by a
- *                              memory-hard function).  It must remain valid
- *                              until the operation terminates. It must be of
- *                              type #PSA_KEY_TYPE_PASSWORD or
- *                              #PSA_KEY_TYPE_PASSWORD_HASH. It has to allow
- *                              the usage #PSA_KEY_USAGE_DERIVE.
- *
- * \retval #PSA_SUCCESS
- *         Success.
- * \retval #PSA_ERROR_INVALID_HANDLE
- *         \p password is not a valid key identifier.
- * \retval #PSA_ERROR_NOT_PERMITTED
- *         The key does not have the #PSA_KEY_USAGE_DERIVE flag, or it does not
- *         permit the \p operation's algorithm.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         The key type for \p password is not #PSA_KEY_TYPE_PASSWORD or
- *         #PSA_KEY_TYPE_PASSWORD_HASH, or \p password is not compatible with
- *         the \p operation's cipher suite.
- * \retval #PSA_ERROR_NOT_SUPPORTED
- *         The key type or key size of \p password is not supported with the
- *         \p operation's cipher suite.
- * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
- * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
- * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
- * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
- * \retval #PSA_ERROR_DATA_INVALID \emptydescription
- * \retval #PSA_ERROR_BAD_STATE
- *         The operation state is not valid (it must have been set up.), or
- *         the library has not been previously initialized by psa_crypto_init().
- *         It is implementation-dependent whether a failure to initialize
- *         results in this error code.
- */
-psa_status_t psa_pake_set_password_key(psa_pake_operation_t *operation,
-                                       mbedtls_svc_key_id_t password);
 
 /** Set the user ID for a password-authenticated key exchange.
  *

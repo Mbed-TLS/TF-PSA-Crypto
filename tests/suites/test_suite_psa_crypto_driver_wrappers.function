@@ -3063,14 +3063,11 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
 
     /* Collecting input stage (no driver entry points) */
 
-    TEST_EQUAL(psa_pake_setup(&operation, &cipher_suite),
+    TEST_EQUAL(psa_pake_setup(&operation, key &cipher_suite),
                PSA_SUCCESS);
 
     PSA_ASSERT(psa_pake_set_user(&operation, jpake_server_id, sizeof(jpake_server_id)));
     PSA_ASSERT(psa_pake_set_peer(&operation, jpake_client_id, sizeof(jpake_client_id)));
-
-    TEST_EQUAL(psa_pake_set_password_key(&operation, key),
-               PSA_SUCCESS);
 
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
 
@@ -3256,9 +3253,9 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
         mbedtls_test_driver_pake_hooks.forced_setup_status = PSA_ERROR_NOT_SUPPORTED;
     }
 
-    PSA_ASSERT(psa_pake_setup(&server, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&server, key, &cipher_suite));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
-    PSA_ASSERT(psa_pake_setup(&client, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&client, key, &cipher_suite));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
 
 
@@ -3267,10 +3264,6 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
     PSA_ASSERT(psa_pake_set_user(&client, jpake_client_id, sizeof(jpake_client_id)));
     PSA_ASSERT(psa_pake_set_peer(&client, jpake_server_id, sizeof(jpake_server_id)));
-    TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
-    PSA_ASSERT(psa_pake_set_password_key(&server, key));
-    TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
-    PSA_ASSERT(psa_pake_set_password_key(&client, key));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
 
     /* First round */
