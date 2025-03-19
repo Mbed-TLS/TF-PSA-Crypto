@@ -199,6 +199,8 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): rename `mbedtls_pk_
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): remove mentions of operations other than sign and verify from the documentation.
 
+The function is somewhat dangerous, since the PK context will silently become invalid if the PSA key is destroyed. Experience in 3.x has shown the function to be handy nonetheless, so we shouldn't remove it without clear alternatives.
+
 The current function has some limitations. We should lift them soon (“[Remove limitations of `mbedtls_pk_wrap_psa()`](#remove-limitations-of-mbedtls_pk_wrap_psa)”), but it isn't a deal breaker for TF-PSA-Crypto 1.0.
 
 ### Key parsing and writing
@@ -339,6 +341,8 @@ Should we provide a function to access the underlying PSA key of a PK context, i
 This would be new work, and does not seem to be needed at the moment. If the PK context was created from a PSA key, the application might as well use the original PSA key. If the PK context was created by parsing, `mbedtls_pk_import_into_psa()` works, and does not require a special case if the PK context does not have an underlying PSA key.
 
 If we add this in the future, it will be considerably easier if all PK contexts have an underlying PSA key, or at least all PK contexts containing a private key have an underlying PSA key.
+
+Note that this function would be somewhat dangerous, like `mbedtls_pk_wrap_psa()`, since the PK object becomes invalid if the PSA key is destroyed independently, and the PSA key identifier becomes invalid if the PK context is destroyed. It is impossible to detect invalid uses at runtime since the PSA key identifier may be reused.
 
 ## Later tasks
 
