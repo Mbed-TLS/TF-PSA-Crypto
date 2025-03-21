@@ -16,7 +16,7 @@
 #define MBEDTLS_SHA3_H
 #include "mbedtls/private_access.h"
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 #include <stddef.h>
 #include <stdint.h>

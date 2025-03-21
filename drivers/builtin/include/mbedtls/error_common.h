@@ -10,7 +10,7 @@
 #ifndef MBEDTLS_ERROR_COMMON_H
 #define MBEDTLS_ERROR_COMMON_H
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 #include <psa/crypto_values.h>
 #include <stddef.h>
 

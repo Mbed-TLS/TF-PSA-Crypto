@@ -21,7 +21,7 @@
 #ifndef PSA_CRYPTO_PLATFORM_H
 #define PSA_CRYPTO_PLATFORM_H
 #include "mbedtls/private_access.h"
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 /* PSA requires several types which C99 provides in stdint.h. */
 #include <stdint.h>

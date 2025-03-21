@@ -27,7 +27,7 @@
  * The payloads are serialized in a way suitable for use in TLS, but could
  * also be use outside TLS.
  */
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 #include "mbedtls/ecp.h"
 #include "mbedtls/md.h"

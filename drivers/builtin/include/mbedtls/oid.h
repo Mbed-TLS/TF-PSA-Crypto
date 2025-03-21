@@ -11,7 +11,7 @@
 #define MBEDTLS_OID_H
 #include "mbedtls/private_access.h"
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/pk.h"

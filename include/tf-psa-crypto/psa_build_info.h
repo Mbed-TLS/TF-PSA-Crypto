@@ -1,5 +1,5 @@
 /**
- * \file tf-psa-crypto/build_info.h
+ * \file tf-psa-crypto/psa_build_info.h
  *
  * \brief Build-time configuration info
  *
@@ -136,6 +136,6 @@
  */
 #define TF_PSA_CRYPTO_CONFIG_IS_FINALIZED
 
-#include "tf-psa-crypto/check_config.h"
+#include "tf-psa-crypto/psa_check_config.h"
 
 #endif /* TF_PSA_CRYPTO_BUILD_INFO_H */

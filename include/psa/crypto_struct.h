@@ -54,7 +54,7 @@
 extern "C" {
 #endif
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 /* Include the context definition for the compiled-in drivers for the primitive
  * algorithms. */

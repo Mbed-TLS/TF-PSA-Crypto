@@ -20,7 +20,7 @@
 #define MBEDTLS_GCM_H
 #include "mbedtls/private_access.h"
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 #include "mbedtls/cipher.h"
 

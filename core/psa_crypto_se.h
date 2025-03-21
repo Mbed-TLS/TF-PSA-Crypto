@@ -9,7 +9,7 @@
 #ifndef PSA_CRYPTO_SE_H
 #define PSA_CRYPTO_SE_H
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 #include "psa/crypto.h"
 #include "psa/crypto_se_driver.h"

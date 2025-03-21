@@ -12,7 +12,7 @@
 #define MBEDTLS_PSA_UTIL_H
 #include "mbedtls/private_access.h"
 
-#include "tf-psa-crypto/build_info.h"
+#include "tf-psa-crypto/psa_build_info.h"
 
 #include "psa/crypto.h"
 

@@ -1,5 +1,5 @@
 /**
- * \file tf-psa-crypto/check_config.h
+ * \file tf-psa-crypto/psa_check_config.h
  *
  * \brief Consistency checks for configuration options
  *
