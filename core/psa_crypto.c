@@ -500,8 +500,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE:
         case MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH:
-            return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_PK_BUFFER_TOO_SMALL:
             return PSA_ERROR_BUFFER_TOO_SMALL;
 #endif
@@ -539,7 +537,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH:
         case MBEDTLS_ERR_ECP_VERIFY_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_ECP_ALLOC_FAILED:

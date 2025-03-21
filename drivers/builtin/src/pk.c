@@ -1174,7 +1174,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
             return PSA_PK_TO_MBEDTLS_ERR(status);
         }
 
-        /* This function requires returning MBEDTLS_ERR_PK_SIG_LEN_MISMATCH
+        /* This function requires returning MBEDTLS_ERR_RSA_VERIFY_FAILED
          * on a valid signature with trailing data in a buffer, but
          * mbedtls_psa_rsa_verify_hash requires the sig_len to be exact,
          * so for this reason the passed sig_len is overwritten. Smaller
@@ -1186,7 +1186,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
         destruction_status = psa_destroy_key(key_id);
 
         if (status == PSA_SUCCESS && sig_len > mbedtls_pk_get_len(ctx)) {
-            return MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
+            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
         }
 
         if (status == PSA_SUCCESS) {
@@ -1211,7 +1211,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
         }
 
         if (sig_len > mbedtls_pk_get_len(ctx)) {
-            return MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
+            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
         }
 
         return 0;

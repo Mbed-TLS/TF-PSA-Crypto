@@ -58,8 +58,6 @@
 #define MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE -0x3A00
 /** Unavailable feature, e.g. RSA disabled for RSA key. */
 #define MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE -0x3980
-/** The buffer contains a valid signature followed by more data. */
-#define MBEDTLS_ERR_PK_SIG_LEN_MISMATCH    -0x3900
 /** The output buffer is too small. */
 #define MBEDTLS_ERR_PK_BUFFER_TOO_SMALL    -0x3880
 
@@ -740,7 +738,7 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  *                  a different algorithm.
  *
  * \return          0 on success (signature is valid),
- *                  #MBEDTLS_ERR_PK_SIG_LEN_MISMATCH if there is a valid
+ *                  #MBEDTLS_ERR_RSA_VERIFY_FAILED if there is a valid
  *                  signature in \p sig but its length is less than \p sig_len,
  *                  or a specific error code.
  */
@@ -790,7 +788,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  * \return          0 on success (signature is valid),
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
  *                  used for this type of signatures,
- *                  #MBEDTLS_ERR_PK_SIG_LEN_MISMATCH if there is a valid
+ *                  #MBEDTLS_ERR_RSA_VERIFY_FAILED if there is a valid
  *                  signature in \p sig but its length is less than \p sig_len,
  *                  or a specific error code.
  *
