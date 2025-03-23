@@ -29,6 +29,8 @@ This document uses a few unusual terms, and a few generic terms with a specific 
 
 **Exposed** (interface): An interface (such as a header, type, function or configuration option) that is not publicly documented and not part of the stable API, but that is visible to the compiler when building application code. A typical example is types that are used in fields of structs whose content is not stable, but that it must be possible to allocate on the stack or statically.
 
+**Internal** (interface): an interface of a part of TF-PSA-Crypto or Mbed TLS that is only used by other parts of the same project, and is not visible outside of the project. In particular, Mbed TLS cannot use internal interfaces of TF-PSA-Crypto.
+
 **MVP** (minimum viable product): A version of TF-PSA-Crypto and a corresponding version of Mbed TLS that meet the requirements for TF-PSA-Crypto 1.0, and that would be acceptable for a 1.0/4.0 release.
 
 **Private** (interface): An interface (such as a header, type, function or macro) that is not publicly documented, and that may change or be removed without warning. This is the opposite of **public**. To the extent that it is practical, the library should prevent applications from accidentally relying on private interfaces, but some private interfaces have to be **exposed**.
@@ -155,8 +157,8 @@ The following table lists the headers that, as of the repository split, are loca
 | `chachapoly.h` | `mbedtls_chachapoly_` | Expose | [context types](#headers-with-context-types) |
 | `cipher.h` | `mbedtls_cipher_` | Expose | [context types](#headers-with-context-types) |
 | `cmac.h` | `mbedtls_cipher_cmac_` | Expose | [context types](#headers-with-context-types) |
-| `config_adjust_*.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
-| `config_psa.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
+| `config_adjust_*.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-exposed-for-exposed-macros) |
+| `config_psa.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-exposed-for-exposed-macros) |
 | `constant_time.h` | `mbedtls_ct_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
 | `des.h` | `mbedtls_des_` | Expose | [context types](#headers-with-context-types) |
@@ -184,10 +186,10 @@ The following table lists the headers that, as of the repository split, are loca
 | `platform_time.h` | `mbedtls_*time*` | Public | [Platform headers](#platform-headers) |
 | `platform_util.h` | `mbedtls_platform_` | Public | [Platform headers](#platform-headers) |
 | `poly1305.h` | `mbedtls_poly1305_` | Expose | [context types](#headers-with-context-types) |
-| `private_access.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-public-for-exposed-macros) |
+| `private_access.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-exposed-for-exposed-macros) |
 | `psa_util.h` | N/A | Public | [remains public](#headers-that-remain-public) but see [Private types in `psa_util.h`](#private-types-in-psa_utilh) |
 | `ripemd160.h` | `mbedtls_ripemd160_` | Expose | [context types](#headers-with-context-types) |
-| `rsa.h` | `mbedtls_rsa_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work (TODO) |
+| `rsa.h` | `mbedtls_rsa_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) with a little work |
 | `sha1.h` | `mbedtls_sha1_` | Expose | [context types](#headers-with-context-types) |
 | `sha256.h` | `mbedtls_sha256_` | Expose | [context types](#headers-with-context-types) |
 | `sha3.h` | `mbedtls_sha3_` | Expose | [context types](#headers-with-context-types) |
@@ -239,7 +241,7 @@ Base64 is used:
 * In the Mbed TLS sample program `ssl_mail_client`, for a tiny bit of SMTP that requires Base64.
 * In application code, sometimes, for miscellaneous things, often not directly related to cryptography. On the one hand, many of these uses are out of scope. On the other hand, since TF-PSA-Crypto has a Base64 implementation anyway, users who like TF-PSA-Crypto for its small code size would be justifiably disappointed not to have a Base64 interface.
 
-TODO: decide.
+Conclusion: we will keep the existing `pem.h` and `base64.h` as public interfaces in TF-PSA-Crypto 0ε. If we have time before the 1.0 release, we will improve the APIs.
 
 #### OID interface
 
@@ -262,29 +264,43 @@ In an exposed header, the minimum work for 0ε is:
 * Ensure that exposed interfaces are not listed in the rendered Doxygen documentation.
 * Ensure that applications cannot inadvertently call private functions that are declared in exposed headers.
 
+Note that due to a lack of bandwidth, sample programs may keep using private interfaces.
+
 #### TF-PSA-Crypto header locations
 
-We distinguish between three categories of headers:
+We distinguish between four categories of headers:
 
 * Public headers define public, stable APIs.
-* Exposed headers define exposed interfaces, as well as private interfaces used by Mbed TLS. They need to be present when building Mbed TLS.
-* Private headers are only needed when building TF-PSA-Crypto itself.
+* Exposed headers define exposed interfaces, as well as private interfaces used by Mbed TLS. They need to be present when building Mbed TLS, but their content must clearly be excluded from the stable API.
+* Private headers do not define any exposed interfaces, but they are used by Mbed TLS for the time being. They need to be present when building Mbed TLS, but their content must clearly be excluded from the stable API.
+* Internal headers are only needed when building TF-PSA-Crypto itself. Their content must clearly be excluded from the stable API.
 
-The following table summarizes the characteristics of each category.
+The following table summarizes the characteristics of each category and their location in TF-PSA-Crypto 0ε.
 
-| Category | Location | In include path? |
+| Category | Location | Installed? | Doxygen? | Visible to Mbed TLS? |
 | -------- | -------- | ---------------- |
-| Public   | `include` | yes |
-| Exposed  | `include` | yes except for Doxygen |
-| Private  | `drivers/*/include` | only for crypto |
+| Public   | `include/mbedtls` | yes | yes | yes |
+| Exposed  | `drivers/*/include/mbedtls/private` | yes | no | yes |
+| Private  | `drivers/*/include/mbedtls/private` | yes for now | no | yes |
+| Internal | anything except `**/include/mbedtls/*.h` | no | no | no |
 
-TODO: Task to set up the Doxygen build
+We will arrange so that:
+
+* Public interfaces are available to consuming projects and visible in the rendered documentation.
+* Exposed and private interfaces are available to consuming projects, but not visible in the rendered documentation and clearly not public for someone who reads the header files themselves. It would be convenient to have separate locations for permanently exposed interfaces (e.g. types appearing in operation contexts) and temporarily exposed interfaces (legacy functions that Mbed TLS is still using), but this is not necessry.
+* Internal interfaces are available only inside TF-PSA-Crypto, not to consuming projects. Like exposed interfaces, the documentation (rendered or by direct header reading) clearly conveys that they are not part of the API.
 
 #### Hiding functions in an exposed header
 
 For TF-PSA-Crypto 0ε, all private functions defined in private headers will be guarded by `defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)`. We define this macro when building TF-PSA-Crypto and Mbed TLS, but applications should not define it, and our Doxygen build will not define it.
 
 This is similar to `MBEDTLS_ALLOW_PRIVATE_ACCESS` to “bless” access to structure fields.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/219): in TF-PSA-Crypto, in `private_access.h`, define `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` when `MBEDTLS_ALLOW_PRIVATE_ACCESS` is defined. Add  `#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` just before the first `#include` in every program under `programs` that calls `mbedtls_xxx` functions (just `benchmark.c` at the time of writing).
+
+Since `MBEDTLS_ALLOW_PRIVATE_ACCESS` implies `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`, and `common.h` enables `MBEDTLS_ALLOW_PRIVATE_ACCESS`, parts of the code base that already allow access to private structure fields (library, unit tests) will automatically have access to private functions.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10082): in Mbed TLS, add `#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` just before the first `#include` in every program under `programs`, except the ones that already have `MBEDTLS_ALLOW_PRIVATE_ACCESS`. The reason to add it program by program is that later we can validate that an individual program no longer requires private identifiers by removing `#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` from that particular program. This is a prerequisite for any privatization in TF-PSA-Crypto that privatizes something used in Mbed TLS.
 
 Prototype: https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/132
 
@@ -295,13 +311,13 @@ Rationale:
 * This is a small amount of work.
 * This requires few changes to the code, and they are very localized, so it will not disrupt other work happening in parallel.
 
-TODO: this leaves Doxygen comments around, e.g. `\file` comments and the documentation of exposed types.
+Additionally, each header may itself be public or not: do we still want applications to `#include <mbedtls/foo.h>`? A header that contains exposed declarations must be exposed, but does not need to be public. See [Move private headers](#move-private-headers).
 
 #### Separating private interfaces from exposed interfaces
 
 If a private interface of TF-PSA-Crypto is declared in an exposed header, in the medium term, we should move it to a private header. Note that we can only do that if the interface is not called from Mbed TLS code.
 
-At some point, perhaps after the 1.0 release, we expect that all the functions declared in an exposed header will be private and will not be called by Mbed TLS. That point may be reached at different times for different headers. When we reach that point for a header, we can run a script to move the declarations guarded by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` to a private header file and adjust `#include` directives accordingly.
+At some point, perhaps after the 1.0 release, we expect that all the functions declared in an exposed header will be private and will not be called by Mbed TLS. That point may be reached at different times for different headers. When we reach that point for a header, we can run a script to move the declarations guarded by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` to an internal header file and adjust `#include` directives accordingly.
 
 ### Analysis of privatization by header
 
@@ -326,9 +342,11 @@ psa_util.h
 threading.h
 ```
 
-#### Headers that remain public for exposed macros
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/223): Move TF-PSA-Crypto public headers to `/include/mbedtls`.
 
-The following headers solely define exposed macros, and must remain exposed. They can be excluded from Doxygen parsing.
+#### Headers that remain exposed for exposed macros
+
+The following headers solely define exposed macros, and must remain exposed. They can be excluded from Doxygen parsing, but they shouldn't contain Doxygen comments anyway, and currently mostly don't apart from `\file` comments.
 
 ```
 config_adjust_legacy_from_psa.h
@@ -376,6 +394,18 @@ Main loss of functionality:
 
 Note: see also [Everest](#privatization-of-everest-headers).
 
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/224): Privatize functions in low-level hash headers.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/225: Privatize functions in cipher primitive headers.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/226): Privatize functions in cipher mode headers.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/227): Privatize functions in low-level asymmetric crypto headers.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/220): Privatize functions in `cipher.h`.
+
+See [Public hash-only `md.h`](#public-hash-only-mdh) regarding `md.h`.
+
 #### Headers that can be made fully private
 
 The headers listed below are not used in Mbed TLS, except in places that should be removed and can be removed easily.
@@ -407,7 +437,7 @@ Main loss of functionality:
 
 `drivers/builtin/include/mbedtls/build_info.h` is a special case that exists only as a transition for the sake of our source files contains `#include <mbedtls/build_info.h>` and that must be buildable against either TF-PSA-Crypto or Mbed TLS. It should be removed: https://github.com/Mbed-TLS/mbedtls/issues/9862 .
 
-The p256-m headers fall in the same category.
+We will make these headers internal after 0ε. For 0ε, they can remain private.
 
 #### Headers that will become internal eventually
 
@@ -424,18 +454,32 @@ Main loss of functionality:
 
 * CTR\_DRBG in itself (i.e. other than for the PSA Crypto RNG instance). We intend to restore this functionality through a PSA API, but the API isn't designed yet, so this will happen after 1.0 and not with the existing API.
 * Direct access to entropy sources. We've decided that this is acceptable.
-* The ability to configure entropy sources on a platform. This is not an acceptable loss. In the long term (likely after 1.0), this will be resolved by the PSA crypto random driver API. In the short term, we will expose a modified `mbedtls_hardware_poll()` (https://github.com/Mbed-TLS/mbedtls/issues/9618).
+* The ability to configure entropy sources on a platform. This is not an acceptable loss. In the long term (likely after 1.0), this will be resolved by the PSA crypto random driver API. In the short term, we will expose a modified `mbedtls_hardware_poll()` (https://github.com/Mbed-TLS/mbedtls/issues/9618) through `mbedtls/platform.h`.
 * `MBEDTLS_ERROR_ADD` will no longer be used after https://github.com/Mbed-TLS/mbedtls/pull/9926 .
+
+We will make these headers internal after 0ε. For 0ε, they can remain private.
+
+#### Move private headers
+
+Move private and exposed headers so that they are always under a subdirectory called `.../private`. This is a simple way of conveying that their content is not part of the public API both to humans and to programs.
+
+Note that public headers can include private headers, since some private headers define exposed types and macros.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10087): Move TF-PSA-Crypto private headers from `drivers/builtin/include/mbedtls` to `drivers/builtin/include/mbedtls/private`. Move mbedtls private headers from `include/mbedtls` to `include/mbedtls/private`. This requires coordinated action between the three repositories.
 
 #### Privatization of Everest headers
 
 Everest headers (`drivers/everest/include/everest/include/**/*.h`) contain some exposed types: they are exposed via `mbedtls_ecdh_context` from `mbedtls/ecdh.h` which is exposed via `mbedtls_psa_key_agreement_interruptible_operation_t` indirectly from `psa/crypto.h`. The rest of their content is private (to be consumed only by `ecdh.c`) or internal (to be consumed only by `everest/**/*.c`) definitions.
 
-For 0ε, guard everything that isn't an exposed type (or necessary macros, if any) by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/230): For 0ε, guard everything that isn't an exposed type (or necessary macros, if any) by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`. TODO: do we actually need this?
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/229): For 0ε, move Everest headers so that they are installed under `$PREFIX/include/tf-psa-crypto/private`.
 
 #### Privatization of 256-m headers
 
-P256-m headers only declare private functions (called by PSA driver wrappers). They do not expose anything. So they can be made private to TF-PSA-Crypto.
+P256-m headers only declare private functions (called by PSA driver wrappers). They do not expose anything. So they can be made internal to TF-PSA-Crypto.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/228): do not install `p256/p256-m.h`.
 
 ### Renaming mbedtls interfaces that remain public
 
@@ -478,15 +522,17 @@ The ASN.1 interfaces use `mbedtls_mpi` for INTEGER parsing/writing. This must ch
 
 ### Private types in `nist_kw.h`
 
-`nist_kw.h` must switch from a legacy cipher ID to a PSA key type: https://github.com/Mbed-TLS/mbedtls/issues/9382.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/9382): `nist_kw.h` must switch from a legacy cipher ID to a PSA key type.
 
 ### Private types in `psa_util.h`
 
 The functions `mbedtls_ecc_group_to_psa()` and `mbedtls_ecc_group_from_psa()` are no longer relevant for public use since the legacy side of the conversion is no longer a public interface. They are not used in Mbed TLS. They should be moved to an internal header.
 
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/231): Move the declarations of `mbedtls_ecc_group_to_psa()` and `mbedtls_ecc_group_from_psa()` to `pk_internal.h`.
+
 ### Private types in `ssl_ticket.h`
 
-`ssl_ticket.h` uses a legacy cipher type to specify the AEAD mechanism to use for tickets. Switch to a PSA key type and algorithm: https://github.com/Mbed-TLS/mbedtls/issues/9874.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/9874): `ssl_ticket.h` uses a legacy cipher type to specify the AEAD mechanism to use for tickets. Switch to a PSA key type and algorithm.
 
 ### Leaking error codes
 
@@ -1091,13 +1137,15 @@ Reasons to do this:
 * It is used in a very large number of places, both in Mbed TLS and in third-party code. Keeping it around will both save us work during the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x, and facilitate the transition for our users.
 * If we don't do this, then we'll have to change some code in Mbed TLS. In the `full` configuration, Mbed TLS links to several md functions: `mbedtls_md`, `mbedtls_md_error_from_psa`, `mbedtls_md_get_size`, `mbedtls_md_info_from_type` (in addition to macros, enum constants and static inline functions from `mbedtls/md.h`).
 
-https://github.com/Mbed-TLS/mbedtls/issues/8450
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/8450): Privatize the parts of `md.h` that are not MD-light.
 
 ### Shrunk-down `pk.h`
 
-TODO
+We treat the evolution of `pk.h` as a project with its own design document and task breakdown.
 
 https://github.com/Mbed-TLS/mbedtls/issues/8452
+
+https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/203
 
 ### Shrunk-down `psa_util.h`
 
