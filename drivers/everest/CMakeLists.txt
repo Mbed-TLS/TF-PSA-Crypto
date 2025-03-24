@@ -10,10 +10,10 @@ target_include_directories(${everest_target}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>
          $<INSTALL_INTERFACE:include>
   PRIVATE include/everest
           include/everest/kremlib
+          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>
           ${TF_PSA_CRYPTO_DIR}/core)
 set_config_files_compile_definitions(${everest_target})
 
