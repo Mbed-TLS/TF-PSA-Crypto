@@ -446,10 +446,6 @@ mbedtls_platform_context;
 #include "platform_alt.h"
 #endif /* !MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
 
-#if !defined(MBEDTLS_ENTROPY_MIN_HARDWARE)
-#define MBEDTLS_ENTROPY_MIN_HARDWARE     32     /**< Minimum for the hardware source */
-#endif
-
 #if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
 /**
  * \brief           Entropy poll callback for a hardware source
