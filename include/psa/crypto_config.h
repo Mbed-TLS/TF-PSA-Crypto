@@ -2463,25 +2463,6 @@
 #define MBEDTLS_POLY1305_C
 
 /**
- * \def MBEDTLS_PSA_CRYPTO_SE_C
- *
- * Enable dynamic secure element support in the Platform Security Architecture
- * cryptography API.
- *
- * \deprecated This feature is deprecated. Please switch to the PSA driver
- *             interface.
- *
- * \warning    This feature is not thread-safe, and should not be used in a
- *             multi-threaded environment.
- *
- * Module:  library/psa_crypto_se.c
- *
- * Requires: MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_STORAGE_C
- *
- */
-//#define MBEDTLS_PSA_CRYPTO_SE_C
-
-/**
  * \def MBEDTLS_RIPEMD160_C
  *
  * Enable the RIPEMD-160 hash algorithm.

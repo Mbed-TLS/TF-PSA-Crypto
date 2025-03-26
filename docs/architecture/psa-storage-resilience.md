@@ -477,12 +477,6 @@ In practice, there will rarely be more than one active transaction at a time, so
     * 4: import key.
 * Padding: 3 bytes. Reserved for future use. Currently unused during recovery.
 
-#### Dynamic secure element transaction file
-
-Note that the code base already references a “transaction file” (`PSA_CRYPTO_ITS_TRANSACTION_UID` = 0xffffff54), used by dynamic secure elements (feature enabled with `MBEDTLS_PSA_CRYPTO_SE_C`). This is a deprecated feature that has not been fully implemented: when this feature is enabled, the transaction file gets written during transactions, but if it exists when PSA crypto starts, `psa_crypto_init()` fails because [recovery has never been implemented](https://github.com/ARMmbed/mbed-crypto/issues/218).
-
-For the new kind of secure element driver, we pick a different file name to avoid any mixup.
-
 ## Testing key management in secure elements
 
 ### Instrumentation for checking the storage invariant

@@ -116,12 +116,6 @@ Not yet implemented.
 
 TODO
 
-## Storage transaction resumption
-
-Only relevant for secure element support. Not yet fully implemented.
-
-TODO
-
 ## PSA ITS over file
 
 TODO

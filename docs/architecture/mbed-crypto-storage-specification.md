@@ -465,3 +465,8 @@ The layout of a transaction file is:
     * The slot in the secure element designated by the slot number.
     * The file containing the key metadata designated by the key identifier.
     * The driver persistent data.
+
+
+## TF-PSA-Crypto 1.0
+
+The dynamic secure element interface `MBEDTLS_PSA_CRYPTO_SE_C` is removed. As a consequence files identifiers 0xfffffe02 through 0xfffffeff are no more used by the secure element driver storage.
