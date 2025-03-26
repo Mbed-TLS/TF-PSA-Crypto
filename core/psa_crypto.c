@@ -993,6 +993,11 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
         return PSA_ALG_KEY_AGREEMENT_GET_BASE(requested_alg) ==
                policy_alg;
     }
+
+    if (PSA_ALG_IS_JPAKE(policy_alg) && PSA_ALG_IS_JPAKE(requested_alg)) {
+        return policy_alg == PSA_ALG_JPAKE_BASE;
+    }
+
     /* If it isn't explicitly permitted, it's forbidden. */
     return 0;
 }
