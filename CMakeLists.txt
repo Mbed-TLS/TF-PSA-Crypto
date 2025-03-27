@@ -416,17 +416,18 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     if(GEN_FILES)
         add_custom_command(
             OUTPUT
-                ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include/test/test_keys.h
+                ${CMAKE_CURRENT_BINARY_DIR}/tests/include/test/test_keys.h
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/tests/include/test
             COMMAND
                 "${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}"
                 "${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_test_keys.py"
                 "--output"
-                "${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include/test/test_keys.h"
+                "${CMAKE_CURRENT_BINARY_DIR}/tests/include/test/test_keys.h"
             DEPENDS
                 ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_test_keys.py
         )
         add_custom_target(tf_psa_crypto_test_keys_header
-            DEPENDS ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include/test/test_keys.h)
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests/include/test/test_keys.h)
         add_dependencies(tf_psa_crypto_test tf_psa_crypto_test_keys_header)
     endif()
 
@@ -436,6 +437,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     )
 
     target_include_directories(tf_psa_crypto_test
+        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/tests/include
         PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
         PRIVATE tests/include
         PRIVATE include

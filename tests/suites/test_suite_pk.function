@@ -1016,7 +1016,7 @@ void mbedtls_pk_check_pair(char *pub_file, char *prv_file, int ret)
     /* Test check_pair() between the opaque key we just created and the public PK counterpart.
      * Note: opaque EC keys support check_pair(), whereas RSA ones do not. */
     if (is_ec_key) {
-        TEST_EQUAL(mbedtls_pk_check_pair(&pub, &prv),ret);
+        TEST_EQUAL(mbedtls_pk_check_pair(&pub, &prv), ret);
     } else {
         TEST_EQUAL(mbedtls_pk_check_pair(&pub, &prv), MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
     }
