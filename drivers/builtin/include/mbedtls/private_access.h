@@ -37,15 +37,15 @@
 #define MBEDTLS_PRIVATE(member) member
 
 /* Activate declarations guarded by this macro.
-*
-* Typical usage:
-* ```
-* typedef ... mbedtls_some_type_t; // built-in crypto type
-* #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
-* int mbedtls_some_function(...); // built-in crypto function
-* #endif // MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
-* ```
-*/
+ *
+ * Typical usage:
+ * ```
+ * typedef ... mbedtls_some_type_t; // built-in crypto type
+ * #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+ * int mbedtls_some_function(...); // built-in crypto function
+ * #endif // MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
+ * ```
+ */
 #define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
 
 #endif
