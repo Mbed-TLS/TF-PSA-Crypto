@@ -86,4 +86,3 @@ exit:
     mbedtls_free(signature);
 }
 /* END_CASE */
-
