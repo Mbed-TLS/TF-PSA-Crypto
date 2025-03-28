@@ -117,7 +117,7 @@ typedef struct mbedtls_pk_rsassa_pss_options {
  */
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE 0
 
-#if (defined(MBEDTLS_RSA_C)) && \
+#if defined(MBEDTLS_RSA_C) && \
     MBEDTLS_MPI_MAX_SIZE > MBEDTLS_PK_SIGNATURE_MAX_SIZE
 /* For RSA, the signature can be as large as the bignum module allows.*/
 #undef MBEDTLS_PK_SIGNATURE_MAX_SIZE
