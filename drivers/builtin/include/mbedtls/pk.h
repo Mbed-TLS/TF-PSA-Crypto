@@ -119,10 +119,7 @@ typedef struct mbedtls_pk_rsassa_pss_options {
 
 #if (defined(MBEDTLS_RSA_C)) && \
     MBEDTLS_MPI_MAX_SIZE > MBEDTLS_PK_SIGNATURE_MAX_SIZE
-/* For RSA, the signature can be as large as the bignum module allows.
- * For RSA_ALT, the signature size is not necessarily tied to what the
- * bignum module can do, but in the absence of any specific setting,
- * we use that (rsa_alt_sign_wrap in library/pk_wrap.h will check). */
+/* For RSA, the signature can be as large as the bignum module allows.*/
 #undef MBEDTLS_PK_SIGNATURE_MAX_SIZE
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE MBEDTLS_MPI_MAX_SIZE
 #endif
@@ -333,9 +330,6 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  * \return          0 on success,
  *                  MBEDTLS_ERR_PK_BAD_INPUT_DATA on invalid input,
  *                  MBEDTLS_ERR_PK_ALLOC_FAILED on allocation failure.
- *
- * \note            For contexts holding an RSA-alt key, use
- *                  \c mbedtls_pk_setup_rsa_alt() instead.
  */
 int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
 
@@ -467,9 +461,6 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  * if (ret != 0) ...; // error handling omitted
  * ```
  *
- * \note            This function does not support RSA-alt contexts
- *                  (set up with mbedtls_pk_setup_rsa_alt()).
- *
  * \param[in] pk    The PK context to use. It must have been set up.
  *                  It can either contain a key pair or just a public key.
  * \param usage     A single `PSA_KEY_USAGE_xxx` flag among the following:
@@ -580,9 +571,6 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
  *                                psa_get_key_type(&attributes)));
  *     - Restrict the key usage if desired.
  * -# Call mbedtls_pk_import_into_psa().
- *
- * \note            This function does not support RSA-alt contexts
- *                  (set up with mbedtls_pk_setup_rsa_alt()).
  *
  * \param[in] pk    The PK context to use. It must have been set up.
  *                  It can either contain a key pair or just a public key.
