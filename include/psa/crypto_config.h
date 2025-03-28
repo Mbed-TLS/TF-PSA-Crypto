@@ -1283,19 +1283,6 @@
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
 
 /**
- * \def MBEDTLS_PSA_INJECT_ENTROPY
- *
- * Enable support for entropy injection at first boot. This feature is
- * required on systems that do not have a built-in entropy source (TRNG).
- * This feature is currently not supported on systems that have a built-in
- * entropy source.
- *
- * Requires: MBEDTLS_PSA_CRYPTO_STORAGE_C, MBEDTLS_ENTROPY_NV_SEED
- *
- */
-//#define MBEDTLS_PSA_INJECT_ENTROPY
-
-/**
  * \def MBEDTLS_PSA_ITS_FILE_C
  *
  * Enable the emulation of the Platform Security Architecture

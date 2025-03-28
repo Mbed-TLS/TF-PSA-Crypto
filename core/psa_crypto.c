@@ -7952,10 +7952,6 @@ psa_status_t psa_key_agreement_iop_abort(
 /* Random generation */
 /****************************************************************/
 
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY)
-#include "entropy_poll.h"
-#endif
-
 /** Initialize the PSA random generator.
  *
  *  Note: the mbedtls_threading_psa_rngdata_mutex should be held when calling
@@ -7977,16 +7973,6 @@ static void mbedtls_psa_random_init(mbedtls_psa_random_context_t *rng)
     }
 
     rng->entropy_init(&rng->entropy);
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY) && \
-    defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
-    /* The PSA entropy injection feature depends on using NV seed as an entropy
-     * source. Add NV seed as an entropy source for PSA entropy injection. */
-    mbedtls_entropy_add_source(&rng->entropy,
-                               mbedtls_nv_seed_poll, NULL,
-                               MBEDTLS_ENTROPY_BLOCK_SIZE,
-                               MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif
-
     mbedtls_psa_drbg_init(&rng->drbg);
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 }
@@ -8038,24 +8024,6 @@ exit:
     LOCAL_OUTPUT_FREE(output_external, output);
     return status;
 }
-
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY)
-psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
-                                        size_t seed_size)
-{
-    if (psa_get_initialized()) {
-        return PSA_ERROR_NOT_PERMITTED;
-    }
-
-    if (((seed_size < MBEDTLS_ENTROPY_MIN_PLATFORM) ||
-         (seed_size < MBEDTLS_ENTROPY_BLOCK_SIZE)) ||
-        (seed_size > MBEDTLS_ENTROPY_MAX_SEED_SIZE)) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-
-    return mbedtls_psa_storage_inject_entropy(seed, seed_size);
-}
-#endif /* MBEDTLS_PSA_INJECT_ENTROPY */
 
 /** Validate the key type and size for key generation
  *

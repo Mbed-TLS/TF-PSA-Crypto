@@ -14,17 +14,6 @@
 #include <test/psa_crypto_helpers.h>
 #include <test/psa_test_wrappers.h>
 
-/* Wrapper for mbedtls_psa_inject_entropy */
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY)
-psa_status_t mbedtls_test_wrap_mbedtls_psa_inject_entropy(
-    const uint8_t *arg0_seed,
-    size_t arg1_seed_size)
-{
-    psa_status_t status = (mbedtls_psa_inject_entropy)(arg0_seed, arg1_seed_size);
-    return status;
-}
-#endif /* defined(MBEDTLS_PSA_INJECT_ENTROPY) */
-
 /* Wrapper for mbedtls_psa_platform_get_builtin_key */
 #if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
 psa_status_t mbedtls_test_wrap_mbedtls_psa_platform_get_builtin_key(
