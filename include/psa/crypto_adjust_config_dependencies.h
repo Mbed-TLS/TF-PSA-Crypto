@@ -48,7 +48,7 @@
 #define PSA_WANT_ALG_CMAC 1
 #endif
 
-#if (defined(NIST_KW_C))
+#if defined(NIST_KW_C)
 #define PSA_WANT_ALG_ECB_NO_PADDING
 #define PSA_WANT_KEY_TYPE_AES
 #endif

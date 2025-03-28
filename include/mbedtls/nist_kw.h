@@ -72,7 +72,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  * \param key                The key wrapping psa key ID to use for encryption. The key should have the following attributes:
  *                               - type: PSA_KEY_TYPE_AES
  *                               - algorithm: PSA_ALG_ECB_NO_PADDING
- *                               - usage flag: PSA_KEY_USAGE_ENCRYPT + other flags if required by the application.
+ *                               - usage flag: PSA_KEY_USAGE_DECRYPT + other flags if required by the application.
  * \param mode               The key wrapping mode to use (MBEDTLS_KW_MODE_KW or MBEDTLS_KW_MODE_KWP)
  * \param input              The buffer holding the input data.
  * \param input_length       The length of the input data in Bytes.

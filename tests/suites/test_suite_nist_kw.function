@@ -12,7 +12,7 @@
  * https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/CAVP-TESTING-BLOCK-CIPHER-MODES#KW
  */
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_ECB_NO_PADDING */
-void mbedtls_nist_kw_self_test(int verbose, int mode, data_t *kw_key,
+void mbedtls_nist_kw_self_test(int mode, data_t *kw_key,
                                data_t *kw_msg, data_t *kw_res, int kw_out_len) {
     unsigned char out[48];
     size_t olen, out_len = kw_out_len;
@@ -37,9 +37,6 @@ void mbedtls_nist_kw_self_test(int verbose, int mode, data_t *kw_key,
 
     TEST_MEMORY_COMPARE(out, olen, kw_msg->x,  kw_msg->len);
 
-    if (verbose != 0) {
-       mbedtls_printf(" passed\n");
-    }
 exit:
     psa_destroy_key(key_id);
     PSA_DONE();
@@ -265,6 +262,7 @@ void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
     TEST_ASSERT(result_length == expected_result->len);
 
     TEST_ASSERT(memcmp(expected_result->x, result, result_length) == 0);
+    TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,  result_length);
 
 exit:
     mbedtls_free(result);
