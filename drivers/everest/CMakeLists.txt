@@ -14,6 +14,8 @@ target_include_directories(${everest_target}
   PRIVATE include/everest
           include/everest/kremlib
           $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>
+          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/>
+          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/kremlib/>
           ${TF_PSA_CRYPTO_DIR}/core)
 set_config_files_compile_definitions(${everest_target})
 

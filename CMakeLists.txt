@@ -442,7 +442,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE tests/include
         PRIVATE include
         PRIVATE drivers/builtin/include
-        PRIVATE drivers/everest/include
+        PRIVATE drivers/everest/include/tf-psa-crypto/private/
         PRIVATE core
         PRIVATE drivers/builtin/src)
     # Request C11, needed for memory poisoning tests
