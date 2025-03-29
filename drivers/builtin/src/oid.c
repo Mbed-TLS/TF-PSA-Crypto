@@ -457,6 +457,12 @@ static const oid_sig_alg_t oid_sig_alg[] =
         MBEDTLS_MD_SHA512,   MBEDTLS_PK_ECDSA,
     },
 #endif /* PSA_WANT_ALG_SHA_512 */
+#if defined(PSA_WANT_ALG_SHA3_256)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_ED448,            "Ed448",                "Ed448 with SHA3-256"),
+        MBEDTLS_MD_SHA3_256, MBEDTLS_PK_ECDSA
+    },
+#endif /* PSA_WANT_ALG_SHA3_256 */
 #endif /* PSA_HAVE_ALG_SOME_ECDSA */
 #if defined(MBEDTLS_RSA_C)
     {
