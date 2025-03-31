@@ -11,7 +11,7 @@
  * Test vectors taken from NIST
  * https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/CAVP-TESTING-BLOCK-CIPHER-MODES#KW
  */
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_ECB_NO_PADDING */
+/* BEGIN_CASE */
 void mbedtls_nist_kw_self_test(int mode, data_t *kw_key,
                                data_t *kw_msg, data_t *kw_res, int kw_out_len) {
     unsigned char out[48];
@@ -43,7 +43,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_ECB_NO_PADDING */
+/* BEGIN_CASE */
 void mbedtls_nist_kw_mix_contexts()
 {
     mbedtls_svc_key_id_t key_id_1 = MBEDTLS_SVC_KEY_ID_INIT, key_id_2 = MBEDTLS_SVC_KEY_ID_INIT;
@@ -131,7 +131,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_ECB_NO_PADDING */
+/* BEGIN_CASE */
 void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
 {
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
@@ -184,7 +184,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_ECB_NO_PADDING */
+/* BEGIN_CASE */
 void nist_kw_ciphertext_lengths(int in_len, int out_len, int mode, int res)
 {
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
@@ -250,8 +250,7 @@ void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
 
     PSA_INIT();
 
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT |
-                        PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT);
     psa_set_key_algorithm(&attributes, PSA_ALG_ECB_NO_PADDING);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
     PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, &key_id));
@@ -286,8 +285,7 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
 
     PSA_INIT();
 
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT |
-                            PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DECRYPT);
     psa_set_key_algorithm(&attributes, PSA_ALG_ECB_NO_PADDING);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
     PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, &key_id));
