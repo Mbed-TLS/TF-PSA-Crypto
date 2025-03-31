@@ -40,7 +40,7 @@ typedef enum {
 /**
  * \brief                    This function encrypts a buffer using key wrapping.
  *
- * \param key                The key wrapping psa key ID to use for encryption. The key should have the following attributes:
+ * \param key                The key wrapping PSA key ID to use for encryption. The key should have the following attributes:
  *                               - type: PSA_KEY_TYPE_AES
  *                               - algorithm: PSA_ALG_ECB_NO_PADDING
  *                               - usage flag: PSA_KEY_USAGE_ENCRYPT + other flags if required by the application.
@@ -69,7 +69,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
 /**
  * \brief           This function decrypts a buffer using key wrapping.
  *
- * \param key                The key wrapping psa key ID to use for encryption. The key should have the following attributes:
+ * \param key                The key wrapping PSA key ID to use for encryption. The key should have the following attributes:
  *                               - type: PSA_KEY_TYPE_AES
  *                               - algorithm: PSA_ALG_ECB_NO_PADDING
  *                               - usage flag: PSA_KEY_USAGE_DECRYPT + other flags if required by the application.
