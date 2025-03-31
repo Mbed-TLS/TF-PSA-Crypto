@@ -58,6 +58,7 @@ typedef struct mbedtls_des3_context {
 }
 mbedtls_des3_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 
 /**
  * \brief          Initialize DES context
@@ -355,6 +356,8 @@ MBEDTLS_CHECK_RETURN_CRITICAL
 int mbedtls_des_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

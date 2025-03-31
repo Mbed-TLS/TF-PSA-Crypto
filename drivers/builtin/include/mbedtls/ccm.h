@@ -90,6 +90,8 @@ typedef struct mbedtls_ccm_context {
 }
 mbedtls_ccm_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function initializes the specified CCM context,
  *                  to make references valid, and prepare the context
@@ -510,6 +512,8 @@ int mbedtls_ccm_finish(mbedtls_ccm_context *ctx,
  */
 int mbedtls_ccm_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

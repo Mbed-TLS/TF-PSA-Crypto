@@ -349,6 +349,8 @@ mbedtls_ecp_group;
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           Internal restart context for multiplication
  *
@@ -362,6 +364,8 @@ typedef struct mbedtls_ecp_restart_mul mbedtls_ecp_restart_mul_ctx;
  * \note            Opaque struct
  */
 typedef struct mbedtls_ecp_restart_muladd mbedtls_ecp_restart_muladd_ctx;
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /**
  * \brief           General context for resuming ECC operations
@@ -383,6 +387,7 @@ typedef struct {
 #define MBEDTLS_ECP_OPS_ADD  11 /*!< basic ops count for see ecp_add_mixed() */
 #define MBEDTLS_ECP_OPS_INV 120 /*!< empirical equivalent for mpi_mod_inv()  */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief           Internal; for restartable functions in other modules.
  *                  Check and update basic ops budget.
@@ -397,6 +402,7 @@ typedef struct {
 int mbedtls_ecp_check_budget(const mbedtls_ecp_group *grp,
                              mbedtls_ecp_restart_ctx *rs_ctx,
                              unsigned ops);
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /* Utility macro for checking and updating ops budget */
 #define MBEDTLS_ECP_BUDGET(ops)   \
@@ -451,6 +457,8 @@ mbedtls_ecp_keypair;
  * Some other constants from RFC 4492
  */
 #define MBEDTLS_ECP_TLS_NAMED_CURVE    3   /**< The named_curve of ECCurveType. */
+
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 /**
@@ -1517,6 +1525,8 @@ int mbedtls_ecp_export(const mbedtls_ecp_keypair *key, mbedtls_ecp_group *grp,
 int mbedtls_ecp_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

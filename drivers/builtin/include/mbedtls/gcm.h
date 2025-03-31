@@ -72,6 +72,8 @@ typedef struct mbedtls_gcm_context {
 }
 mbedtls_gcm_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function initializes the specified GCM context,
  *                  to make references valid, and prepares the context
@@ -368,6 +370,8 @@ void mbedtls_gcm_free(mbedtls_gcm_context *ctx);
 int mbedtls_gcm_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

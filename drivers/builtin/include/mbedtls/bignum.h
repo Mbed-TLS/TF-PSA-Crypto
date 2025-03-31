@@ -240,6 +240,8 @@ mbedtls_mpi;
 
 #define MBEDTLS_MPI_INIT { 0, 1, 0 }
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           Initialize an MPI context.
  *
@@ -1078,6 +1080,8 @@ int mbedtls_mpi_gen_prime(mbedtls_mpi *X, size_t nbits, int flags,
 int mbedtls_mpi_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

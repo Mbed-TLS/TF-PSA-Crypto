@@ -84,6 +84,8 @@ typedef struct mbedtls_aes_xts_context {
 } mbedtls_aes_xts_context;
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief          This function initializes the specified AES context.
  *
@@ -577,6 +579,8 @@ MBEDTLS_CHECK_RETURN_CRITICAL
 int mbedtls_aes_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

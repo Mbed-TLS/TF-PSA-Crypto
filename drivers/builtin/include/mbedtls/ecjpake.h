@@ -74,6 +74,8 @@ typedef struct mbedtls_ecjpake_context {
     mbedtls_mpi MBEDTLS_PRIVATE(s);                      /**< Pre-shared secret (passphrase) */
 } mbedtls_ecjpake_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           Initialize an ECJPAKE context.
  *
@@ -284,6 +286,8 @@ void mbedtls_ecjpake_free(mbedtls_ecjpake_context *ctx);
 int mbedtls_ecjpake_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

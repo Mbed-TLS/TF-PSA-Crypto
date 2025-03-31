@@ -181,6 +181,8 @@ mbedtls_ecdh_context;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 #endif /* MBEDTLS_ECDH_LEGACY_CONTEXT */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief          Return the ECP group for provided context.
  *
@@ -486,6 +488,8 @@ int mbedtls_ecdh_calc_secret(mbedtls_ecdh_context *ctx, size_t *olen,
  */
 void mbedtls_ecdh_enable_restart(mbedtls_ecdh_context *ctx);
 #endif /* MBEDTLS_ECP_RESTARTABLE */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

@@ -53,6 +53,8 @@ typedef struct mbedtls_chachapoly_context {
 }
 mbedtls_chachapoly_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function initializes the specified ChaCha20-Poly1305 context.
  *
@@ -328,6 +330,8 @@ int mbedtls_chachapoly_auth_decrypt(mbedtls_chachapoly_context *ctx,
  */
 int mbedtls_chachapoly_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

@@ -363,6 +363,8 @@ typedef struct mbedtls_cipher_context_t {
 
 } mbedtls_cipher_context_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief This function retrieves the list of ciphers supported
  *        by the generic cipher module.
@@ -1160,6 +1162,9 @@ int mbedtls_cipher_auth_decrypt_ext(mbedtls_cipher_context_t *ctx,
                                     unsigned char *output, size_t output_len,
                                     size_t *olen, size_t tag_len);
 #endif /* MBEDTLS_CIPHER_MODE_AEAD || MBEDTLS_NIST_KW_C */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
+
 #ifdef __cplusplus
 }
 #endif

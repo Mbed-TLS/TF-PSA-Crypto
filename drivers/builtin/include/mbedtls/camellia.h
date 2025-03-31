@@ -40,6 +40,8 @@ typedef struct mbedtls_camellia_context {
 }
 mbedtls_camellia_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief          Initialize a CAMELLIA context.
  *
@@ -289,6 +291,8 @@ int mbedtls_camellia_crypt_ctr(mbedtls_camellia_context *ctx,
 int mbedtls_camellia_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

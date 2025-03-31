@@ -66,6 +66,8 @@ struct mbedtls_cmac_context_t {
     size_t              MBEDTLS_PRIVATE(unprocessed_len);
 };
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief               This function starts a new CMAC computation
  *                      by setting the CMAC key, and preparing to authenticate
@@ -214,6 +216,8 @@ int mbedtls_aes_cmac_prf_128(const unsigned char *key, size_t key_len,
  */
 int mbedtls_cmac_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST && ( MBEDTLS_AES_C || MBEDTLS_DES_C ) */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

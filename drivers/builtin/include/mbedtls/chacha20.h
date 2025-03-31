@@ -40,6 +40,8 @@ typedef struct mbedtls_chacha20_context {
 }
 mbedtls_chacha20_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function initializes the specified ChaCha20 context.
  *
@@ -188,6 +190,8 @@ int mbedtls_chacha20_crypt(const unsigned char key[32],
  */
 int mbedtls_chacha20_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

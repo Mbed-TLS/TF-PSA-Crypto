@@ -44,6 +44,8 @@ typedef struct mbedtls_sha256_context {
 }
 mbedtls_sha256_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief          This function initializes a SHA-256 context.
  *
@@ -169,6 +171,8 @@ int mbedtls_sha256_self_test(int verbose);
 #endif /* MBEDTLS_SHA256_C */
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

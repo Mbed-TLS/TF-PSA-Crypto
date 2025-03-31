@@ -52,6 +52,8 @@ typedef struct mbedtls_aria_context {
 }
 mbedtls_aria_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief          This function initializes the specified ARIA context.
  *
@@ -327,6 +329,8 @@ int mbedtls_aria_crypt_ctr(mbedtls_aria_context *ctx,
  */
 int mbedtls_aria_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

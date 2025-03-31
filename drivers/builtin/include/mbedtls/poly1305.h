@@ -42,6 +42,8 @@ typedef struct mbedtls_poly1305_context {
 }
 mbedtls_poly1305_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function initializes the specified Poly1305 context.
  *
@@ -154,6 +156,8 @@ int mbedtls_poly1305_mac(const unsigned char key[32],
  */
 int mbedtls_poly1305_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
