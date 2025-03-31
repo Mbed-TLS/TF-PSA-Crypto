@@ -113,7 +113,7 @@ typedef struct mbedtls_pk_rsassa_pss_options {
  *
  * The resulting value can be 0, for example if MBEDTLS_ECDH_C is enabled
  * (which allows the pk module to be included) but neither MBEDTLS_ECDSA_C
- * nor MBEDTLS_RSA_C nor any opaque signature mechanism (PSA or RSA_ALT).
+ * nor MBEDTLS_RSA_C nor any opaque signature mechanism (PSA).
  */
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE 0
 
