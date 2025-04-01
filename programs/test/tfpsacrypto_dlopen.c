@@ -23,8 +23,7 @@
     do                                                                 \
     {                                                                  \
         char *CHECK_DLERROR_error = dlerror();                         \
-        if (CHECK_DLERROR_error != NULL)                               \
-        {                                                              \
+        if (CHECK_DLERROR_error != NULL) {                             \
             fprintf(stderr, "Dynamic loading error for %s(%s): %s\n",  \
                     function, argument, CHECK_DLERROR_error);          \
             mbedtls_exit(MBEDTLS_EXIT_FAILURE);            \
@@ -41,15 +40,12 @@ int main(void)
     CHECK_DLERROR("dlsym", "psa_crypto_init");
 
     psa_status_t status = psa_crypto_init_ptr();
-    if (status == PSA_SUCCESS)
-    {
+    if (status == PSA_SUCCESS) {
         mbedtls_printf("dlopen(%s): Call to psa_crypto_init was successful.\n",
-                             CRYPTO_SO_FILENAME);
-    }
-    else
-    {
+                       CRYPTO_SO_FILENAME);
+    } else {
         mbedtls_printf("dlopen(%s): Call to psa_crypto_init failed.\n",
-                             CRYPTO_SO_FILENAME);
+                       CRYPTO_SO_FILENAME);
     }
 
     dlclose(crypto_so);
