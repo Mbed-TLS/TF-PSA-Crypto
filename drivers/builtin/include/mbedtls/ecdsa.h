@@ -69,8 +69,6 @@ typedef mbedtls_ecp_keypair mbedtls_ecdsa_context;
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
-
 /**
  * \brief           Internal restart context for ecdsa_verify()
  *
@@ -93,8 +91,6 @@ typedef struct mbedtls_ecdsa_restart_sig mbedtls_ecdsa_restart_sig_ctx;
  */
 typedef struct mbedtls_ecdsa_restart_det mbedtls_ecdsa_restart_det_ctx;
 #endif
-
-#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /**
  * \brief           General context for resuming ECDSA operations

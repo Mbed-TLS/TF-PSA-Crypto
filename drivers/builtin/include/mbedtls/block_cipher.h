@@ -39,7 +39,6 @@ typedef enum {
     MBEDTLS_BLOCK_CIPHER_ID_ARIA,      /**< The Aria cipher. */
 } mbedtls_block_cipher_id_t;
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * Used internally to indicate whether a context uses legacy or PSA.
  *
@@ -49,7 +48,6 @@ typedef enum {
     MBEDTLS_BLOCK_CIPHER_ENGINE_LEGACY = 0,
     MBEDTLS_BLOCK_CIPHER_ENGINE_PSA,
 } mbedtls_block_cipher_engine_t;
-#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 typedef struct {
     mbedtls_block_cipher_id_t MBEDTLS_PRIVATE(id);
