@@ -5,7 +5,6 @@ set(executables
     key_ladder_demo
     psa_constant_names
     psa_hash
-    which_aes
 )
 add_dependencies(${programs_target} ${executables})
 
