@@ -43,4 +43,3 @@ int main(void)
     return 0;
 }
 #endif /* !MBEDTLS_AES_C */
-
