@@ -1,6 +1,7 @@
 set(libs
-    ${mbedtls_target}
+    ${tfpsacrypto_target}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${mbedtls_target}
 )
 
 find_library(FUZZINGENGINE_LIB FuzzingEngine)
@@ -21,9 +22,7 @@ add_dependencies(${programs_target} ${executables_with_common_c})
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     set(exe_sources
-        ${exe}.c
-        $<TARGET_OBJECTS:mbedtls_test_helpers>
-        $<TARGET_OBJECTS:mbedtls_test>)
+        ${exe}.c)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)
     endif()
