@@ -66,6 +66,15 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
     unsigned char outbuff[KW_SEMIBLOCK_LENGTH * 2];
     unsigned char inbuff[KW_SEMIBLOCK_LENGTH * 2];
     psa_cipher_operation_t wrap_operation = PSA_CIPHER_OPERATION_INIT;
+    psa_key_attributes_t attributes;
+
+    if(psa_get_key_attributes(key, &attributes) != PSA_SUCCESS){
+	    goto cleanup;
+    }
+
+    if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
+                    return PSA_ERROR_NOT_PERMITTED;
+    }
 
     ret = psa_cipher_encrypt_setup(&wrap_operation, key, PSA_ALG_ECB_NO_PADDING);
     if (ret != PSA_SUCCESS) {
@@ -281,6 +290,15 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     int diff;
     size_t part_length, padlen = 0, Plen;
     psa_cipher_operation_t unwrap_operation = PSA_CIPHER_OPERATION_INIT;
+    psa_key_attributes_t attributes;
+
+    if(psa_get_key_attributes(key, &attributes) != PSA_SUCCESS){
+	    goto cleanup;
+    }
+
+    if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
+                    return PSA_ERROR_NOT_PERMITTED;
+    }
 
     ret = psa_cipher_decrypt_setup(&unwrap_operation, key, PSA_ALG_ECB_NO_PADDING);
     if (ret != PSA_SUCCESS) {

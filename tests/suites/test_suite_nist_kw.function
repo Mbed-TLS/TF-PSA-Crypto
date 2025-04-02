@@ -25,7 +25,6 @@ void mbedtls_nist_kw_self_test(int mode, data_t *kw_key,
                         PSA_KEY_USAGE_DECRYPT);
     psa_set_key_algorithm(&attributes, PSA_ALG_ECB_NO_PADDING);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
-    mbedtls_printf("\n");
 
     PSA_ASSERT(psa_import_key(&attributes, kw_key->x, kw_key->len, &key_id));
     PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, kw_msg->x,
@@ -271,6 +270,44 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void mbedtls_nist_kw_wrap_key_test(int mode, const data_t *key, int usage, int alg, int key_type, data_t *msg,
+                          data_t *expected_result, int expected_ret) {
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t result_length, padlen;
+
+    padlen = (msg->len % 8 != 0) ? 8 - (msg->len % 8) : 0;
+    int result_size = msg->len + 8 + padlen;
+    unsigned char *result;
+    result = mbedtls_calloc(1, result_size);
+
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, &key_id));
+
+    TEST_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len
+                           , result, result_size, &result_length) == expected_ret);
+    if(expected_ret != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    TEST_ASSERT(result_length == expected_result->len);
+
+    TEST_ASSERT(memcmp(expected_result->x, result, result_length) == 0);
+    TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,  result_length);
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
                             data_t *expected_result, int expected_ret)
 {
@@ -297,6 +334,44 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
         TEST_ASSERT(result_len == expected_result->len);
         TEST_ASSERT(memcmp(expected_result->x, result, result_len) == 0);
     } else {
+        TEST_ASSERT(result_len == 0);
+    }
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_nist_kw_unwrap_key_test(int mode, data_t *key, int usage, int alg, int key_type, data_t *msg, data_t *expected_result, int expected_ret)
+{
+    size_t result_len = 0;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+
+    unsigned char *result;
+    int result_size = msg->len - 8;
+    result = mbedtls_calloc(1, result_size);
+
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, &key_id));
+
+    /* Test with input == output */
+    TEST_ASSERT(mbedtls_nist_kw_unwrap(key_id, mode, msg->x, msg->len,
+                                       result, result_size, &result_len) == expected_ret);
+    if (expected_ret == PSA_SUCCESS) {
+        TEST_ASSERT(result_len == expected_result->len);
+        TEST_ASSERT(memcmp(expected_result->x, result, result_len) == 0);
+    } else {
+        goto exit;
         TEST_ASSERT(result_len == 0);
     }
 
