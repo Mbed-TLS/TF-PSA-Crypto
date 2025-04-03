@@ -239,8 +239,8 @@ typedef struct mbedtls_ssl_ticket_context {
 #endif
 }
 mbedtls_ssl_ticket_context;
+```
 
 ### Removal of `mbedtls_ssl_conf_rng`
 
 `mbedtls_ssl_conf_rng` has been removed from the library as its sole purpose is to configure RNG for ssl and this is no longer required.
-```
