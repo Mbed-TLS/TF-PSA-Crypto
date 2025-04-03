@@ -110,13 +110,24 @@ component_test_tf_psa_crypto_zeroize () {
 
     for optimization_flag in -O2 -O3 -Ofast -Os; do
         for compiler in clang gcc; do
+            cd $OUT_OF_SOURCE_DIR
             msg "test: $compiler $optimization_flag, mbedtls_platform_zeroize()"
-            make programs CC="$compiler" DEBUG=1 CFLAGS="$optimization_flag"
-            gdb -ex "$gdb_disable_aslr" -x $FRAMEWORK/tests/programs/test_zeroize.gdb -nw -batch -nx 2>&1 | tee test_zeroize.log
+            cmake -DCMAKE_C_COMPILER="$compiler" \
+                  -DCMAKE_C_FLAGS="$optimization_flag -Wno-error=array-bounds -g3" \
+                  -DCMAKE_BUILD_TYPE:String=Custom \
+                  -DENABLE_PROGRAMS=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+            make
+            gdb -ex "$gdb_disable_aslr" -ex "set \$is_tf_psa_crypto=1" \
+                -x $FRAMEWORK/tests/programs/test_zeroize.gdb -nw -batch \
+                -nx 2>&1 | tee test_zeroize.log
             grep "The buffer was correctly zeroized" test_zeroize.log
             not grep -i "error" test_zeroize.log
             rm -f test_zeroize.log
-            make clean
+
+            # Restore the build directory for the next iteration (i.e. delete & re-create it)
+            cd $TF_PSA_CRYPTO_ROOT_DIR
+            rm -rf $OUT_OF_SOURCE_DIR
+            mkdir $OUT_OF_SOURCE_DIR
         done
     done
 }
