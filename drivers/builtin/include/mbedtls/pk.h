@@ -76,7 +76,6 @@ typedef enum {
     MBEDTLS_PK_ECKEY,
     MBEDTLS_PK_ECKEY_DH,
     MBEDTLS_PK_ECDSA,
-    MBEDTLS_PK_RSA_ALT,
     MBEDTLS_PK_RSASSA_PSS,
     MBEDTLS_PK_OPAQUE,
 } mbedtls_pk_type_t;
@@ -114,16 +113,13 @@ typedef struct mbedtls_pk_rsassa_pss_options {
  *
  * The resulting value can be 0, for example if MBEDTLS_ECDH_C is enabled
  * (which allows the pk module to be included) but neither MBEDTLS_ECDSA_C
- * nor MBEDTLS_RSA_C nor any opaque signature mechanism (PSA or RSA_ALT).
+ * nor MBEDTLS_RSA_C nor any opaque signature mechanism (PSA).
  */
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE 0
 
-#if (defined(MBEDTLS_RSA_C) || defined(MBEDTLS_PK_RSA_ALT_SUPPORT)) && \
+#if defined(MBEDTLS_RSA_C) && \
     MBEDTLS_MPI_MAX_SIZE > MBEDTLS_PK_SIGNATURE_MAX_SIZE
-/* For RSA, the signature can be as large as the bignum module allows.
- * For RSA_ALT, the signature size is not necessarily tied to what the
- * bignum module can do, but in the absence of any specific setting,
- * we use that (rsa_alt_sign_wrap in library/pk_wrap.h will check). */
+/* For RSA, the signature can be as large as the bignum module allows.*/
 #undef MBEDTLS_PK_SIGNATURE_MAX_SIZE
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE MBEDTLS_MPI_MAX_SIZE
 #endif
@@ -275,19 +271,6 @@ typedef struct {
 typedef void mbedtls_pk_restart_ctx;
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
 
-#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
-/**
- * \brief           Types for RSA-alt abstraction
- */
-typedef int (*mbedtls_pk_rsa_alt_decrypt_func)(void *ctx, size_t *olen,
-                                               const unsigned char *input, unsigned char *output,
-                                               size_t output_max_len);
-typedef int (*mbedtls_pk_rsa_alt_sign_func)(void *ctx,
-                                            mbedtls_md_type_t md_alg, unsigned int hashlen,
-                                            const unsigned char *hash, unsigned char *sig);
-typedef size_t (*mbedtls_pk_rsa_alt_key_len_func)(void *ctx);
-#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
-
 /**
  * \brief           Return information associated with the given PK type
  *
@@ -347,9 +330,6 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  * \return          0 on success,
  *                  MBEDTLS_ERR_PK_BAD_INPUT_DATA on invalid input,
  *                  MBEDTLS_ERR_PK_ALLOC_FAILED on allocation failure.
- *
- * \note            For contexts holding an RSA-alt key, use
- *                  \c mbedtls_pk_setup_rsa_alt() instead.
  */
 int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
 
@@ -393,28 +373,6 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
 int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
                             const mbedtls_svc_key_id_t key);
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
-
-#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
-/**
- * \brief           Initialize an RSA-alt context
- *
- * \param ctx       Context to initialize. It must not have been set
- *                  up yet (type #MBEDTLS_PK_NONE).
- * \param key       RSA key pointer
- * \param decrypt_func  Decryption function
- * \param sign_func     Signing function
- * \param key_len_func  Function returning key length in bytes
- *
- * \return          0 on success, or MBEDTLS_ERR_PK_BAD_INPUT_DATA if the
- *                  context wasn't already initialized as RSA_ALT.
- *
- * \note            This function replaces \c mbedtls_pk_setup() for RSA-alt.
- */
-int mbedtls_pk_setup_rsa_alt(mbedtls_pk_context *ctx, void *key,
-                             mbedtls_pk_rsa_alt_decrypt_func decrypt_func,
-                             mbedtls_pk_rsa_alt_sign_func sign_func,
-                             mbedtls_pk_rsa_alt_key_len_func key_len_func);
-#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
 
 /**
  * \brief           Get the size in bits of the underlying key
@@ -503,9 +461,6 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  * if (ret != 0) ...; // error handling omitted
  * ```
  *
- * \note            This function does not support RSA-alt contexts
- *                  (set up with mbedtls_pk_setup_rsa_alt()).
- *
  * \param[in] pk    The PK context to use. It must have been set up.
  *                  It can either contain a key pair or just a public key.
  * \param usage     A single `PSA_KEY_USAGE_xxx` flag among the following:
@@ -571,7 +526,6 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                        if \p usage is SIGN/VERIFY, and
  *                        #PSA_ALG_RSA_OAEP(\c hash)
  *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_RSA_ALT: not supported.
  *                      - #MBEDTLS_PK_ECDSA or #MBEDTLS_PK_ECKEY
  *                        if \p usage is SIGN/VERIFY:
  *                        #PSA_ALG_DETERMINISTIC_ECDSA(#PSA_ALG_ANY_HASH)
@@ -617,9 +571,6 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
  *                                psa_get_key_type(&attributes)));
  *     - Restrict the key usage if desired.
  * -# Call mbedtls_pk_import_into_psa().
- *
- * \note            This function does not support RSA-alt contexts
- *                  (set up with mbedtls_pk_setup_rsa_alt()).
  *
  * \param[in] pk    The PK context to use. It must have been set up.
  *                  It can either contain a key pair or just a public key.
