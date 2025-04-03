@@ -1281,7 +1281,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  *    the key share that was received from the peer.
  * -# Depending on the algorithm additional calls to #psa_pake_output() and
  *    #psa_pake_input() might be necessary.
- * -# Call #psa_pake_get_shared_key() to access the shared secret.
+ * -# Call #psa_pake_get_implicit_key() to access the shared secret.
  *
  * Refer to the documentation of individual PAKE algorithms for details on the
  * required set up and operation for each algorithm, and for constraints on the
@@ -1290,7 +1290,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  * After a successful call to #psa_pake_setup(), the operation is active, and
  * the application must eventually terminate the operation. The following events
  * terminate an operation:
- * - A successful call to #psa_pake_get_shared_key().
+ * - A successful call to #psa_pake_get_implicit_key().
  * - A call to #psa_pake_abort().
  *
  * If #psa_pake_setup() returns an error, the operation object is unchanged. If
