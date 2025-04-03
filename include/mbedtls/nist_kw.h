@@ -62,9 +62,9 @@ typedef enum {
  * \return                   cipher-specific error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
-                         mbedtls_nist_kw_mode_t mode,
-                         const unsigned char *input, size_t input_length,
-                         unsigned char *output, size_t output_size, size_t *output_length);
+                                  mbedtls_nist_kw_mode_t mode,
+                                  const unsigned char *input, size_t input_length,
+                                  unsigned char *output, size_t output_size, size_t *output_length);
 
 /**
  * \brief           This function decrypts a buffer using key wrapping.
@@ -92,9 +92,10 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  * \return                   cipher-specific error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
-                           mbedtls_nist_kw_mode_t mode,
-                           const unsigned char *input, size_t input_length,
-                           unsigned char *output, size_t output_size, size_t *output_length);
+                                    mbedtls_nist_kw_mode_t mode,
+                                    const unsigned char *input, size_t input_length,
+                                    unsigned char *output, size_t output_size,
+                                    size_t *output_length);
 
 
 #ifdef __cplusplus
