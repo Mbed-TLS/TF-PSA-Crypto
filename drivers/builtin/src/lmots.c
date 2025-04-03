@@ -721,7 +721,7 @@ int mbedtls_lmots_sign(mbedtls_lmots_private_t *ctx,
     }
 
     ret = psa_generate_random(tmp_c_random,
-                MBEDTLS_LMOTS_N_HASH_LEN(ctx->params.type));
+                              MBEDTLS_LMOTS_N_HASH_LEN(ctx->params.type));
     if (ret) {
         return ret;
     }

@@ -2,7 +2,6 @@ set(src_crypto
     psa_crypto.c
     psa_crypto_client.c
     psa_crypto_driver_wrappers_no_static.c
-    psa_crypto_se.c
     psa_crypto_slot_management.c
     psa_crypto_storage.c
     psa_its_file.c

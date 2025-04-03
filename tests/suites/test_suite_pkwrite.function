@@ -105,8 +105,7 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
     if (is_public_key) {
         TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&key, key_file), 0);
     } else {
-        TEST_EQUAL(mbedtls_pk_parse_keyfile(&key, key_file, NULL,
-                                            mbedtls_test_rnd_std_rand, NULL), 0);
+        TEST_EQUAL(mbedtls_pk_parse_keyfile(&key, key_file, NULL), 0);
     }
 
     start_buf = buf;
@@ -201,8 +200,7 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
     mbedtls_pk_init(&priv_key);
     USE_PSA_INIT();
 
-    TEST_EQUAL(mbedtls_pk_parse_keyfile(&priv_key, priv_key_file, NULL,
-                                        mbedtls_test_rnd_std_rand, NULL), 0);
+    TEST_EQUAL(mbedtls_pk_parse_keyfile(&priv_key, priv_key_file, NULL), 0);
     TEST_EQUAL(mbedtls_pk_load_file(pub_key_file, &pub_key_raw,
                                     &pub_key_len), 0);
 

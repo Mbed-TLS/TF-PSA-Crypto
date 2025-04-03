@@ -421,7 +421,7 @@ int mbedtls_lms_calculate_public_key(mbedtls_lms_public_t *ctx,
  * \return         A non-zero error code on failure.
  */
 int mbedtls_lms_sign(mbedtls_lms_private_t *ctx,
-                      const unsigned char *msg,
+                     const unsigned char *msg,
                      unsigned int msg_size, unsigned char *sig, size_t sig_size,
                      size_t *sig_len);
 #endif /* defined(MBEDTLS_LMS_PRIVATE) */

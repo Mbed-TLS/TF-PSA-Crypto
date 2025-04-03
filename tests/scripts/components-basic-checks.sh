@@ -9,6 +9,18 @@
 #### Basic checks
 ################################################################
 
+component_tf_psa_crypto_check_code_style () {
+    msg "Check C code style"
+    $FRAMEWORK/scripts/code_style.py
+}
+
+support_tf_psa_crypto_check_code_style () {
+    case $(uncrustify --version) in
+        *0.75.1*) true;;
+        *) false;;
+    esac
+}
+
 component_tf_psa_crypto_check_files () {
     msg "Check: file sanity checks (permissions, encodings)" # < 1s
     $FRAMEWORK/scripts/check_files.py
@@ -17,6 +29,16 @@ component_tf_psa_crypto_check_files () {
 components_tf_psa_crypto_check_python_files () {
     msg "Lint: Python scripts"
     $FRAMEWORK/scripts/check-python-files.sh
+}
+
+component_tf_psa_crypto_check_generated_files () {
+    msg "Check generated files"
+    cd $OUT_OF_SOURCE_DIR
+    cmake -D GEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    cd $TF_PSA_CRYPTO_ROOT_DIR
+    $FRAMEWORK/scripts/make_generated_files.py --root $OUT_OF_SOURCE_DIR --check
 }
 
 component_tf_psa_crypto_check_recursion () {

@@ -283,8 +283,6 @@ typedef int (*mbedtls_pk_rsa_alt_decrypt_func)(void *ctx, size_t *olen,
                                                const unsigned char *input, unsigned char *output,
                                                size_t output_max_len);
 typedef int (*mbedtls_pk_rsa_alt_sign_func)(void *ctx,
-                                            int (*f_rng)(void *, unsigned char *, size_t),
-                                            void *p_rng,
                                             mbedtls_md_type_t md_alg, unsigned int hashlen,
                                             const unsigned char *hash, unsigned char *sig);
 typedef size_t (*mbedtls_pk_rsa_alt_key_len_func)(void *ctx);
@@ -828,8 +826,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
  * \param sig_size  The size of the \p sig buffer in bytes.
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
- * \param f_rng     RNG function, must not be \c NULL.
- * \param p_rng     RNG parameter
  *
  * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
  *                  either PKCS#1 v1.5 or PSS (using the largest possible salt
@@ -846,8 +842,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
  */
 int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                     const unsigned char *hash, size_t hash_len,
-                    unsigned char *sig, size_t sig_size, size_t *sig_len,
-                    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+                    unsigned char *sig, size_t sig_size, size_t *sig_len);
 
 /**
  * \brief           Make signature given a signature type.
@@ -866,8 +861,6 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  * \param sig_size  The size of the \p sig buffer in bytes.
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
- * \param f_rng     RNG function, must not be \c NULL.
- * \param p_rng     RNG parameter
  *
  * \return          0 on success, or a specific error code.
  *
@@ -882,9 +875,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
-                        unsigned char *sig, size_t sig_size, size_t *sig_len,
-                        int (*f_rng)(void *, unsigned char *, size_t),
-                        void *p_rng);
+                        unsigned char *sig, size_t sig_size, size_t *sig_len);
 
 /**
  * \brief           Restartable version of \c mbedtls_pk_sign()
@@ -907,8 +898,6 @@ int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
  * \param sig_size  The size of the \p sig buffer in bytes.
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
- * \param f_rng     RNG function, must not be \c NULL.
- * \param p_rng     RNG parameter
  * \param rs_ctx    Restart context (NULL to disable restart)
  *
  * \return          See \c mbedtls_pk_sign().
@@ -919,7 +908,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 mbedtls_md_type_t md_alg,
                                 const unsigned char *hash, size_t hash_len,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len,
-                                int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
                                 mbedtls_pk_restart_ctx *rs_ctx);
 
 /**
@@ -932,8 +920,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
  * \param output    Decrypted output
  * \param olen      Decrypted message length
  * \param osize     Size of the output buffer
- * \param f_rng     RNG function, must not be \c NULL.
- * \param p_rng     RNG parameter
  *
  * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
  *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
@@ -944,8 +930,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
  */
 int mbedtls_pk_decrypt(mbedtls_pk_context *ctx,
                        const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize,
-                       int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+                       unsigned char *output, size_t *olen, size_t osize);
 
 /**
  * \brief           Encrypt message (including padding if relevant).
@@ -956,30 +941,23 @@ int mbedtls_pk_decrypt(mbedtls_pk_context *ctx,
  * \param output    Encrypted output
  * \param olen      Encrypted output length
  * \param osize     Size of the output buffer
- * \param f_rng     RNG function, must not be \c NULL.
- * \param p_rng     RNG parameter
  *
  * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
  *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
  *                  the underlying RSA context. For a pk object constructed by
  *                  parsing, this is PKCS#1 v1.5 by default.
  *
- * \note            \p f_rng is used for padding generation.
- *
  * \return          0 on success, or a specific error code.
  */
 int mbedtls_pk_encrypt(mbedtls_pk_context *ctx,
                        const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize,
-                       int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+                       unsigned char *output, size_t *olen, size_t osize);
 
 /**
  * \brief           Check if a public-private pair of keys matches.
  *
  * \param pub       Context holding a public key.
  * \param prv       Context holding a private (and public) key.
- * \param f_rng     RNG function, must not be \c NULL.
- * \param p_rng     RNG parameter
  *
  * \return          \c 0 on success (keys were checked and match each other).
  * \return          #MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE if the keys could not
@@ -988,9 +966,7 @@ int mbedtls_pk_encrypt(mbedtls_pk_context *ctx,
  * \return          Another non-zero value if the keys do not match.
  */
 int mbedtls_pk_check_pair(const mbedtls_pk_context *pub,
-                          const mbedtls_pk_context *prv,
-                          int (*f_rng)(void *, unsigned char *, size_t),
-                          void *p_rng);
+                          const mbedtls_pk_context *prv);
 
 /**
  * \brief           Export debug information
@@ -1092,8 +1068,6 @@ static inline mbedtls_ecp_keypair *mbedtls_pk_ec(const mbedtls_pk_context pk)
  *                  The empty password is not supported.
  * \param pwdlen    Size of the password in bytes.
  *                  Ignored if \p pwd is \c NULL.
- * \param f_rng     RNG function, must not be \c NULL. Used for blinding.
- * \param p_rng     RNG parameter
  *
  * \note            On entry, ctx must be empty, either freshly initialised
  *                  with mbedtls_pk_init() or reset with mbedtls_pk_free(). If you need a
@@ -1105,8 +1079,7 @@ static inline mbedtls_ecp_keypair *mbedtls_pk_ec(const mbedtls_pk_context pk)
  */
 int mbedtls_pk_parse_key(mbedtls_pk_context *ctx,
                          const unsigned char *key, size_t keylen,
-                         const unsigned char *pwd, size_t pwdlen,
-                         int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+                         const unsigned char *pwd, size_t pwdlen);
 
 /** \ingroup pk_module */
 /**
@@ -1155,8 +1128,6 @@ int mbedtls_pk_parse_public_key(mbedtls_pk_context *ctx,
  *                  Pass a null-terminated string if expecting an encrypted
  *                  key; a non-encrypted key will also be accepted.
  *                  The empty password is not supported.
- * \param f_rng     RNG function, must not be \c NULL. Used for blinding.
- * \param p_rng     RNG parameter
  *
  * \note            On entry, ctx must be empty, either freshly initialised
  *                  with mbedtls_pk_init() or reset with mbedtls_pk_free(). If you need a
@@ -1167,8 +1138,7 @@ int mbedtls_pk_parse_public_key(mbedtls_pk_context *ctx,
  * \return          0 if successful, or a specific PK or PEM error code
  */
 int mbedtls_pk_parse_keyfile(mbedtls_pk_context *ctx,
-                             const char *path, const char *password,
-                             int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+                             const char *path, const char *password);
 
 /** \ingroup pk_module */
 /**

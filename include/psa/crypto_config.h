@@ -1283,19 +1283,6 @@
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
 
 /**
- * \def MBEDTLS_PSA_INJECT_ENTROPY
- *
- * Enable support for entropy injection at first boot. This feature is
- * required on systems that do not have a built-in entropy source (TRNG).
- * This feature is currently not supported on systems that have a built-in
- * entropy source.
- *
- * Requires: MBEDTLS_PSA_CRYPTO_STORAGE_C, MBEDTLS_ENTROPY_NV_SEED
- *
- */
-//#define MBEDTLS_PSA_INJECT_ENTROPY
-
-/**
  * \def MBEDTLS_PSA_ITS_FILE_C
  *
  * Enable the emulation of the Platform Security Architecture
@@ -2461,25 +2448,6 @@
  * Caller:  library/chachapoly.c
  */
 #define MBEDTLS_POLY1305_C
-
-/**
- * \def MBEDTLS_PSA_CRYPTO_SE_C
- *
- * Enable dynamic secure element support in the Platform Security Architecture
- * cryptography API.
- *
- * \deprecated This feature is deprecated. Please switch to the PSA driver
- *             interface.
- *
- * \warning    This feature is not thread-safe, and should not be used in a
- *             multi-threaded environment.
- *
- * Module:  library/psa_crypto_se.c
- *
- * Requires: MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_STORAGE_C
- *
- */
-//#define MBEDTLS_PSA_CRYPTO_SE_C
 
 /**
  * \def MBEDTLS_RIPEMD160_C
