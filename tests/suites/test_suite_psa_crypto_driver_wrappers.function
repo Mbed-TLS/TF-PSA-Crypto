@@ -3063,7 +3063,7 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
 
     /* Collecting input stage (no driver entry points) */
 
-    TEST_EQUAL(psa_pake_setup(&operation, key &cipher_suite),
+    TEST_EQUAL(psa_pake_setup(&operation, key, &cipher_suite),
                PSA_SUCCESS);
 
     PSA_ASSERT(psa_pake_set_user(&operation, jpake_server_id, sizeof(jpake_server_id)));
