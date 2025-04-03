@@ -69,7 +69,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
     psa_key_attributes_t attributes;
 
     if(psa_get_key_attributes(key, &attributes) != PSA_SUCCESS){
-	    goto cleanup;
+        goto cleanup;
     }
 
     if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
@@ -293,7 +293,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     psa_key_attributes_t attributes;
 
     if(psa_get_key_attributes(key, &attributes) != PSA_SUCCESS){
-	    goto cleanup;
+        goto cleanup;
     }
 
     if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
