@@ -124,7 +124,6 @@ const mbedtls_pk_info_t *mbedtls_pk_info_from_type(mbedtls_pk_type_t pk_type)
         case MBEDTLS_PK_ECDSA:
             return &mbedtls_ecdsa_info;
 #endif /* PSA_HAVE_ALG_SOME_ECDSA */
-        /* MBEDTLS_PK_RSA_ALT omitted on purpose */
         default:
             return NULL;
     }
@@ -187,39 +186,6 @@ int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
     return 0;
 }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
-
-#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
-/*
- * Initialize an RSA-alt context
- */
-int mbedtls_pk_setup_rsa_alt(mbedtls_pk_context *ctx, void *key,
-                             mbedtls_pk_rsa_alt_decrypt_func decrypt_func,
-                             mbedtls_pk_rsa_alt_sign_func sign_func,
-                             mbedtls_pk_rsa_alt_key_len_func key_len_func)
-{
-    mbedtls_rsa_alt_context *rsa_alt;
-    const mbedtls_pk_info_t *info = &mbedtls_rsa_alt_info;
-
-    if (ctx->pk_info != NULL) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    if ((ctx->pk_ctx = info->ctx_alloc_func()) == NULL) {
-        return MBEDTLS_ERR_PK_ALLOC_FAILED;
-    }
-
-    ctx->pk_info = info;
-
-    rsa_alt = (mbedtls_rsa_alt_context *) ctx->pk_ctx;
-
-    rsa_alt->key = key;
-    rsa_alt->decrypt_func = decrypt_func;
-    rsa_alt->sign_func = sign_func;
-    rsa_alt->key_len_func = key_len_func;
-
-    return 0;
-}
-#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
 
 /*
  * Tell if a PK can do the operations of the given type
@@ -509,11 +475,6 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
             break;
         }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
-
-#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
-        case MBEDTLS_PK_RSA_ALT:
-            return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
         case MBEDTLS_PK_OPAQUE:
@@ -842,12 +803,6 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
     /* Set the output immediately so that it won't contain garbage even
      * if we error out before calling psa_import_key(). */
     *key_id = MBEDTLS_SVC_KEY_ID_INIT;
-
-#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
-    if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_RSA_ALT) {
-        return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-    }
-#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
 
     int want_public = PSA_KEY_TYPE_IS_PUBLIC_KEY(psa_get_key_type(attributes));
     if (want_public) {
@@ -1414,15 +1369,9 @@ int mbedtls_pk_check_pair(const mbedtls_pk_context *pub,
         return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
     }
 
-    if (prv->pk_info->type == MBEDTLS_PK_RSA_ALT) {
-        if (pub->pk_info->type != MBEDTLS_PK_RSA) {
-            return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-        }
-    } else {
-        if ((prv->pk_info->type != MBEDTLS_PK_OPAQUE) &&
-            (pub->pk_info != prv->pk_info)) {
-            return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-        }
+    if ((prv->pk_info->type != MBEDTLS_PK_OPAQUE) &&
+        (pub->pk_info != prv->pk_info)) {
+        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
     return prv->pk_info->check_pair_func((mbedtls_pk_context *) pub,
