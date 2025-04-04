@@ -298,8 +298,8 @@ void mbedtls_nist_kw_wrap_key_test(int mode,
     psa_set_key_type(&attributes, key_type);
     PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, &key_id));
 
-    TEST_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len
-                                     , result, result_size, &result_length) == expected_ret);
+    TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len,
+                                     result, result_size, &result_length), expected_ret);
     if (expected_ret != PSA_SUCCESS) {
         goto exit;
     }
