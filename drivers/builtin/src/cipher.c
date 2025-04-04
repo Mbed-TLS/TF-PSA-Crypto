@@ -47,10 +47,6 @@
 #include "psa/crypto.h"
 #endif /* MBEDTLS_USE_PSA_CRYPTO && !MBEDTLS_DEPRECATED_REMOVED */
 
-#if defined(MBEDTLS_NIST_KW_C)
-#include "mbedtls/nist_kw.h"
-#endif
-
 #include "mbedtls/platform.h"
 
 static int supported_init = 0;

@@ -48,10 +48,6 @@
 #include "mbedtls/ccm.h"
 #endif
 
-#if defined(MBEDTLS_NIST_KW_C)
-#include "mbedtls/nist_kw.h"
-#endif
-
 #if defined(MBEDTLS_CIPHER_NULL_CIPHER)
 #include <string.h>
 #endif
