@@ -2,3 +2,4 @@ API changes
    * Align the mbedtls_nist_kw_wrap() and mbedtls_nist_kw_unwrap() functions
      with the PSA Crypto API. Instead of taking a mbedtls_nist_kw_context as an
      argument, these functions now take a mbedtls_svc_key_id_t key.
+   * Remove support for nist_kw in cipher.
