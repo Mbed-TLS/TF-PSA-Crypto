@@ -464,7 +464,7 @@ void get_integer_raw(const data_t *input,
     /* Initialize pointer and length to nonsense values so that we can
      * distinguish leaving them unchanged from setting them in the error
      * case. */
-    unsigned char *integer_head = (unsigned char *)0x1234;
+    unsigned char *integer_head = (unsigned char *) 0x1234;
     size_t integer_length = 5;
 
     ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
