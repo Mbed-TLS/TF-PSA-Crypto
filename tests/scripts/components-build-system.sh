@@ -9,6 +9,19 @@
 #### Build System Testing
 ################################################################
 
+component_test_tf_psa_crypto_shared () {
+    msg "build/test: shared libraries" # ~ 2min
+    # We're not building in the OUT_OF_SOURCE_DIR directory in this case
+    # because we want "tfpsacrypto_dlopen" program to be accessible as
+    # "<tf-psa-crypto-root>/programs/test/tfpsacrypto_dlopen"
+    # in dlopen_demo.sh below.
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+    ldd programs/test/benchmark | grep libtfpsacrypto
+    make test
+    $FRAMEWORK/tests/programs/dlopen_demo.sh
+}
+
 component_test_tf_psa_crypto_out_of_source () {
     msg "build: cmake tf-psa-crypto 'out-of-source' build"
     cd $OUT_OF_SOURCE_DIR

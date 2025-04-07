@@ -863,15 +863,6 @@
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
 /**
- * \def MBEDTLS_PK_RSA_ALT_SUPPORT
- *
- * Support external private RSA keys (eg from a HSM) in the PK layer.
- *
- * Comment this macro to disable support for external private RSA keys.
- */
-#define MBEDTLS_PK_RSA_ALT_SUPPORT
-
-/**
  * \def MBEDTLS_PK_WRITE_C
  *
  * Enable the generic public (asymmetric) key writer.
