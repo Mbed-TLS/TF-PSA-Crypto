@@ -1,6 +1,6 @@
 Changes
    * Changed the `PSA_ALG_JPAKE` macro to accommodate the hash algorithm
-     parameter, conformant to the standard PAKE interface
+     parameter, to be conformant to the PSA API 1.2 PAKE extension
    * Added the `PSA_ALG_JPAKE_BASE` macro to indicate the base JPAKE algorithm
      without any hash algorithm used
    * Added the `PSA_ALG_IS_JPAKE` macro to test whether a given algorithm is
