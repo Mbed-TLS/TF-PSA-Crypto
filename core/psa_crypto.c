@@ -9389,7 +9389,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
 exit:
 
     if (status != PSA_SUCCESS) {
-        *key = PSA_KEY_ID_NULL;
+        *key = MBEDTLS_SVC_KEY_ID_INIT;
     }
 
     abort_status = psa_pake_abort(operation);
