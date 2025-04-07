@@ -1,7 +1,7 @@
 Removals
-   * Removed the `psa_pake_set_password_key()` function. Removed to comply
-     with the new standard PAKE interface.
+   * Removed the `psa_pake_set_password_key()` function to comply
+     with the PSA API 1.2 PAKE extension.
 
 Changes
    * Now the functionality of `psa_pake_set_password_key()` is implemented in
-     `psa_pake_setup()` function, as per the new standard PAKE interface.
+     `psa_pake_setup()` function, as per the PSA API 1.2 PAKE extension.
