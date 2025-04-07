@@ -1576,21 +1576,21 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
                             size_t input_length);
 
 /** Extract the shared secret from the PAKE as a key.
- * 
+ *
  * This is the final call in a PAKE operation, which retrieves the shared
  * secret as a key. It is recommended that this key is used as an input to
  * a key derivation operation to produce additional cryptographic keys. For
  * some PAKE algorithms, the shared secret is also suitable for use as a key
- * in cryptographic operations such as encryption. Refer to the documentation 
+ * in cryptographic operations such as encryption. Refer to the documentation
  * of individual PAKE algorithms for more information, see PAKE algorithms.
- * 
+ *
  * Depending on the key confirmation requested in the cipher suite,
- * psa_pake_get_shared_key() must be called either before or after the 
+ * psa_pake_get_shared_key() must be called either before or after the
  * key-confirmation output and input steps for the PAKE algorithm. The key
  * confirmation affects the guarantees that can be made about the shared key:
- * 
+ *
  * Unconfirmed key:
- * 
+ *
  * If the cipher suite used to set up the operation requested an unconfirmed
  * key, the application must call psa_pake_get_shared_key() after the
  * key-exchange output and input steps are completed. The PAKE algorithm
@@ -1598,38 +1598,38 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * password, and identity inputs, is able to compute the same key. However,
  * there is no guarantee that the peer is the participant it claims to be,
  * and was able to compute the same key.
- * 
+ *
  * Since the peer is not authenticated, no action should be taken that assumes
  * that the peer is who it claims to be. For example, do not access restricted
  * resources on the peer’s behalf until an explicit authentication has succeeded.
- * 
+ *
  * \note Some PAKE algorithms do not enable the output of the shared secret
  * until it has been confirmed.
- * 
+ *
  * Confirmed key:
- * 
+ *
  * If the cipher suite used to set up the operation requested a confirmed key,
  * the application must call psa_pake_get_shared_key() after the key-exchange
  * and key-confirmation output and input steps are completed.
- * 
+ *
  * Following key confirmation, the PAKE algorithm provides a cryptographic
  * guarantee that the peer used the same password and identity inputs, and
  * has computed the identical shared secret key.
- * 
+ *
  * Since the peer is not authenticated, no action should be taken that assumes
  * that the peer is who it claims to be. For example, do not access restricted
  * resources on the peer’s behalf until an explicit authentication has succeeded.
- * 
+ *
  * \note Some PAKE algorithms do not include any key-confirmation steps.
- * 
+ *
  * The exact sequence of calls to perform a password-authenticated key exchange
  * depends on the algorithm in use. Refer to the documentation of individual PAKE
  * algorithms for more information. See PAKE algorithms.
- * 
+ *
  * When this function returns successfully, operation becomes inactive. If this
  * function returns an error status, the operation enters an error state and must
  * be aborted by calling psa_pake_abort().
- * 
+ *
  * \param[in,out]   operation   Active PAKE operation.
  * \param[in]       attributes  The attributes for the new key. This function uses
  *                              the attributes as follows:
@@ -1641,27 +1641,27 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *                              #PSA_KEY_TYPE_AES. Refer to the documentation of
  *                              individual PAKE algorithms for more information.
  *                              See PAKE algorithms.
- * 
- *                              The key size in #attributes must be zero. The
+ *
+ *                              The key size in attributes must be zero. The
  *                              returned key size is always determined from the
  *                              PAKE shared secret.
- * 
+ *
  *                              The key permitted-algorithm policy is required for
  *                              keys that will be used for a cryptographic operation.
- * 
+ *
  *                              The key usage flags define what operations are permitted
  *                              with the key.
- * 
+ *
  *                              The key lifetime and identifier are required for a
  *                              persistent key.
- * 
+ *
  *                              \note This is an input parameter: it is not updated
  *                              with the final key attributes. The final attributes
  *                              of the new key can be queried by calling
  *                              psa_get_key_attributes() with the key’s identifier.
  * \param[out]      key         On success, an identifier for the newly created key.
  *                              #PSA_KEY_ID_NULL on failure.
- * 
+ *
  * \retval #PSA_SUCCESS
  *         Success. If the key is persistent, the key material and the key’s metadata have
  *         been saved to persistent storage.
@@ -1680,7 +1680,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * \retval #PSA_ERROR_ALREADY_EXISTS
  *         This is an attempt to create a persistent key, and there is already a persistent
  *         key with the given identifier.
- * 
+ *
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The following conditions can result in this error:
  *         The key type is not valid for output from this operation’s algorithm.
