@@ -1302,7 +1302,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  *
  * \param[in,out] operation     The operation object to set up. It must have been
  *                              initialized as per the documentation for
- *                              psa_pake_operation_t and not yet in use.
+ *                              #psa_pake_operation_t and not yet in use.
  * \param[in] password_key      Identifier of the key holding the password or a
  *                              value derived from the password. It must remain
  *                              valid until the operation terminates.
@@ -1312,45 +1312,45 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
  *                              individual PAKE algorithms for more information, see
  *                              PAKE algorithms.
  *
- *                              The key must permit the usage PSA_KEY_USAGE_DERIVE.
+ *                              The key must permit the usage #PSA_KEY_USAGE_DERIVE.
  * \param[in] cipher_suite      The cipher suite to use. A PAKE cipher suite fully
  *                              characterizes a PAKE algorithm, including the PAKE
  *                              algorithm.
  *
  *                              The cipher suite must be compatible with the key type
- *                              of password_key.
+ *                              of \p password_key.
  *
  * \retval #PSA_SUCCESS
  *         Success. The operation is now active.
  * \retval #PSA_ERROR_BAD_STATE
  *         The following conditions can result in this error:
  *         - The operation state is not valid: it must be inactive.
- *         - The library requires initializing by a call to psa_crypto_init().
+ *         - The library requires initializing by a call to #psa_crypto_init().
  * \retval #PSA_ERROR_INVALID_HANDLE
- *         password_key is not a valid key identifier.
+ *         \p password_key is not a valid key identifier.
  * \retval #PSA_ERROR_NOT_PERMITTED
- *         password_key does not have the PSA_KEY_USAGE_DERIVE flag, or it does
- *         not permit the algorithm in cipher_suite.
+ *         \p password_key does not have the #PSA_KEY_USAGE_DERIVE flag, or it does
+ *         not permit the algorithm in \p cipher_suite.
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The following conditions can result in this error:
- *         - The algorithm in cipher_suite is not a PAKE algorithm, or encodes an
+ *         - The algorithm in \p cipher_suite is not a PAKE algorithm, or encodes an
  *           invalid hash algorithm.
- *         - The PAKE primitive in cipher_suite is not compatible with the PAKE
+ *         - The PAKE primitive in \p cipher_suite is not compatible with the PAKE
  *           algorithm.
- *         - The key confirmation value in cipher_suite is not compatible with the
+ *         - The key confirmation value in \p cipher_suite is not compatible with the
  *           PAKE algorithm and primitive.
- *         - The key type or key size of password_key is not compatible with
- *           cipher_suite.
+ *         - The key type or key size of \p password_key is not compatible with
+ *           \p cipher_suite.
  * \retval #PSA_ERROR_NOT_SUPPORTED
  *         The following conditions can result in this error:
- *         - The algorithm in cipher_suite is not a supported PAKE algorithm, or
+ *         - The algorithm in \p cipher_suite is not a supported PAKE algorithm, or
  *           encodes an unsupported hash algorithm.
- *         - The PAKE primitive in cipher_suite is not supported or not compatible
+ *         - The PAKE primitive in \p cipher_suite is not supported or not compatible
  *           with the PAKE algorithm.
- *         - The key confirmation value in cipher_suite is not supported, or not
+ *         - The key confirmation value in \p cipher_suite is not supported, or not
  *           compatible, with the PAKE algorithm and primitive.
- *         - The key type or key size of password_key is not supported with
- *           cipher_suite.
+ *         - The key type or key size of \p password_key is not supported with
+ *           \p cipher_suite.
  * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
  * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
  * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
