@@ -6,7 +6,7 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "common.h"
+#include "fuzz_common.h"
 
 //4 Kb should be enough for every bug ;-)
 #define MAX_LEN 0x1000

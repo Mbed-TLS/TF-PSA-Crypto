@@ -22,7 +22,10 @@ add_dependencies(${programs_target} ${executables_with_common_c})
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     set(exe_sources
-        ${exe}.c)
+        ${exe}.c
+        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/drivers/platform_builtin_keys.c
+        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/*.c 
+	${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/test_helpers/*.c)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)
     endif()
@@ -30,15 +33,12 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
     # This emulates "if ( ... IN_LIST ... )" which becomes available in CMake 3.3
     list(FIND executables_with_common_c ${exe} exe_index)
     if(${exe_index} GREATER -1)
-        list(APPEND exe_sources common.c)
+        list(APPEND exe_sources fuzz_common.c)
     endif()
 
     add_executable(${exe} ${exe_sources})
     set_base_compile_options(${exe})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../../drivers/builtin/include/
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../../include/
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    target_include_directories(${exe} PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include)
 
     if (NOT FUZZINGENGINE_LIB)
         target_link_libraries(${exe} ${libs})
