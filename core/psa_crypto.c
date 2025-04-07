@@ -9243,9 +9243,9 @@ psa_status_t psa_pake_output(
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
     {
-            (void) step;
-            status = PSA_ERROR_NOT_SUPPORTED;
-            goto exit;
+        (void) step;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
     }
 
     LOCAL_OUTPUT_ALLOC(output_external, output_size, output);
@@ -9319,9 +9319,9 @@ psa_status_t psa_pake_input(
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
     {
-            (void) step;
-            status = PSA_ERROR_NOT_SUPPORTED;
-            goto exit;
+        (void) step;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
     }
 
     LOCAL_INPUT_ALLOC(input_external, input_length, input);
@@ -9341,8 +9341,8 @@ psa_status_t psa_pake_input(
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
     {
-            status = PSA_ERROR_NOT_SUPPORTED;
-            goto exit;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
     }
 
 exit:
