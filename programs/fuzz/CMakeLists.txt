@@ -23,9 +23,7 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     set(exe_sources
         ${exe}.c
-        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/drivers/platform_builtin_keys.c
-        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/*.c 
-	${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/test_helpers/*.c)
+        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/drivers/platform_builtin_keys.c)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)
     endif()
