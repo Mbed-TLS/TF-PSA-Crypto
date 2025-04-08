@@ -11,7 +11,7 @@ assignees: ''
 we ask that you report it privately to
 <mbed-tls-security@lists.trustedfirmware.org>
 so that we can prepare and release a fix before publishing the details.
-See [SECURITY.md](https://github.com/Mbed-TLS/mbedtls/blob/development/SECURITY.md).
+See [SECURITY.md](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/SECURITY.md).
 
 ### Summary
 
