@@ -19,9 +19,9 @@ See [SECURITY.md](https://github.com/Mbed-TLS/mbedtls/blob/development/SECURITY.
 
 ### System information
 
-Mbed TLS version (number or commit id): 
+TF-PSA-Crypto version (number or commit id): 
 Operating system and version: 
-Configuration (if not default, please attach `mbedtls_config.h`): 
+Configuration (if not default, please attach `crypto_config.h`): 
 Compiler and options (if you used a pre-built binary, please indicate how you obtained it): 
 Additional environment information: 
 

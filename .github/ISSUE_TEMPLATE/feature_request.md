@@ -13,5 +13,5 @@ assignees: ''
 
 ### Justification
 
-Mbed TLS needs this because 
+TF-PSA-Crypto needs this because 
 
