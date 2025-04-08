@@ -17,6 +17,7 @@
 #endif
 
 #include "psa_util_internal.h"
+#include "pk_internal.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 
