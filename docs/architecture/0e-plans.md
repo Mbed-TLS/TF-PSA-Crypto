@@ -1086,7 +1086,9 @@ From the perspective of the TF-PSA-Crypto build, there are three levels of OID i
 2. (1) plus the core set for X.509 (subject to available cryptographic mechanisms where relevant).
 3. (2) plus the extra data for `mbedtls_x509_crt_info()` and friends.
 
-We either need public compilation options with this level of inclusion, or to move the X.509 parts of `oid.c` to the X.509 library (obviously preferable, but requiring more upfront work). TODO
+We either need public compilation options with this level of inclusion, or to move the X.509 parts of `oid.c` to the X.509 library (obviously preferable, but requiring more upfront work).
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10124): move the X.509 parts of `oid.c` to the X.509 library.
 
 ### Changes to option implications
 
