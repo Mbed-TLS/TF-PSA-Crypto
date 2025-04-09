@@ -444,27 +444,6 @@ extern "C" {
 #endif
 
 /**
- * \brief          Translate an X.509 extension OID into local values
- *
- * \param oid      OID to use
- * \param ext_type place to store the extension type
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_x509_ext_type(const mbedtls_asn1_buf *oid, int *ext_type);
-
-/**
- * \brief          Translate an X.509 attribute type OID into the short name
- *                 (e.g. the OID for an X520 Common Name into "CN")
- *
- * \param oid      OID to use
- * \param short_name    place to store the string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_attr_short_name(const mbedtls_asn1_buf *oid, const char **short_name);
-
-/**
  * \brief          Translate PublicKeyAlgorithm OID into pk_type
  *
  * \param oid      OID to use
@@ -535,41 +514,6 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
 /**
- * \brief          Translate SignatureAlgorithm OID into md_type and pk_type
- *
- * \param oid      OID to use
- * \param md_alg   place to store message digest algorithm
- * \param pk_alg   place to store public key algorithm
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_sig_alg(const mbedtls_asn1_buf *oid,
-                            mbedtls_md_type_t *md_alg, mbedtls_pk_type_t *pk_alg);
-
-/**
- * \brief          Translate SignatureAlgorithm OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_sig_alg_desc(const mbedtls_asn1_buf *oid, const char **desc);
-
-/**
- * \brief          Translate md_type and pk_type into SignatureAlgorithm OID
- *
- * \param md_alg   message digest algorithm
- * \param pk_alg   public key algorithm
- * \param oid      place to store ASN.1 OID string pointer
- * \param olen     length of the OID
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
-                                   const char **oid, size_t *olen);
-
-/**
  * \brief          Translate hmac algorithm OID into md_type
  *
  * \param oid      OID to use
@@ -588,28 +532,6 @@ int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_h
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_md_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg);
-
-#if 1 /* OID_INFO_STRINGS */
-/**
- * \brief          Translate Extended Key Usage OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_extended_key_usage(const mbedtls_asn1_buf *oid, const char **desc);
-#endif /* OID_INFO_STRINGS */
-
-/**
- * \brief          Translate certificate policies OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_certificate_policies(const mbedtls_asn1_buf *oid, const char **desc);
 
 /**
  * \brief          Translate md_type into hash algorithm OID
