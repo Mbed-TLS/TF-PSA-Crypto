@@ -20,11 +20,17 @@
 
 /**
  * \brief Base OID descriptor structure
+ *
+ * \note In Mbed TLS, the preprocessor symbol \c OID_INFO_STRINGS is defined
+ *       if textual information is desired, i.e. if the user configuration
+ *       option \c MBEDTLS_X509_REMOVE_INFO is disabled.
+ *
+ *       In TF-PSA-Crypto, \c OID_INFO_STRINGS is never enabled.
  */
 typedef struct mbedtls_oid_descriptor_t {
     const char *MBEDTLS_PRIVATE(asn1);               /*!< OID ASN.1 representation       */
     size_t MBEDTLS_PRIVATE(asn1_len);                /*!< length of asn1                 */
-#if 1 /* OID_INFO_STRINGS */
+#if defined(OID_INFO_STRINGS)
     const char *MBEDTLS_PRIVATE(name);               /*!< official name (e.g. from RFC)  */
     const char *MBEDTLS_PRIVATE(description);        /*!< human friendly description     */
 #endif
@@ -38,7 +44,7 @@ typedef struct mbedtls_oid_descriptor_t {
 /*
  * Macro to generate mbedtls_oid_descriptor_t
  */
-#if 1 /* OID_INFO_STRINGS */
+#if defined(OID_INFO_STRINGS)
 #define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s), name, description }
 #define NULL_OID_DESCRIPTOR                   { NULL, 0, NULL, NULL }
 #else
@@ -69,7 +75,7 @@ typedef struct mbedtls_oid_descriptor_t {
         return NULL;                                                 \
     }
 
-#if 1 /* OID_INFO_STRINGS */
+#if defined(OID_INFO_STRINGS)
 /*
  * Macro to generate a function for retrieving a single attribute from the
  * descriptor of an mbedtls_oid_descriptor_t wrapper.
