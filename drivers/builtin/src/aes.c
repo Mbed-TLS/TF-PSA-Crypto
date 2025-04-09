@@ -1834,6 +1834,7 @@ int mbedtls_aes_self_test(int verbose)
                 mbedtls_printf("  AES note: built-in implementation.\n");
                 break;
             case MBEDTLS_AES_IMP_UNKNOWN:
+                break;
         }
     }
 
