@@ -21,6 +21,8 @@
 
 #include "mbedtls/platform.h"
 
+#include "oid_definition_helpers.h"
+
 /*
  * Macro to automatically add the size of #define'd OIDs
  */
