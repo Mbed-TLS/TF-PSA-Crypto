@@ -42,17 +42,6 @@ typedef struct mbedtls_oid_descriptor_t {
 #define ADD_LEN(s)      s, MBEDTLS_OID_SIZE(s)
 
 /*
- * Macro to generate mbedtls_oid_descriptor_t
- */
-#if defined(OID_INFO_STRINGS)
-#define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s), name, description }
-#define NULL_OID_DESCRIPTOR                   { NULL, 0, NULL, NULL }
-#else
-#define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s) }
-#define NULL_OID_DESCRIPTOR                   { NULL, 0 }
-#endif /* OID_INFO_STRINGS */
-
-/*
  * Macro to generate an internal function for oid_XXX_from_asn1() (used by
  * the other functions)
  */
