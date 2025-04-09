@@ -1,6 +1,6 @@
 Changes
    * Added the `key_confirmation` field to the PAKE cipher suite to conform to
-     the standard PAKE interface
+     PSA API 1.2 PAKE extension
    * Added the `psa_pake_cs_get_key_confirmation()` function which retrieves
      the value from a cipher suite, the `psa_pake_cs_set_key_confirmation()`
      function which declares the value for a cipher suite
