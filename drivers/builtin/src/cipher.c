@@ -1576,7 +1576,7 @@ static int mbedtls_cipher_aead_decrypt(mbedtls_cipher_context_t *ctx,
 
 #if defined(MBEDTLS_CIPHER_MODE_AEAD)
 /*
- * Packet-oriented encryption for AEAD/NIST_KW: public function.
+ * Packet-oriented encryption for AEAD: public function.
  */
 int mbedtls_cipher_auth_encrypt_ext(mbedtls_cipher_context_t *ctx,
                                     const unsigned char *iv, size_t iv_len,
@@ -1598,7 +1598,7 @@ int mbedtls_cipher_auth_encrypt_ext(mbedtls_cipher_context_t *ctx,
 }
 
 /*
- * Packet-oriented decryption for AEAD/NIST_KW: public function.
+ * Packet-oriented decryption for AEAD: public function.
  */
 int mbedtls_cipher_auth_decrypt_ext(mbedtls_cipher_context_t *ctx,
                                     const unsigned char *iv, size_t iv_len,
