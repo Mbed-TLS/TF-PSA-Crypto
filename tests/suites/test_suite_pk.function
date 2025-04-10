@@ -1073,18 +1073,15 @@ exit:
 void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
                                 int mod, char *input_N,
                                 char *input_E, data_t *result_str,
-                                int pk_type, int mgf1_hash_id,
-                                int salt_len, int sig_len,
+                                int pk_type, int sig_len,
                                 int result)
 {
     mbedtls_rsa_context *rsa;
     mbedtls_pk_context pk;
-    mbedtls_pk_rsassa_pss_options pss_opts;
-    void *options;
     int ret;
 
     mbedtls_pk_init(&pk);
-    MD_OR_USE_PSA_INIT();
+    USE_PSA_INIT();
 
     TEST_ASSERT(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)) == 0);
     rsa = mbedtls_pk_rsa(pk);
@@ -1093,21 +1090,10 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
     TEST_ASSERT(mbedtls_test_read_mpi(&rsa->N, input_N) == 0);
     TEST_ASSERT(mbedtls_test_read_mpi(&rsa->E, input_E) == 0);
 
-
-    if (mgf1_hash_id < 0) {
-        options = NULL;
-    } else {
-        options = &pss_opts;
-
-        pss_opts.mgf1_hash_id = mgf1_hash_id;
-        pss_opts.expected_salt_len = salt_len;
-    }
-
-    ret = mbedtls_pk_verify_ext(pk_type, options, &pk,
+    ret = mbedtls_pk_verify_ext(pk_type, NULL, &pk,
                                 digest, message_str->x, message_str->len,
                                 result_str->x, sig_len);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (result == MBEDTLS_ERR_RSA_INVALID_PADDING) {
         /* Mbed TLS distinguishes "invalid padding" from "valid padding but
          * the rest of the signature is invalid". This has little use in
@@ -1118,16 +1104,15 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
          * PSA or the Mbed TLS API, depending on the PSS options used.
          * So, it may return either INVALID_PADDING or INVALID_SIGNATURE.
          */
+        fprintf(stderr, "result=%d, ret=%d\n", result, ret);
         TEST_ASSERT(ret == result || ret == MBEDTLS_ERR_RSA_VERIFY_FAILED);
-    } else
-#endif
-    {
+    } else {
         TEST_EQUAL(ret, result);
     }
 
 exit:
     mbedtls_pk_free(&pk);
-    MD_OR_USE_PSA_DONE();
+    USE_PSA_DONE();
 }
 /* END_CASE */
 
@@ -1608,7 +1593,7 @@ void pk_rsa_overflow()
 #if defined(MBEDTLS_PKCS1_V21)
     TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, NULL, &pk,
                                      MBEDTLS_MD_NONE, hash, hash_len, sig, sig_len),
-               MBEDTLS_ERR_PK_BAD_INPUT_DATA);
+               MBEDTLS_ERR_PK_INVALID_ALG);
 #endif /* MBEDTLS_PKCS1_V21 */
 
     TEST_EQUAL(mbedtls_pk_verify(&pk, MBEDTLS_MD_NONE, hash, hash_len,
@@ -1803,8 +1788,6 @@ void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     unsigned char hash[MBEDTLS_MD_MAX_SIZE];
     size_t hash_len = mbedtls_md_get_size_from_type(md_alg);
-    void const *options = NULL;
-    mbedtls_pk_rsassa_pss_options rsassa_pss_options;
     memset(hash, 0x2a, sizeof(hash));
     memset(sig, 0, sizeof(sig));
 
@@ -1816,13 +1799,7 @@ void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
     TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
                                    sig, sizeof(sig), &sig_len), 0);
 
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        rsassa_pss_options.mgf1_hash_id = md_alg;
-        TEST_ASSERT(hash_len != 0);
-        rsassa_pss_options.expected_salt_len = hash_len;
-        options = (const void *) &rsassa_pss_options;
-    }
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, options, &pk, md_alg,
+    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
 exit:
     mbedtls_pk_free(&pk);
@@ -1843,8 +1820,6 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     unsigned char hash[PSA_HASH_MAX_SIZE];
     psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
     size_t hash_len = PSA_HASH_LENGTH(psa_md_alg);
-    void const *options = NULL;
-    mbedtls_pk_rsassa_pss_options rsassa_pss_options;
     int ret;
 
     mbedtls_pk_init(&pk);
@@ -1895,11 +1870,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
 
     /* verify_ext() is not supported when using an opaque context. */
     if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        mbedtls_pk_rsassa_pss_options pss_opts = {
-            .mgf1_hash_id = md_alg,
-            .expected_salt_len = MBEDTLS_RSA_SALT_LEN_ANY,
-        };
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pss_opts, &pk, md_alg,
+        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
                                          hash, hash_len, sig, sig_len),
                    MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
     } else {
@@ -1916,13 +1887,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
                                 mbedtls_pk_info_from_type(pk_type)), 0);
     TEST_EQUAL(mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(pk), pkey_start, pkey_len), 0);
 
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        rsassa_pss_options.mgf1_hash_id = md_alg;
-        TEST_ASSERT(hash_len != 0);
-        rsassa_pss_options.expected_salt_len = hash_len;
-        options = (const void *) &rsassa_pss_options;
-    }
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, options, &pk, md_alg,
+    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
 
 exit:
