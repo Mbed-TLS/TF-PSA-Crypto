@@ -67,7 +67,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
                                   unsigned char *output, size_t output_size, size_t *output_length);
 
 /**
- * \brief           This function decrypts a buffer using key wrapping.
+ * \brief                    This function decrypts a buffer using key wrapping.
  *
  * \param key                The key wrapping PSA key ID to use for encryption. The key should have the following attributes:
  *                               - type: PSA_KEY_TYPE_AES
