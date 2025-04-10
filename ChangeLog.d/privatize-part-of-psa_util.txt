@@ -1,0 +1,2 @@
+API changes
+   * Privatize the functions mbedtls_ecc_group_to_psa and mbedtls_ecc_group_from_psa.
