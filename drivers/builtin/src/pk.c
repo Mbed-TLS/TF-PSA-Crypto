@@ -1081,9 +1081,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
         return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
     }
 
-#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V21)
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    const mbedtls_pk_rsassa_pss_options *pss_opts;
+#if defined(MBEDTLS_RSA_C)
 
 #if SIZE_MAX > UINT_MAX
     if (md_alg == MBEDTLS_MD_NONE && UINT_MAX < hash_len) {
@@ -1091,89 +1089,59 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
     }
 #endif
 
-    if (options == NULL) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    unsigned char buf[MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES];
+    unsigned char *p;
+    int key_len;
+    size_t signature_length;
+    psa_status_t status = PSA_ERROR_DATA_CORRUPT;
+    psa_status_t destruction_status = PSA_ERROR_DATA_CORRUPT;
+
+    psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_algorithm_t psa_sig_alg = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
+    p = buf + sizeof(buf);
+    key_len = mbedtls_rsa_write_pubkey(mbedtls_pk_rsa(*ctx), buf, &p);
+
+    if (key_len < 0) {
+        return key_len;
     }
 
-    pss_opts = (const mbedtls_pk_rsassa_pss_options *) options;
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
+    psa_set_key_algorithm(&attributes, psa_sig_alg);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-    if (pss_opts->mgf1_hash_id == md_alg) {
-        unsigned char buf[MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES];
-        unsigned char *p;
-        int key_len;
-        size_t signature_length;
-        psa_status_t status = PSA_ERROR_DATA_CORRUPT;
-        psa_status_t destruction_status = PSA_ERROR_DATA_CORRUPT;
-
-        psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-        mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-        psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-        psa_algorithm_t psa_sig_alg = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
-        p = buf + sizeof(buf);
-        key_len = mbedtls_rsa_write_pubkey(mbedtls_pk_rsa(*ctx), buf, &p);
-
-        if (key_len < 0) {
-            return key_len;
-        }
-
-        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
-        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
-        psa_set_key_algorithm(&attributes, psa_sig_alg);
-
-        status = psa_import_key(&attributes,
-                                buf + sizeof(buf) - key_len, key_len,
-                                &key_id);
-        if (status != PSA_SUCCESS) {
-            psa_destroy_key(key_id);
-            return PSA_PK_TO_MBEDTLS_ERR(status);
-        }
-
-        /* This function requires returning MBEDTLS_ERR_RSA_VERIFY_FAILED
-         * on a valid signature with trailing data in a buffer, but
-         * mbedtls_psa_rsa_verify_hash requires the sig_len to be exact,
-         * so for this reason the passed sig_len is overwritten. Smaller
-         * signature lengths should not be accepted for verification. */
-        signature_length = sig_len > mbedtls_pk_get_len(ctx) ?
-                           mbedtls_pk_get_len(ctx) : sig_len;
-        status = psa_verify_hash(key_id, psa_sig_alg, hash,
-                                 hash_len, sig, signature_length);
-        destruction_status = psa_destroy_key(key_id);
-
-        if (status == PSA_SUCCESS && sig_len > mbedtls_pk_get_len(ctx)) {
-            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
-        }
-
-        if (status == PSA_SUCCESS) {
-            status = destruction_status;
-        }
-
-        return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-    } else
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-    {
-        if (sig_len < mbedtls_pk_get_len(ctx)) {
-            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
-        }
-
-        ret = mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_pk_rsa(*ctx),
-                                                md_alg, (unsigned int) hash_len, hash,
-                                                pss_opts->mgf1_hash_id,
-                                                pss_opts->expected_salt_len,
-                                                sig);
-        if (ret != 0) {
-            return ret;
-        }
-
-        if (sig_len > mbedtls_pk_get_len(ctx)) {
-            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
-        }
-
-        return 0;
+    status = psa_import_key(&attributes,
+                            buf + sizeof(buf) - key_len, key_len,
+                            &key_id);
+    if (status != PSA_SUCCESS) {
+        psa_destroy_key(key_id);
+        return PSA_PK_TO_MBEDTLS_ERR(status);
     }
+
+    /* This function requires returning MBEDTLS_ERR_RSA_VERIFY_FAILED
+     * on a valid signature with trailing data in a buffer, but
+     * mbedtls_psa_rsa_verify_hash requires the sig_len to be exact,
+     * so for this reason the passed sig_len is overwritten. Smaller
+     * signature lengths should not be accepted for verification. */
+    signature_length = sig_len > mbedtls_pk_get_len(ctx) ?
+                       mbedtls_pk_get_len(ctx) : sig_len;
+    status = psa_verify_hash(key_id, psa_sig_alg, hash,
+                             hash_len, sig, signature_length);
+    destruction_status = psa_destroy_key(key_id);
+
+    if (status == PSA_SUCCESS && sig_len > mbedtls_pk_get_len(ctx)) {
+        return MBEDTLS_ERR_RSA_VERIFY_FAILED;
+    }
+
+    if (status == PSA_SUCCESS) {
+        status = destruction_status;
+    }
+
+    return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
 #else
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V21 */
+#endif /* MBEDTLS_RSA_C */
 }
 
 /*

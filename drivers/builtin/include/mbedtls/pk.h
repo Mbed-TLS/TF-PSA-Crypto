@@ -748,11 +748,9 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  *
  * \note            md_alg may be MBEDTLS_MD_NONE, only if hash_len != 0
  *
- * \note            If type is MBEDTLS_PK_RSASSA_PSS, then options must point
- *                  to a mbedtls_pk_rsassa_pss_options structure,
- *                  otherwise it must be NULL. Note that the salt length is not
- *                  verified as contexes have PSA_ALG_RSA_PSS_ANY_SALT as default
- *                  and that is the only valid value.
+ * \note            \p options parameter is kept for backward compatibility.
+ *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
+ *                  be NULL, otherwise it's just ignored.
  */
 int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
