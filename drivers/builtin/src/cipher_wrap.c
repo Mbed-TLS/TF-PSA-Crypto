@@ -97,9 +97,6 @@ enum mbedtls_cipher_base_index {
 #if defined(MBEDTLS_GCM_C) && defined(MBEDTLS_CAMELLIA_C)
     MBEDTLS_CIPHER_BASE_INDEX_GCM_CAMELLIA,
 #endif
-#if defined(MBEDTLS_NIST_KW_C)
-    MBEDTLS_CIPHER_BASE_INDEX_KW_AES,
-#endif
 #if defined(MBEDTLS_CIPHER_NULL_CIPHER)
     MBEDTLS_CIPHER_BASE_INDEX_NULL_BASE,
 #endif
