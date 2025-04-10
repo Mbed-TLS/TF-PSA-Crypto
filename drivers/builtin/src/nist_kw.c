@@ -82,7 +82,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
      */
     if(psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
         ret = PSA_ERROR_NOT_PERMITTED;
-	goto cleanup;
+        goto cleanup;
     }
 
     ret = psa_cipher_encrypt_setup(&wrap_operation, key, PSA_ALG_ECB_NO_PADDING);
