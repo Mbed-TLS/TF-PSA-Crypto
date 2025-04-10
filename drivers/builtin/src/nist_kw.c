@@ -75,7 +75,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
     }
 
     /*
-     * TF-PSA-CRYPTO is able to check the algorithm and usage as this is specified
+     * PSA API are able to check the algorithm and usage as this is specified
      * when the key is imported in the parameters. It is however unable to verify the
      * key type as this is a requirement of the NIST KW specification, therefore add
      * a check here to ensure the correct key type is used.
@@ -318,7 +318,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     }
 
     /*
-     * TF-PSA-CRYPTO is able to check the algorithm and usage as this is specified
+     * PSA API are able to check the algorithm and usage as this is specified
      * when the key is imported in the parameters. It is however unable to verify the
      * key type as this is a requirement of the NIST KW specification, therefore add
      * a check here to ensure the correct key type is used.
