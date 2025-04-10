@@ -80,7 +80,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
      * key type as this is a requirement of the NIST KW specification, therefore add
      * a check here to ensure the correct key type is used.
      */
-    if(psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
+    if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
         ret = PSA_ERROR_NOT_PERMITTED;
         goto cleanup;
     }
