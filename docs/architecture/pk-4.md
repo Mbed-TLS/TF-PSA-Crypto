@@ -61,6 +61,65 @@ In this document, a ***private*** interface is one that is not documented. Appli
 
 An ***internal*** interface is only usable inside TF-PSA-Crypto.
 
+## Use case studies
+
+### RSA in TLS
+
+#### How Mbed TLS currently uses RSA
+
+In Mbed TLS 4.x, TLS 1.2 cipher suites using RSA encryption are not supported. Thus we only care about RSA as a signature algorithm. This subsection studies how the TLS subsystem uses RSA.
+
+TLS 1.2 normally uses PKCS#1v1.5. However, if an Mbed TLS client advertizes support for both TLS 1.2 and 1.3 and advertizes support for PSS-based signature algorithms, some servers may select PSS in TLS 1.2, and the Mbed TLS client supports that. In this case, the TLS 1.2 `ssl_parse_server_key_exchange()` checks an RSA-PSS signature using a public key that it finds as a `mbedtls_pk_context` in the peer's certificate. The public key is only used for a single algorithm, but the algorithm is not yet known when the PK object is created.
+
+TLS 1.3 has a verification mechanism with the same data flow in `ssl_tls13_parse_certificate_verify()`. In TLS 1.3, this is done both on the client side and on the server side.
+
+TLS 1.3 servers may need to produce either a PKCS#1v1.5 or a PSS signature, based on which signature algorithm the server selects among those offered by the client. The private key is a `mbedtls_pk_context` object passed to `mbedtls_conf_own_cert()`. The SSL configuration stores a chained list of key/certificate pairs, with no length limit. The same private key may be used a different RSA algorithm in each connection. The server commits to a private key and to a certificate chain at the same time, based on the keys it has available and their compatibility with the offered signature algorithms.
+
+#### Dual-algorithm RSA verification
+
+In both TLS and X.509, we want the following control flow:
+
+1. Parse a certificate, creating a PK context containing a public key.
+2. Determine which signature verification algorithm to use. This information does not come from the certiciate.
+3. Verify a signature according to the chosen algorithm.
+
+In Mbed TLS 3.6, the parsing step always results in an object where the key is public present in plain text (either in PSA import format or as a representation involving MPI objects). The verification step either calls built-in code or imports the key into PSA. In the latter case, it can freely choose the algorithm. Even if we change the data flow later to create a PSA key sooner, it will always be possible to export the public key, thus we do not need to take any particular precautions for future-proofing.
+
+The ideal interface here is something similar to `mbedtls_pk_verify_ext()`, with a free selection of the verification algorithm at the time of verification.
+
+It would be possible to create multiple PK contexts after parsing, one with each potential signature algorithm. However there is no incentive to do so. It would add complexity and memory consumption for no benefit.
+
+#### Dual-algorithm RSA signature
+
+The control flow for a TLS server using an RSA private key is as follows:
+
+1. Construct a PK context around the private key. There are two ways:
+
+    * Parse a key file. Optionally, change some metadata associated with the key.
+    * Wrap an existing PSA key (opaque PK context). There is no way to change its policy.
+
+2. Pass the PK context alongside a matching certificate to `mbedtls_ssl_conf_own_cert()`. Note that the same certificate is commonly used with the same key for both PKCS#1v1.5 and PSS.
+
+3. Establish a connection and reach the point in the construction of the ServerKeyExchange message where the key in question is chosen, with a signature algorithm that can indicate either PKCS#1v1.5 or PSS.
+
+4. Use the chosen algorithm to produce a signature.
+
+In order to make it possible to use the same RSA key with both algorithm, some action is necessary at one of these steps.
+
+At step 1, in Mbed TLS 3.6, RSA keys resulting from parsing can always be used for both algorithms, but this is not necessarily the case for opaque keys. (It can only be the case if the PSA key uses the “enrollment algorithm” policy feature, which is a proprietary extension of TF-PSA-Crypto that is not supported on some platforms such as TF-M.) Thus, if we want a single workflow for all cases, it has to be a **strict workflow**, where the application using TLS must pass two PK contexts if it wants to allow both algorithms. In the case of a PK context resulting from parsing, there must be some indication of which RSA algorithm will be chosen (this is to be documented in the PK module — parsing an RSA key defaults to PKCS#1v1.5). In this workflow, the signature operation always involves the algorithm associated with the PK context: there is no analog of `mbedtls_pk_sign_ext()`.
+
+We may also consider a **duplication workflow**. In this workflow, at step 2, when `mbedtls_ssl_conf_own_cert()` sees a PK context that could be used for both algorithms (e.g. a PK context that wraps an exportable key, or a PK context that wraps a key whose policy allows both algorithms), it adds two entries to the key/certificate list: the original PK object, and a copied object with the other protocol. This seems complicated, especially with respect to resource management (the SSL configuration object does not own the keys and certificates, but it would have to own the copy made here). Hence we will not consider this workflow further.
+
+Steps 3 and 4 are performed in near succession for each connection, therefore there is no meaningful difference between an action taken at step 3 or step 4, and we will consider them together. Step 3 needs to determine whether the key is compatible with a given signature algorithm offered by the client. Therefore it must be able to tell when a key allows both algorithms. Then step 4 needs to use the chosen signature algorithm, using a function similar to `mbedtls_pk_sign_ext()`. Depending on how the PK context was constructed, this may be done in different ways (just pass the right algorithm to `psa_sign_hash()` if the PSA key allows it, pass the right algorithm when importing a key that wasn't in PSA already, copy the key, etc.). This is a **cheating workflow**. In this workflow, it is difficult to explain when a PK context allows both algorithms, in part because it is implementation-dependent.
+
+Conclusion: the **strict workflow** seems significantly easier to implement. However it comes with a small cost in the application code.
+
+#### How PK can support the strict workflow
+
+Note that the strict workflow assumes that a PK context containing an RSA key has a single associated RSA flavor. We may decide that for a PSA-based context, this is the PSA key's primary algorithm policy. However, this would prevent from leveraging the enrollment algorithm policy feature, which means extra key duplication. Hence it should be possible to select the RSA algorithm associated with a given PK context after parsing it.
+
+TODO: So is this just [`mbedtls_pk_set_algorithm()`](#context-metadata)?
+
 ## API elements
 
 ### PK context type
