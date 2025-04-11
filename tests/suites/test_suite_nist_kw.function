@@ -1,6 +1,5 @@
 /* BEGIN_HEADER */
 #include "mbedtls/nist_kw.h"
-#
 static int setup_psa_key(int usage,
                          int alg,
                          int key_type,
