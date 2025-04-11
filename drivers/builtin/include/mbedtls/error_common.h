@@ -62,8 +62,6 @@ extern "C" {
  * \param low       Low-level error code, i.e. error code returned by
  *                  a lower-level function.
  *                  This can be 0 to just return a high-level error.
- * \param file      file where this error code combination occurred.
- * \param line      line where this error code combination occurred.
  */
 static inline int mbedtls_error_add(int high, int low)
 {
