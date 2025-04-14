@@ -24,6 +24,29 @@
 
 #define ENTROPY_MAX_LOOP    256     /**< Maximum amount to loop before error */
 
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+
+MBEDTLS_STATIC_TESTABLE
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
+{
+    int ret;
+    size_t entropy_content = 0;
+    (void) data;
+
+    ret = mbedtls_platform_get_entropy_alt(output, len, olen, &entropy_content);
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (entropy_content < (8 * (*olen))) {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    return 0;
+}
+
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+
 void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
 {
     ctx->source_count = 0;
