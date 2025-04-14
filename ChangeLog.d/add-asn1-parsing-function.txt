@@ -1,9 +1,6 @@
 Features
-   * Add a new function, mbedtls_asn1_get_integer(), which parses an
-     ASN.1 BER/DER-encoded integer and returns a pointer to the start of
-     its big-endian encoded value and its length. This allows the parsing
-     of arbitrary-precision integers without using the legacy mbedtls_mpi
-     type.
+   * The new function mbedtls_asn1_get_integer() parses an integer into a byte
+     array. It replaces mbedtls_asn1_get_mpi().
 
 Removals
    * Remove the function mbedtls_asn1_get_mpi() from the public interface.
