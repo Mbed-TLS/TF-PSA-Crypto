@@ -1074,6 +1074,7 @@ int mbedtls_mpi_gen_prime(mbedtls_mpi *X, size_t nbits, int flags,
 /**
  * \brief       Retrieve an integer ASN.1 tag and its value.
  *              Updates the pointer to immediately behind the full tag.
+ *              Legacy function, which is now for internal use only.
  *
  * \param p     On entry, \c *p points to the start of the ASN.1 element.
  *              On successful completion, \c *p points to the first byte
