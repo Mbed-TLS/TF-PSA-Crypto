@@ -1434,7 +1434,7 @@ exit:
  * it with mbedtls_mpi_core_read_be(). */
 void asn1_get_and_parse_integer(const data_t *input,
                                 int expected_result,
-                                const char *output_arg)
+                                const char *expected_output)
 {
     int ret;
     unsigned char *p = input->x;
@@ -1446,8 +1446,8 @@ void asn1_get_and_parse_integer(const data_t *input,
 
     mbedtls_mpi_uint *integer = NULL;
 
-    mbedtls_mpi_uint *output = NULL;
-    size_t output_limbs = 0;
+    mbedtls_mpi_uint *expected = NULL;
+    size_t expected_limbs = 0;
 
     ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
                                    &integer_head, &integer_length);
@@ -1459,25 +1459,25 @@ void asn1_get_and_parse_integer(const data_t *input,
 
         /* Calculate the number of limbs required (int ceil operation) */
         TEST_ASSERT(integer_length > 0);
-        size_t limbs = 1 + (integer_length - 1) / sizeof(mbedtls_mpi_uint);
+        size_t limbs = CHARS_TO_LIMBS(integer_length);
         TEST_CALLOC(integer, limbs);
 
         ret = mbedtls_mpi_core_read_be(integer, limbs,
                                        integer_head, integer_length);
         TEST_EQUAL(ret, 0);
 
-        ret = mbedtls_test_read_mpi_core(&output, &output_limbs,
-                                         output_arg);
+        ret = mbedtls_test_read_mpi_core(&expected, &expected_limbs,
+                                         expected_output);
         TEST_EQUAL(ret, 0);
 
         /* Check that the integer we get is the same as the one we
          * expected to get. */
         TEST_MEMORY_COMPARE(integer, limbs * sizeof(*integer),
-                            output, output_limbs * sizeof(*output));
+                            expected, expected_limbs * sizeof(*expected));
     }
 
 exit:
     mbedtls_free(integer);
-    mbedtls_free(output);
+    mbedtls_free(expected);
 }
 /* END_CASE */
