@@ -22,12 +22,22 @@ int main(int argc, char **argv)
         return 1;
     }
     //opens the file, get its size, and reads it into a buffer
+    #ifdef WIN32 
+    errno_t err = 0;
+    err = fopen_s( &fp, argv[1], "rb")
+    if (err != 0) {
+        fprintf(stderr, "%s: Error in fopen\n", argv0);
+        return 2;
+    }
+    #else
     fp = fopen(argv[1], "rb");
     if (fp == NULL) {
         fprintf(stderr, "%s: Error in fopen\n", argv0);
         perror(argv[1]);
         return 2;
     }
+    #endif /* WIN32*/
+
     if (fseek(fp, 0L, SEEK_END) != 0) {
         fprintf(stderr, "%s: Error in fseek(SEEK_END)\n", argv0);
         perror(argv[1]);
