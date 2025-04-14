@@ -1,9 +1,12 @@
 Removals
-   * Previously deprecated build symbol `MBEDTLS_ENTROPY_HARDWARE_ALT` is
-     removed.
+   * Previously deprecated build symbol MBEDTLS_ENTROPY_HARDWARE_ALT is
+     removed. See documentation of MBEDTLS_PLATFORM_GET_ENTROPY_ALT as
+     replacement of what should be used instead.
 
 Features
-   * The new symbol `MBEDTLS_PLATFORM_GET_ENTROPY_ALT` is added to allow the
-     defintion of a custom callback function named
-     `mbedtls_platform_get_entropy_alt()` which allows to gather entropy
-     data from some hardware device.
+   * To supply a platform-specific entropy source, define the compilation option
+     MBEDTLS_PLATFORM_GET_ENTROPY_ALT and provide the callback function
+     mbedtls_platform_get_entropy_alt(). This function should typically access
+     a TRNG ("true hardware random generator") device on bare-metal platforms,
+     or call an operating system function to obtain cryptographic-quality random
+     data.
