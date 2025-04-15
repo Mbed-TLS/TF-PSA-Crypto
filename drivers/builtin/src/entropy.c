@@ -24,29 +24,6 @@
 
 #define ENTROPY_MAX_LOOP    256     /**< Maximum amount to loop before error */
 
-#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
-
-MBEDTLS_STATIC_TESTABLE
-int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
-{
-    int ret;
-    size_t entropy_content = 0;
-    (void) data;
-
-    ret = mbedtls_platform_get_entropy_alt(output, len, olen, &entropy_content);
-    if (ret != 0) {
-        return ret;
-    }
-
-    if (entropy_content < (8 * (*olen))) {
-        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
-    }
-
-    return 0;
-}
-
-#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
-
 void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
 {
     ctx->source_count = 0;
@@ -63,16 +40,15 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
      *           when adding more strong entropy sources here. */
 
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
-#if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
-    mbedtls_entropy_add_source(ctx, mbedtls_platform_entropy_poll, NULL,
-                               MBEDTLS_ENTROPY_MIN_PLATFORM,
-                               MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif
 #if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
     mbedtls_entropy_add_source(ctx, mbedtls_hardware_poll, NULL,
                                MBEDTLS_ENTROPY_MIN_HARDWARE,
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif
+#else /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+    mbedtls_entropy_add_source(ctx, mbedtls_platform_entropy_poll, NULL,
+                               MBEDTLS_ENTROPY_MIN_PLATFORM,
+                               MBEDTLS_ENTROPY_SOURCE_STRONG);
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
     mbedtls_entropy_add_source(ctx, mbedtls_nv_seed_poll, NULL,
                                MBEDTLS_ENTROPY_BLOCK_SIZE,

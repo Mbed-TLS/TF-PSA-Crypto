@@ -25,12 +25,9 @@ component_tf_psa_crypto_build_no_std_function () {
 component_tf_psa_crypto_platform_get_entropy_alt()
 {
     msg "build: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
-    # Keep hardware polling as the only source for entropy
+    # Use hardware polling as the only source for entropy
     scripts/config.py set MBEDTLS_PLATFORM_GET_ENTROPY_ALT
     scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
-    scripts/config.py set MBEDTLS_NO_PLATFORM_ENTROPY
-    # Test hooks is required to access mbedtls_hardware_poll() from tests
-    scripts/config.py set MBEDTLS_TEST_HOOKS
 
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=gcc "$TF_PSA_CRYPTO_ROOT_DIR"

@@ -24,13 +24,33 @@
 
 #include "mbedtls/platform.h"
 
-#if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
+{
+    int ret;
+    size_t entropy_content = 0;
+    (void) data;
+
+    ret = mbedtls_platform_get_entropy_alt(output, len, olen, &entropy_content);
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (entropy_content < (8 * (*olen))) {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    return 0;
+}
+
+#else /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 
 #if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
     !defined(__APPLE__) && !defined(_WIN32) && !defined(__QNXNTO__) && \
     !defined(__HAIKU__) && !defined(__midipix__) && !defined(__MVS__)
 #error \
-    "Platform entropy sources only work on Unix and Windows, see MBEDTLS_NO_PLATFORM_ENTROPY in mbedtls_config.h"
+    "Platform entropy sources only work on Unix and Windows"
 #endif
 
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
@@ -198,7 +218,7 @@ int mbedtls_platform_entropy_poll(void *data,
 #endif /* HAVE_SYSCTL_ARND */
 }
 #endif /* _WIN32 && !EFIX64 && !EFI32 */
-#endif /* !MBEDTLS_NO_PLATFORM_ENTROPY */
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 int mbedtls_nv_seed_poll(void *data,

@@ -18,18 +18,19 @@
 extern "C" {
 #endif
 
-/*
- * Default thresholds for built-in sources, in bytes
- */
-#define MBEDTLS_ENTROPY_MIN_PLATFORM     32     /**< Minimum for platform source    */
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
 
-#if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
-/**
- * \brief           Platform-specific entropy poll callback
- */
-int mbedtls_platform_entropy_poll(void *data,
-                                  unsigned char *output, size_t len, size_t *olen);
-#endif
+#define MBEDTLS_ENTROPY_MIN_HARDWARE        32
+
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen);
+
+#else /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+
+#define MBEDTLS_ENTROPY_MIN_PLATFORM        32
+
+int mbedtls_platform_entropy_poll(void *data, unsigned char *output, size_t len, size_t *olen);
+
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 /**
@@ -40,16 +41,6 @@ int mbedtls_platform_entropy_poll(void *data,
 int mbedtls_nv_seed_poll(void *data,
                          unsigned char *output, size_t len, size_t *olen);
 #endif
-
-#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
-
-#define MBEDTLS_ENTROPY_MIN_HARDWARE            32
-
-#if defined(MBEDTLS_TEST_HOOKS)
-int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen);
-#endif /* MBEDTLS_TEST_HOOKS */
-
-#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 
 #ifdef __cplusplus
 }
