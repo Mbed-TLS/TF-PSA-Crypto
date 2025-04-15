@@ -120,6 +120,19 @@ Note that the strict workflow assumes that a PK context containing an RSA key ha
 
 TODO: So is this just [`mbedtls_pk_set_algorithm()`](#context-metadata)?
 
+Alternatively, should this be something similar to `mbedtls_pk_import_into_psa()`, but with an argument to just select the algorithm instead of full PSA attributes?
+```
+int mbedtls_pk_copy(const mbedtls_pk_context *src,
+                    psa_algorithm_t alg,
+                    mbedtls_pk_context *dest)
+```
+
+Making a copy makes the function specifications easier to understand with respect to resource management. It's a little extra explicit work when you just want a PSS signature, but that's not a major problem.
+
+Or should we give up on using PK for signature, and instead rely on `mbedtls_pk_import_into_psa()` and the PSA signature function? This adds extra complexity though: either `mbedtls_ssl_conf_own_cert()` needs a PSA variant, or it needs to completely switch from PK to PSA, and either way this requires extra work before 4.0 both inside the library and in calling code.
+
+Or should we give up on using PK for signature, and instead rely on `mbedtls_pk_import_into_psa()` followed by `mbedtls_pk_wrap_psa()`? That adds complexity to callers but not inside the library.
+
 ## API elements
 
 ### PK context type
