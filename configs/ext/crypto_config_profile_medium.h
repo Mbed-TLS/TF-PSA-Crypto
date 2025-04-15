@@ -255,6 +255,19 @@
 #define MBEDTLS_ENTROPY_C
 
 /**
+ * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+ *
+ * By default Mbed TLS uses standard platform sources (/dev/urandom on Linux
+ * and CryptoAPI on Windows) to gather entropy data. If these functions are
+ * not available for some reason (ex: working on a baremetal project), the
+ * following symbol allows the user to define a custom callback function that
+ * Mbed TLS will use to gather entropy data.
+ * Public header `mbedtls/platform.h` provides the prototype for this callback
+ * function and also the documentation for its parameters.
+ */
+#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+
+/**
  * \def MBEDTLS_ENTROPY_NV_SEED
  *
  * Enable the non-volatile (NV) seed file-based entropy source.
@@ -281,17 +294,6 @@
  *       given to an external source, to update it.
  */
 #define MBEDTLS_ENTROPY_NV_SEED
-
-/**
- * \def MBEDTLS_NO_PLATFORM_ENTROPY
- *
- * Do not use built-in platform entropy functions.
- * This is useful if your platform does not support
- * standards like the /dev/urandom or Windows CryptoAPI.
- *
- * Uncomment this macro to disable the built-in platform entropy functions.
- */
-#define MBEDTLS_NO_PLATFORM_ENTROPY
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_C
@@ -611,10 +613,10 @@
  * variables accordingly.
  */
 #if defined(__IAR_SYSTEMS_ICC__) || defined(__ARMCC_VERSION) || defined(__ARM_EABI__)
-#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 #else
 /* Use built-in platform entropy functions (TF-M provides its own). */
-#undef MBEDTLS_NO_PLATFORM_ENTROPY
+#undef MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 #endif
 
 /***********************************************************************
