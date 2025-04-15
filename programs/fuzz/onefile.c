@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     err = fopen_s( &fp, argv[1], "rb")
     if (err != 0) {
         fprintf(stderr, "%s: Error in fopen\n", argv0);
-        return 2;
+        return err;
     }
     #else
     fp = fopen(argv[1], "rb");
