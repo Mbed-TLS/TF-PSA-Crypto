@@ -190,6 +190,14 @@ struct tm *mbedtls_platform_gmtime_r(const mbedtls_time_t *tt,
                                      struct tm *tm_buf);
 #endif /* MBEDTLS_HAVE_TIME_DATE */
 
+#if !defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+/* This is the private defintion of mbedtls_platform_get_entropy(). The full
+ * documentation is at drivers/builtin/include/mbedtls/platform.h. */
+int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
+                                 size_t *output_len, size_t *entropy_content);
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif

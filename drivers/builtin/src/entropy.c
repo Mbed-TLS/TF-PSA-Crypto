@@ -40,15 +40,9 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
      *           when adding more strong entropy sources here. */
 
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
-#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
-    mbedtls_entropy_add_source(ctx, mbedtls_hardware_poll, NULL,
-                               MBEDTLS_ENTROPY_MIN_HARDWARE,
+    mbedtls_entropy_add_source(ctx, mbedtls_entropy_poll_platform, NULL,
+                               MBEDTLS_ENTROPY_POLL_PLATFORM_MIN,
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
-#else /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
-    mbedtls_entropy_add_source(ctx, mbedtls_platform_entropy_poll, NULL,
-                               MBEDTLS_ENTROPY_MIN_PLATFORM,
-                               MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
     mbedtls_entropy_add_source(ctx, mbedtls_nv_seed_poll, NULL,
                                MBEDTLS_ENTROPY_BLOCK_SIZE,
@@ -503,8 +497,8 @@ static int mbedtls_entropy_source_self_test_gather(unsigned char *buf, size_t bu
     size_t attempts = buf_len;
 
     while (attempts > 0 && entropy_len < buf_len) {
-        if ((ret = mbedtls_hardware_poll(NULL, buf + entropy_len,
-                                         buf_len - entropy_len, &olen)) != 0) {
+        if ((ret = mbedtls_entropy_poll_platform(NULL, buf + entropy_len,
+                                                 buf_len - entropy_len, &olen)) != 0) {
             return ret;
         }
 

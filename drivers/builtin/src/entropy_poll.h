@@ -18,19 +18,22 @@
 extern "C" {
 #endif
 
-#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+#define MBEDTLS_ENTROPY_POLL_PLATFORM_MIN        32
 
-#define MBEDTLS_ENTROPY_MIN_HARDWARE        32
-
-int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen);
-
-#else /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
-
-#define MBEDTLS_ENTROPY_MIN_PLATFORM        32
-
-int mbedtls_platform_entropy_poll(void *data, unsigned char *output, size_t len, size_t *olen);
-
-#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+/**
+ * This function get called from the entropy module when it's gathering entropy
+ * data. Backends are:
+ * - on Windows: no need to define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and
+ *              CryptoAPI will be used.
+ * - on Linux: no need to define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and
+ *              /dev/urandom will be used.
+ * - on baremetal plaform: define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and provide
+ *              the custom implementation of mbedtls_platform_get_entropy().
+ *              See mbedtls/platform.h for the documentation of the function.
+ *
+ * \note The function must accept \p data == NULL.
+ */
+int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len, size_t *olen);
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 /**

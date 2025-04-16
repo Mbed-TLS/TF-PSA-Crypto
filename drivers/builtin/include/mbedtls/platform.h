@@ -475,8 +475,8 @@ mbedtls_platform_context;
  *              0 < \p entropy_content < 8 * output_len) by calling the callback
  *              function in loop.
  */
-int mbedtls_platform_get_entropy_alt(unsigned char *output, size_t output_size,
-                                     size_t *output_len, size_t *entropy_content);
+int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
+                                 size_t *output_len, size_t *entropy_content);
 #endif
 
 /**

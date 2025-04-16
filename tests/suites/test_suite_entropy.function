@@ -570,15 +570,15 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 void entropy_test_platform_get_entropy_alt(void)
 {
-    uint8_t data[MBEDTLS_ENTROPY_MIN_HARDWARE];
+    uint8_t data[MBEDTLS_ENTROPY_POLL_PLATFORM_MIN];
     size_t olen;
 
-    TEST_ASSERT(mbedtls_hardware_poll(NULL, data, sizeof(data), &olen) == 0);
-    mbedtls_test_get_entropy_alt_force(1, 0);
-    TEST_ASSERT(mbedtls_hardware_poll(NULL, data, sizeof(data), &olen) ==
+    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) == 0);
+    mbedtls_test_get_entropy_force(1, 0);
+    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
                 MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
-    mbedtls_test_get_entropy_alt_force(0, 8 * (sizeof(data) - 1));
-    TEST_ASSERT(mbedtls_hardware_poll(NULL, data, sizeof(data), &olen) ==
+    mbedtls_test_get_entropy_force(0, 8 * (sizeof(data) - 1));
+    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
                 MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
 }
 /* END_CASE */
