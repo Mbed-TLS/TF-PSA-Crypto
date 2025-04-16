@@ -49,8 +49,10 @@
 /** The context is invalid. For example, because it was freed. */
 #define MBEDTLS_ERR_CIPHER_INVALID_CONTEXT      -0x6380
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_CIPHER_VARIABLE_IV_LEN     0x01    /**< Cipher accepts IVs of variable length. */
 #define MBEDTLS_CIPHER_VARIABLE_KEY_LEN    0x02    /**< Cipher accepts keys of variable length. */
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -168,6 +170,7 @@ typedef enum {
     MBEDTLS_CIPHER_AES_256_KWP,          /**< AES cipher with 256-bit NIST KWP mode. */
 } mbedtls_cipher_type_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /** Supported cipher modes. */
 typedef enum {
     MBEDTLS_MODE_NONE = 0,               /**< None.                        */
@@ -194,6 +197,7 @@ typedef enum {
     MBEDTLS_PADDING_ZEROS,         /**< Zero padding (not reversible). */
     MBEDTLS_PADDING_NONE,          /**< Never pad (full blocks only).   */
 } mbedtls_cipher_padding_t;
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Type of operation. */
 typedef enum {
@@ -202,6 +206,7 @@ typedef enum {
     MBEDTLS_ENCRYPT,
 } mbedtls_operation_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 enum {
     /** Undefined key length. */
     MBEDTLS_KEY_LENGTH_NONE = 0,
@@ -212,6 +217,7 @@ enum {
     /** Key length in bits, including parity, for DES in three-key EDE. \warning 3DES is considered weak. */
     MBEDTLS_KEY_LENGTH_DES_EDE3 = 192,
 };
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Maximum length of any IV, in Bytes. */
 /* This should ideally be derived automatically from list of ciphers.
@@ -302,10 +308,13 @@ typedef struct mbedtls_cipher_info_t {
 
 } mbedtls_cipher_info_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /* For internal use only.
  * These are used to more compactly represent the fields above. */
 #define MBEDTLS_KEY_BITLEN_SHIFT  6
 #define MBEDTLS_IV_SIZE_SHIFT     2
+#endif
+
 /**
  * Generic cipher context.
  */
@@ -363,6 +372,7 @@ typedef struct mbedtls_cipher_context_t {
 
 } mbedtls_cipher_context_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief This function retrieves the list of ciphers supported
  *        by the generic cipher module.
@@ -1151,6 +1161,9 @@ int mbedtls_cipher_auth_decrypt_ext(mbedtls_cipher_context_t *ctx,
                                     unsigned char *output, size_t output_len,
                                     size_t *olen, size_t tag_len);
 #endif /* MBEDTLS_CIPHER_MODE_AEAD */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
+
 #ifdef __cplusplus
 }
 #endif
