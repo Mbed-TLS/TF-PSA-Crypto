@@ -84,3 +84,6 @@ entropy_nv_seed:"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 Entropy self test
 entropy_selftest:0
+
+Test platform_get_entropy
+entropy_test_platform_get_entropy_alt:
