@@ -246,9 +246,6 @@ void mbedtls_nist_kw_unwrap_key_test(int mode,
     TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, input, 16, output, 
                                       sizeof(output), &output_length),
                                       expected_ret);
-    if (expected_ret != PSA_SUCCESS) {
-        goto exit;
-    }
 
 exit:
     psa_destroy_key(key_id);
