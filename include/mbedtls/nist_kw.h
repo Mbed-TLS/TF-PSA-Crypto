@@ -89,6 +89,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  *
  * \return                   \c 0 on success.
  * \return                   \c #PSA_ERROR_INVALID_ARGUMENT for invalid input length.
+ * \return                   \c #PSA_ERROR_INVALID_SIGNATURE for invalid ciphertext.
  * \return                   Another error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,

@@ -362,7 +362,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
         diff = mbedtls_ct_memcmp(NIST_KW_ICV1, A, KW_SEMIBLOCK_LENGTH);
 
         if (diff != 0) {
-            ret = PSA_ERROR_CORRUPTION_DETECTED;
+            ret = PSA_ERROR_INVALID_SIGNATURE;
             goto cleanup;
         }
 
