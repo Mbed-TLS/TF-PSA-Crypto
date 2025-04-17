@@ -9354,7 +9354,6 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t abort_status = PSA_ERROR_CORRUPTION_DETECTED;
-
     uint8_t shared_key[MBEDTLS_PSA_JPAKE_BUFFER_SIZE];
     size_t shared_key_len = 0;
 
@@ -9378,7 +9377,10 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
         goto exit;
     }
 
-    status = psa_driver_wrapper_pake_get_implicit_key(operation, shared_key, sizeof(shared_key), &shared_key_len);
+    status = psa_driver_wrapper_pake_get_implicit_key(operation,
+                                                      shared_key,
+                                                      sizeof(shared_key),
+                                                      &shared_key_len);
 
     if (status != PSA_SUCCESS) {
         goto exit;
