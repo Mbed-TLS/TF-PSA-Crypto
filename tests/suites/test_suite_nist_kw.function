@@ -155,7 +155,6 @@ void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
 
     TEST_EQUAL(result_length, expected_result->len);
 
-    TEST_ASSERT(memcmp(expected_result->x, result, result_length) == 0);
     TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,  
                         result_length);
 
@@ -214,8 +213,7 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
                                        result, result_size, &result_len),
                                        expected_ret);
     if (expected_ret == 0) {
-        TEST_EQUAL(result_len, expected_result->len);
-        TEST_EQUAL(memcmp(expected_result->x, result, result_len), 0);
+        TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result, result_len);
     } else {
         TEST_EQUAL(result_len, 0);
     }
