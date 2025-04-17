@@ -57,15 +57,11 @@ exit:
 void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
 {
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    data_t key;
     unsigned char *plaintext = NULL;
     unsigned char *ciphertext = NULL;
     size_t output_len = out_len;
-    uint8_t key_array[16];
-    key.len = 16;
-    key.x = key_array;
-
-    memset(key_array, 0, sizeof(key_array));
+    uint8_t key_array[16] = { 0 };
+    data_t key = { .len = sizeof(key_array), .x = key_array };;
 
     if (in_len != 0) {
         plaintext = mbedtls_calloc(1, in_len);

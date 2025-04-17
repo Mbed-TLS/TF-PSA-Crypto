@@ -23,9 +23,6 @@ NIST KWP self test key size 256
 depends_on:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 nist_kw_wrap_unwrap:MBEDTLS_KW_MODE_KWP:"95da2700ca6fd9a52554ee2a8df1386f5b94a1a60ed8a4aef60a8d61ab5f225a":"d1":"06ba7ae6f3248cfdcf267507fa001bc4"
 
-NIST KW mix contexts and modes
-mbedtls_nist_kw_mix_contexts:
-
 NIST KW lengths #1 KW plaintext OK (2 to 2^54 - 1 semiblocks)
 nist_kw_plaintext_lengths:16:24:MBEDTLS_KW_MODE_KW:0
 
