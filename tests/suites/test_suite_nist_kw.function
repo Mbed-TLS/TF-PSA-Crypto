@@ -27,7 +27,7 @@ exit:
  */
 
 /* BEGIN_CASE */
-void mbedtls_nist_kw_self_test(int mode, data_t *kw_key,
+void nist_kw_wrap_unwrap(int mode, data_t *kw_key,
                                data_t *kw_msg, data_t *kw_res, int kw_out_len)
 {
     unsigned char out[48];
