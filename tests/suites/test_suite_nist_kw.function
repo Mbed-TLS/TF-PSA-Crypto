@@ -26,10 +26,6 @@ exit:
  * END_DEPENDENCIES
  */
 
-/*
- * Test vectors taken from NIST
- * https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/CAVP-TESTING-BLOCK-CIPHER-MODES#KW
- */
 /* BEGIN_CASE */
 void mbedtls_nist_kw_self_test(int mode, data_t *kw_key,
                                data_t *kw_msg, data_t *kw_res, int kw_out_len)

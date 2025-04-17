@@ -1,3 +1,6 @@
+#Test vectors taken from NIST
+#https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/CAVP-TESTING-BLOCK-CIPHER-MODES#KW
+
 NIST KW self test key size 128
 mbedtls_nist_kw_self_test:MBEDTLS_KW_MODE_KW:"7575da3a93607cc2bfd8cec7aadfd9a6":"42136d3c384a3eeac95a066fd28fed3f":"031f6bd7e61e643df68594816f64caa3f56fabea2548f5fb":24
 
