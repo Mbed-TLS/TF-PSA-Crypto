@@ -28,18 +28,17 @@ exit:
 
 /* BEGIN_CASE */
 void nist_kw_wrap_unwrap(int mode, data_t *kw_key,
-                               data_t *kw_msg, data_t *kw_res, int kw_out_len)
+                               data_t *kw_msg, data_t *kw_res)
 {
     unsigned char out[48];
-    size_t olen, out_len = kw_out_len;
+    size_t olen;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT, PSA_ALG_ECB_NO_PADDING,
                              PSA_KEY_TYPE_AES, &key_id, kw_key));
     PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, kw_msg->x,
                                     kw_msg->len, out, sizeof(out), &olen));
-    TEST_ASSERT(out_len == olen ||
-                memcmp(out, kw_res->x, out_len) == 0);
+    TEST_MEMORY_COMPARE(out, olen, kw_res->x, kw_res->len);
     PSA_ASSERT(mbedtls_nist_kw_unwrap(key_id, mode,
                                       out, olen, out, sizeof(out), &olen));
 
