@@ -31,7 +31,7 @@ void nist_kw_wrap_unwrap(int mode, data_t *kw_key,
                                data_t *kw_msg, data_t *kw_res)
 {
     unsigned char *out = NULL;
-    size_t olen;
+    size_t olen = 0;
     TEST_CALLOC(out, kw_res->len);
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
