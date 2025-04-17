@@ -77,10 +77,10 @@ void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
                              PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id, 
                              &key));
 
-    TEST_ASSERT(mbedtls_nist_kw_wrap(key_id, mode,
+    TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode,
                                      plaintext, in_len,
                                      ciphertext, output_len,
-                                     &output_len) == res);
+                                     &output_len), res);
     if (res == 0) {
         if (mode == MBEDTLS_KW_MODE_KWP) {
             TEST_ASSERT(output_len == (size_t) in_len + 8 -
@@ -132,9 +132,9 @@ void nist_kw_ciphertext_lengths(int in_len, int out_len, int mode, int res)
                                         &output_len);
 
     if (res == 0) {
-        TEST_ASSERT(unwrap_ret == PSA_ERROR_INVALID_SIGNATURE);
+        TEST_EQUAL(unwrap_ret, PSA_ERROR_INVALID_SIGNATURE);
     } else {
-        TEST_ASSERT(unwrap_ret == res);
+        TEST_EQUAL(unwrap_ret, res);
     }
 
     TEST_ASSERT(output_len == 0);
@@ -164,7 +164,7 @@ void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
     PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len
                                     , result, result_size, &result_length));
 
-    TEST_ASSERT(result_length == expected_result->len);
+    TEST_EQUAL(result_length, expected_result->len);
 
     TEST_ASSERT(memcmp(expected_result->x, result, result_length) == 0);
     TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,  
@@ -221,14 +221,14 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
                              PSA_KEY_TYPE_AES, &key_id, key));
 
     /* Test with input == output */
-    TEST_ASSERT(mbedtls_nist_kw_unwrap(key_id, mode, msg->x, msg->len,
-                                       result, result_size, &result_len) 
-                                       == expected_ret);
+    TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, msg->x, msg->len,
+                                       result, result_size, &result_len),
+                                       expected_ret);
     if (expected_ret == 0) {
-        TEST_ASSERT(result_len == expected_result->len);
-        TEST_ASSERT(memcmp(expected_result->x, result, result_len) == 0);
+        TEST_EQUAL(result_len, expected_result->len);
+        TEST_EQUAL(memcmp(expected_result->x, result, result_len), 0);
     } else {
-        TEST_ASSERT(result_len == 0);
+        TEST_EQUAL(result_len, 0);
     }
 
 exit:
