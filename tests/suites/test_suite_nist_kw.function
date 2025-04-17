@@ -63,15 +63,9 @@ void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
     uint8_t key_array[16] = { 0 };
     data_t key = { .len = sizeof(key_array), .x = key_array };;
 
-    if (in_len != 0) {
-        plaintext = mbedtls_calloc(1, in_len);
-        TEST_ASSERT(plaintext != NULL);
-    }
+    TEST_CALLOC(plaintext, in_len);
 
-    if (out_len != 0) {
-        ciphertext = mbedtls_calloc(1, output_len);
-        TEST_ASSERT(ciphertext != NULL);
-    }
+    TEST_CALLOC(ciphertext, output_len);
 
     PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT, 
                              PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id, 
@@ -118,14 +112,8 @@ void nist_kw_ciphertext_lengths(int in_len, int out_len, int mode, int res)
                              PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id, 
                              &key));
 
-    if (out_len != 0) {
-        plaintext = mbedtls_calloc(1, output_len);
-        TEST_ASSERT(plaintext != NULL);
-    }
-    if (in_len != 0) {
-        ciphertext = mbedtls_calloc(1, in_len);
-        TEST_ASSERT(ciphertext != NULL);
-    }
+    TEST_CALLOC(plaintext, output_len);
+    TEST_CALLOC(ciphertext, in_len);
 
     unwrap_ret = mbedtls_nist_kw_unwrap(key_id, mode, ciphertext, in_len,
                                         plaintext, output_len,
@@ -156,8 +144,9 @@ void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
 
     padlen = (msg->len % 8 != 0) ? 8 - (msg->len % 8) : 0;
     int result_size = msg->len + 8 + padlen;
-    unsigned char *result;
-    result = mbedtls_calloc(1, result_size);
+    unsigned char *result = NULL;
+    
+    TEST_CALLOC(result, result_size);
 
     PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT, PSA_ALG_ECB_NO_PADDING, 
                              PSA_KEY_TYPE_AES, &key_id, key));
@@ -213,7 +202,7 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
     size_t result_len;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
-    unsigned char *result;
+    unsigned char *result = NULL;
     int result_size = msg->len - 8;
     result = mbedtls_calloc(1, result_size);
 
