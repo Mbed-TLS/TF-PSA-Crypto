@@ -41,10 +41,10 @@ typedef enum {
  * \brief                    This function encrypts a buffer using key wrapping.
  *
  * \param key                The key wrapping PSA key ID to use for encryption. The key should have the following attributes:
- *                               - type: PSA_KEY_TYPE_AES
- *                               - algorithm: PSA_ALG_ECB_NO_PADDING
- *                               - usage flag: PSA_KEY_USAGE_ENCRYPT + other flags if required by the application.
- * \param mode               The key wrapping mode to use (MBEDTLS_KW_MODE_KW or MBEDTLS_KW_MODE_KWP)
+ *                               - type: #PSA_KEY_TYPE_AES
+ *                               - algorithm: #PSA_ALG_ECB_NO_PADDING
+ *                               - usage flag: #PSA_KEY_USAGE_ENCRYPT + other flags if required by the application.
+ * \param mode               The key wrapping mode to use (#MBEDTLS_KW_MODE_KW or #MBEDTLS_KW_MODE_KWP)
  * \param input              The buffer holding the input data.
  * \param input_length       The length of the input data in Bytes.
  *                           The input uses units of 8 Bytes called semiblocks.
@@ -58,7 +58,7 @@ typedef enum {
  * \param[in] output_length  The capacity of the output buffer.
  *
  * \return                   \c 0 on success.
- * \return                   \c PSA_ERROR_DATA_INVALID for invalid input length.
+ * \return                   \c #PSA_ERROR_DATA_INVALID for invalid input length.
  * \return                   cipher-specific error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
@@ -70,10 +70,10 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  * \brief                    This function decrypts a buffer using key wrapping.
  *
  * \param key                The key wrapping PSA key ID to use for encryption. The key should have the following attributes:
- *                               - type: PSA_KEY_TYPE_AES
- *                               - algorithm: PSA_ALG_ECB_NO_PADDING
- *                               - usage flag: PSA_KEY_USAGE_DECRYPT + other flags if required by the application.
- * \param mode               The key wrapping mode to use (MBEDTLS_KW_MODE_KW or MBEDTLS_KW_MODE_KWP)
+ *                               - type: #PSA_KEY_TYPE_AES
+ *                               - algorithm: #PSA_ALG_ECB_NO_PADDING
+ *                               - usage flag: #PSA_KEY_USAGE_DECRYPT + other flags if required by the application.
+ * \param mode               The key wrapping mode to use (#MBEDTLS_KW_MODE_KW or #MBEDTLS_KW_MODE_KWP)
  * \param input              The buffer holding the input data.
  * \param input_length       The length of the input data in Bytes.
  *                           The input uses units of 8 Bytes called semiblocks.
@@ -88,7 +88,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  *                           depending on how much padding was added to the data.
  *
  * \return                   \c 0 on success.
- * \return                   \c PSA_ERROR_DATA_INVALID for invalid input length.
+ * \return                   \c #PSA_ERROR_DATA_INVALID for invalid input length.
  * \return                   cipher-specific error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
