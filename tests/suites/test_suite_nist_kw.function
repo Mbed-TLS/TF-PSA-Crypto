@@ -6,18 +6,17 @@ static int setup_psa_key(int usage,
                          mbedtls_svc_key_id_t *key_id,
                          const data_t *key)
 {
-    int ret = PSA_SUCCESS;
+    int ok = 1;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
-    ret = psa_crypto_init();
-    if (ret == PSA_SUCCESS) {
-        psa_set_key_usage_flags(&attributes, usage);
-        psa_set_key_algorithm(&attributes, alg);
-        psa_set_key_type(&attributes, key_type);
-        ret = psa_import_key(&attributes, key->x, key->len, key_id);
-    }
-
-    return ret;
+    PSA_INIT();
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, key_id));
+    ok = PSA_SUCCESS;
+exit:
+    return ok;
 }
 
 /* END_HEADER */
