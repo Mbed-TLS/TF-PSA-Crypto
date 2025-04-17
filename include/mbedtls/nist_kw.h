@@ -58,7 +58,7 @@ typedef enum {
  * \param[in] output_length  The capacity of the output buffer.
  *
  * \return                   \c 0 on success.
- * \return                   \c #PSA_ERROR_DATA_INVALID for invalid input length.
+ * \return                   \c #PSA_ERROR_INVALID_ARGUMENT for invalid input length.
  * \return                   cipher-specific error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
@@ -88,7 +88,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  *                           depending on how much padding was added to the data.
  *
  * \return                   \c 0 on success.
- * \return                   \c #PSA_ERROR_DATA_INVALID for invalid input length.
+ * \return                   \c #PSA_ERROR_INVALID_ARGUMENT for invalid input length.
  * \return                   cipher-specific error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,

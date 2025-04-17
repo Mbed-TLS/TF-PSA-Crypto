@@ -96,7 +96,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
      */
     if (mode == MBEDTLS_KW_MODE_KW) {
         if (output_size < input_length + KW_SEMIBLOCK_LENGTH) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
@@ -109,7 +109,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
             input_length > 0x1FFFFFFFFFFFFF8 ||
 #endif
             input_length % KW_SEMIBLOCK_LENGTH != 0) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
@@ -121,7 +121,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
         }
 
         if (output_size < input_length + KW_SEMIBLOCK_LENGTH + padlen) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
@@ -134,7 +134,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
             || input_length > 0xFFFFFFFF
 #endif
             ) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
@@ -173,7 +173,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
          * Do the wrapping function W, as defined in RFC 3394 section 2.2.1
          */
         if (semiblocks < MIN_SEMIBLOCKS_COUNT) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
@@ -243,7 +243,7 @@ static int unwrap(const unsigned char *input, size_t semiblocks,
     *output_length = 0;
 
     if (semiblocks < MIN_SEMIBLOCKS_COUNT) {
-        ret = PSA_ERROR_DATA_INVALID;
+        ret = PSA_ERROR_INVALID_ARGUMENT;
         goto cleanup;
     }
 
@@ -334,7 +334,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     }
     *output_length = 0;
     if (output_size < input_length - KW_SEMIBLOCK_LENGTH) {
-        ret = PSA_ERROR_DATA_INVALID;
+        ret = PSA_ERROR_INVALID_ARGUMENT;
         goto cleanup;
     }
 
@@ -348,7 +348,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
             input_length > 0x200000000000000 ||
 #endif
             input_length % KW_SEMIBLOCK_LENGTH != 0) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
@@ -376,7 +376,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
             input_length > 0x100000000 ||
 #endif
             input_length % KW_SEMIBLOCK_LENGTH != 0) {
-            ret = PSA_ERROR_DATA_INVALID;
+            ret = PSA_ERROR_INVALID_ARGUMENT;
             goto cleanup;
         }
 
