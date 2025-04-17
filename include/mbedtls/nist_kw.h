@@ -59,7 +59,7 @@ typedef enum {
  *
  * \return                   \c 0 on success.
  * \return                   \c #PSA_ERROR_INVALID_ARGUMENT for invalid input length.
- * \return                   cipher-specific error code on failure of the underlying cipher.
+ * \return                   Another error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
                                   mbedtls_nist_kw_mode_t mode,
@@ -89,7 +89,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  *
  * \return                   \c 0 on success.
  * \return                   \c #PSA_ERROR_INVALID_ARGUMENT for invalid input length.
- * \return                   cipher-specific error code on failure of the underlying cipher.
+ * \return                   Another error code on failure of the underlying cipher.
  */
 psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
                                     mbedtls_nist_kw_mode_t mode,
