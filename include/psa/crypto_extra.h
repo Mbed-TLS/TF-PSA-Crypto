@@ -1595,8 +1595,8 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * key, the application must call psa_pake_get_shared_key() after the
  * key-exchange output and input steps are completed. The PAKE algorithm
  * provides a cryptographic guarantee that only a peer who used the same
- * password, and identity inputs, is able to compute the same key. However,
- * there is no guarantee that the peer is the participant it claims to be,
+ * password, and identity inputs is able to compute the same key. However,
+ * there is no guarantee that the peer is the participant it claims to be
  * and was able to compute the same key.
  *
  * Since the peer is not authenticated, no action should be taken that assumes
@@ -1626,7 +1626,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * depends on the algorithm in use. Refer to the documentation of individual PAKE
  * algorithms for more information. See PAKE algorithms.
  *
- * When this function returns successfully, operation becomes inactive. If this
+ * When this function returns successfully, the operation becomes inactive. If this
  * function returns an error status, the operation enters an error state and must
  * be aborted by calling psa_pake_abort().
  *
@@ -1655,7 +1655,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *                              The key lifetime and identifier are required for a
  *                              persistent key.
  *
- *                              \note This is an input parameter: it is not updated
+ *                              \note This is an input parameter: It is not updated
  *                              with the final key attributes. The final attributes
  *                              of the new key can be queried by calling
  *                              psa_get_key_attributes() with the key’s identifier.
@@ -1667,7 +1667,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *         been saved to persistent storage.
  * \retval #PSA_ERROR_BAD_STATE
  *         The following conditions can result in this error:
- *         The state of PAKE operation operation is not valid: it must be ready to return
+ *         The state of PAKE operation operation is not valid: It must be ready to return
  *         the shared secret.
  *         For an unconfirmed key, this will be when the key-exchange output and input
  *         steps are complete, but prior to any key-confirmation output and input steps.
