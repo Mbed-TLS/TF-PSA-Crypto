@@ -14,6 +14,10 @@ tfpsacrypto_build_program_common(benchmark)
 target_sources(benchmark PRIVATE $<TARGET_OBJECTS:tf_psa_crypto_test>)
 target_link_libraries(benchmark PRIVATE ${tfpsacrypto_target} ${CMAKE_THREAD_LIBS_INIT})
 
+# which_aes
+tfpsacrypto_build_program_common(which_aes)
+target_link_libraries(which_aes PRIVATE ${tfpsacrypto_target})
+
 # dlopen
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "[Ww][Ii][Nn]")
     tfpsacrypto_build_program_common(tfpsacrypto_dlopen)
