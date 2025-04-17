@@ -222,7 +222,7 @@ void nist_kw_ciphertext_lengths(int in_len, int out_len, int mode, int res)
                                         &output_len);
 
     if (res == 0) {
-        TEST_ASSERT(unwrap_ret == PSA_ERROR_CORRUPTION_DETECTED);
+        TEST_ASSERT(unwrap_ret == PSA_ERROR_INVALID_SIGNATURE);
     } else {
         TEST_ASSERT(unwrap_ret == res);
     }
