@@ -170,7 +170,6 @@ typedef enum {
     MBEDTLS_CIPHER_AES_256_KWP,          /**< AES cipher with 256-bit NIST KWP mode. */
 } mbedtls_cipher_type_t;
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /** Supported cipher modes. */
 typedef enum {
     MBEDTLS_MODE_NONE = 0,               /**< None.                        */
@@ -189,6 +188,7 @@ typedef enum {
     MBEDTLS_MODE_KWP,                    /**< The SP800-38F KWP mode */
 } mbedtls_cipher_mode_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /** Supported cipher padding types. */
 typedef enum {
     MBEDTLS_PADDING_PKCS7 = 0,     /**< PKCS7 padding (default).        */
@@ -308,12 +308,10 @@ typedef struct mbedtls_cipher_info_t {
 
 } mbedtls_cipher_info_t;
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /* For internal use only.
  * These are used to more compactly represent the fields above. */
 #define MBEDTLS_KEY_BITLEN_SHIFT  6
 #define MBEDTLS_IV_SIZE_SHIFT     2
-#endif
 
 /**
  * Generic cipher context.
