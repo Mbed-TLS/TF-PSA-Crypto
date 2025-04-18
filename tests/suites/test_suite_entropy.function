@@ -574,7 +574,7 @@ void entropy_test_platform_get_entropy_alt(void)
     size_t olen;
 
     TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) == 0);
-    mbedtls_test_get_entropy_force(1, 0);
+    mbedtls_test_get_entropy_force(1, SIZE_MAX);
     TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
                 MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
     mbedtls_test_get_entropy_force(0, 8 * (sizeof(data) - 1));
