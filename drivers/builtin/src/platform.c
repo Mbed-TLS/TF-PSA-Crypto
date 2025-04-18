@@ -410,34 +410,37 @@ void mbedtls_platform_teardown(mbedtls_platform_context *ctx)
     "mbedtls_platform_get_entropy()."
 #endif
 
+#include "mbedtls/entropy.h"
+
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
 
 #include <windows.h>
 #include <bcrypt.h>
 #include <intsafe.h>
 
-int mbedtls_platform_get_entropy(void *data, unsigned char *output, size_t len, size_t *olen)
+int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
+                                 size_t *output_len, size_t *entropy_content)
 {
-    ((void) data);
-    *olen = 0;
+    *output_len = 0;
 
     /*
      * BCryptGenRandom takes ULONG for size, which is smaller than size_t on
      * 64-bit Windows platforms. Extract entropy in chunks of len (dependent
      * on ULONG_MAX) size.
      */
-    while (len != 0) {
+    while (output_size != 0) {
         unsigned long ulong_bytes =
-            (len > ULONG_MAX) ? ULONG_MAX : (unsigned long) len;
+            (output_size > ULONG_MAX) ? ULONG_MAX : (unsigned long) output_size;
 
         if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, output, ulong_bytes,
                                             BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
             return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
         }
 
-        *olen += ulong_bytes;
-        len -= ulong_bytes;
+        *output_len += ulong_bytes;
+        output_size -= ulong_bytes;
     }
+    *entropy_content = 8 * *output_len;
 
     return 0;
 }
@@ -529,7 +532,6 @@ static int sysctl_arnd_wrapper(unsigned char *buf, size_t buflen)
 #endif /* __FreeBSD__ || __NetBSD__ */
 
 #include <stdio.h>
-#include "mbedtls/entropy.h"
 
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
                                  size_t *output_len, size_t *entropy_content)
