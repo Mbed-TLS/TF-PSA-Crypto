@@ -23,13 +23,13 @@ extern "C" {
 /**
  * This function get called from the entropy module when it's gathering entropy
  * data. Backends are:
- * - on Windows: no need to define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and
- *              CryptoAPI will be used.
- * - on Linux: no need to define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and
- *              /dev/urandom will be used.
- * - on baremetal plaform: define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and provide
- *              the custom implementation of mbedtls_platform_get_entropy().
- *              See mbedtls/platform.h for the documentation of the function.
+ * - On Windows, Linux or BSD systems there's no need to define
+ *   MBEDTLS_PLATFORM_GET_ENTROPY_ALT. In this case Mbed TLS uses platform-specific
+ *   sources such as getrandom(), /dev/urandom or BCryptGenRandom() to gather
+ *   entropy data.
+ * - on baremetal plaform instead define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and
+ *   provide the custom implementation of mbedtls_platform_get_entropy().
+ *   See mbedtls/platform.h for the documentation of the function.
  *
  * \note The function must accept \p data == NULL.
  */
