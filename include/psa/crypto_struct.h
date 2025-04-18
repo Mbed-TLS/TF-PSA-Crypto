@@ -79,10 +79,10 @@ struct psa_hash_operation_s {
 #else
 #define PSA_HASH_OPERATION_INIT { 0, { 0 } }
 #endif
-static inline void psa_hash_operation_init_internal(struct psa_hash_operation_s *operation)
+static inline struct psa_hash_operation_s psa_hash_operation_init(void)
 {
     const struct psa_hash_operation_s v = PSA_HASH_OPERATION_INIT;
-    *operation = v;
+    return v;
 }
 
 struct psa_cipher_operation_s {
@@ -111,10 +111,10 @@ struct psa_cipher_operation_s {
 #else
 #define PSA_CIPHER_OPERATION_INIT { 0, 0, 0, 0, { 0 } }
 #endif
-static inline void psa_cipher_operation_init_internal(struct psa_cipher_operation_s *operation)
+static inline struct psa_cipher_operation_s psa_cipher_operation_init(void)
 {
     const struct psa_cipher_operation_s v = PSA_CIPHER_OPERATION_INIT;
-    *operation = v;
+    return v;
 }
 
 /* Include the context definition for the compiled-in drivers for the composite
@@ -143,10 +143,10 @@ struct psa_mac_operation_s {
 #else
 #define PSA_MAC_OPERATION_INIT { 0, 0, 0, { 0 } }
 #endif
-static inline void psa_mac_operation_init_internal(struct psa_mac_operation_s *operation)
+static inline struct psa_mac_operation_s psa_mac_operation_init(void)
 {
     const struct psa_mac_operation_s v = PSA_MAC_OPERATION_INIT;
-    *operation = v;
+    return v;
 }
 
 struct psa_aead_operation_s {
@@ -182,10 +182,10 @@ struct psa_aead_operation_s {
 #else
 #define PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
 #endif
-static inline void psa_aead_operation_init_internal(struct psa_aead_operation_s *operation)
+static inline struct psa_aead_operation_s psa_aead_operation_init(void)
 {
     const struct psa_aead_operation_s v = PSA_AEAD_OPERATION_INIT;
-    *operation = v;
+    return v;
 }
 
 /* Include the context definition for the compiled-in drivers for the key
@@ -209,11 +209,11 @@ struct psa_key_derivation_s {
 /* This only zeroes out the first byte in the union, the rest is unspecified. */
 #define PSA_KEY_DERIVATION_OPERATION_INIT { 0, 0, 0, { 0 } }
 #endif
-static inline void psa_key_derivation_operation_init_internal(
-    struct psa_key_derivation_s *operation)
+static inline struct psa_key_derivation_s psa_key_derivation_operation_init(
+    void)
 {
     const struct psa_key_derivation_s v = PSA_KEY_DERIVATION_OPERATION_INIT;
-    *operation = v;
+    return v;
 }
 
 struct psa_custom_key_parameters_s {
@@ -281,10 +281,10 @@ struct psa_key_attributes_s {
                                   PSA_KEY_POLICY_INIT,             \
                                   MBEDTLS_SVC_KEY_ID_INIT }
 
-static inline void psa_key_attributes_init_internal(struct psa_key_attributes_s *attributes)
+static inline struct psa_key_attributes_s psa_key_attributes_init(void)
 {
     const struct psa_key_attributes_s v = PSA_KEY_ATTRIBUTES_INIT;
-    *attributes = v;
+    return v;
 }
 
 static inline void psa_set_key_id(psa_key_attributes_t *attributes,
