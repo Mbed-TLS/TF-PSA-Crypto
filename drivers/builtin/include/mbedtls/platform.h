@@ -446,7 +446,6 @@ mbedtls_platform_context;
 #include "platform_alt.h"
 #endif /* !MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
 
-#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
 /**
  * \brief       User defined callback function that is used from the entropy
  *              module to gather entropy data from some hardware device.
@@ -477,7 +476,6 @@ mbedtls_platform_context;
  */
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
                                  size_t *output_len, size_t *entropy_content);
-#endif
 
 /**
  * \brief   This function performs any platform-specific initialization
