@@ -1,2 +1,0 @@
-Changes
-   * Change everest headers path.
