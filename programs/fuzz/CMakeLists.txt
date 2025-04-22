@@ -21,10 +21,7 @@ add_dependencies(${programs_target} ${executables_with_common_c})
 
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
-    set(exe_sources
-        ${exe}.c
-        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/helpers.c
-        ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/drivers/platform_builtin_keys.c)
+    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)
     endif()
