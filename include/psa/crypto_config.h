@@ -2538,17 +2538,6 @@
  */
 #define MBEDTLS_SHA512_C
 
-/**
- * \def MBEDTLS_SHA3_C
- *
- * Enable the SHA3 cryptographic hash algorithm.
- *
- * Module:  library/sha3.c
- *
- * This module adds support for SHA3.
- */
-#define MBEDTLS_SHA3_C
-
 /** \} name SECTION: Legacy cryptography */
 
 #endif /* PSA_CRYPTO_CONFIG_H */

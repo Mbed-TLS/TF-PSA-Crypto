@@ -220,7 +220,6 @@
     defined(MBEDTLS_SHA256_C) || \
     defined(MBEDTLS_SHA384_C) || \
     defined(MBEDTLS_SHA512_C) || \
-    defined(MBEDTLS_SHA3_C) || \
     defined(MBEDTLS_RIPEMD160_C)
 #define MBEDTLS_MD_SOME_LEGACY
 #endif

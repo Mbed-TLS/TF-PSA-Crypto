@@ -306,7 +306,10 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx)
                 mbedtls_sha512_free(ctx->md_ctx);
                 break;
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
             case MBEDTLS_MD_SHA3_224:
             case MBEDTLS_MD_SHA3_256:
             case MBEDTLS_MD_SHA3_384:
@@ -391,7 +394,10 @@ int mbedtls_md_clone(mbedtls_md_context_t *dst,
             mbedtls_sha512_clone(dst->md_ctx, src->md_ctx);
             break;
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_224:
         case MBEDTLS_MD_SHA3_256:
         case MBEDTLS_MD_SHA3_384:
@@ -481,7 +487,10 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
             ALLOC(sha512);
             break;
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_224:
         case MBEDTLS_MD_SHA3_256:
         case MBEDTLS_MD_SHA3_384:
@@ -553,13 +562,19 @@ int mbedtls_md_starts(mbedtls_md_context_t *ctx)
         case MBEDTLS_MD_SHA512:
             return mbedtls_sha512_starts(ctx->md_ctx, 0);
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224)
         case MBEDTLS_MD_SHA3_224:
             return mbedtls_sha3_starts(ctx->md_ctx, MBEDTLS_SHA3_224);
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
         case MBEDTLS_MD_SHA3_256:
             return mbedtls_sha3_starts(ctx->md_ctx, MBEDTLS_SHA3_256);
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
         case MBEDTLS_MD_SHA3_384:
             return mbedtls_sha3_starts(ctx->md_ctx, MBEDTLS_SHA3_384);
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3_starts(ctx->md_ctx, MBEDTLS_SHA3_512);
 #endif
@@ -612,7 +627,10 @@ int mbedtls_md_update(mbedtls_md_context_t *ctx, const unsigned char *input, siz
         case MBEDTLS_MD_SHA512:
             return mbedtls_sha512_update(ctx->md_ctx, input, ilen);
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_224:
         case MBEDTLS_MD_SHA3_256:
         case MBEDTLS_MD_SHA3_384:
@@ -670,7 +688,10 @@ int mbedtls_md_finish(mbedtls_md_context_t *ctx, unsigned char *output)
         case MBEDTLS_MD_SHA512:
             return mbedtls_sha512_finish(ctx->md_ctx, output);
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_224:
         case MBEDTLS_MD_SHA3_256:
         case MBEDTLS_MD_SHA3_384:
@@ -728,13 +749,19 @@ int mbedtls_md(const mbedtls_md_info_t *md_info, const unsigned char *input, siz
         case MBEDTLS_MD_SHA512:
             return mbedtls_sha512(input, ilen, output, 0);
 #endif
-#if defined(MBEDTLS_SHA3_C)
+#if defined(PSA_WANT_ALG_SHA3_224)
         case MBEDTLS_MD_SHA3_224:
             return mbedtls_sha3(MBEDTLS_SHA3_224, input, ilen, output, md_info->size);
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
         case MBEDTLS_MD_SHA3_256:
             return mbedtls_sha3(MBEDTLS_SHA3_256, input, ilen, output, md_info->size);
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
         case MBEDTLS_MD_SHA3_384:
             return mbedtls_sha3(MBEDTLS_SHA3_384, input, ilen, output, md_info->size);
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3(MBEDTLS_SHA3_512, input, ilen, output, md_info->size);
 #endif
