@@ -16,6 +16,12 @@
 
 #include "psa/crypto.h"
 
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+
+#include "mbedtls/ecp.h"
+
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 
 /*************************************************************************
