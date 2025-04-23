@@ -763,7 +763,7 @@
  *
  * Module:  library/nist_kw.c
  *
- * Auto enables: PSA_WANT_ALG_ECB_NO_PADDING and PSA_WANT_KEY_TYPE_AES
+ * Auto enables: PSA_WANT_ALG_ECB_NO_PADDING
  */
 #define MBEDTLS_NIST_KW_C
 
