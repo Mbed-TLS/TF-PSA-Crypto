@@ -21,7 +21,7 @@ add_dependencies(${programs_target} ${executables_with_common_c})
 
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
-    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
+    set(exe_sources ${exe}.c)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)
     endif()
@@ -32,7 +32,7 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
         list(APPEND exe_sources fuzz_common.c)
     endif()
 
-    add_executable(${exe} ${exe_sources})
+    add_executable(${exe} ${exe_sources} $<TARGET_OBJECTS:tf_psa_crypto_test>)
     set_base_compile_options(${exe})
     target_include_directories(${exe} PRIVATE ../../core/
 	                                      ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include)
