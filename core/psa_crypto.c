@@ -64,7 +64,7 @@
 #include "mbedtls/sha1.h"
 #include "mbedtls/sha256.h"
 #include "mbedtls/sha512.h"
-#include "pk_internal.h"
+#include "psa_util_internal.h"
 #include "mbedtls/threading.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF) ||          \
