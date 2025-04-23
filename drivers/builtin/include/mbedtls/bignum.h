@@ -1107,6 +1107,22 @@ int mbedtls_mpi_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
 
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
+/**
+ * \brief           Write an arbitrary-precision number (#MBEDTLS_ASN1_INTEGER)
+ *                  in ASN.1 format.
+ *
+ * \note            This function works backwards in data buffer.
+ *
+ * \param p         The reference to the current position pointer.
+ * \param start     The start of the buffer, for bounds-checking.
+ * \param X         The MPI to write.
+ *                  It must be non-negative.
+ *
+ * \return          The number of bytes written to \p p on success.
+ * \return          A negative \c MBEDTLS_ERR_ASN1_XXX error code on failure.
+ */
+int mbedtls_asn1_write_mpi(unsigned char **p, const unsigned char *start,
+                           const mbedtls_mpi *X);
 
 #ifdef __cplusplus
 }
