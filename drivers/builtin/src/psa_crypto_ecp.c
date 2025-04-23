@@ -14,7 +14,7 @@
 #include "psa_crypto_core.h"
 #include "psa_crypto_ecp.h"
 #include "psa_crypto_random_impl.h"
-#include "pk_internal.h"
+#include "psa_util_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
