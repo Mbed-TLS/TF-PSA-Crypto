@@ -424,7 +424,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
          */
         padlen = input_length - KW_SEMIBLOCK_LENGTH - Plen;
         ret = mbedtls_ct_error_if(mbedtls_ct_uint_gt(padlen, 7),
-                                  PSA_ERROR_INVALID_PADDING, ret);
+                                  PSA_ERROR_INVALID_SIGNATURE, ret);
         padlen &= 7;
 
         /* Check padding in "constant-time" */
@@ -434,7 +434,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
             KW_SEMIBLOCK_LENGTH, KW_SEMIBLOCK_LENGTH - padlen, 0);
 
         if (diff != 0) {
-            ret = PSA_ERROR_INVALID_PADDING;
+            ret = PSA_ERROR_INVALID_SIGNATURE;
         }
 
         if (ret != PSA_SUCCESS) {
