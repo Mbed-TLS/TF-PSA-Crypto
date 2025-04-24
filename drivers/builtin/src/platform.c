@@ -425,21 +425,18 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
 
     /*
      * BCryptGenRandom takes ULONG for size, which is smaller than size_t on
-     * 64-bit Windows platforms. Extract entropy in chunks of len (dependent
-     * on ULONG_MAX) size.
+     * 64-bit Windows platforms.
      */
-    while (output_size != 0) {
-        unsigned long ulong_bytes =
-            (output_size > ULONG_MAX) ? ULONG_MAX : (unsigned long) output_size;
-
-        if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, output, ulong_bytes,
-                                            BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
-            return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
-        }
-
-        *output_len += ulong_bytes;
-        output_size -= ulong_bytes;
+    if (output_size > ULONG_MAX) {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
+
+    if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, output, output_size,
+                                        BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    *output_len = output_size;
     *entropy_content = 8 * *output_len;
 
     return 0;
