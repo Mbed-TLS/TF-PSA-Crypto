@@ -1059,12 +1059,12 @@
 /**
  * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
  *
- * By default Mbed TLS uses platform-specific sources such as getrandom(),
- * /dev/urandom or BCryptGenRandom() to gather entropy data. If these functions
- * are not available for some reason (ex: working on a baremetal project), the
- * following symbol allows the user to define a custom callback function named
- * `mbedtls_platform_get_entropy()` that Mbed TLS will use to gather entropy
- * data. Public header `mbedtls/platform.h` provides the prototype for this
+ * By default TF-PSA-Crypto uses platform-specific sources such as `getrandom()`,
+ * `/dev/urandom` or `BCryptGenRandom()` to gather entropy data. If these
+ * functions are not available on your platform, the following symbol allows
+ * you to define a custom callback function named mbedtls_platform_get_entropy()
+ * that Mbed TLS will use to gather entropy data.
+ * The public header mbedtls/platform.h provides the prototype for this
  * callback function and also the documentation for its parameters.
  */
 //#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
