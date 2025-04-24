@@ -16,6 +16,12 @@
 
 #include "psa/crypto.h"
 
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+
+#include "mbedtls/ecp.h"
+
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 
 /*************************************************************************
@@ -93,4 +99,35 @@ int psa_pk_status_to_mbedtls(psa_status_t status);
                           fallback_f)
 
 #endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+/** Convert an ECC curve identifier from the Mbed TLS encoding to PSA.
+ *
+ * \param grpid         An Mbed TLS elliptic curve identifier
+ *                      (`MBEDTLS_ECP_DP_xxx`).
+ * \param[out] bits     On success the bit size of the curve; 0 on failure.
+ *
+ * \return              If the curve is supported in the PSA API, this function
+ *                      returns the proper PSA curve identifier
+ *                      (`PSA_ECC_FAMILY_xxx`). This holds even if the curve is
+ *                      not supported by the ECP module.
+ * \return              \c 0 if the curve is not supported in the PSA API.
+ */
+psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
+                                          size_t *bits);
+
+/** Convert an ECC curve identifier from the PSA encoding to Mbed TLS.
+ *
+ * \param family        A PSA elliptic curve family identifier
+ *                      (`PSA_ECC_FAMILY_xxx`).
+ * \param bits          The bit-length of a private key on \p curve.
+ *
+ * \return              If the curve is supported in the PSA API, this function
+ *                      returns the corresponding Mbed TLS elliptic curve
+ *                      identifier (`MBEDTLS_ECP_DP_xxx`).
+ * \return              #MBEDTLS_ECP_DP_NONE if the combination of \c curve
+ *                      and \p bits is not supported.
+ */
+mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
+                                                size_t bits);
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #endif /* MBEDTLS_PSA_UTIL_INTERNAL_H */

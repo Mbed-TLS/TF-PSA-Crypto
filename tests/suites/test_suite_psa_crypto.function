@@ -6,7 +6,7 @@
 #include "mbedtls/oid.h"
 #include "common.h"
 
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 
 /* For MBEDTLS_CTR_DRBG_MAX_REQUEST, knowing that psa_generate_random()
  * uses mbedtls_ctr_drbg internally. */
