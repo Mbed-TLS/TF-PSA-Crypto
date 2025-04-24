@@ -112,25 +112,25 @@ static const mbedtls_md_info_t mbedtls_sha512_info = {
 };
 #endif
 
-#if defined(PSA_WANT_ALG_SHA3_224)
+#if defined(PSA_WANT_ALG_SHA3_224) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_224)
 static const mbedtls_md_info_t mbedtls_sha3_224_info = {
     MD_INFO(MBEDTLS_MD_SHA3_224, 28, 144)
 };
 #endif
 
-#if defined(PSA_WANT_ALG_SHA3_256)
+#if defined(PSA_WANT_ALG_SHA3_256) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_256)
 static const mbedtls_md_info_t mbedtls_sha3_256_info = {
     MD_INFO(MBEDTLS_MD_SHA3_256, 32, 136)
 };
 #endif
 
-#if defined(PSA_WANT_ALG_SHA3_384)
+#if defined(PSA_WANT_ALG_SHA3_384) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_384)
 static const mbedtls_md_info_t mbedtls_sha3_384_info = {
     MD_INFO(MBEDTLS_MD_SHA3_384, 48, 104)
 };
 #endif
 
-#if defined(PSA_WANT_ALG_SHA3_512)
+#if defined(PSA_WANT_ALG_SHA3_512) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_512)
 static const mbedtls_md_info_t mbedtls_sha3_512_info = {
     MD_INFO(MBEDTLS_MD_SHA3_512, 64, 72)
 };
@@ -167,19 +167,19 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
         case MBEDTLS_MD_SHA512:
             return &mbedtls_sha512_info;
 #endif
-#if defined(PSA_WANT_ALG_SHA3_224)
+#if defined(PSA_WANT_ALG_SHA3_224) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_224)
         case MBEDTLS_MD_SHA3_224:
             return &mbedtls_sha3_224_info;
 #endif
-#if defined(PSA_WANT_ALG_SHA3_256)
+#if defined(PSA_WANT_ALG_SHA3_256) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_256)
         case MBEDTLS_MD_SHA3_256:
             return &mbedtls_sha3_256_info;
 #endif
-#if defined(PSA_WANT_ALG_SHA3_384)
+#if defined(PSA_WANT_ALG_SHA3_384) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_384)
         case MBEDTLS_MD_SHA3_384:
             return &mbedtls_sha3_384_info;
 #endif
-#if defined(PSA_WANT_ALG_SHA3_512)
+#if defined(PSA_WANT_ALG_SHA3_512) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return &mbedtls_sha3_512_info;
 #endif
