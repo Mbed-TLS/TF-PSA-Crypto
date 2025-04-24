@@ -1,8 +1,8 @@
 Removals
-   * MBEDTLS_NO_PLATFORM_ENTROPY and previously deprecated
-     MBEDTLS_ENTROPY_HARDWARE_ALT are removed. See documentation of
-     MBEDTLS_PLATFORM_GET_ENTROPY_ALT for a description on how entropy module
-     gathers entropy data.
+   * MBEDTLS_NO_PLATFORM_ENTROPY and the previously deprecated
+     MBEDTLS_ENTROPY_HARDWARE_ALT are removed. See the documentation of
+     MBEDTLS_PLATFORM_GET_ENTROPY_ALT for a description on how the entropy
+     module gathers entropy data.
    * MBEDTLS_ENTROPY_MIN_HARDWARE is also removed following the removal of
      MBEDTLS_ENTROPY_HARDWARE_ALT.
 
