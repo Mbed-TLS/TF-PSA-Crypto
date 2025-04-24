@@ -612,7 +612,50 @@ Note that if we want to be able to remove all error code translations (to save c
 
 ## Changes to compilation options
 
-TODO
+### Strategy for removing a compilation option
+
+#### Types of compilation option removals
+
+There are ways in which a compilation option can be removed from the public interface:
+
+* The option is no longer referenced in the code base. Setting it is harmless.
+* The option is still present in the code base, but now implied by other options. This is notably the case for legacy crypto options that are now always controlled via `PSA_WANT_xxx` (`MBEDTLS_PSA_CRYPTO_CONFIG` always on). Setting it may cause the configuration to be inconsistent, so we should complain if the option is set through a configuration file (`mbedtls/mbedtls_config.h`, `psa/crypto_config.h` or similar) rather than internally (in `*/config_adjust*.h`).
+* The option is still present in the code base and not set automatically, but it is not part of the public interface, and will be removed in 1.x/4.x. This happens when we remove a feature that tests still rely on (for example, directly removing some small elliptic curves ([#8136](https://github.com/Mbed-TLS/mbedtls/issues/8136)) would remove some test coverage). We should complain if the option is set, unless it is set from our own test scripts.
+
+#### How to remove a legacy configuration option
+
+Goal: complain if a user tries to set an option in the configuration file (`mbedtls/mbedtls_config.h`, `psa/crypto_config.h` or similar), for options that existed in 3.x but have become internal in 1.0/4.0.
+
+This concerns, in particular, legacy crypto options that are now always controlled via `PSA_WANT_xxx` (`MBEDTLS_PSA_CRYPTO_CONFIG` always on).
+
+Note that users may be setting crypto options in the Mbed TLS configuration, which is included after the config adjustments in TF-PSA-Crypto have set some legacy symbols. We need a complaint if TF-PSA-Crypto's `build_info.h` does not set some legacy option and the user's `mbedtls_config.h` then sets it. How can we do this?
+
+* Remember the state of all implied options before including the Mbed TLS configuration, then check if it has changed. This requires a lot of boilerplate. This doesn't cause a complaint if the Mbed TLS configuration sets an implied option redundantly, only if it sets an implied option that should no longer be set.
+* Set implied options to an expansion that is a nonzero integer (e.g. 0xdeadc0f1) when doing config adjustments. After reading the Mbed TLS configuration, reject implied options that are defined but false (which is the case for `#if FOO` when `FOO` is defined with an empty expansion). This causes a complaint if the Mbed TLS configuration sets an option redundantly, but the reason for the complaint is not clear from the error message (macro redefinition warning).
+* Rename all implied options internally. This would be ideal, but it's a lot of work, including work in the framework, so it is not achievable for 0ε.
+* Temporarily rename implied options around the inclusion of the Mbed TLS configuration (e.g. `#ifdef FOO #define REMEMBER_FOO #undef FOO #endif` before, and `#ifdef FOO #error #endif #ifdef REMEMBER_FOO #define FOO #endif` after). This requires a lot of boilerplate.
+* Split `build_info.h` differently so that we can have all user configuration, then the removed-option checks, then the config adjustments. This doesn't seem doable since the application code may have included a crypto header before any mbedtls header.
+
+Requiring a lot of boilerplate is not much of a problem. The code follows a systematic pattern and can be generated easily. This code is unlikely to change throughout 1.x/4.x, so we can generate it and check it in as part of the 0ε work.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10147): in `build_info.h`, after including the user configuration file but before the configuration adjustments, include a header that has `#error` directives for each preprocessor symbol that was a configuration option in 3.6 but no longer is in 1.0/4.0. Suggested header names:
+
+* `mbedtls/check_config_removed.h`
+* `tf-psa-crypto/check_config_removed.h`
+
+#### How to remove a feature option from the interface
+
+Goal: have a way for an option to be forbidden to users, but allowed in our test scripts.
+
+This concerns options controlling features that we want to remove, but that we still rely on. For example DES to decrypt some test keys, or small elliptic curves used in some curve-agnostic testing.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10147): define a new option in `psa/crypto_config.h` called `TF_PSA_CRYPTO_ALLOW_REMOVED_FEATURES`, disabled by default. Let it be enabled in the `full` configuration. Add a section in `psa/crypto_config.h` for removed options with a comment explaining that the options in this section are not part of the interface. In `config.py`, exclude this whole section from the `realfull` configuration.
+
+Then, to remove a feature option `FOO` from the interface without removing it from the code base:
+
+* Keep `//#define FOO` in `psa/crypto_config.h`, but remove its documentation and move the line to the removed features section.
+* In any `all.sh` component that enables the option from the default configuration rather than from the `full` configuration, explicitly enable `TF_PSA_CRYPTO_ALLOW_REMOVED_FEATURES`.
+* We should not do this for any option that is enabled in a sample configuration.
 
 ### Analysis of legacy crypto options
 
