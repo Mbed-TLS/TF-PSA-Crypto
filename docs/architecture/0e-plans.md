@@ -461,17 +461,19 @@ We will make these headers internal after 0ε. For 0ε, they can remain private.
 
 #### Move private headers
 
-Move private and exposed headers so that they are always under a subdirectory called `.../private`. This is a simple way of conveying that their content is not part of the public API both to humans and to programs.
+Move private and exposed headers so that they are always under a subdirectory called `.../private`. This is a simple way of conveying that their content is not part of the public API both to humans and to programs. In particular, this makes it clear to human readers that the header's content is not part of the public API, even after the headers are installed. (Merely relying on the layout of the source tree does not help after installation.)
 
 Note that public headers can include private headers, since some private headers define exposed types and macros.
 
 ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10087): Move TF-PSA-Crypto private headers from `drivers/builtin/include/mbedtls` to `drivers/builtin/include/mbedtls/private`. Move mbedtls private headers from `include/mbedtls` to `include/mbedtls/private`. This requires coordinated action between the three repositories.
 
+OPEN: is this really necessary? If we don't do this, attempts to call exposed functions will fail thanks to `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` (see “[Hiding functions in an exposed header](#hiding-functions-in-an-exposed-header)”). But this preprocessor guard is discrete and users are likely to miss it, leading to frustration when their code mysteriously doesn't compile.
+
 #### Privatization of Everest headers
 
 Everest headers (`drivers/everest/include/everest/include/**/*.h`) contain some exposed types: they are exposed via `mbedtls_ecdh_context` from `mbedtls/ecdh.h` which is exposed via `mbedtls_psa_key_agreement_interruptible_operation_t` indirectly from `psa/crypto.h`. The rest of their content is private (to be consumed only by `ecdh.c`) or internal (to be consumed only by `everest/**/*.c`) definitions.
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/230): For 0ε, guard everything that isn't an exposed type (or necessary macros, if any) by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`. TODO: do we actually need this?
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/230): For 0ε, guard everything that isn't an exposed type (or necessary macros, if any) by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`.
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/229): For 0ε, move Everest headers so that they are installed under `$PREFIX/include/tf-psa-crypto/private`.
 
