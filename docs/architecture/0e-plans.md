@@ -992,7 +992,7 @@ Options that can currently be set directly, and cannot be set via adjustment. Su
 
 We have finished migrating `all.sh` to `MBEDTLS_PSA_CRYPTO_CONFIG`, so in principle, it should not rely on setting legacy options. There are still many occurrences of [boolean options that can be set indirectly](#boolean-options-that-can-be-set-indirectly) (and thus are likely to be removed). Almost all are `config.py unset` that are only present because we're disabling a mechanism through PSA and we want to avoid it coming back through the legacy API where it's enabled by default or by `full`, hence we can remove the `unset` statements once the option is no longer present in `crypto_config.h`.
 
-TODO: validate this. By making the legacy option default-off and excluded from `full`, then comparing the outcome files? (Removing the option may affect [`depends.py`](#legacy-options-in-dependspy) until the ongoing work there is finished.)
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10148): validate this. By making the legacy option default-off and excluded from `full`, then comparing the outcome files? (Removing the option may affect [`depends.py`](#legacy-options-in-dependspy) until the ongoing work there is finished.)
 
 #### Legacy options in `depends.py`
 
@@ -1002,7 +1002,7 @@ At the time of writing, `depends.py` still works with legacy options. A migratio
 
 Non-boolean options are likely to remain relevant since PSA has no equivalent. However, some may have become irrelevant, for example if they configure a module that is being removed.
 
-TODO
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10149): check non-boolean options, other than RNG options, to see if any should be removed or adapted.
 
 ### Changes to RNG options
 
@@ -1053,7 +1053,7 @@ Beyond the entry points, the random generator also has a configuration interface
 
 #### Evolution of RNG options
 
-TODO
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/267): work out the fate of RNG options.
 
 #### Builds without entropy
 
@@ -1251,7 +1251,7 @@ We are removing the low-level DHM module for finite-field Diffie-Hellman (FFDH).
 
 The PSA code is not based on the DHM module (it calls bignum directly), so the DHM module is now dead code.
 
-Task: Remove `dhm.h`, `dhm.c`, `MBEDTLS_DHM_C`, `test_suite_dhm`.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/9956): Remove `dhm.h`, `dhm.c`, `MBEDTLS_DHM_C`, `test_suite_dhm`.
 
 ### PSA self-test interface
 
