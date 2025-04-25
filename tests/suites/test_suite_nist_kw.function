@@ -35,8 +35,8 @@ void nist_kw_wrap_unwrap(int mode, data_t *kw_key,
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
     TEST_CALLOC(out, kw_res->len);
 
-    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT, 
-                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id, 
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id,
                              kw_key));
     PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, kw_msg->x,
                                     kw_msg->len, out, kw_res->len, &olen));
@@ -67,8 +67,8 @@ void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
 
     TEST_CALLOC(ciphertext, output_len);
 
-    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT, 
-                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id, 
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id,
                              &key));
 
     TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode,
@@ -108,8 +108,8 @@ void nist_kw_ciphertext_lengths(int in_len, int out_len, int mode, int res)
 
     memset(key_array, 0, sizeof(key_array));
 
-    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT, 
-                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id, 
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id,
                              &key));
 
     TEST_CALLOC(plaintext, output_len);
@@ -145,17 +145,17 @@ void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
     padlen = (msg->len % 8 != 0) ? 8 - (msg->len % 8) : 0;
     int result_size = msg->len + 8 + padlen;
     unsigned char *result = NULL;
-    
+
     TEST_CALLOC(result, result_size);
 
-    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT, PSA_ALG_ECB_NO_PADDING, 
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT, PSA_ALG_ECB_NO_PADDING,
                              PSA_KEY_TYPE_AES, &key_id, key));
     PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len,
                                     result, result_size, &result_length));
 
     TEST_EQUAL(result_length, expected_result->len);
 
-    TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,  
+    TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,
                         result_length);
 
 exit:
@@ -182,7 +182,7 @@ void mbedtls_nist_kw_wrap_key_test(int mode,
     PSA_ASSERT(setup_psa_key(usage, alg, key_type, &key_id, key));
 
     TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode, input, 16,
-                                    output, sizeof(output), &output_length), 
+                                    output, sizeof(output), &output_length),
                                     expected_ret);
     if (expected_ret != PSA_SUCCESS) {
         goto exit;
@@ -205,7 +205,7 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
     int result_size = msg->len - 8;
     result = mbedtls_calloc(1, result_size);
 
-    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_DECRYPT, PSA_ALG_ECB_NO_PADDING, 
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_DECRYPT, PSA_ALG_ECB_NO_PADDING,
                              PSA_KEY_TYPE_AES, &key_id, key));
 
     /* Test with input == output */
@@ -243,7 +243,7 @@ void mbedtls_nist_kw_unwrap_key_test(int mode,
     PSA_ASSERT(setup_psa_key(usage, alg, key_type, &key_id, key));
 
     /* Test with input == output */
-    TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, input, 16, output, 
+    TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, input, 16, output,
                                       sizeof(output), &output_length),
                                       expected_ret);
 
