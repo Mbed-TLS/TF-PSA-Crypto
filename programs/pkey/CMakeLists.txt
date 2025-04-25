@@ -8,7 +8,7 @@ foreach(exe IN LISTS executables_mbedcrypto)
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
     set_base_compile_options(${exe})
     target_link_libraries(${exe} ${tfpsacrypto_target} ${CMAKE_THREAD_LIBS_INIT})
-    target_include_directories(${exe} PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include ../../core/)
+    target_include_directories(${exe} PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include)
 endforeach()
 
 install(TARGETS ${executables_mbedcrypto}
