@@ -11,19 +11,23 @@ target_include_directories(${everest_target}
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
          $<INSTALL_INTERFACE:include>
-  PRIVATE $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/kremlib/>
+	 $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>
+  PRIVATE $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/>
+          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/kremlib/>
           ${TF_PSA_CRYPTO_DIR}/core)
 set_config_files_compile_definitions(${everest_target})
+
+if(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
   install(DIRECTORY include/tf-psa-crypto/private/everest
     DESTINATION include
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     FILES_MATCHING PATTERN "*.h")
-install(TARGETS ${everest_target}
 
+endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
+
+install(TARGETS ${everest_target}
   EXPORT MbedTLSTargets
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
   PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
