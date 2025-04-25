@@ -4,6 +4,8 @@ psa/hmac_demo
 psa/key_ladder_demo
 psa/psa_constant_names
 psa/psa_hash
+pkey/rsa_sign_pss
+pkey/rsa_sign_verify
 test/benchmark
 test/which_aes
 
