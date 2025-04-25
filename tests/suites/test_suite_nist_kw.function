@@ -28,7 +28,7 @@ exit:
 
 /* BEGIN_CASE */
 void nist_kw_wrap_unwrap(int mode, data_t *kw_key,
-                               data_t *kw_msg, data_t *kw_res)
+                         data_t *kw_msg, data_t *kw_res)
 {
     unsigned char *out = NULL;
     size_t olen = 0;
@@ -72,9 +72,9 @@ void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
                              &key));
 
     TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode,
-                                     plaintext, in_len,
-                                     ciphertext, output_len,
-                                     &output_len), res);
+                                    plaintext, in_len,
+                                    ciphertext, output_len,
+                                    &output_len), res);
     if (res == 0) {
         if (mode == MBEDTLS_KW_MODE_KWP) {
             TEST_ASSERT(output_len == (size_t) in_len + 8 -
@@ -183,7 +183,7 @@ void mbedtls_nist_kw_wrap_key_test(int mode,
 
     TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode, input, 16,
                                     output, sizeof(output), &output_length),
-                                    expected_ret);
+               expected_ret);
     if (expected_ret != PSA_SUCCESS) {
         goto exit;
     }
@@ -210,8 +210,8 @@ void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
 
     /* Test with input == output */
     TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, msg->x, msg->len,
-                                       result, result_size, &result_len),
-                                       expected_ret);
+                                      result, result_size, &result_len),
+               expected_ret);
     if (expected_ret == 0) {
         TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result, result_len);
     } else {
@@ -245,7 +245,7 @@ void mbedtls_nist_kw_unwrap_key_test(int mode,
     /* Test with input == output */
     TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, input, 16, output,
                                       sizeof(output), &output_length),
-                                      expected_ret);
+               expected_ret);
 
 exit:
     psa_destroy_key(key_id);
