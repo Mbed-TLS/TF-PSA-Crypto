@@ -22,18 +22,23 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_DES_ENCRYPT     1
 #define MBEDTLS_DES_DECRYPT     0
+#endif
 
 /** The data input has an invalid length. */
 #define MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH              -0x0032
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_DES_KEY_SIZE    8
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          DES context structure
  *
@@ -355,6 +360,8 @@ MBEDTLS_CHECK_RETURN_CRITICAL
 int mbedtls_des_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

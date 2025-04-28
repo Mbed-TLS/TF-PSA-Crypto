@@ -25,12 +25,14 @@
 
 #include "mbedtls/platform_util.h"
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_ARIA_ENCRYPT     1 /**< ARIA encryption. */
 #define MBEDTLS_ARIA_DECRYPT     0 /**< ARIA decryption. */
 
 #define MBEDTLS_ARIA_BLOCKSIZE   16 /**< ARIA block size in bytes. */
 #define MBEDTLS_ARIA_MAX_ROUNDS  16 /**< Maximum number of rounds in ARIA. */
 #define MBEDTLS_ARIA_MAX_KEYSIZE 32 /**< Maximum size of an ARIA key in bytes. */
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Bad input data. */
 #define MBEDTLS_ERR_ARIA_BAD_INPUT_DATA -0x005C
@@ -42,6 +44,7 @@
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief The ARIA context-type definition.
  */
@@ -163,8 +166,8 @@ int mbedtls_aria_crypt_ecb(mbedtls_aria_context *ctx,
  * \param ctx      The ARIA context to use for encryption or decryption.
  *                 This must be initialized and bound to a key.
  * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_ARIA_ENCRYPT for encryption, or
- *                 #MBEDTLS_ARIA_DECRYPT for decryption.
+ *                 MBEDTLS_ARIA_ENCRYPT for encryption, or
+ *                 MBEDTLS_ARIA_DECRYPT for decryption.
  * \param length   The length of the input data in Bytes. This must be a
  *                 multiple of the block size (16 Bytes).
  * \param iv       Initialization vector (updated after use).
@@ -212,8 +215,8 @@ int mbedtls_aria_crypt_cbc(mbedtls_aria_context *ctx,
  * \param ctx      The ARIA context to use for encryption or decryption.
  *                 This must be initialized and bound to a key.
  * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_ARIA_ENCRYPT for encryption, or
- *                 #MBEDTLS_ARIA_DECRYPT for decryption.
+ *                 MBEDTLS_ARIA_ENCRYPT for encryption, or
+ *                 MBEDTLS_ARIA_DECRYPT for decryption.
  * \param length   The length of the input data \p input in Bytes.
  * \param iv_off   The offset in IV (updated after use).
  *                 This must not be larger than 15.
@@ -244,7 +247,7 @@ int mbedtls_aria_crypt_cfb128(mbedtls_aria_context *ctx,
  *             Due to the nature of CTR, you must use the same key schedule
  *             for both encryption and decryption operations. Therefore, you
  *             must use the context initialized with mbedtls_aria_setkey_enc()
- *             for both #MBEDTLS_ARIA_ENCRYPT and #MBEDTLS_ARIA_DECRYPT.
+ *             for both MBEDTLS_ARIA_ENCRYPT and MBEDTLS_ARIA_DECRYPT.
  *
  * \warning    You must never reuse a nonce value with the same key. Doing so
  *             would void the encryption for the two messages encrypted with
@@ -327,6 +330,8 @@ int mbedtls_aria_crypt_ctr(mbedtls_aria_context *ctx,
  */
 int mbedtls_aria_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
