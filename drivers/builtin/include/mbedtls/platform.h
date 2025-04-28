@@ -449,8 +449,6 @@ mbedtls_platform_context;
 /**
  * \brief       User defined callback function that is used from the entropy
  *              module to gather entropy data from some hardware device.
- *              The function's prototype is only available when
- *              `MBEDTLS_PLATFORM_GET_ENTROPY_ALT` is defined.
  *
  * \param[out] output           Output buffer where the entropy data will be
  *                              stored.
@@ -473,6 +471,11 @@ mbedtls_platform_context;
  *              with entropy sources with lower entropy content (i.e.
  *              0 < \p entropy_content < 8 * output_len) by calling the callback
  *              function in loop.
+ *
+ * \note        This function is not meant to be called by application code, and
+ *              it is not guaranteed that this function will exist or will behave
+ *              in the same way in future versions of the library. Applications
+ *              should call psa_generate_random() to obtain random data.
  */
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
                                  size_t *output_len, size_t *entropy_content);
