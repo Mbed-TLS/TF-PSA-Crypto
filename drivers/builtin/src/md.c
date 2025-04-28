@@ -307,9 +307,9 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx)
                 break;
 #endif
 #if defined(PSA_WANT_ALG_SHA3_224) || \
-    defined(PSA_WANT_ALG_SHA3_256) || \
-    defined(PSA_WANT_ALG_SHA3_384) || \
-    defined(PSA_WANT_ALG_SHA3_512)
+        defined(PSA_WANT_ALG_SHA3_256) || \
+        defined(PSA_WANT_ALG_SHA3_384) || \
+        defined(PSA_WANT_ALG_SHA3_512)
             case MBEDTLS_MD_SHA3_224:
             case MBEDTLS_MD_SHA3_256:
             case MBEDTLS_MD_SHA3_384:
