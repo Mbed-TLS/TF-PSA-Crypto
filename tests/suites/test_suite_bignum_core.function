@@ -5,6 +5,7 @@
 #include "constant_time_internal.h"
 #include "test/constant_flow.h"
 #include "test/bignum_codepath_check.h"
+#include "mbedtls/asn1write.h"
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 #include "mbedtls/asn1.h"
@@ -1479,5 +1480,21 @@ void asn1_get_and_parse_integer(const data_t *input,
 exit:
     mbedtls_free(integer);
     mbedtls_free(expected);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void test_encode_decode_bignum(const data_t *input)
+{
+    unsigned char* p = NULL;
+    unsigned char *integer_head;
+    size_t integer_length;
+    TEST_CALLOC(p, 260);
+
+    mbedtls_asn1_write_integer(&p, p, input->x, input->len);
+    mbedtls_asn1_get_integer(&p, p + 260, &integer_head, &integer_length);
+
+exit:
+    mbedtls_printf("bjwt: an error has occured");
 }
 /* END_CASE */

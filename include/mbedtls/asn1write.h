@@ -362,6 +362,8 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
                                                        const unsigned char *val,
                                                        size_t val_len);
 
+int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, unsigned char *val, size_t integer_size);
+
 #ifdef __cplusplus
 }
 #endif
