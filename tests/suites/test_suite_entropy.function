@@ -608,5 +608,8 @@ void entropy_test_platform_get_entropy_alt(void)
     mbedtls_entropy_free(&ctx);
     call_count = mbedtls_test_platform_get_entropy_get_call_count();
     TEST_EQUAL(call_count, TEST_PLATFORM_GET_ENTROPY_EXP_CALL_COUNT);
+
+exit:
+    mbedtls_test_platform_get_entropy_reset();
 }
 /* END_CASE */
