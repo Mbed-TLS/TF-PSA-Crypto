@@ -33,7 +33,6 @@
 extern "C" {
 #endif
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          CAMELLIA context structure
  */
@@ -43,6 +42,7 @@ typedef struct mbedtls_camellia_context {
 }
 mbedtls_camellia_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          Initialize a CAMELLIA context.
  *

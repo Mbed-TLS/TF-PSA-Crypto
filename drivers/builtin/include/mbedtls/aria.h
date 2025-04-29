@@ -28,9 +28,11 @@
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_ARIA_ENCRYPT     1 /**< ARIA encryption. */
 #define MBEDTLS_ARIA_DECRYPT     0 /**< ARIA decryption. */
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #define MBEDTLS_ARIA_BLOCKSIZE   16 /**< ARIA block size in bytes. */
 #define MBEDTLS_ARIA_MAX_ROUNDS  16 /**< Maximum number of rounds in ARIA. */
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_ARIA_MAX_KEYSIZE 32 /**< Maximum size of an ARIA key in bytes. */
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
@@ -44,7 +46,6 @@
 extern "C" {
 #endif
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief The ARIA context-type definition.
  */
@@ -55,6 +56,7 @@ typedef struct mbedtls_aria_context {
 }
 mbedtls_aria_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          This function initializes the specified ARIA context.
  *
