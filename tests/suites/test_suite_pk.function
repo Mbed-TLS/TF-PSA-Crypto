@@ -1104,7 +1104,6 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
          * PSA or the Mbed TLS API, depending on the PSS options used.
          * So, it may return either INVALID_PADDING or INVALID_SIGNATURE.
          */
-        fprintf(stderr, "result=%d, ret=%d\n", result, ret);
         TEST_ASSERT(ret == result || ret == MBEDTLS_ERR_RSA_VERIFY_FAILED);
     } else {
         TEST_EQUAL(ret, result);
