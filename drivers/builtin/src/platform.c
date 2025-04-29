@@ -431,7 +431,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
-    if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, output, output_size,
+    if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, output, (unsigned long) output_size,
                                         BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
