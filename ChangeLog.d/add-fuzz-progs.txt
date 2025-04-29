@@ -1,0 +1,2 @@
+Features
+   * Add fuzz_privkey and fuzz_pubkey programs.
