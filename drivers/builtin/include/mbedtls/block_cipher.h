@@ -32,6 +32,7 @@
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 typedef enum {
     MBEDTLS_BLOCK_CIPHER_ID_NONE = 0,  /**< Unset. */
     MBEDTLS_BLOCK_CIPHER_ID_AES,       /**< The AES cipher. */
@@ -68,6 +69,8 @@ typedef struct {
 #endif
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_block_cipher_context_t;
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

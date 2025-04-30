@@ -44,10 +44,12 @@
 #include "mbedtls/block_cipher.h"
 #endif
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_CCM_DECRYPT       0
 #define MBEDTLS_CCM_ENCRYPT       1
 #define MBEDTLS_CCM_STAR_DECRYPT  2
 #define MBEDTLS_CCM_STAR_ENCRYPT  3
+#endif
 
 /** Bad input parameters to the function. */
 #define MBEDTLS_ERR_CCM_BAD_INPUT       -0x000D
@@ -90,6 +92,7 @@ typedef struct mbedtls_ccm_context {
 }
 mbedtls_ccm_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief           This function initializes the specified CCM context,
  *                  to make references valid, and prepare the context
@@ -312,9 +315,9 @@ int mbedtls_ccm_star_auth_decrypt(mbedtls_ccm_context *ctx, size_t length,
  * \note            This function is not implemented in Mbed TLS yet.
  *
  * \param ctx       The CCM context. This must be initialized.
- * \param mode      The operation to perform: #MBEDTLS_CCM_ENCRYPT or
- *                  #MBEDTLS_CCM_DECRYPT or #MBEDTLS_CCM_STAR_ENCRYPT or
- *                  #MBEDTLS_CCM_STAR_DECRYPT.
+ * \param mode      The operation to perform: MBEDTLS_CCM_ENCRYPT or
+ *                  MBEDTLS_CCM_DECRYPT or MBEDTLS_CCM_STAR_ENCRYPT or
+ *                  MBEDTLS_CCM_STAR_DECRYPT.
  * \param iv        The initialization vector. This must be a readable buffer
  *                  of at least \p iv_len Bytes.
  * \param iv_len    The length of the nonce in Bytes: 7, 8, 9, 10, 11, 12,
@@ -510,6 +513,8 @@ int mbedtls_ccm_finish(mbedtls_ccm_context *ctx,
  */
 int mbedtls_ccm_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

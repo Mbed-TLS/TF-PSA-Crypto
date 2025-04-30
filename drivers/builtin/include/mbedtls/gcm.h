@@ -30,8 +30,10 @@
 
 #include <stdint.h>
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_GCM_ENCRYPT     1
 #define MBEDTLS_GCM_DECRYPT     0
+#endif
 
 /** Authenticated decryption failed. */
 #define MBEDTLS_ERR_GCM_AUTH_FAILED                       -0x0012
@@ -72,6 +74,7 @@ typedef struct mbedtls_gcm_context {
 }
 mbedtls_gcm_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief           This function initializes the specified GCM context,
  *                  to make references valid, and prepares the context
@@ -121,10 +124,10 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
  * \param ctx       The GCM context to use for encryption or decryption. This
  *                  must be initialized.
  * \param mode      The operation to perform:
- *                  - #MBEDTLS_GCM_ENCRYPT to perform authenticated encryption.
+ *                  - MBEDTLS_GCM_ENCRYPT to perform authenticated encryption.
  *                    The ciphertext is written to \p output and the
  *                    authentication tag is written to \p tag.
- *                  - #MBEDTLS_GCM_DECRYPT to perform decryption.
+ *                  - MBEDTLS_GCM_DECRYPT to perform decryption.
  *                    The plaintext is written to \p output and the
  *                    authentication tag is written to \p tag.
  *                    Note that this mode is not recommended, because it does
@@ -150,7 +153,7 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
  *                  buffer of at least \p tag_len Bytes.
  *
  * \return          \c 0 if the encryption or decryption was performed
- *                  successfully. Note that in #MBEDTLS_GCM_DECRYPT mode,
+ *                  successfully. Note that in MBEDTLS_GCM_DECRYPT mode,
  *                  this does not indicate that the data is authentic.
  * \return          #MBEDTLS_ERR_GCM_BAD_INPUT if the lengths or pointers are
  *                  not valid or a cipher-specific error code if the encryption
@@ -217,8 +220,8 @@ int mbedtls_gcm_auth_decrypt(mbedtls_gcm_context *ctx,
  *                  operation.
  *
  * \param ctx       The GCM context. This must be initialized.
- * \param mode      The operation to perform: #MBEDTLS_GCM_ENCRYPT or
- *                  #MBEDTLS_GCM_DECRYPT.
+ * \param mode      The operation to perform: MBEDTLS_GCM_ENCRYPT or
+ *                  MBEDTLS_GCM_DECRYPT.
  * \param iv        The initialization vector. This must be a readable buffer of
  *                  at least \p iv_len Bytes.
  * \param iv_len    The length of the IV.
@@ -368,6 +371,8 @@ void mbedtls_gcm_free(mbedtls_gcm_context *ctx);
 int mbedtls_gcm_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
