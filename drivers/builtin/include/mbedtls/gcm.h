@@ -68,8 +68,8 @@ typedef struct mbedtls_gcm_context {
     unsigned char MBEDTLS_PRIVATE(y)[16];                    /*!< The Y working value. */
     unsigned char MBEDTLS_PRIVATE(buf)[16];                  /*!< The buf working value. */
     unsigned char MBEDTLS_PRIVATE(mode);                     /*!< The operation to perform:
-                                                              #MBEDTLS_GCM_ENCRYPT or
-                                                              #MBEDTLS_GCM_DECRYPT. */
+                                                              MBEDTLS_GCM_ENCRYPT or
+                                                              MBEDTLS_GCM_DECRYPT. */
     unsigned char MBEDTLS_PRIVATE(acceleration);             /*!< The acceleration to use. */
 }
 mbedtls_gcm_context;

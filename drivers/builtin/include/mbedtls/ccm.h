@@ -78,10 +78,10 @@ typedef struct mbedtls_ccm_context {
                                                   auth data input is finished. */
     unsigned int MBEDTLS_PRIVATE(q);         /*!< The Q working value */
     unsigned int MBEDTLS_PRIVATE(mode);      /*!< The operation to perform:
-                                              #MBEDTLS_CCM_ENCRYPT or
-                                              #MBEDTLS_CCM_DECRYPT or
-                                              #MBEDTLS_CCM_STAR_ENCRYPT or
-                                              #MBEDTLS_CCM_STAR_DECRYPT. */
+                                              MBEDTLS_CCM_ENCRYPT or
+                                              MBEDTLS_CCM_DECRYPT or
+                                              MBEDTLS_CCM_STAR_ENCRYPT or
+                                              MBEDTLS_CCM_STAR_DECRYPT. */
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     mbedtls_block_cipher_context_t MBEDTLS_PRIVATE(block_cipher_ctx);    /*!< The cipher context used. */
 #else
