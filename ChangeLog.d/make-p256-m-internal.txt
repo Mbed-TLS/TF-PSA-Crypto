@@ -1,2 +1,2 @@
 Changes
-   * Make the p256-m.h internal, it is no longer installed or documented.
+   * Make the file p256-m.h internal, it is no longer installed or documented.
