@@ -133,6 +133,16 @@ Or should we give up on using PK for signature, and instead rely on `mbedtls_pk_
 
 Or should we give up on using PK for signature, and instead rely on `mbedtls_pk_import_into_psa()` followed by `mbedtls_pk_wrap_psa()`? That adds complexity to callers but not inside the library.
 
+#### Enforcing the workflow
+
+If the effective capabilities of `mbedtls_ssl_conf_own_cert()` change, we need to be careful not to end up in a situation where:
+
+1. An application works fine with Mbed TLS 3.6, relying only on documented behavior.
+2. The application still works in practice with Mbed TLS 4.0, but now relies on behavior that is no longer documented.
+3. The application breaks when TF-PSA-Crypto 1.x moves to more PSA in PK (the change that is likely to be problematic being when `mbedtls_pk_parse_key()` starts constructing a PSA key for RSA key pairs).
+
+We should make sure that `mbedtls_ssl_conf_own_cert()` is strict on what it accepts even in the 4.0 release, and validate this through tests. See [“Interface stability testing”](#interface-stability-testing).
+
 ## API elements
 
 ### PK context type
@@ -381,6 +391,20 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/208): Remove the option
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): update the PSA transition guide.
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): write changelog entries.
+
+## Testing
+
+### Unit tests
+
+For the most part, the testing work is a matter of adapting the existing tests, and of creating unit tests for the new interfaces. This work is distributed throughout the coding tasks, plus a specific task https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/207 to account for the new tests around changed interafaces.
+
+### Interface stability testing
+
+One of the [project goals](#project-goal) is to prepare for moving crypto to be fully PSA, and in particular PK to be purely a wrapper around PSA keys, at least for private keys. We want to avoid breaking application code in TF-PSA-Crypto 1.x if the code worked with TF-PSA-Crypto 1.0. Normally our stability guarantee does not apply to applications that use undocumented behavior. However, it may happen that an application worked fine with Mbed TLS 3.6 and was relying only on documented behavior, and TF-PSA-Crypto 1.0 or Mbed TLS 4.0 stops documenting a critical aspect of the behavior, but in practice the application still works with 1.0/4.0. To reduce user frustration, we would like to minimize such cases. Thus the API in TF-PSA-Crypto 1.0 and Mbed TLS 4.0 should be strict and should reject “permissive” behavior that could work now, but would not be easy to migrate to PSA.
+
+The design proposed here mostly ensures this by construction. In particular, a PK object has at most one associated algorithm (set by `mbedtls_pk_set_algorithm()`), and there is no way to “cheat” (there is no longer an `mbedtls_pk_sign_ext()`). However, we need to be careful where the library cheats internally, which is the case in X.509 and TLS for RSA keys (see [“Dual-algorithm RSA verification”](#dual-algorithm-rsa-verification)). For verification, it doesn't matter, because it's always possible to export the key and use it with another algorithm. But for signature, cheating on the algorithm can be impossible, depending on the key's policy. Thus we need to ensure that the TLS interface does not rely on cheating.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10160): test `mbedtls_ssl_conf_own_cert()` to ensure that it doesn't cheat on key policies.
 
 ## Open questions
 
