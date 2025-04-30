@@ -8,12 +8,12 @@ set_base_compile_options(${p256m_target})
 
 target_include_directories(${p256m_target}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/p256-m>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include>
          $<INSTALL_INTERFACE:include>
-  PRIVATE ${TF_PSA_CRYPTO_DIR}/core)
+  PRIVATE ${TF_PSA_CRYPTO_DIR}/core
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/p256-m>)
 set_config_files_compile_definitions(${p256m_target})
 
 install(TARGETS ${p256m_target}
