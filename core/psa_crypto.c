@@ -64,6 +64,7 @@
 #include "mbedtls/sha1.h"
 #include "mbedtls/sha256.h"
 #include "mbedtls/sha512.h"
+#include "mbedtls/nist_kw.h"
 #include "psa_util_internal.h"
 #include "mbedtls/threading.h"
 
@@ -1745,7 +1746,9 @@ static psa_status_t psa_validate_key_policy(const psa_key_policy_t *policy)
                            PSA_KEY_USAGE_SIGN_HASH |
                            PSA_KEY_USAGE_VERIFY_HASH |
                            PSA_KEY_USAGE_VERIFY_DERIVATION |
-                           PSA_KEY_USAGE_DERIVE)) != 0) {
+                           PSA_KEY_USAGE_DERIVE |
+                           PSA_KEY_USAGE_WRAP |
+                           PSA_KEY_USAGE_UNWRAP)) != 0) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -4689,6 +4692,137 @@ exit:
 
     LOCAL_INPUT_FREE(input_external, input);
     LOCAL_OUTPUT_FREE(output_external, output);
+
+    return status;
+}
+
+
+
+psa_status_t psa_wrap_key(mbedtls_svc_key_id_t wrapping_key,
+                          psa_algorithm_t alg,
+                          mbedtls_svc_key_id_t key,
+                          uint8_t *data,
+                          size_t data_size,
+                          size_t *data_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *slot = NULL;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    if (alg != PSA_ALG_AES_KW) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(key, &slot,
+                                                    PSA_KEY_USAGE_EXPORT,
+                                                    PSA_ALG_NONE);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+    
+    status = mbedtls_psa_wrap_key(wrapping_key,
+                                  slot->key.data, slot->key.bytes,
+                                  data,
+                                  data_size,
+                                  data_length);
+
+exit:
+
+    unlock_status = psa_unregister_read_under_mutex(slot);
+    if (status == PSA_SUCCESS) {
+        status = unlock_status;
+    }
+
+    return status;
+}
+
+static psa_status_t psa_validate_key_type_and_size_for_key_generation(
+    psa_key_type_t type, size_t bits);
+
+psa_status_t psa_unwrap_key(const psa_key_attributes_t *attributes,
+                            psa_key_id_t wrapping_key,
+                            psa_algorithm_t alg,
+                            const uint8_t *data,
+                            size_t data_length,
+                            psa_key_id_t *key)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *slot = NULL;
+    size_t key_buffer_size;
+
+    if (alg != PSA_ALG_AES_KW) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    status = psa_start_key_creation(attributes, &slot);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    if (slot->key.bytes == 0) {
+
+        status = psa_validate_key_type_and_size_for_key_generation(
+                attributes->type, attributes->bits);
+            if (status != PSA_SUCCESS) {
+                goto exit;
+            }
+        
+        key_buffer_size = PSA_EXPORT_KEY_OUTPUT_SIZE(
+                attributes->type,
+                attributes->bits);
+        status = psa_allocate_buffer_to_slot(slot, key_buffer_size);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    }
+
+    status = mbedtls_psa_unwrap_key(wrapping_key,
+                                    data, data_length, slot->key.data, slot->key.bytes, &slot->key.bytes);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_fail_key_creation(slot);
+    }
+    if (status == PSA_SUCCESS) {
+        status = psa_finish_key_creation(slot, key);
+    }
+    return status;
+}
+
+psa_status_t mbedtls_psa_wrap_key(
+        mbedtls_svc_key_id_t wrapping_key,
+        const uint8_t *input_key_buffer,
+        size_t input_key_size,
+        uint8_t *output,
+        size_t output_size,
+        size_t *output_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    status = mbedtls_nist_kw_wrap(
+        wrapping_key,
+        MBEDTLS_KW_MODE_KW, input_key_buffer, input_key_size,
+        output,
+        output_size, output_length);
+
+    return status;
+}
+
+psa_status_t mbedtls_psa_unwrap_key(
+    mbedtls_svc_key_id_t wrapping_key,
+    const uint8_t *input_key_buffer,
+    size_t input_key_size,
+    uint8_t *output_key_buffer,
+    size_t output_key_size,
+    size_t *output_key_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    status = mbedtls_nist_kw_unwrap(wrapping_key,
+                                    MBEDTLS_KW_MODE_KW,
+                                    input_key_buffer, input_key_size,
+                                    output_key_buffer, output_key_size,
+                                    output_key_length);
 
     return status;
 }

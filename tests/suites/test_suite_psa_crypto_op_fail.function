@@ -448,3 +448,50 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void key_wrap_fail(int key_type_arg, data_t *key_data,
+                   int alg_arg,
+                   int expected_status_arg)
+{
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t input_key_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t input_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t input_key[16] = {0};
+    uint8_t output[24] = {0};
+    size_t output_len = 0;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
+                              &key_id));
+
+    psa_set_key_usage_flags(&input_key_attributes, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&input_key_attributes, PSA_ALG_ECB_NO_PADDING);
+    psa_set_key_type(&input_key_attributes, PSA_KEY_TYPE_AES);
+    psa_set_key_bits(&input_key_attributes, sizeof(input_key) * 8);
+
+    PSA_ASSERT(psa_import_key(&input_key_attributes, input_key, sizeof(input_key),
+                              &input_key_id));
+ 
+    
+    TEST_EQUAL(psa_wrap_key(key_id,
+                          alg,
+                          input_key_id,
+                          output,
+                          sizeof(output),
+                          &output_len), expected_status);
+exit:
+    psa_destroy_key(key_id);
+    psa_destroy_key(input_key_id);
+    PSA_DONE();
+}
+/* END_CASE */

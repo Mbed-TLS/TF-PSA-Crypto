@@ -1074,4 +1074,60 @@ psa_status_t psa_crypto_local_output_alloc(uint8_t *output, size_t output_len,
  */
 psa_status_t psa_crypto_local_output_free(psa_crypto_local_output_t *local_output);
 
+/**
+ * \brief Wrap a key using a specified wrapping key.
+ *
+ * \param wrapping_key          ID of the key used for wrapping.
+ * \param input_key_buffer      Buffer containing the key material to be wrapped.
+ * \param input_key_size        Size in bytes of the input key.
+ * \param output                Buffer where the wrapped key will be written.
+ * \param output_size           Size in bytes of the \c output buffer.
+ * \param output_length         On success, contains the number of bytes written
+ *                              to \c output.
+ *
+ * \return                      #PSA_SUCCESS` on key wrapping success.
+ * \return                      #PSA_ERROR_INVALID_ARGUMENT on invalid input length.
+ * \return                      #PSA_ERROR_NOT_PERMITTED on using invalid key.                 
+ * \return                      #PSA_ERROR_COMMUNICATION_FAILURE
+ * \return                      #PSA_ERROR_HARDWARE_FAILURE
+ * \return                      #PSA_ERROR_CORRUPTION_DETECTED
+ * \return                      #PSA_ERROR_STORAGE_FAILURE
+ */
+psa_status_t mbedtls_psa_wrap_key(
+        mbedtls_svc_key_id_t wrapping_key,
+        const uint8_t *input_key_buffer,
+        size_t input_key_size,
+        uint8_t *output,
+        size_t output_size,
+        size_t *output_length);
+
+/**
+ * \brief Unwrap a key using a specified wrapping key.
+ *
+ * \param wrapping_key          Identifier of the key used for unwrapping.
+ * \param input_key_buffer      Buffer containing the wrapped key data.
+ * \param input_key_size        Size in bytes of the wrapped key data.
+ * \param output_key_buffer     Buffer where the unwrapped key will be written.
+ * \param output_key_size       Size in bytes of the `output_key_buffer`.
+ * \param output_key_length     On success, contains the number of bytes written
+ *                              to `output_key_buffer`.
+ *
+ * \return                      #PSA_SUCCESS` on key wrapping success.
+ * \return                      #PSA_ERROR_INVALID_ARGUMENT on invalid input length.
+ * \return                      #PSA_ERROR_INVALID_SIGNATURE for invalid ciphertext.
+ * \return                      #PSA_ERROR_NOT_PERMITTED on using a key that is
+ *                              not of AES type.                           
+ * \return                      #PSA_ERROR_COMMUNICATION_FAILURE
+ * \return                      #PSA_ERROR_HARDWARE_FAILURE
+ * \return                      #PSA_ERROR_CORRUPTION_DETECTED
+ * \return                      #PSA_ERROR_STORAGE_FAILURE
+ */
+psa_status_t mbedtls_psa_unwrap_key(
+    mbedtls_svc_key_id_t wrapping_key,
+    const uint8_t *input_key_buffer,
+    size_t input_key_size,
+    uint8_t *output_key_buffer,
+    size_t output_key_size,
+    size_t *output_key_length);
+
 #endif /* PSA_CRYPTO_CORE_H */
