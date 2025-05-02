@@ -6,14 +6,13 @@ add_library(${everest_target}
   library/Hacl_Curve25519_joined.c)
 
 set_base_compile_options(${everest_target})
-target_include_directories(${everest_target}
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
+  target_include_directories(${everest_target}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/tf-psa-crypto/private>
          $<INSTALL_INTERFACE:include>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>
-  PRIVATE $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/>
-          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/everest/kremlib/>
+  PRIVATE $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
+          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
+          include/tf-psa-crypto/private/everest
+          include/tf-psa-crypto/private/everest/kremlib
           ${TF_PSA_CRYPTO_DIR}/core)
 set_config_files_compile_definitions(${everest_target})
 
