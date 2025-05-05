@@ -44,44 +44,6 @@
 #define PEM_BEGIN_ENCRYPTED_PRIVATE_KEY_PKCS8 "-----BEGIN ENCRYPTED PRIVATE KEY-----"
 #define PEM_END_ENCRYPTED_PRIVATE_KEY_PKCS8   "-----END ENCRYPTED PRIVATE KEY-----"
 
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(MBEDTLS_PK_USE_PSA_EC_DATA)
-/**
- * Public function mbedtls_pk_ec() can be used to get direct access to the
- * wrapped ecp_keypair structure pointed to the pk_ctx. However this is not
- * ideal because it bypasses the PK module on the control of its internal
- * structure (pk_context) fields.
- * For backward compatibility we keep mbedtls_pk_ec() when ECP_C is defined, but
- * we provide 2 very similar functions when only ECP_LIGHT is enabled and not
- * ECP_C.
- * These variants embed the "ro" or "rw" keywords in their name to make the
- * usage of the returned pointer explicit. Of course the returned value is
- * const or non-const accordingly.
- */
-static inline const mbedtls_ecp_keypair *mbedtls_pk_ec_ro(const mbedtls_pk_context pk)
-{
-    switch (mbedtls_pk_get_type(&pk)) {
-        case MBEDTLS_PK_ECKEY:
-        case MBEDTLS_PK_ECKEY_DH:
-        case MBEDTLS_PK_ECDSA:
-            return (const mbedtls_ecp_keypair *) (pk).MBEDTLS_PRIVATE(pk_ctx);
-        default:
-            return NULL;
-    }
-}
-
-static inline mbedtls_ecp_keypair *mbedtls_pk_ec_rw(const mbedtls_pk_context pk)
-{
-    switch (mbedtls_pk_get_type(&pk)) {
-        case MBEDTLS_PK_ECKEY:
-        case MBEDTLS_PK_ECKEY_DH:
-        case MBEDTLS_PK_ECDSA:
-            return (mbedtls_ecp_keypair *) (pk).MBEDTLS_PRIVATE(pk_ctx);
-        default:
-            return NULL;
-    }
-}
-#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY && !MBEDTLS_PK_USE_PSA_EC_DATA */
-
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 
 static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_context *pk)
@@ -101,11 +63,7 @@ static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_c
         id = mbedtls_ecc_group_from_psa(curve, psa_get_key_bits(&opaque_attrs));
         psa_reset_key_attributes(&opaque_attrs);
     } else {
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
         id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->ec_bits);
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-        id = mbedtls_pk_ec_ro(*pk)->grp.id;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
     }
 
     return id;
@@ -171,9 +129,6 @@ int mbedtls_pk_ecc_set_pubkey(mbedtls_pk_context *pk, const unsigned char *pub, 
  * however for convenience the serialized version is also passed,
  * as it's available at each calling site, and useful in some configs
  * (as otherwise we would have to re-serialize it from the pk context).
- *
- * There are two implementations of this function depending on
- * MBEDTLS_PK_USE_PSA_EC_DATA being set or not.
  */
 int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
                                        const unsigned char *prv, size_t prv_len);
