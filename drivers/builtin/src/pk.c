@@ -43,12 +43,10 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx)
     ctx->pk_info = NULL;
     ctx->pk_ctx = NULL;
     ctx->priv_id = MBEDTLS_SVC_KEY_ID_INIT;
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     memset(ctx->pub_raw, 0, sizeof(ctx->pub_raw));
     ctx->pub_raw_len = 0;
     ctx->ec_family = 0;
     ctx->ec_bits = 0;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
 }
 
 /*
@@ -64,13 +62,11 @@ void mbedtls_pk_free(mbedtls_pk_context *ctx)
         ctx->pk_info->ctx_free_func(ctx->pk_ctx);
     }
 
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     /* The ownership of the priv_id key for opaque keys is external of the PK
      * module. It's the user responsibility to clear it after use. */
     if ((ctx->pk_info != NULL) && (ctx->pk_info->type != MBEDTLS_PK_OPAQUE)) {
         psa_destroy_key(ctx->priv_id);
     }
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
 
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_pk_context));
 }
@@ -420,21 +416,14 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
         {
             int sign_ok = (pk_type != MBEDTLS_PK_ECKEY_DH);
             int derive_ok = (pk_type != MBEDTLS_PK_ECDSA);
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             psa_ecc_family_t family = pk->ec_family;
             size_t bits = pk->ec_bits;
             int has_private = 0;
+            psa_algorithm_t alg = 0;
+
             if (pk->priv_id != MBEDTLS_SVC_KEY_ID_INIT) {
                 has_private = 1;
             }
-#else
-            const mbedtls_ecp_keypair *ec = mbedtls_pk_ec_ro(*pk);
-            int has_private = (ec->d.n != 0);
-            size_t bits = 0;
-            psa_ecc_family_t family =
-                mbedtls_ecc_group_to_psa(ec->grp.id, &bits);
-#endif
-            psa_algorithm_t alg = 0;
             switch (usage) {
                 case PSA_KEY_USAGE_SIGN_MESSAGE:
                 case PSA_KEY_USAGE_SIGN_HASH:
@@ -629,47 +618,16 @@ static int import_pair_into_psa(const mbedtls_pk_context *pk,
              * and if it's specified, psa_import_key() will know from the key
              * data length and will check that the bit-size matches. */
             psa_key_type_t to_type = psa_get_key_type(attributes);
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             psa_ecc_family_t from_family = pk->ec_family;
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-            const mbedtls_ecp_keypair *ec = mbedtls_pk_ec_ro(*pk);
-            size_t from_bits = 0;
-            psa_ecc_family_t from_family = mbedtls_ecc_group_to_psa(ec->grp.id,
-                                                                    &from_bits);
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
             if (to_type != PSA_KEY_TYPE_ECC_KEY_PAIR(from_family)) {
                 return MBEDTLS_ERR_PK_TYPE_MISMATCH;
             }
 
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             if (mbedtls_svc_key_id_is_null(pk->priv_id)) {
                 /* We have a public key and want a key pair. */
                 return MBEDTLS_ERR_PK_TYPE_MISMATCH;
             }
             return copy_into_psa(pk->priv_id, attributes, key_id);
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-            if (ec->d.n == 0) {
-                /* Private key not set. Assume the input is a public key only.
-                 * (The other possibility is that it's an incomplete object
-                 * where the group is set but neither the public key nor
-                 * the private key. This is not possible through ecp.h
-                 * functions, so we don't bother reporting a more suitable
-                 * error in that case.) */
-                return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-            }
-            unsigned char key_buffer[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
-            size_t key_length = 0;
-            int ret = mbedtls_ecp_write_key_ext(ec, &key_length,
-                                                key_buffer, sizeof(key_buffer));
-            if (ret < 0) {
-                return ret;
-            }
-            ret = PSA_PK_TO_MBEDTLS_ERR(psa_import_key(attributes,
-                                                       key_buffer, key_length,
-                                                       key_id));
-            mbedtls_platform_zeroize(key_buffer, key_length);
-            return ret;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
         }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
@@ -719,28 +677,11 @@ static int import_public_into_psa(const mbedtls_pk_context *pk,
              * We don't check the bit-size: it's optional in attributes,
              * and if it's specified, psa_import_key() will know from the key
              * data length and will check that the bit-size matches. */
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             if (psa_type != PSA_KEY_TYPE_ECC_PUBLIC_KEY(pk->ec_family)) {
                 return MBEDTLS_ERR_PK_TYPE_MISMATCH;
             }
             key_data = (unsigned char *) pk->pub_raw;
             key_length = pk->pub_raw_len;
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-            const mbedtls_ecp_keypair *ec = mbedtls_pk_ec_ro(*pk);
-            size_t from_bits = 0;
-            psa_ecc_family_t from_family = mbedtls_ecc_group_to_psa(ec->grp.id,
-                                                                    &from_bits);
-            if (psa_type != PSA_KEY_TYPE_ECC_PUBLIC_KEY(from_family)) {
-                return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-            }
-            int ret = mbedtls_ecp_write_public_key(
-                ec, MBEDTLS_ECP_PF_UNCOMPRESSED,
-                &key_length, key_buffer, sizeof(key_buffer));
-            if (ret < 0) {
-                return ret;
-            }
-            key_data = key_buffer;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
             break;
         }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
