@@ -22,6 +22,42 @@ component_test_tf_psa_crypto_shared () {
     $FRAMEWORK/tests/programs/dlopen_demo.sh
 }
 
+support_build_tf_psa_crypto_shared_newer_ld () {
+    ld_version=""
+    ld_version_major=""
+    ld_version_minor=""
+    distrib_id=""
+
+    # Attempt to parse ld --version to find out ld’s version. If not found this should fail safe.
+    if command ld -v >/dev/null 2>&1; then
+        ld_version=$(ld -v | awk '{print $NF}')
+        # split into major and minor
+        ld_version_major=${ld_version%%.*}
+        tmp=${ld_version#*.}
+        ld_version_minor=${tmp%%.*}
+    fi
+
+    if [[ -f /etc/lsb-release ]]; then
+        while read -r lsb_line; do
+            case "$lsb_line" in
+                "DISTRIB_ID"*) distrib_id=${lsb_line/#DISTRIB_ID=};;
+            esac
+        done < /etc/lsb-release
+    fi
+
+
+    # Newer lds cause extra errors that wouldn't be caught with older versions
+    [ "$distrib_id" != "Ubuntu" ] || [ "$ld_version_minor" -gt 37 ]
+}
+
+component_build_tf_psa_crypto_shared_newer_ld () {
+    msg "build/test: shared libraries"
+    # Test building with this option with newer lds for a more thorough check
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+}
+
+
 component_test_tf_psa_crypto_out_of_source () {
     msg "build: cmake tf-psa-crypto 'out-of-source' build"
     cd $OUT_OF_SOURCE_DIR
