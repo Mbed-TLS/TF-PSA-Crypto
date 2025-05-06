@@ -1057,18 +1057,17 @@
 //#define MBEDTLS_ENTROPY_FORCE_SHA256
 
 /**
- * \def MBEDTLS_ENTROPY_HARDWARE_ALT
+ * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
  *
- * Uncomment this macro to let Mbed TLS use your own implementation of a
- * hardware entropy collector.
- *
- * Your function must be called \c mbedtls_hardware_poll(), have the same
- * prototype as declared in library/entropy_poll.h, and accept NULL as first
- * argument.
- *
- * Uncomment to use your own hardware entropy collector.
+ * By default TF-PSA-Crypto uses platform-specific sources such as `getrandom()`,
+ * `/dev/urandom` or `BCryptGenRandom()` to gather entropy data. If these
+ * functions are not available on your platform, the following symbol allows
+ * you to define a custom callback function named mbedtls_platform_get_entropy()
+ * that Mbed TLS will use to gather entropy data.
+ * The public header mbedtls/platform.h provides the prototype for this
+ * callback function and also the documentation for its parameters.
  */
-//#define MBEDTLS_ENTROPY_HARDWARE_ALT
+//#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 
 /**
  * \def MBEDTLS_ENTROPY_NV_SEED
@@ -1109,17 +1108,6 @@
  * Uncomment this macro to prevent loading of default entropy functions.
  */
 //#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-
-/**
- * \def MBEDTLS_NO_PLATFORM_ENTROPY
- *
- * Do not use built-in platform entropy functions.
- * This is useful if your platform does not support
- * standards like the /dev/urandom or Windows CryptoAPI.
- *
- * Uncomment this macro to disable the built-in platform entropy functions.
- */
-//#define MBEDTLS_NO_PLATFORM_ENTROPY
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_C
@@ -1325,7 +1313,6 @@
 /* Entropy options */
 //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
 //#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
-//#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_PLATFORM_FILE
