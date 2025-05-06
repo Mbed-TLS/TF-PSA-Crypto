@@ -1595,7 +1595,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * key, the application must call psa_pake_get_shared_key() after the
  * key-exchange output and input steps are completed. The PAKE algorithm
  * provides a cryptographic guarantee that only a peer who used the same
- * password, and identity inputs is able to compute the same key. However,
+ * password and identity inputs is able to compute the same key. However,
  * there is no guarantee that the peer is the participant it claims to be
  * and was able to compute the same key.
  *
