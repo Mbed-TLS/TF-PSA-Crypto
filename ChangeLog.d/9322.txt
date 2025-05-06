@@ -1,7 +1,7 @@
 Removals
    * Removed the `psa_pake_get_implicit_key()` function. Removed to comply
-     with the new standard PAKE interface.
+     with PSA API 1.2 PAKE extension.
 
 Changes
    * Implemented the `psa_pake_get_shared_key()` function, compliant with the
-     standard PAKE interface, replacement for `psa_pake_get_implicit_key()`
+     PSA API 1.2 PAKE extension, replacement for `psa_pake_get_implicit_key()`
