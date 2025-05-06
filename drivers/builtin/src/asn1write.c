@@ -12,6 +12,7 @@
 
 #include "mbedtls/asn1write.h"
 #include "mbedtls/error_common.h"
+#include "bignum_core.h"
 
 #include <string.h>
 
@@ -112,7 +113,6 @@ int mbedtls_asn1_write_mpi(unsigned char **p, const unsigned char *start, const 
     }
 
     if (*p < start || (size_t) (*p - start) < len) {
-        mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
     }
 
@@ -124,7 +124,6 @@ int mbedtls_asn1_write_mpi(unsigned char **p, const unsigned char *start, const 
     //
     if (X->s == 1 && **p & 0x80) {
         if (*p - start < 1) {
-            mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
             return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
         }
 
@@ -134,7 +133,6 @@ int mbedtls_asn1_write_mpi(unsigned char **p, const unsigned char *start, const 
 
     ret = mbedtls_asn1_write_len_and_tag(p, start, len, MBEDTLS_ASN1_INTEGER);
     if(ret < 0) {
-        mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
     }
 
 cleanup:
@@ -440,59 +438,54 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
     return cur;
 }
 
-size_t mbedtls_get_asn1_integer_frame_length(size_t integer_length){
-    size_t header_length =2;
-    if(integer_length > 126) {
-        header_length = 3;
-    } else if(integer_length > 254) {
-        header_length = 4;
-    }
-    return integer_length + header_length;
-}
-
 /*
  * to test
  * buffer too small
  * buffer to big
  * different integer length to buffer size
  * Oversize integer length
- * figure out why we need a double size buffer
+ * Multiple frames?
  */
-int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length, size_t buffer_length) {
+int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length) {
 
-    mbedtls_mpi mpi_to_encode; //declare a mpi for storing the input
-    int result_size;
-    int ret =-1;
-
+    int ret = 0;
+    int asn1_frame_size = 0;
+    size_t input_buffer_size = (*p-start);
 
     if((*p == NULL) || (start == NULL) || (integer == NULL)){
-        mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
-        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+        mbedtls_printf("bjwt: file=%s, line=%i, NULL pointer exception\n", __FILE__, __LINE__);
+        return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
     }
 
-    if(integer_length > 0xFFFFFFFF){
-        mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
-        return MBEDTLS_ERR_ASN1_INVALID_LENGTH;
+    if(input_buffer_size<1){
+        mbedtls_printf("bjwt: file=%s, line=%i, nuffer less than zero or negative\n", __FILE__, __LINE__);
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC2 input too small TODO check error.
     }
 
-    if(buffer_length < mbedtls_get_asn1_integer_frame_length(integer_length)){
-	return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+    if(input_buffer_size<integer_length){
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 input too small TODO check error.
     }
 
-    mbedtls_mpi_init(&mpi_to_encode);
-    memset(start, 0, buffer_length);
+    memset(start, 0, input_buffer_size);
+    
+    *p-=integer_length;
 
-    ret = mbedtls_mpi_read_binary(&mpi_to_encode, integer, integer_length); //read the input string into the mpi
-    if(ret !=0){
-        mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
-        return ret;
-    }
-    result_size = mbedtls_asn1_write_mpi(p, start, &mpi_to_encode); //encode the mpi into asn1
+    ret = mbedtls_mpi_core_write_le((mbedtls_mpi_uint*) integer, integer_length/8, *p, integer_length);
 
-    if(result_size < 0){
-        mbedtls_printf("bjwt: file =%s, line=%i\n", __FILE__, __LINE__);
+    if(ret!=0){
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;//TC7 mbedtls_mpi_core_write_le failed.
     }
 
-    return result_size;
+    asn1_frame_size=mbedtls_asn1_write_len_and_tag(p, start, integer_length, MBEDTLS_ASN1_INTEGER);
+    
+    if(asn1_frame_size<0){
+        mbedtls_printf("bjwt: file=%s, line=%i\n", __FILE__, __LINE__);
+        return asn1_frame_size;//TC4 mbedtls_asn1_write_len_and_tag failed. 
+    }else if(asn1_frame_size>(int)input_buffer_size){
+        mbedtls_printf("bjwt: file=%s, line=%i\n", __FILE__, __LINE__);
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL; //TC5 Buffer too small for frame. 
+    }
+
+    return asn1_frame_size;
 }
 #endif /* MBEDTLS_ASN1_WRITE_C */

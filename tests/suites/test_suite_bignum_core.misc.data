@@ -539,11 +539,20 @@ asn1_get_and_parse_integer:"028201000123456789abcdef0123456789abcdef0123456789ab
 Parse raw ASN.1 integer, correct encoding, more data than needed
 asn1_get_and_parse_integer:"02010707":0:"07"
 
-Test bignum encode/decode 8 byte length
-encode_decode_asn1_bignum:"0123456789abcdef"
-
-Test for NULL pointer exceptions
+TC1 Test for NULL pointer exceptions
 null_pointer_checks
 
-Test sizes
+TC3 Output buffer too small for tag and length
+encode_decode_asn1_bignum:"0123456789abcdef":1:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+TC4 Output buffer too small for frame
+encode_decode_asn1_bignum:"0123456789abcdef":8:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+TC5 Large output buffer
+encode_decode_asn1_bignum:"0123456789abcdef":11:10
+
+TC6 Basic test
+encode_decode_asn1_bignum:"0123456789abcdef":10:10
+
+TC7 Functional test of permitted integers
 size_checks
