@@ -33,7 +33,7 @@
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_GCM_ENCRYPT     1
 #define MBEDTLS_GCM_DECRYPT     0
-#endif
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Authenticated decryption failed. */
 #define MBEDTLS_ERR_GCM_AUTH_FAILED                       -0x0012

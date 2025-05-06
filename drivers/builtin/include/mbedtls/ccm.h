@@ -49,7 +49,7 @@
 #define MBEDTLS_CCM_ENCRYPT       1
 #define MBEDTLS_CCM_STAR_DECRYPT  2
 #define MBEDTLS_CCM_STAR_ENCRYPT  3
-#endif
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Bad input parameters to the function. */
 #define MBEDTLS_ERR_CCM_BAD_INPUT       -0x000D
