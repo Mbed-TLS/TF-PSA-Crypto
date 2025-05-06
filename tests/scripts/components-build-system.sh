@@ -22,7 +22,7 @@ component_test_tf_psa_crypto_shared () {
     $FRAMEWORK/tests/programs/dlopen_demo.sh
 }
 
-support_build_tf_psa_crypto_shared_newer_ld () {
+support_build_tf_psa_crypto_shared_newer_ld_gcc () {
     ld_version=""
     ld_version_major=""
     ld_version_minor=""
@@ -50,13 +50,12 @@ support_build_tf_psa_crypto_shared_newer_ld () {
     [ "$distrib_id" != "Ubuntu" ] || [ "$ld_version_minor" -gt 37 ]
 }
 
-component_build_tf_psa_crypto_shared_newer_ld () {
+component_build_tf_psa_crypto_shared_newer_ld_gcc () {
     msg "build/test: shared libraries"
     # Test building with this option with newer lds for a more thorough check
-    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    CC=gcc cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=ON "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 }
-
 
 component_test_tf_psa_crypto_out_of_source () {
     msg "build: cmake tf-psa-crypto 'out-of-source' build"
