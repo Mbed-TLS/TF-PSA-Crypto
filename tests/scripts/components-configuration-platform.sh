@@ -22,7 +22,7 @@ component_tf_psa_crypto_build_no_std_function () {
     make
 }
 
-component_tf_psa_crypto_platform_get_entropy_alt()
+component_tf_psa_crypto_test_platform_get_entropy_alt()
 {
     msg "build: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
     # Use hardware polling as the only source for entropy
