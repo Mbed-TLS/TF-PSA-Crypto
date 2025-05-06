@@ -186,7 +186,7 @@ typedef struct mbedtls_pk_context {
     size_t MBEDTLS_PRIVATE(ec_bits);                /**< Curve's bits of pk */
 } mbedtls_pk_context;
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /**
  * \brief           Context for resuming operations
  */
@@ -194,10 +194,10 @@ typedef struct {
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
     void *MBEDTLS_PRIVATE(rs_ctx);                        /**< Underlying restart context     */
 } mbedtls_pk_restart_ctx;
-#else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#else /* MBEDTLS_ECP_RESTARTABLE */
 /* Now we can declare functions that take a pointer to that */
 typedef void mbedtls_pk_restart_ctx;
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /**
  * \brief           Return information associated with the given PK type
@@ -229,7 +229,7 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx);
  */
 void mbedtls_pk_free(mbedtls_pk_context *ctx);
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /**
  * \brief           Initialize a restart context
  *
@@ -245,7 +245,7 @@ void mbedtls_pk_restart_init(mbedtls_pk_restart_ctx *ctx);
  *                  If this is \c NULL, this function does nothing.
  */
 void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /**
  * \brief           Initialize a PK context with the information given

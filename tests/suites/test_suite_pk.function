@@ -1039,7 +1039,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:MBEDTLS_ECDSA_C:MBEDTLS_ECDSA_DETERMINISTIC */
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:MBEDTLS_ECDSA_DETERMINISTIC */
 void pk_sign_verify_restart(int pk_type, int grp_id, char *d_str,
                             char *QX_str, char *QY_str,
                             int md_alg, data_t *hash, data_t *sig_check,

@@ -71,7 +71,7 @@ void mbedtls_pk_free(mbedtls_pk_context *ctx)
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_pk_context));
 }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /*
  * Initialize a restart context
  */
@@ -96,7 +96,7 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx)
     ctx->pk_info = NULL;
     ctx->rs_ctx = NULL;
 }
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /*
  * Get pk_info structure from type
@@ -880,7 +880,7 @@ static inline int pk_hashlen_helper(mbedtls_md_type_t md_alg, size_t *hash_len)
     return 0;
 }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /*
  * Helper to set up a restart context if needed
  */
@@ -905,7 +905,7 @@ static int pk_restart_setup(mbedtls_pk_restart_ctx *ctx,
 
     return 0;
 }
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /*
  * Verify a signature (restartable)
@@ -925,7 +925,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
         mbedtls_ecp_restart_is_enabled() &&
@@ -945,9 +945,9 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
 
         return ret;
     }
-#else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#else /* MBEDTLS_ECP_RESTARTABLE */
     (void) rs_ctx;
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     if (ctx->pk_info->verify_func == NULL) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
@@ -1083,7 +1083,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
         mbedtls_ecp_restart_is_enabled() &&
@@ -1105,9 +1105,9 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
         return ret;
     }
-#else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#else /* MBEDTLS_ECP_RESTARTABLE */
     (void) rs_ctx;
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     if (ctx->pk_info->sign_func == NULL) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;

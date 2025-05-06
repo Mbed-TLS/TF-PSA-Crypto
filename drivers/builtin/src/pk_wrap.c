@@ -249,12 +249,12 @@ const mbedtls_pk_info_t mbedtls_rsa_info = {
     .can_do = rsa_can_do,
     .verify_func = rsa_verify_wrap,
     .sign_func = rsa_sign_wrap,
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = rsa_check_pair_wrap,
     .ctx_alloc_func = rsa_alloc_wrap,
     .ctx_free_func = rsa_free_wrap,
@@ -447,7 +447,7 @@ static int ecdsa_opaque_sign_wrap(mbedtls_pk_context *pk,
 
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /* Forward declarations */
 static int ecdsa_verify_rs_wrap(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                                 const unsigned char *hash, size_t hash_len,
@@ -551,7 +551,7 @@ static int eckey_sign_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
 cleanup:
     return ret;
 }
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 static int eckey_check_pair_psa(mbedtls_pk_context *pub, mbedtls_pk_context *prv)
 {
@@ -607,12 +607,12 @@ const mbedtls_pk_info_t mbedtls_eckey_info = {
 #else /* PSA_HAVE_ALG_ECDSA_VERIFY */
     .sign_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = eckey_verify_rs_wrap,
     .sign_rs_func = eckey_sign_rs_wrap,
     .rs_alloc_func = eckey_rs_alloc,
     .rs_free_func = eckey_rs_free,
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = eckey_check_pair_wrap,
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,
@@ -635,10 +635,10 @@ const mbedtls_pk_info_t mbedtls_eckeydh_info = {
     .can_do = eckeydh_can_do,
     .verify_func = NULL,
     .sign_func = NULL,
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = eckey_check_pair_wrap,
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,
@@ -651,7 +651,7 @@ static int ecdsa_can_do(mbedtls_pk_type_t type)
     return type == MBEDTLS_PK_ECDSA;
 }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 static int ecdsa_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                                 const unsigned char *hash, size_t hash_len,
                                 const unsigned char *sig, size_t sig_len,
@@ -697,7 +697,7 @@ static void ecdsa_rs_free(void *ctx)
     mbedtls_ecdsa_restart_free(ctx);
     mbedtls_free(ctx);
 }
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 const mbedtls_pk_info_t mbedtls_ecdsa_info = {
     .type = MBEDTLS_PK_ECDSA,
@@ -714,12 +714,12 @@ const mbedtls_pk_info_t mbedtls_ecdsa_info = {
 #else /* PSA_HAVE_ALG_ECDSA_SIGN */
     .sign_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = ecdsa_verify_rs_wrap,
     .sign_rs_func = ecdsa_sign_rs_wrap,
     .rs_alloc_func = ecdsa_rs_alloc,
     .rs_free_func = ecdsa_rs_free,
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = eckey_check_pair_wrap,   /* Compatible key structures */
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,
@@ -764,12 +764,12 @@ const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info = {
 #else /* PSA_HAVE_ALG_ECDSA_SIGN */
     .sign_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = ecdsa_opaque_check_pair_wrap,
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,
@@ -839,12 +839,12 @@ const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
     .can_do = rsa_opaque_can_do,
     .verify_func = NULL,
     .sign_func = rsa_opaque_sign_wrap,
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = NULL,
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,

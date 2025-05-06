@@ -40,7 +40,7 @@ struct mbedtls_pk_info_t {
                      const unsigned char *hash, size_t hash_len,
                      unsigned char *sig, size_t sig_size, size_t *sig_len);
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     /** Verify signature (restartable) */
     int (*verify_rs_func)(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
@@ -52,7 +52,7 @@ struct mbedtls_pk_info_t {
                         const unsigned char *hash, size_t hash_len,
                         unsigned char *sig, size_t sig_size, size_t *sig_len,
                         void *rs_ctx);
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     /** Check public-private key pair */
     int (*check_pair_func)(mbedtls_pk_context *pub, mbedtls_pk_context *prv);
@@ -63,13 +63,13 @@ struct mbedtls_pk_info_t {
     /** Free the given context */
     void (*ctx_free_func)(void *ctx);
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     /** Allocate the restart context */
     void *(*rs_alloc_func)(void);
 
     /** Free the restart context */
     void (*rs_free_func)(void *rs_ctx);
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     /** Interface with the debug module */
     void (*debug_func)(mbedtls_pk_context *pk, mbedtls_pk_debug_item *items);
