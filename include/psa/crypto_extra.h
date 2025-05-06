@@ -1585,14 +1585,14 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * of individual PAKE algorithms for more information, see PAKE algorithms.
  *
  * Depending on the key confirmation requested in the cipher suite,
- * psa_pake_get_shared_key() must be called either before or after the
+ * #psa_pake_get_shared_key() must be called either before or after the
  * key-confirmation output and input steps for the PAKE algorithm. The key
  * confirmation affects the guarantees that can be made about the shared key:
  *
  * Unconfirmed key:
  *
  * If the cipher suite used to set up the operation requested an unconfirmed
- * key, the application must call psa_pake_get_shared_key() after the
+ * key, the application must call #psa_pake_get_shared_key() after the
  * key-exchange output and input steps are completed. The PAKE algorithm
  * provides a cryptographic guarantee that only a peer who used the same
  * password and identity inputs is able to compute the same key. However,
@@ -1609,7 +1609,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  * Confirmed key:
  *
  * If the cipher suite used to set up the operation requested a confirmed key,
- * the application must call psa_pake_get_shared_key() after the key-exchange
+ * the application must call #psa_pake_get_shared_key() after the key-exchange
  * and key-confirmation output and input steps are completed.
  *
  * Following key confirmation, the PAKE algorithm provides a cryptographic
@@ -1628,7 +1628,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *
  * When this function returns successfully, the operation becomes inactive. If this
  * function returns an error status, the operation enters an error state and must
- * be aborted by calling psa_pake_abort().
+ * be aborted by calling #psa_pake_abort().
  *
  * \param[in,out]   operation   Active PAKE operation.
  * \param[in]       attributes  The attributes for the new key. This function uses
@@ -1658,7 +1658,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *                              \note This is an input parameter: It is not updated
  *                              with the final key attributes. The final attributes
  *                              of the new key can be queried by calling
- *                              psa_get_key_attributes() with the key’s identifier.
+ *                              #psa_get_key_attributes() with the key’s identifier.
  * \param[out]      key         On success, an identifier for the newly created key.
  *                              #PSA_KEY_ID_NULL on failure.
  *
@@ -1667,7 +1667,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *         been saved to persistent storage.
  * \retval #PSA_ERROR_BAD_STATE
  *         The following conditions can result in this error:
- *         The state of PAKE operation operation is not valid: It must be ready to return
+ *         The state of PAKE operation \p operation is not valid: It must be ready to return
  *         the shared secret.
  *         For an unconfirmed key, this will be when the key-exchange output and input
  *         steps are complete, but prior to any key-confirmation output and input steps.
@@ -1683,15 +1683,15 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The following conditions can result in this error:
- *         The key type is not valid for output from this operation’s algorithm.
- *         The key size is nonzero.
- *         The key lifetime is invalid.
- *         The key identifier is not valid for the key lifetime.
- *         The key usage flags include invalid values.
- *         The key’s permitted-usage algorithm is invalid.
- *         The key attributes, as a whole, are invalid.
+ *         The \p key type is not valid for output from this operation’s algorithm.
+ *         The \p key size is nonzero.
+ *         The \p key lifetime is invalid.
+ *         The \p key identifier is not valid for the key lifetime.
+ *         The \p key usage flags include invalid values.
+ *         The \p key’s permitted-usage algorithm is invalid.
+ *         The \p key attributes, as a whole, are invalid.
  * \retval #PSA_ERROR_NOT_SUPPORTED
- *         The key attributes, as a whole, are not supported for creation from a PAKE secret,
+ *         The \p key attributes, as a whole, are not supported for creation from a PAKE secret,
  *         either by the implementation in general or in the specified storage location.
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
@@ -1714,7 +1714,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
  * object has been initialized as described in #psa_pake_operation_t.
  *
  * In particular, calling psa_pake_abort() after the operation has been
- * terminated by a call to psa_pake_abort() or psa_pake_get_shared_key()
+ * terminated by a call to #psa_pake_abort() or #psa_pake_get_shared_key()
  * is safe and has no effect.
  *
  * \param[in,out] operation    The operation to abort.
