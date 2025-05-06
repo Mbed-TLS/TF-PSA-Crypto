@@ -25,14 +25,14 @@
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_DES_ENCRYPT     1
 #define MBEDTLS_DES_DECRYPT     0
-#endif
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** The data input has an invalid length. */
 #define MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH              -0x0032
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_DES_KEY_SIZE    8
-#endif
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 extern "C" {

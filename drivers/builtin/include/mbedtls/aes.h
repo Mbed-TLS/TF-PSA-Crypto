@@ -39,7 +39,7 @@
 /* aesni.c relies on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
 #define MBEDTLS_AES_DECRYPT     0 /**< AES decryption. */
-#endif
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /* Error codes in range 0x0020-0x0022 */
 /** Invalid key length. */
