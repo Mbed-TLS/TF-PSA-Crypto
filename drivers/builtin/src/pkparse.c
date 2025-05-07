@@ -20,10 +20,8 @@
 
 #include <string.h>
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "mbedtls/psa_util.h"
 #include "psa/crypto.h"
-#endif
 
 /* Key types */
 #if defined(MBEDTLS_RSA_C)
