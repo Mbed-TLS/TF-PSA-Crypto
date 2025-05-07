@@ -194,6 +194,10 @@ typedef struct {
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
     void *MBEDTLS_PRIVATE(rs_ctx);                        /**< Underlying restart context     */
 } mbedtls_pk_restart_ctx;
+typedef enum {
+    MBEDTLS_PK_RS_OP_VERIFY,
+    MBEDTLS_PK_RS_OP_SIGN,
+} mbedtls_pk_rs_op_t;
 #else /* MBEDTLS_ECP_RESTARTABLE */
 /* Now we can declare functions that take a pointer to that */
 typedef void mbedtls_pk_restart_ctx;

@@ -470,8 +470,9 @@ typedef struct {
     mbedtls_ecdsa_context ecdsa_ctx;
 } eckey_restart_ctx;
 
-static void *eckey_rs_alloc(void)
+static void *eckey_rs_alloc(mbedtls_pk_rs_op_t op_type)
 {
+    (void) rs_op;
     eckey_restart_ctx *rs_ctx;
 
     void *ctx = mbedtls_calloc(1, sizeof(eckey_restart_ctx));
@@ -681,7 +682,7 @@ static int ecdsa_sign_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
 
 }
 
-static void *ecdsa_rs_alloc(void)
+static void *ecdsa_rs_alloc(mbedtls_pk_rs_op_t op_type)
 {
     void *ctx = mbedtls_calloc(1, sizeof(mbedtls_ecdsa_restart_ctx));
 

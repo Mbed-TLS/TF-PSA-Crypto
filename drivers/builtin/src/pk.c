@@ -885,7 +885,8 @@ static inline int pk_hashlen_helper(mbedtls_md_type_t md_alg, size_t *hash_len)
  * Helper to set up a restart context if needed
  */
 static int pk_restart_setup(mbedtls_pk_restart_ctx *ctx,
-                            const mbedtls_pk_info_t *info)
+                            const mbedtls_pk_info_t *info,
+                            mbedtls_pk_rs_op_t rs_op)
 {
     /* Don't do anything if already set up or invalid */
     if (ctx == NULL || ctx->pk_info != NULL) {
@@ -897,7 +898,7 @@ static int pk_restart_setup(mbedtls_pk_restart_ctx *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if ((ctx->rs_ctx = info->rs_alloc_func()) == NULL) {
+    if ((ctx->rs_ctx = info->rs_alloc_func(rs_op)) == NULL) {
         return MBEDTLS_ERR_PK_ALLOC_FAILED;
     }
 
@@ -932,7 +933,8 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
         ctx->pk_info->verify_rs_func != NULL) {
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-        if ((ret = pk_restart_setup(rs_ctx, ctx->pk_info)) != 0) {
+        ret = pk_restart_setup(rs_ctx, ctx->pk_info, MBEDTLS_PK_RS_OP_VERIFY);
+        if (ret != 0) {
             return ret;
         }
 
@@ -1090,7 +1092,8 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         ctx->pk_info->sign_rs_func != NULL) {
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-        if ((ret = pk_restart_setup(rs_ctx, ctx->pk_info)) != 0) {
+        ret = pk_restart_setup(rs_ctx, ctx->pk_info, MBEDTLS_PK_RS_OP_SIGN);
+        if (ret != 0) {
             return ret;
         }
 

@@ -65,7 +65,7 @@ struct mbedtls_pk_info_t {
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     /** Allocate the restart context */
-    void *(*rs_alloc_func)(void);
+    void *(*rs_alloc_func)(mbedtls_pk_rs_op_t op_type);
 
     /** Free the restart context */
     void (*rs_free_func)(void *rs_ctx);
