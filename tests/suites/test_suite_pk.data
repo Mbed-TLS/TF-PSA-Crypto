@@ -588,7 +588,7 @@ mbedtls_pk_check_pair:"../framework/data_files/ec_256_pub.pem":"../framework/dat
 
 Check pair #2 (EC, bad)
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_PEM_PARSE_C
-mbedtls_pk_check_pair:"../framework/data_files/ec_256_pub.pem":"../framework/data_files/server5.key":MBEDTLS_ERR_ECP_BAD_INPUT_DATA
+mbedtls_pk_check_pair:"../framework/data_files/ec_256_pub.pem":"../framework/data_files/server5.key":MBEDTLS_ERR_PK_BAD_INPUT_DATA
 
 Check pair #3 (RSA, OK)
 depends_on:MBEDTLS_RSA_C:MBEDTLS_PKCS1_V15:MBEDTLS_PEM_PARSE_C
@@ -1312,67 +1312,51 @@ PSA import into PSA: transparent -> persistent public
 pk_import_into_psa_lifetime:0:0:1:1:1
 
 PSA import into PSA: opaque volatile [export] -> volatile pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:1:0:0
 
 PSA import into PSA: opaque volatile [export] -> persistent pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:1:0:1
 
 PSA import into PSA: opaque volatile [export] -> volatile public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:1:1:0
 
 PSA import into PSA: opaque volatile [export] -> persistent public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:1:1:1
 
 PSA import into PSA: opaque volatile [copy] -> volatile pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:0:0:0
 
 PSA import into PSA: opaque volatile [copy] -> persistent pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:0:0:1
 
 PSA import into PSA: opaque volatile [copy] -> volatile public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:0:1:0
 
 PSA import into PSA: opaque volatile [copy] -> persistent public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:0:0:1:1
 
 PSA import into PSA: opaque persistent [export] -> volatile pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:1:0:0
 
 PSA import into PSA: opaque persistent [export] -> persistent pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:1:0:1
 
 PSA import into PSA: opaque persistent [export] -> volatile public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:1:1:0
 
 PSA import into PSA: opaque persistent [export] -> persistent public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:1:1:1
 
 PSA import into PSA: opaque persistent [copy] -> volatile pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:0:0:0
 
 PSA import into PSA: opaque persistent [copy] -> persistent pair
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:0:0:1
 
 PSA import into PSA: opaque persistent [copy] -> volatile public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:0:1:0
 
 PSA import into PSA: opaque persistent [copy] -> persistent public
-depends_on:MBEDTLS_USE_PSA_CRYPTO
 pk_import_into_psa_lifetime:1:1:0:1:1
 
 PSA import into PSA: opaque RSA, COPY (ok)
