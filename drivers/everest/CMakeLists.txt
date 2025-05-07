@@ -19,7 +19,7 @@ set_config_files_compile_definitions(${everest_target})
 if(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
   install(DIRECTORY include/tf-psa-crypto/private/everest
-    DESTINATION include
+    DESTINATION include/tf-psa-crypto/private/everest
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     FILES_MATCHING PATTERN "*.h")
