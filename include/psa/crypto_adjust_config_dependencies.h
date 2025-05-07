@@ -50,7 +50,6 @@
 
 #if defined(NIST_KW_C)
 #define PSA_WANT_ALG_ECB_NO_PADDING 1
-#define PSA_WANT_KEY_TYPE_AES 1
 #endif
 
 #endif /* PSA_CRYPTO_ADJUST_CONFIG_DEPENDENCIES_H */
