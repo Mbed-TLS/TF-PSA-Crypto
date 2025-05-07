@@ -279,7 +279,15 @@ static const oid_x509_ext_t oid_x509_ext[] =
         MBEDTLS_OID_X509_EXT_BASIC_CONSTRAINTS,
     },
     {
-        OID_DESCRIPTOR(MBEDTLS_OID_KEY_USAGE,            "id-ce-keyUsage",            "Key Usage"),
+        OID_DESCRIPTOR(MBEDTLS_OID_NAME_CONSTRAINTS,
+                       "id-ce-nameConstraints",
+                       "Name Constraints"),
+        MBEDTLS_OID_X509_EXT_NAME_CONSTRAINTS,
+    },
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_KEY_USAGE,
+                       "id-ce-keyUsage",
+                       "Key Usage"),
         MBEDTLS_OID_X509_EXT_KEY_USAGE,
     },
     {
@@ -343,6 +351,9 @@ static const mbedtls_oid_descriptor_t oid_ext_key_usage[] =
     OID_DESCRIPTOR(MBEDTLS_OID_WISUN_FAN,
                    "id-kp-wisun-fan-device",
                    "Wi-SUN Alliance Field Area Network (FAN)"),
+    OID_DESCRIPTOR(MBEDTLS_OID_BUNDLE_SECURITY,
+                   "id-kp-bundleSecurity",
+                   "Bundle Protocol Security"),
     NULL_OID_DESCRIPTOR,
 };
 

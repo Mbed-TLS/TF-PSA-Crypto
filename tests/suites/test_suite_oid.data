@@ -28,6 +28,9 @@ oid_get_extended_key_usage:"2B06010505070309":"OCSP Signing"
 OID get Ext Key Usage - id-kp-wisun-fan-device
 oid_get_extended_key_usage:"2B0601040182E42501":"Wi-SUN Alliance Field Area Network (FAN)"
 
+OID get Ext Key Usage - id-kp-bundleSecurity
+oid_get_extended_key_usage:"2B06010505070323":"Bundle Protocol Security"
+
 OID get Ext Key Usage invalid oid
 oid_get_extended_key_usage:"5533445566":""
 
