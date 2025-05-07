@@ -51,6 +51,26 @@ static void calc_a_xor_t(unsigned char A[KW_SEMIBLOCK_LENGTH], uint64_t t)
     }
 }
 
+static int verify_input(psa_key_attributes_t *attributes, mbedtls_svc_key_id_t *key){
+    int ret = PSA_SUCCESS;
+    
+    ret = psa_get_key_attributes(*key, attributes);
+
+    if (ret != PSA_SUCCESS) {
+        return ret;
+    }
+
+    /*
+     * Currently NIST KW only supports PSA_KEY_TYPE_AES, so verify this is 
+     * set in the key attributes.
+     */
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) {
+	return PSA_ERROR_NOT_PERMITTED;
+    }
+
+    return ret;
+}
+
 /*
  * KW-AE as defined in SP 800-38F section 6.2
  * KWP-AE as defined in SP 800-38F section 6.3
@@ -68,18 +88,10 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
     unsigned char inbuff[KW_SEMIBLOCK_LENGTH * 2];
     psa_cipher_operation_t wrap_operation = PSA_CIPHER_OPERATION_INIT;
     psa_key_attributes_t attributes;
+    *output_length = 0;
 
-    ret = psa_get_key_attributes(key, &attributes);
+    ret = verify_input(&attributes, &key);
     if (ret != PSA_SUCCESS) {
-        goto cleanup;
-    }
-
-    /*
-     * Currently NIST KW only supports PSA_KEY_TYPE_AES, so verify this is 
-     * set in the key attributes.
-     */
-    if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
-        ret = PSA_ERROR_NOT_PERMITTED;
         goto cleanup;
     }
 
@@ -88,7 +100,6 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
         goto cleanup;
     }
 
-    *output_length = 0;
     /*
      * Generate the String to work on
      */
@@ -311,19 +322,8 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     psa_key_attributes_t attributes;
     *output_length = 0;
 
-    ret = psa_get_key_attributes(key, &attributes);
+    ret = verify_input(&attributes, &key);
     if (ret != PSA_SUCCESS) {
-        goto cleanup;
-    }
-
-    /*
-     * PSA API are able to check the algorithm and usage as this is specified
-     * when the key is imported in the parameters. It is however unable to verify the
-     * key type as this is a requirement of the NIST KW specification, therefore add
-     * a check here to ensure the correct key type is used.
-     */
-    if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
-        ret = PSA_ERROR_NOT_PERMITTED;
         goto cleanup;
     }
 
