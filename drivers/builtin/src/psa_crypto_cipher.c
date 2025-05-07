@@ -194,6 +194,11 @@ psa_status_t mbedtls_cipher_values_from_psa(
                 *mode = MBEDTLS_MODE_CHACHAPOLY;
                 break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_XTS)
+            case PSA_ALG_XTS:
+                *mode = MBEDTLS_MODE_XTS;
+                break;
+#endif
             default:
                 return PSA_ERROR_NOT_SUPPORTED;
         }
