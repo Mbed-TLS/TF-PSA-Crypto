@@ -48,7 +48,7 @@
 #define PSA_WANT_ALG_CMAC 1
 #endif
 
-#if defined(NIST_KW_C)
+#if defined(MBEDTLS_NIST_KW_C)
 #define PSA_WANT_ALG_ECB_NO_PADDING 1
 #endif
 
