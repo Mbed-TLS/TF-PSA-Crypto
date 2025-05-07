@@ -53,7 +53,7 @@ static void calc_a_xor_t(unsigned char A[KW_SEMIBLOCK_LENGTH], uint64_t t)
 
 static int verify_input(psa_key_attributes_t *attributes, mbedtls_svc_key_id_t *key){
     int ret = PSA_SUCCESS;
-    
+
     ret = psa_get_key_attributes(*key, attributes);
 
     if (ret != PSA_SUCCESS) {
@@ -61,11 +61,11 @@ static int verify_input(psa_key_attributes_t *attributes, mbedtls_svc_key_id_t *
     }
 
     /*
-     * Currently NIST KW only supports PSA_KEY_TYPE_AES, so verify this is 
+     * Currently NIST KW only supports PSA_KEY_TYPE_AES, so verify this is
      * set in the key attributes.
      */
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) {
-	return PSA_ERROR_NOT_PERMITTED;
+        return PSA_ERROR_NOT_PERMITTED;
     }
 
     return ret;
