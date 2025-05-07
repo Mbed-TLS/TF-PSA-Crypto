@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_OID_H
-#define MBEDTLS_OID_H
+#ifndef MBEDTLS_CRYPTO_OID_H
+#define MBEDTLS_CRYPTO_OID_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -692,4 +692,4 @@ int mbedtls_oid_get_pkcs12_pbe_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_
 }
 #endif
 
-#endif /* oid.h */
+#endif /* crypto_oid.h */

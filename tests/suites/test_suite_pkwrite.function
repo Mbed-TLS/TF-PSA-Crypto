@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
 #include "pk_internal.h"
 #include "mbedtls/pem.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/crypto_oid.h"
 #include "mbedtls/base64.h"
 #include "psa/crypto_sizes.h"
 
