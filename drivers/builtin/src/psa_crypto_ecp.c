@@ -594,7 +594,8 @@ exit:
 /* Interruptible ECC Key Generation */
 /****************************************************************/
 
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
 
 uint32_t mbedtls_psa_generate_key_iop_get_num_ops(
     mbedtls_psa_generate_key_iop_t *operation)
@@ -664,6 +665,13 @@ psa_status_t mbedtls_psa_ecp_generate_key_iop_abort(
     return PSA_SUCCESS;
 }
 
+#endif /* MBEDTLS_ECP_RESTARTABLE && MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE */
+
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
+
 uint32_t mbedtls_psa_ecp_export_public_key_iop_get_num_ops(
     mbedtls_psa_export_public_key_iop_t *operation)
 {
@@ -732,7 +740,11 @@ psa_status_t mbedtls_psa_ecp_export_public_key_iop_abort(
     return PSA_SUCCESS;
 }
 
-#endif
+#endif /* MBEDTLS_ECP_RESTARTABLE && \
+          (MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT ||
+           MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT || \
+           MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY) */
+
 /****************************************************************/
 /* Interruptible ECC Key Agreement */
 /****************************************************************/

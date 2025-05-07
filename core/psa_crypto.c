@@ -1588,7 +1588,10 @@ exit:
 /* Interruptible ECC Export Public-key */
 /****************************************************************/
 
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)  && \
+    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
 static psa_status_t psa_export_public_key_iop_abort_internal(psa_export_public_key_iop_t *operation)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -1609,7 +1612,10 @@ static psa_status_t psa_export_public_key_iop_abort_internal(psa_export_public_k
 
 uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *operation)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
     return operation->num_ops;
 #else
     (void) operation;
@@ -1620,7 +1626,11 @@ uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *oper
 psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operation,
                                              mbedtls_svc_key_id_t key)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)  && \
+    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
+
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_attributes_t key_attributes;
@@ -1680,7 +1690,10 @@ psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *ope
                                                 size_t data_size,
                                                 size_t *data_length)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)  && \
+    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     if (operation->id == 0 || operation->error_occurred) {
@@ -1713,7 +1726,10 @@ psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *ope
 
 psa_status_t psa_export_public_key_iop_abort(psa_export_public_key_iop_t *operation)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)  && \
+    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     status = psa_export_public_key_iop_abort_internal(operation);
@@ -8315,7 +8331,8 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
                                    key);
 }
 
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
 static psa_status_t psa_generate_key_iop_abort_internal(
     psa_generate_key_iop_t *operation)
 {
@@ -8345,7 +8362,8 @@ psa_status_t psa_generate_key_iop_setup(
     psa_generate_key_iop_t *operation,
     const psa_key_attributes_t *attributes)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_type_t type;
 
@@ -8398,7 +8416,8 @@ psa_status_t psa_generate_key_iop_complete(
     psa_generate_key_iop_t *operation,
     mbedtls_svc_key_id_t *key)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
     psa_status_t status;
     uint8_t key_data[PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)+1] = { 0 };
     size_t key_len = 0;
@@ -8441,7 +8460,8 @@ exit:
 psa_status_t psa_generate_key_iop_abort(
     psa_generate_key_iop_t *operation)
 {
-#if defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
     psa_status_t status;
 
     status = psa_generate_key_iop_abort_internal(operation);
