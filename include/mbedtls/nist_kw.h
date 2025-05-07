@@ -54,8 +54,8 @@ typedef enum {
  *                           <ul><li>For KW mode: Must be at least 8 bytes larger than \p in_len.</li>
  *                           <li>For KWP mode: Must be at least 8 bytes larger rounded up to a multiple of
  *                           8 bytes for KWP (15 bytes at most).</li></ul>
- * \param[out] output_size   The number of bytes written to the output buffer. \c 0 on failure.
- * \param[in] output_length  The capacity of the output buffer.
+ * \param output_size        The capacity of the output buffer. \c 0 on failure.
+ * \param[out] output_length On success, the number of bytes written to the output buffer. \c 0 on failure.
  *
  * \return                   \c 0 on success.
  * \return                   #PSA_ERROR_INVALID_ARGUMENT for invalid input length.
