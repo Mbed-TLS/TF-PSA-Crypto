@@ -105,7 +105,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
      */
     if (mode == MBEDTLS_KW_MODE_KW) {
         if (output_size < input_length + KW_SEMIBLOCK_LENGTH) {
-            ret = PSA_ERROR_INVALID_ARGUMENT;
+            ret = PSA_ERROR_BUFFER_TOO_SMALL;
             goto cleanup;
         }
 
@@ -130,7 +130,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
         }
 
         if (output_size < input_length + KW_SEMIBLOCK_LENGTH + padlen) {
-            ret = PSA_ERROR_INVALID_ARGUMENT;
+            ret = PSA_ERROR_BUFFER_TOO_SMALL;
             goto cleanup;
         }
 
@@ -332,7 +332,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
         goto cleanup;
     }
     if (output_size < input_length - KW_SEMIBLOCK_LENGTH) {
-        ret = PSA_ERROR_INVALID_ARGUMENT;
+        ret = PSA_ERROR_BUFFER_TOO_SMALL;
         goto cleanup;
     }
 
