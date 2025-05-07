@@ -309,6 +309,7 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     size_t part_length, padlen = 0, Plen;
     psa_cipher_operation_t unwrap_operation = PSA_CIPHER_OPERATION_INIT;
     psa_key_attributes_t attributes;
+    *output_length = 0;
 
     ret = psa_get_key_attributes(key, &attributes);
     if (ret != PSA_SUCCESS) {
@@ -330,7 +331,6 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     if (ret != PSA_SUCCESS) {
         goto cleanup;
     }
-    *output_length = 0;
     if (output_size < input_length - KW_SEMIBLOCK_LENGTH) {
         ret = PSA_ERROR_INVALID_ARGUMENT;
         goto cleanup;
