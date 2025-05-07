@@ -22,9 +22,7 @@
 
 #include "mbedtls/platform.h"
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#endif
 
 #if defined(PSA_WANT_ALG_MD5) &&  \
     defined(MBEDTLS_CIPHER_MODE_CBC) &&                             \
