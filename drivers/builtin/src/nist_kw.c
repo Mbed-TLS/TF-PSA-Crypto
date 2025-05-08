@@ -51,10 +51,11 @@ static void calc_a_xor_t(unsigned char A[KW_SEMIBLOCK_LENGTH], uint64_t t)
     }
 }
 
-static int verify_input(psa_key_attributes_t *attributes, mbedtls_svc_key_id_t *key){
+static int verify_input(mbedtls_svc_key_id_t *key){
     int ret = PSA_SUCCESS;
 
-    ret = psa_get_key_attributes(*key, attributes);
+    psa_key_attributes_t attributes;
+    ret = psa_get_key_attributes(*key, &attributes);
 
     if (ret != PSA_SUCCESS) {
         return ret;
@@ -67,6 +68,7 @@ static int verify_input(psa_key_attributes_t *attributes, mbedtls_svc_key_id_t *
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) {
         return PSA_ERROR_NOT_PERMITTED;
     }
+    psa_reset_key_attributes(&attributes);
 
     return ret;
 }
@@ -87,10 +89,9 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
     unsigned char outbuff[KW_SEMIBLOCK_LENGTH * 2];
     unsigned char inbuff[KW_SEMIBLOCK_LENGTH * 2];
     psa_cipher_operation_t wrap_operation = PSA_CIPHER_OPERATION_INIT;
-    psa_key_attributes_t attributes;
     *output_length = 0;
 
-    ret = verify_input(&attributes, &key);
+    ret = verify_input(&key);
     if (ret != PSA_SUCCESS) {
         goto cleanup;
     }
@@ -225,7 +226,6 @@ cleanup:
     psa_cipher_abort(&wrap_operation);
     mbedtls_platform_zeroize(inbuff, KW_SEMIBLOCK_LENGTH * 2);
     mbedtls_platform_zeroize(outbuff, KW_SEMIBLOCK_LENGTH * 2);
-    psa_reset_key_attributes(&attributes);
 
     return ret;
 }
@@ -319,10 +319,9 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
     int diff;
     size_t part_length, padlen = 0, Plen;
     psa_cipher_operation_t unwrap_operation = PSA_CIPHER_OPERATION_INIT;
-    psa_key_attributes_t attributes;
     *output_length = 0;
 
-    ret = verify_input(&attributes, &key);
+    ret = verify_input(&key);
     if (ret != PSA_SUCCESS) {
         goto cleanup;
     }
@@ -454,7 +453,6 @@ cleanup:
     psa_cipher_abort(&unwrap_operation);
     mbedtls_platform_zeroize(&diff, sizeof(diff));
     mbedtls_platform_zeroize(A, sizeof(A));
-    psa_reset_key_attributes(&attributes);
 
     return ret;
 }
