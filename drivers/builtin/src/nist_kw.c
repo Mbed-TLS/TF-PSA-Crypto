@@ -218,7 +218,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
 cleanup:
 
     if (ret != PSA_SUCCESS && output != NULL) {
-        memset(output, 0, semiblocks * KW_SEMIBLOCK_LENGTH);
+        memset(output, 0, output_size);
     }
     psa_cipher_abort(&wrap_operation);
     mbedtls_platform_zeroize(inbuff, KW_SEMIBLOCK_LENGTH * 2);
