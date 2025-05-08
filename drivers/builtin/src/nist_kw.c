@@ -207,11 +207,8 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
                 R2 = output + KW_SEMIBLOCK_LENGTH;
             }
         }
-        ret = psa_cipher_finish(&wrap_operation,
-                                outbuff + olen,
-                                sizeof(outbuff) - olen,
-                                &part_length);
-        if (ret != PSA_SUCCESS) {
+        if (olen != 16) {
+            ret = PSA_ERROR_BAD_STATE; 
             goto cleanup;
         }
     }
