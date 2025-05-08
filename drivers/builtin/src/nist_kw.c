@@ -65,7 +65,7 @@ static int verify_input(mbedtls_svc_key_id_t *key){
      * Currently NIST KW only supports PSA_KEY_TYPE_AES, so verify this is
      * set in the key attributes.
      */
-    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) {
+    if (psa_get_key_type(&attributes) != PSA_KEY_TYPE_AES) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
     psa_reset_key_attributes(&attributes);
