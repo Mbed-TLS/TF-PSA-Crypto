@@ -83,8 +83,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
                                   unsigned char *output, size_t output_size, size_t *output_length)
 {
     psa_status_t ret = 0;
-    size_t semiblocks = 0, s, olen, padlen = 0, update_output_length, finish_output_length,
-           part_length;
+    size_t semiblocks = 0, s, olen, padlen = 0, update_output_length, finish_output_length;
     uint64_t t = 0;
     unsigned char outbuff[KW_SEMIBLOCK_LENGTH * 2];
     unsigned char inbuff[KW_SEMIBLOCK_LENGTH * 2];
