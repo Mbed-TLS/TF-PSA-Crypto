@@ -82,7 +82,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
  *                           <li>For KWP mode: a multiple of 8 bytes between 16 and 2^32 inclusive.</li></ul>
  * \param[out] output        The buffer holding the output data.
  *                           The output buffer's minimal length is 8 bytes shorter than \p in_len.
- * \param[in] output_size    The capacity of the output buffer.
+ * \param output_size    The capacity of the output buffer.
  * \param[out] output_length The number of bytes written to the output buffer. \c 0 on failure.
  *                           For KWP mode, the length could be up to 15 bytes shorter than \p in_len,
  *                           depending on how much padding was added to the data.
