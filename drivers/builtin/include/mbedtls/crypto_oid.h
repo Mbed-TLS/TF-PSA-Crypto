@@ -1,5 +1,5 @@
 /**
- * \file oid.h
+ * \file crypto_oid.h
  *
  * \brief Object Identifier (OID) database
  */
