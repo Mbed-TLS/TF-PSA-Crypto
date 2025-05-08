@@ -66,7 +66,7 @@ static int verify_input(mbedtls_svc_key_id_t *key){
      * set in the key attributes.
      */
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) {
-        return PSA_ERROR_NOT_PERMITTED;
+        return PSA_ERROR_INVALID_ARGUMENT;
     }
     psa_reset_key_attributes(&attributes);
 
