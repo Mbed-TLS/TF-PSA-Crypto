@@ -75,9 +75,7 @@
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_MPI_MAX_BITS                              (8 * MBEDTLS_MPI_MAX_SIZE)      /**< Maximum number of bits for usable MPIs. */
-#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /*
  * When reading from files with mbedtls_mpi_read_file() and writing to files with
  * mbedtls_mpi_write_file() the buffer should have space
