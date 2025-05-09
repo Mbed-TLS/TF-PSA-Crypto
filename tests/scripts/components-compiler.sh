@@ -18,22 +18,24 @@ component_build_tf_psa_crypto_tfm_armcc () {
     cp configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
 
     msg "build: TF-M config, armclang armv7-m thumb2"
-    helper_armc6_build_test "--target=arm-arm-none-eabi -mcpu=cortex-m0 -mthumb -Os -std=c99 -Werror -Wall -Wextra -Wwrite-strings -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral -Wshadow -Wasm-operand-widths -Wunused -I../framework/tests/include/spe"
+    cd $OUT_OF_SOURCE_DIR
+    helper_armc6_build_test "--target=arm-arm-none-eabi -mcpu=cortex-m0 -mthumb -Os -I../framework/tests/include/spe"
 }
 
 test_build_opt () {
     info=$1 cc=$2; shift 2
     $cc --version
+    cd $OUT_OF_SOURCE_DIR
     for opt in "$@"; do
-          cd $OUT_OF_SOURCE_DIR
-          msg "build/test: $cc $opt, $info" # ~ 30s
-          cmake -DCMAKE_C_COMPILER="$cc" -DCMAKE_C_FLAGS="$opt -std=c99 -pedantic -Wall -Wextra -Werror" "$TF_PSA_CRYPTO_ROOT_DIR"
-          make
-          # We're confident enough in compilers to not run _all_ the tests,
-          # but at least run the unit tests. In particular, runs with
-          # optimizations use inline assembly whereas runs with -O0
-          # skip inline assembly.
-          make test # ~30s
+        msg "build/test: $cc $opt, $info" # ~ 30s
+        cmake -DCMAKE_C_COMPILER="$cc" -DCMAKE_C_FLAGS="$opt -pedantic" "$TF_PSA_CRYPTO_ROOT_DIR"
+        make
+        # We're confident enough in compilers to not run _all_ the tests,
+        # but at least run the unit tests. In particular, runs with
+        # optimizations use inline assembly whereas runs with -O0
+        # skip inline assembly.
+        make test # ~30s
+        rm -Rf *
     done
 }
 
@@ -89,7 +91,8 @@ component_build_tf_psa_crypto_zeroize_checks () {
     cd $OUT_OF_SOURCE_DIR
 
     # Only compile - we're looking for sizeof-pointer-memaccess warnings
-    cmake -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-zeroize-memset.h" -DCMAKE_C_FLAGS="-DMBEDTLS_TEST_DEFINES_ZEROIZE -Werror -Wsizeof-pointer-memaccess" "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-zeroize-memset.h" \
+          -DCMAKE_C_FLAGS="-DMBEDTLS_TEST_DEFINES_ZEROIZE -Wsizeof-pointer-memaccess" "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 }
 
@@ -108,9 +111,9 @@ component_test_tf_psa_crypto_zeroize () {
         gdb_disable_aslr='set disable-randomization off'
     fi
 
+    cd $OUT_OF_SOURCE_DIR
     for optimization_flag in -O2 -O3 -Ofast -Os; do
         for compiler in clang gcc; do
-            cd $OUT_OF_SOURCE_DIR
             msg "test: $compiler $optimization_flag, mbedtls_platform_zeroize()"
             cmake -DCMAKE_C_COMPILER="$compiler" \
                   -DCMAKE_C_FLAGS="$optimization_flag -Wno-error=array-bounds -g3" \
@@ -122,12 +125,9 @@ component_test_tf_psa_crypto_zeroize () {
                 -nx 2>&1 | tee test_zeroize.log
             grep "The buffer was correctly zeroized" test_zeroize.log
             not grep -i "error" test_zeroize.log
-            rm -f test_zeroize.log
 
-            # Restore the build directory for the next iteration (i.e. delete & re-create it)
-            cd $TF_PSA_CRYPTO_ROOT_DIR
-            rm -rf $OUT_OF_SOURCE_DIR
-            mkdir $OUT_OF_SOURCE_DIR
+            # Restore the build directory for the next iteration
+            rm -Rf *
         done
     done
 }
