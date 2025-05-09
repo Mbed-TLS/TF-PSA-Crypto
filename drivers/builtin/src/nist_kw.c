@@ -208,7 +208,7 @@ psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
             }
         }
         if (olen != 16) {
-            ret = PSA_ERROR_BAD_STATE;
+            ret = PSA_ERROR_CORRUPTION_DETECTED;
             goto cleanup;
         }
     }
