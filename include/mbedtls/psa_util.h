@@ -120,10 +120,7 @@ static inline mbedtls_md_type_t mbedtls_md_type_from_psa_alg(psa_algorithm_t psa
  * \param       der_size    Size of \p der in bytes. It is enough if \p der_size
  *                          is at least the size of the actual output. (The size
  *                          of the output can vary depending on the presence of
- *                          leading zeros in the data.) You can use
- *                          #MBEDTLS_ECDSA_MAX_SIG_LEN(\p bits) to determine a
- *                          size that is large enough for all signatures for a
- *                          given value of \p bits.
+ *                          leading zeros in the data.)
  * \param[out]  der_len     On success it contains the amount of valid data
  *                          (in bytes) written to \p der. It's undefined
  *                          in case of failure.
