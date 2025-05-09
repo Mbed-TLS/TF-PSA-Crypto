@@ -22,6 +22,12 @@ if(GEN_FILES)
             ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
             ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
+
+    add_custom_target(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target
+        DEPENDS
+            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h
+            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c
+    )
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -103,6 +109,11 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${libs})
+
+    if(GEN_FILES)
+        add_dependencies(${tfpsacrypto_static_target}
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target)
+    endif()
 endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
@@ -115,6 +126,11 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION 4.0.0 SOVERSION 16)
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
+
+    if(GEN_FILES)
+        add_dependencies(${tfpsacrypto_target}
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target)
+    endif()
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
