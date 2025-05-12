@@ -28,6 +28,7 @@ extern "C" {
 /** SHA-3 input data was malformed. */
 #define MBEDTLS_ERR_SHA3_BAD_INPUT_DATA                 -0x0076
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * SHA-3 family id.
  *
@@ -41,6 +42,7 @@ typedef enum {
     MBEDTLS_SHA3_384, /*!< SHA3-384 */
     MBEDTLS_SHA3_512, /*!< SHA3-512 */
 } mbedtls_sha3_id;
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /**
  * \brief          The SHA-3 context structure.
@@ -55,6 +57,7 @@ typedef struct {
 }
 mbedtls_sha3_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          This function initializes a SHA-3 context.
  *
@@ -164,6 +167,8 @@ int mbedtls_sha3(mbedtls_sha3_id id, const uint8_t *input,
  */
 int mbedtls_sha3_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
