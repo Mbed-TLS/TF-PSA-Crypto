@@ -757,13 +757,13 @@
 /**
  * \def MBEDTLS_NIST_KW_C
  *
- * Enable the Key Wrapping mode for 128-bit block ciphers,
- * as defined in NIST SP 800-38F. Only KW and KWP modes
- * are supported. At the moment, only AES is approved by NIST.
+ * Enable the 128-bit key wrapping modes from NIST SP 800-38F:
+ * KW (also known as RFC 3394) and KWP (RFC 5649).
+ * Currently these modes are only supported with AES.
  *
  * Module:  library/nist_kw.c
  *
- * Requires: MBEDTLS_AES_C and MBEDTLS_CIPHER_C
+ * Auto enables: PSA_WANT_ALG_ECB_NO_PADDING
  */
 #define MBEDTLS_NIST_KW_C
 
