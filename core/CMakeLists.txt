@@ -22,9 +22,6 @@ if(GEN_FILES)
             ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
             ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
-else()
-    link_to_source(psa_crypto_driver_wrappers.h)
-    link_to_source(psa_crypto_driver_wrappers_no_static.c)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
