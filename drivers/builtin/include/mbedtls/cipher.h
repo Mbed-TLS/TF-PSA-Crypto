@@ -58,6 +58,7 @@
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief     Supported cipher types.
  *
@@ -75,6 +76,7 @@ typedef enum {
     MBEDTLS_CIPHER_ID_ARIA,      /**< The Aria cipher. */
     MBEDTLS_CIPHER_ID_CHACHA20,  /**< The ChaCha20 cipher. */
 } mbedtls_cipher_id_t;
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /**
  * \brief     Supported {cipher type, cipher mode} pairs.
@@ -170,6 +172,7 @@ typedef enum {
     MBEDTLS_CIPHER_AES_256_KWP,          /**< AES cipher with 256-bit NIST KWP mode. */
 } mbedtls_cipher_type_t;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /** Supported cipher modes. */
 typedef enum {
     MBEDTLS_MODE_NONE = 0,               /**< None.                        */
@@ -188,7 +191,6 @@ typedef enum {
     MBEDTLS_MODE_KWP,                    /**< The SP800-38F KWP mode */
 } mbedtls_cipher_mode_t;
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /** Supported cipher padding types. */
 typedef enum {
     MBEDTLS_PADDING_PKCS7 = 0,     /**< PKCS7 padding (default).        */
@@ -229,6 +231,7 @@ enum {
  */
 #define MBEDTLS_MAX_BLOCK_LENGTH   16
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /** Maximum key length, in Bytes. */
 /* This should ideally be derived automatically from list of ciphers.
  * For now, only check whether XTS is enabled which uses 64 Byte keys,
@@ -244,6 +247,7 @@ enum {
  * Base cipher information (opaque struct).
  */
 typedef struct mbedtls_cipher_base_t mbedtls_cipher_base_t;
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /**
  * CMAC context (opaque struct).
