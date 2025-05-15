@@ -16,52 +16,52 @@
     mbedtls_ecp_point_init(x);
 
 /* Auxiliary function to compare two mbedtls_ecp_group objects. */
-inline static int mbedtls_ecp_group_cmp(mbedtls_ecp_group *grp1,
-                                        mbedtls_ecp_group *grp2)
+inline static int mbedtls_ecp_group_cmp(mbedtls_ecp_group *grp_1,
+                                        mbedtls_ecp_group *grp_2)
 {
-    if (mbedtls_mpi_cmp_mpi(&grp1->P, &grp2->P) != 0) {
+    if (mbedtls_mpi_cmp_mpi(&grp_1->P, &grp_2->P) != 0) {
         return 1;
     }
-    if (mbedtls_mpi_cmp_mpi(&grp1->A, &grp2->A) != 0) {
+    if (mbedtls_mpi_cmp_mpi(&grp_1->A, &grp_2->A) != 0) {
         return 1;
     }
-    if (mbedtls_mpi_cmp_mpi(&grp1->B, &grp2->B) != 0) {
+    if (mbedtls_mpi_cmp_mpi(&grp_1->B, &grp_2->B) != 0) {
         return 1;
     }
-    if (mbedtls_mpi_cmp_mpi(&grp1->N, &grp2->N) != 0) {
+    if (mbedtls_mpi_cmp_mpi(&grp_1->N, &grp_2->N) != 0) {
         return 1;
     }
-    if (mbedtls_ecp_point_cmp(&grp1->G, &grp2->G) != 0) {
+    if (mbedtls_ecp_point_cmp(&grp_1->G, &grp_2->G) != 0) {
         return 1;
     }
-    if (grp1->id != grp2->id) {
+    if (grp_1->id != grp_2->id) {
         return 1;
     }
-    if (grp1->pbits != grp2->pbits) {
+    if (grp_1->pbits != grp_2->pbits) {
         return 1;
     }
-    if (grp1->nbits != grp2->nbits) {
+    if (grp_1->nbits != grp_2->nbits) {
         return 1;
     }
-    if (grp1->h != grp2->h) {
+    if (grp_1->h != grp_2->h) {
         return 1;
     }
-    if (grp1->modp != grp2->modp) {
+    if (grp_1->modp != grp_2->modp) {
         return 1;
     }
-    if (grp1->t_pre != grp2->t_pre) {
+    if (grp_1->t_pre != grp_2->t_pre) {
         return 1;
     }
-    if (grp1->t_post != grp2->t_post) {
+    if (grp_1->t_post != grp_2->t_post) {
         return 1;
     }
-    if (grp1->t_data != grp2->t_data) {
+    if (grp_1->t_data != grp_2->t_data) {
         return 1;
     }
-    if (grp1->T_size != grp2->T_size) {
+    if (grp_1->T_size != grp_2->T_size) {
         return 1;
     }
-    if (grp1->T != grp2->T) {
+    if (grp_1->T != grp_2->T) {
         return 1;
     }
 
@@ -793,30 +793,30 @@ exit:
 /* BEGIN_CASE */
 void ecp_tls_write_read_group(int id)
 {
-    mbedtls_ecp_group grp1, grp2;
+    mbedtls_ecp_group grp_1, grp_2;
     unsigned char buf[10];
     const unsigned char *vbuf = buf;
     size_t len;
     int ret;
 
-    mbedtls_ecp_group_init(&grp1);
-    mbedtls_ecp_group_init(&grp2);
+    mbedtls_ecp_group_init(&grp_1);
+    mbedtls_ecp_group_init(&grp_2);
     memset(buf, 0x00, sizeof(buf));
 
-    TEST_ASSERT(mbedtls_ecp_group_load(&grp1, id) == 0);
+    TEST_ASSERT(mbedtls_ecp_group_load(&grp_1, id) == 0);
 
-    TEST_ASSERT(mbedtls_ecp_tls_write_group(&grp1, &len, buf, 10) == 0);
-    ret = mbedtls_ecp_tls_read_group(&grp2, &vbuf, len);
+    TEST_ASSERT(mbedtls_ecp_tls_write_group(&grp_1, &len, buf, 10) == 0);
+    ret = mbedtls_ecp_tls_read_group(&grp_2, &vbuf, len);
     TEST_ASSERT(ret == 0);
 
     if (ret == 0) {
-        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&grp1.N, &grp2.N) == 0);
-        TEST_ASSERT(grp1.id == grp2.id);
+        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&grp_1.N, &grp_2.N) == 0);
+        TEST_ASSERT(grp_1.id == grp_2.id);
     }
 
 exit:
-    mbedtls_ecp_group_free(&grp1);
-    mbedtls_ecp_group_free(&grp2);
+    mbedtls_ecp_group_free(&grp_1);
+    mbedtls_ecp_group_free(&grp_2);
 }
 /* END_CASE */
 
