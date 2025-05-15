@@ -46,7 +46,7 @@
 /** Invalid private or public key. */
 #define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80
 /** Operation in progress, call again with the same parameters to continue. */
-#define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00
+#define MBEDTLS_ERR_ECP_IN_PROGRESS                       PSA_OPERATION_INCOMPLETE
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /* Flags indicating whether to include code that is specific to certain

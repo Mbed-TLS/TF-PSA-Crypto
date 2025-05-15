@@ -42,7 +42,7 @@
 /** The private key operation failed. */
 #define MBEDTLS_ERR_RSA_PRIVATE_FAILED                    -0x4300
 /** The PKCS#1 verification failed. */
-#define MBEDTLS_ERR_RSA_VERIFY_FAILED                     -0x4380
+#define MBEDTLS_ERR_RSA_VERIFY_FAILED                     PSA_ERROR_INVALID_SIGNATURE
 /** The output buffer for decryption is not large enough. */
 #define MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE                  -0x4400
 /** The random generator failed to generate non-zeros. */
