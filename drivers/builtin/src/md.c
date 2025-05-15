@@ -306,14 +306,22 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx)
                 mbedtls_sha512_free(ctx->md_ctx);
                 break;
 #endif
+#if defined(PSA_WANT_ALG_SHA3_224)
+            case MBEDTLS_MD_SHA3_224:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
+            case MBEDTLS_MD_SHA3_256:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
+            case MBEDTLS_MD_SHA3_384:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
+            case MBEDTLS_MD_SHA3_512:
+#endif
 #if defined(PSA_WANT_ALG_SHA3_224) || \
         defined(PSA_WANT_ALG_SHA3_256) || \
         defined(PSA_WANT_ALG_SHA3_384) || \
         defined(PSA_WANT_ALG_SHA3_512)
-            case MBEDTLS_MD_SHA3_224:
-            case MBEDTLS_MD_SHA3_256:
-            case MBEDTLS_MD_SHA3_384:
-            case MBEDTLS_MD_SHA3_512:
                 mbedtls_sha3_free(ctx->md_ctx);
                 break;
 #endif
@@ -394,14 +402,22 @@ int mbedtls_md_clone(mbedtls_md_context_t *dst,
             mbedtls_sha512_clone(dst->md_ctx, src->md_ctx);
             break;
 #endif
+#if defined(PSA_WANT_ALG_SHA3_224)
+        case MBEDTLS_MD_SHA3_224:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
+        case MBEDTLS_MD_SHA3_256:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
+        case MBEDTLS_MD_SHA3_384:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
+        case MBEDTLS_MD_SHA3_512:
+#endif
 #if defined(PSA_WANT_ALG_SHA3_224) || \
     defined(PSA_WANT_ALG_SHA3_256) || \
     defined(PSA_WANT_ALG_SHA3_384) || \
     defined(PSA_WANT_ALG_SHA3_512)
-        case MBEDTLS_MD_SHA3_224:
-        case MBEDTLS_MD_SHA3_256:
-        case MBEDTLS_MD_SHA3_384:
-        case MBEDTLS_MD_SHA3_512:
             mbedtls_sha3_clone(dst->md_ctx, src->md_ctx);
             break;
 #endif
@@ -487,14 +503,22 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
             ALLOC(sha512);
             break;
 #endif
+#if defined(PSA_WANT_ALG_SHA3_224)
+        case MBEDTLS_MD_SHA3_224:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
+        case MBEDTLS_MD_SHA3_256:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
+        case MBEDTLS_MD_SHA3_384:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
+        case MBEDTLS_MD_SHA3_512:
+#endif
 #if defined(PSA_WANT_ALG_SHA3_224) || \
     defined(PSA_WANT_ALG_SHA3_256) || \
     defined(PSA_WANT_ALG_SHA3_384) || \
     defined(PSA_WANT_ALG_SHA3_512)
-        case MBEDTLS_MD_SHA3_224:
-        case MBEDTLS_MD_SHA3_256:
-        case MBEDTLS_MD_SHA3_384:
-        case MBEDTLS_MD_SHA3_512:
             ALLOC(sha3);
             break;
 #endif
@@ -627,14 +651,22 @@ int mbedtls_md_update(mbedtls_md_context_t *ctx, const unsigned char *input, siz
         case MBEDTLS_MD_SHA512:
             return mbedtls_sha512_update(ctx->md_ctx, input, ilen);
 #endif
+#if defined(PSA_WANT_ALG_SHA3_224)
+        case MBEDTLS_MD_SHA3_224:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
+        case MBEDTLS_MD_SHA3_256:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
+        case MBEDTLS_MD_SHA3_384:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
+        case MBEDTLS_MD_SHA3_512:
+#endif
 #if defined(PSA_WANT_ALG_SHA3_224) || \
     defined(PSA_WANT_ALG_SHA3_256) || \
     defined(PSA_WANT_ALG_SHA3_384) || \
     defined(PSA_WANT_ALG_SHA3_512)
-        case MBEDTLS_MD_SHA3_224:
-        case MBEDTLS_MD_SHA3_256:
-        case MBEDTLS_MD_SHA3_384:
-        case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3_update(ctx->md_ctx, input, ilen);
 #endif
         default:
@@ -688,14 +720,22 @@ int mbedtls_md_finish(mbedtls_md_context_t *ctx, unsigned char *output)
         case MBEDTLS_MD_SHA512:
             return mbedtls_sha512_finish(ctx->md_ctx, output);
 #endif
+#if defined(PSA_WANT_ALG_SHA3_224)
+        case MBEDTLS_MD_SHA3_224:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_256)
+        case MBEDTLS_MD_SHA3_256:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_384)
+        case MBEDTLS_MD_SHA3_384:
+#endif
+#if defined(PSA_WANT_ALG_SHA3_512)
+        case MBEDTLS_MD_SHA3_512:
+#endif
 #if defined(PSA_WANT_ALG_SHA3_224) || \
     defined(PSA_WANT_ALG_SHA3_256) || \
     defined(PSA_WANT_ALG_SHA3_384) || \
     defined(PSA_WANT_ALG_SHA3_512)
-        case MBEDTLS_MD_SHA3_224:
-        case MBEDTLS_MD_SHA3_256:
-        case MBEDTLS_MD_SHA3_384:
-        case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3_finish(ctx->md_ctx, output, ctx->md_info->size);
 #endif
         default:
