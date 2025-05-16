@@ -325,6 +325,13 @@ static int psa_is_dh_key_size_valid(size_t bits)
 
 psa_status_t mbedtls_to_psa_error(int ret)
 {
+    /* PSA error codes (except PSA_SUCCESS) exist in the space between
+     * PSA_ERROR_GENERIC_ERROR and PSA_OPERATION_INCOMPLETE, so if we are
+     * passed a PSA error code then just return it. */
+    if (ret <= PSA_ERROR_GENERIC_ERROR && ret >= PSA_OPERATION_INCOMPLETE)
+    {
+        return (psa_status_t)ret;
+    }
     /* Mbed TLS error codes can combine a high-level error code and a
      * low-level error code. The low-level error usually reflects the
      * root cause better, so dispatch on that preferably. */
