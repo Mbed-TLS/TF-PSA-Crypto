@@ -43,6 +43,7 @@ typedef struct mbedtls_sha512_context {
 }
 mbedtls_sha512_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          This function initializes a SHA-512 context.
  *
@@ -177,6 +178,8 @@ int mbedtls_sha512_self_test(int verbose);
 #endif /* MBEDTLS_SHA512_C */
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

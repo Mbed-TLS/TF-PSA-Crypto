@@ -92,13 +92,13 @@ component_tf_psa_crypto_build_custom_config_file () {
     # that nothing else depends on).
     echo '#undef MBEDTLS_NIST_KW_C' >crypto_config_user.h
     # Before rebuilding the library let's verify that the feature was present in the previous build.
-    grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
+    grep -q mbedtls_nist_kw_wrap drivers/builtin/libbuiltin.a
     cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=crypto_config_custom.h \
             -DTF_PSA_CRYPTO_USER_CONFIG_FILE=crypto_config_user.h "$TF_PSA_CRYPTO_ROOT_DIR"
     make
     # Verify that MBEDTLS_NIST_KW_C was really disabled, i.e. crypto_config_user.h was included
     # correctly in the build.
-    not grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
+    not grep -q mbedtls_nist_kw_wrap drivers/builtin/libbuiltin.a
 
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
@@ -125,12 +125,12 @@ component_tf_psa_crypto_build_custom_config_file () {
     # that nothing else depends on).
     echo '#undef MBEDTLS_NIST_KW_C' >crypto_config_user.h
     # Before rebuilding the library let's verify that the feature was present in the previous build.
-    grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
+    grep -q mbedtls_nist_kw_wrap drivers/builtin/libbuiltin.a
     cmake -DGEN_FILES=OFF -DTF_PSA_CRYPTO_CONFIG_FILE=crypto_config_custom.h -DTF_PSA_CRYPTO_USER_CONFIG_FILE=crypto_config_user.h .
     make
     # Verify that MBEDTLS_NIST_KW_C was really disabled, i.e. crypto_config_user.h was included
     # correctly in the build.
-    not grep -q mbedtls_nist_kw_init drivers/builtin/libbuiltin.a
+    not grep -q mbedtls_nist_kw_wrap drivers/builtin/libbuiltin.a
 
     # Restore default crypto config file and remove generated ones
     mv include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"

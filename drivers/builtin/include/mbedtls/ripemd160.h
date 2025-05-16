@@ -30,6 +30,7 @@ typedef struct mbedtls_ripemd160_context {
 }
 mbedtls_ripemd160_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          Initialize RIPEMD-160 context
  *
@@ -109,6 +110,8 @@ int mbedtls_ripemd160(const unsigned char *input,
 int mbedtls_ripemd160_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

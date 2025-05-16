@@ -35,15 +35,7 @@ extern "C" {
  *        more details.
  */
 #define MBEDTLS_ERROR_ADD(high, low) \
-    mbedtls_error_add(high, low, __FILE__, __LINE__)
-
-#if defined(MBEDTLS_TEST_HOOKS)
-/**
- * \brief Testing hook called before adding/combining two error codes together.
- *        Only used when invasive testing is enabled via MBEDTLS_TEST_HOOKS.
- */
-extern void (*mbedtls_test_hook_error_add)(int, int, const char *, int);
-#endif
+    mbedtls_error_add(high, low)
 
 /**
  * \brief Combines a high-level and low-level error code together.
@@ -64,29 +56,15 @@ extern void (*mbedtls_test_hook_error_add)(int, int, const char *, int);
  *        is a good reason to report a different error code in the
  *        higher-level module.
  *
- * \note  When invasive testing is enabled via #MBEDTLS_TEST_HOOKS, also try to
- *        call \link mbedtls_test_hook_error_add \endlink.
- *
  * \param high      High-level error code, i.e. error code from the module
  *                  that is reporting the error.
  *                  This can be 0 to just propagate a low-level error.
  * \param low       Low-level error code, i.e. error code returned by
  *                  a lower-level function.
  *                  This can be 0 to just return a high-level error.
- * \param file      file where this error code combination occurred.
- * \param line      line where this error code combination occurred.
  */
-static inline int mbedtls_error_add(int high, int low,
-                                    const char *file, int line)
+static inline int mbedtls_error_add(int high, int low)
 {
-#if defined(MBEDTLS_TEST_HOOKS)
-    if (*mbedtls_test_hook_error_add != NULL) {
-        (*mbedtls_test_hook_error_add)(high, low, file, line);
-    }
-#endif
-    (void) file;
-    (void) line;
-
     /* We give priority to the lower-level error code, because this
      * is usually the right choice. For example, if a low-level module
      * runs out of memory, this should not be converted to a high-level

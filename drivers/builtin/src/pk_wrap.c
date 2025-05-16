@@ -157,7 +157,7 @@ static int rsa_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
      * valid signature?" and not just "Does the buffer contain a valid
      * signature?". */
     if (sig_len > rsa_len) {
-        return MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
+        return MBEDTLS_ERR_RSA_VERIFY_FAILED;
     }
 
     return 0;
@@ -653,10 +653,6 @@ static int ecdsa_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
     ret = mbedtls_ecdsa_read_signature((mbedtls_ecdsa_context *) pk->pk_ctx,
                                        hash, hash_len, sig, sig_len);
 
-    if (ret == MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH) {
-        return MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
-    }
-
     return ret;
 }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
@@ -1148,10 +1144,6 @@ static int ecdsa_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         (mbedtls_ecdsa_context *) pk->pk_ctx,
         hash, hash_len, sig, sig_len,
         (mbedtls_ecdsa_restart_ctx *) rs_ctx);
-
-    if (ret == MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH) {
-        return MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
-    }
 
     return ret;
 }

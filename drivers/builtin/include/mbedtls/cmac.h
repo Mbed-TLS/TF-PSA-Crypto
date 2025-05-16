@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_AES_BLOCK_SIZE          16
 #define MBEDTLS_DES3_BLOCK_SIZE         8
 
@@ -32,14 +33,15 @@ extern "C" {
 #define MBEDTLS_CMAC_MAX_BLOCK_SIZE      16  /**< The longest block used by CMAC is that of AES. */
 #else
 #define MBEDTLS_CMAC_MAX_BLOCK_SIZE      8   /**< The longest block used by CMAC is that of 3DES. */
-#endif
+#endif /* MBEDTLS_AES_C */
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
 /** The longest block supported by the cipher module.
  *
  * \deprecated
  * For the maximum block size of a cipher supported by the CMAC module,
- * use #MBEDTLS_CMAC_MAX_BLOCK_SIZE.
+ * use MBEDTLS_CMAC_MAX_BLOCK_SIZE.
  * For the maximum block size of a cipher supported by the cipher module,
  * use #MBEDTLS_MAX_BLOCK_LENGTH.
  */
@@ -51,6 +53,7 @@ extern "C" {
 #define MBEDTLS_CIPHER_BLKSIZE_MAX MBEDTLS_MAX_BLOCK_LENGTH
 #endif /* MBEDTLS_DEPRECATED_REMOVED */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * The CMAC context structure.
  */
@@ -214,6 +217,8 @@ int mbedtls_aes_cmac_prf_128(const unsigned char *key, size_t key_len,
  */
 int mbedtls_cmac_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST && ( MBEDTLS_AES_C || MBEDTLS_DES_C ) */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

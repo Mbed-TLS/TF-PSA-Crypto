@@ -64,7 +64,7 @@
 #include "mbedtls/sha1.h"
 #include "mbedtls/sha256.h"
 #include "mbedtls/sha512.h"
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 #include "mbedtls/threading.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF) ||          \
@@ -500,8 +500,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE:
         case MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH:
-            return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_PK_BUFFER_TOO_SMALL:
             return PSA_ERROR_BUFFER_TOO_SMALL;
 #endif
@@ -539,7 +537,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH:
         case MBEDTLS_ERR_ECP_VERIFY_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_ECP_ALLOC_FAILED:
@@ -5465,7 +5462,7 @@ psa_status_t psa_aead_abort(psa_aead_operation_t *operation)
 }
 
 /****************************************************************/
-/* Generators */
+/* Key derivation: output generation */
 /****************************************************************/
 
 #if defined(BUILTIN_ALG_ANY_HKDF) || \
@@ -6525,7 +6522,7 @@ psa_status_t psa_key_derivation_output_key(
 
 
 /****************************************************************/
-/* Key derivation */
+/* Key derivation: operation management */
 /****************************************************************/
 
 #if defined(AT_LEAST_ONE_BUILTIN_KDF)
@@ -8386,6 +8383,8 @@ psa_status_t psa_generate_key_iop_abort(
 #endif
 }
 
+
+
 /****************************************************************/
 /* Module setup */
 /****************************************************************/
@@ -8620,6 +8619,12 @@ exit:
 
     return status;
 }
+
+
+
+/****************************************************************/
+/* PAKE */
+/****************************************************************/
 
 #if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t psa_crypto_driver_pake_get_password_len(
