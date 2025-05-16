@@ -1683,7 +1683,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
  *
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The following conditions can result in this error:
- *         The \p key type is not valid for output from this operation’s algorithm.
+ *         The \p key type is not valid for output from this \p operation’s algorithm.
  *         The \p key size is nonzero.
  *         The \p key lifetime is invalid.
  *         The \p key identifier is not valid for the key lifetime.
