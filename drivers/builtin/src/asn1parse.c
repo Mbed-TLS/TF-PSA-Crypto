@@ -195,12 +195,14 @@ int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
     }
 
     if (integer_length == 0) {
+        *p = start;
         return MBEDTLS_ERR_ASN1_INVALID_DATA;
     }
 
     const int negative = ((**p & 0x80) != 0);
 
     if (negative) {
+        *p = start;
         return MBEDTLS_ERR_ASN1_INVALID_DATA;
     }
 
