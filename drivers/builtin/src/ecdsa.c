@@ -729,7 +729,7 @@ int mbedtls_ecdsa_read_signature_restartable(mbedtls_ecdsa_context *ctx,
      * Return 0 if the buffer just contains the signature, and a specific
      * error code if the valid signature is followed by more data. */
     if (p != end) {
-        ret = MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH;
+        ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;
     }
 
 cleanup:

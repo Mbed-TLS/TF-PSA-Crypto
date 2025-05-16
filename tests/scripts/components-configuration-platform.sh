@@ -22,6 +22,22 @@ component_tf_psa_crypto_build_no_std_function () {
     make
 }
 
+component_tf_psa_crypto_test_platform_get_entropy_alt()
+{
+    msg "build: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
+    # Use hardware polling as the only source for entropy
+    scripts/config.py set MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+    scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=gcc "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    # Run all the tests
+    msg "test: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
+    make test
+}
+
 component_tf_psa_crypto_test_no_date_time () {
     msg "build: default config without MBEDTLS_HAVE_TIME_DATE"
     scripts/config.py unset MBEDTLS_HAVE_TIME_DATE

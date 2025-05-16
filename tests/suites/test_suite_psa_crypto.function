@@ -3,10 +3,10 @@
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/asn1write.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/crypto_oid.h"
 #include "common.h"
 
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 
 /* For MBEDTLS_CTR_DRBG_MAX_REQUEST, knowing that psa_generate_random()
  * uses mbedtls_ctr_drbg internally. */

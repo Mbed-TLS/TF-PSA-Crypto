@@ -36,7 +36,14 @@ int main(void)
     void *crypto_so = dlopen(CRYPTO_SO_FILENAME, RTLD_NOW);
     CHECK_DLERROR("dlopen", CRYPTO_SO_FILENAME);
 
+#pragma GCC diagnostic push
+    /* dlsym() returns an object pointer which is meant to be used as a
+     * function pointer. This has undefined behavior in standard C, so
+     * "gcc -std=c99 -pedantic" complains about it, but it is perfectly
+     * fine on platforms that have dlsym(). */
+#pragma GCC diagnostic ignored "-Wpedantic"
     psa_status_t (*psa_crypto_init_ptr)(void) = dlsym(crypto_so, "psa_crypto_init");
+#pragma GCC diagnostic pop
     CHECK_DLERROR("dlsym", "psa_crypto_init");
 
     psa_status_t status = psa_crypto_init_ptr();

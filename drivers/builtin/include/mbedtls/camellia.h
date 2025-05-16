@@ -18,8 +18,10 @@
 
 #include "mbedtls/platform_util.h"
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_CAMELLIA_ENCRYPT     1
 #define MBEDTLS_CAMELLIA_DECRYPT     0
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Bad input data. */
 #define MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA -0x0024
@@ -40,6 +42,7 @@ typedef struct mbedtls_camellia_context {
 }
 mbedtls_camellia_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          Initialize a CAMELLIA context.
  *
@@ -97,7 +100,7 @@ int mbedtls_camellia_setkey_dec(mbedtls_camellia_context *ctx,
  * \param ctx      The CAMELLIA context to use. This must be initialized
  *                 and bound to a key.
  * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_CAMELLIA_ENCRYPT or #MBEDTLS_CAMELLIA_DECRYPT.
+ *                 MBEDTLS_CAMELLIA_ENCRYPT or MBEDTLS_CAMELLIA_DECRYPT.
  * \param input    The input block. This must be a readable buffer
  *                 of size \c 16 Bytes.
  * \param output   The output block. This must be a writable buffer
@@ -126,7 +129,7 @@ int mbedtls_camellia_crypt_ecb(mbedtls_camellia_context *ctx,
  * \param ctx      The CAMELLIA context to use. This must be initialized
  *                 and bound to a key.
  * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_CAMELLIA_ENCRYPT or #MBEDTLS_CAMELLIA_DECRYPT.
+ *                 MBEDTLS_CAMELLIA_ENCRYPT or MBEDTLS_CAMELLIA_DECRYPT.
  * \param length   The length in Bytes of the input data \p input.
  *                 This must be a multiple of \c 16 Bytes.
  * \param iv       The initialization vector. This must be a read/write buffer
@@ -157,7 +160,7 @@ int mbedtls_camellia_crypt_cbc(mbedtls_camellia_context *ctx,
  *                 key for both encryption and decryption. In particular, calls
  *                 to this function should be preceded by a key-schedule via
  *                 mbedtls_camellia_setkey_enc() regardless of whether \p mode
- *                 is #MBEDTLS_CAMELLIA_ENCRYPT or #MBEDTLS_CAMELLIA_DECRYPT.
+ *                 is MBEDTLS_CAMELLIA_ENCRYPT or MBEDTLS_CAMELLIA_DECRYPT.
  *
  * \note           Upon exit, the content of the IV is updated so that you can
  *                 call the function same function again on the following
@@ -170,7 +173,7 @@ int mbedtls_camellia_crypt_cbc(mbedtls_camellia_context *ctx,
  * \param ctx      The CAMELLIA context to use. This must be initialized
  *                 and bound to a key.
  * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_CAMELLIA_ENCRYPT or #MBEDTLS_CAMELLIA_DECRYPT.
+ *                 MBEDTLS_CAMELLIA_ENCRYPT or MBEDTLS_CAMELLIA_DECRYPT.
  * \param length   The length of the input data \p input. Any value is allowed.
  * \param iv_off   The current offset in the IV. This must be smaller
  *                 than \c 16 Bytes. It is updated after this call to allow
@@ -203,7 +206,7 @@ int mbedtls_camellia_crypt_cfb128(mbedtls_camellia_context *ctx,
  *             key for both encryption and decryption. In particular, calls
  *             to this function should be preceded by a key-schedule via
  *             mbedtls_camellia_setkey_enc() regardless of whether the mode
- *             is #MBEDTLS_CAMELLIA_ENCRYPT or #MBEDTLS_CAMELLIA_DECRYPT.
+ *             is MBEDTLS_CAMELLIA_ENCRYPT or MBEDTLS_CAMELLIA_DECRYPT.
  *
  * \warning    You must never reuse a nonce value with the same key. Doing so
  *             would void the encryption for the two messages encrypted with
@@ -289,6 +292,8 @@ int mbedtls_camellia_crypt_ctr(mbedtls_camellia_context *ctx,
 int mbedtls_camellia_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

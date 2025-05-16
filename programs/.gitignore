@@ -5,6 +5,7 @@ psa/key_ladder_demo
 psa/psa_constant_names
 psa/psa_hash
 test/benchmark
+test/which_aes
 
 ###START_GENERATED_FILES###
 # Generated source files

@@ -540,7 +540,7 @@ int mbedtls_ecdsa_write_signature_restartable(mbedtls_ecdsa_context *ctx,
  *
  * \return          \c 0 on success.
  * \return          #MBEDTLS_ERR_ECP_BAD_INPUT_DATA if signature is invalid.
- * \return          #MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH if there is a valid
+ * \return          #MBEDTLS_ERR_ECP_VERIFY_FAILED if there is a valid
  *                  signature in \p sig, but its length is less than \p siglen.
  * \return          An \c MBEDTLS_ERR_ECP_XXX or \c MBEDTLS_ERR_MPI_XXX
  *                  error code on failure for any other reason.
@@ -573,7 +573,7 @@ int mbedtls_ecdsa_read_signature(mbedtls_ecdsa_context *ctx,
  *
  * \return          \c 0 on success.
  * \return          #MBEDTLS_ERR_ECP_BAD_INPUT_DATA if signature is invalid.
- * \return          #MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH if there is a valid
+ * \return          #MBEDTLS_ERR_ECP_VERIFY_FAILED if there is a valid
  *                  signature in \p sig, but its length is less than \p siglen.
  * \return          #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
  *                  operations was reached: see \c mbedtls_ecp_set_max_ops().

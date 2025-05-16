@@ -56,7 +56,6 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_MEMORY_DEBUG', # depends on MEMORY_BUFFER_ALLOC_C
     'MBEDTLS_NO_64BIT_MULTIPLICATION', # influences anything that uses bignum
     'MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES', # removes a feature
-    'MBEDTLS_NO_PLATFORM_ENTROPY', # removes a feature
     'MBEDTLS_NO_UDBL_DIVISION', # influences anything that uses bignum
     'MBEDTLS_PSA_P256M_DRIVER_ENABLED', # influences SECP256R1 KeyGen/ECDH/ECDSA
     'MBEDTLS_PLATFORM_NO_STD_FUNCTIONS', # removes a feature
@@ -109,6 +108,7 @@ def is_seamless_alt(name):
     an implementation of the relevant functions and an xxx_alt.h header.
     """
     if name in (
+            'MBEDTLS_PLATFORM_GET_ENTROPY_ALT',
             'MBEDTLS_PLATFORM_GMTIME_R_ALT',
             'MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT',
             'MBEDTLS_PLATFORM_MS_TIME_ALT',

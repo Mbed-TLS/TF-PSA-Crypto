@@ -2,7 +2,7 @@
 #include "mbedtls/md.h"
 #include "mbedtls/psa_util.h"
 
-#include "mbedtls/oid.h"
+#include "mbedtls/crypto_oid.h"
 #include "mbedtls/asn1.h"
 
 #define MD_PSA(md, psa) \

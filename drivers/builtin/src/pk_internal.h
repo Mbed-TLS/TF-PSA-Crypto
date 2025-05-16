@@ -83,6 +83,7 @@ static inline mbedtls_ecp_keypair *mbedtls_pk_ec_rw(const mbedtls_pk_context pk)
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY && !MBEDTLS_PK_USE_PSA_EC_DATA */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+
 static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_context *pk)
 {
     mbedtls_ecp_group_id id;

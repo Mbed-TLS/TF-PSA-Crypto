@@ -45,6 +45,7 @@ typedef struct mbedtls_sha1_context {
 }
 mbedtls_sha1_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          This function initializes a SHA-1 context.
  *
@@ -185,6 +186,8 @@ int mbedtls_sha1(const unsigned char *input,
 int mbedtls_sha1_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

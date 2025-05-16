@@ -45,8 +45,6 @@
 #define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00
 /** Invalid private or public key. */
 #define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80
-/** The buffer contains a valid signature followed by more data. */
-#define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00
 /** Operation in progress, call again with the same parameters to continue. */
 #define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00
 

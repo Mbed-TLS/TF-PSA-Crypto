@@ -40,16 +40,9 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
      *           when adding more strong entropy sources here. */
 
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
-#if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
-    mbedtls_entropy_add_source(ctx, mbedtls_platform_entropy_poll, NULL,
-                               MBEDTLS_ENTROPY_MIN_PLATFORM,
+    mbedtls_entropy_add_source(ctx, mbedtls_entropy_poll_platform, NULL,
+                               MBEDTLS_ENTROPY_POLL_PLATFORM_MIN,
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
-    mbedtls_entropy_add_source(ctx, mbedtls_hardware_poll, NULL,
-                               MBEDTLS_ENTROPY_MIN_HARDWARE,
-                               MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
     mbedtls_entropy_add_source(ctx, mbedtls_nv_seed_poll, NULL,
                                MBEDTLS_ENTROPY_BLOCK_SIZE,
@@ -494,7 +487,7 @@ static int entropy_dummy_source(void *data, unsigned char *output,
     return 0;
 }
 
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
 
 static int mbedtls_entropy_source_self_test_gather(unsigned char *buf, size_t buf_len)
 {
@@ -504,8 +497,8 @@ static int mbedtls_entropy_source_self_test_gather(unsigned char *buf, size_t bu
     size_t attempts = buf_len;
 
     while (attempts > 0 && entropy_len < buf_len) {
-        if ((ret = mbedtls_hardware_poll(NULL, buf + entropy_len,
-                                         buf_len - entropy_len, &olen)) != 0) {
+        if ((ret = mbedtls_entropy_poll_platform(NULL, buf + entropy_len,
+                                                 buf_len - entropy_len, &olen)) != 0) {
             return ret;
         }
 
@@ -593,7 +586,7 @@ cleanup:
     return ret != 0;
 }
 
-#endif /* MBEDTLS_ENTROPY_HARDWARE_ALT */
+#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
 
 /*
  * The actual entropy quality is hard to test, but we can at least
@@ -654,7 +647,7 @@ int mbedtls_entropy_self_test(int verbose)
         }
     }
 
-#if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
     if ((ret = mbedtls_entropy_source_self_test(0)) != 0) {
         goto cleanup;
     }
