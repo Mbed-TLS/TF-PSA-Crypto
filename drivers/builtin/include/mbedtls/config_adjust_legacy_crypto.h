@@ -378,4 +378,13 @@
 #define MBEDTLS_SSL_HAVE_AEAD
 #endif
 
+// Temporary definition to menage the removal of MBEDTLS_SHA3_C.
+// After all PR of the removal is merged this needs to be deleted.
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
+#define MBEDTLS_SHA3_C
+#endif
+
 #endif /* MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H */
