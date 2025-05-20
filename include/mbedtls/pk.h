@@ -595,10 +595,9 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_sign(), mbedtls_pk_verify(),
- *                  mbedtls_pk_encrypt(), mbedtls_pk_decrypt() on the resulting
- *                  PK context will perform the corresponding algorithm for that
- *                  PK context type.
+ *                  Calling mbedtls_pk_sign() or mbedtls_pk_verify(), on the
+ *                  resulting PK context will perform the corresponding
+ *                  algorithm for that PK context type.
  *                  * For ECDSA, the choice of deterministic vs randomized will
  *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
  *                  * For an RSA key, the output PK context will allow both
@@ -630,8 +629,7 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_verify() or
- *                  mbedtls_pk_encrypt() on the resulting
+ *                  Calling mbedtls_pk_verify() on the resulting
  *                  PK context will perform the corresponding algorithm for that
  *                  PK context type.
  *
