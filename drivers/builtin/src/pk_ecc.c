@@ -94,7 +94,7 @@ int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
                                    &pk->pub_raw_len);
     return psa_pk_status_to_mbedtls(status);
 
-#elif defined(MBEDTLS_USE_PSA_CRYPTO) /* && !MBEDTLS_PK_USE_PSA_EC_DATA */
+#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
 
     psa_status_t status;
 
@@ -126,15 +126,7 @@ int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
     /* Load serialized public key into ecp_keypair structure */
     return mbedtls_ecp_point_read_binary(&eck->grp, &eck->Q, pub, pub_len);
 
-#else /* MBEDTLS_USE_PSA_CRYPTO */
-
-    (void) prv;
-    (void) prv_len;
-
-    mbedtls_ecp_keypair *eck = (mbedtls_ecp_keypair *) pk->pk_ctx;
-    return mbedtls_ecp_mul(&eck->grp, &eck->Q, &eck->d, &eck->grp.G);
-
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
+#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
 }
 
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
