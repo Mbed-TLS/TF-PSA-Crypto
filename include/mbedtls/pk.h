@@ -335,10 +335,10 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
  * * EC:
  *     * verify, verify_ext, sign, sign_ext: ECDSA.
  * * RSA:
- *     * sign, decrypt: use the primary algorithm in the wrapped PSA key;
+ *     * sign: use the primary algorithm in the wrapped PSA key;
  *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_RSASSA_PSS, otherwise
  *       it falls back to the sign() case;
- *     * verify, verify_ext, encrypt: not supported.
+ *     * verify, verify_ext: not supported.
  *
  * In order for the above operations to succeed, the policy of the wrapped PSA
  * key must allow the specified algorithm.
@@ -523,7 +523,7 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                        #PSA_ALG_ECDH.
  *                      - #MBEDTLS_PK_OPAQUE: same as the primary algorithm
  *                        set for the underlying PSA key, except that
- *                        sign/decrypt flags are removed if the type is
+ *                        sign flags are removed if the type is
  *                        set to a public key type.
  *                        The underlying key must allow \p usage.
  *                        Note that the enrollment algorithm set with
@@ -600,9 +600,8 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  algorithm for that PK context type.
  *                  * For ECDSA, the choice of deterministic vs randomized will
  *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
- *                  * For an RSA key, the output PK context will allow both
- *                    encrypt/decrypt and sign/verify regardless of the original
- *                    key's policy.
+ *                  * For an RSA key, the output PK context will allow
+ *                    sign/verify regardless of the original key's policy.
  *                    The original key's policy determines the output key's padding
  *                    mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
  *                    otherwise PKCS1 v1.5 is set.
@@ -633,9 +632,8 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  PK context will perform the corresponding algorithm for that
  *                  PK context type.
  *
- *                  For an RSA key, the output PK context will allow both
- *                  encrypt and verify regardless of the original key's policy.
- *                  The original key's policy determines the output key's padding
+ *                  For an RSA key,
+ *                  the original key's policy determines the output key's padding
  *                  mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
  *                  otherwise PKCS1 v1.5 is set.
  *
