@@ -736,7 +736,7 @@ int mbedtls_md_finish(mbedtls_md_context_t *ctx, unsigned char *output)
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_256) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
-            return mbedtls_sha3_finish(ctx->md_ctx, output, ctx->md_info->size);
+    return mbedtls_sha3_finish(ctx->md_ctx, output, ctx->md_info->size);
 #endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
