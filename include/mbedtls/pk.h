@@ -847,49 +847,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 mbedtls_pk_restart_ctx *rs_ctx);
 
 /**
- * \brief           Decrypt message (including padding if relevant).
- *
- * \param ctx       The PK context to use. It must have been set up
- *                  with a private key.
- * \param input     Input to decrypt
- * \param ilen      Input size
- * \param output    Decrypted output
- * \param olen      Decrypted message length
- * \param osize     Size of the output buffer
- *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
- *                  the underlying RSA context. For a pk object constructed by
- *                  parsing, this is PKCS#1 v1.5 by default.
- *
- * \return          0 on success, or a specific error code.
- */
-int mbedtls_pk_decrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize);
-
-/**
- * \brief           Encrypt message (including padding if relevant).
- *
- * \param ctx       The PK context to use. It must have been set up.
- * \param input     Message to encrypt
- * \param ilen      Message size
- * \param output    Encrypted output
- * \param olen      Encrypted output length
- * \param osize     Size of the output buffer
- *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
- *                  the underlying RSA context. For a pk object constructed by
- *                  parsing, this is PKCS#1 v1.5 by default.
- *
- * \return          0 on success, or a specific error code.
- */
-int mbedtls_pk_encrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize);
-
-/**
  * \brief           Check if a public-private pair of keys matches.
  *
  * \param pub       Context holding a public key.
