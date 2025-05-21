@@ -34,8 +34,7 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     add_executable(${exe} ${exe_sources} $<TARGET_OBJECTS:tf_psa_crypto_test>)
     set_base_compile_options(${exe})
-    target_include_directories(${exe} PRIVATE ../../core/
-	                                      ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include)
+    target_include_directories(${exe} PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include)
 
     if (NOT FUZZINGENGINE_LIB)
         target_link_libraries(${exe} ${libs})
