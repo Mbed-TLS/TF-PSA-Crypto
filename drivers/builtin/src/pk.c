@@ -421,7 +421,7 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
             int has_private = 0;
             psa_algorithm_t alg = 0;
 
-            if (pk->priv_id != MBEDTLS_SVC_KEY_ID_INIT) {
+            if (!mbedtls_svc_key_id_is_null(pk->priv_id)) {
                 has_private = 1;
             }
             switch (usage) {
@@ -927,9 +927,10 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
     }
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
+    int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
-        mbedtls_ecp_restart_is_enabled() &&
+        is_restartable_enabled &&
         ctx->pk_info->verify_rs_func != NULL) {
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
@@ -1086,9 +1087,10 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     }
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
+    int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
-        mbedtls_ecp_restart_is_enabled() &&
+        is_restartable_enabled &&
         ctx->pk_info->sign_rs_func != NULL) {
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
