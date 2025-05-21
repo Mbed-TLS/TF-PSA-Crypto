@@ -1040,7 +1040,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:MBEDTLS_ECDSA_DETERMINISTIC */
-void pk_sign_verify_restart(int pk_type, int grp_id, char *d_str,
+void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
                             char *QX_str, char *QY_str,
                             int md_alg, data_t *hash, data_t *sig_check,
                             int max_ops, int min_restart, int max_restart)
@@ -1048,8 +1048,8 @@ void pk_sign_verify_restart(int pk_type, int grp_id, char *d_str,
     int ret, cnt_restart;
     mbedtls_pk_restart_ctx rs_ctx;
     mbedtls_pk_context prv, pub;
-    unsigned char sig[MBEDTLS_ECDSA_MAX_LEN];
     size_t slen;
+    unsigned char sig[MBEDTLS_ECDSA_MAX_LEN];
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
@@ -1059,14 +1059,23 @@ void pk_sign_verify_restart(int pk_type, int grp_id, char *d_str,
     memset(sig, 0, sizeof(sig));
 
     TEST_ASSERT(mbedtls_pk_setup(&prv, mbedtls_pk_info_from_type(pk_type)) == 0);
-    TEST_ASSERT(mbedtls_ecp_group_load(&mbedtls_pk_ec_rw(prv)->grp, grp_id) == 0);
-    TEST_ASSERT(mbedtls_test_read_mpi(&mbedtls_pk_ec_rw(prv)->d, d_str) == 0);
-
     TEST_ASSERT(mbedtls_pk_setup(&pub, mbedtls_pk_info_from_type(pk_type)) == 0);
-    TEST_ASSERT(mbedtls_ecp_group_load(&mbedtls_pk_ec_rw(pub)->grp, grp_id) == 0);
-    TEST_ASSERT(mbedtls_ecp_point_read_string(&mbedtls_pk_ec_rw(pub)->Q, 16, QX_str, QY_str) == 0);
 
-    mbedtls_ecp_set_max_ops(max_ops);
+    (void) QX_str;
+    (void) QY_str;
+
+    unsigned char pub_key[MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH] = { 0 };
+    size_t pub_key_len;
+
+    TEST_ASSERT(mbedtls_pk_ecc_set_group(&prv, grp_id) == 0);
+    TEST_ASSERT(mbedtls_pk_ecc_set_key(&prv, (unsigned char *) d_str->x, d_str->len) == 0);
+
+    PSA_ASSERT(psa_export_public_key(prv.priv_id, pub_key, sizeof(pub_key), &pub_key_len));
+
+    TEST_ASSERT(mbedtls_pk_ecc_set_group(&pub, grp_id) == 0);
+    TEST_ASSERT(mbedtls_pk_ecc_set_pubkey(&pub, pub_key, pub_key_len) == 0);
+
+    psa_interruptible_set_max_ops(max_ops);
 
     slen = sizeof(sig);
     cnt_restart = 0;
@@ -1134,7 +1143,7 @@ void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_
     size_t hash_len = sizeof(hash);
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     void *rs_ctx = NULL;
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_pk_restart_ctx ctx;
 
     rs_ctx = &ctx;
@@ -1142,8 +1151,8 @@ void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_
     /* This value is large enough that the operation will complete in one run.
      * See comments at the top of ecp_test_vect_restart in
      * test_suite_ecp.function for estimates of operation counts. */
-    mbedtls_ecp_set_max_ops(42000);
-#endif
+    psa_interruptible_set_max_ops(42000);
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     mbedtls_pk_init(&pk);
     PSA_INIT();
@@ -1211,7 +1220,7 @@ void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_
     }
 
 exit:
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_pk_restart_free(rs_ctx);
 #endif
     mbedtls_pk_free(&pk);
