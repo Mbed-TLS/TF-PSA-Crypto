@@ -204,129 +204,6 @@ static int rsa_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                                        sig, sig_size, sig_len);
 }
 
-static int rsa_decrypt_wrap(mbedtls_pk_context *pk,
-                            const unsigned char *input, size_t ilen,
-                            unsigned char *output, size_t *olen, size_t osize)
-{
-    mbedtls_rsa_context *rsa = (mbedtls_rsa_context *) pk->pk_ctx;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_algorithm_t psa_md_alg, decrypt_alg;
-    psa_status_t status;
-    int key_len;
-    unsigned char buf[MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES];
-    unsigned char *p = buf + sizeof(buf);
-
-    if (ilen != mbedtls_rsa_get_len(rsa)) {
-        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
-    }
-
-    key_len = mbedtls_rsa_write_key(rsa, buf, &p);
-    if (key_len <= 0) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_KEY_PAIR);
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DECRYPT);
-    if (mbedtls_rsa_get_padding_mode(rsa) == MBEDTLS_RSA_PKCS_V21) {
-        psa_md_alg = mbedtls_md_psa_alg_from_type((mbedtls_md_type_t) mbedtls_rsa_get_md_alg(rsa));
-        decrypt_alg = PSA_ALG_RSA_OAEP(psa_md_alg);
-    } else {
-        decrypt_alg = PSA_ALG_RSA_PKCS1V15_CRYPT;
-    }
-    psa_set_key_algorithm(&attributes, decrypt_alg);
-
-    status = psa_import_key(&attributes,
-                            buf + sizeof(buf) - key_len, key_len,
-                            &key_id);
-    if (status != PSA_SUCCESS) {
-        ret = PSA_PK_TO_MBEDTLS_ERR(status);
-        goto cleanup;
-    }
-
-    status = psa_asymmetric_decrypt(key_id, decrypt_alg,
-                                    input, ilen,
-                                    NULL, 0,
-                                    output, osize, olen);
-    if (status != PSA_SUCCESS) {
-        ret = PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-        goto cleanup;
-    }
-
-    ret = 0;
-
-cleanup:
-    mbedtls_platform_zeroize(buf, sizeof(buf));
-    status = psa_destroy_key(key_id);
-    if (ret == 0 && status != PSA_SUCCESS) {
-        ret = PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-
-    return ret;
-}
-
-static int rsa_encrypt_wrap(mbedtls_pk_context *pk,
-                            const unsigned char *input, size_t ilen,
-                            unsigned char *output, size_t *olen, size_t osize)
-{
-    mbedtls_rsa_context *rsa = (mbedtls_rsa_context *) pk->pk_ctx;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_algorithm_t psa_md_alg, psa_encrypt_alg;
-    psa_status_t status;
-    int key_len;
-    unsigned char buf[MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES];
-    unsigned char *p = buf + sizeof(buf);
-
-    if (mbedtls_rsa_get_len(rsa) > osize) {
-        return MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE;
-    }
-
-    key_len = mbedtls_rsa_write_pubkey(rsa, buf, &p);
-    if (key_len <= 0) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT);
-    if (mbedtls_rsa_get_padding_mode(rsa) == MBEDTLS_RSA_PKCS_V21) {
-        psa_md_alg = mbedtls_md_psa_alg_from_type((mbedtls_md_type_t) mbedtls_rsa_get_md_alg(rsa));
-        psa_encrypt_alg = PSA_ALG_RSA_OAEP(psa_md_alg);
-    } else {
-        psa_encrypt_alg = PSA_ALG_RSA_PKCS1V15_CRYPT;
-    }
-    psa_set_key_algorithm(&attributes, psa_encrypt_alg);
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
-
-    status = psa_import_key(&attributes,
-                            buf + sizeof(buf) - key_len, key_len,
-                            &key_id);
-    if (status != PSA_SUCCESS) {
-        ret = PSA_PK_TO_MBEDTLS_ERR(status);
-        goto cleanup;
-    }
-
-    status = psa_asymmetric_encrypt(key_id, psa_encrypt_alg,
-                                    input, ilen,
-                                    NULL, 0,
-                                    output, osize, olen);
-    if (status != PSA_SUCCESS) {
-        ret = PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-        goto cleanup;
-    }
-
-    ret = 0;
-
-cleanup:
-    status = psa_destroy_key(key_id);
-    if (ret == 0 && status != PSA_SUCCESS) {
-        ret = PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-
-    return ret;
-}
-
 static int rsa_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *prv)
 {
     return mbedtls_rsa_check_pub_priv((const mbedtls_rsa_context *) pub->pk_ctx,
@@ -378,8 +255,6 @@ const mbedtls_pk_info_t mbedtls_rsa_info = {
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-    .decrypt_func = rsa_decrypt_wrap,
-    .encrypt_func = rsa_encrypt_wrap,
     .check_pair_func = rsa_check_pair_wrap,
     .ctx_alloc_func = rsa_alloc_wrap,
     .ctx_free_func = rsa_free_wrap,
@@ -944,8 +819,6 @@ const mbedtls_pk_info_t mbedtls_eckey_info = {
     .rs_alloc_func = eckey_rs_alloc,
     .rs_free_func = eckey_rs_free,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-    .decrypt_func = NULL,
-    .encrypt_func = NULL,
     .check_pair_func = eckey_check_pair_wrap,
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     .ctx_alloc_func = NULL,
@@ -977,8 +850,6 @@ const mbedtls_pk_info_t mbedtls_eckeydh_info = {
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-    .decrypt_func = NULL,
-    .encrypt_func = NULL,
     .check_pair_func = eckey_check_pair_wrap,
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     .ctx_alloc_func = NULL,
@@ -1065,8 +936,6 @@ const mbedtls_pk_info_t mbedtls_ecdsa_info = {
     .rs_alloc_func = ecdsa_rs_alloc,
     .rs_free_func = ecdsa_rs_free,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-    .decrypt_func = NULL,
-    .encrypt_func = NULL,
     .check_pair_func = eckey_check_pair_wrap,   /* Compatible key structures */
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     .ctx_alloc_func = NULL,
@@ -1122,8 +991,6 @@ const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info = {
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-    .decrypt_func = NULL,
-    .encrypt_func = NULL,
     .check_pair_func = ecdsa_opaque_check_pair_wrap,
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,
@@ -1136,40 +1003,6 @@ static int rsa_opaque_can_do(mbedtls_pk_type_t type)
     return type == MBEDTLS_PK_RSA ||
            type == MBEDTLS_PK_RSASSA_PSS;
 }
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-static int rsa_opaque_decrypt(mbedtls_pk_context *pk,
-                              const unsigned char *input, size_t ilen,
-                              unsigned char *output, size_t *olen, size_t osize)
-{
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_algorithm_t alg;
-    psa_key_type_t type;
-    psa_status_t status;
-
-    /* PSA has its own RNG */
-
-    status = psa_get_key_attributes(pk->priv_id, &attributes);
-    if (status != PSA_SUCCESS) {
-        return PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-
-    type = psa_get_key_type(&attributes);
-    alg = psa_get_key_algorithm(&attributes);
-    psa_reset_key_attributes(&attributes);
-
-    if (!PSA_KEY_TYPE_IS_RSA(type)) {
-        return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-    }
-
-    status = psa_asymmetric_decrypt(pk->priv_id, alg, input, ilen, NULL, 0, output, osize, olen);
-    if (status != PSA_SUCCESS) {
-        return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-    }
-
-    return 0;
-}
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
 static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                                 const unsigned char *hash, size_t hash_len,
@@ -1233,12 +1066,6 @@ const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-    .decrypt_func = rsa_opaque_decrypt,
-#else /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
-    .decrypt_func = NULL,
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
-    .encrypt_func = NULL,
     .check_pair_func = NULL,
     .ctx_alloc_func = NULL,
     .ctx_free_func = NULL,

@@ -1243,44 +1243,6 @@ int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
 }
 
 /*
- * Decrypt message
- */
-int mbedtls_pk_decrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize)
-{
-    if (ctx->pk_info == NULL) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    if (ctx->pk_info->decrypt_func == NULL) {
-        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-    }
-
-    return ctx->pk_info->decrypt_func(ctx, input, ilen,
-                                      output, olen, osize);
-}
-
-/*
- * Encrypt message
- */
-int mbedtls_pk_encrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize)
-{
-    if (ctx->pk_info == NULL) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    if (ctx->pk_info->encrypt_func == NULL) {
-        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-    }
-
-    return ctx->pk_info->encrypt_func(ctx, input, ilen,
-                                      output, olen, osize);
-}
-
-/*
  * Check public-private key pair
  */
 int mbedtls_pk_check_pair(const mbedtls_pk_context *pub,

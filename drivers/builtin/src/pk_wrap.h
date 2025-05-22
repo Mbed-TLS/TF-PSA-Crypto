@@ -54,14 +54,6 @@ struct mbedtls_pk_info_t {
                         void *rs_ctx);
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
 
-    /** Decrypt message */
-    int (*decrypt_func)(mbedtls_pk_context *pk, const unsigned char *input, size_t ilen,
-                        unsigned char *output, size_t *olen, size_t osize);
-
-    /** Encrypt message */
-    int (*encrypt_func)(mbedtls_pk_context *pk, const unsigned char *input, size_t ilen,
-                        unsigned char *output, size_t *olen, size_t osize);
-
     /** Check public-private key pair */
     int (*check_pair_func)(mbedtls_pk_context *pub, mbedtls_pk_context *prv);
 

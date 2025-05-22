@@ -335,10 +335,10 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
  * * EC:
  *     * verify, verify_ext, sign, sign_ext: ECDSA.
  * * RSA:
- *     * sign, decrypt: use the primary algorithm in the wrapped PSA key;
+ *     * sign: use the primary algorithm in the wrapped PSA key;
  *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_RSASSA_PSS, otherwise
  *       it falls back to the sign() case;
- *     * verify, verify_ext, encrypt: not supported.
+ *     * verify, verify_ext: not supported.
  *
  * In order for the above operations to succeed, the policy of the wrapped PSA
  * key must allow the specified algorithm.
@@ -523,7 +523,7 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                        #PSA_ALG_ECDH.
  *                      - #MBEDTLS_PK_OPAQUE: same as the primary algorithm
  *                        set for the underlying PSA key, except that
- *                        sign/decrypt flags are removed if the type is
+ *                        sign flags are removed if the type is
  *                        set to a public key type.
  *                        The underlying key must allow \p usage.
  *                        Note that the enrollment algorithm set with
@@ -595,15 +595,13 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_sign(), mbedtls_pk_verify(),
- *                  mbedtls_pk_encrypt(), mbedtls_pk_decrypt() on the resulting
- *                  PK context will perform the corresponding algorithm for that
- *                  PK context type.
+ *                  Calling mbedtls_pk_sign() or mbedtls_pk_verify(), on the
+ *                  resulting PK context will perform the corresponding
+ *                  algorithm for that PK context type.
  *                  * For ECDSA, the choice of deterministic vs randomized will
  *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
- *                  * For an RSA key, the output PK context will allow both
- *                    encrypt/decrypt and sign/verify regardless of the original
- *                    key's policy.
+ *                  * For an RSA key, the output PK context will allow
+ *                    sign/verify regardless of the original key's policy.
  *                    The original key's policy determines the output key's padding
  *                    mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
  *                    otherwise PKCS1 v1.5 is set.
@@ -630,14 +628,12 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_verify() or
- *                  mbedtls_pk_encrypt() on the resulting
+ *                  Calling mbedtls_pk_verify() on the resulting
  *                  PK context will perform the corresponding algorithm for that
  *                  PK context type.
  *
- *                  For an RSA key, the output PK context will allow both
- *                  encrypt and verify regardless of the original key's policy.
- *                  The original key's policy determines the output key's padding
+ *                  For an RSA key,
+ *                  the original key's policy determines the output key's padding
  *                  mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
  *                  otherwise PKCS1 v1.5 is set.
  *
@@ -845,49 +841,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 const unsigned char *hash, size_t hash_len,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len,
                                 mbedtls_pk_restart_ctx *rs_ctx);
-
-/**
- * \brief           Decrypt message (including padding if relevant).
- *
- * \param ctx       The PK context to use. It must have been set up
- *                  with a private key.
- * \param input     Input to decrypt
- * \param ilen      Input size
- * \param output    Decrypted output
- * \param olen      Decrypted message length
- * \param osize     Size of the output buffer
- *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
- *                  the underlying RSA context. For a pk object constructed by
- *                  parsing, this is PKCS#1 v1.5 by default.
- *
- * \return          0 on success, or a specific error code.
- */
-int mbedtls_pk_decrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize);
-
-/**
- * \brief           Encrypt message (including padding if relevant).
- *
- * \param ctx       The PK context to use. It must have been set up.
- * \param input     Message to encrypt
- * \param ilen      Message size
- * \param output    Encrypted output
- * \param olen      Encrypted output length
- * \param osize     Size of the output buffer
- *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
- *                  the underlying RSA context. For a pk object constructed by
- *                  parsing, this is PKCS#1 v1.5 by default.
- *
- * \return          0 on success, or a specific error code.
- */
-int mbedtls_pk_encrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize);
 
 /**
  * \brief           Check if a public-private pair of keys matches.
