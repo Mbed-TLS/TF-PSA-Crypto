@@ -1,15 +1,14 @@
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
+set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest_objs")
 
-add_library(${everest_target}
+add_library(${everest_target} OBJECT
   library/everest.c
   library/x25519.c
   library/Hacl_Curve25519_joined.c)
 
 set_base_compile_options(${everest_target})
 target_include_directories(${everest_target}
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:include>
-  PRIVATE ${TF_PSA_CRYPTO_DIR}/include
+  PRIVATE include
+          ${TF_PSA_CRYPTO_DIR}/include
           ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include
           include/tf-psa-crypto/private/everest
           include/tf-psa-crypto/private/everest/kremlib
@@ -25,13 +24,3 @@ if(INSTALL_TF_PSA_CRYPTO_HEADERS)
     FILES_MATCHING PATTERN "*.h")
 
 endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
-
-install(TARGETS ${everest_target}
-  EXPORT MbedTLSTargets
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-
-install(TARGETS ${everest_target}
-  EXPORT TF-PSA-CryptoTargets
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)

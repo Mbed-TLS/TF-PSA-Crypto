@@ -42,7 +42,6 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 endif()
 
 set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
 
 foreach (target IN LISTS target_libraries)
     add_library(${target} OBJECT ${src_builtin})
@@ -51,11 +50,9 @@ foreach (target IN LISTS target_libraries)
     target_include_directories(${target}
       PRIVATE src include
               ${TF_PSA_CRYPTO_DIR}/include
-              ${TF_PSA_CRYPTO_DIR}/core)
+              ${TF_PSA_CRYPTO_DIR}/core
+              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include)
     set_config_files_compile_definitions(${target})
-    if(TARGET ${everest_target})
-        target_link_libraries(${builtin_target} PUBLIC ${everest_target})
-    endif()
 
     if(TARGET ${p256m_target})
         target_link_libraries(${builtin_target} PUBLIC ${p256m_target})
