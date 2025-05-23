@@ -31,7 +31,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
     set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 endif()
 
-set(builtin_target ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin)
+set(builtin_target ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin_objs)
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(builtin_static_target ${builtin_target})
 endif()
@@ -45,7 +45,7 @@ set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
 set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
 
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${builtin_static_target} STATIC ${src_builtin})
+    add_library(${builtin_static_target} OBJECT ${src_builtin})
     set_base_compile_options(${builtin_static_target})
     target_compile_options(${builtin_static_target} PRIVATE ${LIBS_C_FLAGS})
     if(TARGET ${everest_target})
@@ -58,7 +58,8 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${builtin_target} SHARED ${src_builtin})
+    add_library(${builtin_target} OBJECT ${src_builtin})
+    set_property(TARGET ${builtin_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_base_compile_options(${builtin_target})
     target_compile_options(${builtin_target} PRIVATE ${LIBS_C_FLAGS})
     if(TARGET ${everest_target})
@@ -72,30 +73,19 @@ endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 foreach (target IN LISTS target_libraries)
     target_include_directories(${target}
-      PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-             $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
-      PRIVATE ${TF_PSA_CRYPTO_DIR}/core)
+      PRIVATE src include
+              ${TF_PSA_CRYPTO_DIR}/include
+              ${TF_PSA_CRYPTO_DIR}/core)
     set_config_files_compile_definitions(${target})
-
-    if(INSTALL_TF_PSA_CRYPTO_HEADERS)
-
-      install(DIRECTORY include/mbedtls
-        DESTINATION include
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
-        GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        FILES_MATCHING PATTERN "*.h")
-
-    endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
-
-    install(TARGETS ${target}
-      EXPORT MbedTLSTargets
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-
-    install(TARGETS ${target}
-      EXPORT TF-PSA-CryptoTargets
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endforeach(target)
+
+if(INSTALL_TF_PSA_CRYPTO_HEADERS)
+
+  install(DIRECTORY include/mbedtls
+    DESTINATION include
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+    GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    FILES_MATCHING PATTERN "*.h")
+
+endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
