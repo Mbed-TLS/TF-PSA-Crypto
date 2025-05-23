@@ -125,6 +125,11 @@ typedef enum {
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE (PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE + 11)
 #endif
 
+/* Keep this symbol for backward compatibility. There is code in the framework
+ * which depends on this. Once 3.6 LTS branch will reach end-of-life framework's
+ * code can be adjusted and this define removed. */
+#define MBEDTLS_PK_USE_PSA_EC_DATA
+
 /**
  * \brief           Types for interfacing with the debug module
  */
