@@ -96,14 +96,6 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${libs})
 
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${builtin_static_target})
-
-    if(TARGET ${everest_target})
-        target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${everest_target})
-    endif()
-
-    if(TARGET ${p256m_target})
-        target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${p256m_target})
-    endif()
 endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
@@ -115,14 +107,6 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
 
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${builtin_target})
-
-    if(TARGET ${everest_target})
-        target_link_libraries(${tfpsacrypto_target} PUBLIC ${everest_target})
-    endif()
-
-    if(TARGET ${p256m_target})
-        target_link_libraries(${tfpsacrypto_target} PUBLIC ${p256m_target})
-    endif()
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
