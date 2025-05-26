@@ -109,6 +109,32 @@ static inline mbedtls_md_type_t mbedtls_md_type_from_psa_alg(psa_algorithm_t psa
 
 #if defined(PSA_HAVE_ALG_SOME_ECDSA)
 
+/**
+ * \brief           Maximum size of a DER-encoded ECDSA signature for a
+ *                  given curve bit size.
+ *
+ * \param bits      Curve size in bits.
+ * \return          Maximum signature size in bytes.
+ *
+ * \note            This macro returns a compile-time constant if its argument
+ *                  is one. It may evaluate its argument multiple times.
+ */
+/*
+ *     Ecdsa-Sig-Value ::= SEQUENCE {
+ *         r       INTEGER,
+ *         s       INTEGER
+ *     }
+ *
+ * For each of r and s, the value (V) may include an extra initial "0" bit.
+ */
+#define MBEDTLS_ECDSA_DER_MAX_SIG_LEN(bits)                               \
+    (/*T,L of SEQUENCE*/ ((bits) >= 61 * 8 ? 3 : 2) +              \
+     /*T,L of r,s*/ 2 * (((bits) >= 127 * 8 ? 3 : 2) +     \
+                         /*V of r,s*/ ((bits) + 8) / 8))
+
+/** The maximal size of a DER-encoded ECDSA signature in Bytes. */
+#define MBEDTLS_ECDSA_DER_MAX_LEN  MBEDTLS_ECDSA_DER_MAX_SIG_LEN(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+
 /** Convert an ECDSA signature from raw format to DER ASN.1 format.
  *
  * \param       bits        Size of each coordinate in bits.
@@ -121,8 +147,8 @@ static inline mbedtls_md_type_t mbedtls_md_type_from_psa_alg(psa_algorithm_t psa
  *                          is at least the size of the actual output. (The size
  *                          of the output can vary depending on the presence of
  *                          leading zeros in the data.) You can use
- *                          #MBEDTLS_ECDSA_MAX_SIG_LEN(\p bits) to determine a
- *                          size that is large enough for all signatures for a
+ *                          #MBEDTLS_ECDSA_DER_MAX_SIG_LEN(\p bits) to determine
+ *                          a size that is large enough for all signatures for a
  *                          given value of \p bits.
  * \param[out]  der_len     On success it contains the amount of valid data
  *                          (in bytes) written to \p der. It's undefined

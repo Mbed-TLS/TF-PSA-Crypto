@@ -24,6 +24,7 @@
 #include "mbedtls/ecp.h"
 #include "mbedtls/md.h"
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief           Maximum ECDSA signature size for a given curve bit size
  *
@@ -48,6 +49,7 @@
 
 /** The maximal size of an ECDSA signature in Bytes. */
 #define MBEDTLS_ECDSA_MAX_LEN  MBEDTLS_ECDSA_MAX_SIG_LEN(MBEDTLS_ECP_MAX_BITS)
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,6 +114,7 @@ typedef void mbedtls_ecdsa_restart_ctx;
 
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          This function checks whether a given group can be used
  *                 for ECDSA.
@@ -657,6 +660,8 @@ void mbedtls_ecdsa_restart_init(mbedtls_ecdsa_restart_ctx *ctx);
  */
 void mbedtls_ecdsa_restart_free(mbedtls_ecdsa_restart_ctx *ctx);
 #endif /* MBEDTLS_ECP_RESTARTABLE */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
