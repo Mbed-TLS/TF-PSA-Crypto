@@ -18,7 +18,7 @@ component_build_tf_psa_crypto_tfm_armcc () {
     cp configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
 
     msg "build: TF-M config, armclang armv7-m thumb2"
-    helper_armc6_build_test "--target=arm-arm-none-eabi -mcpu=cortex-m0 -mthumb -Os -I../framework/tests/include/spe"
+    helper_armc6_cmake_build_test "--target=arm-arm-none-eabi -mcpu=cortex-m0 -mthumb -Os -I../framework/tests/include/spe"
 }
 
 test_build_opt () {
