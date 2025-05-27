@@ -1491,14 +1491,17 @@ exit:
 //declare the frame internally
 void encode_decode_asn1_bignum(const data_t *input, int asn1_frame_length, int expected_result)
 {
+    int n = 1;
     int output_buffer_length;
     unsigned char* p = NULL;
+    unsigned char *endian_swap=NULL;
     size_t integer_length;
-    data_t asn1_frame;
+    data_t asn1_frame;//TODO remove this.
 
     asn1_frame.x=NULL;
     asn1_frame.len=asn1_frame_length;
     TEST_CALLOC(asn1_frame.x, asn1_frame.len);
+    TEST_CALLOC(endian_swap, input->len);
 
     unsigned char *integer_head = NULL;
 
@@ -1510,29 +1513,38 @@ void encode_decode_asn1_bignum(const data_t *input, int asn1_frame_length, int e
 
     if(output_buffer_length>0){
         TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame.x + asn1_frame.len, &integer_head, &integer_length), 0);//TODO capture return
-        TEST_MEMORY_COMPARE(input->x, integer_length, integer_head, integer_length);
+        if(*(char *)&n == 1) { //detect processor endian and convert to it if required.
+            mbedtls_mpi_core_write_be((const mbedtls_mpi_uint*)integer_head, integer_length/8, endian_swap, integer_length);
+        }else{
+             endian_swap = integer_head;
+        }
+        TEST_MEMORY_COMPARE(input->x, input->len, endian_swap, integer_length);
     }
 
 exit:
     mbedtls_free(asn1_frame.x);
+    mbedtls_free(endian_swap);
 }
 /* END_CASE */
 
 /* BEGIN_CASE */
 void size_checks(){
     int output_buffer_length;
+    int n=1;
 
     unsigned char *p = NULL;
     unsigned char *integer_head = NULL;
     unsigned char *input=NULL;
     unsigned char *asn1_frame=NULL;
+    unsigned char *endian_swap=NULL;
 
     size_t integer_length;
-    size_t max_integer_length=32767;
-    size_t max_frame_length=65535;
+    size_t max_integer_length=80000;
+    size_t max_frame_length=90000;
 
     TEST_CALLOC(asn1_frame, max_frame_length);
     TEST_CALLOC(input, max_integer_length);
+    TEST_CALLOC(endian_swap, max_integer_length);
 
     for(size_t i=8; i< max_integer_length; i=i+8){
 
@@ -1549,13 +1561,19 @@ void size_checks(){
 
         if(output_buffer_length>0){
             TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + max_frame_length, &integer_head, &integer_length), 0);//TODO capture return
-            TEST_MEMORY_COMPARE(input, i, integer_head, integer_length);
+            if(*(char *)&n == 1) { //detect processor endian and convert to it if required.
+                mbedtls_mpi_core_write_be((const mbedtls_mpi_uint*)integer_head, integer_length/8, endian_swap, integer_length);
+            }else{
+                endian_swap = integer_head;
+            }
+            TEST_MEMORY_COMPARE(input, i, endian_swap, integer_length);
         }
     }
 
 exit:
     mbedtls_free(asn1_frame);
     mbedtls_free(input);
+    mbedtls_free(endian_swap);
 }
 /* END_CASE */
 

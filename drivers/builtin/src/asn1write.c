@@ -470,7 +470,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     
     *p-=integer_length;
 
-    ret = mbedtls_mpi_core_write_le((mbedtls_mpi_uint*) integer, integer_length/8, *p, integer_length);
+    ret = mbedtls_mpi_core_write_be((mbedtls_mpi_uint*) integer, integer_length/8, *p, integer_length);
 
     if(ret!=0){
         return MBEDTLS_ERR_ASN1_INVALID_DATA;//TC7 mbedtls_mpi_core_write_le failed.
