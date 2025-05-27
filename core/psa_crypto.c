@@ -8367,15 +8367,15 @@ psa_status_t psa_generate_key_iop_setup(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_type_t type;
 
-    if (operation->id != 0 || operation->error_occurred) {
-        status = PSA_ERROR_BAD_STATE;
-        goto exit;
-    }
-
     type = psa_get_key_type(attributes);
 
     if (!PSA_KEY_TYPE_IS_ECC(type)) {
         status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+
+    if (operation->id != 0 || operation->error_occurred) {
+        status = PSA_ERROR_BAD_STATE;
         goto exit;
     }
 
