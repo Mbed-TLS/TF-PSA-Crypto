@@ -10334,7 +10334,8 @@ void generate_key(int type_arg,
         expected_status = PSA_ERROR_NOT_SUPPORTED;
     }
 
-#if !defined(MBEDTLS_ECP_RESTARTABLE)
+#if !defined(MBEDTLS_ECP_RESTARTABLE) || \
+    !defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
     expected_status = PSA_ERROR_NOT_SUPPORTED;
 #endif
 
@@ -10350,7 +10351,16 @@ void generate_key(int type_arg,
     /* Test that calling setup 2 time consecutively fails */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     status = psa_generate_key_iop_setup(&operation, &attributes);
-    TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    /* Restartable operations are supported only for EC keys and in built-in mode. */
+    if (PSA_KEY_TYPE_IS_ECC(type)) {
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+        TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+#else
+        TEST_EQUAL(status, PSA_ERROR_NOT_SUPPORTED);
+#endif
+    } else {
+        TEST_EQUAL(status, PSA_ERROR_NOT_SUPPORTED);
+    }
 #endif
 
     PSA_ASSERT(psa_generate_key_iop_abort(&operation));
