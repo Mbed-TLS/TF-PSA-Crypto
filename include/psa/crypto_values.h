@@ -27,6 +27,7 @@
 #ifndef PSA_CRYPTO_VALUES_H
 #define PSA_CRYPTO_VALUES_H
 #include "mbedtls/private_access.h"
+#include <psa/crypto_types.h>
 
 /** \defgroup error Error codes
  * @{
@@ -2010,9 +2011,9 @@
  * the other secret depends on the key exchange specified in the cipher suite:
  * - for a plain PSK cipher suite (RFC 4279, Section 2), omit
  *   PSA_KEY_DERIVATION_INPUT_OTHER_SECRET
- * - for a DHE-PSK (RFC 4279, Section 3) or ECDHE-PSK cipher suite
- *   (RFC 5489, Section 2), the other secret should be the output of the
- *   PSA_ALG_FFDH or PSA_ALG_ECDH key agreement performed with the peer.
+ * - for a ECDHE-PSK cipher suite (RFC 5489, Section 2), the other secret
+ *   should be the output of the PSA_ALG_FFDH or PSA_ALG_ECDH key agreement
+ *   performed with the peer.
  *   The recommended way to pass this input is to use a key derivation
  *   algorithm constructed as
  *   PSA_ALG_KEY_AGREEMENT(ka_alg, PSA_ALG_TLS12_PSK_TO_MS(hash_alg))

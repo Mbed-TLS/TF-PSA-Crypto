@@ -3,10 +3,10 @@
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/asn1write.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/crypto_oid.h"
 #include "common.h"
 
-#include "mbedtls/psa_util.h"
+#include "psa_util_internal.h"
 
 /* For MBEDTLS_CTR_DRBG_MAX_REQUEST, knowing that psa_generate_random()
  * uses mbedtls_ctr_drbg internally. */
@@ -267,23 +267,6 @@ exit:
 
     return ok;
 }
-
-/* Assert that a key isn't reported as having a slot number. */
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#define ASSERT_NO_SLOT_NUMBER(attributes)                             \
-    do                                                                \
-    {                                                                 \
-        psa_key_slot_number_t ASSERT_NO_SLOT_NUMBER_slot_number;      \
-        TEST_EQUAL(psa_get_key_slot_number(                           \
-                       attributes,                                    \
-                       &ASSERT_NO_SLOT_NUMBER_slot_number),           \
-                   PSA_ERROR_INVALID_ARGUMENT);                       \
-    }                                                                 \
-    while (0)
-#else /* MBEDTLS_PSA_CRYPTO_SE_C */
-#define ASSERT_NO_SLOT_NUMBER(attributes)     \
-    ((void) 0)
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
 #define INPUT_INTEGER 0x10000   /* Out of range of psa_key_type_t */
 
@@ -1580,7 +1563,6 @@ void import_with_policy(int type_arg,
     TEST_EQUAL(psa_get_key_usage_flags(&got_attributes),
                mbedtls_test_update_key_usage_flags(usage));
     TEST_EQUAL(psa_get_key_algorithm(&got_attributes), alg);
-    ASSERT_NO_SLOT_NUMBER(&got_attributes);
 
     PSA_ASSERT(psa_destroy_key(key));
     test_operations_on_invalid_key(key);
@@ -1640,7 +1622,6 @@ void import_with_data(data_t *data, int type_arg,
     if (attr_bits != 0) {
         TEST_EQUAL(attr_bits, psa_get_key_bits(&got_attributes));
     }
-    ASSERT_NO_SLOT_NUMBER(&got_attributes);
 
     PSA_ASSERT(psa_destroy_key(key));
     test_operations_on_invalid_key(key);
@@ -1691,7 +1672,6 @@ void import_large_key(int type_arg, int byte_size_arg,
         TEST_EQUAL(psa_get_key_type(&attributes), type);
         TEST_EQUAL(psa_get_key_bits(&attributes),
                    PSA_BYTES_TO_BITS(byte_size));
-        ASSERT_NO_SLOT_NUMBER(&attributes);
         memset(buffer, 0, byte_size + 1);
         PSA_ASSERT(psa_export_key(key, buffer, byte_size, &n));
         for (n = 0; n < byte_size; n++) {
@@ -1808,7 +1788,6 @@ void import_export(data_t *data,
     PSA_ASSERT(psa_get_key_attributes(key, &got_attributes));
     TEST_EQUAL(psa_get_key_type(&got_attributes), type);
     TEST_EQUAL(psa_get_key_bits(&got_attributes), (size_t) expected_bits);
-    ASSERT_NO_SLOT_NUMBER(&got_attributes);
 
     /* Export the key */
     status = psa_export_key(key, exported, export_size, &exported_length);
@@ -8900,7 +8879,9 @@ void derive_input(int alg_arg,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
 
-    PSA_ASSERT(psa_key_derivation_setup(&operation, alg));
+    if (alg != PSA_ALG_NONE) {
+        PSA_ASSERT(psa_key_derivation_setup(&operation, alg));
+    }
 
     for (i = 0; i < ARRAY_LENGTH(steps); i++) {
         mbedtls_test_set_step(i);

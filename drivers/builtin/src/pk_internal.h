@@ -83,11 +83,11 @@ static inline mbedtls_ecp_keypair *mbedtls_pk_ec_rw(const mbedtls_pk_context pk)
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY && !MBEDTLS_PK_USE_PSA_EC_DATA */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+
 static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_context *pk)
 {
     mbedtls_ecp_group_id id;
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
         psa_key_attributes_t opaque_attrs = PSA_KEY_ATTRIBUTES_INIT;
         psa_key_type_t opaque_key_type;
@@ -100,9 +100,7 @@ static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_c
         curve = PSA_KEY_TYPE_ECC_GET_FAMILY(opaque_key_type);
         id = mbedtls_ecc_group_from_psa(curve, psa_get_key_bits(&opaque_attrs));
         psa_reset_key_attributes(&opaque_attrs);
-    } else
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-    {
+    } else {
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
         id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->ec_bits);
 #else /* MBEDTLS_PK_USE_PSA_EC_DATA */
@@ -168,21 +166,17 @@ int mbedtls_pk_ecc_set_pubkey(mbedtls_pk_context *pk, const unsigned char *pub, 
  * [in/out] pk: in: must have the private key set, see mbedtls_pk_ecc_set_key().
  *              out: will have the public key set.
  * [in] prv, prv_len: the raw private key (see note below).
- * [in] f_rng, p_rng: RNG function and context.
  *
  * Note: the private key information is always available from pk,
  * however for convenience the serialized version is also passed,
  * as it's available at each calling site, and useful in some configs
  * (as otherwise we would have to re-serialize it from the pk context).
  *
- * There are three implementations of this function:
- * 1. MBEDTLS_PK_USE_PSA_EC_DATA,
- * 2. MBEDTLS_USE_PSA_CRYPTO but not MBEDTLS_PK_USE_PSA_EC_DATA,
- * 3. not MBEDTLS_USE_PSA_CRYPTO.
+ * There are two implementations of this function depending on
+ * MBEDTLS_PK_USE_PSA_EC_DATA being set or not.
  */
 int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
-                                       const unsigned char *prv, size_t prv_len,
-                                       int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+                                       const unsigned char *prv, size_t prv_len);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
 /* Helper for (deterministic) ECDSA */
@@ -196,8 +190,7 @@ int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
 MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     mbedtls_pk_context *pk,
     unsigned char *key, size_t keylen,
-    const unsigned char *pwd, size_t pwdlen,
-    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+    const unsigned char *pwd, size_t pwdlen);
 #endif
 
 #if defined(MBEDTLS_FS_IO)

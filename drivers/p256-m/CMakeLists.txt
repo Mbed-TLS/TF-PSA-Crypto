@@ -8,23 +8,13 @@ set_base_compile_options(${p256m_target})
 
 target_include_directories(${p256m_target}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/p256-m>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include>
          $<INSTALL_INTERFACE:include>
-  PRIVATE ${TF_PSA_CRYPTO_DIR}/core)
+  PRIVATE ${TF_PSA_CRYPTO_DIR}/core
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/p256-m>)
 set_config_files_compile_definitions(${p256m_target})
-
-if(INSTALL_TF_PSA_CRYPTO_HEADERS)
-
-  install(DIRECTORY p256-m
-    DESTINATION include
-    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-    FILES_MATCHING PATTERN "*.h")
-
-endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
 install(TARGETS ${p256m_target}
   EXPORT MbedTLSTargets

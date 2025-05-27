@@ -45,11 +45,10 @@
 #define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00
 /** Invalid private or public key. */
 #define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80
-/** The buffer contains a valid signature followed by more data. */
-#define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00
 /** Operation in progress, call again with the same parameters to continue. */
 #define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /* Flags indicating whether to include code that is specific to certain
  * types of curves. These flags are for internal library use only. */
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
@@ -68,7 +67,8 @@
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
     defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
 #define MBEDTLS_ECP_MONTGOMERY_ENABLED
-#endif
+#endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED OR MBEDTLS_ECP_DP_CURVE448_ENABLED */
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,6 +116,7 @@ typedef enum {
     MBEDTLS_ECP_DP_CURVE448,       /*!< Domain parameters for Curve448. */
 } mbedtls_ecp_group_id;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * The number of supported curves, plus one for #MBEDTLS_ECP_DP_NONE.
  */
@@ -143,6 +144,7 @@ typedef struct mbedtls_ecp_curve_info {
     uint16_t bit_size;              /*!< The curve size in bits. */
     const char *name;               /*!< A human-friendly name. */
 } mbedtls_ecp_curve_info;
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /**
  * \brief           The ECP point structure, in Jacobian coordinates.
@@ -375,6 +377,7 @@ typedef struct {
 
 #define MBEDTLS_ECP_RESTART_INIT { 0, 0, NULL, NULL }
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /*
  * Operation counts for restartable functions
  */
@@ -402,10 +405,13 @@ int mbedtls_ecp_check_budget(const mbedtls_ecp_group *grp,
 #define MBEDTLS_ECP_BUDGET(ops)   \
     MBEDTLS_MPI_CHK(mbedtls_ecp_check_budget(grp, rs_ctx, \
                                              (unsigned) (ops)));
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #else /* MBEDTLS_ECP_RESTARTABLE */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_ECP_BUDGET(ops)     /* no-op; for compatibility */
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /* We want to declare restartable versions of existing functions anyway */
 typedef void mbedtls_ecp_restart_ctx;
@@ -452,6 +458,7 @@ mbedtls_ecp_keypair;
  */
 #define MBEDTLS_ECP_TLS_NAMED_CURVE    3   /**< The named_curve of ECCurveType. */
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 /**
  * \brief           Set the maximum number of basic operations done in a row.
@@ -470,9 +477,8 @@ mbedtls_ecp_keypair;
  *                  returns 0.
  *
  *                  This only applies to functions whose documentation
- *                  mentions they may return #MBEDTLS_ERR_ECP_IN_PROGRESS (or
- *                  #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS for functions in the
- *                  SSL module). For functions that accept a "restart context"
+ *                  mentions they may return #MBEDTLS_ERR_ECP_IN_PROGRESS.
+ *                  For functions that accept a "restart context"
  *                  argument, passing NULL disables restart and makes the
  *                  function equivalent to the function with the same name
  *                  with \c _restartable removed. For functions in the ECDH
@@ -1518,6 +1524,8 @@ int mbedtls_ecp_export(const mbedtls_ecp_keypair *key, mbedtls_ecp_group *grp,
 int mbedtls_ecp_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

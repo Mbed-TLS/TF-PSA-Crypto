@@ -1,9 +1,11 @@
-/*
- *  Declaration of context structures for use with the PSA driver wrapper
- *  interface. This file contains the context structures for 'primitive'
- *  operations, i.e. those operations which do not rely on other contexts.
+/**
+ * \file crypto_driver_contexts_primitives.h
  *
- *  Warning: This file will be auto-generated in the future.
+ * \brief Declaration of context structures for use with the PSA driver wrapper
+ * interface. This file contains the context structures for 'primitive'
+ * operations, i.e. those operations which do not rely on other contexts.
+ *
+ * \warning This file will be auto-generated in the future.
  *
  * \note This file may not be included directly. Applications must
  * include psa/crypto.h.

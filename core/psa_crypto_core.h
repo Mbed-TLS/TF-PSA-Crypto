@@ -12,22 +12,9 @@
 #include "tf-psa-crypto/build_info.h"
 
 #include "psa/crypto.h"
-#include "psa/crypto_se_driver.h"
 #if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"
 #endif
-
-/**
- * Tell if PSA is ready for this hash.
- *
- * \note            For now, only checks the state of the driver subsystem,
- *                  not the algorithm. Might do more in the future.
- *
- * \param hash_alg  The hash algorithm (ignored for now).
- *
- * \return 1 if the driver subsytem is ready, 0 otherwise.
- */
-int psa_can_do_hash(psa_algorithm_t hash_alg);
 
 /**
  * Tell if PSA is ready for this cipher.
@@ -212,20 +199,6 @@ static inline int psa_key_slot_has_readers(const psa_key_slot_t *slot)
 {
     return slot->var.occupied.registered_readers > 0;
 }
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-/** Get the SE slot number of a key from the key slot storing its description.
- *
- * \param[in]  slot  The key slot to query. This must be a key slot storing
- *                   the description of a key of a dynamically registered
- *                   secure element, otherwise the behaviour is undefined.
- */
-static inline psa_key_slot_number_t psa_key_slot_get_slot_number(
-    const psa_key_slot_t *slot)
-{
-    return *((psa_key_slot_number_t *) (slot->key.data));
-}
-#endif
 
 /** Completely wipe a slot in memory, including its policy.
  *

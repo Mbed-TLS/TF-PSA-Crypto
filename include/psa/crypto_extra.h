@@ -84,130 +84,6 @@ static inline psa_algorithm_t psa_get_key_enrollment_algorithm(
     return attributes->MBEDTLS_PRIVATE(policy).MBEDTLS_PRIVATE(alg2);
 }
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-
-/** Retrieve the slot number where a key is stored.
- *
- * A slot number is only defined for keys that are stored in a secure
- * element.
- *
- * This information is only useful if the secure element is not entirely
- * managed through the PSA Cryptography API. It is up to the secure
- * element driver to decide how PSA slot numbers map to any other interface
- * that the secure element may have.
- *
- * \param[in] attributes        The key attribute structure to query.
- * \param[out] slot_number      On success, the slot number containing the key.
- *
- * \retval #PSA_SUCCESS
- *         The key is located in a secure element, and \p *slot_number
- *         indicates the slot number that contains it.
- * \retval #PSA_ERROR_NOT_PERMITTED
- *         The caller is not permitted to query the slot number.
- *         Mbed TLS currently does not return this error.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         The key is not located in a secure element.
- */
-psa_status_t psa_get_key_slot_number(
-    const psa_key_attributes_t *attributes,
-    psa_key_slot_number_t *slot_number);
-
-/** Choose the slot number where a key is stored.
- *
- * This function declares a slot number in the specified attribute
- * structure.
- *
- * A slot number is only meaningful for keys that are stored in a secure
- * element. It is up to the secure element driver to decide how PSA slot
- * numbers map to any other interface that the secure element may have.
- *
- * \note Setting a slot number in key attributes for a key creation can
- *       cause the following errors when creating the key:
- *       - #PSA_ERROR_NOT_SUPPORTED if the selected secure element does
- *         not support choosing a specific slot number.
- *       - #PSA_ERROR_NOT_PERMITTED if the caller is not permitted to
- *         choose slot numbers in general or to choose this specific slot.
- *       - #PSA_ERROR_INVALID_ARGUMENT if the chosen slot number is not
- *         valid in general or not valid for this specific key.
- *       - #PSA_ERROR_ALREADY_EXISTS if there is already a key in the
- *         selected slot.
- *
- * \param[out] attributes       The attribute structure to write to.
- * \param slot_number           The slot number to set.
- */
-static inline void psa_set_key_slot_number(
-    psa_key_attributes_t *attributes,
-    psa_key_slot_number_t slot_number)
-{
-    attributes->MBEDTLS_PRIVATE(has_slot_number) = 1;
-    attributes->MBEDTLS_PRIVATE(slot_number) = slot_number;
-}
-
-/** Remove the slot number attribute from a key attribute structure.
- *
- * This function undoes the action of psa_set_key_slot_number().
- *
- * \param[out] attributes       The attribute structure to write to.
- */
-static inline void psa_clear_key_slot_number(
-    psa_key_attributes_t *attributes)
-{
-    attributes->MBEDTLS_PRIVATE(has_slot_number) = 0;
-}
-
-/** Register a key that is already present in a secure element.
- *
- * The key must be located in a secure element designated by the
- * lifetime field in \p attributes, in the slot set with
- * psa_set_key_slot_number() in the attribute structure.
- * This function makes the key available through the key identifier
- * specified in \p attributes.
- *
- * \param[in] attributes        The attributes of the existing key.
- *                              - The lifetime must be a persistent lifetime
- *                                in a secure element. Volatile lifetimes are
- *                                not currently supported.
- *                              - The key identifier must be in the valid
- *                                range for persistent keys.
- *                              - The key type and size must be specified and
- *                                must be consistent with the key material
- *                                in the secure element.
- *
- * \retval #PSA_SUCCESS
- *         The key was successfully registered.
- *         Note that depending on the design of the driver, this may or may
- *         not guarantee that a key actually exists in the designated slot
- *         and is compatible with the specified attributes.
- * \retval #PSA_ERROR_ALREADY_EXISTS
- *         There is already a key with the identifier specified in
- *         \p attributes.
- * \retval #PSA_ERROR_NOT_SUPPORTED
- *         The secure element driver for the specified lifetime does not
- *         support registering a key.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         The identifier in \p attributes is invalid, namely the identifier is
- *         not in the user range, or
- *         \p attributes specifies a lifetime which is not located
- *         in a secure element, or no slot number is specified in \p attributes,
- *         or the specified slot number is not valid.
- * \retval #PSA_ERROR_NOT_PERMITTED
- *         The caller is not authorized to register the specified key slot.
- * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
- * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
- * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
- * \retval #PSA_ERROR_DATA_INVALID \emptydescription
- * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
- * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
- * \retval #PSA_ERROR_BAD_STATE
- *         The library has not been previously initialized by psa_crypto_init().
- *         It is implementation-dependent whether a failure to initialize
- *         results in this error code.
- */
-psa_status_t mbedtls_psa_register_se_key(
-    const psa_key_attributes_t *attributes);
-
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
 /**@}*/
 
 /**
@@ -260,78 +136,6 @@ typedef struct mbedtls_psa_stats_s {
  *       may not expose this function.
  */
 void mbedtls_psa_get_stats(mbedtls_psa_stats_t *stats);
-
-/**
- * \brief Inject an initial entropy seed for the random generator into
- *        secure storage.
- *
- * This function injects data to be used as a seed for the random generator
- * used by the PSA Crypto implementation. On devices that lack a trusted
- * entropy source (preferably a hardware random number generator),
- * the Mbed PSA Crypto implementation uses this value to seed its
- * random generator.
- *
- * On devices without a trusted entropy source, this function must be
- * called exactly once in the lifetime of the device. On devices with
- * a trusted entropy source, calling this function is optional.
- * In all cases, this function may only be called before calling any
- * other function in the PSA Crypto API, including psa_crypto_init().
- *
- * When this function returns successfully, it populates a file in
- * persistent storage. Once the file has been created, this function
- * can no longer succeed.
- *
- * If any error occurs, this function does not change the system state.
- * You can call this function again after correcting the reason for the
- * error if possible.
- *
- * \warning This function **can** fail! Callers MUST check the return status.
- *
- * \warning If you use this function, you should use it as part of a
- *          factory provisioning process. The value of the injected seed
- *          is critical to the security of the device. It must be
- *          *secret*, *unpredictable* and (statistically) *unique per device*.
- *          You should be generate it randomly using a cryptographically
- *          secure random generator seeded from trusted entropy sources.
- *          You should transmit it securely to the device and ensure
- *          that its value is not leaked or stored anywhere beyond the
- *          needs of transmitting it from the point of generation to
- *          the call of this function, and erase all copies of the value
- *          once this function returns.
- *
- * This is an Mbed TLS extension.
- *
- * \note This function is only available on the following platforms:
- * * If the compile-time option MBEDTLS_PSA_INJECT_ENTROPY is enabled.
- *   Note that you must provide compatible implementations of
- *   mbedtls_nv_seed_read and mbedtls_nv_seed_write.
- * * In a client-server integration of PSA Cryptography, on the client side,
- *   if the server supports this feature.
- * \param[in] seed          Buffer containing the seed value to inject.
- * \param[in] seed_size     Size of the \p seed buffer.
- *                          The size of the seed in bytes must be greater
- *                          or equal to both #MBEDTLS_ENTROPY_BLOCK_SIZE
- *                          and the value of \c MBEDTLS_ENTROPY_MIN_PLATFORM
- *                          in `library/entropy_poll.h` in the Mbed TLS source
- *                          code.
- *                          It must be less or equal to
- *                          #MBEDTLS_ENTROPY_MAX_SEED_SIZE.
- *
- * \retval #PSA_SUCCESS
- *         The seed value was injected successfully. The random generator
- *         of the PSA Crypto implementation is now ready for use.
- *         You may now call psa_crypto_init() and use the PSA Crypto
- *         implementation.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         \p seed_size is out of range.
- * \retval #PSA_ERROR_STORAGE_FAILURE
- *         There was a failure reading or writing from storage.
- * \retval #PSA_ERROR_NOT_PERMITTED
- *         The library has already been initialized. It is no longer
- *         possible to call this function.
- */
-psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
-                                        size_t seed_size);
 
 /** \addtogroup crypto_types
  * @{
@@ -582,6 +386,35 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 #endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
 
 /** @} */
+
+/** \defgroup psa_crypto_client Functions defined by a client provider
+ *
+ * The functions in this group are meant to be implemented by providers of
+ * the PSA Crypto client interface. They are provided by the library when
+ * #MBEDTLS_PSA_CRYPTO_C is enabled.
+ *
+ * \note All functions in this group are experimental, as using
+ *       alternative client interface providers is experimental.
+ *
+ * @{
+ */
+
+/** Check if PSA is capable of handling the specified hash algorithm.
+ *
+ * This means that PSA core was built with the corresponding PSA_WANT_ALG_xxx
+ * set and that psa_crypto_init has already been called.
+ *
+ * \note When using Mbed TLS version of PSA core (i.e. MBEDTLS_PSA_CRYPTO_C is
+ *       set) for now this function only checks the state of the driver
+ *       subsystem, not the algorithm. This might be improved in the future.
+ *
+ * \param hash_alg  The hash algorithm.
+ *
+ * \return 1 if the PSA can handle \p hash_alg, 0 otherwise.
+ */
+int psa_can_do_hash(psa_algorithm_t hash_alg);
+
+/**@}*/
 
 /** \addtogroup crypto_types
  * @{
@@ -1027,6 +860,29 @@ static psa_algorithm_t psa_pake_cs_get_hash(
  */
 static void psa_pake_cs_set_hash(psa_pake_cipher_suite_t *cipher_suite,
                                  psa_algorithm_t hash);
+
+/** Retrieve the key confirmation from a PAKE cipher suite.
+ *
+ * \param[in] cipher_suite      The cipher suite structure to query.
+ *
+ * \return A key confirmation value: either #PSA_PAKE_CONFIRMED_KEY or
+ *         #PSA_PAKE_UNCONFIRMED_KEY.
+ */
+static uint32_t psa_pake_cs_get_key_confirmation(const psa_pake_cipher_suite_t *cipher_suite);
+
+/** Declare the key confirmation for a PAKE cipher suite.
+ *
+ * This function overwrites any key confirmation previously set in \p cipher_suite.
+ *
+ * The documentation of individual PAKE algorithms specifies which key confirmation values
+ * are valid for the algorithm.
+ *
+ * \param[out] cipher_suite     The cipher suite structure to write to.
+ * \param[in]  key_confirmation The key confirmation value to write: either
+ *                              #PSA_PAKE_CONFIRMED_KEY or #PSA_PAKE_UNCONFIRMED_KEY.
+ */
+static void psa_pake_cs_set_key_confirmation(psa_pake_cipher_suite_t *cipher_suite,
+                                             uint32_t key_confirmation);
 
 /** The type of the state data structure for PAKE operations.
  *
@@ -1713,7 +1569,7 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 /** Returns a suitable initializer for a PAKE cipher suite object of type
  * psa_pake_cipher_suite_t.
  */
-#define PSA_PAKE_CIPHER_SUITE_INIT { PSA_ALG_NONE, 0, 0, 0, PSA_ALG_NONE }
+#define PSA_PAKE_CIPHER_SUITE_INIT { PSA_ALG_NONE, 0, 0, 0, PSA_ALG_NONE, 0 }
 
 /** Returns a suitable initializer for a PAKE operation object of type
  * psa_pake_operation_t.
@@ -1725,12 +1581,38 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
                                   { 0 }, { { 0 } } }
 #endif
 
+/**
+ * A key confirmation value that indicates an confirmed key in a PAKE cipher suite.
+ *
+ * This key confirmation value will result in the PAKE algorithm exchanging data
+ * to verify that the shared key is identical for both parties. This is the default
+ * key confirmation value in an initialized PAKE cipher suite object.
+ *
+ * Some algorithms do not include confirmation of the shared key.
+ */
+#define PSA_PAKE_CONFIRMED_KEY 0
+
+/**
+ * A key confirmation value that indicates an unconfirmed key in a PAKE cipher suite.
+ *
+ * This key confirmation value will result in the PAKE algorithm terminating prior to
+ * confirming that the resulting shared key is identical for both parties.
+ *
+ * Some algorithms do not support returning an unconfirmed shared key.
+ *
+ * \warning When the shared key is not confirmed as part of the PAKE operation, the
+ *          application is responsible for mitigating risks that arise from the possible
+ *          mismatch in the output keys.
+ */
+#define PSA_PAKE_UNCONFIRMED_KEY 1
+
 struct psa_pake_cipher_suite_s {
     psa_algorithm_t algorithm;
     psa_pake_primitive_type_t type;
     psa_pake_family_t family;
     uint16_t  bits;
     psa_algorithm_t hash;
+    uint32_t key_confirmation;
 };
 
 static inline psa_algorithm_t psa_pake_cs_get_algorithm(
@@ -1792,6 +1674,17 @@ static inline void psa_pake_cs_set_hash(psa_pake_cipher_suite_t *cipher_suite,
     } else {
         cipher_suite->hash = hash;
     }
+}
+
+static inline uint32_t psa_pake_cs_get_key_confirmation(const psa_pake_cipher_suite_t *cipher_suite)
+{
+    return cipher_suite->key_confirmation;
+}
+
+static inline void psa_pake_cs_set_key_confirmation(psa_pake_cipher_suite_t *cipher_suite,
+                                                    uint32_t key_confirmation)
+{
+    cipher_suite->key_confirmation = key_confirmation;
 }
 
 struct psa_crypto_driver_pake_inputs_s {

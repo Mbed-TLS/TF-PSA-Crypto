@@ -3,6 +3,12 @@
 #include "entropy_poll.h"
 #include "mbedtls/md.h"
 #include "string.h"
+#include "test/fake_external_rng_for_test.h"
+
+#define TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL       8
+#define TEST_PLATFORM_GET_ENTROPY_EXP_CALL_COUNT                            \
+    (MAX(MBEDTLS_ENTROPY_BLOCK_SIZE, MBEDTLS_ENTROPY_POLL_PLATFORM_MIN) /    \
+     TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL)
 
 typedef enum {
     DUMMY_CONSTANT_LENGTH, /* Output context->length bytes */
@@ -144,7 +150,7 @@ static int read_nv_seed(unsigned char *buf, size_t buf_len)
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
- * depends_on:MBEDTLS_ENTROPY_C:!MBEDTLS_PSA_INJECT_ENTROPY
+ * depends_on:MBEDTLS_ENTROPY_C
  * END_DEPENDENCIES
  */
 
@@ -563,5 +569,47 @@ void entropy_selftest(int result)
 
 exit:
     MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_C:MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+void entropy_test_platform_get_entropy_alt(void)
+{
+    mbedtls_entropy_context ctx;
+    uint8_t data[MBEDTLS_ENTROPY_POLL_PLATFORM_MIN];
+    size_t olen, call_count;
+
+    /* Simple callback test -> all fine. */
+    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) == 0);
+    TEST_LE_U(1, olen);
+    TEST_LE_U(olen, sizeof(data));
+
+    mbedtls_test_platform_get_entropy_reset();
+
+    /* Force a failure -> return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED. */
+    mbedtls_test_platform_get_entropy_set_force_failure(1);
+    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
+                MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+
+    mbedtls_test_platform_get_entropy_reset();
+
+    /* Return less entropy than expected -> entropy gathering fails */
+    mbedtls_test_platform_get_entropy_set_entropy_content(8 * (sizeof(data) - 1));
+    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
+                MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+
+    mbedtls_test_platform_get_entropy_reset();
+
+    /* Return less data than required -> callback will be called more than once. */
+    mbedtls_entropy_init(&ctx);
+    mbedtls_test_platform_get_entropy_set_output_len(
+        TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL);
+    TEST_ASSERT(mbedtls_entropy_func(&ctx, data, sizeof(data)) == 0);
+    mbedtls_entropy_free(&ctx);
+    call_count = mbedtls_test_platform_get_entropy_get_call_count();
+    TEST_EQUAL(call_count, TEST_PLATFORM_GET_ENTROPY_EXP_CALL_COUNT);
+
+exit:
+    mbedtls_test_platform_get_entropy_reset();
 }
 /* END_CASE */

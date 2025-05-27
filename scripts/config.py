@@ -56,7 +56,6 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_MEMORY_DEBUG', # depends on MEMORY_BUFFER_ALLOC_C
     'MBEDTLS_NO_64BIT_MULTIPLICATION', # influences anything that uses bignum
     'MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES', # removes a feature
-    'MBEDTLS_NO_PLATFORM_ENTROPY', # removes a feature
     'MBEDTLS_NO_UDBL_DIVISION', # influences anything that uses bignum
     'MBEDTLS_PSA_P256M_DRIVER_ENABLED', # influences SECP256R1 KeyGen/ECDH/ECDSA
     'MBEDTLS_PLATFORM_NO_STD_FUNCTIONS', # removes a feature
@@ -64,7 +63,6 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG', # behavior change + build dependency
     'MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER', # interface and behavior change
     'MBEDTLS_PSA_CRYPTO_SPM', # platform dependency (PSA SPM)
-    'MBEDTLS_PSA_INJECT_ENTROPY', # conflicts with platform entropy sources
     'MBEDTLS_RSA_NO_CRT', # influences the use of RSA in X.509 and TLS
     'MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY', # interacts with *_USE_A64_CRYPTO_IF_PRESENT
     'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY', # interacts with *_USE_ARMV8_A_CRYPTO_IF_PRESENT
@@ -110,6 +108,7 @@ def is_seamless_alt(name):
     an implementation of the relevant functions and an xxx_alt.h header.
     """
     if name in (
+            'MBEDTLS_PLATFORM_GET_ENTROPY_ALT',
             'MBEDTLS_PLATFORM_GMTIME_R_ALT',
             'MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT',
             'MBEDTLS_PLATFORM_MS_TIME_ALT',
@@ -133,6 +132,15 @@ def full_adapter(name, value, active):
         return active
     return include_in_full(name)
 
+def realfull_adapter(_name, _value, _active):
+    """Activate all symbols.
+
+    This is intended for building the documentation, including the
+    documentation of settings that are activated by defining an optional
+    preprocessor macro. There is no expectation that the resulting
+    configuration can be built.
+    """
+    return True
 
 class TFPSACryptoConfigFile(config_common.ConfigFile):
     """Representation of a TF PSA Crypto configuration file."""
@@ -197,7 +205,11 @@ class TFPSACryptoConfigTool(config_common.ConfigTool):
             Exclude alternative implementations and platform support options, as well as
             some options that are awkward to test.
             """)
-
+        self.add_adapter(
+            'realfull', realfull_adapter,
+            """Uncomment all boolean #defines.
+            Suitable for generating documentation, but not for building.
+            """)
 
 if __name__ == '__main__':
     sys.exit(TFPSACryptoConfigTool().main())

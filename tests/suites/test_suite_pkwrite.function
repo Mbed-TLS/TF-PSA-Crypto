@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
 #include "pk_internal.h"
 #include "mbedtls/pem.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/crypto_oid.h"
 #include "mbedtls/base64.h"
 #include "psa/crypto_sizes.h"
 
@@ -75,10 +75,8 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
     unsigned char *start_buf;
     size_t buf_len, check_buf_len;
     int expected_result;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t opaque_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     USE_PSA_INIT();
 
@@ -105,8 +103,7 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
     if (is_public_key) {
         TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&key, key_file), 0);
     } else {
-        TEST_EQUAL(mbedtls_pk_parse_keyfile(&key, key_file, NULL,
-                                            mbedtls_test_rnd_std_rand, NULL), 0);
+        TEST_EQUAL(mbedtls_pk_parse_keyfile(&key, key_file, NULL), 0);
     }
 
     start_buf = buf;
@@ -127,7 +124,6 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
 
     TEST_MEMORY_COMPARE(start_buf, buf_len, check_buf, check_buf_len);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     /* Verify that pk_write works also for opaque private keys */
     if (!is_public_key) {
         memset(buf, 0, check_buf_len);
@@ -151,12 +147,9 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
 
         TEST_MEMORY_COMPARE(start_buf, buf_len, check_buf, check_buf_len);
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 exit:
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_destroy_key(opaque_id);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     mbedtls_free(buf);
     mbedtls_free(check_buf);
     mbedtls_pk_free(&key);
@@ -193,16 +186,13 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
     size_t derived_key_len = 0;
     uint8_t *pub_key_raw = NULL;
     size_t pub_key_len = 0;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t opaque_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     mbedtls_pk_init(&priv_key);
     USE_PSA_INIT();
 
-    TEST_EQUAL(mbedtls_pk_parse_keyfile(&priv_key, priv_key_file, NULL,
-                                        mbedtls_test_rnd_std_rand, NULL), 0);
+    TEST_EQUAL(mbedtls_pk_parse_keyfile(&priv_key, priv_key_file, NULL), 0);
     TEST_EQUAL(mbedtls_pk_load_file(pub_key_file, &pub_key_raw,
                                     &pub_key_len), 0);
 
@@ -215,7 +205,6 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
     TEST_MEMORY_COMPARE(derived_key_raw, derived_key_len,
                         pub_key_raw, pub_key_len);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_platform_zeroize(derived_key_raw, derived_key_len);
 
     /* Turn the priv_key PK context into an opaque one. */
@@ -230,12 +219,9 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
 
     TEST_MEMORY_COMPARE(derived_key_raw, derived_key_len,
                         pub_key_raw, pub_key_len);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 exit:
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_destroy_key(opaque_key_id);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     mbedtls_free(derived_key_raw);
     mbedtls_free(pub_key_raw);
     mbedtls_pk_free(&priv_key);

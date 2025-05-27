@@ -1,12 +1,12 @@
 /* BEGIN_HEADER */
-#include "mbedtls/oid.h"
+#include "mbedtls/crypto_oid.h"
 #include "mbedtls/asn1.h"
 #include "mbedtls/asn1write.h"
 #include "string.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
- * depends_on:MBEDTLS_OID_C:!MBEDTLS_X509_REMOVE_INFO
+ * depends_on:MBEDTLS_OID_C
  * END_DEPENDENCIES
  */
 

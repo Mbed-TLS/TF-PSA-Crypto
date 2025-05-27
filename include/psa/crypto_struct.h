@@ -258,10 +258,6 @@ typedef uint16_t psa_key_bits_t;
 #define PSA_MAX_KEY_BITS 0xfff8
 
 struct psa_key_attributes_s {
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-    psa_key_slot_number_t MBEDTLS_PRIVATE(slot_number);
-    int MBEDTLS_PRIVATE(has_slot_number);
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
     psa_key_type_t MBEDTLS_PRIVATE(type);
     psa_key_bits_t MBEDTLS_PRIVATE(bits);
     psa_key_lifetime_t MBEDTLS_PRIVATE(lifetime);
@@ -280,16 +276,10 @@ struct psa_key_attributes_s {
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(id);
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#define PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER 0, 0,
-#else
-#define PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER
-#endif
-#define PSA_KEY_ATTRIBUTES_INIT { PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER \
-                                      PSA_KEY_TYPE_NONE, 0,            \
-                                      PSA_KEY_LIFETIME_VOLATILE,       \
-                                      PSA_KEY_POLICY_INIT,             \
-                                      MBEDTLS_SVC_KEY_ID_INIT }
+#define PSA_KEY_ATTRIBUTES_INIT { PSA_KEY_TYPE_NONE, 0,            \
+                                  PSA_KEY_LIFETIME_VOLATILE,       \
+                                  PSA_KEY_POLICY_INIT,             \
+                                  MBEDTLS_SVC_KEY_ID_INIT }
 
 static inline struct psa_key_attributes_s psa_key_attributes_init(void)
 {

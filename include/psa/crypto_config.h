@@ -183,11 +183,6 @@
  * MBEDTLS_PLATFORM_STD_TIME.
  *
  * Comment if your system does not support time functions.
- *
- * \note If MBEDTLS_TIMING_C is set - to enable the semi-portable timing
- *       interface - timing.c will include time.h on suitable platforms
- *       regardless of the setting of MBEDTLS_HAVE_TIME, unless
- *       MBEDTLS_TIMING_ALT is used. See timing.c for more information.
  */
 #define MBEDTLS_HAVE_TIME
 
@@ -434,11 +429,12 @@
  * \def MBEDTLS_THREADING_C
  *
  * Enable the threading abstraction layer.
- * By default Mbed TLS assumes it is used in a non-threaded environment or that
- * contexts are not shared between threads. If you do intend to use contexts
- * between threads, you will need to enable this layer to prevent race
- * conditions. See also our Knowledge Base article about threading:
- * https://mbed-tls.readthedocs.io/en/latest/kb/development/thread-safety-and-multi-threading
+ *
+ * \note You must enable this option if TF-PSA-Crypto runs in a
+ * multithreaded environment. Otherwise the PSA cryptography subsystem is
+ * not thread-safe. As an exception, this option can be disabled if all
+ * PSA crypto functions are ever called from a single thread. Note that
+ * this includes indirect calls, for example through PK.
  *
  * Module:  library/threading.c
  *
@@ -761,13 +757,13 @@
 /**
  * \def MBEDTLS_NIST_KW_C
  *
- * Enable the Key Wrapping mode for 128-bit block ciphers,
- * as defined in NIST SP 800-38F. Only KW and KWP modes
- * are supported. At the moment, only AES is approved by NIST.
+ * Enable the 128-bit key wrapping modes from NIST SP 800-38F:
+ * KW (also known as RFC 3394) and KWP (RFC 5649).
+ * Currently these modes are only supported with AES.
  *
  * Module:  library/nist_kw.c
  *
- * Requires: MBEDTLS_AES_C and MBEDTLS_CIPHER_C
+ * Auto enables: PSA_WANT_ALG_ECB_NO_PADDING
  */
 #define MBEDTLS_NIST_KW_C
 
@@ -867,15 +863,6 @@
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
 /**
- * \def MBEDTLS_PK_RSA_ALT_SUPPORT
- *
- * Support external private RSA keys (eg from a HSM) in the PK layer.
- *
- * Comment this macro to disable support for external private RSA keys.
- */
-#define MBEDTLS_PK_RSA_ALT_SUPPORT
-
-/**
  * \def MBEDTLS_PK_WRITE_C
  *
  * Enable the generic public (asymmetric) key writer.
@@ -938,7 +925,6 @@
  *
  * Module:  library/asn1.c
  * Caller:  library/x509.c
- *          library/dhm.c
  *          library/pkcs12.c
  *          library/pkcs5.c
  *          library/pkparse.c
@@ -1000,8 +986,7 @@
  * Enable PEM decoding / parsing.
  *
  * Module:  library/pem.c
- * Caller:  library/dhm.c
- *          library/pkparse.c
+ * Caller:  library/pkparse.c
  *          library/x509_crl.c
  *          library/x509_crt.c
  *          library/x509_csr.c
@@ -1072,18 +1057,17 @@
 //#define MBEDTLS_ENTROPY_FORCE_SHA256
 
 /**
- * \def MBEDTLS_ENTROPY_HARDWARE_ALT
+ * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
  *
- * Uncomment this macro to let Mbed TLS use your own implementation of a
- * hardware entropy collector.
- *
- * Your function must be called \c mbedtls_hardware_poll(), have the same
- * prototype as declared in library/entropy_poll.h, and accept NULL as first
- * argument.
- *
- * Uncomment to use your own hardware entropy collector.
+ * By default TF-PSA-Crypto uses platform-specific sources such as `getrandom()`,
+ * `/dev/urandom` or `BCryptGenRandom()` to gather entropy data. If these
+ * functions are not available on your platform, the following symbol allows
+ * you to define a custom callback function named mbedtls_platform_get_entropy()
+ * that Mbed TLS will use to gather entropy data.
+ * The public header mbedtls/platform.h provides the prototype for this
+ * callback function and also the documentation for its parameters.
  */
-//#define MBEDTLS_ENTROPY_HARDWARE_ALT
+//#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 
 /**
  * \def MBEDTLS_ENTROPY_NV_SEED
@@ -1124,17 +1108,6 @@
  * Uncomment this macro to prevent loading of default entropy functions.
  */
 //#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-
-/**
- * \def MBEDTLS_NO_PLATFORM_ENTROPY
- *
- * Do not use built-in platform entropy functions.
- * This is useful if your platform does not support
- * standards like the /dev/urandom or Windows CryptoAPI.
- *
- * Uncomment this macro to disable the built-in platform entropy functions.
- */
-//#define MBEDTLS_NO_PLATFORM_ENTROPY
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_C
@@ -1289,19 +1262,6 @@
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
 
 /**
- * \def MBEDTLS_PSA_INJECT_ENTROPY
- *
- * Enable support for entropy injection at first boot. This feature is
- * required on systems that do not have a built-in entropy source (TRNG).
- * This feature is currently not supported on systems that have a built-in
- * entropy source.
- *
- * Requires: MBEDTLS_PSA_CRYPTO_STORAGE_C, MBEDTLS_ENTROPY_NV_SEED
- *
- */
-//#define MBEDTLS_PSA_INJECT_ENTROPY
-
-/**
  * \def MBEDTLS_PSA_ITS_FILE_C
  *
  * Enable the emulation of the Platform Security Architecture
@@ -1353,7 +1313,6 @@
 /* Entropy options */
 //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
 //#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
-//#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_PLATFORM_FILE
@@ -1633,8 +1592,7 @@
  * Enable "non-blocking" ECC operations that can return early and be resumed.
  *
  * This allows various functions to pause by returning
- * #MBEDTLS_ERR_ECP_IN_PROGRESS (or, for functions in the SSL module,
- * #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS) and then be called later again in
+ * #MBEDTLS_ERR_ECP_IN_PROGRESS and then be called later again in
  * order to further progress and eventually complete their operation. This is
  * controlled through mbedtls_ecp_set_max_ops() which limits the maximum
  * number of ECC operations a function may perform before pausing; see
@@ -1659,10 +1617,6 @@
  *   - verification of the server's certificate chain;
  *   - generation of the client's signature if client authentication is used,
  *     with an ECC key/certificate.
- *
- * \note  In the cases above, the usual SSL/TLS functions, such as
- *        mbedtls_ssl_handshake(), can now return
- *        MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS.
  *
  * \note  When this option is enabled, restartable operations in PK, X.509
  *        and TLS (see above) are not using PSA. On the other hand, ECDH
@@ -2024,61 +1978,6 @@
  *          library/pem.c
  *          library/ctr_drbg.c
  *
- * This module enables the following ciphersuites (if other requisites are
- * enabled as well):
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_ECDH_RSA_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_ECDH_RSA_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_DHE_PSK_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_PSK_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_DHE_PSK_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_DHE_PSK_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_DHE_PSK_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_DHE_PSK_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_RSA_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256
- *      MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_RSA_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA
- *      MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384
- *      MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384
- *      MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA
- *      MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256
- *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256
- *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA
- *
  * PEM_PARSE uses AES for decrypting encrypted keys.
  */
 #define MBEDTLS_AES_C
@@ -2090,44 +1989,6 @@
  *
  * Module:  library/aria.c
  * Caller:  library/cipher.c
- *
- * This module enables the following ciphersuites (if other requisites are
- * enabled as well):
- *
- *      MBEDTLS_TLS_RSA_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_RSA_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_RSA_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDH_RSA_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDH_RSA_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_RSA_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_RSA_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDH_RSA_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDH_RSA_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_PSK_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_DHE_PSK_WITH_ARIA_256_CBC_SHA384
- *      MBEDTLS_TLS_PSK_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_PSK_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256
- *      MBEDTLS_TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_ARIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_ARIA_256_CBC_SHA384
  */
 #define MBEDTLS_ARIA_C
 
@@ -2140,14 +2001,13 @@
  *          library/bignum_core.c
  *          library/bignum_mod.c
  *          library/bignum_mod_raw.c
- * Caller:  library/dhm.c
- *          library/ecp.c
+ * Caller:  library/ecp.c
  *          library/ecdsa.c
  *          library/rsa.c
  *          library/rsa_alt_helpers.c
  *          library/ssl_tls.c
  *
- * This module is required for RSA, DHM and ECC (ECDH, ECDSA) support.
+ * This module is required for RSA and ECC (ECDH, ECDSA) support.
  */
 #define MBEDTLS_BIGNUM_C
 
@@ -2158,47 +2018,6 @@
  *
  * Module:  library/camellia.c
  * Caller:  library/cipher.c
- *
- * This module enables the following ciphersuites (if other requisites are
- * enabled as well):
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA
- *      MBEDTLS_TLS_DHE_PSK_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_DHE_PSK_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256
- *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA
- *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256
- *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA
- *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384
- *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
- *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256
- *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256
  */
 #define MBEDTLS_CAMELLIA_C
 
@@ -2302,24 +2121,6 @@
  * Warning: Only do so when you know what you are doing. This allows for
  * encryption or channels without any security!
  *
- * To enable the following ciphersuites:
- *      MBEDTLS_TLS_ECDH_ECDSA_WITH_NULL_SHA
- *      MBEDTLS_TLS_ECDH_RSA_WITH_NULL_SHA
- *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_NULL_SHA
- *      MBEDTLS_TLS_ECDHE_RSA_WITH_NULL_SHA
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_NULL_SHA384
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_NULL_SHA256
- *      MBEDTLS_TLS_ECDHE_PSK_WITH_NULL_SHA
- *      MBEDTLS_TLS_DHE_PSK_WITH_NULL_SHA384
- *      MBEDTLS_TLS_DHE_PSK_WITH_NULL_SHA256
- *      MBEDTLS_TLS_DHE_PSK_WITH_NULL_SHA
- *      MBEDTLS_TLS_RSA_WITH_NULL_SHA256
- *      MBEDTLS_TLS_RSA_WITH_NULL_SHA
- *      MBEDTLS_TLS_RSA_WITH_NULL_MD5
- *      MBEDTLS_TLS_PSK_WITH_NULL_SHA384
- *      MBEDTLS_TLS_PSK_WITH_NULL_SHA256
- *      MBEDTLS_TLS_PSK_WITH_NULL_SHA
- *
  * Uncomment this macro to enable the NULL cipher and ciphersuites
  */
 //#define MBEDTLS_CIPHER_NULL_CIPHER
@@ -2409,28 +2210,6 @@
 #define MBEDTLS_DES_C
 
 /**
- * \def MBEDTLS_DHM_C
- *
- * Enable the Diffie-Hellman-Merkle module.
- *
- * Module:  library/dhm.c
- * Caller:  library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module is used by the following key exchanges:
- *      DHE-RSA, DHE-PSK
- *
- * \warning    Using DHE constitutes a security risk as it
- *             is not possible to validate custom DH parameters.
- *             If possible, it is recommended users should consider
- *             preferring other methods of key exchange.
- *             See dhm.h for more details.
- *
- */
-#define MBEDTLS_DHM_C
-
-/**
  * \def MBEDTLS_ECDH_C
  *
  * Enable the elliptic curve Diffie-Hellman library.
@@ -2442,7 +2221,7 @@
  *          library/ssl*_server.c
  *
  * This module is used by the following key exchanges:
- *      ECDHE-ECDSA, ECDHE-RSA, DHE-PSK
+ *      ECDHE-ECDSA, ECDHE-RSA
  *
  * Requires: MBEDTLS_ECP_C
  */
@@ -2649,25 +2428,6 @@
 #define MBEDTLS_POLY1305_C
 
 /**
- * \def MBEDTLS_PSA_CRYPTO_SE_C
- *
- * Enable dynamic secure element support in the Platform Security Architecture
- * cryptography API.
- *
- * \deprecated This feature is deprecated. Please switch to the PSA driver
- *             interface.
- *
- * \warning    This feature is not thread-safe, and should not be used in a
- *             multi-threaded environment.
- *
- * Module:  library/psa_crypto_se.c
- *
- * Requires: MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_STORAGE_C
- *
- */
-//#define MBEDTLS_PSA_CRYPTO_SE_C
-
-/**
  * \def MBEDTLS_RIPEMD160_C
  *
  * Enable the RIPEMD-160 hash algorithm.
@@ -2692,7 +2452,7 @@
  *          library/ssl*_server.c
  *
  * This module is used by the following key exchanges:
- *      RSA, DHE-RSA, ECDHE-RSA
+ *      RSA, ECDHE-RSA
  *
  * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
  */

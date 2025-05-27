@@ -1,8 +1,10 @@
-/*
- *  Context structure declaration of the Mbed TLS software-based PSA drivers
- *  called through the PSA Crypto driver dispatch layer.
- *  This file contains the context structures of those algorithms which need to
- *  rely on other algorithms, i.e. are 'composite' algorithms.
+/**
+ * \file crypto_builtin_composites.h
+ *
+ * \brief Context structure declaration of the Mbed TLS software-based PSA
+ * drivers called through the PSA Crypto driver dispatch layer. This file
+ * contains the context structures of those algorithms which need to rely on
+ * other algorithms, i.e. are 'composite' algorithms.
  *
  * \note This file may not be included directly. Applications must
  * include psa/crypto.h.

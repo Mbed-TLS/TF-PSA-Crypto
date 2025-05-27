@@ -39,6 +39,7 @@ typedef struct mbedtls_md5_context {
 }
 mbedtls_md5_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief          Initialize MD5 context
  *
@@ -158,6 +159,8 @@ int mbedtls_md5(const unsigned char *input,
 int mbedtls_md5_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

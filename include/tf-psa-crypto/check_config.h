@@ -94,18 +94,9 @@
 #error "MBEDTLS_CTR_DRBG_C defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_DHM_C) && !defined(MBEDTLS_BIGNUM_C)
-#error "MBEDTLS_DHM_C defined, but not all prerequisites"
-#endif
-
 #if defined(MBEDTLS_CMAC_C) && \
     ( !defined(MBEDTLS_CIPHER_C ) || ( !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_DES_C) ) )
 #error "MBEDTLS_CMAC_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_NIST_KW_C) && \
-    ( !defined(MBEDTLS_AES_C) || !defined(MBEDTLS_CIPHER_C) )
-#error "MBEDTLS_NIST_KW_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
@@ -160,14 +151,14 @@
 #error "MBEDTLS_ECDSA_C defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_PK_C) && defined(MBEDTLS_USE_PSA_CRYPTO)
+#if defined(MBEDTLS_PK_C)
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN) && !defined(MBEDTLS_ASN1_WRITE_C)
-#error "MBEDTLS_PK_C with MBEDTLS_USE_PSA_CRYPTO needs MBEDTLS_ASN1_WRITE_C for ECDSA signature"
+#error "MBEDTLS_PK_C needs MBEDTLS_ASN1_WRITE_C for ECDSA signature"
 #endif
 #if defined(PSA_HAVE_ALG_ECDSA_VERIFY) && !defined(MBEDTLS_ASN1_PARSE_C)
-#error "MBEDTLS_PK_C with MBEDTLS_USE_PSA_CRYPTO needs MBEDTLS_ASN1_PARSE_C for ECDSA verification"
+#error "MBEDTLS_PK_C needs MBEDTLS_ASN1_PARSE_C for ECDSA verification"
 #endif
-#endif /* MBEDTLS_PK_C && MBEDTLS_USE_PSA_CRYPTO */
+#endif /* MBEDTLS_PK_C */
 
 #if defined(MBEDTLS_ECJPAKE_C) && \
     !defined(MBEDTLS_ECP_C)
@@ -567,39 +558,9 @@
 #error "MBEDTLS_PSA_CRYPTO_SPM defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C) &&    \
-    ! ( defined(MBEDTLS_PSA_CRYPTO_C) && \
-        defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) )
-#error "MBEDTLS_PSA_CRYPTO_SE_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#if defined(MBEDTLS_DEPRECATED_REMOVED)
-#error "MBEDTLS_PSA_CRYPTO_SE_C is deprecated and will be removed in a future version of Mbed TLS"
-#elif defined(MBEDTLS_DEPRECATED_WARNING)
-#warning "MBEDTLS_PSA_CRYPTO_SE_C is deprecated and will be removed in a future version of Mbed TLS"
-#endif
-#endif /* MBEDTLS_PSA_CRYPTO_SE_C */
-
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) &&            \
     ! defined(MBEDTLS_PSA_CRYPTO_C)
 #error "MBEDTLS_PSA_CRYPTO_STORAGE_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY) &&      \
-    !( defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) && \
-       defined(MBEDTLS_ENTROPY_NV_SEED) )
-#error "MBEDTLS_PSA_INJECT_ENTROPY defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY) &&              \
-    !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
-#error "MBEDTLS_PSA_INJECT_ENTROPY is not compatible with actual entropy sources"
-#endif
-
-#if defined(MBEDTLS_PSA_INJECT_ENTROPY) &&              \
-    defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#error "MBEDTLS_PSA_INJECT_ENTROPY is not compatible with MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG"
 #endif
 
 #if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC) &&           \

@@ -35,9 +35,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /* aesni.c relies on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
 #define MBEDTLS_AES_DECRYPT     0 /**< AES decryption. */
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /* Error codes in range 0x0020-0x0022 */
 /** Invalid key length. */
@@ -72,6 +74,7 @@ typedef struct mbedtls_aes_context {
 }
 mbedtls_aes_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
  * \brief The AES XTS context-type definition.
@@ -83,6 +86,14 @@ typedef struct mbedtls_aes_xts_context {
                                                    computation. */
 } mbedtls_aes_xts_context;
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
+
+typedef enum {
+    MBEDTLS_AES_IMP_UNKNOWN = -1,
+    MBEDTLS_AES_IMP_SOFTWARE,
+    MBEDTLS_AES_IMP_AESCE,
+    MBEDTLS_AES_IMP_AESNI_ASM,
+    MBEDTLS_AES_IMP_AESNI_INTRINSICS,
+} mbedtls_aes_implementation;
 
 /**
  * \brief          This function initializes the specified AES context.
@@ -102,6 +113,16 @@ void mbedtls_aes_init(mbedtls_aes_context *ctx);
  *                 Otherwise, the context must have been at least initialized.
  */
 void mbedtls_aes_free(mbedtls_aes_context *ctx);
+
+/**
+ * \brief          This function returns the AES implementation.
+ *
+ *                 The options are: unknown, software AES, AESCE, AESNI
+ *                 assembly, and AESNI intrinsics.
+ *
+ * \return         The enum corresponding to the AES implementation.
+ */
+mbedtls_aes_implementation mbedtls_aes_get_implementation(void);
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
@@ -222,8 +243,8 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
  *
  * \param ctx      The AES context to use for encryption or decryption.
  *                 It must be initialized and bound to a key.
- * \param mode     The AES operation: #MBEDTLS_AES_ENCRYPT or
- *                 #MBEDTLS_AES_DECRYPT.
+ * \param mode     The AES operation: MBEDTLS_AES_ENCRYPT or
+ *                 MBEDTLS_AES_DECRYPT.
  * \param input    The buffer holding the input data.
  *                 It must be readable and at least \c 16 Bytes long.
  * \param output   The buffer where the output data will be written.
@@ -264,8 +285,8 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
  *
  * \param ctx      The AES context to use for encryption or decryption.
  *                 It must be initialized and bound to a key.
- * \param mode     The AES operation: #MBEDTLS_AES_ENCRYPT or
- *                 #MBEDTLS_AES_DECRYPT.
+ * \param mode     The AES operation: MBEDTLS_AES_ENCRYPT or
+ *                 MBEDTLS_AES_DECRYPT.
  * \param length   The length of the input data in Bytes. This must be a
  *                 multiple of the block size (\c 16 Bytes).
  * \param iv       Initialization vector (updated after use).
@@ -303,8 +324,8 @@ int mbedtls_aes_crypt_cbc(mbedtls_aes_context *ctx,
  *
  * \param ctx          The AES XTS context to use for AES XTS operations.
  *                     It must be initialized and bound to a key.
- * \param mode         The AES operation: #MBEDTLS_AES_ENCRYPT or
- *                     #MBEDTLS_AES_DECRYPT.
+ * \param mode         The AES operation: MBEDTLS_AES_ENCRYPT or
+ *                     MBEDTLS_AES_DECRYPT.
  * \param length       The length of a data unit in Bytes. This can be any
  *                     length between 16 bytes and 2^24 bytes inclusive
  *                     (between 1 and 2^20 block cipher blocks).
@@ -359,8 +380,8 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
  *
  * \param ctx      The AES context to use for encryption or decryption.
  *                 It must be initialized and bound to a key.
- * \param mode     The AES operation: #MBEDTLS_AES_ENCRYPT or
- *                 #MBEDTLS_AES_DECRYPT.
+ * \param mode     The AES operation: MBEDTLS_AES_ENCRYPT or
+ *                 MBEDTLS_AES_DECRYPT.
  * \param length   The length of the input data in Bytes.
  * \param iv_off   The offset in IV (updated after use).
  *                 It must point to a valid \c size_t.
@@ -393,7 +414,7 @@ int mbedtls_aes_crypt_cfb128(mbedtls_aes_context *ctx,
  *        Due to the nature of CFB, you must use the same key schedule for
  *        both encryption and decryption operations. Therefore, you must
  *        use the context initialized with mbedtls_aes_setkey_enc() for
- *        both #MBEDTLS_AES_ENCRYPT and #MBEDTLS_AES_DECRYPT.
+ *        both MBEDTLS_AES_ENCRYPT and MBEDTLS_AES_DECRYPT.
  *
  * \note  Upon exit, the content of the IV is updated so that you can
  *        call the same function again on the next
@@ -406,8 +427,8 @@ int mbedtls_aes_crypt_cfb128(mbedtls_aes_context *ctx,
  *
  * \param ctx      The AES context to use for encryption or decryption.
  *                 It must be initialized and bound to a key.
- * \param mode     The AES operation: #MBEDTLS_AES_ENCRYPT or
- *                 #MBEDTLS_AES_DECRYPT
+ * \param mode     The AES operation: MBEDTLS_AES_ENCRYPT or
+ *                 MBEDTLS_AES_DECRYPT
  * \param length   The length of the input data.
  * \param iv       The initialization vector (updated after use).
  *                 It must be a readable and writeable buffer of \c 16 Bytes.
@@ -491,7 +512,7 @@ int mbedtls_aes_crypt_ofb(mbedtls_aes_context *ctx,
  *             Due to the nature of CTR, you must use the same key schedule
  *             for both encryption and decryption operations. Therefore, you
  *             must use the context initialized with mbedtls_aes_setkey_enc()
- *             for both #MBEDTLS_AES_ENCRYPT and #MBEDTLS_AES_DECRYPT.
+ *             for both MBEDTLS_AES_ENCRYPT and MBEDTLS_AES_DECRYPT.
  *
  * \warning    You must never reuse a nonce value with the same key. Doing so
  *             would void the encryption for the two messages encrypted with
@@ -577,6 +598,8 @@ MBEDTLS_CHECK_RETURN_CRITICAL
 int mbedtls_aes_self_test(int verbose);
 
 #endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
