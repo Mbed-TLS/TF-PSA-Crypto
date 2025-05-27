@@ -110,7 +110,6 @@ component_test_tf_psa_crypto_zeroize () {
         gdb_disable_aslr='set disable-randomization off'
     fi
 
-    cd $OUT_OF_SOURCE_DIR
     for optimization_flag in -O2 -O3 -Ofast -Os; do
         for compiler in clang gcc; do
             msg "test: $compiler $optimization_flag, mbedtls_platform_zeroize()"
@@ -125,8 +124,8 @@ component_test_tf_psa_crypto_zeroize () {
             grep "The buffer was correctly zeroized" test_zeroize.log
             not grep -i "error" test_zeroize.log
 
-            # Restore the build directory for the next iteration
-            rm -Rf *
+            make clean
+            rm -rf CMakeCache.txt CMakeFiles/
         done
     done
 }
