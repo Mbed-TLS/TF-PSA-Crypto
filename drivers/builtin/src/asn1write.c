@@ -440,13 +440,8 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
 
 /*
  * to test
- * buffer too small
- * buffer to big
- * different integer length to buffer size
- * Oversize integer length
- * Multiple frames?
  * overlong encoded/negative?
- * test feed in output to input to check endian
+ * add function docs
  */
 int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length) {
 
@@ -473,7 +468,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     
     *p-=integer_length;
 
-    ret = mbedtls_mpi_core_write_be((mbedtls_mpi_uint*) integer, (integer_length + 7)/8, *p, integer_length);
+    ret = mbedtls_mpi_core_write_le((mbedtls_mpi_uint*) integer, (integer_length + 7)/8, *p, integer_length);
 
     if(ret!=0){
         return ret;//This should be impossible to reach as we have already checked we have enough space, return an error just in case though.

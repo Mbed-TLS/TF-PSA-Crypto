@@ -542,7 +542,7 @@ asn1_get_and_parse_integer:"02010707":0:"07"
 TC1 Test for NULL pointer exceptions
 null_pointer_checks
 
-TC2 Outpuy buffer less than minimum size of 3
+TC2 Output buffer less than minimum size of 3
 encode_decode_asn1_bignum:"0123456789123456":1:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
 
 TC3 Output buffer too small for integer
@@ -559,3 +559,6 @@ encode_decode_asn1_bignum:"0123456789123456":10:10
 
 TC7 Functional test of permitted integers
 size_checks
+
+TC8 Endian Check
+endian_check:"0123456789123456":10:10
