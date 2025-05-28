@@ -59,6 +59,18 @@ extern "C" {
  * of integral types defined in "crypto_types.h". */
 #include "crypto_values.h"
 
+/* The file "crypto_sizes.h" contains definitions for size calculation
+ * macros whose definitions are implementation-specific. */
+#include "crypto_sizes.h"
+
+/* The file "crypto_struct.h" contains definitions for
+ * implementation-specific structs that are declared above. */
+#if defined(MBEDTLS_PSA_CRYPTO_STRUCT_FILE)
+#include MBEDTLS_PSA_CRYPTO_STRUCT_FILE
+#else
+#include "crypto_struct.h"
+#endif
+
 /** \defgroup initialization Library initialization
  * @{
  */
@@ -5801,18 +5813,6 @@ psa_status_t psa_export_public_key_iop_abort(psa_export_public_key_iop_t *operat
 
 #ifdef __cplusplus
 }
-#endif
-
-/* The file "crypto_sizes.h" contains definitions for size calculation
- * macros whose definitions are implementation-specific. */
-#include "crypto_sizes.h"
-
-/* The file "crypto_struct.h" contains definitions for
- * implementation-specific structs that are declared above. */
-#if defined(MBEDTLS_PSA_CRYPTO_STRUCT_FILE)
-#include MBEDTLS_PSA_CRYPTO_STRUCT_FILE
-#else
-#include "crypto_struct.h"
 #endif
 
 /* The file "crypto_extra.h" contains vendor-specific definitions. This
