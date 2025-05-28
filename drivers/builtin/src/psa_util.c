@@ -32,8 +32,7 @@
     defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
 #include <mbedtls/rsa.h>
 #endif
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && \
-    defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include <mbedtls/ecp.h>
 #endif
 #if defined(MBEDTLS_PK_C)
@@ -90,8 +89,7 @@ const mbedtls_error_pair_t psa_to_pk_rsa_errors[] =
 };
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && \
-    defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 const mbedtls_error_pair_t psa_to_pk_ecdsa_errors[] =
 {
     { PSA_SUCCESS,                     0 },

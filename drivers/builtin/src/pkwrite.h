@@ -15,9 +15,7 @@
 
 #include "mbedtls/pk.h"
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /*
  * Max sizes of key per types. Shown as tag + len (+ content).
@@ -70,14 +68,10 @@
 /* Find the maximum number of bytes necessary to store an EC point. When USE_PSA
  * is defined this means looking for the maximum between PSA and built-in
  * supported curves. */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #define MBEDTLS_PK_MAX_ECC_BYTES   (PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS) > \
                                     MBEDTLS_ECP_MAX_BYTES ? \
                                     PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS) : \
                                     MBEDTLS_ECP_MAX_BYTES)
-#else /* MBEDTLS_USE_PSA_CRYPTO */
-#define MBEDTLS_PK_MAX_ECC_BYTES   MBEDTLS_ECP_MAX_BYTES
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /*
  * EC public keys:

@@ -79,29 +79,6 @@ typedef enum {
 } mbedtls_pk_type_t;
 
 /**
- * \brief           Options for RSASSA-PSS signature verification.
- *                  See \c mbedtls_rsa_rsassa_pss_verify_ext()
- */
-typedef struct mbedtls_pk_rsassa_pss_options {
-    /** The digest to use for MGF1 in PSS.
-     *
-     * \note When #MBEDTLS_RSA_C is disabled, this must be equal to the \c md_alg argument passed
-     *       to mbedtls_pk_verify_ext(). In a future version of the library, this constraint may
-     *       apply regardless of the status of #MBEDTLS_RSA_C.
-     */
-    mbedtls_md_type_t mgf1_hash_id;
-
-    /** The expected length of the salt, in bytes. This may be
-     * #MBEDTLS_RSA_SALT_LEN_ANY to accept any salt length.
-     *
-     * \note Only #MBEDTLS_RSA_SALT_LEN_ANY is valid. Any other value may be ignored (allowing any
-     *       salt length).
-     */
-    int expected_salt_len;
-
-} mbedtls_pk_rsassa_pss_options;
-
-/**
  * \brief           Maximum size of a signature made by mbedtls_pk_sign().
  */
 /* We need to set MBEDTLS_PK_SIGNATURE_MAX_SIZE to the maximum signature
@@ -130,7 +107,6 @@ typedef struct mbedtls_pk_rsassa_pss_options {
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE MBEDTLS_ECDSA_MAX_LEN
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if PSA_SIGNATURE_MAX_SIZE > MBEDTLS_PK_SIGNATURE_MAX_SIZE
 /* PSA_SIGNATURE_MAX_SIZE is the maximum size of a signature made
  * through the PSA API in the PSA representation. */
@@ -148,28 +124,22 @@ typedef struct mbedtls_pk_rsassa_pss_options {
 #undef MBEDTLS_PK_SIGNATURE_MAX_SIZE
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE (PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE + 11)
 #endif
-#endif /* defined(MBEDTLS_USE_PSA_CRYPTO) */
 
 /* Internal helper to define which fields in the pk_context structure below
  * should be used for EC keys: legacy ecp_keypair or the raw (PSA friendly)
  * format. It should be noted that this only affects how data is stored, not
  * which functions are used for various operations. The overall picture looks
  * like this:
- * - if USE_PSA is not defined and ECP_C is defined then use ecp_keypair data
- *   structure and legacy functions. (MBEDTLS_USE_PSA_CRYPTO is always on and
- *   although this codepath remains present, it never will be taken.)
- * - if USE_PSA is defined and
- *     - if ECP_C then use ecp_keypair structure, convert data to a PSA friendly
- *       format and use PSA functions
- *     - if !ECP_C then use new raw data and PSA functions directly.
+ * - if ECP_C then use ecp_keypair structure, convert data to a PSA friendly
+ *   format and use PSA functions
+ * - if !ECP_C then use new raw data and PSA functions directly.
  *
- * The main reason for the "intermediate" (USE_PSA + ECP_C) above is that as long
+ * The main reason to keep support for the ecp_keypair structure is that as long
  * as ECP_C is defined mbedtls_pk_ec() gives the user a read/write access to the
  * ecp_keypair structure inside the pk_context so they can modify it using
  * ECP functions which are not under PK module's control.
  */
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && \
-    !defined(MBEDTLS_ECP_C)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(MBEDTLS_ECP_C)
 #define MBEDTLS_PK_USE_PSA_EC_DATA
 #endif
 
@@ -212,6 +182,7 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 typedef struct mbedtls_pk_context {
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
     void *MBEDTLS_PRIVATE(pk_ctx);                        /**< Underlying public key context  */
+
     /* The following field is used to store the ID of a private key in the
      * following cases:
      * - opaque key
@@ -225,9 +196,8 @@ typedef struct mbedtls_pk_context {
      * Note: this private key storing solution only affects EC keys, not the
      *       other ones. The latters still use the pk_ctx to store their own
      *       context. */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);      /**< Key ID for opaque keys */
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
+
     /* The following fields are meant for storing the public key in raw format
      * which is handy for:
      * - easily importing it into the PSA context
@@ -331,7 +301,6 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  */
 int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 /**
  * \brief Initialize a PK context to wrap a PSA key.
  *
@@ -343,10 +312,10 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
  * * EC:
  *     * verify, verify_ext, sign, sign_ext: ECDSA.
  * * RSA:
- *     * sign, decrypt: use the primary algorithm in the wrapped PSA key;
+ *     * sign: use the primary algorithm in the wrapped PSA key;
  *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_RSASSA_PSS, otherwise
  *       it falls back to the sign() case;
- *     * verify, verify_ext, encrypt: not supported.
+ *     * verify, verify_ext: not supported.
  *
  * In order for the above operations to succeed, the policy of the wrapped PSA
  * key must allow the specified algorithm.
@@ -370,7 +339,6 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
  */
 int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
                             const mbedtls_svc_key_id_t key);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /**
  * \brief           Get the size in bits of the underlying key
@@ -407,7 +375,6 @@ static inline size_t mbedtls_pk_get_len(const mbedtls_pk_context *ctx)
  */
 int mbedtls_pk_can_do(const mbedtls_pk_context *ctx, mbedtls_pk_type_t type);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 /**
  * \brief           Tell if context can do the operation given by PSA algorithm
  *
@@ -437,7 +404,6 @@ int mbedtls_pk_can_do(const mbedtls_pk_context *ctx, mbedtls_pk_type_t type);
  */
 int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
                           psa_key_usage_t usage);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 /**
@@ -534,7 +500,7 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                        #PSA_ALG_ECDH.
  *                      - #MBEDTLS_PK_OPAQUE: same as the primary algorithm
  *                        set for the underlying PSA key, except that
- *                        sign/decrypt flags are removed if the type is
+ *                        sign flags are removed if the type is
  *                        set to a public key type.
  *                        The underlying key must allow \p usage.
  *                        Note that the enrollment algorithm set with
@@ -606,15 +572,13 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_sign(), mbedtls_pk_verify(),
- *                  mbedtls_pk_encrypt(), mbedtls_pk_decrypt() on the resulting
- *                  PK context will perform the corresponding algorithm for that
- *                  PK context type.
+ *                  Calling mbedtls_pk_sign() or mbedtls_pk_verify(), on the
+ *                  resulting PK context will perform the corresponding
+ *                  algorithm for that PK context type.
  *                  * For ECDSA, the choice of deterministic vs randomized will
  *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
- *                  * For an RSA key, the output PK context will allow both
- *                    encrypt/decrypt and sign/verify regardless of the original
- *                    key's policy.
+ *                  * For an RSA key, the output PK context will allow
+ *                    sign/verify regardless of the original key's policy.
  *                    The original key's policy determines the output key's padding
  *                    mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
  *                    otherwise PKCS1 v1.5 is set.
@@ -641,14 +605,12 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_verify() or
- *                  mbedtls_pk_encrypt() on the resulting
+ *                  Calling mbedtls_pk_verify() on the resulting
  *                  PK context will perform the corresponding algorithm for that
  *                  PK context type.
  *
- *                  For an RSA key, the output PK context will allow both
- *                  encrypt and verify regardless of the original key's policy.
- *                  The original key's policy determines the output key's padding
+ *                  For an RSA key,
+ *                  the original key's policy determines the output key's padding
  *                  mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
  *                  otherwise PKCS1 v1.5 is set.
  *
@@ -856,49 +818,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 const unsigned char *hash, size_t hash_len,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len,
                                 mbedtls_pk_restart_ctx *rs_ctx);
-
-/**
- * \brief           Decrypt message (including padding if relevant).
- *
- * \param ctx       The PK context to use. It must have been set up
- *                  with a private key.
- * \param input     Input to decrypt
- * \param ilen      Input size
- * \param output    Decrypted output
- * \param olen      Decrypted message length
- * \param osize     Size of the output buffer
- *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
- *                  the underlying RSA context. For a pk object constructed by
- *                  parsing, this is PKCS#1 v1.5 by default.
- *
- * \return          0 on success, or a specific error code.
- */
-int mbedtls_pk_decrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize);
-
-/**
- * \brief           Encrypt message (including padding if relevant).
- *
- * \param ctx       The PK context to use. It must have been set up.
- * \param input     Message to encrypt
- * \param ilen      Message size
- * \param output    Encrypted output
- * \param olen      Encrypted output length
- * \param osize     Size of the output buffer
- *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
- *                  either PKCS#1 v1.5 or OAEP, depending on the padding mode in
- *                  the underlying RSA context. For a pk object constructed by
- *                  parsing, this is PKCS#1 v1.5 by default.
- *
- * \return          0 on success, or a specific error code.
- */
-int mbedtls_pk_encrypt(mbedtls_pk_context *ctx,
-                       const unsigned char *input, size_t ilen,
-                       unsigned char *output, size_t *olen, size_t osize);
 
 /**
  * \brief           Check if a public-private pair of keys matches.

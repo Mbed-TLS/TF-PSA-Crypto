@@ -15,9 +15,7 @@
 
 #include "mbedtls/pk.h"
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#endif
 
 struct mbedtls_pk_info_t {
     /** Public key type */
@@ -56,14 +54,6 @@ struct mbedtls_pk_info_t {
                         void *rs_ctx);
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
 
-    /** Decrypt message */
-    int (*decrypt_func)(mbedtls_pk_context *pk, const unsigned char *input, size_t ilen,
-                        unsigned char *output, size_t *olen, size_t osize);
-
-    /** Encrypt message */
-    int (*encrypt_func)(mbedtls_pk_context *pk, const unsigned char *input, size_t ilen,
-                        unsigned char *output, size_t *olen, size_t osize);
-
     /** Check public-private key pair */
     int (*check_pair_func)(mbedtls_pk_context *pub, mbedtls_pk_context *prv);
 
@@ -98,7 +88,6 @@ extern const mbedtls_pk_info_t mbedtls_eckeydh_info;
 extern const mbedtls_pk_info_t mbedtls_ecdsa_info;
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 extern const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info;
 extern const mbedtls_pk_info_t mbedtls_rsa_opaque_info;
 
@@ -109,7 +98,5 @@ int mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t psa_alg_md,
                                 unsigned char *sig, size_t sig_size,
                                 size_t *sig_len);
 #endif /* MBEDTLS_RSA_C */
-
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #endif /* MBEDTLS_PK_WRAP_H */
