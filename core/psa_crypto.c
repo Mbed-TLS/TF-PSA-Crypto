@@ -9349,8 +9349,8 @@ exit:
 }
 
 psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
-    const psa_key_attributes_t * attributes,
-    mbedtls_svc_key_id_t * key)
+                                     const psa_key_attributes_t *attributes,
+                                     mbedtls_svc_key_id_t *key)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t abort_status = PSA_ERROR_CORRUPTION_DETECTED;

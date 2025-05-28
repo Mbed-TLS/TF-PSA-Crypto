@@ -3158,7 +3158,9 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
             TEST_EQUAL(psa_pake_get_shared_key(&operation, &attributes, &shared_key_id),
                        expected_status);
 
-            psa_key_derivation_input_key(&implicit_key, PSA_KEY_DERIVATION_INPUT_SECRET, shared_key_id);
+            psa_key_derivation_input_key(&implicit_key,
+                                         PSA_KEY_DERIVATION_INPUT_SECRET,
+                                         shared_key_id);
 
             psa_destroy_key(shared_key_id);
 
