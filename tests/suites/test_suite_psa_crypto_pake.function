@@ -922,7 +922,7 @@ exit:
 /* BEGIN_CASE */
 void ecjpake_size_macros()
 {
-    const psa_algorithm_t alg = PSA_ALG_JPAKE_BASE;
+    const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
     const size_t bits = 256;
     const psa_pake_primitive_t prim = PSA_PAKE_PRIMITIVE(
         PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, bits);

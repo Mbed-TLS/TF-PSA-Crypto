@@ -994,10 +994,6 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
                policy_alg;
     }
 
-    if (PSA_ALG_IS_JPAKE(policy_alg) && PSA_ALG_IS_JPAKE(requested_alg)) {
-        return policy_alg == PSA_ALG_JPAKE_BASE;
-    }
-
     /* If it isn't explicitly permitted, it's forbidden. */
     return 0;
 }
@@ -8898,8 +8894,7 @@ psa_status_t psa_pake_setup(
         goto exit;
     }
 
-    if (PSA_ALG_IS_PAKE(cipher_suite->algorithm) == 0 ||
-        PSA_ALG_IS_HASH(psa_pake_cs_get_hash(cipher_suite)) == 0) {
+    if (PSA_ALG_IS_PAKE(cipher_suite->algorithm) == 0) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }
