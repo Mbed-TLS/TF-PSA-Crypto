@@ -1546,12 +1546,11 @@ void size_checks(){
     TEST_CALLOC(input, max_integer_length);
     TEST_CALLOC(endian_swap, max_integer_length);
 
-    for(size_t i=8; i< max_integer_length; i=i+8){
+    p = asn1_frame + max_frame_length;
 
-        memset(input, 0x01, i);
+    for(size_t i=1; i< max_integer_length; i++){
 
-
-        p = asn1_frame + max_frame_length;
+        memset(input, 0x12, i);
 
         output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame, input, i);
 
@@ -1562,11 +1561,14 @@ void size_checks(){
         if(output_buffer_length>0){
             TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + max_frame_length, &integer_head, &integer_length), 0);//TODO capture return
             if(*(char *)&n == 1) { //detect processor endian and convert to it if required.
-                mbedtls_mpi_core_write_be((const mbedtls_mpi_uint*)integer_head, integer_length/8, endian_swap, integer_length);
+                mbedtls_mpi_core_write_be((const mbedtls_mpi_uint*)integer_head, (integer_length + 7)/8, endian_swap, integer_length);
             }else{
                 endian_swap = integer_head;
             }
             TEST_MEMORY_COMPARE(input, i, endian_swap, integer_length);
+        }
+        if((p-(i*2))<asn1_frame) {
+            p = asn1_frame + max_frame_length;
         }
     }
 

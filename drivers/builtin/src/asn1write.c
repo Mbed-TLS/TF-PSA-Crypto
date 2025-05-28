@@ -445,6 +445,7 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
  * different integer length to buffer size
  * Oversize integer length
  * Multiple frames?
+ * overlong encoded/negative?
  */
 int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length) {
 
@@ -458,7 +459,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     }
 
     if(input_buffer_size<1){
-        mbedtls_printf("bjwt: file=%s, line=%i, nuffer less than zero or negative\n", __FILE__, __LINE__);
+        mbedtls_printf("bjwt: file=%s, line=%i, buffer less than one or negative\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC2 input too small TODO check error.
     }
 
@@ -470,7 +471,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     
     *p-=integer_length;
 
-    ret = mbedtls_mpi_core_write_be((mbedtls_mpi_uint*) integer, integer_length/8, *p, integer_length);
+    ret = mbedtls_mpi_core_write_be((mbedtls_mpi_uint*) integer, (integer_length + 7)/8, *p, integer_length);
 
     if(ret!=0){
         return MBEDTLS_ERR_ASN1_INVALID_DATA;//TC7 mbedtls_mpi_core_write_le failed.
