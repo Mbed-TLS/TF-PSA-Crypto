@@ -1484,35 +1484,28 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-//input bignum integer
-//long integer test integer that is too large
-//buffer_test, test buffer that is too smalll or large.
-//expected result expected output of the function.
-//declare the frame internally
 void encode_decode_asn1_bignum(const data_t *input, int asn1_frame_length, int expected_result)
 {
     int n = 1;
     int output_buffer_length;
     unsigned char* p = NULL;
     unsigned char *endian_swap=NULL;
+    unsigned char *asn1_frame=NULL;
     size_t integer_length;
-    data_t asn1_frame;//TODO remove this.
 
-    asn1_frame.x=NULL;
-    asn1_frame.len=asn1_frame_length;
-    TEST_CALLOC(asn1_frame.x, asn1_frame.len);
+    TEST_CALLOC(asn1_frame, asn1_frame_length);
     TEST_CALLOC(endian_swap, input->len);
 
     unsigned char *integer_head = NULL;
 
-    p = asn1_frame.x + asn1_frame.len;
+    p = asn1_frame + asn1_frame_length;
 
-    output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame.x, input->x, input->len);
+    output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame, input->x, input->len);
 
     TEST_EQUAL(output_buffer_length,expected_result);
 
     if(output_buffer_length>0){
-        TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame.x + asn1_frame.len, &integer_head, &integer_length), 0);//TODO capture return
+        TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + asn1_frame_length, &integer_head, &integer_length), 0);//TODO capture return
         if(*(char *)&n == 1) { //detect processor endian and convert to it if required.
             mbedtls_mpi_core_write_be((const mbedtls_mpi_uint*)integer_head, integer_length/8, endian_swap, integer_length);
         }else{
@@ -1522,7 +1515,7 @@ void encode_decode_asn1_bignum(const data_t *input, int asn1_frame_length, int e
     }
 
 exit:
-    mbedtls_free(asn1_frame.x);
+    mbedtls_free(asn1_frame);
     mbedtls_free(endian_swap);
 }
 /* END_CASE */
