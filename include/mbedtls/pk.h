@@ -198,7 +198,7 @@ typedef struct mbedtls_pk_context {
     uint8_t MBEDTLS_PRIVATE(pub_raw)[MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN]; /**< Raw public key   */
     size_t MBEDTLS_PRIVATE(pub_raw_len);            /**< Valid bytes in "pub_raw" */
     psa_ecc_family_t MBEDTLS_PRIVATE(ec_family);    /**< EC family of pk */
-    size_t MBEDTLS_PRIVATE(ec_bits);                /**< Curve's bits of pk */
+    size_t MBEDTLS_PRIVATE(bits);                /**< Curve's bits of pk */
 } mbedtls_pk_context;
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)

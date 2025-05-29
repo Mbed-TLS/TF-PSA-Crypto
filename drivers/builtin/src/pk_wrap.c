@@ -275,7 +275,7 @@ static int eckey_can_do(mbedtls_pk_type_t type)
 
 static size_t eckey_get_bitlen(mbedtls_pk_context *pk)
 {
-    return pk->ec_bits;
+    return pk->bits;
 }
 
 #if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
@@ -381,7 +381,7 @@ static int ecdsa_verify_wrap(mbedtls_pk_context *pk,
 {
     (void) md_alg;
     psa_ecc_family_t curve = pk->ec_family;
-    size_t curve_bits = pk->ec_bits;
+    size_t curve_bits = pk->bits;
 
     return ecdsa_verify_psa(pk->pub_raw, pk->pub_raw_len, curve, curve_bits,
                             hash, hash_len, sig, sig_len);
@@ -522,7 +522,7 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    ret = mbedtls_ecdsa_der_to_raw(pk->ec_bits, sig, sig_len,
+    ret = mbedtls_ecdsa_der_to_raw(pk->bits, sig, sig_len,
                                    raw_sig, sizeof(raw_sig), &raw_sig_len);
     if (ret != 0) {
         return ret;
@@ -535,7 +535,7 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         psa_algorithm_t alg = PSA_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg));
         psa_set_key_algorithm(&attr, alg);
         psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_PUBLIC_KEY(pk->ec_family));
-        psa_set_key_bits(&attr, pk->ec_bits);
+        psa_set_key_bits(&attr, pk->bits);
         psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE);
 
         status = psa_import_key(&attr, pk->pub_raw, pk->pub_raw_len, &rs_ctx->pub_id);
@@ -605,7 +605,7 @@ static int eckey_sign_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
         return PSA_PK_TO_MBEDTLS_ERR(status);
     }
 
-    return mbedtls_ecdsa_raw_to_der(pk->ec_bits, sig, *sig_len, sig, sig_size, sig_len);
+    return mbedtls_ecdsa_raw_to_der(pk->bits, sig, *sig_len, sig, sig_size, sig_len);
 }
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #endif /* MBEDTLS_ECP_RESTARTABLE */

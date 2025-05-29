@@ -258,7 +258,7 @@ static int pk_setup(mbedtls_pk_context *pk, mbedtls_pk_type_t pk_type, int curve
         TEST_EQUAL(get_predefined_key_data(1, curve_or_keybits, &key_data, &key_data_len,
                                            &pub_key_data, &pub_key_data_len), 0);
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-        pk->ec_family = mbedtls_ecc_group_to_psa(curve_or_keybits, &pk->ec_bits);
+        pk->ec_family = mbedtls_ecc_group_to_psa(curve_or_keybits, &pk->bits);
         TEST_EQUAL(pk_psa_import_key(key_data, key_data_len,
                                      PSA_KEY_TYPE_ECC_KEY_PAIR(pk->ec_family),
                                      PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH |
@@ -408,7 +408,7 @@ static int pk_public_same(const mbedtls_pk_context *pk1,
             TEST_MEMORY_COMPARE(pk1->pub_raw, pk1->pub_raw_len,
                                 pk2->pub_raw, pk2->pub_raw_len);
             TEST_EQUAL(pk1->ec_family, pk2->ec_family);
-            TEST_EQUAL(pk1->ec_bits, pk2->ec_bits);
+            TEST_EQUAL(pk1->bits, pk2->bits);
         }
         break;
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
@@ -1026,7 +1026,7 @@ void pk_ec_test_vec(int type, int id, data_t *key, data_t *hash,
     TEST_ASSERT(mbedtls_pk_can_do(&pk, MBEDTLS_PK_ECDSA));
     TEST_ASSERT(key->len <= MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN);
     memcpy(pk.pub_raw, key->x, key->len);
-    pk.ec_family = mbedtls_ecc_group_to_psa(id, &(pk.ec_bits));
+    pk.ec_family = mbedtls_ecc_group_to_psa(id, &(pk.bits));
     pk.pub_raw_len = key->len;
 
     // MBEDTLS_MD_NONE is used since it will be ignored.
