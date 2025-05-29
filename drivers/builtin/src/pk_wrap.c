@@ -276,7 +276,7 @@ static int eckey_can_do(mbedtls_pk_type_t type)
 static size_t eckey_get_bitlen(mbedtls_pk_context *pk)
 {
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
-    return pk->ec_bits;
+    return pk->bits;
 #else /* MBEDTLS_PK_USE_PSA_EC_DATA */
     mbedtls_ecp_keypair *ecp = (mbedtls_ecp_keypair *) pk->pk_ctx;
     return ecp->grp.pbits;
@@ -387,7 +387,7 @@ static int ecdsa_verify_wrap(mbedtls_pk_context *pk,
 {
     (void) md_alg;
     psa_ecc_family_t curve = pk->ec_family;
-    size_t curve_bits = pk->ec_bits;
+    size_t curve_bits = pk->bits;
 
     return ecdsa_verify_psa(pk->pub_raw, pk->pub_raw_len, curve, curve_bits,
                             hash, hash_len, sig, sig_len);

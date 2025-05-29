@@ -102,7 +102,7 @@ static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_c
         psa_reset_key_attributes(&opaque_attrs);
     } else {
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
-        id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->ec_bits);
+        id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->bits);
 #else /* MBEDTLS_PK_USE_PSA_EC_DATA */
         id = mbedtls_pk_ec_ro(*pk)->grp.id;
 #endif /* MBEDTLS_PK_USE_PSA_EC_DATA */

@@ -22,13 +22,13 @@ int mbedtls_pk_ecc_set_group(mbedtls_pk_context *pk, mbedtls_ecp_group_id grp_id
 
     /* group may already be initialized; if so, make sure IDs match */
     if ((pk->ec_family != 0 && pk->ec_family != ec_family) ||
-        (pk->ec_bits != 0 && pk->ec_bits != ec_bits)) {
+        (pk->bits != 0 && pk->bits != ec_bits)) {
         return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
     }
 
     /* set group */
     pk->ec_family = ec_family;
-    pk->ec_bits = ec_bits;
+    pk->bits = ec_bits;
 
     return 0;
 #else /* MBEDTLS_PK_USE_PSA_EC_DATA */

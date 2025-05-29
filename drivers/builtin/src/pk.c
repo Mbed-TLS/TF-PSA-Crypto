@@ -47,7 +47,7 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx)
     memset(ctx->pub_raw, 0, sizeof(ctx->pub_raw));
     ctx->pub_raw_len = 0;
     ctx->ec_family = 0;
-    ctx->ec_bits = 0;
+    ctx->bits = 0;
 #endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
 }
 
@@ -422,7 +422,7 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
             int derive_ok = (pk_type != MBEDTLS_PK_ECDSA);
 #if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             psa_ecc_family_t family = pk->ec_family;
-            size_t bits = pk->ec_bits;
+            size_t bits = pk->bits;
             int has_private = 0;
             if (pk->priv_id != MBEDTLS_SVC_KEY_ID_INIT) {
                 has_private = 1;
