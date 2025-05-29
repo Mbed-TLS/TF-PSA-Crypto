@@ -464,6 +464,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     ret = mbedtls_mpi_core_write_le((mbedtls_mpi_uint*) integer, (integer_length + 7)/8, *p, integer_length);
 
     if(ret!=0){
+        *p=start+input_buffer_size;
         return ret;//This should be impossible to reach as we have already checked we have enough space, return an error just in case though.
     }
 
@@ -472,6 +473,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     //
     if (sign == 1 && **p & 0x80) {
         if (*p - start < 1) {
+            *p=start+input_buffer_size;
             return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
         }
 
@@ -481,8 +483,10 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
 
     asn1_frame_size=mbedtls_asn1_write_len_and_tag(p, start, integer_length, MBEDTLS_ASN1_INTEGER);
     if(asn1_frame_size<0){
+        *p=start+input_buffer_size;
         return asn1_frame_size;//TC4 mbedtls_asn1_write_len_and_tag failed. 
     }else if(asn1_frame_size>(int)input_buffer_size){
+        *p=start+input_buffer_size;
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL; //TC5 Buffer too small for frame. 
     }
 
