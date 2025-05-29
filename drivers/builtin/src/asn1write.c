@@ -453,12 +453,8 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
         return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
     }
 
-    if(input_buffer_size<3){
-        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC2 buffer too small for 1 byte integer and header.
-    }
-
-    if(input_buffer_size<integer_length){
-        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size.
+    if((input_buffer_size<integer_length) || (input_buffer_size<3)){
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size. TC2 buffer too small for 1 byte integer and header.
     }
 
     memset(start, 0, input_buffer_size);
