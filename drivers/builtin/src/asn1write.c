@@ -443,7 +443,7 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
  * overlong encoded/negative?
  * add function docs
  */
-int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length) {
+int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length, int sign) {
 
     int ret = 0;
     int asn1_frame_size = 0;
@@ -473,6 +473,18 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     if(ret!=0){
         return ret;//This should be impossible to reach as we have already checked we have enough space, return an error just in case though.
     }
+
+    // DER format assumes 2s complement for numbers, so the leftmost bit
+    // should be 0 for positive numbers and 1 for negative numbers.
+    //
+    if (sign == 1 && **p & 0x80) {
+        if (*p - start < 1) {
+            return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+        }
+
+        *--(*p) = 0x00;
+        integer_length += 1;
+    }   
 
     asn1_frame_size=mbedtls_asn1_write_len_and_tag(p, start, integer_length, MBEDTLS_ASN1_INTEGER);
     if(asn1_frame_size<0){
