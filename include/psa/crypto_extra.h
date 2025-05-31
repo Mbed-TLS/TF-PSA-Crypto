@@ -550,9 +550,11 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  */
 #define PSA_ALG_JPAKE_BASE                      ((psa_algorithm_t) 0x0a000100)
 
-#define PSA_ALG_JPAKE(hash_alg)                 (PSA_ALG_JPAKE_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
+#define PSA_ALG_JPAKE(hash_alg) \
+    (PSA_ALG_JPAKE_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
 
-#define PSA_ALG_IS_JPAKE(alg)                   (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_JPAKE_BASE)
+#define PSA_ALG_IS_JPAKE(alg) \
+    (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_JPAKE_BASE)
 
 /** @} */
 

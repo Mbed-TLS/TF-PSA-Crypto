@@ -224,7 +224,7 @@ psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
         if (cipher_suite.type != PSA_PAKE_PRIMITIVE_TYPE_ECC ||
             cipher_suite.family != PSA_ECC_FAMILY_SECP_R1 ||
             cipher_suite.bits != 256 ||
-            psa_pake_cs_get_hash(&cipher_suite) != PSA_ALG_SHA_256) {
+            PSA_ALG_GET_HASH(cipher_suite.algorithm) != PSA_ALG_SHA_256) {
             status = PSA_ERROR_NOT_SUPPORTED;
             goto error;
         }
