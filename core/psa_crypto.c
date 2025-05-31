@@ -8858,7 +8858,7 @@ static psa_status_t psa_pake_set_password_key(
         type != PSA_KEY_TYPE_PASSWORD_HASH) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
-        }
+    }
 
     operation->data.inputs.password = mbedtls_calloc(1, slot->key.bytes);
     if (operation->data.inputs.password == NULL) {
@@ -8870,10 +8870,10 @@ static psa_status_t psa_pake_set_password_key(
     operation->data.inputs.password_len = slot->key.bytes;
     operation->data.inputs.attributes = slot->attr;
 
-    exit:
-        if (status != PSA_SUCCESS) {
-            psa_pake_abort(operation);
-        }
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_pake_abort(operation);
+    }
     unlock_status = psa_unregister_read_under_mutex(slot);
     return (status == PSA_SUCCESS) ? unlock_status : status;
 }
