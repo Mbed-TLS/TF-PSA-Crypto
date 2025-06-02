@@ -445,7 +445,6 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
  */
 int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length, int sign) {
 
-    int ret = 0;
     int asn1_frame_size = 0;
     size_t input_buffer_size = (*p-start);
 
@@ -461,12 +460,7 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     
     *p-=integer_length;
 
-    ret = mbedtls_mpi_core_write_le((mbedtls_mpi_uint*) integer, (integer_length + 7)/8, *p, integer_length);
-
-    if(ret!=0){
-        *p=start+input_buffer_size;
-        return ret;//This should be impossible to reach as we have already checked we have enough space, return an error just in case though.
-    }
+    memcpy(*p, integer, integer_length);
 
     // DER format assumes 2s complement for numbers, so the leftmost bit
     // should be 0 for positive numbers and 1 for negative numbers.

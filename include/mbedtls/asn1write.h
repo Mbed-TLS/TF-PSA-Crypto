@@ -364,6 +364,9 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
 
 /**
  * \brief                  Encode an integer into ASN1 and write it to a buffer.
+ *                         The function takes a big endian bignum buffer that
+ *                         begins at start and ends at *p and encodes it into
+ *                         a asn1 frame.
  *                         Warning: Destructive behaviour for the buffer data!
  *
  * \param p                The reference to the current position pointer.
@@ -375,7 +378,7 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  *
  * \return                 An integer number of bytes written on success.
  * \return                 An appropriate error code on failure.
- * \return                 On success p will be set to point to the start of the frame, 
+ * \return                 On success p will be set to point to the start of the frame,
  *                         on failure it will be set ot the end of the buffer.
  */
 int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length, int sign);
