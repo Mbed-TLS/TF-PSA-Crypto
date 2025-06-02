@@ -22,7 +22,7 @@ int main(int argc, char **argv)
         return 1;
     }
     //opens the file, get its size, and reads it into a buffer
-    #ifdef WIN32 
+    #ifdef WIN32
     errno_t err = 0;
     err = fopen_s( &fp, argv[1], "rb");
     if (err != 0) {
