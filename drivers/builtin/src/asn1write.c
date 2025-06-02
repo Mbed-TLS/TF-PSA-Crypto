@@ -446,7 +446,9 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
 int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length, int sign) {
 
     int asn1_frame_size = 0;
+    int number_of_leading_zeros = 0;
     size_t input_buffer_size = (*p-start);
+    unsigned char* integer_start = NULL;
 
     if((*p == NULL) || (start == NULL) || (integer == NULL)){
         return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
@@ -458,9 +460,18 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
 
     memset(start, 0, input_buffer_size);
     
-    *p-=integer_length;
+    // asn1 specifies that the bignum must be encoded in the minimum allowable space, so leading zeros must be removed.
+    while(integer[number_of_leading_zeros]==0x0){
+        number_of_leading_zeros++;
+    }
+    
+    integer_start = (unsigned char*) integer + number_of_leading_zeros;
 
-    memcpy(*p, integer, integer_length);
+    integer_length -= number_of_leading_zeros;
+
+    *p -= integer_length;
+
+    memcpy(*p, integer_start, integer_length);
 
     // DER format assumes 2s complement for numbers, so the leftmost bit
     // should be 0 for positive numbers and 1 for negative numbers.

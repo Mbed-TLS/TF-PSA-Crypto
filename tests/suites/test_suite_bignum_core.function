@@ -1525,7 +1525,8 @@ exit:
 /* BEGIN_CASE */
 void encode_decode_asn1_bignum(const data_t *input, int asn1_frame_length, int expected_result, int sign)
 {
-    int output_buffer_length;
+    int output_buffer_length = 0;
+    int number_of_leading_zeros = 0;
     unsigned char* p = NULL;
     unsigned char *asn1_frame=NULL;
     size_t integer_length;
@@ -1541,8 +1542,11 @@ void encode_decode_asn1_bignum(const data_t *input, int asn1_frame_length, int e
     TEST_EQUAL(output_buffer_length,expected_result);
 
     if(output_buffer_length>0){
+        while(input->x[number_of_leading_zeros]==0x0){
+            number_of_leading_zeros++;
+        }
         TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + asn1_frame_length, &integer_head, &integer_length), 0);
-        TEST_MEMORY_COMPARE(input->x, input->len, integer_head, integer_length);//bjwt TODO ask Giles about 8.3.2 behaviour in the parse
+        TEST_MEMORY_COMPARE(input->x + number_of_leading_zeros, input->len - number_of_leading_zeros, integer_head, integer_length);
     }
 
 exit:
