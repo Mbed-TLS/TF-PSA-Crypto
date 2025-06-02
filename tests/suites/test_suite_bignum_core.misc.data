@@ -539,38 +539,38 @@ asn1_get_and_parse_integer:"028201000123456789abcdef0123456789abcdef0123456789ab
 Parse raw ASN.1 integer, correct encoding, more data than needed
 asn1_get_and_parse_integer:"02010707":0:"07"
 
-TC1 Test for NULL pointer exceptions
+asn_write TC1 Test for NULL pointer exceptions
 null_pointer_checks
 
-TC2 Output buffer less than minimum size of 3
+asn_write TC2 Output buffer less than minimum size of 3
 encode_decode_asn1_bignum:"1234567891234567":1:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL:1
 
-TC3 Output buffer too small for integer
+asn_write TC3 Output buffer too small for integer
 encode_decode_asn1_bignum:"1234567891234567":4:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL:1
 
-TC4 Output buffer too small for frame
+asn_write TC4 Output buffer too small for frame
 encode_decode_asn1_bignum:"1234567891234567":8:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL:1
 
-TC5 Large output buffer
+asn_write TC5 Large output buffer
 encode_decode_asn1_bignum:"1234567891234567":11:10:1
 
-TC6 Basic test positive
+asn_write TC6 Basic test positive
 encode_decode_asn1_bignum:"1234567891234567":10:10:1
 
-TC7 Basic test negative
+asn_write TC7 Basic test negative
 encode_decode_asn1_bignum:"1234567891234567":10:10:-1
 
-TC8 Functional test of permitted integers positive
+asn_write TC8 Functional test of permitted integers positive
 size_checks:1
 
-TC9 Functional test of permitted integers negative
+asn_write TC9 Functional test of permitted integers negative
 size_checks:-1
 
-TC10 Endian Check
+asn_write TC10 Endian Check
 endian_check:"0123456789123456":10:10:1
 
-TC11 X.690-0207 Clause 8.3.2 1's
+asn_write TC11 X.690-0207 Clause 8.3.2 1's
 encode_decode_asn1_bignum:"FF01456789123456":11:11:1
 
-TC12 X.690-0207 Clause 8.3.2 leading zero's
+asn_write TC12 X.690-0207 Clause 8.3.2 leading zero's
 encode_decode_asn1_bignum:"0023456789123456":10:9:1
