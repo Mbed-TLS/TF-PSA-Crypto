@@ -220,7 +220,6 @@
     defined(MBEDTLS_SHA256_C) || \
     defined(MBEDTLS_SHA384_C) || \
     defined(MBEDTLS_SHA512_C) || \
-    defined(MBEDTLS_SHA3_C) || \
     defined(MBEDTLS_RIPEMD160_C)
 #define MBEDTLS_MD_SOME_LEGACY
 #endif
@@ -377,6 +376,15 @@
 #if defined(PSA_WANT_ALG_GCM) || defined(PSA_WANT_ALG_CCM) || \
     defined(PSA_WANT_ALG_CHACHA20_POLY1305)
 #define MBEDTLS_SSL_HAVE_AEAD
+#endif
+
+// Temporary definition to menage the removal of MBEDTLS_SHA3_C.
+// After all PR of the removal is merged this needs to be deleted.
+#if defined(PSA_WANT_ALG_SHA3_224) || \
+    defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SHA3_384) || \
+    defined(PSA_WANT_ALG_SHA3_512)
+#define MBEDTLS_SHA3_C
 #endif
 
 #endif /* MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H */

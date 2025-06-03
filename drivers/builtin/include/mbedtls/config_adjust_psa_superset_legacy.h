@@ -61,13 +61,6 @@
 #define PSA_WANT_ALG_SHA_512 1
 #endif
 
-#if defined(MBEDTLS_SHA3_C)
-#define PSA_WANT_ALG_SHA3_224 1
-#define PSA_WANT_ALG_SHA3_256 1
-#define PSA_WANT_ALG_SHA3_384 1
-#define PSA_WANT_ALG_SHA3_512 1
-#endif
-
 /* Ensure that the PSA's supported curves (PSA_WANT_ECC_xxx) are always a
  * superset of the builtin ones (MBEDTLS_ECP_DP_xxx). */
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
