@@ -373,15 +373,19 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  * \param start            The start of the buffer, for bounds-checking.
  * \param integer          The start of the integer buffer.
  * \param integer_length   The size of the integer in the buffer.
- * \param sign             The signess of the integer in the buffer 1 for 
- *                         positive and -1 for negetive.
+ * \param sign             The signess of the integer in the buffer 1 for
+ *                         positive and -1 for negative.
  *
  * \return                 An integer number of bytes written on success.
  * \return                 An appropriate error code on failure.
  * \return                 On success p will be set to point to the start of the frame,
  *                         on failure it will be set ot the end of the buffer.
  */
-int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const unsigned char *integer, size_t integer_length, int sign);
+int mbedtls_asn1_write_integer(unsigned char **p,
+                               unsigned char *start,
+                               const unsigned char *integer,
+                               size_t integer_length,
+                               int sign);
 
 #ifdef __cplusplus
 }
