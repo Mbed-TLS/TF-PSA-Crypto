@@ -56,7 +56,7 @@
     {{ capability.names[entry_point]}}
     {% else -%}
     {{driver.prefix}}_{{driver.type}}_{{entry_point}}
-    {% endif -%}
+    {%- endif -%}
 {% endmacro %}
 /* END-Common Macro definitions */
 
@@ -74,6 +74,18 @@ static inline psa_status_t psa_driver_wrapper_init( void )
         return( status );
 #endif
 
+{% with entry_point = "init" -%}
+{% for driver in drivers -%}
+{% for capability in driver.capabilities if entry_point in capability.entry_points -%}
+#if ({% if capability['mbedtls/c_condition'] is defined -%}{{ capability['mbedtls/c_condition'] }} {% else -%} {{ 1 }} {% endif %})
+    status = {{ entry_point_name(capability, entry_point, driver) }}( );
+    if( status != PSA_SUCCESS )
+        return( status );
+#endif
+{% endfor -%}
+{% endfor -%}
+{% endwith %}
+
     (void) status;
     return( PSA_SUCCESS );
 }
@@ -84,6 +96,16 @@ static inline void psa_driver_wrapper_free( void )
     mbedtls_test_transparent_free( );
     mbedtls_test_opaque_free( );
 #endif
+
+{% with entry_point = "free" -%}
+{% for driver in drivers -%}
+{% for capability in driver.capabilities if entry_point in capability.entry_points -%}
+#if ({% if capability['mbedtls/c_condition'] is defined -%}{{ capability['mbedtls/c_condition'] }} {% else -%} {{ 1 }} {% endif %})
+    {{ entry_point_name(capability, entry_point, driver) }}( );
+#endif
+{% endfor -%}
+{% endfor -%}
+{% endwith %}
 }
 
 /* Start delegation functions */
