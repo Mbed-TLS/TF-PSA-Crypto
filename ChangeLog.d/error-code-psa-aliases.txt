@@ -1,0 +1,4 @@
+API changes
+   * Change MBEDTLS_ERR_ECP_IN_PROGRESS to be an alias of
+     PSA_OPERATION_INCOMPLETE and MBEDTLS_ERR_RSA_VERIFY_FAILED to be an alias
+     of PSA_ERROR_INVALID_SIGNATURE.

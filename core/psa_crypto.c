@@ -325,6 +325,12 @@ static int psa_is_dh_key_size_valid(size_t bits)
 
 psa_status_t mbedtls_to_psa_error(int ret)
 {
+    /* Only legacy error codes need to be translated.
+     * Those are either a low-level error code (-127..-2)
+     * or a high-level error code (<= -0x1000). */
+    if (ret > -0x1000 && ret < -0x80) {
+        return (psa_status_t) ret;
+    }
     /* Mbed TLS error codes can combine a high-level error code and a
      * low-level error code. The low-level error usually reflects the
      * root cause better, so dispatch on that preferably. */

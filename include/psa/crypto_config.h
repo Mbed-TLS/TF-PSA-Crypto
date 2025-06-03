@@ -895,8 +895,7 @@
  * PSA crypto subsystem.
  *
  * If this option is unset, the library chooses a hash (currently between
- * #MBEDTLS_MD_SHA512 and #MBEDTLS_MD_SHA256) based on availability and
- * unspecified heuristics.
+ * SHA512 and SHA256) based on availability and unspecified heuristics.
  *
  * \note The PSA crypto subsystem uses the first available mechanism amongst
  *       the following:
@@ -1592,7 +1591,7 @@
  * Enable "non-blocking" ECC operations that can return early and be resumed.
  *
  * This allows various functions to pause by returning
- * #MBEDTLS_ERR_ECP_IN_PROGRESS and then be called later again in
+ * #PSA_OPERATION_INCOMPLETE and then be called later again in
  * order to further progress and eventually complete their operation. This is
  * controlled through mbedtls_ecp_set_max_ops() which limits the maximum
  * number of ECC operations a function may perform before pausing; see

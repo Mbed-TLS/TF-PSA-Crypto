@@ -476,16 +476,15 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                    based on the #mbedtls_pk_type_t type of \p pk,
  *                    the chosen \p usage and other factors:
  *                      - #MBEDTLS_PK_RSA whose underlying
- *                        #mbedtls_rsa_context has the padding mode
- *                        #MBEDTLS_RSA_PKCS_V15:
+ *                        context uses the PKCS#1 v1.5 padding mode:
  *                        #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH)
  *                        if \p usage is SIGN/VERIFY, and
  *                        #PSA_ALG_RSA_PKCS1V15_CRYPT
  *                        if \p usage is ENCRYPT/DECRYPT.
  *                      - #MBEDTLS_PK_RSA whose underlying
- *                        #mbedtls_rsa_context has the padding mode
- *                        #MBEDTLS_RSA_PKCS_V21 and the digest type
- *                        corresponding to the PSA algorithm \c hash:
+ *                        context uses the PKCS#1 v2.1 padding mode
+ *                        and the digest type corresponding to the PSA
+ *                        algorithm \c hash:
  *                        #PSA_ALG_RSA_PSS_ANY_SALT(#PSA_ALG_ANY_HASH)
  *                        if \p usage is SIGN/VERIFY, and
  *                        #PSA_ALG_RSA_OAEP(\c hash)
@@ -630,14 +629,6 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  *
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used.
- *                  This can be #MBEDTLS_MD_NONE if the signature algorithm
- *                  does not rely on a hash algorithm (non-deterministic
- *                  ECDSA, RSA PKCS#1 v1.5).
- *                  For PKCS#1 v1.5, if \p md_alg is #MBEDTLS_MD_NONE, then
- *                  \p hash is the DigestInfo structure used by RFC 8017
- *                  &sect;9.2 steps 3&ndash;6. If \p md_alg is a valid hash
- *                  algorithm then \p hash is the digest itself, and this
- *                  function calculates the DigestInfo encoding internally.
  * \param hash      Hash of the message to sign
  * \param hash_len  Hash length
  * \param sig       Signature to verify
@@ -651,7 +642,7 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  *                  a different algorithm.
  *
  * \return          0 on success (signature is valid),
- *                  #MBEDTLS_ERR_RSA_VERIFY_FAILED if there is a valid
+ *                  #PSA_ERROR_INVALID_SIGNATURE if there is a valid
  *                  signature in \p sig but its length is less than \p sig_len,
  *                  or a specific error code.
  */
@@ -676,7 +667,7 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  * \param rs_ctx    Restart context (NULL to disable restart)
  *
  * \return          See \c mbedtls_pk_verify(), or
- * \return          #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
+ * \return          #PSA_OPERATION_INCOMPLETE if maximum number of
  *                  operations was reached: see \c mbedtls_ecp_set_max_ops().
  */
 int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
@@ -701,14 +692,12 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  * \return          0 on success (signature is valid),
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
  *                  used for this type of signatures,
- *                  #MBEDTLS_ERR_RSA_VERIFY_FAILED if there is a valid
+ *                  #PSA_ERROR_INVALID_SIGNATURE if there is a valid
  *                  signature in \p sig but its length is less than \p sig_len,
  *                  or a specific error code.
  *
  * \note            If hash_len is 0, then the length associated with md_alg
  *                  is used instead, or an error returned if it is invalid.
- *
- * \note            md_alg may be MBEDTLS_MD_NONE, only if hash_len != 0
  *
  * \note            \p options parameter is kept for backward compatibility.
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
@@ -746,8 +735,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
  *
  * \return          0 on success, or a specific error code.
  *
- * \note            For RSA, md_alg may be MBEDTLS_MD_NONE if hash_len != 0.
- *                  For ECDSA, md_alg may never be MBEDTLS_MD_NONE.
  */
 int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                     const unsigned char *hash, size_t hash_len,
@@ -775,9 +762,6 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \note            When \p pk_type is #MBEDTLS_PK_RSASSA_PSS,
  *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
- *
- * \note            For RSA, md_alg may be MBEDTLS_MD_NONE if hash_len != 0.
- *                  For ECDSA, md_alg may never be MBEDTLS_MD_NONE.
  *
  */
 int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
@@ -810,7 +794,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
  * \param rs_ctx    Restart context (NULL to disable restart)
  *
  * \return          See \c mbedtls_pk_sign().
- * \return          #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
+ * \return          #PSA_OPERATION_INCOMPLETE if maximum number of
  *                  operations was reached: see \c mbedtls_ecp_set_max_ops().
  */
 int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
@@ -967,9 +951,6 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *ctx,
  * \note            On entry, ctx must be empty, either freshly initialised
  *                  with mbedtls_pk_init() or reset with mbedtls_pk_free(). If you need a
  *                  specific key type, check the result with mbedtls_pk_can_do().
- *
- * \note            For compressed points, see #MBEDTLS_ECP_PF_COMPRESSED for
- *                  limitations.
  *
  * \note            The key is also checked for correctness.
  *
