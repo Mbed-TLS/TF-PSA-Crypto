@@ -111,7 +111,7 @@ static int pk_can_ecdsa(const mbedtls_pk_context *ctx)
  * END_DEPENDENCIES
  */
 
-/* BEGIN_CASE depends_on:MBEDTLS_RSA_C:MBEDTLS_FS_IO */
+/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_FS_IO */
 void pk_parse_keyfile_rsa(char *key_file, char *password, int result)
 {
     mbedtls_pk_context ctx;
@@ -119,7 +119,7 @@ void pk_parse_keyfile_rsa(char *key_file, char *password, int result)
     int res;
     char *pwd = password;
 
-    MD_PSA_INIT();
+    PSA_INIT();
 
     if (strcmp(pwd, "NULL") == 0) {
         pwd = NULL;
@@ -130,17 +130,13 @@ void pk_parse_keyfile_rsa(char *key_file, char *password, int result)
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        mbedtls_rsa_context *rsa;
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_RSA));
-        rsa = mbedtls_pk_rsa(ctx);
-        TEST_EQUAL(mbedtls_rsa_check_privkey(rsa), 0);
+        TEST_EQUAL(mbedtls_pk_get_bitlen(&ctx), ctx.bits);
+        TEST_EQUAL(mbedtls_pk_get_len(&ctx), PSA_BITS_TO_BYTES(ctx.bits));
 
-        size_t bitlen = mbedtls_rsa_get_bitlen(rsa);
-        TEST_EQUAL(mbedtls_pk_get_bitlen(&ctx), bitlen);
-        TEST_EQUAL(mbedtls_pk_get_len(&ctx), (bitlen + 7) / 8);
+        TEST_ASSERT(mbedtls_pk_rsa_set_pubkey_from_prv(&ctx) == 0);
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-        PSA_INIT();
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_SIGN_HASH));
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_SIGN_MESSAGE));
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_DECRYPT));
@@ -157,31 +153,26 @@ exit:
 
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_RSA_C:MBEDTLS_FS_IO */
+/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_FS_IO */
 void pk_parse_public_keyfile_rsa(char *key_file, int result)
 {
     mbedtls_pk_context ctx;
     mbedtls_pk_init(&ctx);
     int res;
 
-    MD_PSA_INIT();
+    PSA_INIT();
 
     res = mbedtls_pk_parse_public_keyfile(&ctx, key_file);
 
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        mbedtls_rsa_context *rsa;
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_RSA));
-        rsa = mbedtls_pk_rsa(ctx);
-        TEST_EQUAL(mbedtls_rsa_check_pubkey(rsa), 0);
 
-        size_t bitlen = mbedtls_rsa_get_bitlen(rsa);
-        TEST_EQUAL(mbedtls_pk_get_bitlen(&ctx), bitlen);
-        TEST_EQUAL(mbedtls_pk_get_len(&ctx), (bitlen + 7) / 8);
+        TEST_EQUAL(mbedtls_pk_get_bitlen(&ctx), ctx.bits);
+        TEST_EQUAL(mbedtls_pk_get_len(&ctx), PSA_BITS_TO_BYTES(ctx.bits));
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-        PSA_INIT();
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_VERIFY_HASH));
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_VERIFY_MESSAGE));
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_ENCRYPT));
