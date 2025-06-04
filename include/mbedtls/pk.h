@@ -176,6 +176,19 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
     PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+
+#define MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN \
+    PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
+
+#define MBEDTLS_PK_MAX_PUBKEY_RAW_LEN \
+    (MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN > MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN) ? \
+    MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN : MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN
+
+typedef enum {
+    MBEDTLS_PK_RSA_PKCS_V15 = 0,
+    MBEDTLS_PK_RSA_PKCS_V21,
+} mbedtls_pk_rsa_padding_t;
+
 /**
  * \brief           Public key container
  */
@@ -198,32 +211,28 @@ typedef struct mbedtls_pk_context {
      *       context. */
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);      /**< Key ID for opaque keys */
 
-    /* The following fields are meant for storing the public key in raw format
-     * which is handy for:
-     * - easily importing it into the PSA context
-     * - reducing the ECP module dependencies in the PK one.
-     *
-     * When MBEDTLS_PK_USE_PSA_EC_DATA is enabled:
-     * - the pk_ctx above is not used anymore for storing the public key
-     *   inside the ecp_keypair structure
-     * - the following fields are used for all public key operations: signature
-     *   verify, key pair check and key write.
-     * - For a key pair, priv_id contains the private key. For a public key,
-     *   priv_id is null.
-     * Of course, when MBEDTLS_PK_USE_PSA_EC_DATA is not enabled, the legacy
-     * ecp_keypair structure is used for storing the public key and performing
-     * all the operations.
-     *
-     * Note: This new public key storing solution only works for EC keys, not
-     *       other ones. The latters still use pk_ctx to store their own
-     *       context.
-     */
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
-    uint8_t MBEDTLS_PRIVATE(pub_raw)[MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN]; /**< Raw public key   */
-    size_t MBEDTLS_PRIVATE(pub_raw_len);            /**< Valid bytes in "pub_raw" */
-    psa_ecc_family_t MBEDTLS_PRIVATE(ec_family);    /**< EC family of pk */
-    size_t MBEDTLS_PRIVATE(bits);                /**< Curve's bits of pk */
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
+#if defined(MBEDTLS_PK_USE_PSA_EC_DATA) || defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    /* Public EC or RSA key in raw format, where raw here means the format returned
+     * by psa_export_public_key(). */
+    uint8_t MBEDTLS_PRIVATE(pub_raw)[MBEDTLS_PK_MAX_PUBKEY_RAW_LEN];
+
+    /* Lenght of the raw key above in bytes. */
+    size_t MBEDTLS_PRIVATE(pub_raw_len);
+
+    /* Bits of the private/public key. */
+    size_t MBEDTLS_PRIVATE(bits);
+
+    /* EC family. Only applies to EC keys. */
+    psa_ecc_family_t MBEDTLS_PRIVATE(ec_family);
+
+    /* Padding associated to the RSA key. It only affects RSA public key since
+     * the private one is imported into PSA with v1.5 as main algorithm and
+     * v2.1 as enrollment algorithm. */
+    mbedtls_pk_rsa_padding_t MBEDTLS_PRIVATE(rsa_padding);
+
+    /* Hash algorithm to be used with RSA public key. */
+    psa_algorithm_t rsa_hash_alg;
+#endif /* MBEDTLS_PK_USE_PSA_EC_DATA || PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 } mbedtls_pk_context;
 
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
