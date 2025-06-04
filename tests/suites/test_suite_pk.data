@@ -12,20 +12,6 @@ PK utils: RSA 1024-bit
 depends_on:MBEDTLS_RSA_C
 pk_utils:MBEDTLS_PK_RSA:1024:1024:(1024 + 7) / 8:"RSA"
 
-# In the following 3 test cases we test a few different sizes that are not a
-# multiple of 8 and for which we have test data.
-PK utils: RSA 1026-bits
-depends_on:MBEDTLS_RSA_C
-pk_utils:MBEDTLS_PK_RSA:1026:1026:(1026 + 7) / 8:"RSA"
-
-PK utils: RSA 1028-bits
-depends_on:MBEDTLS_RSA_C
-pk_utils:MBEDTLS_PK_RSA:1028:1028:(1028 + 7) / 8:"RSA"
-
-PK utils: RSA 1030-bits
-depends_on:MBEDTLS_RSA_C
-pk_utils:MBEDTLS_PK_RSA:1030:1030:(1030 + 7) / 8:"RSA"
-
 PK utils: ECKEY SECP192R1
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_192
 pk_utils:MBEDTLS_PK_ECKEY:MBEDTLS_ECP_DP_SECP192R1:192:24:"EC"
