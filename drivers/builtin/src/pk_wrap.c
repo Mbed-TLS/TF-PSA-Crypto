@@ -46,7 +46,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
 static int rsa_can_do(mbedtls_pk_type_t type)
 {
     return type == MBEDTLS_PK_RSA ||
@@ -55,24 +55,19 @@ static int rsa_can_do(mbedtls_pk_type_t type)
 
 static size_t rsa_get_bitlen(mbedtls_pk_context *pk)
 {
-    const mbedtls_rsa_context *rsa = (const mbedtls_rsa_context *) pk->pk_ctx;
-    return mbedtls_rsa_get_bitlen(rsa);
+    return pk->bits;
 }
 
 static int rsa_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                            const unsigned char *hash, size_t hash_len,
                            const unsigned char *sig, size_t sig_len)
 {
-    mbedtls_rsa_context *rsa = (mbedtls_rsa_context *) pk->pk_ctx;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_status_t status;
-    int key_len;
-    unsigned char buf[MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES];
-    unsigned char *p = buf + sizeof(buf);
     psa_algorithm_t psa_alg_md;
-    size_t rsa_len = mbedtls_rsa_get_len(rsa);
+    size_t rsa_len = mbedtls_pk_get_len(pk);
 
 #if SIZE_MAX > UINT_MAX
     if (md_alg == MBEDTLS_MD_NONE && UINT_MAX < hash_len) {
@@ -80,7 +75,7 @@ static int rsa_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
     }
 #endif
 
-    if (mbedtls_rsa_get_padding_mode(rsa) == MBEDTLS_RSA_PKCS_V21) {
+    if (pk->rsa_padding == MBEDTLS_PK_RSA_PKCS_V21) {
         psa_alg_md = PSA_ALG_RSA_PSS(mbedtls_md_psa_alg_from_type(md_alg));
     } else {
         psa_alg_md = PSA_ALG_RSA_PKCS1V15_SIGN(mbedtls_md_psa_alg_from_type(md_alg));
@@ -90,18 +85,11 @@ static int rsa_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
         return MBEDTLS_ERR_RSA_VERIFY_FAILED;
     }
 
-    key_len = mbedtls_rsa_write_pubkey(rsa, buf, &p);
-    if (key_len <= 0) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
     psa_set_key_algorithm(&attributes, psa_alg_md);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
 
-    status = psa_import_key(&attributes,
-                            buf + sizeof(buf) - key_len, key_len,
-                            &key_id);
+    status = psa_import_key(&attributes, pk->pub_raw, pk->pub_raw_len, &key_id);
     if (status != PSA_SUCCESS) {
         ret = PSA_PK_TO_MBEDTLS_ERR(status);
         goto cleanup;
@@ -125,63 +113,21 @@ cleanup:
 }
 
 int  mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t alg,
-                                 mbedtls_rsa_context *rsa_ctx,
+                                 mbedtls_pk_context *pk,
                                  const unsigned char *hash, size_t hash_len,
                                  unsigned char *sig, size_t sig_size,
                                  size_t *sig_len)
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_status_t status;
-    int key_len;
-    unsigned char *buf = NULL;
-    unsigned char *p;
 
-    buf = mbedtls_calloc(1, MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES);
-    if (buf == NULL) {
-        return MBEDTLS_ERR_PK_ALLOC_FAILED;
-    }
-    p = buf + MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES;
-
-    *sig_len = mbedtls_rsa_get_len(rsa_ctx);
+    *sig_len = mbedtls_pk_get_len(pk);
     if (sig_size < *sig_len) {
-        mbedtls_free(buf);
         return MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
     }
 
-    key_len = mbedtls_rsa_write_key(rsa_ctx, buf, &p);
-    if (key_len <= 0) {
-        mbedtls_free(buf);
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH);
-    psa_set_key_algorithm(&attributes, alg);
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_KEY_PAIR);
-
-    status = psa_import_key(&attributes,
-                            buf + MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES - key_len, key_len,
-                            &key_id);
-    if (status != PSA_SUCCESS) {
-        ret = PSA_PK_TO_MBEDTLS_ERR(status);
-        goto cleanup;
-    }
-    status = psa_sign_hash(key_id, alg, hash, hash_len,
+    status = psa_sign_hash(pk->priv_id, alg, hash, hash_len,
                            sig, sig_size, sig_len);
-    if (status != PSA_SUCCESS) {
-        ret = PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-        goto cleanup;
-    }
-
-    ret = 0;
-
-cleanup:
-    mbedtls_free(buf);
-    status = psa_destroy_key(key_id);
-    if (ret == 0 && status != PSA_SUCCESS) {
-        ret = PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-    return ret;
+    return PSA_PK_TO_MBEDTLS_ERR(status);
 }
 
 static int rsa_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
@@ -194,37 +140,32 @@ static int rsa_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
     psa_algorithm_t psa_alg;
-    if (mbedtls_rsa_get_padding_mode(mbedtls_pk_rsa(*pk)) == MBEDTLS_RSA_PKCS_V21) {
+    if (pk->rsa_padding == MBEDTLS_PK_RSA_PKCS_V21) {
         psa_alg = PSA_ALG_RSA_PSS(psa_md_alg);
     } else {
         psa_alg = PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg);
     }
 
-    return mbedtls_pk_psa_rsa_sign_ext(psa_alg, pk->pk_ctx, hash, hash_len,
+    return mbedtls_pk_psa_rsa_sign_ext(psa_alg, pk, hash, hash_len,
                                        sig, sig_size, sig_len);
 }
 
 static int rsa_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *prv)
 {
-    return mbedtls_rsa_check_pub_priv((const mbedtls_rsa_context *) pub->pk_ctx,
-                                      (const mbedtls_rsa_context *) prv->pk_ctx);
-}
+    psa_status_t status;
+    uint8_t exp_pub_key[MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN];
+    size_t exp_pub_key_len;
 
-static void *rsa_alloc_wrap(void)
-{
-    void *ctx = mbedtls_calloc(1, sizeof(mbedtls_rsa_context));
-
-    if (ctx != NULL) {
-        mbedtls_rsa_init((mbedtls_rsa_context *) ctx);
+    status = psa_export_public_key(prv->priv_id, exp_pub_key, sizeof(exp_pub_key),
+                                   &exp_pub_key_len);
+    if (status != PSA_SUCCESS) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    return ctx;
-}
-
-static void rsa_free_wrap(void *ctx)
-{
-    mbedtls_rsa_free((mbedtls_rsa_context *) ctx);
-    mbedtls_free(ctx);
+    if (memcmp(pub->pub_raw, exp_pub_key, exp_pub_key_len) != 0) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+    return 0;
 }
 
 static void rsa_debug(mbedtls_pk_context *pk, mbedtls_pk_debug_item *items)
@@ -256,11 +197,11 @@ const mbedtls_pk_info_t mbedtls_rsa_info = {
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = rsa_check_pair_wrap,
-    .ctx_alloc_func = rsa_alloc_wrap,
-    .ctx_free_func = rsa_free_wrap,
+    .ctx_alloc_func = NULL,
+    .ctx_free_func = NULL,
     .debug_func = rsa_debug,
 };
-#endif /* MBEDTLS_RSA_C */
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 /*

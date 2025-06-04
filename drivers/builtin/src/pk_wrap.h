@@ -75,7 +75,7 @@ struct mbedtls_pk_info_t {
     void (*debug_func)(mbedtls_pk_context *pk, mbedtls_pk_debug_item *items);
 
 };
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
 extern const mbedtls_pk_info_t mbedtls_rsa_info;
 #endif
 
@@ -91,12 +91,12 @@ extern const mbedtls_pk_info_t mbedtls_ecdsa_info;
 extern const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info;
 extern const mbedtls_pk_info_t mbedtls_rsa_opaque_info;
 
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
 int mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t psa_alg_md,
-                                mbedtls_rsa_context *rsa_ctx,
+                                mbedtls_pk_context *pk,
                                 const unsigned char *hash, size_t hash_len,
                                 unsigned char *sig, size_t sig_size,
                                 size_t *sig_len);
-#endif /* MBEDTLS_RSA_C */
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #endif /* MBEDTLS_PK_WRAP_H */
