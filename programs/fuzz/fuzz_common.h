@@ -24,5 +24,5 @@ int dummy_entropy(void *data, unsigned char *output, size_t len);
 int fuzz_recv_timeout(void *ctx, unsigned char *buf, size_t len,
                       uint32_t timeout);
 
-/* Implemented in the fuzz_*.c sources and required by onefile.c */
+/* Implemented in the fuzz_*.c sources and required by fuzz_onefile.c */
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);

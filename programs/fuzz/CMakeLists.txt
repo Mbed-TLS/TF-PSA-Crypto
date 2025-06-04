@@ -23,7 +23,7 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     set(exe_sources ${exe}.c)
     if(NOT FUZZINGENGINE_LIB)
-        list(APPEND exe_sources onefile.c)
+        list(APPEND exe_sources fuzz_onefile.c)
     endif()
 
     # This emulates "if ( ... IN_LIST ... )" which becomes available in CMake 3.3
