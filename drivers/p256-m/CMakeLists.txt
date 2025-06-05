@@ -12,7 +12,7 @@ target_include_directories(${p256m_target}
          $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
          $<INSTALL_INTERFACE:include>
   PRIVATE ${TF_PSA_CRYPTO_DIR}/core
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/p256-m>)
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/p256-m>
           $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/tf-psa-crypto/private/>)
 set_config_files_compile_definitions(${p256m_target})
 
