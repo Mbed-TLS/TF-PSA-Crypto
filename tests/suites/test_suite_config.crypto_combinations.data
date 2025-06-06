@@ -1,5 +1,21 @@
 # Interesting combinations of low-level crypto options
 
+Config: entropy: built-in only
+depends_on:MBEDTLS_PSA_BUILTIN_GET_ENTROPY:!MBEDTLS_PSA_DRIVER_GET_ENTROPY:!MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: entropy: driver only
+depends_on:!MBEDTLS_PSA_BUILTIN_GET_ENTROPY:MBEDTLS_PSA_DRIVER_GET_ENTROPY:!MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: entropy: NV seed only
+depends_on:!MBEDTLS_PSA_BUILTIN_GET_ENTROPY:!MBEDTLS_PSA_DRIVER_GET_ENTROPY:MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: entropy: built-in + NV seed
+depends_on:MBEDTLS_PSA_BUILTIN_GET_ENTROPY:!MBEDTLS_PSA_DRIVER_GET_ENTROPY:MBEDTLS_ENTROPY_NV_SEED
+pass:
+
 Config: ECC: Weierstrass curves only
 depends_on:MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED:!MBEDTLS_ECP_MONTGOMERY_ENABLED
 pass:
