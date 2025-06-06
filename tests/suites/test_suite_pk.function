@@ -936,13 +936,13 @@ void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
     mbedtls_rsa_context *rsa;
     mbedtls_pk_context pk;
     mbedtls_pk_restart_ctx *rs_ctx = NULL;
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_pk_restart_ctx ctx;
 
     rs_ctx = &ctx;
     mbedtls_pk_restart_init(rs_ctx);
     // this setting would ensure restart would happen if ECC was used
-    mbedtls_ecp_set_max_ops(1);
+    psa_interruptible_set_max_ops(1);
 #endif
 
     mbedtls_pk_init(&pk);
@@ -971,7 +971,7 @@ void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
     TEST_EQUAL(actual_result, expected_result);
 
 exit:
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_pk_restart_free(rs_ctx);
 #endif
     mbedtls_pk_free(&pk);
