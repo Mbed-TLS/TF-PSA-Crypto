@@ -650,10 +650,6 @@
 #endif
 #undef MBEDTLS_THREADING_IMPL // temporary macro defined above
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && !defined(MBEDTLS_PSA_CRYPTO_CLIENT)
-#error "MBEDTLS_USE_PSA_CRYPTO defined, but not all prerequisites"
-#endif
-
 #if defined(MBEDTLS_HAVE_INT32) && defined(MBEDTLS_HAVE_INT64)
 #error "MBEDTLS_HAVE_INT32 and MBEDTLS_HAVE_INT64 cannot be defined simultaneously"
 #endif /* MBEDTLS_HAVE_INT32 && MBEDTLS_HAVE_INT64 */
