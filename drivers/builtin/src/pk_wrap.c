@@ -441,8 +441,6 @@ static int ecdsa_opaque_sign_wrap(mbedtls_pk_context *pk,
                           sig_len);
 }
 
-/* When PK_USE_PSA_EC_DATA is defined opaque and non-opaque keys end up
- * using the same function. */
 #define ecdsa_sign_wrap     ecdsa_opaque_sign_wrap
 
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
@@ -637,10 +635,7 @@ static int eckey_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *pr
     return eckey_check_pair_psa(pub, prv);
 }
 
-/* When PK_USE_PSA_EC_DATA is defined opaque and non-opaque keys end up
- * using the same function. */
 #define ecdsa_opaque_check_pair_wrap    eckey_check_pair_wrap
-
 
 static void eckey_debug(mbedtls_pk_context *pk, mbedtls_pk_debug_item *items)
 {
