@@ -148,6 +148,7 @@ typedef enum {
     MBEDTLS_PK_DEBUG_MPI,
     MBEDTLS_PK_DEBUG_ECP,
     MBEDTLS_PK_DEBUG_PSA_EC,
+    MBEDTLS_PK_DEBUG_PSA_RSA,
 } mbedtls_pk_debug_type;
 
 /**

@@ -170,17 +170,9 @@ static int rsa_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *prv)
 
 static void rsa_debug(mbedtls_pk_context *pk, mbedtls_pk_debug_item *items)
 {
-    mbedtls_rsa_context *rsa = (mbedtls_rsa_context *) pk->pk_ctx;
-
-    items->type = MBEDTLS_PK_DEBUG_MPI;
-    items->name = "rsa.N";
-    items->value = &(rsa->N);
-
-    items++;
-
-    items->type = MBEDTLS_PK_DEBUG_MPI;
-    items->name = "rsa.E";
-    items->value = &(rsa->E);
+    items->type = MBEDTLS_PK_DEBUG_PSA_RSA;
+    items->name = "rsa";
+    items->value = pk;
 }
 
 const mbedtls_pk_info_t mbedtls_rsa_info = {
