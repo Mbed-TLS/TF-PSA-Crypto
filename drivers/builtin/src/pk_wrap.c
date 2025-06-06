@@ -512,10 +512,11 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
 {
     mbedtls_pk_psa_restartable_ctx_t *rs_ctx = _rs_ctx;
     psa_verify_hash_interruptible_operation_t *op;
-    psa_status_t status_tmp, status = PSA_SUCCESS;
+    psa_status_t status_tmp = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     unsigned char raw_sig[PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE];
     size_t raw_sig_len;
-    int ret;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
     if (rs_ctx->op_type != MBEDTLS_PK_RS_OP_VERIFY) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
@@ -573,7 +574,8 @@ static int eckey_sign_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
 {
     mbedtls_pk_psa_restartable_ctx_t *rs_ctx = _rs_ctx;
     psa_sign_hash_interruptible_operation_t *op;
-    psa_status_t tmp_status, status = 0;
+    psa_status_t tmp_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     if (rs_ctx->op_type != MBEDTLS_PK_RS_OP_SIGN) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
