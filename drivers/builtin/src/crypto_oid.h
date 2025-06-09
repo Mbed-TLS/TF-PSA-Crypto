@@ -28,9 +28,7 @@
  * the public API, Hide it from scripts/generate_errors.pl, which
  * is in the mbedtls repository, and would complain because it doesn't
  * recognize the header name "crypto_oid.h". */
-#define MBEDTLS_ERR_OID_NOT_FOUND                         (-0x002E)
-/* output buffer is too small */
-#define MBEDTLS_ERR_OID_BUF_TOO_SMALL (PSA_ERROR_BUFFER_TOO_SMALL)
+#define MBEDTLS_ERR_OID_NOT_FOUND                         PSA_ERROR_NOT_SUPPORTED
 
 /* This is for the benefit of X.509, but defined here in order to avoid
  * having a "backwards" include of x.509.h here */
