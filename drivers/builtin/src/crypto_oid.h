@@ -458,17 +458,6 @@ typedef struct mbedtls_oid_descriptor_t {
 } mbedtls_oid_descriptor_t;
 
 /**
- * \brief          Translate an X.509 attribute type OID into the short name
- *                 (e.g. the OID for an X520 Common Name into "CN")
- *
- * \param oid      OID to use
- * \param short_name    place to store the string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_attr_short_name(const mbedtls_asn1_buf *oid, const char **short_name);
-
-/**
  * \brief          Translate PublicKeyAlgorithm OID into pk_type
  *
  * \param oid      OID to use
