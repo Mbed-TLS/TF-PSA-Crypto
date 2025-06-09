@@ -11,7 +11,7 @@
 
 #include "mbedtls/pk.h"
 #include "mbedtls/asn1write.h"
-#include "mbedtls/crypto_oid.h"
+#include "crypto_oid.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 #include "pk_internal.h"

@@ -10,6 +10,6 @@
 #ifndef MBEDTLS_OID_H
 #define MBEDTLS_OID_H
 
-#include "mbedtls/crypto_oid.h"
+#include "crypto_oid.h"
 
 #endif /* oid.h */
