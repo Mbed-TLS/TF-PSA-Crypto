@@ -27,13 +27,8 @@
 /*
  * Macro to generate mbedtls_oid_descriptor_t
  */
-#if 1 /* OID_INFO_STRINGS */
-#define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s), name, description }
-#define NULL_OID_DESCRIPTOR                   { NULL, 0, NULL, NULL }
-#else
 #define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s) }
 #define NULL_OID_DESCRIPTOR                   { NULL, 0 }
-#endif /* OID_INFO_STRINGS */
 
 /*
  * Macro to generate an internal function for oid_XXX_from_asn1() (used by
@@ -57,21 +52,6 @@
         }                                                               \
         return NULL;                                                 \
     }
-
-#if 1 /* OID_INFO_STRINGS */
-/*
- * Macro to generate a function for retrieving a single attribute from the
- * descriptor of an mbedtls_oid_descriptor_t wrapper.
- */
-#define FN_OID_GET_DESCRIPTOR_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
-    int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1)                  \
-    {                                                                       \
-        const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);        \
-        if (data == NULL) return MBEDTLS_ERR_OID_NOT_FOUND;            \
-        *ATTR1 = data->descriptor.ATTR1;                                    \
-        return 0;                                                        \
-    }
-#endif /* OID_INFO_STRINGS */
 
 /*
  * Macro to generate a function for retrieving a single attribute from an
@@ -325,46 +305,6 @@ static const oid_x509_ext_t oid_x509_ext[] =
 FN_OID_TYPED_FROM_ASN1(oid_x509_ext_t, x509_ext, oid_x509_ext)
 FN_OID_GET_ATTR1(mbedtls_oid_get_x509_ext_type, oid_x509_ext_t, x509_ext, int, ext_type)
 
-#if 1 /* OID_INFO_STRINGS */
-static const mbedtls_oid_descriptor_t oid_ext_key_usage[] =
-{
-    OID_DESCRIPTOR(MBEDTLS_OID_SERVER_AUTH,
-                   "id-kp-serverAuth",
-                   "TLS Web Server Authentication"),
-    OID_DESCRIPTOR(MBEDTLS_OID_CLIENT_AUTH,
-                   "id-kp-clientAuth",
-                   "TLS Web Client Authentication"),
-    OID_DESCRIPTOR(MBEDTLS_OID_CODE_SIGNING,     "id-kp-codeSigning",     "Code Signing"),
-    OID_DESCRIPTOR(MBEDTLS_OID_EMAIL_PROTECTION, "id-kp-emailProtection", "E-mail Protection"),
-    OID_DESCRIPTOR(MBEDTLS_OID_TIME_STAMPING,    "id-kp-timeStamping",    "Time Stamping"),
-    OID_DESCRIPTOR(MBEDTLS_OID_OCSP_SIGNING,     "id-kp-OCSPSigning",     "OCSP Signing"),
-    OID_DESCRIPTOR(MBEDTLS_OID_WISUN_FAN,
-                   "id-kp-wisun-fan-device",
-                   "Wi-SUN Alliance Field Area Network (FAN)"),
-    NULL_OID_DESCRIPTOR,
-};
-
-FN_OID_TYPED_FROM_ASN1(mbedtls_oid_descriptor_t, ext_key_usage, oid_ext_key_usage)
-FN_OID_GET_ATTR1(mbedtls_oid_get_extended_key_usage,
-                 mbedtls_oid_descriptor_t,
-                 ext_key_usage,
-                 const char *,
-                 description)
-
-static const mbedtls_oid_descriptor_t oid_certificate_policies[] =
-{
-    OID_DESCRIPTOR(MBEDTLS_OID_ANY_POLICY,      "anyPolicy",       "Any Policy"),
-    NULL_OID_DESCRIPTOR,
-};
-
-FN_OID_TYPED_FROM_ASN1(mbedtls_oid_descriptor_t, certificate_policies, oid_certificate_policies)
-FN_OID_GET_ATTR1(mbedtls_oid_get_certificate_policies,
-                 mbedtls_oid_descriptor_t,
-                 certificate_policies,
-                 const char *,
-                 description)
-#endif /* OID_INFO_STRINGS */
-
 /*
  * For SignatureAlgorithmIdentifier
  */
@@ -469,14 +409,6 @@ static const oid_sig_alg_t oid_sig_alg[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_sig_alg_t, sig_alg, oid_sig_alg)
-
-#if 1 /* OID_INFO_STRINGS */
-FN_OID_GET_DESCRIPTOR_ATTR1(mbedtls_oid_get_sig_alg_desc,
-                            oid_sig_alg_t,
-                            sig_alg,
-                            const char *,
-                            description)
-#endif /* OID_INFO_STRINGS */
 
 FN_OID_GET_ATTR2(mbedtls_oid_get_sig_alg,
                  oid_sig_alg_t,

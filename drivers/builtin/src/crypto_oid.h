@@ -477,10 +477,6 @@ extern "C" {
 typedef struct mbedtls_oid_descriptor_t {
     const char *MBEDTLS_PRIVATE(asn1);               /*!< OID ASN.1 representation       */
     size_t MBEDTLS_PRIVATE(asn1_len);                /*!< length of asn1                 */
-#if 1 /* OID_INFO_STRINGS */
-    const char *MBEDTLS_PRIVATE(name);               /*!< official name (e.g. from RFC)  */
-    const char *MBEDTLS_PRIVATE(description);        /*!< human friendly description     */
-#endif
 } mbedtls_oid_descriptor_t;
 
 /**
@@ -628,28 +624,6 @@ int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_h
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_md_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg);
-
-#if 1 /* OID_INFO_STRINGS */
-/**
- * \brief          Translate Extended Key Usage OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_extended_key_usage(const mbedtls_asn1_buf *oid, const char **desc);
-#endif /* OID_INFO_STRINGS */
-
-/**
- * \brief          Translate certificate policies OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_certificate_policies(const mbedtls_asn1_buf *oid, const char **desc);
 
 /**
  * \brief          Translate md_type into hash algorithm OID
