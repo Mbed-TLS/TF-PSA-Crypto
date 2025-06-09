@@ -538,16 +538,6 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
 int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_hmac);
 
 /**
- * \brief          Translate hash algorithm OID into md_type
- *
- * \param oid      OID to use
- * \param md_alg   place to store message digest algorithm
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_md_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg);
-
-/**
  * \brief          Translate md_type into hash algorithm OID
  *
  * \param md_alg   message digest algorithm

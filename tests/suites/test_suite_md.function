@@ -48,10 +48,6 @@ void mbedtls_md_list()
         /* Check that we have an OID definition */
         TEST_EQUAL(mbedtls_oid_get_oid_by_md((mbedtls_md_type_t) *md_type_ptr,
                                              (const char **) &asn1.p, &asn1.len), 0);
-        /* Check that this OID definition maps back to the correct mbedtls_md_type_t */
-        mbedtls_md_type_t m;
-        TEST_EQUAL(mbedtls_oid_get_md_alg(&asn1, &m), 0);
-        TEST_EQUAL(m, *md_type_ptr);
     }
 
 exit:
