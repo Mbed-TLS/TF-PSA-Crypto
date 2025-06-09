@@ -528,41 +528,6 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
 /**
- * \brief          Translate SignatureAlgorithm OID into md_type and pk_type
- *
- * \param oid      OID to use
- * \param md_alg   place to store message digest algorithm
- * \param pk_alg   place to store public key algorithm
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_sig_alg(const mbedtls_asn1_buf *oid,
-                            mbedtls_md_type_t *md_alg, mbedtls_pk_type_t *pk_alg);
-
-/**
- * \brief          Translate SignatureAlgorithm OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_sig_alg_desc(const mbedtls_asn1_buf *oid, const char **desc);
-
-/**
- * \brief          Translate md_type and pk_type into SignatureAlgorithm OID
- *
- * \param md_alg   message digest algorithm
- * \param pk_alg   public key algorithm
- * \param oid      place to store ASN.1 OID string pointer
- * \param olen     length of the OID
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
-                                   const char **oid, size_t *olen);
-
-/**
  * \brief          Translate hmac algorithm OID into md_type
  *
  * \param oid      OID to use
