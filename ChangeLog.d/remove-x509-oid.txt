@@ -1,0 +1,4 @@
+Removals
+   * The OID module has been removed, along with the compilation option
+     MBEDTLS_OID_C. There are no longer any interfaces to look up values by
+     OID or OID enum values.
