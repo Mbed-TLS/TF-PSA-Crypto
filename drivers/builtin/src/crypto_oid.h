@@ -49,10 +49,10 @@
 #define MBEDTLS_OID_COUNTRY_US                  "\x86\x48"      /* {us(840)} */
 #define MBEDTLS_OID_ORG_RSA_DATA_SECURITY       "\x86\xf7\x0d"  /* {rsadsi(113549)} */
 #define MBEDTLS_OID_RSA_COMPANY                 MBEDTLS_OID_ISO_MEMBER_BODIES MBEDTLS_OID_COUNTRY_US \
-        MBEDTLS_OID_ORG_RSA_DATA_SECURITY                                 /* {iso(1) member-body(2) us(840) rsadsi(113549)} */
+    MBEDTLS_OID_ORG_RSA_DATA_SECURITY                           /* {iso(1) member-body(2) us(840) rsadsi(113549)} */
 #define MBEDTLS_OID_ORG_ANSI_X9_62              "\xce\x3d" /* ansi-X9-62(10045) */
 #define MBEDTLS_OID_ANSI_X9_62                  MBEDTLS_OID_ISO_MEMBER_BODIES MBEDTLS_OID_COUNTRY_US \
-        MBEDTLS_OID_ORG_ANSI_X9_62
+    MBEDTLS_OID_ORG_ANSI_X9_62
 
 /*
  * ISO Identified organization OID parts
@@ -64,20 +64,20 @@
 #define MBEDTLS_OID_OIW_SECSIG_SHA1             MBEDTLS_OID_OIW_SECSIG_ALG "\x1a"
 #define MBEDTLS_OID_ORG_THAWTE                  "\x65"          /* thawte(101) */
 #define MBEDTLS_OID_THAWTE                      MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_ORG_THAWTE
+    MBEDTLS_OID_ORG_THAWTE
 #define MBEDTLS_OID_ORG_CERTICOM                "\x81\x04"  /* certicom(132) */
 #define MBEDTLS_OID_CERTICOM                    MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_ORG_CERTICOM
+    MBEDTLS_OID_ORG_CERTICOM
 #define MBEDTLS_OID_ORG_TELETRUST               "\x24" /* teletrust(36) */
 #define MBEDTLS_OID_TELETRUST                   MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_ORG_TELETRUST
+    MBEDTLS_OID_ORG_TELETRUST
 
 /*
  * ISO ITU OID parts
  */
 #define MBEDTLS_OID_ORGANIZATION                "\x01"          /* {organization(1)} */
 #define MBEDTLS_OID_ISO_ITU_US_ORG              MBEDTLS_OID_ISO_ITU_COUNTRY MBEDTLS_OID_COUNTRY_US \
-        MBEDTLS_OID_ORGANIZATION                                                                                            /* {joint-iso-itu-t(2) country(16) us(840) organization(1)} */
+    MBEDTLS_OID_ORGANIZATION                                    /* {joint-iso-itu-t(2) country(16) us(840) organization(1)} */
 
 #define MBEDTLS_OID_ORG_GOV                     "\x65"          /* {gov(101)} */
 #define MBEDTLS_OID_GOV                         MBEDTLS_OID_ISO_ITU_US_ORG MBEDTLS_OID_ORG_GOV /* {joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101)} */
@@ -227,7 +227,7 @@
  */
 #define MBEDTLS_OID_DIGEST_ALG_MD5              MBEDTLS_OID_RSA_COMPANY "\x02\x05" /**< id-mbedtls_md5 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) digestAlgorithm(2) 5 } */
 #define MBEDTLS_OID_DIGEST_ALG_SHA1             MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_OIW_SECSIG_SHA1                                                                        /**< id-mbedtls_sha1 OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 26 } */
+    MBEDTLS_OID_OIW_SECSIG_SHA1                                                 /**< id-mbedtls_sha1 OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 26 } */
 #define MBEDTLS_OID_DIGEST_ALG_SHA224           MBEDTLS_OID_NIST_ALG "\x02\x04" /**< id-sha224 OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashalgs(2) 4 } */
 #define MBEDTLS_OID_DIGEST_ALG_SHA256           MBEDTLS_OID_NIST_ALG "\x02\x01" /**< id-mbedtls_sha256 OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashalgs(2) 1 } */
 
@@ -272,7 +272,7 @@
  * https://datatracker.ietf.org/doc/html/rfc8018#appendix-C.
  */
 #define MBEDTLS_OID_DES_CBC                     MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_OIW_SECSIG_ALG "\x07"                                                                        /**< desCBC OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 7 } */
+    MBEDTLS_OID_OIW_SECSIG_ALG "\x07"                                  /**< desCBC OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 7 } */
 #define MBEDTLS_OID_DES_EDE3_CBC                MBEDTLS_OID_RSA_COMPANY "\x03\x07" /**< des-ede3-cbc OBJECT IDENTIFIER ::= { iso(1) member-body(2) -- us(840) rsadsi(113549) encryptionAlgorithm(3) 7 } */
 #define MBEDTLS_OID_AES                         MBEDTLS_OID_NIST_ALG "\x01" /** aes OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) 1 } */
 #define MBEDTLS_OID_AES_128_CBC                 MBEDTLS_OID_AES "\x02" /** aes128-cbc-pad OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithms(4) aes(1) aes128-CBC-PAD(2) } */
