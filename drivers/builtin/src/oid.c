@@ -9,8 +9,6 @@
 
 #include "common.h"
 
-#if defined(MBEDTLS_OID_C)
-
 #include "crypto_oid.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/error_common.h"
@@ -911,5 +909,3 @@ FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg,
                  mbedtls_cipher_type_t,
                  cipher_alg)
 #endif /* MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_C */
-
-#endif /* MBEDTLS_OID_C */

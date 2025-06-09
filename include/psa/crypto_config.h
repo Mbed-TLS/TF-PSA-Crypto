@@ -829,7 +829,7 @@
  * Caller:  library/x509_crt.c
  *          library/x509_csr.c
  *
- * Requires: MBEDTLS_ASN1_PARSE_C, MBEDTLS_OID_C, MBEDTLS_PK_C
+ * Requires: MBEDTLS_ASN1_PARSE_C, MBEDTLS_PK_C
  *
  * Uncomment to enable generic public key parse functions.
  */
@@ -870,7 +870,7 @@
  * Module:  library/pkwrite.c
  * Caller:  library/x509write.c
  *
- * Requires: MBEDTLS_ASN1_WRITE_C, MBEDTLS_OID_C, MBEDTLS_PK_C
+ * Requires: MBEDTLS_ASN1_WRITE_C, MBEDTLS_PK_C
  *
  * Uncomment to enable generic public key write functions.
  */
@@ -955,29 +955,6 @@
  * This module is required for PEM support (required by X.509).
  */
 #define MBEDTLS_BASE64_C
-
-/**
- * \def MBEDTLS_OID_C
- *
- * Enable the OID database.
- *
- * Module:  library/oid.c
- * Caller:  library/asn1write.c
- *          library/pkcs5.c
- *          library/pkparse.c
- *          library/pkwrite.c
- *          library/rsa.c
- *          library/x509.c
- *          library/x509_create.c
- *          library/x509_crl.c
- *          library/x509_crt.c
- *          library/x509_csr.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
- *
- * This modules translates between OIDs and internal values.
- */
-#define MBEDTLS_OID_C
 
 /**
  * \def MBEDTLS_PEM_PARSE_C
@@ -2453,7 +2430,7 @@
  * This module is used by the following key exchanges:
  *      RSA, ECDHE-RSA
  *
- * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
+ * Requires: MBEDTLS_BIGNUM_C
  */
 #define MBEDTLS_RSA_C
 

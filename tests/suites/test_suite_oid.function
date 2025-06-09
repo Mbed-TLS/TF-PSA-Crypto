@@ -5,11 +5,6 @@
 #include "string.h"
 /* END_HEADER */
 
-/* BEGIN_DEPENDENCIES
- * depends_on:MBEDTLS_OID_C
- * END_DEPENDENCIES
- */
-
 /* BEGIN_CASE */
 void oid_get_certificate_policies(data_t *oid, char *result_str)
 {
