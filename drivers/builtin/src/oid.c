@@ -102,27 +102,6 @@
     }
 
 /*
- * Macro to generate a function for retrieving the OID based on two
- * attributes from a mbedtls_oid_descriptor_t wrapper.
- */
-#define FN_OID_GET_OID_BY_ATTR2(FN_NAME, TYPE_T, LIST, ATTR1_TYPE, ATTR1,   \
-                                ATTR2_TYPE, ATTR2)                          \
-    int FN_NAME(ATTR1_TYPE ATTR1, ATTR2_TYPE ATTR2, const char **oid,         \
-                size_t *olen)                                                 \
-    {                                                                           \
-        const TYPE_T *cur = (LIST);                                             \
-        while (cur->descriptor.asn1 != NULL) {                                 \
-            if (cur->ATTR1 == (ATTR1) && cur->ATTR2 == (ATTR2)) {              \
-                *oid = cur->descriptor.asn1;                                    \
-                *olen = cur->descriptor.asn1_len;                               \
-                return 0;                                                    \
-            }                                                                   \
-            cur++;                                                              \
-        }                                                                       \
-        return MBEDTLS_ERR_OID_NOT_FOUND;                                   \
-    }
-
-/*
  * For PublicKeyInfo (PKCS1, RFC 5480)
  */
 typedef struct {
