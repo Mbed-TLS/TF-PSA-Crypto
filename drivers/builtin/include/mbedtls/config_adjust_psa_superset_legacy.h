@@ -29,8 +29,7 @@
 
 /****************************************************************/
 /* Hashes that are built in are also enabled in PSA.
- * This simplifies dependency declarations especially
- * for modules that obey MBEDTLS_USE_PSA_CRYPTO. */
+ * This simplifies dependency declarations */
 /****************************************************************/
 
 #if defined(MBEDTLS_MD5_C)
