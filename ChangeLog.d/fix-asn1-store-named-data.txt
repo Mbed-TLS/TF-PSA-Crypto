@@ -4,5 +4,5 @@ Security
      val.len > 0. Functions using the structure after that, including
      mbedtls_asn1_store_named_data() itself (and functions from the X.509
      library) would then dereference a NULL pointer. Applications that do not
-     call this function (and do not use X.509) are not affected.
-     Found by Linh Le and Ngan Nguyen from Calif.
+     call this function (directly, or indirectly through X.509 writing) are not
+     affected. Found by Linh Le and Ngan Nguyen from Calif.
