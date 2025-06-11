@@ -44,24 +44,15 @@ endif()
 set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
 set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
 
-if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${builtin_static_target} OBJECT ${src_builtin})
-    set_base_compile_options(${builtin_static_target})
-    target_compile_options(${builtin_static_target} PRIVATE ${LIBS_C_FLAGS})
-    if(TARGET ${everest_target})
-        target_link_libraries(${builtin_static_target} PUBLIC ${everest_target})
-    endif()
-
-    if(TARGET ${p256m_target})
-        target_link_libraries(${builtin_static_target} PUBLIC ${p256m_target})
-    endif()
-endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
-
-if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${builtin_target} OBJECT ${src_builtin})
-    set_property(TARGET ${builtin_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_base_compile_options(${builtin_target})
-    target_compile_options(${builtin_target} PRIVATE ${LIBS_C_FLAGS})
+foreach (target IN LISTS target_libraries)
+    add_library(${target} OBJECT ${src_builtin})
+    set_base_compile_options(${target})
+    target_compile_options(${target} PRIVATE ${LIBS_C_FLAGS})
+    target_include_directories(${target}
+      PRIVATE src include
+              ${TF_PSA_CRYPTO_DIR}/include
+              ${TF_PSA_CRYPTO_DIR}/core)
+    set_config_files_compile_definitions(${target})
     if(TARGET ${everest_target})
         target_link_libraries(${builtin_target} PUBLIC ${everest_target})
     endif()
@@ -69,15 +60,11 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     if(TARGET ${p256m_target})
         target_link_libraries(${builtin_target} PUBLIC ${p256m_target})
     endif()
-endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
-
-foreach (target IN LISTS target_libraries)
-    target_include_directories(${target}
-      PRIVATE src include
-              ${TF_PSA_CRYPTO_DIR}/include
-              ${TF_PSA_CRYPTO_DIR}/core)
-    set_config_files_compile_definitions(${target})
 endforeach(target)
+
+if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
+    set_property(TARGET ${builtin_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 if(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
