@@ -43,12 +43,10 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx)
     ctx->pk_info = NULL;
     ctx->pk_ctx = NULL;
     ctx->priv_id = MBEDTLS_SVC_KEY_ID_INIT;
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     memset(ctx->pub_raw, 0, sizeof(ctx->pub_raw));
     ctx->pub_raw_len = 0;
     ctx->ec_family = 0;
     ctx->ec_bits = 0;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
 }
 
 /*
@@ -64,18 +62,16 @@ void mbedtls_pk_free(mbedtls_pk_context *ctx)
         ctx->pk_info->ctx_free_func(ctx->pk_ctx);
     }
 
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
     /* The ownership of the priv_id key for opaque keys is external of the PK
      * module. It's the user responsibility to clear it after use. */
     if ((ctx->pk_info != NULL) && (ctx->pk_info->type != MBEDTLS_PK_OPAQUE)) {
         psa_destroy_key(ctx->priv_id);
     }
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
 
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_pk_context));
 }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /*
  * Initialize a restart context
  */
@@ -100,7 +96,7 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx)
     ctx->pk_info = NULL;
     ctx->rs_ctx = NULL;
 }
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /*
  * Get pk_info structure from type
@@ -420,21 +416,14 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
         {
             int sign_ok = (pk_type != MBEDTLS_PK_ECKEY_DH);
             int derive_ok = (pk_type != MBEDTLS_PK_ECDSA);
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             psa_ecc_family_t family = pk->ec_family;
             size_t bits = pk->ec_bits;
             int has_private = 0;
-            if (pk->priv_id != MBEDTLS_SVC_KEY_ID_INIT) {
+            psa_algorithm_t alg = 0;
+
+            if (!mbedtls_svc_key_id_is_null(pk->priv_id)) {
                 has_private = 1;
             }
-#else
-            const mbedtls_ecp_keypair *ec = mbedtls_pk_ec_ro(*pk);
-            int has_private = (ec->d.n != 0);
-            size_t bits = 0;
-            psa_ecc_family_t family =
-                mbedtls_ecc_group_to_psa(ec->grp.id, &bits);
-#endif
-            psa_algorithm_t alg = 0;
             switch (usage) {
                 case PSA_KEY_USAGE_SIGN_MESSAGE:
                 case PSA_KEY_USAGE_SIGN_HASH:
@@ -629,47 +618,16 @@ static int import_pair_into_psa(const mbedtls_pk_context *pk,
              * and if it's specified, psa_import_key() will know from the key
              * data length and will check that the bit-size matches. */
             psa_key_type_t to_type = psa_get_key_type(attributes);
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             psa_ecc_family_t from_family = pk->ec_family;
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-            const mbedtls_ecp_keypair *ec = mbedtls_pk_ec_ro(*pk);
-            size_t from_bits = 0;
-            psa_ecc_family_t from_family = mbedtls_ecc_group_to_psa(ec->grp.id,
-                                                                    &from_bits);
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
             if (to_type != PSA_KEY_TYPE_ECC_KEY_PAIR(from_family)) {
                 return MBEDTLS_ERR_PK_TYPE_MISMATCH;
             }
 
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             if (mbedtls_svc_key_id_is_null(pk->priv_id)) {
                 /* We have a public key and want a key pair. */
                 return MBEDTLS_ERR_PK_TYPE_MISMATCH;
             }
             return copy_into_psa(pk->priv_id, attributes, key_id);
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-            if (ec->d.n == 0) {
-                /* Private key not set. Assume the input is a public key only.
-                 * (The other possibility is that it's an incomplete object
-                 * where the group is set but neither the public key nor
-                 * the private key. This is not possible through ecp.h
-                 * functions, so we don't bother reporting a more suitable
-                 * error in that case.) */
-                return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-            }
-            unsigned char key_buffer[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
-            size_t key_length = 0;
-            int ret = mbedtls_ecp_write_key_ext(ec, &key_length,
-                                                key_buffer, sizeof(key_buffer));
-            if (ret < 0) {
-                return ret;
-            }
-            ret = PSA_PK_TO_MBEDTLS_ERR(psa_import_key(attributes,
-                                                       key_buffer, key_length,
-                                                       key_id));
-            mbedtls_platform_zeroize(key_buffer, key_length);
-            return ret;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
         }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
@@ -719,28 +677,11 @@ static int import_public_into_psa(const mbedtls_pk_context *pk,
              * We don't check the bit-size: it's optional in attributes,
              * and if it's specified, psa_import_key() will know from the key
              * data length and will check that the bit-size matches. */
-#if defined(MBEDTLS_PK_USE_PSA_EC_DATA)
             if (psa_type != PSA_KEY_TYPE_ECC_PUBLIC_KEY(pk->ec_family)) {
                 return MBEDTLS_ERR_PK_TYPE_MISMATCH;
             }
             key_data = (unsigned char *) pk->pub_raw;
             key_length = pk->pub_raw_len;
-#else /* MBEDTLS_PK_USE_PSA_EC_DATA */
-            const mbedtls_ecp_keypair *ec = mbedtls_pk_ec_ro(*pk);
-            size_t from_bits = 0;
-            psa_ecc_family_t from_family = mbedtls_ecc_group_to_psa(ec->grp.id,
-                                                                    &from_bits);
-            if (psa_type != PSA_KEY_TYPE_ECC_PUBLIC_KEY(from_family)) {
-                return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-            }
-            int ret = mbedtls_ecp_write_public_key(
-                ec, MBEDTLS_ECP_PF_UNCOMPRESSED,
-                &key_length, key_buffer, sizeof(key_buffer));
-            if (ret < 0) {
-                return ret;
-            }
-            key_data = key_buffer;
-#endif /* MBEDTLS_PK_USE_PSA_EC_DATA */
             break;
         }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
@@ -939,12 +880,13 @@ static inline int pk_hashlen_helper(mbedtls_md_type_t md_alg, size_t *hash_len)
     return 0;
 }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
 /*
  * Helper to set up a restart context if needed
  */
 static int pk_restart_setup(mbedtls_pk_restart_ctx *ctx,
-                            const mbedtls_pk_info_t *info)
+                            const mbedtls_pk_info_t *info,
+                            mbedtls_pk_rs_op_t rs_op)
 {
     /* Don't do anything if already set up or invalid */
     if (ctx == NULL || ctx->pk_info != NULL) {
@@ -956,7 +898,7 @@ static int pk_restart_setup(mbedtls_pk_restart_ctx *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if ((ctx->rs_ctx = info->rs_alloc_func()) == NULL) {
+    if ((ctx->rs_ctx = info->rs_alloc_func(rs_op)) == NULL) {
         return MBEDTLS_ERR_PK_ALLOC_FAILED;
     }
 
@@ -964,7 +906,7 @@ static int pk_restart_setup(mbedtls_pk_restart_ctx *ctx,
 
     return 0;
 }
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /*
  * Verify a signature (restartable)
@@ -984,14 +926,16 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
-        mbedtls_ecp_restart_is_enabled() &&
+        is_restartable_enabled &&
         ctx->pk_info->verify_rs_func != NULL) {
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-        if ((ret = pk_restart_setup(rs_ctx, ctx->pk_info)) != 0) {
+        ret = pk_restart_setup(rs_ctx, ctx->pk_info, MBEDTLS_PK_RS_OP_VERIFY);
+        if (ret != 0) {
             return ret;
         }
 
@@ -1004,9 +948,9 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
 
         return ret;
     }
-#else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#else /* MBEDTLS_ECP_RESTARTABLE */
     (void) rs_ctx;
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     if (ctx->pk_info->verify_func == NULL) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
@@ -1142,14 +1086,16 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
-        mbedtls_ecp_restart_is_enabled() &&
+        is_restartable_enabled &&
         ctx->pk_info->sign_rs_func != NULL) {
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-        if ((ret = pk_restart_setup(rs_ctx, ctx->pk_info)) != 0) {
+        ret = pk_restart_setup(rs_ctx, ctx->pk_info, MBEDTLS_PK_RS_OP_SIGN);
+        if (ret != 0) {
             return ret;
         }
 
@@ -1164,9 +1110,9 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
         return ret;
     }
-#else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#else /* MBEDTLS_ECP_RESTARTABLE */
     (void) rs_ctx;
-#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
     if (ctx->pk_info->sign_func == NULL) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
