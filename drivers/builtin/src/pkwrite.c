@@ -531,12 +531,12 @@ int mbedtls_pk_write_key_pem(const mbedtls_pk_context *key, unsigned char *buf, 
         goto cleanup;
     }
 
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_KEY_EXPORT_RSA_KEY_PAIR_MAX_SIZE)
     if (pk_get_type_ext(key) == MBEDTLS_PK_RSA) {
         begin = PEM_BEGIN_PRIVATE_KEY_RSA "\n";
         end = PEM_END_PRIVATE_KEY_RSA "\n";
     } else
-#endif
+#endif /* PSA_KEY_EXPORT_RSA_KEY_PAIR_MAX_SIZE */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     if (pk_get_type_ext(key) == MBEDTLS_PK_ECKEY) {
         if (mbedtls_pk_is_rfc8410(key)) {
