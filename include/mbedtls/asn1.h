@@ -288,9 +288,9 @@ int mbedtls_asn1_get_int(unsigned char **p,
                          int *val);
 
 /**
- * \brief               Parse an INTEGER and return a pointer to its big-endian
- *                      representation, length of the representation. The pointers
- *                      are only valid as long as the input buffer is.
+ * \brief               Parse an INTEGER in DER representation and return a pointer
+ *                      to its big-endian representation, length of the representation.
+ *                      The pointers are only valid as long as the input buffer is.
  * \param[in,out] p     On entry, \c *p points to the start of the ASN.1 element.
  *                      On successful completion, \c *p points to the first byte
  *                      beyond the ASN.1 element.
@@ -298,14 +298,12 @@ int mbedtls_asn1_get_int(unsigned char **p,
  * \param[in] end       End of data.
  * \param[out] head     On success, set to point to the start of the big-endian
  *                      representation of the INTEGER. On failure, set to NULL.
- *                      Overlong encoding is not allowed, i.e. the leftmost 9 bits cannot
- *                      be of the same value; 0 is encoded by a single 0 byte
  * \param[out] length   On success, set to the length of the big-endian representation
  *                      of the INTEGER, measured in bytes.
  *
  * \return              0 if successful.
  * \return              An ASN.1 error code if the input does not start with
- *                      a valid ASN.1 INTEGER.
+ *                      a valid ASN.1 INTEGER in DER representation.
  * \return              #MBEDTLS_ERR_ASN1_INVALID_DATA if the parsed value is
  *                      negative.
  */
