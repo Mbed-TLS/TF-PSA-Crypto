@@ -102,6 +102,7 @@
         return MBEDTLS_ERR_OID_NOT_FOUND;                                    \
     }
 
+#if defined(MBEDTLS_PK_PARSE_C) || defined(MBEDTLS_PK_WRITE_C)
 /*
  * For PublicKeyInfo (PKCS1, RFC 5480)
  */
@@ -264,8 +265,89 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_ec_grp_algid,
                         mbedtls_ecp_group_id,
                         grp_id)
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#endif /* MBEDTLS_PK_PARSE_C || MBEDTLS_PK_WRITE_C */
 
 #if defined(MBEDTLS_CIPHER_C)
+#if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_ASN1_PARSE_C)
+/*
+ * For HMAC digestAlgorithm
+ */
+typedef struct {
+    mbedtls_oid_descriptor_t    descriptor;
+    mbedtls_md_type_t           md_hmac;
+} oid_md_hmac_t;
+
+static const oid_md_hmac_t oid_md_hmac[] =
+{
+#if defined(PSA_WANT_ALG_SHA_1)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA1,      "hmacSHA1",      "HMAC-SHA-1"),
+        MBEDTLS_MD_SHA1,
+    },
+#endif /* PSA_WANT_ALG_SHA_1 */
+#if defined(PSA_WANT_ALG_SHA_224)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA224,    "hmacSHA224",    "HMAC-SHA-224"),
+        MBEDTLS_MD_SHA224,
+    },
+#endif /* PSA_WANT_ALG_SHA_224 */
+#if defined(PSA_WANT_ALG_SHA_256)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA256,    "hmacSHA256",    "HMAC-SHA-256"),
+        MBEDTLS_MD_SHA256,
+    },
+#endif /* PSA_WANT_ALG_SHA_256 */
+#if defined(PSA_WANT_ALG_SHA_384)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA384,    "hmacSHA384",    "HMAC-SHA-384"),
+        MBEDTLS_MD_SHA384,
+    },
+#endif /* PSA_WANT_ALG_SHA_384 */
+#if defined(PSA_WANT_ALG_SHA_512)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA512,    "hmacSHA512",    "HMAC-SHA-512"),
+        MBEDTLS_MD_SHA512,
+    },
+#endif /* PSA_WANT_ALG_SHA_512 */
+#if defined(PSA_WANT_ALG_SHA3_224)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_224,    "hmacSHA3-224",    "HMAC-SHA3-224"),
+        MBEDTLS_MD_SHA3_224,
+    },
+#endif /* PSA_WANT_ALG_SHA3_224 */
+#if defined(PSA_WANT_ALG_SHA3_256)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_256,    "hmacSHA3-256",    "HMAC-SHA3-256"),
+        MBEDTLS_MD_SHA3_256,
+    },
+#endif /* PSA_WANT_ALG_SHA3_256 */
+#if defined(PSA_WANT_ALG_SHA3_384)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_384,    "hmacSHA3-384",    "HMAC-SHA3-384"),
+        MBEDTLS_MD_SHA3_384,
+    },
+#endif /* PSA_WANT_ALG_SHA3_384 */
+#if defined(PSA_WANT_ALG_SHA3_512)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_512,    "hmacSHA3-512",    "HMAC-SHA3-512"),
+        MBEDTLS_MD_SHA3_512,
+    },
+#endif /* PSA_WANT_ALG_SHA3_512 */
+#if defined(PSA_WANT_ALG_RIPEMD160)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_RIPEMD160,    "hmacRIPEMD160",    "HMAC-RIPEMD160"),
+        MBEDTLS_MD_RIPEMD160,
+    },
+#endif /* PSA_WANT_ALG_RIPEMD160 */
+    {
+        NULL_OID_DESCRIPTOR,
+        MBEDTLS_MD_NONE,
+    },
+};
+
+FN_OID_TYPED_FROM_ASN1(oid_md_hmac_t, md_hmac, oid_md_hmac)
+FN_OID_GET_ATTR1(mbedtls_oid_get_md_hmac, oid_md_hmac_t, md_hmac, mbedtls_md_type_t, md_hmac)
+
 /*
  * For PKCS#5 PBES2 encryption algorithm
  */
@@ -308,8 +390,51 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_cipher_alg,
                  cipher_alg,
                  mbedtls_cipher_type_t,
                  cipher_alg)
+#endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
+
+#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
+    defined(MBEDTLS_CIPHER_PADDING_PKCS7)
+/*
+ * For PKCS#12 PBEs
+ */
+typedef struct {
+    mbedtls_oid_descriptor_t    descriptor;
+    mbedtls_md_type_t           md_alg;
+    mbedtls_cipher_type_t       cipher_alg;
+} oid_pkcs12_pbe_alg_t;
+
+static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] =
+{
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_PKCS12_PBE_SHA1_DES3_EDE_CBC,
+                       "pbeWithSHAAnd3-KeyTripleDES-CBC",
+                       "PBE with SHA1 and 3-Key 3DES"),
+        MBEDTLS_MD_SHA1,      MBEDTLS_CIPHER_DES_EDE3_CBC,
+    },
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_PKCS12_PBE_SHA1_DES2_EDE_CBC,
+                       "pbeWithSHAAnd2-KeyTripleDES-CBC",
+                       "PBE with SHA1 and 2-Key 3DES"),
+        MBEDTLS_MD_SHA1,      MBEDTLS_CIPHER_DES_EDE_CBC,
+    },
+    {
+        NULL_OID_DESCRIPTOR,
+        MBEDTLS_MD_NONE, MBEDTLS_CIPHER_NONE,
+    },
+};
+
+FN_OID_TYPED_FROM_ASN1(oid_pkcs12_pbe_alg_t, pkcs12_pbe_alg, oid_pkcs12_pbe_alg)
+FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg,
+                 oid_pkcs12_pbe_alg_t,
+                 pkcs12_pbe_alg,
+                 mbedtls_md_type_t,
+                 md_alg,
+                 mbedtls_cipher_type_t,
+                 cipher_alg)
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_PADDING_PKCS7 */
 #endif /* MBEDTLS_CIPHER_C */
 
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
 /*
  * For digestAlgorithm
  */
@@ -397,122 +522,4 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_md,
                         oid_md_alg,
                         mbedtls_md_type_t,
                         md_alg)
-
-/*
- * For HMAC digestAlgorithm
- */
-typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_md_type_t           md_hmac;
-} oid_md_hmac_t;
-
-static const oid_md_hmac_t oid_md_hmac[] =
-{
-#if defined(PSA_WANT_ALG_SHA_1)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA1,      "hmacSHA1",      "HMAC-SHA-1"),
-        MBEDTLS_MD_SHA1,
-    },
-#endif /* PSA_WANT_ALG_SHA_1 */
-#if defined(PSA_WANT_ALG_SHA_224)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA224,    "hmacSHA224",    "HMAC-SHA-224"),
-        MBEDTLS_MD_SHA224,
-    },
-#endif /* PSA_WANT_ALG_SHA_224 */
-#if defined(PSA_WANT_ALG_SHA_256)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA256,    "hmacSHA256",    "HMAC-SHA-256"),
-        MBEDTLS_MD_SHA256,
-    },
-#endif /* PSA_WANT_ALG_SHA_256 */
-#if defined(PSA_WANT_ALG_SHA_384)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA384,    "hmacSHA384",    "HMAC-SHA-384"),
-        MBEDTLS_MD_SHA384,
-    },
-#endif /* PSA_WANT_ALG_SHA_384 */
-#if defined(PSA_WANT_ALG_SHA_512)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA512,    "hmacSHA512",    "HMAC-SHA-512"),
-        MBEDTLS_MD_SHA512,
-    },
-#endif /* PSA_WANT_ALG_SHA_512 */
-#if defined(PSA_WANT_ALG_SHA3_224)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_224,    "hmacSHA3-224",    "HMAC-SHA3-224"),
-        MBEDTLS_MD_SHA3_224,
-    },
-#endif /* PSA_WANT_ALG_SHA3_224 */
-#if defined(PSA_WANT_ALG_SHA3_256)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_256,    "hmacSHA3-256",    "HMAC-SHA3-256"),
-        MBEDTLS_MD_SHA3_256,
-    },
-#endif /* PSA_WANT_ALG_SHA3_256 */
-#if defined(PSA_WANT_ALG_SHA3_384)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_384,    "hmacSHA3-384",    "HMAC-SHA3-384"),
-        MBEDTLS_MD_SHA3_384,
-    },
-#endif /* PSA_WANT_ALG_SHA3_384 */
-#if defined(PSA_WANT_ALG_SHA3_512)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_SHA3_512,    "hmacSHA3-512",    "HMAC-SHA3-512"),
-        MBEDTLS_MD_SHA3_512,
-    },
-#endif /* PSA_WANT_ALG_SHA3_512 */
-#if defined(PSA_WANT_ALG_RIPEMD160)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_HMAC_RIPEMD160,    "hmacRIPEMD160",    "HMAC-RIPEMD160"),
-        MBEDTLS_MD_RIPEMD160,
-    },
-#endif /* PSA_WANT_ALG_RIPEMD160 */
-    {
-        NULL_OID_DESCRIPTOR,
-        MBEDTLS_MD_NONE,
-    },
-};
-
-FN_OID_TYPED_FROM_ASN1(oid_md_hmac_t, md_hmac, oid_md_hmac)
-FN_OID_GET_ATTR1(mbedtls_oid_get_md_hmac, oid_md_hmac_t, md_hmac, mbedtls_md_type_t, md_hmac)
-
-#if defined(MBEDTLS_PKCS12_C) && defined(MBEDTLS_CIPHER_C)
-/*
- * For PKCS#12 PBEs
- */
-typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_md_type_t           md_alg;
-    mbedtls_cipher_type_t       cipher_alg;
-} oid_pkcs12_pbe_alg_t;
-
-static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] =
-{
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_PKCS12_PBE_SHA1_DES3_EDE_CBC,
-                       "pbeWithSHAAnd3-KeyTripleDES-CBC",
-                       "PBE with SHA1 and 3-Key 3DES"),
-        MBEDTLS_MD_SHA1,      MBEDTLS_CIPHER_DES_EDE3_CBC,
-    },
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_PKCS12_PBE_SHA1_DES2_EDE_CBC,
-                       "pbeWithSHAAnd2-KeyTripleDES-CBC",
-                       "PBE with SHA1 and 2-Key 3DES"),
-        MBEDTLS_MD_SHA1,      MBEDTLS_CIPHER_DES_EDE_CBC,
-    },
-    {
-        NULL_OID_DESCRIPTOR,
-        MBEDTLS_MD_NONE, MBEDTLS_CIPHER_NONE,
-    },
-};
-
-FN_OID_TYPED_FROM_ASN1(oid_pkcs12_pbe_alg_t, pkcs12_pbe_alg, oid_pkcs12_pbe_alg)
-FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg,
-                 oid_pkcs12_pbe_alg_t,
-                 pkcs12_pbe_alg,
-                 mbedtls_md_type_t,
-                 md_alg,
-                 mbedtls_cipher_type_t,
-                 cipher_alg)
-#endif /* MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_C */
+#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */

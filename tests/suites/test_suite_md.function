@@ -44,10 +44,12 @@ void mbedtls_md_list()
         TEST_EQUAL(*md_type_ptr, mbedtls_md_type_from_psa_alg(p));
 #endif
 
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
         mbedtls_asn1_buf asn1;
         /* Check that we have an OID definition */
         TEST_EQUAL(mbedtls_oid_get_oid_by_md((mbedtls_md_type_t) *md_type_ptr,
                                              (const char **) &asn1.p, &asn1.len), 0);
+#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
     }
 
 exit:

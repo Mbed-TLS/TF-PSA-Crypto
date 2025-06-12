@@ -453,6 +453,7 @@ typedef struct mbedtls_oid_descriptor_t {
     size_t MBEDTLS_PRIVATE(asn1_len);                /*!< length of asn1                 */
 } mbedtls_oid_descriptor_t;
 
+#if defined(MBEDTLS_PK_PARSE_C) || defined(MBEDTLS_PK_WRITE_C)
 /**
  * \brief          Translate PublicKeyAlgorithm OID into pk_type
  *
@@ -522,7 +523,10 @@ int mbedtls_oid_get_ec_grp_algid(const mbedtls_asn1_buf *oid, mbedtls_ecp_group_
 int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
                                         const char **oid, size_t *olen);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#endif /* MBEDTLS_PK_PARSE_C || MBEDTLS_PK_WRITE_C */
 
+#if defined(MBEDTLS_CIPHER_C)
+#if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_ASN1_PARSE_C)
 /**
  * \brief          Translate hmac algorithm OID into md_type
  *
@@ -534,18 +538,6 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
 int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_hmac);
 
 /**
- * \brief          Translate md_type into hash algorithm OID
- *
- * \param md_alg   message digest algorithm
- * \param oid      place to store ASN.1 OID string pointer
- * \param olen     length of the OID
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t *olen);
-
-#if defined(MBEDTLS_CIPHER_C)
-/**
  * \brief          Translate encryption algorithm OID into cipher_type
  *
  * \param oid           OID to use
@@ -554,8 +546,10 @@ int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_t *cipher_alg);
+#endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
 
-#if defined(MBEDTLS_PKCS12_C)
+#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
+    defined(MBEDTLS_CIPHER_PADDING_PKCS7)
 /**
  * \brief          Translate PKCS#12 PBE algorithm OID into md_type and
  *                 cipher_type
@@ -568,8 +562,21 @@ int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_
  */
 int mbedtls_oid_get_pkcs12_pbe_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg,
                                    mbedtls_cipher_type_t *cipher_alg);
-#endif /* MBEDTLS_PKCS12_C */
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_PADDING_PKCS7 */
 #endif /* MBEDTLS_CIPHER_C */
+
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
+/**
+ * \brief          Translate md_type into hash algorithm OID
+ *
+ * \param md_alg   message digest algorithm
+ * \param oid      place to store ASN.1 OID string pointer
+ * \param olen     length of the OID
+ *
+ * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ */
+int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t *olen);
+#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
 
 #ifdef __cplusplus
 }
