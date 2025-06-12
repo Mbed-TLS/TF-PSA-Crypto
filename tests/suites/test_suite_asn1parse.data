@@ -305,7 +305,7 @@ Get integer raw, negative number
 get_integer_raw:"0201fe":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
 
 Get integer raw, one 0 leading byte, valid
-get_integer_raw:"0203008080":"008080":0:-1
+get_integer_raw:"0203008080":"8080":0:-1
 
 Get integer raw, two 0 leading bytes, invalid
 get_integer_raw:"020400008080":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
@@ -339,6 +339,9 @@ get_integer_raw:"0201":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
 
 Get integer raw, incomplete (partial contents)
 get_integer_raw:"02050100":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
+
+Get integer raw, leading zero byte, next byte top bit not set, invalid
+get_integer_raw:"0202007f":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
 
 INTEGER too large for mpi
 get_mpi_too_large:

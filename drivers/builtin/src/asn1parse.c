@@ -220,6 +220,12 @@ int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
     *p += integer_length;
     *length = integer_length;
 
+    if (integer_length > 1 && ((*head)[0] == 0))
+    {
+        (*head)++;
+        (*length)--;
+    }
+
     return 0;
 }
 

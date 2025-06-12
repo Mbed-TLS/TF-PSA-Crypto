@@ -482,13 +482,12 @@ void get_integer_raw(const data_t *input,
         /* On success, check that the returned number matches what we expect */
         TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
                             integer_head, integer_length);
-        /* And check that p is sensible. The minimum length of an
-         * encoded INTEGER is 3 bytes */
-        TEST_ASSERT(p == input->x + asn1_data_length);
+
+        /* And check that p is correct */
+        TEST_EQUAL(p - input->x, asn1_data_length);
     } else {
         /* On failure we'd like the pointer and length to be
          * obviously invalid */
-        TEST_ASSERT(integer_head == NULL);
         TEST_ASSERT(integer_head == NULL);
         TEST_EQUAL(integer_length, 0);
 
