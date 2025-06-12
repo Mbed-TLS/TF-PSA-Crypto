@@ -455,6 +455,12 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+/**
+ * The #asn1_data_length argument is only used to provide real data length,
+ * not the buffer length, in case there are more bytes in the buffer, than there
+ * is data, it is then compared with the difference of initial p, and p after the
+ * #mbedtls_asn1_get_integer() call
+ */
 void get_integer_raw(const data_t *input,
                      const data_t *expected_output, int expected_result,
                      int asn1_data_length)
