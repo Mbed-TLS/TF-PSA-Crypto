@@ -25,7 +25,8 @@
 #define ADD_LEN(s)      s, MBEDTLS_OID_SIZE(s)
 
 /*
- * Macro to generate mbedtls_oid_descriptor_t
+ * Macro to generate mbedtls_oid_descriptor_t - the name and description
+ * fields are present for historical reasons and are no longer used.
  */
 #define OID_DESCRIPTOR(s, name, description)  { ADD_LEN(s) }
 #define NULL_OID_DESCRIPTOR                   { NULL, 0 }

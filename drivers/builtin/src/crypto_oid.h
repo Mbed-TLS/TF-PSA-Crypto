@@ -24,10 +24,6 @@
 
 #include "mbedtls/md.h"
 
-/* OID is not found. This error is in the process of being removed from
- * the public API, Hide it from scripts/generate_errors.pl, which
- * is in the mbedtls repository, and would complain because it doesn't
- * recognize the header name "crypto_oid.h". */
 #define MBEDTLS_ERR_OID_NOT_FOUND                         PSA_ERROR_NOT_SUPPORTED
 
 /*
