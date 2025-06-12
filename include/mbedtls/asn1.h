@@ -297,7 +297,8 @@ int mbedtls_asn1_get_int(unsigned char **p,
  *                      On error, the value of \c *p is unspecified.
  * \param[in] end       End of data.
  * \param[out] head     On success, set to point to the start of the big-endian
- *                      representation of the INTEGER. On failure, set to NULL.
+ *                      representation of the INTEGER without any leading zeros.
+ *                      On failure, set to NULL.
  * \param[out] length   On success, set to the length of the big-endian representation
  *                      of the INTEGER, measured in bytes.
  *
