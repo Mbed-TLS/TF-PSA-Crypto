@@ -299,7 +299,7 @@ Get integer raw, correct encoding, more data than needed
 get_integer_raw:"02010707":"07":0:3
 
 Get integer raw, correct encoding, zero
-get_integer_raw:"020100":"00":0:-1
+get_integer_raw:"020100":"":0:-1
 
 Get integer raw, negative number
 get_integer_raw:"0201fe":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
