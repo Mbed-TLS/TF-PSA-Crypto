@@ -26,14 +26,11 @@
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include "pk_internal.h"
 #endif
-#if defined(MBEDTLS_RSA_C) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include "pkwrite.h"
 #endif
 #if defined(MBEDTLS_PEM_WRITE_C)
 #include "mbedtls/pem.h"
-#endif
-#if defined(MBEDTLS_RSA_C)
-#include "rsa_internal.h"
 #endif
 
 #include "psa/crypto.h"

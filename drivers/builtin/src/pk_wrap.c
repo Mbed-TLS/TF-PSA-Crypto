@@ -30,11 +30,6 @@
 #include "psa/crypto.h"
 #include "mbedtls/psa_util.h"
 
-#if defined(MBEDTLS_RSA_C)
-#include "pkwrite.h"
-#include "rsa_internal.h"
-#endif
-
 #if defined(PSA_HAVE_ALG_SOME_ECDSA)
 #include "mbedtls/asn1write.h"
 #include "mbedtls/asn1.h"
@@ -749,7 +744,7 @@ static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
                                 const unsigned char *hash, size_t hash_len,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len)
 {
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_algorithm_t alg;
     psa_key_type_t type;
@@ -782,7 +777,7 @@ static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     }
 
     return 0;
-#else /* !MBEDTLS_RSA_C */
+#else /* !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
     ((void) pk);
     ((void) md_alg);
     ((void) hash);
@@ -791,7 +786,7 @@ static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     ((void) sig_size);
     ((void) sig_len);
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* !MBEDTLS_RSA_C */
+#endif /* !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 }
 
 const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {

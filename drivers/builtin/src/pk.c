@@ -22,10 +22,6 @@
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 
-#if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
-#include "rsa_internal.h"
-#endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include "mbedtls/ecp.h"
 #endif

@@ -23,12 +23,6 @@
 #include "mbedtls/psa_util.h"
 #include "psa/crypto.h"
 
-/* Key types */
-#if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
-#include "rsa_internal.h"
-#endif
-
 /* Extended formats */
 #if defined(MBEDTLS_PEM_PARSE_C)
 #include "mbedtls/pem.h"
@@ -1150,9 +1144,9 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
      * it is ok to leave the PK context initialized but not
      * freed: It is the caller's responsibility to call pk_init()
      * before calling this function, and to call pk_free()
-     * when it fails. If PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY is defined but MBEDTLS_RSA_C
-     * isn't, this leads to mbedtls_pk_free() being called
-     * twice, once here and once by the caller, but this is
+     * when it fails. If PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY is defined but
+     * PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY isn't, this leads to mbedtls_pk_free()
+     * being called twice, once here and once by the caller, but this is
      * also ok and in line with the mbedtls_pk_free() calls
      * on failed PEM parsing attempts. */
 
