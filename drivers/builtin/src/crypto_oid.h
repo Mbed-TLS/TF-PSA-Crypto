@@ -525,7 +525,6 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #endif /* MBEDTLS_PK_PARSE_C || MBEDTLS_PK_WRITE_C */
 
-#if defined(MBEDTLS_CIPHER_C)
 #if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_ASN1_PARSE_C)
 /**
  * \brief          Translate hmac algorithm OID into md_type
@@ -537,6 +536,7 @@ int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
  */
 int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_hmac);
 
+#if defined(MBEDTLS_CIPHER_C)
 /**
  * \brief          Translate encryption algorithm OID into cipher_type
  *
@@ -546,10 +546,11 @@ int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_h
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_t *cipher_alg);
+#endif /* MBEDTLS_CIPHER_C */
 #endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
 
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
-    defined(MBEDTLS_CIPHER_PADDING_PKCS7)
+    defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
 /**
  * \brief          Translate PKCS#12 PBE algorithm OID into md_type and
  *                 cipher_type
@@ -562,8 +563,8 @@ int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_
  */
 int mbedtls_oid_get_pkcs12_pbe_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg,
                                    mbedtls_cipher_type_t *cipher_alg);
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_PADDING_PKCS7 */
-#endif /* MBEDTLS_CIPHER_C */
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C &&
+          MBEDTLS_CIPHER_PADDING_PKCS7 && MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
 /**

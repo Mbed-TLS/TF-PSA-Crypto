@@ -267,7 +267,6 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_ec_grp_algid,
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #endif /* MBEDTLS_PK_PARSE_C || MBEDTLS_PK_WRITE_C */
 
-#if defined(MBEDTLS_CIPHER_C)
 #if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_ASN1_PARSE_C)
 /*
  * For HMAC digestAlgorithm
@@ -348,6 +347,7 @@ static const oid_md_hmac_t oid_md_hmac[] =
 FN_OID_TYPED_FROM_ASN1(oid_md_hmac_t, md_hmac, oid_md_hmac)
 FN_OID_GET_ATTR1(mbedtls_oid_get_md_hmac, oid_md_hmac_t, md_hmac, mbedtls_md_type_t, md_hmac)
 
+#if defined(MBEDTLS_CIPHER_C)
 /*
  * For PKCS#5 PBES2 encryption algorithm
  */
@@ -390,10 +390,11 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_cipher_alg,
                  cipher_alg,
                  mbedtls_cipher_type_t,
                  cipher_alg)
+#endif /* MBEDTLS_CIPHER_C */
 #endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
 
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
-    defined(MBEDTLS_CIPHER_PADDING_PKCS7)
+    defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
 /*
  * For PKCS#12 PBEs
  */
@@ -431,8 +432,8 @@ FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg,
                  md_alg,
                  mbedtls_cipher_type_t,
                  cipher_alg)
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_PADDING_PKCS7 */
-#endif /* MBEDTLS_CIPHER_C */
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C &&
+          MBEDTLS_CIPHER_PADDING_PKCS7 && MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
 /*
