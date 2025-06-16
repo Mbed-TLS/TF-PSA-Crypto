@@ -289,12 +289,12 @@ int mbedtls_asn1_get_int(unsigned char **p,
 
 /**
  * \brief               Parse an INTEGER in DER representation and return a pointer
- *                      to its big-endian representation, length of the representation.
+ *                      to its big-endian representation and length of the representation.
  *                      The pointers are only valid as long as the input buffer is.
  * \param[in,out] p     On entry, \c *p points to the start of the ASN.1 element.
  *                      On successful completion, \c *p points to the first byte
  *                      beyond the ASN.1 element.
- *                      On error, the value of \c *p is unspecified.
+ *                      On error, the value of \c *p is unchanged.
  * \param[in] end       End of data.
  * \param[out] head     On success, set to point to the start of the big-endian
  *                      representation of the INTEGER without any leading zeros.
