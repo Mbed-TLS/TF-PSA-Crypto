@@ -16,7 +16,7 @@
 
 #include <stddef.h>
 
-#include "md.h"
+#include "mbedtls/md.h"
 
 
 #if defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
