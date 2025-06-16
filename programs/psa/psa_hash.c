@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "mbedtls/build_info.h"
+#include "tf-psa-crypto/build_info.h"
 #include "mbedtls/platform.h"
 
 /* Information about hashing with the PSA API can be

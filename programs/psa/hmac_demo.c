@@ -26,7 +26,7 @@
 /* First include Mbed TLS headers to get the Mbed TLS configuration and
  * platform definitions that we'll use in this program. Also include
  * standard C headers for functions we'll use here. */
-#include "mbedtls/build_info.h"
+#include "tf-psa-crypto/build_info.h"
 
 #include "psa/crypto.h"
 
