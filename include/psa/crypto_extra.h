@@ -756,15 +756,6 @@ typedef uint32_t psa_pake_primitive_t;
  */
 #define PSA_PAKE_STEP_ZK_PROOF                  ((psa_pake_step_t) 0x03)
 
-struct psa_pake_cipher_suite_s
-{
-    psa_algorithm_t algorithm;
-    psa_pake_primitive_type_t type;
-    psa_pake_family_t family;
-    uint16_t  bits;
-    psa_algorithm_t hash;
-};
-
 /** The type of the data structure for PAKE cipher suites.
  *
  * This is an implementation-defined \c struct. Applications should not
@@ -893,79 +884,6 @@ static uint32_t psa_pake_cs_get_key_confirmation(const psa_pake_cipher_suite_t *
 static void psa_pake_cs_set_key_confirmation(psa_pake_cipher_suite_t *cipher_suite,
                                              uint32_t key_confirmation);
 
-struct psa_crypto_driver_pake_inputs_s {
-    uint8_t *MBEDTLS_PRIVATE(password);
-    size_t MBEDTLS_PRIVATE(password_len);
-    uint8_t *MBEDTLS_PRIVATE(user);
-    size_t MBEDTLS_PRIVATE(user_len);
-    uint8_t *MBEDTLS_PRIVATE(peer);
-    size_t MBEDTLS_PRIVATE(peer_len);
-    psa_key_attributes_t MBEDTLS_PRIVATE(attributes);
-    psa_pake_cipher_suite_t MBEDTLS_PRIVATE(cipher_suite);
-};
-
-/** The type of input values for PAKE operations. */
-typedef struct psa_crypto_driver_pake_inputs_s psa_crypto_driver_pake_inputs_t;
-
-typedef enum psa_jpake_round {
-    PSA_JPAKE_FIRST = 0,
-    PSA_JPAKE_SECOND = 1,
-    PSA_JPAKE_FINISHED = 2
-} psa_jpake_round_t;
-
-typedef enum psa_jpake_io_mode {
-    PSA_JPAKE_INPUT = 0,
-    PSA_JPAKE_OUTPUT = 1
-} psa_jpake_io_mode_t;
-
-struct psa_jpake_computation_stage_s {
-    /* The J-PAKE round we are currently on */
-    psa_jpake_round_t MBEDTLS_PRIVATE(round);
-    /* The 'mode' we are currently in (inputting or outputting) */
-    psa_jpake_io_mode_t MBEDTLS_PRIVATE(io_mode);
-    /* The number of completed inputs so far this round */
-    uint8_t MBEDTLS_PRIVATE(inputs);
-    /* The number of completed outputs so far this round */
-    uint8_t MBEDTLS_PRIVATE(outputs);
-    /* The next expected step (KEY_SHARE, ZK_PUBLIC or ZK_PROOF) */
-    psa_pake_step_t MBEDTLS_PRIVATE(step);
-};
-
-/** The type of computation stage for J-PAKE operations. */
-typedef struct psa_jpake_computation_stage_s psa_jpake_computation_stage_t;
-
-struct psa_pake_operation_s {
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-    mbedtls_psa_client_handle_t handle;
-#else
-    /** Unique ID indicating which driver got assigned to do the
-     * operation. Since driver contexts are driver-specific, swapping
-     * drivers halfway through the operation is not supported.
-     * ID values are auto-generated in psa_crypto_driver_wrappers.h
-     * ID value zero means the context is not valid or not assigned to
-     * any driver (i.e. none of the driver contexts are active). */
-    unsigned int MBEDTLS_PRIVATE(id);
-    /* Algorithm of the PAKE operation */
-    psa_algorithm_t MBEDTLS_PRIVATE(alg);
-    /* A primitive of type compatible with algorithm */
-    psa_pake_primitive_t MBEDTLS_PRIVATE(primitive);
-    /* Stage of the PAKE operation: waiting for the setup, collecting inputs
-    * or computing. */
-    uint8_t MBEDTLS_PRIVATE(stage);
-    /* Holds computation stage of the PAKE algorithms. */
-    union {
-        uint8_t MBEDTLS_PRIVATE(dummy);
-#if defined(PSA_WANT_ALG_JPAKE)
-        psa_jpake_computation_stage_t MBEDTLS_PRIVATE(jpake);
-#endif
-    } MBEDTLS_PRIVATE(computation_stage);
-    union {
-        psa_driver_pake_context_t MBEDTLS_PRIVATE(ctx);
-        psa_crypto_driver_pake_inputs_t MBEDTLS_PRIVATE(inputs);
-    } MBEDTLS_PRIVATE(data);
-#endif
-};
-
 /** The type of the state data structure for PAKE operations.
  *
  * Before calling any function on a PAKE operation object, the application
@@ -995,6 +913,12 @@ struct psa_pake_operation_s {
  * make any assumptions about the content of this structure.
  * Implementation details can change in future versions without notice. */
 typedef struct psa_pake_operation_s psa_pake_operation_t;
+
+/** The type of input values for PAKE operations. */
+typedef struct psa_crypto_driver_pake_inputs_s psa_crypto_driver_pake_inputs_t;
+
+/** The type of computation stage for J-PAKE operations. */
+typedef struct psa_jpake_computation_stage_s psa_jpake_computation_stage_t;
 
 /** Return an initial value for a PAKE operation object.
  */
@@ -1682,6 +1606,15 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
  */
 #define PSA_PAKE_UNCONFIRMED_KEY 1
 
+struct psa_pake_cipher_suite_s {
+    psa_algorithm_t algorithm;
+    psa_pake_primitive_type_t type;
+    psa_pake_family_t family;
+    uint16_t  bits;
+    psa_algorithm_t hash;
+    uint32_t key_confirmation;
+};
+
 static inline psa_algorithm_t psa_pake_cs_get_algorithm(
     const psa_pake_cipher_suite_t *cipher_suite)
 {
@@ -1781,10 +1714,66 @@ typedef enum psa_crypto_driver_pake_step {
     PSA_JPAKE_X4S_STEP_ZK_PROOF   = 12  /* Round 2: input Schnorr NIZKP proof for the X4S key (from peer) */
 } psa_crypto_driver_pake_step_t;
 
+typedef enum psa_jpake_round {
+    PSA_JPAKE_FIRST = 0,
+    PSA_JPAKE_SECOND = 1,
+    PSA_JPAKE_FINISHED = 2
+} psa_jpake_round_t;
+
+typedef enum psa_jpake_io_mode {
+    PSA_JPAKE_INPUT = 0,
+    PSA_JPAKE_OUTPUT = 1
+} psa_jpake_io_mode_t;
+
+struct psa_jpake_computation_stage_s {
+    /* The J-PAKE round we are currently on */
+    psa_jpake_round_t MBEDTLS_PRIVATE(round);
+    /* The 'mode' we are currently in (inputting or outputting) */
+    psa_jpake_io_mode_t MBEDTLS_PRIVATE(io_mode);
+    /* The number of completed inputs so far this round */
+    uint8_t MBEDTLS_PRIVATE(inputs);
+    /* The number of completed outputs so far this round */
+    uint8_t MBEDTLS_PRIVATE(outputs);
+    /* The next expected step (KEY_SHARE, ZK_PUBLIC or ZK_PROOF) */
+    psa_pake_step_t MBEDTLS_PRIVATE(step);
+};
+
 #define PSA_JPAKE_EXPECTED_INPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
                                           ((round) == PSA_JPAKE_FIRST ? 2 : 1))
 #define PSA_JPAKE_EXPECTED_OUTPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
                                            ((round) == PSA_JPAKE_FIRST ? 2 : 1))
+
+struct psa_pake_operation_s {
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+    mbedtls_psa_client_handle_t handle;
+#else
+    /** Unique ID indicating which driver got assigned to do the
+     * operation. Since driver contexts are driver-specific, swapping
+     * drivers halfway through the operation is not supported.
+     * ID values are auto-generated in psa_crypto_driver_wrappers.h
+     * ID value zero means the context is not valid or not assigned to
+     * any driver (i.e. none of the driver contexts are active). */
+    unsigned int MBEDTLS_PRIVATE(id);
+    /* Algorithm of the PAKE operation */
+    psa_algorithm_t MBEDTLS_PRIVATE(alg);
+    /* A primitive of type compatible with algorithm */
+    psa_pake_primitive_t MBEDTLS_PRIVATE(primitive);
+    /* Stage of the PAKE operation: waiting for the setup, collecting inputs
+     * or computing. */
+    uint8_t MBEDTLS_PRIVATE(stage);
+    /* Holds computation stage of the PAKE algorithms. */
+    union {
+        uint8_t MBEDTLS_PRIVATE(dummy);
+#if defined(PSA_WANT_ALG_JPAKE)
+        psa_jpake_computation_stage_t MBEDTLS_PRIVATE(jpake);
+#endif
+    } MBEDTLS_PRIVATE(computation_stage);
+    union {
+        psa_driver_pake_context_t MBEDTLS_PRIVATE(ctx);
+        psa_crypto_driver_pake_inputs_t MBEDTLS_PRIVATE(inputs);
+    } MBEDTLS_PRIVATE(data);
+#endif
+};
 
 static inline struct psa_pake_cipher_suite_s psa_pake_cipher_suite_init(void)
 {
