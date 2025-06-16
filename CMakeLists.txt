@@ -440,6 +440,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/tests/include
         PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
         PRIVATE tests/include
+        PRIVATE tests/include/test
         PRIVATE include
         PRIVATE drivers/builtin/include
         PRIVATE drivers/everest/include
