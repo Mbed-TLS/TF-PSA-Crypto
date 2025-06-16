@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/gcm.h"
+#include "mbedtls/private/gcm.h"
 
 /* Use the multipart interface to process the encrypted data in two parts
  * and check that the output matches the expected output.

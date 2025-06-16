@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/des.h"
+#include "mbedtls/private/des.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

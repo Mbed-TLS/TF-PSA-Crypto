@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/chacha20.h"
+#include "mbedtls/private/chacha20.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

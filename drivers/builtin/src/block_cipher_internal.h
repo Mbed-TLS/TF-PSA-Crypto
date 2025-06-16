@@ -13,9 +13,9 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 
-#include "mbedtls/block_cipher.h"
+#include "mbedtls/private/block_cipher.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -52,10 +52,10 @@
 #if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
 #else
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 #endif
 
-#include "entropy.h"
+#include "private/entropy.h"
 
 #if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"

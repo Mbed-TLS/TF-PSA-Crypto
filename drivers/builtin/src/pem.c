@@ -11,12 +11,12 @@
 
 #include "mbedtls/pem.h"
 #include "mbedtls/base64.h"
-#include "mbedtls/des.h"
-#include "mbedtls/aes.h"
+#include "mbedtls/private/des.h"
+#include "mbedtls/private/aes.h"
 #include "mbedtls/md.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

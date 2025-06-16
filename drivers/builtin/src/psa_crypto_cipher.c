@@ -14,8 +14,8 @@
 #include "psa_crypto_core.h"
 #include "psa_crypto_random_impl.h"
 
-#include "mbedtls/cipher.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/cipher.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

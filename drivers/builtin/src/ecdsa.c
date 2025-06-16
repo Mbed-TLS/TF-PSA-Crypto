@@ -15,19 +15,19 @@
 
 #if defined(MBEDTLS_ECDSA_C)
 
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/private/ecdsa.h"
 #include "mbedtls/asn1write.h"
 
 #include <string.h>
 
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/private/hmac_drbg.h"
 #endif
 
 #include "mbedtls/platform.h"
 
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 

@@ -12,7 +12,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 #include "mbedtls/platform.h"
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 
 #if !defined(MBEDTLS_AES_C)
 int main(void)

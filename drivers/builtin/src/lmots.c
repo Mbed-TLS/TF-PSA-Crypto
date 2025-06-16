@@ -28,7 +28,7 @@
 
 #include "mbedtls/lms.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "psa_util_internal.h"
 
 #include "psa/crypto.h"

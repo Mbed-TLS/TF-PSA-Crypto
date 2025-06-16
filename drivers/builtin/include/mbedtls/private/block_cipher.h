@@ -15,13 +15,13 @@
 #include "tf-psa-crypto/build_info.h"
 
 #if defined(MBEDTLS_AES_C)
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 #endif
 #if defined(MBEDTLS_ARIA_C)
-#include "mbedtls/aria.h"
+#include "mbedtls/private/aria.h"
 #endif
 #if defined(MBEDTLS_CAMELLIA_C)
-#include "mbedtls/camellia.h"
+#include "mbedtls/private/camellia.h"
 #endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)

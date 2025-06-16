@@ -12,18 +12,18 @@
 #if defined(MBEDTLS_PK_C)
 #include "pk_wrap.h"
 #include "pk_internal.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/psa_util.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
-#include "mbedtls/rsa.h"
+#include "mbedtls/private/rsa.h"
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/private/ecdsa.h"
 #endif
 
 #include "psa_util_internal.h"

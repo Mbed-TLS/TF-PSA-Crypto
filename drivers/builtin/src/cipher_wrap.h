@@ -14,7 +14,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 
 #include "psa/crypto.h"
 

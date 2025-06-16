@@ -22,10 +22,10 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
-#include "mbedtls/block_cipher.h"
+#include "mbedtls/private/block_cipher.h"
 #endif
 
 #include <stdint.h>

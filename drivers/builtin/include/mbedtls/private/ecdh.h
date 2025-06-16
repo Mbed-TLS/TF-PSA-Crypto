@@ -23,7 +23,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 
 /*
  * Mbed TLS supports two formats for ECDH contexts (#mbedtls_ecdh_context

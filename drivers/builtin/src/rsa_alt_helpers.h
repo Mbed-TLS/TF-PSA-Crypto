@@ -49,7 +49,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -30,9 +30,9 @@
 
 #if defined(MBEDTLS_CMAC_C)
 
-#include "mbedtls/cmac.h"
+#include "mbedtls/private/cmac.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/platform.h"
 #include "constant_time_internal.h"
 

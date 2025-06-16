@@ -15,9 +15,9 @@
 #if defined(MBEDTLS_CTR_DRBG_C)
 
 #include "ctr.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/ctr_drbg.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <limits.h>
 #include <string.h>

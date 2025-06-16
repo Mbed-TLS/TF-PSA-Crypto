@@ -16,9 +16,9 @@
 
 #if defined(MBEDTLS_ECDH_C)
 
-#include "mbedtls/ecdh.h"
+#include "mbedtls/private/ecdh.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

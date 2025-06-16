@@ -1,8 +1,8 @@
 /* BEGIN_HEADER */
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #include "ecp_invasive.h"
-#include "mbedtls/ecdsa.h"
-#include "mbedtls/ecdh.h"
+#include "mbedtls/private/ecdsa.h"
+#include "mbedtls/private/ecdh.h"
 
 #include "bignum_core.h"
 #include "ecp_invasive.h"

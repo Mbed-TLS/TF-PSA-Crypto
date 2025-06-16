@@ -26,7 +26,7 @@
 #include "tf-psa-crypto/build_info.h"
 #include "mbedtls/platform_util.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 
 /*
  * ECP error codes

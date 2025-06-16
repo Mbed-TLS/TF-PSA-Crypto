@@ -19,10 +19,10 @@
 
 #if defined(MBEDTLS_GCM_C)
 
-#include "mbedtls/gcm.h"
+#include "mbedtls/private/gcm.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/constant_time.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)

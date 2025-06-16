@@ -69,7 +69,7 @@
 #include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_BIGNUM_C)
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 #endif
 
 #include "bignum_mod.h"

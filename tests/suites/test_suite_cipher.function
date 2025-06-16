@@ -1,9 +1,9 @@
 /* BEGIN_HEADER */
-#include "mbedtls/cipher.h"
-#include "mbedtls/aes.h"
+#include "mbedtls/private/cipher.h"
+#include "mbedtls/private/aes.h"
 
 #if defined(MBEDTLS_GCM_C)
-#include "mbedtls/gcm.h"
+#include "mbedtls/private/gcm.h"
 #endif
 
 #include "cipher_invasive.h"

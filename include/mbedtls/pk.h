@@ -19,15 +19,15 @@
 #include "mbedtls/md.h"
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "mbedtls/private/rsa.h"
 #endif
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/private/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)

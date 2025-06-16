@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 
 /* Test AES with a copied context.
  *

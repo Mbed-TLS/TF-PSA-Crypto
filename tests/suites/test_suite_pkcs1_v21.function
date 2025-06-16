@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/rsa.h"
+#include "mbedtls/private/rsa.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

@@ -15,7 +15,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 
 #define MBEDTLS_AESNI_AES      0x02000000u
 #define MBEDTLS_AESNI_CLMUL    0x00000002u

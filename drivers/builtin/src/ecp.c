@@ -33,10 +33,10 @@
 
 #if defined(MBEDTLS_ECP_LIGHT)
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #include "mbedtls/threading.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include "bn_mul.h"
 #include "ecp_invasive.h"

@@ -10,7 +10,7 @@
 
 /* For MBEDTLS_CTR_DRBG_MAX_REQUEST, knowing that psa_generate_random()
  * uses mbedtls_ctr_drbg internally. */
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/ctr_drbg.h"
 
 #include "psa/crypto.h"
 #include "psa_crypto_slot_management.h"

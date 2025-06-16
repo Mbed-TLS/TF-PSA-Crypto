@@ -24,7 +24,7 @@
 #include "tf-psa-crypto/build_info.h"
 
 /* for shared error codes */
-#include "mbedtls/poly1305.h"
+#include "mbedtls/private/poly1305.h"
 
 /** The requested operation is not permitted in the current state. */
 #define MBEDTLS_ERR_CHACHAPOLY_BAD_STATE            -0x0054
@@ -41,7 +41,7 @@ typedef enum {
 }
 mbedtls_chachapoly_mode_t;
 
-#include "mbedtls/chacha20.h"
+#include "mbedtls/private/chacha20.h"
 
 typedef struct mbedtls_chachapoly_context {
     mbedtls_chacha20_context MBEDTLS_PRIVATE(chacha20_ctx);  /**< The ChaCha20 context. */

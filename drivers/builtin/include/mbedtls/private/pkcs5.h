@@ -17,7 +17,7 @@
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/md.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 
 #include <stddef.h>
 #include <stdint.h>

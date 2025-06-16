@@ -21,7 +21,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #include "mbedtls/md.h"
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
