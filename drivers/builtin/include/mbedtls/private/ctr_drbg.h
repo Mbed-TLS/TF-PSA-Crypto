@@ -55,7 +55,7 @@
 #include "mbedtls/private/aes.h"
 #endif
 
-#include "private/entropy.h"
+#include "mbedtls/private/entropy.h"
 
 #if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"
