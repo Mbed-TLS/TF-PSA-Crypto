@@ -1,2 +1,2 @@
 This is not the final log entry!!! Currently this file is for the script, which executes the header include changes:
-find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.function" \) -print -exec sed -E -i '/(#include.*private\/aes.h\")/b skip; s/(#include.*(\"|\/))(aes.h)\"/\1private\/\3\"/; :skip' {}  \; > log.txt
+find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.function" \) -print -exec sed -E -i '/(#include.*private\/aes.h(\"|>))/b skip; s/(#include.*(\"|\/|<))(aes.h)(\"|>)/\1private\/\3\4/; :skip' {}  \; > log.txt

@@ -9,7 +9,7 @@
 #ifndef PSA_CRYPTO_CIPHER_H
 #define PSA_CRYPTO_CIPHER_H
 
-#include <mbedtls/cipher.h>
+#include <mbedtls/private/cipher.h>
 #include <psa/crypto.h>
 
 /** Get Mbed TLS cipher information given the cipher algorithm PSA identifier
