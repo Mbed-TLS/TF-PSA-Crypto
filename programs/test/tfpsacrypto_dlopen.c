@@ -42,18 +42,37 @@ int main(void)
      * "gcc -std=c99 -pedantic" complains about it, but it is perfectly
      * fine on platforms that have dlsym(). */
 #pragma GCC diagnostic ignored "-Wpedantic"
-    psa_status_t (*psa_crypto_init_ptr)(void) = dlsym(crypto_so, "psa_crypto_init");
+    psa_status_t (*psa_crypto_init_ptr)(void) =
+        dlsym(crypto_so, "psa_crypto_init");
+    psa_status_t (*psa_hash_compute_ptr)(psa_algorithm_t, const uint8_t *, size_t,
+                                         uint8_t *, size_t, size_t *) =
+        dlsym(crypto_so, "psa_hash_compute");
+        
 #pragma GCC diagnostic pop
     CHECK_DLERROR("dlsym", "psa_crypto_init");
+    CHECK_DLERROR("dlsym", "psa_hash_compute");
 
     psa_status_t status = psa_crypto_init_ptr();
-    if (status == PSA_SUCCESS) {
-        mbedtls_printf("dlopen(%s): Call to psa_crypto_init was successful.\n",
-                       CRYPTO_SO_FILENAME);
-    } else {
-        mbedtls_printf("dlopen(%s): Call to psa_crypto_init failed.\n",
-                       CRYPTO_SO_FILENAME);
+    if (status != PSA_SUCCESS) {
+        mbedtls_fprintf(stderr, "psa_crypto_init failed: %d\n", (int) status);
+        mbedtls_exit(MBEDTLS_EXIT_FAILURE);
     }
+
+    const uint8_t input[] = "hello world";
+    uint8_t hash[32]; // Buffer to hold the output hash
+    size_t hash_len = 0;
+
+    status = psa_hash_compute_ptr(PSA_ALG_SHA_256,  
+                              input, sizeof(input) - 1,
+                              hash, sizeof(hash),
+                              &hash_len);
+    if (status != PSA_SUCCESS) {
+        mbedtls_fprintf(stderr, "psa_hash_compute failed: %d\n", (int) status);
+        mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+    }
+
+    mbedtls_printf("dlopen(%s): psa_hash_compute succeeded. SHA-256 output length: %zu\n",
+               CRYPTO_SO_FILENAME, hash_len);
 
     dlclose(crypto_so);
     CHECK_DLERROR("dlclose", CRYPTO_SO_FILENAME);
