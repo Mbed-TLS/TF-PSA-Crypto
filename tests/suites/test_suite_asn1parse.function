@@ -455,6 +455,55 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+/**
+ * The #asn1_data_length argument is only used to provide real data length,
+ * not the buffer length, in case there are more bytes in the buffer, than there
+ * is data, it is then compared with the difference of initial p, and p after the
+ * #mbedtls_asn1_get_integer() call
+ */
+void get_integer_raw(const data_t *input,
+                     const data_t *expected_output, int expected_result,
+                     int asn1_data_length)
+{
+    int ret;
+    unsigned char *p = input->x;
+
+    if (asn1_data_length == -1) {
+        asn1_data_length = input->len;
+    }
+
+    /* Initialize pointer and length to nonsense values so that we can
+     * distinguish leaving them unchanged from setting them in the error
+     * case. */
+    unsigned char dummy = 0;
+    unsigned char *integer_head = &dummy;
+    size_t integer_length = 0xdeadbeef;
+
+    ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
+                                   &integer_head, &integer_length);
+
+    TEST_EQUAL(ret, expected_result);
+
+    if (expected_result == 0) {
+        /* On success, check that the returned number matches what we expect */
+        TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
+                            integer_head, integer_length);
+
+        /* And check that p is correct */
+        TEST_EQUAL(p - input->x, asn1_data_length);
+    } else {
+        /* On failure we'd like the pointer and length to be
+         * obviously invalid */
+        TEST_ASSERT(integer_head == NULL);
+        TEST_EQUAL(integer_length, 0);
+
+        /* We'd also like p not to have advanced at all */
+        TEST_ASSERT(p == input->x);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void get_enum(const data_t *input,
               const char *expected_hex, int expected_result)
 {

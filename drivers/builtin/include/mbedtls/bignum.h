@@ -1071,6 +1071,30 @@ int mbedtls_mpi_gen_prime(mbedtls_mpi *X, size_t nbits, int flags,
                           int (*f_rng)(void *, unsigned char *, size_t),
                           void *p_rng);
 
+/**
+ * \brief       Retrieve an integer ASN.1 tag and its value.
+ *              Updates the pointer to immediately behind the full tag.
+ *              Legacy function, which is now for internal use only.
+ *              Please use mbedtls_asn1_get_integer() instead.
+ *
+ * \param p     On entry, \c *p points to the start of the ASN.1 element.
+ *              On successful completion, \c *p points to the first byte
+ *              beyond the ASN.1 element.
+ *              On error, the value of \c *p is undefined.
+ * \param end   End of data.
+ * \param X     On success, the parsed value.
+ *
+ * \return      0 if successful.
+ * \return      An ASN.1 error code if the input does not start with
+ *              a valid ASN.1 INTEGER.
+ * \return      #MBEDTLS_ERR_ASN1_INVALID_LENGTH if the parsed value does
+ *              not fit in an \c int.
+ * \return      An MPI error code if the parsed value is too large.
+ */
+int mbedtls_asn1_get_mpi(unsigned char **p,
+                         const unsigned char *end,
+                         mbedtls_mpi *X);
+
 #if defined(MBEDTLS_SELF_TEST)
 
 /**

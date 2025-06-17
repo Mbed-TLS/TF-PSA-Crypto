@@ -179,6 +179,55 @@ int mbedtls_asn1_get_mpi(unsigned char **p,
 }
 #endif /* MBEDTLS_BIGNUM_C */
 
+int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
+                             unsigned char **head, size_t *length)
+{
+    int ret;
+    size_t integer_length;
+    unsigned char *start = *p;
+
+    *length = 0;
+    *head = NULL;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &integer_length, MBEDTLS_ASN1_INTEGER)) != 0) {
+        *p = start;
+        return ret;
+    }
+
+    if (integer_length == 0) {
+        *p = start;
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
+
+    const int negative = ((**p & 0x80) != 0);
+
+    if (negative) {
+        *p = start;
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
+
+    /* Check that the integer is not overlong-encoded. We know that it is not
+     * negative so it is only overlong-encoded if the first byte is zero and
+     * the top bit of the second byte is also zero. */
+    if ((integer_length >= 2) &&
+        ((*p)[0] == 0) &&
+        (((*p)[1] & 0x80) == 0)) {
+        *p = start;
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
+
+    *head = *p;
+    *p += integer_length;
+    *length = integer_length;
+
+    if ((*head)[0] == 0) {
+        (*head)++;
+        (*length)--;
+    }
+
+    return 0;
+}
+
 int mbedtls_asn1_get_bitstring(unsigned char **p, const unsigned char *end,
                                mbedtls_asn1_bitstring *bs)
 {

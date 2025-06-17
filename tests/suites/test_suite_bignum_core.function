@@ -6,6 +6,10 @@
 #include "test/constant_flow.h"
 #include "test/bignum_codepath_check.h"
 
+#if defined(MBEDTLS_ASN1_PARSE_C)
+#include "mbedtls/asn1.h"
+#endif
+
 /** Verifies mbedtls_mpi_core_add().
  *
  * \param[in] A       Little-endian presentation of the left operand.
@@ -1422,5 +1426,58 @@ void mpi_core_check_zero_ct(char *input_X, int expected_is_zero)
 
 exit:
     mbedtls_free(X);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C */
+/* Get a raw bignum with mbedtls_asn1_get_integer() and parse
+ * it with mbedtls_mpi_core_read_be(). */
+void asn1_get_and_parse_integer(const data_t *input,
+                                int expected_result,
+                                const char *expected_output)
+{
+    int ret;
+    unsigned char *p = input->x;
+    /* Initialize pointer and length to nonsense values so that we can
+     * distinguish leaving them unchanged from setting them in the error
+     * case. */
+    unsigned char *integer_head;
+    size_t integer_length;
+
+    mbedtls_mpi_uint *integer = NULL;
+
+    mbedtls_mpi_uint *expected = NULL;
+    size_t expected_limbs = 0;
+
+    ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
+                                   &integer_head, &integer_length);
+
+    TEST_EQUAL(ret, expected_result);
+
+    if (expected_result == 0) {
+        /* On success, try parsing the resulting integer */
+
+        /* Calculate the number of limbs required (int ceil operation) */
+        TEST_ASSERT(integer_length > 0);
+        size_t limbs = CHARS_TO_LIMBS(integer_length);
+        TEST_CALLOC(integer, limbs);
+
+        ret = mbedtls_mpi_core_read_be(integer, limbs,
+                                       integer_head, integer_length);
+        TEST_EQUAL(ret, 0);
+
+        ret = mbedtls_test_read_mpi_core(&expected, &expected_limbs,
+                                         expected_output);
+        TEST_EQUAL(ret, 0);
+
+        /* Check that the integer we get is the same as the one we
+         * expected to get. */
+        TEST_MEMORY_COMPARE(integer, limbs * sizeof(*integer),
+                            expected, expected_limbs * sizeof(*expected));
+    }
+
+exit:
+    mbedtls_free(integer);
+    mbedtls_free(expected);
 }
 /* END_CASE */
