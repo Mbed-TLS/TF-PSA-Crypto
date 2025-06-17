@@ -27,7 +27,7 @@
 #if defined(MBEDTLS_CIPHER_C)
 #include "mbedtls/cipher.h"
 #endif /* MBEDTLS_CIPHER_C */
-#include "mbedtls/crypto_oid.h"
+#include "crypto_oid.h"
 #endif /* MBEDTLS_ASN1_PARSE_C */
 
 #include <string.h>

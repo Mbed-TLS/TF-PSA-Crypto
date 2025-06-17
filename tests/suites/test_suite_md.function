@@ -2,7 +2,7 @@
 #include "mbedtls/md.h"
 #include "mbedtls/psa_util.h"
 
-#include "mbedtls/crypto_oid.h"
+#include "crypto_oid.h"
 #include "mbedtls/asn1.h"
 
 #define MD_PSA(md, psa) \
@@ -44,16 +44,12 @@ void mbedtls_md_list()
         TEST_EQUAL(*md_type_ptr, mbedtls_md_type_from_psa_alg(p));
 #endif
 
-#if defined(MBEDTLS_OID_C)
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
         mbedtls_asn1_buf asn1;
         /* Check that we have an OID definition */
         TEST_EQUAL(mbedtls_oid_get_oid_by_md((mbedtls_md_type_t) *md_type_ptr,
                                              (const char **) &asn1.p, &asn1.len), 0);
-        /* Check that this OID definition maps back to the correct mbedtls_md_type_t */
-        mbedtls_md_type_t m;
-        TEST_EQUAL(mbedtls_oid_get_md_alg(&asn1, &m), 0);
-        TEST_EQUAL(m, *md_type_ptr);
-#endif
+#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
     }
 
 exit:

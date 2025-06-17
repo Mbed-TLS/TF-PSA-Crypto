@@ -32,7 +32,7 @@
 #include "bignum_internal.h"
 #include "rsa_alt_helpers.h"
 #include "rsa_internal.h"
-#include "mbedtls/crypto_oid.h"
+#include "crypto_oid.h"
 #include "mbedtls/asn1write.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"

@@ -24,35 +24,7 @@
 
 #include "mbedtls/md.h"
 
-/* OID is not found. This error is in the process of being removed from
- * the public API, Hide it from scripts/generate_errors.pl, which
- * is in the mbedtls repository, and would complain because it doesn't
- * recognize the header name "crypto_oid.h". */
-#define MBEDTLS_ERR_OID_NOT_FOUND                         (-0x002E)
-/* output buffer is too small */
-#define MBEDTLS_ERR_OID_BUF_TOO_SMALL (PSA_ERROR_BUFFER_TOO_SMALL)
-
-/* This is for the benefit of X.509, but defined here in order to avoid
- * having a "backwards" include of x.509.h here */
-/*
- * X.509 extension types (internal, arbitrary values for bitsets)
- */
-#define MBEDTLS_OID_X509_EXT_AUTHORITY_KEY_IDENTIFIER    (1 << 0)
-#define MBEDTLS_OID_X509_EXT_SUBJECT_KEY_IDENTIFIER      (1 << 1)
-#define MBEDTLS_OID_X509_EXT_KEY_USAGE                   (1 << 2)
-#define MBEDTLS_OID_X509_EXT_CERTIFICATE_POLICIES        (1 << 3)
-#define MBEDTLS_OID_X509_EXT_POLICY_MAPPINGS             (1 << 4)
-#define MBEDTLS_OID_X509_EXT_SUBJECT_ALT_NAME            (1 << 5)
-#define MBEDTLS_OID_X509_EXT_ISSUER_ALT_NAME             (1 << 6)
-#define MBEDTLS_OID_X509_EXT_SUBJECT_DIRECTORY_ATTRS     (1 << 7)
-#define MBEDTLS_OID_X509_EXT_BASIC_CONSTRAINTS           (1 << 8)
-#define MBEDTLS_OID_X509_EXT_NAME_CONSTRAINTS            (1 << 9)
-#define MBEDTLS_OID_X509_EXT_POLICY_CONSTRAINTS          (1 << 10)
-#define MBEDTLS_OID_X509_EXT_EXTENDED_KEY_USAGE          (1 << 11)
-#define MBEDTLS_OID_X509_EXT_CRL_DISTRIBUTION_POINTS     (1 << 12)
-#define MBEDTLS_OID_X509_EXT_INIHIBIT_ANYPOLICY          (1 << 13)
-#define MBEDTLS_OID_X509_EXT_FRESHEST_CRL                (1 << 14)
-#define MBEDTLS_OID_X509_EXT_NS_CERT_TYPE                (1 << 16)
+#define MBEDTLS_ERR_OID_NOT_FOUND                         PSA_ERROR_NOT_SUPPORTED
 
 /*
  * Maximum number of OID components allowed
@@ -73,10 +45,10 @@
 #define MBEDTLS_OID_COUNTRY_US                  "\x86\x48"      /* {us(840)} */
 #define MBEDTLS_OID_ORG_RSA_DATA_SECURITY       "\x86\xf7\x0d"  /* {rsadsi(113549)} */
 #define MBEDTLS_OID_RSA_COMPANY                 MBEDTLS_OID_ISO_MEMBER_BODIES MBEDTLS_OID_COUNTRY_US \
-        MBEDTLS_OID_ORG_RSA_DATA_SECURITY                                 /* {iso(1) member-body(2) us(840) rsadsi(113549)} */
+    MBEDTLS_OID_ORG_RSA_DATA_SECURITY                           /* {iso(1) member-body(2) us(840) rsadsi(113549)} */
 #define MBEDTLS_OID_ORG_ANSI_X9_62              "\xce\x3d" /* ansi-X9-62(10045) */
 #define MBEDTLS_OID_ANSI_X9_62                  MBEDTLS_OID_ISO_MEMBER_BODIES MBEDTLS_OID_COUNTRY_US \
-        MBEDTLS_OID_ORG_ANSI_X9_62
+    MBEDTLS_OID_ORG_ANSI_X9_62
 
 /*
  * ISO Identified organization OID parts
@@ -88,20 +60,20 @@
 #define MBEDTLS_OID_OIW_SECSIG_SHA1             MBEDTLS_OID_OIW_SECSIG_ALG "\x1a"
 #define MBEDTLS_OID_ORG_THAWTE                  "\x65"          /* thawte(101) */
 #define MBEDTLS_OID_THAWTE                      MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_ORG_THAWTE
+    MBEDTLS_OID_ORG_THAWTE
 #define MBEDTLS_OID_ORG_CERTICOM                "\x81\x04"  /* certicom(132) */
 #define MBEDTLS_OID_CERTICOM                    MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_ORG_CERTICOM
+    MBEDTLS_OID_ORG_CERTICOM
 #define MBEDTLS_OID_ORG_TELETRUST               "\x24" /* teletrust(36) */
 #define MBEDTLS_OID_TELETRUST                   MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_ORG_TELETRUST
+    MBEDTLS_OID_ORG_TELETRUST
 
 /*
  * ISO ITU OID parts
  */
 #define MBEDTLS_OID_ORGANIZATION                "\x01"          /* {organization(1)} */
 #define MBEDTLS_OID_ISO_ITU_US_ORG              MBEDTLS_OID_ISO_ITU_COUNTRY MBEDTLS_OID_COUNTRY_US \
-        MBEDTLS_OID_ORGANIZATION                                                                                            /* {joint-iso-itu-t(2) country(16) us(840) organization(1)} */
+    MBEDTLS_OID_ORGANIZATION                                    /* {joint-iso-itu-t(2) country(16) us(840) organization(1)} */
 
 #define MBEDTLS_OID_ORG_GOV                     "\x65"          /* {gov(101)} */
 #define MBEDTLS_OID_GOV                         MBEDTLS_OID_ISO_ITU_US_ORG MBEDTLS_OID_ORG_GOV /* {joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101)} */
@@ -251,7 +223,7 @@
  */
 #define MBEDTLS_OID_DIGEST_ALG_MD5              MBEDTLS_OID_RSA_COMPANY "\x02\x05" /**< id-mbedtls_md5 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) digestAlgorithm(2) 5 } */
 #define MBEDTLS_OID_DIGEST_ALG_SHA1             MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_OIW_SECSIG_SHA1                                                                        /**< id-mbedtls_sha1 OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 26 } */
+    MBEDTLS_OID_OIW_SECSIG_SHA1                                                 /**< id-mbedtls_sha1 OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 26 } */
 #define MBEDTLS_OID_DIGEST_ALG_SHA224           MBEDTLS_OID_NIST_ALG "\x02\x04" /**< id-sha224 OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashalgs(2) 4 } */
 #define MBEDTLS_OID_DIGEST_ALG_SHA256           MBEDTLS_OID_NIST_ALG "\x02\x01" /**< id-mbedtls_sha256 OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashalgs(2) 1 } */
 
@@ -296,7 +268,7 @@
  * https://datatracker.ietf.org/doc/html/rfc8018#appendix-C.
  */
 #define MBEDTLS_OID_DES_CBC                     MBEDTLS_OID_ISO_IDENTIFIED_ORG \
-        MBEDTLS_OID_OIW_SECSIG_ALG "\x07"                                                                        /**< desCBC OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 7 } */
+    MBEDTLS_OID_OIW_SECSIG_ALG "\x07"                                  /**< desCBC OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 7 } */
 #define MBEDTLS_OID_DES_EDE3_CBC                MBEDTLS_OID_RSA_COMPANY "\x03\x07" /**< des-ede3-cbc OBJECT IDENTIFIER ::= { iso(1) member-body(2) -- us(840) rsadsi(113549) encryptionAlgorithm(3) 7 } */
 #define MBEDTLS_OID_AES                         MBEDTLS_OID_NIST_ALG "\x01" /** aes OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) 1 } */
 #define MBEDTLS_OID_AES_128_CBC                 MBEDTLS_OID_AES "\x02" /** aes128-cbc-pad OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithms(4) aes(1) aes128-CBC-PAD(2) } */
@@ -479,33 +451,9 @@ extern "C" {
 typedef struct mbedtls_oid_descriptor_t {
     const char *MBEDTLS_PRIVATE(asn1);               /*!< OID ASN.1 representation       */
     size_t MBEDTLS_PRIVATE(asn1_len);                /*!< length of asn1                 */
-#if 1 /* OID_INFO_STRINGS */
-    const char *MBEDTLS_PRIVATE(name);               /*!< official name (e.g. from RFC)  */
-    const char *MBEDTLS_PRIVATE(description);        /*!< human friendly description     */
-#endif
 } mbedtls_oid_descriptor_t;
 
-/**
- * \brief          Translate an X.509 extension OID into local values
- *
- * \param oid      OID to use
- * \param ext_type place to store the extension type
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_x509_ext_type(const mbedtls_asn1_buf *oid, int *ext_type);
-
-/**
- * \brief          Translate an X.509 attribute type OID into the short name
- *                 (e.g. the OID for an X520 Common Name into "CN")
- *
- * \param oid      OID to use
- * \param short_name    place to store the string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_attr_short_name(const mbedtls_asn1_buf *oid, const char **short_name);
-
+#if defined(MBEDTLS_PK_PARSE_C) || defined(MBEDTLS_PK_WRITE_C)
 /**
  * \brief          Translate PublicKeyAlgorithm OID into pk_type
  *
@@ -575,42 +523,9 @@ int mbedtls_oid_get_ec_grp_algid(const mbedtls_asn1_buf *oid, mbedtls_ecp_group_
 int mbedtls_oid_get_oid_by_ec_grp_algid(mbedtls_ecp_group_id grp_id,
                                         const char **oid, size_t *olen);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#endif /* MBEDTLS_PK_PARSE_C || MBEDTLS_PK_WRITE_C */
 
-/**
- * \brief          Translate SignatureAlgorithm OID into md_type and pk_type
- *
- * \param oid      OID to use
- * \param md_alg   place to store message digest algorithm
- * \param pk_alg   place to store public key algorithm
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_sig_alg(const mbedtls_asn1_buf *oid,
-                            mbedtls_md_type_t *md_alg, mbedtls_pk_type_t *pk_alg);
-
-/**
- * \brief          Translate SignatureAlgorithm OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_sig_alg_desc(const mbedtls_asn1_buf *oid, const char **desc);
-
-/**
- * \brief          Translate md_type and pk_type into SignatureAlgorithm OID
- *
- * \param md_alg   message digest algorithm
- * \param pk_alg   public key algorithm
- * \param oid      place to store ASN.1 OID string pointer
- * \param olen     length of the OID
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
-                                   const char **oid, size_t *olen);
-
+#if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_ASN1_PARSE_C)
 /**
  * \brief          Translate hmac algorithm OID into md_type
  *
@@ -620,49 +535,6 @@ int mbedtls_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_type_t m
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_hmac);
-
-/**
- * \brief          Translate hash algorithm OID into md_type
- *
- * \param oid      OID to use
- * \param md_alg   place to store message digest algorithm
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_md_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg);
-
-#if 1 /* OID_INFO_STRINGS */
-/**
- * \brief          Translate Extended Key Usage OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_extended_key_usage(const mbedtls_asn1_buf *oid, const char **desc);
-#endif /* OID_INFO_STRINGS */
-
-/**
- * \brief          Translate certificate policies OID into description
- *
- * \param oid      OID to use
- * \param desc     place to store string pointer
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_certificate_policies(const mbedtls_asn1_buf *oid, const char **desc);
-
-/**
- * \brief          Translate md_type into hash algorithm OID
- *
- * \param md_alg   message digest algorithm
- * \param oid      place to store ASN.1 OID string pointer
- * \param olen     length of the OID
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t *olen);
 
 #if defined(MBEDTLS_CIPHER_C)
 /**
@@ -674,8 +546,11 @@ int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_t *cipher_alg);
+#endif /* MBEDTLS_CIPHER_C */
+#endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
 
-#if defined(MBEDTLS_PKCS12_C)
+#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
+    defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
 /**
  * \brief          Translate PKCS#12 PBE algorithm OID into md_type and
  *                 cipher_type
@@ -688,8 +563,21 @@ int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_
  */
 int mbedtls_oid_get_pkcs12_pbe_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg,
                                    mbedtls_cipher_type_t *cipher_alg);
-#endif /* MBEDTLS_PKCS12_C */
-#endif /* MBEDTLS_CIPHER_C */
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C &&
+          MBEDTLS_CIPHER_PADDING_PKCS7 && MBEDTLS_CIPHER_C */
+
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
+/**
+ * \brief          Translate md_type into hash algorithm OID
+ *
+ * \param md_alg   message digest algorithm
+ * \param oid      place to store ASN.1 OID string pointer
+ * \param olen     length of the OID
+ *
+ * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ */
+int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t *olen);
+#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
 
 #ifdef __cplusplus
 }
