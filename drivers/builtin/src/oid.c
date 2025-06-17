@@ -102,6 +102,10 @@
         return MBEDTLS_ERR_OID_NOT_FOUND;                                    \
     }
 
+/* Note: while the data is shared, ideally individual functions that are used
+ * only for writing or only for parsing should depend specifically on that.
+ * See https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/317
+ */
 #if defined(MBEDTLS_PK_PARSE_C) || defined(MBEDTLS_PK_WRITE_C)
 /*
  * For PublicKeyInfo (PKCS1, RFC 5480)
@@ -267,6 +271,10 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_ec_grp_algid,
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #endif /* MBEDTLS_PK_PARSE_C || MBEDTLS_PK_WRITE_C */
 
+/*
+ * Note: the optimal dependency would also include CIPHER_C, see
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/317
+ */
 #if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_ASN1_PARSE_C)
 /*
  * For HMAC digestAlgorithm
