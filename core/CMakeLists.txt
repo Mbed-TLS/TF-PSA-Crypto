@@ -55,6 +55,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
     set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 endif()
 
+if(WIN32)
+    set(libs ${libs} ws2_32 bcrypt)
+endif(WIN32)
+
 if(LINK_WITH_PTHREAD)
     set(libs ${libs} ${CMAKE_THREAD_LIBS_INIT})
 endif()
