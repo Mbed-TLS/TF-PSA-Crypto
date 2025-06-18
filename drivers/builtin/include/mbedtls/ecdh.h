@@ -46,7 +46,8 @@
 
 #if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)
 #undef MBEDTLS_ECDH_LEGACY_CONTEXT
-#include "everest/everest.h"
+#include "tf-psa-crypto/private/everest/x25519.h"
+#include "tf-psa-crypto/private/everest/everest.h"
 #endif
 
 #ifdef __cplusplus

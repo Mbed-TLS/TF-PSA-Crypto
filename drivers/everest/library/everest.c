@@ -25,8 +25,8 @@
 
 #include "mbedtls/ecdh.h"
 
-#include "everest/x25519.h"
-#include "everest/everest.h"
+#include "x25519.h"
+#include "everest.h"
 
 #include "mbedtls/platform.h"
 
@@ -99,4 +99,3 @@ int mbedtls_everest_calc_secret( mbedtls_ecdh_context_everest *ctx, size_t *olen
 }
 
 #endif /* MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED */
-
