@@ -35,10 +35,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
     set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 endif()
 
-if(LINK_WITH_PTHREAD)
-    set(libs ${libs} ${CMAKE_THREAD_LIBS_INIT})
-endif()
-
 set(builtin_target ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin)
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(builtin_static_target ${builtin_target})
