@@ -73,10 +73,12 @@ endif(NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBR
 
 set(tfpsacrypto_target "${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto")
 set(builtin_target "${TF_PSA_CRYPTO_TARGET_PREFIX}builtin_objs")
+set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest_objs")
 
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(tfpsacrypto_static_target ${tfpsacrypto_target})
     set(builtin_static_target ${builtin_target})
+    set(everest_static_target ${everest_target})
 endif()
 
 set(target_libraries ${tfpsacrypto_target})
@@ -84,19 +86,19 @@ set(target_libraries ${tfpsacrypto_target})
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     string(APPEND tfpsacrypto_static_target "_static")
     string(APPEND builtin_static_target "_static")
+    string(APPEND everest_static_target "_static")
 
     list(APPEND target_libraries
         ${tfpsacrypto_static_target})
 endif()
 
 set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest_objs")
 
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     add_library(${tfpsacrypto_static_target} STATIC
         ${src_crypto}
         $<TARGET_OBJECTS:${builtin_static_target}>
-        $<TARGET_OBJECTS:${everest_target}>)
+        $<TARGET_OBJECTS:${everest_static_target}>)
     set_base_compile_options(${tfpsacrypto_static_target})
     target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
