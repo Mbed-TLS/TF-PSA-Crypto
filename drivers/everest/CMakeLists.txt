@@ -8,18 +8,18 @@ add_library(${everest_target}
 set_base_compile_options(${everest_target})
 target_include_directories(${everest_target}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
-         $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include>
          $<INSTALL_INTERFACE:include>
-  PRIVATE include/everest
-          include/everest/kremlib
+  PRIVATE ${TF_PSA_CRYPTO_DIR}/include
+          ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include
+          include/tf-psa-crypto/private/everest
+          include/tf-psa-crypto/private/everest/kremlib
           ${TF_PSA_CRYPTO_DIR}/core)
 set_config_files_compile_definitions(${everest_target})
 
 if(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
-  install(DIRECTORY include/everest
-    DESTINATION include
+  install(DIRECTORY include/tf-psa-crypto/private/everest
+    DESTINATION include/tf-psa-crypto/private/everest
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     FILES_MATCHING PATTERN "*.h")

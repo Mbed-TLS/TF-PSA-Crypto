@@ -1,4 +1,4 @@
-THIRDPARTY_INCLUDES+=-I$(THIRDPARTY_DIR)/everest/include -I$(THIRDPARTY_DIR)/everest/include/everest -I$(THIRDPARTY_DIR)/everest/include/everest/kremlib
+THIRDPARTY_INCLUDES+=-I$(THIRDPARTY_DIR)/everest/include -I$(THIRDPARTY_DIR)/everest/include/tf-psa-crypto/private/everest -I$(THIRDPARTY_DIR)/everest/include/tf-psa-crypto/private/everest/kremlib
 
 THIRDPARTY_CRYPTO_OBJECTS+= \
 	$(THIRDPARTY_DIR)/everest/library/everest.o \

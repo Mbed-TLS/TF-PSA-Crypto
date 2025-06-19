@@ -22,8 +22,6 @@
 #ifndef MBEDTLS_EVEREST_H
 #define MBEDTLS_EVEREST_H
 
-#include "everest/x25519.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
