@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include <mbedtls/build_info.h>
+#include <tf-psa-crypto/build_info.h>
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_TEST_HOOKS) && \
     !defined(RECORD_PSA_STATUS_COVERAGE_LOG)

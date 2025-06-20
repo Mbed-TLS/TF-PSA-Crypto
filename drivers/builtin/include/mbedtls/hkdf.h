@@ -13,7 +13,7 @@
 #ifndef MBEDTLS_HKDF_H
 #define MBEDTLS_HKDF_H
 
-#include "mbedtls/build_info.h"
+#include "tf-psa-crypto/build_info.h"
 
 #include "mbedtls/md.h"
 

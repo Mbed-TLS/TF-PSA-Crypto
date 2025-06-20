@@ -299,6 +299,7 @@ function(add_test_suite suite_name)
     target_include_directories(test_suite_${data_name}
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/test
         PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../core
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../drivers/builtin/src)

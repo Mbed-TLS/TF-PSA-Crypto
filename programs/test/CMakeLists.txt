@@ -28,6 +28,7 @@ endif()
 # zeroize
 tfpsacrypto_build_program_common(tf_psa_crypto_zeroize ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/programs/zeroize.c)
 target_link_libraries(tf_psa_crypto_zeroize ${tfpsacrypto_target})
+target_include_directories(tf_psa_crypto_zeroize PRIVATE ${TF_PSA_CRYPTO_DIR}/tests/include/test)
 
 install(TARGETS ${executable_programs}
         DESTINATION "bin"
