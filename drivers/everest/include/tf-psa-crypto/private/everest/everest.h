@@ -41,6 +41,8 @@ typedef struct {
 
 #define MBEDTLS_ECDH_CONTEXT_EVEREST_INIT {MBEDTLS_X25519_CONTEXT_INIT}
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function sets up the ECDH context with the information
  *                  given.
@@ -225,6 +227,8 @@ int mbedtls_everest_calc_secret( mbedtls_ecdh_context_everest *ctx, size_t *olen
                                  unsigned char *buf, size_t blen,
                                  int( *f_rng )( void *, unsigned char *, size_t ),
                                  void *p_rng );
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

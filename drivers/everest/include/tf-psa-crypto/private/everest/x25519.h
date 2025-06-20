@@ -49,6 +49,8 @@ typedef struct
 
 #define MBEDTLS_X25519_CONTEXT_INIT {{0}, {0}}
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function initializes an x25519 context.
  *
@@ -184,6 +186,8 @@ int mbedtls_x25519_make_public( mbedtls_x25519_context *ctx, size_t *olen,
  */
 int mbedtls_x25519_read_public( mbedtls_x25519_context *ctx,
                         const unsigned char *buf, size_t blen );
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }

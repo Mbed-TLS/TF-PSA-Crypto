@@ -15,7 +15,11 @@
 
 #include "kremlib.h"
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 void Hacl_Curve25519_crypto_scalarmult(uint8_t *mypublic, uint8_t *secret, uint8_t *basepoint);
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #define __Hacl_Curve25519_H_DEFINED
 #endif
