@@ -39,7 +39,6 @@ The following features are deliberately removed from the PK API. (They may remai
 * The poorly defined type `mbedtls_pk_type_t` and the associated function `mbedtls_pk_can_do()`. Use PSA metadata instead.
 * Mechanism names: `mbedtls_pk_get_name()`.
 * The RSA-oriented length function: `mbedtls_pk_get_len()`. Use `mbedtls_pk_get_bitlen()`.
-* PSS-extended functions: `mbedtls_pk_sign_ext()`, `mbedtls_pk_verify_ext()`. PSA has less flexibility than the PK API. Use PSA APIs to get all the flexibility that PSA can have. Use separate key objects if you need multiple algorithms with the same key (e.g. PKCS#1v1.5 and PSS for a TLS server that supports both TLS 1.2 and 1.3).
 * Encrypt/decrypt: `mbedtls_pk_decrypt()`, `mbedtls_pk_encrypt()`. Use PSA.
 
 ### Design philosophy for the new PK
@@ -49,7 +48,6 @@ We retain the concept of a “PK context”, which can either be empty or contai
 A PK context has the following conceptual properties:
 
 * A PSA key type (key pair or public key). This is `PSA_KEY_TYPE_NONE` for an empty context.
-* A PSA algorithm used for signing and verification. This is `PSA_ALG_NONE` for an empty context. When a key is set, this is a signature algorithm or a signature wildcard algorithm policy (which specifies a signature mechanism, but leaves a hash algorithm unspecified).
 * Key material that matches the key type. This can be directly in the PK object, or indirectly via a PSA key identifier.
 * Optionally, an associated PSA key identifier. The PSA key may be owned by the PK context and destroyed when the context is destroyed, or it may be referenced by the PK context and left alone when the context is destroyed.
 
@@ -106,32 +104,15 @@ The control flow for a TLS server using an RSA private key is as follows:
 
 In order to make it possible to use the same RSA key with both algorithm, some action is necessary at one of these steps.
 
-At step 1, in Mbed TLS 3.6, RSA keys resulting from parsing can always be used for both algorithms, but this is not necessarily the case for opaque keys. (It can only be the case if the PSA key uses the “enrollment algorithm” policy feature, which is a proprietary extension of TF-PSA-Crypto that is not supported on some platforms such as TF-M.) Thus, if we want a single workflow for all cases, it has to be a **strict workflow**, where the application using TLS must pass two PK contexts if it wants to allow both algorithms. In the case of a PK context resulting from parsing, there must be some indication of which RSA algorithm will be chosen (this is to be documented in the PK module — parsing an RSA key defaults to PKCS#1v1.5). In this workflow, the signature operation always involves the algorithm associated with the PK context: there is no analog of `mbedtls_pk_sign_ext()`.
+At step 1, in Mbed TLS 3.6, RSA keys resulting from parsing can always be used for both algorithms, but this is not necessarily the case for opaque keys. (It can only be the case if the PSA key uses the “enrollment algorithm” policy feature, which is a proprietary extension of TF-PSA-Crypto that is not supported on some platforms such as TF-M.) Thus, if we want a single workflow for all cases, it has to be a **strict workflow**, where the application using TLS must pass two PK contexts if it wants to allow both algorithms. In the case of a PK context resulting from parsing, there must be some indication of which RSA algorithm will be chosen (this is to be documented in the PK module — parsing an RSA key defaults to PKCS#1v1.5). In this workflow, the signature operation always involves the algorithm associated with the PK context: there is no analog of `mbedtls_pk_sign_ext()`. The strict workflow has the downside that it requires each PK object to have a single associated algorithm, which was considered and discarded (see “[Rejected `mbedtls_pk_set_algorithm()`](#rejected-mbedtls_pk_set_algorithm)”).
 
-We may also consider a **duplication workflow**. In this workflow, at step 2, when `mbedtls_ssl_conf_own_cert()` sees a PK context that could be used for both algorithms (e.g. a PK context that wraps an exportable key, or a PK context that wraps a key whose policy allows both algorithms), it adds two entries to the key/certificate list: the original PK object, and a copied object with the other protocol. This seems complicated, especially with respect to resource management (the SSL configuration object does not own the keys and certificates, but it would have to own the copy made here). Hence we will not consider this workflow further.
+We may also consider a **duplication workflow**. In this workflow, at step 2, when `mbedtls_ssl_conf_own_cert()` sees a PK context that could be used for both algorithms (e.g. a PK context that wraps an exportable key, or a PK context that wraps a key whose policy allows both algorithms), it adds two entries to the key/certificate list: the original PK object, and a copied object with the other protocol. This seems complicated, especially with respect to resource management (the SSL configuration object does not own the keys and certificates, but it would have to own the copy made here). Also this workflow is currently broken in TLS 1.3, since it only checks the public key from the certificate, not the private key ([#10233](https://github.com/Mbed-TLS/mbedtls/issues/10233)). Hence we will not consider this workflow further.
 
-Steps 3 and 4 are performed in near succession for each connection, therefore there is no meaningful difference between an action taken at step 3 or step 4, and we will consider them together. Step 3 needs to determine whether the key is compatible with a given signature algorithm offered by the client. Therefore it must be able to tell when a key allows both algorithms. Then step 4 needs to use the chosen signature algorithm, using a function similar to `mbedtls_pk_sign_ext()`. Depending on how the PK context was constructed, this may be done in different ways (just pass the right algorithm to `psa_sign_hash()` if the PSA key allows it, pass the right algorithm when importing a key that wasn't in PSA already, copy the key, etc.). This is a **cheating workflow**. In this workflow, it is difficult to explain when a PK context allows both algorithms, in part because it is implementation-dependent.
+Steps 3 and 4 are performed in near succession for each connection, therefore there is no meaningful difference between an action taken at step 3 or step 4, and we will consider them together. Step 3 needs to determine whether the key is compatible with a given signature algorithm offered by the client. Therefore it must be able to tell when a key allows both algorithms. Then step 4 needs to use the chosen signature algorithm, using a function similar to `mbedtls_pk_sign_ext()`. Depending on how the PK context was constructed, this may be done in different ways (just pass the right algorithm to `psa_sign_hash()` if the PSA key allows it, pass the right algorithm when importing a key that wasn't in PSA already, copy the key, etc.). This is a **cheating workflow**.
 
-Conclusion: the **strict workflow** seems significantly easier to implement. However it comes with a small cost in the application code.
+Conclusion: we will continue to use the current cheating workflow. This approach minimizes the changes in how PK object construction determines which algorithms the key can be used with, and in how to query which algorithms a PK object can be used with.
 
-#### How PK can support the strict workflow
-
-Note that the strict workflow assumes that a PK context containing an RSA key has a single associated RSA flavor. We may decide that for a PSA-based context, this is the PSA key's primary algorithm policy. However, this would prevent from leveraging the enrollment algorithm policy feature, which means extra key duplication. Hence it should be possible to select the RSA algorithm associated with a given PK context after parsing it.
-
-TODO: So is this just [`mbedtls_pk_set_algorithm()`](#context-metadata)?
-
-Alternatively, should this be something similar to `mbedtls_pk_import_into_psa()`, but with an argument to just select the algorithm instead of full PSA attributes?
-```
-int mbedtls_pk_copy(const mbedtls_pk_context *src,
-                    psa_algorithm_t alg,
-                    mbedtls_pk_context *dest)
-```
-
-Making a copy makes the function specifications easier to understand with respect to resource management. It's a little extra explicit work when you just want a PSS signature, but that's not a major problem.
-
-Or should we give up on using PK for signature, and instead rely on `mbedtls_pk_import_into_psa()` and the PSA signature function? This adds extra complexity though: either `mbedtls_ssl_conf_own_cert()` needs a PSA variant, or it needs to completely switch from PK to PSA, and either way this requires extra work before 4.0 both inside the library and in calling code.
-
-Or should we give up on using PK for signature, and instead rely on `mbedtls_pk_import_into_psa()` followed by `mbedtls_pk_wrap_psa()`? That adds complexity to callers but not inside the library.
+The main cost of this approach is that we are committing to supporting permissive PK objects, as in, PK objects that can be used with any algorithm that the key type permits. This means that throughout the lifetime of TF-PSA-Crypto 1.x, we will continue to have code in the implementation of `mbedtls_pk_sign_ext()` that possibly exports an underlying PSA key to re-import it under a different policy. This is not ideal, but has the benefit of interface simplicity (PK doesn't do policy, period) and an easy migration from Mbed TLS 3.6 to TF-PSA-Crypto 1.x + Mbed TLS 4.x for both users and us implementers.
 
 #### Enforcing the workflow
 
@@ -161,18 +142,6 @@ mbedtls_pk_free()
 
 We explicitly associate an algorithm with each PK context. This is intended to match the algorithm in the underlying PSA key when there is one. Having an algorithm stored in the context lets us treat PK contexts more uniformly regardless of whether they contain a PSA key or a direct pointer to key material.
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): populate the field `pk->psa_algorithm` when populating `pk`. Use the same approach as the existing function `mbedtls_pk_get_psa_attributes()` for a signature usage.
-
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): implement a new function to change the algorithm associated with a PK context:
-```
-int mbedtls_pk_set_algorithm(mbedtls_pk_context *ctx,
-                             psa_algorithm_t alg);
-```
-
-This function is intended to be used after parsing a key, but it currently only works effectively for keys that are not backed by PSA. See “[Effectiveness `mbedtls_pk_set_algorithm`](#effectiveness-of-mbedtls_pk_set_algorithm)”.
-
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): change PK operation functions to honor the algorithm set in the context.
-
 Keep:
 ```
 mbedtls_pk_get_bitlen()
@@ -180,6 +149,8 @@ mbedtls_pk_can_do_ext()
 ```
 
 We keep `mbedtls_pk_can_do_ext()` as is because it's useful to check what a key can do after parsing it. It is partially redundant with `mbedtls_pk_get_psa_attributes()`, but it's sometimes more convenient, already implemented, and easy to implement for any evolution of PK that can accommodate `mbedtls_pk_get_psa_attributes()`.
+
+TODO: `mbedtls_pk_can_do_ext()` was designed with private keys in mind, and its behavior with public keys is a bit strange: it checks whether a corresponding private key would work. [Should we fix that?](#public-private-distinction-for-mbedtls_pk_can_do_ext)
 
 #### Meaning of `mbedtls_pk_type_t`
 
@@ -216,9 +187,16 @@ Keep the same numerical values as `mbedtls_pk_type_t`, so that a `mbedtls_pk_sig
 
 Move `x509*.h` and `oid.h` to the new type.
 
-This task removes the need for `mbedtls_pk_type_t` to be in the public API of Mbed TLS. Follow-up: make it (and `mbedtls_pk_get_type()`) private in “[Privatization](#privatization)”.
+This task together with the changes to `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()` described in “[Signature functionality](#signature-functionality)” remove the need for `mbedtls_pk_type_t` to be in the public API of Mbed TLS. Follow-up: make it (and `mbedtls_pk_get_type()`) private in “[Privatization](#privatization)”.
 
-`mbedtls_pk_sigalg_t` is an exposed type: it needs to be visible to the C compiler when compiling Mbed TLS, but it isn't part of the documented API, since we aren't planning to write any public function that uses this type. In the long term, X.509 should presumably switch to PSA algorithms.
+ACTION: define public aliases for backward compatibility (it costs us pretty much nothing, and will facilitate the transition).
+```
+MBEDTLS_PK_NONE = MBEDTLS_PK_SIGALG_NONE
+MBEDTLS_PK_RSA = MBEDTLS_PK_SIGALG_RSA
+MBEDTLS_PK_RSASSA_PSS = MBEDTLS_PK_SIGALG_RSASSA_PSS
+MBEDTLS_PK_ECDSA = MBEDTLS_PK_SIGALG_ECDSA
+MBEDTLS_PK_ECKEY = MBEDTLS_PK_SIGALG_ECDSA
+```
 
 #### `mbedtls_pk_can_do()`
 
@@ -305,14 +283,31 @@ mbedtls_pk_parse_public_keyfile()
 
 ### Signature conveniences
 
-#### Basic signature functionality
+#### Signature functionality
 
 Keep the following:
 ```
 MBEDTLS_PK_SIGNATURE_MAX_SIZE
+```
+
+Keep the following:
+```
 mbedtls_pk_verify()
 mbedtls_pk_sign()
 ```
+
+ACTION: document that `mbedtls_pk_sign()` are legacy functions, that perform the same algorithm that `mbedtls_pk_get_psa_attributes()` would perform under the hood if given a sign or verify usage.
+
+Tweak the following:
+```
+mbedtls_pk_verify()
+mbedtls_pk_sign()
+```
+
+ACTION: remove the `options` parameter to `mbedtls_pk_verify_ext`.
+
+ACTION: for `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()`, change the `mbedtls_pk_type_t type` parameter (whose type is being removed from the API) to `mbedtls_pk_sigalg_t sigalg`. See “[New type for signature algorithms](new-type-for-signature-algorithms)”.
+
 
 ACTION (https://github.com/Mbed-TLS/mbedtls/issues/5544): remove `MBEDTLS_ERR_PK_SIG_LEN_MISMATCH`. It's mostly useless for RSA, and it doesn't even work for ECDSA.
 
@@ -364,16 +359,6 @@ mbedtls_pk_write_pubkey()
 
 Follow-up: [Make private API elements internal](#make-private-api-elements-internal)
 
-#### Loss of sign/verify-ext functions
-
-We are deliberately removing `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()`: the extra parameters should be encoded in a PSA algorithm (or hash-agnostic policy).
-
-This creates a problem for TLS servers that have an RSA key. TLS 1.2 uses PKCS#1v1.5 to sign the handshake, while TLS 1.3 uses PSS. In Mbed TLS 3.6, this works because RSA keys have a non-constraining policy (their padding mode) which `mbedtls_pk_sign_ext()` overrides. With an opaque key, i.e. when the PK object wraps a PSA key, this only works if the underlying PSA policy allows the desired algorithm. In TF-PSA-Crypto 1.x, we want to change PK so that all PK objects with a private key go through PSA, i.e. that all PK key pairs are opaque in the old PK sense. This will break TLS 1.2+1.3 servers that expect to parse an RSA key and then use it indifferently with both protocols.
-
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10075): resolve this for TF-PSA-Crypto 1.0 and Mbed TLS 4.0, in the sense of documenting an official way to do it, ensuring that this way works, and ensuring that applications using the old way fails (unless we decide to preserve the old way throughout the lifetime of Mbed TLS 4.x and TF-PSA-Crypto 1.x).
-
-This isn't a problem for verification because as a last resort, it's always possible to export a public key and re-import it with a different policy.
-
 #### Documentation update after privatization
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/205): remove all mentions of private API elements from the public documentation.
@@ -392,6 +377,24 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): update the PSA tr
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): write changelog entries.
 
+## Changes in PK consumers
+
+No changes are needed in X.509 before Mbed TLS 4.0. One area of TLS may need some tweaks: [private key selection in TLS servers](#changes-to-private-key-selection).
+
+### Changes to private key selection in TLS
+
+A TLS server can have multiple key-certificate pairs configured with `mbedtls_ssl_conf_own_cert()`. In principle, the server goes through the list of cipher suites (TLS 1.2) or signature algorithms (TLS 1.3) offered by the client, and picks the first one for which a key-certificate pair exists. See “[Dual-algorithm RSA signature](dual-algorithm-rsa-signature)” for a more detailed description.
+
+There are known problems with the current implementation:
+
+* [#10208](https://github.com/Mbed-TLS/mbedtls/issues/10208): for RSA keys, TLS 1.2 correctly checks the compatibility of the private key. But to perform the actual signature, it calls `mbedtls_pk_sign()`, so it uses the key's primary algorithm, which might not be the one required by the protocol (PKCS#1v1.5 for RSA keys).
+* [#10220](https://github.com/Mbed-TLS/mbedtls/issues/10220): for ECDSA keys of type `MBEDTLS_PK_OPAQUE`, TLS 1.2 insists on randomized ECDSA, but the key may only permit deterministic ECDSA.
+* [#10233](https://github.com/Mbed-TLS/mbedtls/issues/10233): TLS 1.3 can't cope with multiple private keys for the same certificate.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10075): determine how to pass keys to `mbedtls_ssl_conf_own_cert()` in Mbed TLS 4.0, in the sense of documenting an official way to do it, ensuring that this way works, and ensuring that applications using the old way fails (unless we decide to preserve the old way throughout the lifetime of Mbed TLS 4.x and TF-PSA-Crypto 1.x).
+
+This isn't a problem for verification because as a last resort, it's always possible to export a public key and re-import it with a different policy.
+
 ## Testing
 
 ### Unit tests
@@ -402,9 +405,9 @@ For the most part, the testing work is a matter of adapting the existing tests, 
 
 One of the [project goals](#project-goal) is to prepare for moving crypto to be fully PSA, and in particular PK to be purely a wrapper around PSA keys, at least for private keys. We want to avoid breaking application code in TF-PSA-Crypto 1.x if the code worked with TF-PSA-Crypto 1.0. Normally our stability guarantee does not apply to applications that use undocumented behavior. However, it may happen that an application worked fine with Mbed TLS 3.6 and was relying only on documented behavior, and TF-PSA-Crypto 1.0 or Mbed TLS 4.0 stops documenting a critical aspect of the behavior, but in practice the application still works with 1.0/4.0. To reduce user frustration, we would like to minimize such cases. Thus the API in TF-PSA-Crypto 1.0 and Mbed TLS 4.0 should be strict and should reject “permissive” behavior that could work now, but would not be easy to migrate to PSA.
 
-The design proposed here mostly ensures this by construction. In particular, a PK object has at most one associated algorithm (set by `mbedtls_pk_set_algorithm()`), and there is no way to “cheat” (there is no longer an `mbedtls_pk_sign_ext()`). However, we need to be careful where the library cheats internally, which is the case in X.509 and TLS for RSA keys (see [“Dual-algorithm RSA verification”](#dual-algorithm-rsa-verification)). For verification, it doesn't matter, because it's always possible to export the key and use it with another algorithm. But for signature, cheating on the algorithm can be impossible, depending on the key's policy. Thus we need to ensure that the TLS interface does not rely on cheating.
+Given the choice of keeping PK permissive ([signature functionality](#signature-functionality) keeping `mbedtls_pk_sign_ext()`, cheating workflow chosen for [dual-algorithm RSA signature](#dual-algorithm-rsa-signature)), the combined behavior of PK and TLS remains mostly unchanged from Mbed TLS 3.6.
 
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10160): test `mbedtls_ssl_conf_own_cert()` to ensure that it doesn't cheat on key policies.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10160): test `mbedtls_ssl_conf_own_cert()` to ensure that it doesn't cheat on key policies. TODO: is this still critical? (It's definitely a good idea, but maybe can wait until after the release?)
 
 ## Open questions
 
@@ -416,7 +419,11 @@ Should we remove the file parsing functions `mbedtls_pk_parse_keyfile()` and `mb
 
 These functions are used in test code and sample programs.
 
-#### Effectiveness `mbedtls_pk_set_algorithm`
+### Rejected: `mbedtls_pk_set_algorithm`
+
+An earlier draft of this document proposed that every PK context would have an associated signature algorithm, which could be set with the function `mbedtls_pk_set_algorithm`. This algorithm was used for `mbedtls_pk_sign` and `mbedtls_pk_verify`. There were no `_ext` versions of these functions: users were supposed to import the key into PSA.
+
+#### Effectiveness of `mbedtls_pk_set_algorithm`
 
 How do I parse an RSA key, and then select PSS? More generally, how do I indicate what policy to use after parsing a key?
 
@@ -427,6 +434,46 @@ An alternative approach is to require copying the key after parsing. This is wha
 * `mbedtls_pk_set_algorithm()` — but as noted above this is not future-proof.
 * `mbedtls_pk_import_into_psa()` then `mbedtls_pk_copy_from_psa()`. Inefficient but ok. If that's the intended way to do it, we need to document it clearly, and maybe we should remove `mbedtls_pk_set_algorithm()`?
 * A new function `mbedtls_pk_copy()` allowing a policy change?
+
+#### Why `mbedtls_pk_set_algorithm` was rejected
+
+`mbedtls_pk_set_algorithm()` had to mutate the PK object, because the normal intended workflow was to parse a key, then inspect its type, then call `mbedtls_pk_set_algorithm()`. But this made it possible to mutate an object after passing it to a function, which could have unintended effect. Furthermore, this function could fail, since it may need to allocate resources (to copy the key, when it's already in PSA and the new algorithm isn't permitted by the key's policy).
+
+The main intent of `mbedtls_pk_set_algorithm()` was to allow mimicking current flows involving `mbedtls_pk_sign()` and `mbedtls_pk_verify()`. However, on closer inspection, this didn't work so well. In particular, a major driving goal was to keep the internal workings TLS layer mostly unchanged from Mbed TLS 3.6, but change the way users had to call `mbedtls_pk_conf_own_cert()` (see “[RSA in TLS](#rsa-in-tls)”). This would both save time for the preparation of Mbed TLS 4.0, and serve as a sample of what implementers of other protocols might face.
+
+However, it turns out that the way TLS 1.2 and TLS 1.3 use PK private keys is buggy in different ways:
+
+* [#10208](https://github.com/Mbed-TLS/mbedtls/issues/10208): TLS 1.2 calls `mbedtls_pk_sign()`, so it uses the key's primary algorithm, which might not be the one required by the protocol (PKCS#1v1.5 for RSA keys).
+* [#10233](https://github.com/Mbed-TLS/mbedtls/issues/10233): TLS 1.3 can't cope with multiple private keys for the same certificate.
+
+These are issues in 3.6, so fixing them is desirable. But their impact is relatively minor in 3.6 because they're uncommon cases. On the other hand, in 4.0, they become more relevant, which risked adding a signficant amount of work to be done before 4.0.
+
+Architecturally, #10208 highlights how having an algorithm associated with a PK object is inherently fragile. Hence the current design removes this concept, and instead orients the user of the PK module towards explicitly choosing the signature algorithm.
+
+### Capability checking
+
+#### Public-private distinction for `mbedtls_pk_can_do_ext()`
+
+The semantics of `mbedtls_pk_can_do_ext()` in Mbed TLS 3.6 is somewhat weird. Although the function is advertised as “Tell if context can do the operation given by PSA algorithm”, that is not quite true. The function takes an algorithm and a usage flag (or a mask thereof), with only private-key usage flags allowed. But it accepts public keys, which could only do the corresponding public-key operation. For example,
+```
+mbedtls_pk_can_do_ext(pk, PSA_ALG_ECDSA(PSA_ALG_SHA_256), PSA_KEY_USAGE_SIGN_HASH)
+```
+is true for a builtin ECC key object containing only the public part of the key.
+
+This is misleading and not documented.
+
+We should change the meaning of the usage flag to indicate what operations can actually be performed on the key:
+
+* `PSA_KEY_USAGE_SIGN_HASH` means a key pair that can be used to sign;
+* `PSA_KEY_USAGE_VERIFY_HASH` means a public key or key pair that can be used to verify;
+* `PSA_KEY_USAGE_DECRYPT` means a key pair that can be used to decrypt;
+* `PSA_KEY_USAGE_ENCRYPT` means a public key or key pair that can be used to encrypt;
+* `PSA_KEY_USAGE_DERIVE` means a key pair that can be used as the private side in a key agreement;
+* TODO: flag for a key pair or public key that can be used as the public side in a key agreement?
+
+This would be closer to how `mbedtls_pk_get_psa_attributes()` works.
+
+Note however that this change would break [`ssl_pick_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls12_server.c#L687) and [`ssl_tls13_pick_key_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls13_server.c#L1115), as they rely on calling `mbedtls_pk_can_do_ext()` on the public key from the certificate. However, this should be an easy fix: just change these invocations to use `PSA_KEY_USAGE_VERIFY_HASH` as the usage to check.
 
 ### Resource management
 
