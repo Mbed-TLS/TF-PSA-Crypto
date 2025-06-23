@@ -29,6 +29,7 @@
 #endif
 
 #include "common.h"
+#include "mbedtls/private_access.h"
 
 #if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)
 
@@ -47,4 +48,3 @@
 #include "kremlib/FStar_UInt64_FStar_UInt32_FStar_UInt16_FStar_UInt8.c"
 
 #endif /* defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED) */
-
