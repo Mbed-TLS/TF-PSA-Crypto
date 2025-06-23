@@ -1087,8 +1087,8 @@ For the choice of DRBG, we preserve the existing behavior: pick CTR\_DRBG if ena
 
 We can deduce the sizes used in entropy and for DRBG internals from just two settings:
 
-* `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` indicating the minimum strength of the RNG. Only 128 and 256 are meant to be useful values.
-* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured.
+* `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` indicating the minimum strength of the RNG. Only 128 and 256 are meant to be useful values. Default to 256.
+* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured. Default to SHA-256.
 
 For CTR\_DRBG, use AES-256 if `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > 128` and AES-128 otherwise.
 
