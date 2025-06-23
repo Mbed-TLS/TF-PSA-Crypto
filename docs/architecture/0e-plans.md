@@ -1008,6 +1008,18 @@ ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10149): check non-boolean opt
 
 ### Changes to RNG options
 
+#### Impacted RNG modules
+
+The RNG used when `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` consists of three modules:
+
+* Entropy (`entropy.c` and `entropy_poll.c`): gather entropy which then needs to be fed to a DRBG (deterministic random bit generator, also called a PRNG for pseudo-random number generator).
+* CTR\_DRBG, a NIST-approved DRBG relying on the AES block cipher.
+* HMAC\_DRBG, a NIST-approved DRBG relying on a hash algorithm.
+
+These modules remain relevant internally, but they are becoming fully private. (See “[Headers that can be made fully private](#headers-that-can-be-made-fully-private)” and “[Headers that will become internal eventually](#headers-that-will-become-internal-eventually)”.) We will likely expose CTR\_DRBG and HMAC\_DRBG as programming interfaces in a later minor version of TF-PSA-Crypto 1.x, but this is out of scope for TF-PSA-Crypto 1.0, and will likely wait until there is an official PSA interface.
+
+Entropy and CTR\_DRBG are only used to instantiate the PSA RNG. HMAC\_DRBG is also used internally for deterministic ECDSA.
+
 #### Impacted RNG options
 
 The following boolean options inherited from Mbed TLS 3.x control the random generator used by PSA, and are not tied to any function or callback exposed by TF-PSA-Crypto 0ε or 1.0.
@@ -1051,11 +1063,85 @@ Beyond the entry points, the random generator also has a configuration interface
 * Which low-level algorithms and key sizes to use (AES size for CTR\_DRBG, hash used in HMAC\_DRBG, hash used to accumulate entropy). [security, performance]
 * How much entropy is considered good enough — in total and for each source. [security, performance]
 * Whether to use entropy sources, a seed file, or both.
-* Various sizes of intermediate buffers. [performance, memory usage]
+* Various sizes of intermediate buffers. [performance, memory usage, security]
 
-#### Evolution of RNG options
+#### Towards a minimal set of RNG options
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/267): work out the fate of RNG options.
+This section is about the parameters of the DRBG (including how it communicates with the entropy module) and the internal workings of the entropy module. Entropy sources, and builds with `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` enabled, are out of scope here.
+
+Many of the [RNG options](#impacted-rng-options) are mostly meaningless now that the DRBG modules and the entropy module are no longer public. In this section, we determine which options are still relevant, either because they are algorithm choices or because they are a security/resources compromise.
+
+For notions of strength, we follow [NIST SP 800-90A r1](https://doi.org/10.6028/NIST.SP.800-90Ar1) (especially table 2 p. 38 for HMAC\_DRBG) and table 3 p. 49 for CTR\_DRBG), and [NIST SP 800-57 part 1 r1](https://doi.org/10.6028/NIST.SP.800-57pt1r5) §5.6.1.
+
+The RNG uses the following algorithms:
+
+* A hash function in the entropy module, to update the accumulator. The size of the hash gives the strength (the inputs are not chosen by an adversary unless they have complete control, so collisions are irrelevant) (except for hashes smaller than 32 bits, for which SP 800-57 specifies a smaller strength). Mbed TLS picks between SHA-256 and SHA-512 based on availability and on `MBEDTLS_ENTROPY_FORCE_SHA256`.
+* A hash function in HMAC\_DRBG. The size of the hash gives the strength. Mbed TLS 3.6 allows any supported hash function, configured with `MBEDTLS_PSA_HMAC_DRBG_MD_TYPE`.
+* A block cipher in CTR\_DRBG. The key size gives the strength. The library only supports AES, and defaults to 256 bits unless overridden by `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY`.
+
+When using HMAC\_DRBG, there is no particular reason to use a different hash algorithm for the DRBG and for the entropy accumulator.
+
+For the choice of DRBG, we preserve the existing behavior: pick CTR\_DRBG if enabled in the build, otherwise HMAC\_DRBG. There is no particular reason to change at this point.
+
+#### New RNG options
+
+We can deduce the sizes used in entropy and for DRBG internals from just two settings:
+
+* `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` indicating the minimum strength of the RNG. Only 128 and 256 are meant to be useful values.
+* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured.
+
+For CTR\_DRBG, use AES-256 if `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > 128` and AES-128 otherwise.
+
+In addition, we unify some DRBG options which currently exist separately for CTR\_DRBG and HMAC\_DRBG:
+
+* `MBEDTLS_PSA_RNG_RESEED_INTERVAL`: inteeger, becomes the value of `MBEDTLS_CTR_DRBG_RESEED_INTERVAL` and `MBEDTLS_HMAC_DRBG_RESEED_INTERVAL`.
+
+#### Investigation of `MBEDTLS_ENTROPY_BLOCK_SIZE`
+
+The size of the hash used by the entropy module becomes the value of `MBEDTLS_ENTROPY_BLOCK_SIZE`. This size is used in several places in the entropy module:
+
+* Size of the NV seed.
+* Size collected from each entropy source.
+* Size of the internal entropy accumulator that mixes all the sources (including the NV seed).
+* Maximum size returned by `mbedtls_entropy_func()` (the function that DRBG modules call).
+
+The length requested by a DRBG is `ctr->entropy_len`, which, for default instantiations (the only ones that matter in TF-PSA-Crypto 1.0), is:
+
+* For CTR\_DRBG: `MBEDTLS_CTR_DRBG_ENTROPY_LEN`. In Mbed TLS 3.6, and since the PolarSSL days, this is 48 if entropy uses SHA-512 and 32 if entropy uses SHA-256. Per NIST strength specifications (SP 800-90Ar1 table 3), `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` would be sufficient.
+* For HMAC\_DRBG: 32 for all hashes of 256 bits and above.
+
+In conclusion, if we don't worry about hashes that are less than 256 bits, then we can systematically have the DRBG request 32 bytes, and the entropy module will always deliver.
+
+#### Removed DRBG length options
+
+Remove the following as configuration options (they may still be used internally):
+
+* `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY`: deduced from `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`.
+* `MBEDTLS_ENTROPY_FORCE_SHA256`: superseded by `MBEDTLS_PSA_CRYPTO_RNG_HASH`.
+* `MBEDTLS_CTR_DRBG_ENTROPY_LEN`: 32 per “[Investigation of `MBEDTLS_ENTROPY_BLOCK_SIZE`](#investigation-of-mbedtls_entropy_block_size)”.
+* `MBEDTLS_CTR_DRBG_MAX_INPUT`: only relevant for custom instantiations which are no longer possible. Do not touch in 1.0, other than hiding it.
+* `MBEDTLS_CTR_DRBG_MAX_REQUEST`: this is the maximum size of a request, reflected through `MBEDTLS_PSA_RANDOM_MAX_REQUEST`. The current default is 1024 bytes. It's a minor compromise of stack usage vs performance. We may consider exposing `MBEDTLS_PSA_RANDOM_MAX_REQUEST` later if needs be.
+* `MBEDTLS_CTR_DRBG_MAX_SEED_INPUT`: the default value 384 is always fine (we can reduce it later). This needs to be at least `entropy_len + nonce_len + additional_len` where, in the default instantiation, `entropy_len` is `MBEDTLS_CTR_DRBG_ENTROPY_LEN`, `nonce_len` is at most `(MBEDTLS_CTR_DRBG_ENTROPY_LEN + 1) / 2`  and `additional_len` is 0.
+* `MBEDTLS_CTR_DRBG_RESEED_INTERVAL`: now `MBEDTLS_PSA_RNG_RESEED_INTERVAL`.
+* `MBEDTLS_ENTROPY_MAX_GATHER`: no longer relevant. Can remain the default (128 bytes) which is sufficient for the maximum possible strength of the RNG subsystem (512 bits).
+* `MBEDTLS_ENTROPY_MAX_SOURCES`: no longer relevant since there can only be two entropy sources at most (platform or custom entropy source, and NV seed). Can be hard-coded to 2.
+* `MBEDTLS_ENTROPY_MIN_HARDWARE`: not relevant since there is only one source which must provide the whole entropy. Removed in [#212](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/212) resolving [Mbed-TLS/mbedtls#9618](https://github.com/Mbed-TLS/mbedtls/issues/9618).
+* `MBEDTLS_HMAC_DRBG_MAX_INPUT`: same as `MBEDTLS_CTR_DRBG_MAX_INPUT` (not relevant for deterministic ECDSA). ECDSA only needs the size of the private key (so up to 66 bytes, for secp521r1).
+* `MBEDTLS_HMAC_DRBG_MAX_REQUEST`: same as `MBEDTLS_CTR_DRBG_MAX_REQUEST`.
+* `MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT`: same as `MBEDTLS_CTR_DRBG_MAX_SEED_INPUT`. ECDSA passes `2*n` bits where `n` is the size of the private key in bits (so up to 131 bytes, for secp521r1).
+* `MBEDTLS_HMAC_DRBG_RESEED_INTERVAL`: now `MBEDTLS_PSA_RNG_RESEED_INTERVAL`.
+* `MBEDTLS_PSA_HMAC_DRBG_MD_TYPE`: deduced from `MBEDTLS_PSA_CRYPTO_RNG_HASH`.
+
+#### RNG algorithm and length options: summary
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/328): implement the new configuration options described in “[New RNG options](#new-rng-options)”. Remove the options described in “[Removed DRBG length options](#removed-drbg-length-options)” from `psa/crypto_config.h`, keeping the macros set from remaining options as described. Replace the current configuration checks in `check_config.h` as described below (the new checks may be in `check_config.h` or in other, possibly internal headers).
+
+The new configuration checks ensure that the RNG configuration options achieve the strength in bits specified as `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`. All of this is irrelevant.
+
+* At least one of CTR\_DRBG or HMAC\_DRBG must be enabled (already enforced in `psa_crypto_random_impl.h`).
+* If CTR\_DRBG is used, the AES key size is chosen based on the strength. A strength of more than 256 is an error.
+* If HMAC\_DRBG is used, the size of the hash must be at least `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`.
+* The size of the hash `MBEDTLS_PSA_CRYPTO_RNG_HASH` must be at least 256 bits (32 bytes). We could in principle support smaller hashes, but we would need more complex strength calculations, and nobody needs this in 2025.
 
 #### Builds without entropy
 
