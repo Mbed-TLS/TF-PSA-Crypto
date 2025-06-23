@@ -1149,7 +1149,13 @@ TF-PSA-Crypto 0ε and in all likelihood TF-PSA-Crypto 1.0 cannot be built withou
 
 For the time being, any build of the PSA core will continue to require `MBEDTLS_ENTROPY_C` which requires either an entropy source or an NV seed.
 
-Task: auto-enable `MBEDTLS_ENTROPY_C` except in client-only builds.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/9618): auto-enable `MBEDTLS_ENTROPY_C` except in client-only builds. Require entropy. Change `MBEDTLS_ENTROPY_HARDWARE_ALT` to be simpler and more suitable for TF-PSA-Crypto:
+
+* Add a parameter to the entropy callback to convey how much entropy is present in the output. For the time being, the output must have full entropy, but in the future TF-PSA-Crypto will allow it to be less.
+* Rename the entropy callback.
+* Simplify RNG options by only giving the choice between the platform default source and a custom source. We don't need both.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/307): [Mbed-TLS/mbedtls#9618](https://github.com/Mbed-TLS/mbedtls/issues/9618) removes the possibility of builds with only an NV seed. This is critical for some of our users, including some TF-M builds. Restore this ability. Test it on the CI (done for 3.6 in https://github.com/Mbed-TLS/mbedtls/pull/10210).
 
 ### Changes to platform support options
 
