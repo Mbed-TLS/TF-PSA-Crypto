@@ -443,7 +443,7 @@ int mbedtls_asn1_write_integer(unsigned char **p,
 {
 
     int asn1_frame_size = 0;
-    int number_of_leading_zeros = 0;
+    unsigned int number_of_leading_zeros = 0;
     size_t output_buffer_size = (*p-start);
     unsigned char *integer_start = NULL;
 
@@ -452,7 +452,8 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     }
 
     // asn1 specifies that the bignum must be encoded in the minimum allowable space, so leading zeros must be removed.
-    while (integer[number_of_leading_zeros] == 0x0) {
+    while ((number_of_leading_zeros < integer_length)
+           && (integer[number_of_leading_zeros] == 0x0)) {
         number_of_leading_zeros++;
     }
 
