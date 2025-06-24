@@ -363,10 +363,12 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
                                                        size_t val_len);
 
 /**
- * \brief                  Encode an integer into ASN1 and write it to a buffer.
- *                         The function takes a big endian bignum buffer that
- *                         begins at start and ends at *p and encodes it into
- *                         a asn1 frame.
+ * \brief                  Encode an integer into ASN.1 and write it to a buffer.
+ *                         Write the integer given in \p integer into the buffer
+ *                         given by \p *p and \p start in DER-encoded ASN.1
+ *                         representation.
+ *
+ * \note                   This function works backwards within the data buffer.
  *
  * \param p                The reference to the current position pointer.
  * \param start            The start of the buffer, for bounds-checking.
@@ -375,7 +377,8 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  *
  * \return                 An integer number of bytes written on success.
  * \return                 An appropriate error code on failure.
- * \return                 On success p will be set to point to the start of the frame,
+ * \return                 On success p will be set to point to the start of
+ *                         the encoded integer,
  *                         on failure it will be set to the end of the buffer.
  */
 int mbedtls_asn1_write_integer(unsigned char **p,
