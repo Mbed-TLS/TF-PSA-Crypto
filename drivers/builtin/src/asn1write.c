@@ -439,8 +439,7 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(
 int mbedtls_asn1_write_integer(unsigned char **p,
                                unsigned char *start,
                                const unsigned char *integer,
-                               size_t integer_length,
-                               int sign)
+                               size_t integer_length)
 {
 
     int asn1_frame_size = 0;
@@ -472,9 +471,8 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     memcpy(*p, integer_start, integer_length);
 
     // DER format assumes 2s complement for numbers, so the leftmost bit
-    // should be 0 for positive numbers and 1 for negative numbers.
-    //
-    if (sign == 1 && **p & 0x80) {
+    // should be 0.
+    if (**p & 0x80) {
         if (*p - start < 1) {
             *p = start+input_buffer_size;
             return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
