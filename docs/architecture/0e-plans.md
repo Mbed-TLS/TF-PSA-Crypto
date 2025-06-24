@@ -1116,6 +1116,7 @@ In conclusion, if we don't worry about hashes that are less than 256 bits, then 
 
 Remove the following as configuration options (they may still be used internally):
 
+* `MBEDTLS_ENTROPY_C`: now an internal detail. Enable it automatically if `MBEDTLS_PSA_CRYPTO_C` is enabled (so not in client-only builds) and `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` is disabled.
 * `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY`: deduced from `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`.
 * `MBEDTLS_ENTROPY_FORCE_SHA256`: superseded by `MBEDTLS_PSA_CRYPTO_RNG_HASH`.
 * `MBEDTLS_CTR_DRBG_ENTROPY_LEN`: 32 per “[Investigation of `MBEDTLS_ENTROPY_BLOCK_SIZE`](#investigation-of-mbedtls_entropy_block_size)”.
@@ -1149,7 +1150,7 @@ TF-PSA-Crypto 0ε and in all likelihood TF-PSA-Crypto 1.0 cannot be built withou
 
 For the time being, any build of the PSA core will continue to require `MBEDTLS_ENTROPY_C` which requires either an entropy source or an NV seed.
 
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/9618): auto-enable `MBEDTLS_ENTROPY_C` except in client-only builds. Require entropy. Change `MBEDTLS_ENTROPY_HARDWARE_ALT` to be simpler and more suitable for TF-PSA-Crypto:
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/9618): Require entropy. Change `MBEDTLS_ENTROPY_HARDWARE_ALT` to be simpler and more suitable for TF-PSA-Crypto:
 
 * Add a parameter to the entropy callback to convey how much entropy is present in the output. For the time being, the output must have full entropy, but in the future TF-PSA-Crypto will allow it to be less.
 * Rename the entropy callback.
