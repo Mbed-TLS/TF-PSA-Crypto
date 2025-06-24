@@ -370,8 +370,8 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  *
  * \param p                The reference to the current position pointer.
  * \param start            The start of the buffer, for bounds-checking.
- * \param integer          The start of the integer buffer.
- * \param integer_length   The size of the integer in the buffer.
+ * \param integer          Pointer to a big-endian representation of an integer.
+ * \param integer_length   The number of bytes in the integer buffer.
  *
  * \return                 An integer number of bytes written on success.
  * \return                 An appropriate error code on failure.
