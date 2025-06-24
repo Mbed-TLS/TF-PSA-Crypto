@@ -1010,7 +1010,7 @@ ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10149): check non-boolean opt
 
 #### Impacted RNG modules
 
-The RNG used when `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` consists of three modules:
+The RNG used when `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` is disabled consists of three modules:
 
 * Entropy (`entropy.c` and `entropy_poll.c`): gather entropy which then needs to be fed to a DRBG (deterministic random bit generator, also called a PRNG for pseudo-random number generator).
 * CTR\_DRBG, a NIST-approved DRBG relying on the AES block cipher.
