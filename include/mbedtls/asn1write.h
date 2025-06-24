@@ -41,7 +41,7 @@ extern "C" {
 /**
  * \brief           Write a length field in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -55,7 +55,7 @@ int mbedtls_asn1_write_len(unsigned char **p, const unsigned char *start,
 /**
  * \brief           Write an ASN.1 tag in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -72,7 +72,7 @@ int mbedtls_asn1_write_tag(unsigned char **p, const unsigned char *start,
 /**
  * \brief           Write raw buffer data.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -89,7 +89,7 @@ int mbedtls_asn1_write_raw_buffer(unsigned char **p, const unsigned char *start,
  * \brief           Write a NULL tag (#MBEDTLS_ASN1_NULL) with zero data
  *                  in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -103,7 +103,7 @@ int mbedtls_asn1_write_null(unsigned char **p, const unsigned char *start);
  * \brief           Write an OID tag (#MBEDTLS_ASN1_OID) and data
  *                  in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -119,7 +119,7 @@ int mbedtls_asn1_write_oid(unsigned char **p, const unsigned char *start,
 /**
  * \brief           Write an AlgorithmIdentifier sequence in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -139,7 +139,7 @@ int mbedtls_asn1_write_algorithm_identifier(unsigned char **p,
 /**
  * \brief           Write an AlgorithmIdentifier sequence in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -161,7 +161,7 @@ int mbedtls_asn1_write_algorithm_identifier_ext(unsigned char **p,
  * \brief           Write a boolean tag (#MBEDTLS_ASN1_BOOLEAN) and value
  *                  in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -177,7 +177,7 @@ int mbedtls_asn1_write_bool(unsigned char **p, const unsigned char *start,
  * \brief           Write an int tag (#MBEDTLS_ASN1_INTEGER) and value
  *                  in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -193,7 +193,7 @@ int mbedtls_asn1_write_int(unsigned char **p, const unsigned char *start, int va
  * \brief           Write an enum tag (#MBEDTLS_ASN1_ENUMERATED) and value
  *                  in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -208,7 +208,7 @@ int mbedtls_asn1_write_enum(unsigned char **p, const unsigned char *start, int v
  * \brief           Write a string in ASN.1 format using a specific
  *                  string encoding tag.
 
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -229,7 +229,7 @@ int mbedtls_asn1_write_tagged_string(unsigned char **p, const unsigned char *sta
  * \brief           Write a string in ASN.1 format using the PrintableString
  *                  string encoding tag (#MBEDTLS_ASN1_PRINTABLE_STRING).
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -248,7 +248,7 @@ int mbedtls_asn1_write_printable_string(unsigned char **p,
  * \brief           Write a UTF8 string in ASN.1 format using the UTF8String
  *                  string encoding tag (#MBEDTLS_ASN1_UTF8_STRING).
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -266,7 +266,7 @@ int mbedtls_asn1_write_utf8_string(unsigned char **p, const unsigned char *start
  * \brief           Write a string in ASN.1 format using the IA5String
  *                  string encoding tag (#MBEDTLS_ASN1_IA5_STRING).
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -284,7 +284,7 @@ int mbedtls_asn1_write_ia5_string(unsigned char **p, const unsigned char *start,
  * \brief           Write a bitstring tag (#MBEDTLS_ASN1_BIT_STRING) and
  *                  value in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
@@ -323,7 +323,7 @@ int mbedtls_asn1_write_named_bitstring(unsigned char **p,
  * \brief           Write an octet string tag (#MBEDTLS_ASN1_OCTET_STRING)
  *                  and value in ASN.1 format.
  *
- * \note            This function works backwards in data buffer.
+ * \note            This function works backwards within the data buffer.
  *
  * \param p         The reference to the current position pointer.
  * \param start     The start of the buffer, for bounds-checking.
