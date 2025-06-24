@@ -1105,7 +1105,7 @@ The size of the hash used by the entropy module becomes the value of `MBEDTLS_EN
 * Size of the internal entropy accumulator that mixes all the sources (including the NV seed).
 * Maximum size returned by `mbedtls_entropy_func()` (the function that DRBG modules call).
 
-The length requested by a DRBG is `ctr->entropy_len`, which, for default instantiations (the only ones that matter in TF-PSA-Crypto 1.0), is:
+The length requested by a DRBG is `ctx->entropy_len`, which, for default instantiations (the only ones that matter in TF-PSA-Crypto 1.0), is:
 
 * For CTR\_DRBG: `MBEDTLS_CTR_DRBG_ENTROPY_LEN`. In Mbed TLS 3.6, and since the PolarSSL days, this is 48 if entropy uses SHA-512 and 32 if entropy uses SHA-256. Per NIST strength specifications (SP 800-90Ar1 table 3), `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` would be sufficient.
 * For HMAC\_DRBG: 32 for all hashes of 256 bits and above.
@@ -1134,9 +1134,9 @@ Remove the following as configuration options (they may still be used internally
 
 #### RNG algorithm and length options: summary
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/328): implement the new configuration options described in “[New RNG options](#new-rng-options)”. Remove the options described in “[Removed DRBG length options](#removed-drbg-length-options)” from `psa/crypto_config.h`, keeping the macros set from remaining options as described. Replace the current configuration checks in `check_config.h` as described below (the new checks may be in `check_config.h` or in other, possibly internal headers).
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/328): implement the new configuration options described in “[New RNG options](#new-rng-options)”. Remove the options described in “[Removed DRBG length options](#removed-drbg-length-options)” from `psa/crypto_config.h`, keeping the macros set from remaining options as described. Replace the current configuration checks in `check_config.h` as described below (the new checks may be in `check_config.h` or in other, possibly internal headers). Also, remove the warnings about `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY` in the makefiles. They are no longer relevant: now, if you select a 128-bit RNG strength, that's a very explicit choice.
 
-The new configuration checks ensure that the RNG configuration options achieve the strength in bits specified as `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`. All of this is irrelevant.
+The new configuration checks ensure that the RNG configuration options achieve the strength in bits specified as `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`. Overall we should have the following checks:
 
 * At least one of CTR\_DRBG or HMAC\_DRBG must be enabled (already enforced in `psa_crypto_random_impl.h`).
 * If CTR\_DRBG is used, the AES key size is chosen based on the strength. A strength of more than 256 is an error.
