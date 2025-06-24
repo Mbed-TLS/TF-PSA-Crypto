@@ -367,7 +367,6 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  *                         The function takes a big endian bignum buffer that
  *                         begins at start and ends at *p and encodes it into
  *                         a asn1 frame.
- *                         Warning: Destructive behaviour for the buffer data!
  *
  * \param p                The reference to the current position pointer.
  * \param start            The start of the buffer, for bounds-checking.
