@@ -451,8 +451,8 @@ int mbedtls_asn1_write_integer(unsigned char **p,
         return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
     }
 
-    if ((output_buffer_size < integer_length) || (output_buffer_size < 3)) {
-        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size. TC2 buffer too small for 1 byte integer and header.
+    if (output_buffer_size < integer_length) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size.
     }
 
     memset(start, 0, output_buffer_size);
@@ -487,9 +487,6 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     if (asn1_frame_size < 0) {
         *p = start+output_buffer_size;
         return asn1_frame_size;//TC4 mbedtls_asn1_write_len_and_tag failed.
-    } else if (asn1_frame_size > (int) output_buffer_size) {
-        *p = start+output_buffer_size;
-        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL; //TC5 Buffer too small for frame.
     }
 
     return asn1_frame_size;
