@@ -444,18 +444,18 @@ int mbedtls_asn1_write_integer(unsigned char **p,
 
     int asn1_frame_size = 0;
     int number_of_leading_zeros = 0;
-    size_t input_buffer_size = (*p-start);
+    size_t output_buffer_size = (*p-start);
     unsigned char *integer_start = NULL;
 
     if ((*p == NULL) || (start == NULL) || (integer == NULL)) {
         return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
     }
 
-    if ((input_buffer_size < integer_length) || (input_buffer_size < 3)) {
+    if ((output_buffer_size < integer_length) || (output_buffer_size < 3)) {
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size. TC2 buffer too small for 1 byte integer and header.
     }
 
-    memset(start, 0, input_buffer_size);
+    memset(start, 0, output_buffer_size);
 
     // asn1 specifies that the bignum must be encoded in the minimum allowable space, so leading zeros must be removed.
     while (integer[number_of_leading_zeros] == 0x0) {
@@ -474,7 +474,7 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     // should be 0.
     if (**p & 0x80) {
         if (*p - start < 1) {
-            *p = start+input_buffer_size;
+            *p = start+output_buffer_size;
             return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
         }
 
@@ -485,10 +485,10 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     asn1_frame_size =
         mbedtls_asn1_write_len_and_tag(p, start, integer_length, MBEDTLS_ASN1_INTEGER);
     if (asn1_frame_size < 0) {
-        *p = start+input_buffer_size;
+        *p = start+output_buffer_size;
         return asn1_frame_size;//TC4 mbedtls_asn1_write_len_and_tag failed.
-    } else if (asn1_frame_size > (int) input_buffer_size) {
-        *p = start+input_buffer_size;
+    } else if (asn1_frame_size > (int) output_buffer_size) {
+        *p = start+output_buffer_size;
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL; //TC5 Buffer too small for frame.
     }
 
