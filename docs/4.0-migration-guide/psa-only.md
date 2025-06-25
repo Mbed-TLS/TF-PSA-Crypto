@@ -1,5 +1,24 @@
 ## PSA as the only cryptography API
 
+The PSA Crypto API is now the only API for cryptographic primitives.
+
+For general guidance on migrating to the PSA Crypto API, consult the
+[PSA transition guide](../psa-transition.md). Note that most of the suggested migrations also work in the Mbed TLS 3.6 long-time support branch, provided that the library is configured suitably (`MBEDTLS_USE_PSA_CRYPTO` and `MBEDTLS_PSA_CRYPTO_CONFIG` enabled).
+
+### Impact on application code
+
+The PK module uses PSA for cryptographic operations. This corresponds to the behavior of Mbed TLS 3.x when `MBEDTLS_USE_PSA_CRYPTO` is enabled. In effect, `MBEDTLS_USE_PSA_CRYPTO` is now always enabled.
+
+`psa_crypto_init()` must be called before performing any cryptographic operation.
+
+A few functions take different parameters to migrate them to the PSA API. See “[Function prototype changes](#function-prototype-changes)”.
+
+### Impact on the library configuration
+
+The choice of supported cryptographic mechanisms is now based on `PSA_WANT_xxx` macros instead of legacy configuration macros such as `MBEDTLS_RSA_C`, `MBEDTLS_PKCS1_V15`, etc. This corresponds to the behavior of Mbed TLS 3.x when `MBEDTLS_PSA_CRYPTO_CONFIG` is enabled. In effect, `MBEDTLS_PSA_CRYPTO_CONFIG` is now always enabled.
+
+For information on which configuration macros are affected and their new PSA equivalent, consult the [PSA transition guide](../psa-transition.md).
+
 ### Low-level crypto functions are no longer part of the public API
 
 Low-level crypto functions, that is, all non-PSA crypto functions except a few
