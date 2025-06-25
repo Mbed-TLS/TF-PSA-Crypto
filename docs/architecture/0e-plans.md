@@ -1041,7 +1041,7 @@ MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
 
 #### High-level view of RNG interfaces
 
-The random generator subsystem is not directly exposed to applications. It exists only to feed `psa_get_random()` and other APIs that require randomness (either for their result or for blinding).
+The random generator subsystem is not directly exposed to applications. It exists only to feed `psa_generate_random()` and other APIs that require randomness (either for their result or for blinding).
 
 The random generator subsystem has an interface with drivers, which is not implemented yet and will likely not be implemented until after TF-PSA-Crypto 1.0. This interface is described in the [PSA Cryptoprocessor Driver Interface draft specification](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md): [entropy collection entry point](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md#entropy-collection-entry-point) and [random generation entry points](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md#random-generation-entry-points).
 
@@ -1209,7 +1209,7 @@ Only some of the interface elements in `mbedtls/psa_util.h` remain useful.
 | `mbedtls_ecdsa_raw_to_der` | crypto internal | Keep public |
 | `mbedtls_ecdsa_der_to_raw` | crypto internal | Keep public |
 
-The RNG wrapper function `mbedtls_psa_get_random` (and the associated constant `MBEDTLS_PSA_RANDOM_STATE`) has a negligible cost for us and can help users transition their code. Keep it, but mark it as deprecated, possibly inlined, and change it (code and documentation) to just return the return value of `psa_get_random`.
+The RNG wrapper function `mbedtls_psa_get_random` (and the associated constant `MBEDTLS_PSA_RANDOM_STATE`) has a negligible cost for us and can help users transition their code. Keep it, but mark it as deprecated, possibly inlined, and change it (code and documentation) to just return the return value of `psa_generate_random`.
 
 The ECC group conversion functions are now purely private since the type `mbedtls_ecp_group_id` is private. They aren't used by Mbed TLS, so move their declaration to an internal header.
 
