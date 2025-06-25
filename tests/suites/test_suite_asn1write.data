@@ -393,3 +393,6 @@ store_named_data_val_new:4:1
 
 Store named data: new, val_len=4, val=NULL
 store_named_data_val_new:4:0
+
+ASN.1 write integer: Basic encode
+mbedtls_asn1_write_integer_positive:"0123":"02020123"
