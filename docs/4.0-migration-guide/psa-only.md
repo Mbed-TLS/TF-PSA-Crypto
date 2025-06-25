@@ -1,4 +1,6 @@
-## Low-level crypto functions are no longer part of the public API
+## PSA as the only cryptography API
+
+### Low-level crypto functions are no longer part of the public API
 
 Low-level crypto functions, that is, all non-PSA crypto functions except a few
 that don't have a proper PSA replacement yet, have been removed from the public
