@@ -1,10 +1,12 @@
-## RNG removal
+## High-level API tweaks for PSA
+
+A number of existing functions now take a different list of arguments, to migrate them to the PSA API.
 
 ### Public functions no longer take a RNG callback
 
 Functions that need randomness no longer take an RNG callback in the form of `f_rng, p_rng` arguments. Instead, they use the PSA Crypto random generator (accessible as `psa_generate_random()`). All software using the LMS or PK modules must call `psa_crypto_init()` before calling any of the functions listed here.
 
-### Changes in LMS
+### RNG removal in LMS
 
 The following function prototypes have been changed in `mbedtls/lms.h`:
 
@@ -31,7 +33,7 @@ int mbedtls_lms_sign(mbedtls_lms_private_t *ctx,
                      const unsigned char *msg, unsigned int msg_size, unsigned char *sig, size_t sig_size, size_t *sig_len);
 ```
 
-### Changes in PK
+### RNG removal in PK
 
 The following function prototypes have been changed in `mbedtls/pk.h`:
 
