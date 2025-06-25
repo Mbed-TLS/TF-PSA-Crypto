@@ -72,3 +72,9 @@ If your application was using functions from these headers, please see
 the PSA API instead.
 
 Some of the associated types still need to be visible to the compiler. For example, `mbedtls_aes_context` is used to define `psa_cipher_operation_t`. These types are still available when building application code, but we recommend that you no longer use them directly. The structure, the semantics and even the existence of these types may change without notice.
+
+### Removal of alternative cryptographic module implementations
+
+TF-PSA-Crypto no longer supports replacing a whole cryptographic module or an individual cryptographic function by defining a macro `MBEDTLS_xxx_ALT` and providing a custom implementation of the same interface. Instead, use PSA accelerator drivers.
+
+The PK module no longer supports `MBEDTLS_PK_RSA_ALT`. Instead, for opaque keys (RSA or otherwise), use PSA secure element drivers.
