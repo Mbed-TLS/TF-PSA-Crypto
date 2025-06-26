@@ -86,6 +86,44 @@ typedef int (*mbedtls_pk_rsa_alt_sign_func)(void *ctx,
                                             mbedtls_md_type_t md_alg, unsigned int hashlen, const unsigned char *hash, unsigned char *sig);
 ```
 
+### Changes to NIST_KW
+
+The NIST\_KW module remains part of TF-PSA-Crypto, since it does not have a PSA equivalent yet. Hoever, its interface has changed, to use PSA key identifiers instead of a plaintext key via a custom context.
+
+The following function prototypes have been changed in `mbedtls/nist_kw.h`:
+
+```c
+int mbedtls_nist_kw_wrap(mbedtls_nist_kw_context *ctx,
+                         mbedtls_nist_kw_mode_t mode,
+                         const unsigned char *input, size_t in_len,
+                         unsigned char *output, size_t *out_len, size_t out_size);
+int mbedtls_nist_kw_unwrap(mbedtls_nist_kw_context *ctx,
+                           mbedtls_nist_kw_mode_t mode,
+                           const unsigned char *input, size_t in_len,
+                           unsigned char *output, size_t *out_len, size_t out_size);
+```
+
+to
+
+```c
+psa_status_t mbedtls_nist_kw_wrap(mbedtls_svc_key_id_t key,
+                                  mbedtls_nist_kw_mode_t mode,
+                                  const unsigned char *input, size_t input_length,
+                                  unsigned char *output, size_t output_size,
+                                  size_t *output_length);
+psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
+                                    mbedtls_nist_kw_mode_t mode,
+                                    const unsigned char *input, size_t input_length,
+                                    unsigned char *output, size_t output_size,
+                                    size_t *output_length);
+```
+
+Note that in addition to the change to keys, the last two parameters for the output buffer size and the length of the actual output have been swapped, to align the order of parameters with PSA Crypto APIs.
+
+The type `mbedtls_nist_kw_context` and the functions `mbedtls_nist_kw_init()`, `mbedtls_nist_kw_free()` and `mbedtls_nist_kw_setkey()` have been removed, since the interface no longer involves a specific context object for NIST\_KW.
+
+Also, the function `mbedtls_nist_kw_self_test()` has been removed. TF-PSA-Crypto 1.0 does not provide a ready-made self-test interface; one may be added in a future version of the library.
+
 ### Changes to ASN.1 functions
 
 As a consequence of the removal of the type `mbedtls_mpi` (provided by `mbedtls/bignum.h`) from public interfaces, the ASN.1 functions to parse and write integers have changed.
