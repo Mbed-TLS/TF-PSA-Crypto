@@ -13,6 +13,14 @@ The PK module uses PSA for cryptographic operations. This corresponds to the beh
 
 A few functions take different parameters to migrate them to the PSA API. See “[Function prototype changes](#function-prototype-changes)”.
 
+### No random generator instantiation
+
+Formerly, applications using various cryptographic features needed to provide a random generator, generally by instantiating an entropy context (`mbedtls_entropy_context`) and a DRBG context (`mbedtls_ctr_drbg_context` or `mbedtls_hmac_drbg_context`). This is no longer necessary, or possible. All features that require a random generator (RNG) now use the one provided by the PSA subsystem.
+
+Instead, applications that use random generators or keys (even public keys) need to call `psa_crypto_init()` before any cryptographic operation or key management operation.
+
+See also [function prototype changes](#function-prototype-changes), many of which are related to the move from RNG callbacks to a global RNG.
+
 ### Impact on the library configuration
 
 The choice of supported cryptographic mechanisms is now based on `PSA_WANT_xxx` macros instead of legacy configuration macros such as `MBEDTLS_RSA_C`, `MBEDTLS_PKCS1_V15`, etc. This corresponds to the behavior of Mbed TLS 3.x when `MBEDTLS_PSA_CRYPTO_CONFIG` is enabled. In effect, `MBEDTLS_PSA_CRYPTO_CONFIG` is now always enabled.
