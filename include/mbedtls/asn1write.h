@@ -370,6 +370,9 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  *
  * \note                   This function works backwards within the data buffer.
  *
+ * \note                   This function is not guaranteed to work when the
+ *                         input and output buffers overlap.
+ *
  * \param p                The reference to the current position pointer.
  * \param start            The start of the buffer, for bounds-checking.
  * \param integer          Pointer to a big-endian representation of an integer.
