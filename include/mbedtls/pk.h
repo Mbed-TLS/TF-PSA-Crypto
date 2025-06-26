@@ -134,10 +134,10 @@ typedef enum {
 
 /* This is identical to MBEDTLS_PK_USE_PSA_EC_DATA above, but for RSA keys.
  * The main reason for having it is that framework code is shared between
- * develoment branch and 3.6 LTS one and we need a way to tell from which
+ * the develoment branch and the 3.6 LTS one and we need a way to tell from which
  * of the two we're building.
  * This symbol is not used in builtin driver and tests and it can be removed
- * whenever MBEDTLS_PK_USE_PSA_EC_DATA will be. */
+ * at the same time as MBEDTLS_PK_USE_PSA_EC_DATA. */
 #define MBEDTLS_PK_USE_PSA_RSA_DATA
 
 /**

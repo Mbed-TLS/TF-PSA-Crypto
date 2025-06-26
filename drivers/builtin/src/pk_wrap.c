@@ -777,7 +777,7 @@ static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     }
 
     return 0;
-#else /* !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
+#else /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
     ((void) pk);
     ((void) md_alg);
     ((void) hash);
@@ -786,7 +786,7 @@ static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     ((void) sig_size);
     ((void) sig_len);
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
+#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 }
 
 const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
