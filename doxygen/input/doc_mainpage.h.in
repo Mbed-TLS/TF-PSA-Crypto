@@ -10,7 +10,7 @@
  */
 
 /**
- * @mainpage TF-PSA-Crypto v@TF-PSA-Crypto_VERSION@ source code documentation
+ * @mainpage v@TF-PSA-Crypto_VERSION@-beta source code documentation
  *
  * This documentation describes the internal structure of the TF-PSA-Crypto
  * library. It was automatically generated from specially formatted comment

@@ -37,7 +37,7 @@ cmake_policy(SET CMP0011 NEW)
 # is deprecated and will be removed in future versions.
 cmake_policy(SET CMP0012 NEW)
 
-set(TF_PSA_CRYPTO_VERSION 0.1.0)
+set(TF_PSA_CRYPTO_VERSION 1.0.0)
 set(TF_PSA_CRYPTO_SOVERSION 0)
 
 if(TEST_CPP)
