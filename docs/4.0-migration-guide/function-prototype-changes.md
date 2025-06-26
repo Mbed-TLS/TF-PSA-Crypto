@@ -88,7 +88,7 @@ typedef int (*mbedtls_pk_rsa_alt_sign_func)(void *ctx,
 
 ### Changes to NIST_KW
 
-The NIST\_KW module remains part of TF-PSA-Crypto, since it does not have a PSA equivalent yet. Hoever, its interface has changed, to use PSA key identifiers instead of a plaintext key via a custom context.
+The NIST\_KW module remains part of TF-PSA-Crypto, since it does not have a PSA equivalent yet. However, its interface has changed, to use PSA key identifiers instead of a plaintext key via a custom context.
 
 The following function prototypes have been changed in `mbedtls/nist_kw.h`:
 
