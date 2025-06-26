@@ -447,7 +447,8 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     size_t output_buffer_size = (*p-start);
     unsigned char *integer_start = NULL;
 
-    if ((*p == NULL) || (start == NULL) || (integer == NULL)) {
+    if (((start != *p) && ((*p == NULL) || (start == NULL)))
+        || (integer == NULL)) {
         return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
     }
 

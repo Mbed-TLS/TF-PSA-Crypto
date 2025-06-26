@@ -617,7 +617,7 @@ void mbedtls_asn1_write_integer_positive(data_t *integer, data_t *expected_outpu
     TEST_MEMORY_COMPARE(output, output_length, expected_output->x, expected_output->len);
 
     /* Test with all sizes less than the right length */
-    for (size_t length = 1; length < output_length; length++) {
+    for (size_t length = 0; length < output_length; length++) {
         mbedtls_free(output);
         output = NULL;
         p = NULL;
