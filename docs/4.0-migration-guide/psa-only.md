@@ -81,6 +81,10 @@ the PSA API instead.
 
 Some of the associated types still need to be visible to the compiler. For example, `mbedtls_aes_context` is used to define `psa_cipher_operation_t`. These types are still available when building application code, but we recommend that you no longer use them directly. The structure, the semantics and even the existence of these types may change without notice.
 
+### Other removed functions related to low-level cryptography APIs
+
+The functions `mbedtls_ecc_group_to_psa()` and `mbedtls_ecc_group_from_psa()` have been removed. They are no longer meaningful since the low-level representation of elliptic curve groups is no longer part of the API.
+
 ### Removal of alternative cryptographic module implementations
 
 TF-PSA-Crypto no longer supports replacing a whole cryptographic module or an individual cryptographic function by defining a macro `MBEDTLS_xxx_ALT` and providing a custom implementation of the same interface. Instead, use PSA accelerator drivers.
