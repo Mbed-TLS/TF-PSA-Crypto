@@ -12,4 +12,6 @@ As a consequence, the compilation option `MBEDTLS_SELF_TEST` does not provide di
 
 Acceleration for VIA Padlock (`MBEDTLS_PADLOCK_C`) is no longer provided.
 
+The deprecated and incomplete support for dynamic registration of secure element drivers (`MBEDTLS_PSA_CRYPTO_SE_C`) has been removed. Use compile-time secure element drivers instead.
+
 See also [the removal of ALT interfaces](#removal-of-alternative-cryptographic-module-implementations).
