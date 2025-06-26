@@ -613,8 +613,7 @@ void mbedtls_asn1_write_integer_positive(data_t *integer, data_t *expected_outpu
     p = output + output_length;
 
     ret = mbedtls_asn1_write_integer(&p, output, integer->x, integer->len);
-    TEST_EQUAL(ret, expected_output->len);
-    TEST_MEMORY_COMPARE(output, output_length, expected_output->x, expected_output->len);
+    TEST_MEMORY_COMPARE(p, ret, expected_output->x, expected_output->len);
 
     /* Test with all sizes less than the right length */
     for (size_t length = 0; length < output_length; length++) {
@@ -637,7 +636,7 @@ void mbedtls_asn1_write_integer_positive(data_t *integer, data_t *expected_outpu
         TEST_CALLOC(output, output_length + 1);
         p = output + output_length + 1;
         ret = mbedtls_asn1_write_integer(&p, output, integer->x, integer->len);
-        TEST_EQUAL(ret, expected_output->len);
+        TEST_MEMORY_COMPARE(p, ret, expected_output->x, expected_output->len);
     }
 
 exit:
