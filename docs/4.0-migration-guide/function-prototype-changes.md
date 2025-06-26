@@ -85,3 +85,40 @@ int mbedtls_pk_parse_keyfile(mbedtls_pk_context *ctx, const char *path, const ch
 typedef int (*mbedtls_pk_rsa_alt_sign_func)(void *ctx,
                                             mbedtls_md_type_t md_alg, unsigned int hashlen, const unsigned char *hash, unsigned char *sig);
 ```
+
+### Changes to ASN.1 functions
+
+As a consequence of the removal of the type `mbedtls_mpi` (provided by `mbedtls/bignum.h`) from public interfaces, the ASN.1 functions to parse and write integers have changed.
+
+The following functions have been removed from the API:
+
+```c
+// mbedtls/asn1.h
+int mbedtls_asn1_get_mpi(unsigned char **p, const unsigned char *end,
+                         mbedtls_mpi *X);
+
+// mbedtls/asn1write.h
+int mbedtls_asn1_write_mpi(unsigned char **p, const unsigned char *start,
+                           const mbedtls_mpi *X);
+```
+
+You can use the following new functions instead:
+
+```c
+// mbedtls/asn1.h
+int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
+                             unsigned char **head, size_t *length);
+
+// mbedtls/asn1write.h
+int mbedtls_asn1_write_integer(unsigned char **p,
+                               unsigned char *start,
+                               const unsigned char *integer,
+                               size_t integer_length);
+```
+
+Both new functions use a big-endian byte buffer as the representation.
+
+Note some differences in the semantics of the new parsing function:
+
+* `mbedtls_asn1_get_integer()` rejects negative integers. (`mbedtls_asn1_get_mpi()` misparsed them, using the sign bit as a value bit).
+* `mbedtls_asn1_get_integer()` does not allocate memory. It returns a pointer inside the ASN.1 representation.
