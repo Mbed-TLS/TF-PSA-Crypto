@@ -468,20 +468,33 @@ int mbedtls_asn1_write_integer(unsigned char **p,
 
     memset(start, 0, output_buffer_size);
 
-    *p -= integer_length;
-
-    memcpy(*p, integer_start, integer_length);
-
-    // DER format assumes 2s complement for numbers, so the leftmost bit
-    // should be 0.
-    if (**p & 0x80) {
-        if (*p - start < 1) {
-            *p = start+output_buffer_size;
+    /* Special case - if integer_length is zero, the value is zero and it
+     * should be encoded as one byte. */
+    if (integer_length == 0) {
+        if (output_buffer_size < 1) {
             return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
         }
 
-        *--(*p) = 0x00;
-        integer_length += 1;
+        *p -= 1;
+        integer_length = 1;
+
+    } else {
+
+        *p -= integer_length;
+
+        memcpy(*p, integer_start, integer_length);
+
+        // DER format assumes 2s complement for numbers, so the leftmost bit
+        // should be 0.
+        if (**p & 0x80) {
+            if (*p - start < 1) {
+                *p = start+output_buffer_size;
+                return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+            }
+
+            *--(*p) = 0x00;
+            integer_length += 1;
+        }
     }
 
     asn1_frame_size =
