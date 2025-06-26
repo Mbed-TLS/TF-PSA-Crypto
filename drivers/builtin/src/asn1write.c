@@ -466,7 +466,9 @@ int mbedtls_asn1_write_integer(unsigned char **p,
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size.
     }
 
-    memset(start, 0, output_buffer_size);
+    if (start != *p) {
+        memset(start, 0, output_buffer_size);
+    }
 
     /* Special case - if integer_length is zero, the value is zero and it
      * should be encoded as one byte. */
