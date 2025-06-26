@@ -27,6 +27,10 @@ The choice of supported cryptographic mechanisms is now based on `PSA_WANT_xxx` 
 
 For information on which configuration macros are affected and their new PSA equivalent, consult the [PSA transition guide](../psa-transition.md).
 
+### Configuration of the PSA random generator
+
+The configuration option `MBEDTLS_PSA_INJECT_ENTROPY` has been removed. TF-PSA-Crypto 1.0 does not provide a way to store an entropy seed in the key store. This will be reimplemented in a future minor version.
+
 ### Low-level crypto functions are no longer part of the public API
 
 Low-level crypto functions, that is, all non-PSA crypto functions except a few
