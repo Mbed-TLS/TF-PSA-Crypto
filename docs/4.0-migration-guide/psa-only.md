@@ -29,6 +29,8 @@ For information on which configuration macros are affected and their new PSA equ
 
 ### Configuration of the PSA random generator
 
+TODO: entropy sources, RNG options
+
 The configuration option `MBEDTLS_PSA_INJECT_ENTROPY` has been removed. TF-PSA-Crypto 1.0 does not provide a way to store an entropy seed in the key store. This will be reimplemented in a future minor version.
 
 ### Low-level crypto functions are no longer part of the public API

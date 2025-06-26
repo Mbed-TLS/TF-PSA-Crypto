@@ -1,5 +1,9 @@
 ### Changes to MD and PK
 
+### TODO: restricted md
+
+### TODO: changed pk
+
 ### Removed support for RSA encryption/decryption in PK
 
 The two functions `mbedtls_pk_decrypt()` and `mbedtls_pk_encrypt()` have been
