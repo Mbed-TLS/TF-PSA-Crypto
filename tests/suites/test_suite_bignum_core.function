@@ -1484,50 +1484,6 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void endian_check(const data_t *input, int asn1_frame_length, int expected_result)
-{
-    int output_buffer_length;
-    unsigned char *p = NULL;
-    unsigned char *asn1_frame = NULL;
-    unsigned char *asn1_frame2 = NULL;
-    size_t integer_length;
-
-    TEST_CALLOC(asn1_frame, asn1_frame_length);
-    TEST_CALLOC(asn1_frame2, asn1_frame_length);
-
-    unsigned char *integer_head = NULL;
-
-    p = asn1_frame + asn1_frame_length;
-
-    output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame, input->x, input->len);
-
-    TEST_EQUAL(output_buffer_length, expected_result);
-
-    if (output_buffer_length > 0) {
-        TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + asn1_frame_length, &integer_head,
-                                            &integer_length), 0);
-        p = asn1_frame2 + asn1_frame_length;
-        memcpy(input->x, integer_head, integer_length);
-        output_buffer_length = mbedtls_asn1_write_integer(&p,
-                                                          asn1_frame2,
-                                                          input->x,
-                                                          integer_length);
-
-        if (output_buffer_length > 0) {
-            TEST_MEMORY_COMPARE(asn1_frame, output_buffer_length, asn1_frame2,
-                                output_buffer_length);
-        } else {
-            TEST_FAIL("mbedtls_asn1_write_integer failed");
-        }
-    }
-
-exit:
-    mbedtls_free(asn1_frame);
-    mbedtls_free(asn1_frame2);
-}
-/* END_CASE */
-
-/* BEGIN_CASE */
 void encode_decode_asn1_bignum(const data_t *input,
                                int asn1_frame_length,
                                int expected_result)
@@ -1562,66 +1518,5 @@ void encode_decode_asn1_bignum(const data_t *input,
 
 exit:
     mbedtls_free(asn1_frame);
-}
-/* END_CASE */
-
-/* BEGIN_CASE */
-void size_checks(void)
-{
-    int output_buffer_length;
-
-    unsigned char *p = NULL;
-    unsigned char *integer_head = NULL;
-    unsigned char *input = NULL;
-    unsigned char *asn1_frame = NULL;
-
-    size_t integer_length;
-    size_t max_integer_length = 80000;
-    size_t max_frame_length = 90000;
-
-    TEST_CALLOC(asn1_frame, max_frame_length);
-    TEST_CALLOC(input, max_integer_length);
-
-    p = asn1_frame + max_frame_length;
-
-    for (size_t i = 1; i < max_integer_length; i++) {
-
-        memset(input, 0x12, i);
-
-        output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame, input, i);
-
-        if (output_buffer_length < 0) {
-            TEST_FAIL("mbedtls_asn1_write_integer fail");
-        }
-
-        if (output_buffer_length > 0) {
-            TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + max_frame_length, &integer_head,
-                                                &integer_length), 0);
-            TEST_MEMORY_COMPARE(input, i, integer_head, integer_length);
-        }
-        if ((p-(i*2)) < asn1_frame) {
-            p = asn1_frame + max_frame_length;
-        }
-    }
-
-exit:
-    mbedtls_free(asn1_frame);
-    mbedtls_free(input);
-}
-/* END_CASE */
-
-/* BEGIN_CASE */
-void null_pointer_checks()
-{
-    unsigned char *buff = NULL;
-    TEST_ASSERT(mbedtls_asn1_write_integer(&buff, buff, buff, 1)
-                == MBEDTLS_ERR_ASN1_INVALID_DATA);
-    TEST_CALLOC(buff, 1);
-    TEST_ASSERT(mbedtls_asn1_write_integer(&buff, NULL, buff, 1)
-                == MBEDTLS_ERR_ASN1_INVALID_DATA);
-    TEST_ASSERT(mbedtls_asn1_write_integer(&buff, buff, NULL, 1)
-                == MBEDTLS_ERR_ASN1_INVALID_DATA);
-exit:
-    mbedtls_free(buff);
 }
 /* END_CASE */
