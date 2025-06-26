@@ -1,5 +1,4 @@
 API changes
-   * Replaced MBEDTLS_ERR_PK_SIG_LEN_MISMATCH and
-     MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH error codes with
-     MBEDTLS_ERR_ECP_VERIFY_FAILED and
-     MBEDTLS_ERR_RSA_VERIFY_FAILED
+   * MBEDTLS_ERR_PK_SIG_LEN_MISMATCH is no longer a distinct error code.
+     A valid signature with trailing garbage is now reported as an invalid
+     signature with all algorithms.
