@@ -14,6 +14,10 @@ Generally, functions that used to return the sum of two error codes now return t
 
 As a consequence, the functions `mbedtls_low_level_sterr()` and `mbedtls_high_level_strerr()` no longer exist.
 
+### Removed English error messages
+
+TF-PSA-Crypto does not provide English text corresponding to error codes. The functionality provided by `mbedtls_strerror()` in `mbedtls/error.h` is still present in Mbed TLS.
+
 ### Removed error code names
 
 Many legacy error codes have been removed in favor of PSA error codes. Generally, functions that returned a legacy error code in the table below in Mbed TLS 3.6 now return the PSA error code listed on the same row. Similarly, callbacks should apply the same changes to error code, unless there has been a relevant change to the callback's interface.
