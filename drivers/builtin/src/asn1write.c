@@ -447,11 +447,6 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     size_t output_buffer_size = (*p-start);
     unsigned char *integer_start = NULL;
 
-    if (((start != *p) && ((*p == NULL) || (start == NULL)))
-        || (integer == NULL)) {
-        return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
-    }
-
     // asn1 specifies that the bignum must be encoded in the minimum allowable space, so leading zeros must be removed.
     while ((number_of_leading_zeros < integer_length)
            && (integer[number_of_leading_zeros] == 0x0)) {
