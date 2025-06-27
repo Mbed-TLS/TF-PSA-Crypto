@@ -381,8 +381,7 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data *
  * \return                 An integer number of bytes written on success.
  * \return                 An appropriate error code on failure.
  * \return                 On success p will be set to point to the start of
- *                         the encoded integer,
- *                         on failure it will be set to the end of the buffer.
+ *                         the encoded integer.
  */
 int mbedtls_asn1_write_integer(unsigned char **p,
                                unsigned char *start,

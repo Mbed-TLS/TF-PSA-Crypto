@@ -483,7 +483,6 @@ int mbedtls_asn1_write_integer(unsigned char **p,
         // should be 0.
         if (**p & 0x80) {
             if (*p - start < 1) {
-                *p = start+output_buffer_size;
                 return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
             }
 
@@ -495,7 +494,6 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     asn1_frame_size =
         mbedtls_asn1_write_len_and_tag(p, start, integer_length, MBEDTLS_ASN1_INTEGER);
     if (asn1_frame_size < 0) {
-        *p = start+output_buffer_size;
         return asn1_frame_size;//TC4 mbedtls_asn1_write_len_and_tag failed.
     }
 
