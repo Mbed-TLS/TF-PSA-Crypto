@@ -47,7 +47,7 @@ int main(void)
     psa_status_t (*psa_hash_compute_ptr)(psa_algorithm_t, const uint8_t *, size_t,
                                          uint8_t *, size_t, size_t *) =
         dlsym(crypto_so, "psa_hash_compute");
-        
+    
 #pragma GCC diagnostic pop
     CHECK_DLERROR("dlsym", "psa_crypto_init");
     CHECK_DLERROR("dlsym", "psa_hash_compute");
@@ -62,7 +62,7 @@ int main(void)
     uint8_t hash[32]; // Buffer to hold the output hash
     size_t hash_len = 0;
 
-    status = psa_hash_compute_ptr(PSA_ALG_SHA_256,  
+    status = psa_hash_compute_ptr(PSA_ALG_SHA_256,
                               input, sizeof(input) - 1,
                               hash, sizeof(hash),
                               &hash_len);
