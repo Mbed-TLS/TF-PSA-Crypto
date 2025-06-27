@@ -627,6 +627,7 @@ void mbedtls_asn1_write_integer_positive(data_t *integer, data_t *expected_outpu
 
     /* Test with all sizes less than the right length */
     for (size_t length = 0; length < output_length; length++) {
+        mbedtls_test_set_step(length);
         mbedtls_free(output);
         output = NULL;
         p = NULL;
