@@ -47,7 +47,7 @@ int main(void)
     psa_status_t (*psa_hash_compute_ptr)(psa_algorithm_t, const uint8_t *, size_t,
                                          uint8_t *, size_t, size_t *) =
         dlsym(crypto_so, "psa_hash_compute");
-    
+
 #pragma GCC diagnostic pop
     CHECK_DLERROR("dlsym", "psa_crypto_init");
     CHECK_DLERROR("dlsym", "psa_hash_compute");
@@ -63,16 +63,16 @@ int main(void)
     size_t hash_len = 0;
 
     status = psa_hash_compute_ptr(PSA_ALG_SHA_256,
-                              input, sizeof(input) - 1,
-                              hash, sizeof(hash),
-                              &hash_len);
+                                  input, sizeof(input) - 1,
+                                  hash, sizeof(hash),
+                                  &hash_len);
     if (status != PSA_SUCCESS) {
         mbedtls_fprintf(stderr, "psa_hash_compute failed: %d\n", (int) status);
         mbedtls_exit(MBEDTLS_EXIT_FAILURE);
     }
 
     mbedtls_printf("dlopen(%s): psa_hash_compute succeeded. SHA-256 output length: %zu\n",
-               CRYPTO_SO_FILENAME, hash_len);
+                   CRYPTO_SO_FILENAME, hash_len);
 
     dlclose(crypto_so);
     CHECK_DLERROR("dlclose", CRYPTO_SO_FILENAME);
