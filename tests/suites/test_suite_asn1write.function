@@ -626,13 +626,19 @@ void mbedtls_asn1_write_integer_positive(data_t *integer, data_t *expected_outpu
     TEST_MEMORY_COMPARE(p, ret, expected_output->x, expected_output->len);
 
     /* Test with all sizes less than the right length */
-    for (size_t length = 1; length < output_length; length++) {
+    for (size_t length = 0; length < output_length; length++) {
         mbedtls_test_set_step(length);
         mbedtls_free(output);
         output = NULL;
         p = NULL;
 
-        TEST_CALLOC(output, length);
+        if (length == 0) {
+            /* In the zero-length case, we do not handle a NULL output buffer,
+             * but still test for a non-NULL output that is zero-length. */
+            TEST_CALLOC(output, 1);
+        } else {
+            TEST_CALLOC(output, length);
+        }
         p = output + length;
         ret = mbedtls_asn1_write_integer(&p, output, integer_buf, integer_length);
         TEST_EQUAL(ret, MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
