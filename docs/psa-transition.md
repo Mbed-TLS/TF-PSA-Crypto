@@ -110,11 +110,11 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 | ------ | --------------- | -------------- |
 | `aes.h` | `mbedtls_aes_` | [Symmetric encryption](#symmetric-encryption) |
 | `aria.h` | `mbedtls_aria_` | [Symmetric encryption](#symmetric-encryption) |
-| `asn1.h` | `mbedtls_asn1_` | No change ([PK support interface](#pk-format-support-interfaces)) |
-| `asn1write.h` | `mbedtls_asn1_write_` | No change ([PK support interface](#pk-format-support-interfaces)) |
-| `base64.h` | `mbedtls_base64_` | No change ([PK support interface](#pk-format-support-interfaces)) |
+| `asn1.h` | `mbedtls_asn1_` | No change ([PK format support interfaces](#pk-format-support-interfaces)) |
+| `asn1write.h` | `mbedtls_asn1_write_` | No change ([PK format support interfaces](#pk-format-support-interfaces)) |
+| `base64.h` | `mbedtls_base64_` | No change ([PK format support interfaces](#pk-format-support-interfaces)) |
 | `bignum.h` | `mbedtls_mpi_` | None (no low-level arithmetic) |
-| `build_info.h` | `MBEDTLS_` | No change (not a crypto API) |
+| `build_info.h` | `MBEDTLS_` | Belongs in Mbed TLS, but see also `tf-psa-crypto/build_info.h` |
 | `camellia.h` | `mbedtls_camellia_` | [Symmetric encryption](#symmetric-encryption) |
 | `ccm.h` | `mbedtls_ccm_` | [Symmetric encryption](#symmetric-encryption), [Authenticated cipher operations](#authenticated-cipher-operations) |
 | `chacha20.h` | `mbedtls_chacha20_` | [Symmetric encryption](#symmetric-encryption) |
@@ -126,7 +126,6 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 | `config_psa.h` | N/A | No public APIs (internal support header) |
 | `constant_time.h` | `mbedtls_ct_` | [Constant-time functions](#constant-time-functions) |
 | `ctr_drbg.h` | `mbedtls_ctr_drbg_` | [Random generation interface](#random-generation-interface), [Deterministic pseudorandom generation](#deterministic-pseudorandom-generation) |
-| `debug.h` | `mbedtls_debug_` | No change (not a crypto API) |
 | `des.h` | `mbedtls_des_` | [Symmetric encryption](#symmetric-encryption) |
 | `dhm.h` | `mbedtls_dhm_` | [Asymmetric cryptography](#asymmetric-cryptography) |
 | `ecdh.h` | `mbedtls_ecdh_` | [Asymmetric cryptography](#asymmetric-cryptography) |
@@ -143,38 +142,25 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 | `md.h` | `mbedtls_md_` | [Hashes and MAC](#hashes-and-mac) |
 | `md5.h` | `mbedtls_md5_` | [Hashes and MAC](#hashes-and-mac) |
 | `memory_buffer_alloc.h` | `mbedtls_memory_buffer_alloc_` | No change (not a crypto API) |
-| `net_sockets.h` | `mbedtls_net_` | No change (not a crypto API) |
-| `nist_kw.h` | `mbedtls_nist_kw_` | Migration path not yet defined |
-| `oid.h` | `mbedtls_oid_` | No change ([PK support interface](#pk-format-support-interfaces)) |
-| `pem.h` | `mbedtls_pem_` | No change ([PK support interface](#pk-format-support-interfaces)) |
+| `nist_kw.h` | `mbedtls_nist_kw_` | TODO |
+| `oid.h` | `mbedtls_oid_` | [PK format support interfaces](#pk-format-support-interfaces) |
+| `pem.h` | `mbedtls_pem_` | No change ([PK format support interfaces](#pk-format-support-interfaces)) |
 | `pk.h` | `mbedtls_pk_` | [Asymmetric cryptography](#asymmetric-cryptography) |
 | `pkcs5.h` | `mbedtls_pkcs5_` | [PKCS#5 module](#pkcs5-module) |
-| `pkcs7.h` | `mbedtls_pkcs7_` | No change (not a crypto API) |
 | `pkcs12.h` | `mbedtls_pkcs12_` | [PKCS#12 module](#pkcs12-module) |
 | `platform.h` | `mbedtls_platform_` | No change (not a crypto API) |
 | `platform_time.h` | `mbedtls_*time*` | No change (not a crypto API) |
 | `platform_util.h` | `mbedtls_platform_` | No change (not a crypto API) |
 | `poly1305.h` | `mbedtls_poly1305_` | None (but there is Chacha20-Poly1305 [AEAD](#symmetric-encryption)) |
 | `private_access.h` | N/A | No public APIs (internal support header) |
-| `psa_util.h` | N/A | No public APIs (internal support header) |
+| `psa_util.h` | various | TODO |
 | `ripemd160.h` | `mbedtls_ripemd160_` | [Hashes and MAC](#hashes-and-mac) |
 | `rsa.h` | `mbedtls_rsa_` | [Asymmetric cryptography](#asymmetric-cryptography) |
 | `sha1.h` | `mbedtls_sha1_` | [Hashes and MAC](#hashes-and-mac) |
 | `sha3.h` | `mbedtls_sha3_` | [Hashes and MAC](#hashes-and-mac) |
 | `sha256.h` | `mbedtls_sha256_` | [Hashes and MAC](#hashes-and-mac) |
 | `sha512.h` | `mbedtls_sha512_` | [Hashes and MAC](#hashes-and-mac) |
-| `ssl.h` | `mbedtls_ssl_` | No change (not a crypto API) |
-| `ssl_cache.h` | `mbedtls_ssl_cache_` | No change (not a crypto API) |
-| `ssl_ciphersuites.h` | `mbedtls_ssl_ciphersuite_` | No change (not a crypto API) |
-| `ssl_cookie.h` | `mbedtls_ssl_cookie_` | No change (not a crypto API) |
-| `ssl_ticket.h` | `mbedtls_ssl_ticket_` | No change (not a crypto API) |
 | `threading.h` | `mbedtls_threading_` | No change (not a crypto API) |
-| `timing.h` | `mbedtls_timing_` | No change (not a crypto API) |
-| `version.h` | `mbedtls_version_` | No change (not a crypto API) |
-| `x509.h` | `mbedtls_x509` | No change (not a crypto API) |
-| `x509_crl.h` | `mbedtls_x509` | No change (not a crypto API) |
-| `x509_crt.h` | `mbedtls_x509` | No change (not a crypto API) |
-| `x509_csr.h` | `mbedtls_x509` | No change (not a crypto API) |
 
 ## Compile-time configuration
 
@@ -1315,6 +1301,8 @@ A future version of TF-PSA-Crypto will likely support LMS keys and signatures th
 The interfaces in `base64.h`, `asn1.h`, `asn1write.h` and `pem.h` are intended to support X.509 and key file formats. Since these APIs are not directly about cryptography, there is no PSA replacement in Mbed TLS 3.6 or in TF-PSA-Crypto 1.0.
 
 TF-PSA-Crypto 1.0 removes direct access to OID values and functions formerly in `mbedtls/oid.h`. OID lookup is only used internally to parse and write keys and other objects.
+
+In the ASN.1 modules, the functions `mbedtls_asn1_get_mpi` and `mbedtls_asn1_write_mpi` have been replaced by `mbedtls_asn1_get_integer` and `mbedtls_asn1_write_integer`. See the [TF-PSA-Crypto 1.0 transition guide](1.0-migration-guide.md#changes-to-asn-1-functions) for more information.
 
 ## EC-JPAKE
 
