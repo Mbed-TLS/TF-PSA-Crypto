@@ -138,19 +138,11 @@ mbedtls_pk_init()
 mbedtls_pk_free()
 ```
 
-#### Context metadata
+Also keep the following metadata access function:
 
-We explicitly associate an algorithm with each PK context. This is intended to match the algorithm in the underlying PSA key when there is one. Having an algorithm stored in the context lets us treat PK contexts more uniformly regardless of whether they contain a PSA key or a direct pointer to key material.
-
-Keep:
 ```
-mbedtls_pk_get_bitlen()
 mbedtls_pk_can_do_ext()
 ```
-
-We keep `mbedtls_pk_can_do_ext()` as is because it's useful to check what a key can do after parsing it. It is partially redundant with `mbedtls_pk_get_psa_attributes()`, but it's sometimes more convenient, already implemented, and easy to implement for any evolution of PK that can accommodate `mbedtls_pk_get_psa_attributes()`.
-
-TODO: `mbedtls_pk_can_do_ext()` was designed with private keys in mind, and its behavior with public keys is a bit strange: it checks whether a corresponding private key would work. [Should we fix that?](#public-private-distinction-for-mbedtls_pk_can_do_ext)
 
 #### Meaning of `mbedtls_pk_type_t`
 
@@ -218,6 +210,38 @@ PK no longer supports custom setup and inspection of a PK object, thus we remove
 #### `mbedtls_pk_check_pair()`
 
 Keep `mbedtls_pk_check_pair()`. It's no burden to implement.
+
+### Changes to `mbedtls_pk_can_do_ext`
+
+#### Semantics of `mbedtls_pk_can_do_ext` in Mbed TLS 3.6
+
+We keep `mbedtls_pk_can_do_ext()` because it's useful to check what a key can do after parsing it. It is partially redundant with `mbedtls_pk_get_psa_attributes()`, but it's sometimes more convenient, already implemented, and easy to implement for any evolution of PK that can accommodate `mbedtls_pk_get_psa_attributes()`.
+
+The semantics of `mbedtls_pk_can_do_ext()` in Mbed TLS 3.6 is somewhat weird with respect to public keys. Although the function is advertised as “Tell if context can do the operation given by PSA algorithm”, that is not quite true. The function takes an algorithm and a usage flag (or a mask thereof), with only private-key usage flags allowed. But it accepts public keys, which could only do the corresponding public-key operation. For example,
+```
+mbedtls_pk_can_do_ext(pk, PSA_ALG_ECDSA(PSA_ALG_SHA_256), PSA_KEY_USAGE_SIGN_HASH)
+```
+is true for a builtin ECC key object containing only the public part of the key.
+This is misleading and not documented.
+
+#### New semantics of `mbedtls_pk_can_do_ext`
+
+We should change the meaning of the usage flag to indicate what operations can actually be performed on the key:
+
+* `PSA_KEY_USAGE_SIGN_HASH` means a key pair that can be used to sign;
+* `PSA_KEY_USAGE_VERIFY_HASH` means a public key or key pair that can be used to verify;
+* `PSA_KEY_USAGE_DECRYPT` means a key pair that can be used to decrypt;
+* `PSA_KEY_USAGE_ENCRYPT` means a public key or key pair that can be used to encrypt;
+* `PSA_KEY_USAGE_DERIVE` means a key pair that can be used as the private side in a key agreement;
+* TODO: flag for a key pair or public key that can be used as the public side in a key agreement?
+
+This will be closer to how `mbedtls_pk_get_psa_attributes()` works.
+
+#### Implementing the new `mbedtls_pk_can_do_ext`
+
+Note that the change of semantics on public keys will break [`ssl_pick_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls12_server.c#L687) and [`ssl_tls13_pick_key_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls13_server.c#L1115), as they rely on calling `mbedtls_pk_can_do_ext()` on the public key from the certificate. However, this should be an easy fix: just change these invocations to use `PSA_KEY_USAGE_VERIFY_HASH` as the usage to check.
+
+ACTION: Generalize `mbedtls_pk_can_do_ext()`, taking the TLS dependency into account.
 
 ### PSA bridges
 
@@ -304,7 +328,7 @@ mbedtls_pk_verify()
 mbedtls_pk_sign()
 ```
 
-ACTION: remove the `options` parameter to `mbedtls_pk_verify_ext`.
+ACTION: remove the `options` parameter to `mbedtls_pk_verify_ext`. Note that we have a changelog entry announcing that it's ignored, this changelog entry needs to be replaced.
 
 ACTION: for `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()`, change the `mbedtls_pk_type_t type` parameter (whose type is being removed from the API) to `mbedtls_pk_sigalg_t sigalg`. See “[New type for signature algorithms](new-type-for-signature-algorithms)”.
 
@@ -449,31 +473,6 @@ However, it turns out that the way TLS 1.2 and TLS 1.3 use PK private keys is bu
 These are issues in 3.6, so fixing them is desirable. But their impact is relatively minor in 3.6 because they're uncommon cases. On the other hand, in 4.0, they become more relevant, which risked adding a signficant amount of work to be done before 4.0.
 
 Architecturally, #10208 highlights how having an algorithm associated with a PK object is inherently fragile. Hence the current design removes this concept, and instead orients the user of the PK module towards explicitly choosing the signature algorithm.
-
-### Capability checking
-
-#### Public-private distinction for `mbedtls_pk_can_do_ext()`
-
-The semantics of `mbedtls_pk_can_do_ext()` in Mbed TLS 3.6 is somewhat weird. Although the function is advertised as “Tell if context can do the operation given by PSA algorithm”, that is not quite true. The function takes an algorithm and a usage flag (or a mask thereof), with only private-key usage flags allowed. But it accepts public keys, which could only do the corresponding public-key operation. For example,
-```
-mbedtls_pk_can_do_ext(pk, PSA_ALG_ECDSA(PSA_ALG_SHA_256), PSA_KEY_USAGE_SIGN_HASH)
-```
-is true for a builtin ECC key object containing only the public part of the key.
-
-This is misleading and not documented.
-
-We should change the meaning of the usage flag to indicate what operations can actually be performed on the key:
-
-* `PSA_KEY_USAGE_SIGN_HASH` means a key pair that can be used to sign;
-* `PSA_KEY_USAGE_VERIFY_HASH` means a public key or key pair that can be used to verify;
-* `PSA_KEY_USAGE_DECRYPT` means a key pair that can be used to decrypt;
-* `PSA_KEY_USAGE_ENCRYPT` means a public key or key pair that can be used to encrypt;
-* `PSA_KEY_USAGE_DERIVE` means a key pair that can be used as the private side in a key agreement;
-* TODO: flag for a key pair or public key that can be used as the public side in a key agreement?
-
-This would be closer to how `mbedtls_pk_get_psa_attributes()` works.
-
-Note however that this change would break [`ssl_pick_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls12_server.c#L687) and [`ssl_tls13_pick_key_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls13_server.c#L1115), as they rely on calling `mbedtls_pk_can_do_ext()` on the public key from the certificate. However, this should be an easy fix: just change these invocations to use `PSA_KEY_USAGE_VERIFY_HASH` as the usage to check.
 
 ### Resource management
 
