@@ -450,17 +450,14 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
     size_t input_buffer_size = (*p-start);
 
     if((*p == NULL) || (start == NULL) || (integer == NULL)){
-        mbedtls_printf("bjwt: file=%s, line=%i, TC1 NULL pointer exception\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_INVALID_DATA; //TC1 NULL Pointer exceptions.
     }
 
     if(input_buffer_size<3){
-        mbedtls_printf("bjwt: file=%s, line=%i, TC2 buffer less than three or negative\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC2 buffer too small for 1 byte integer and header.
     }
 
     if(input_buffer_size<integer_length){
-        mbedtls_printf("bjwt: file=%s, line=%i, TC3 buffer less than integer size\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;//TC3 buffer less than integer size.
     }
 
@@ -488,10 +485,8 @@ int mbedtls_asn1_write_integer(unsigned char **p, unsigned char *start, const un
 
     asn1_frame_size=mbedtls_asn1_write_len_and_tag(p, start, integer_length, MBEDTLS_ASN1_INTEGER);
     if(asn1_frame_size<0){
-        mbedtls_printf("bjwt: file=%s, line=%i, TC4 mbedtls_asn1_write_len_and_tag\n", __FILE__, __LINE__);
         return asn1_frame_size;//TC4 mbedtls_asn1_write_len_and_tag failed. 
     }else if(asn1_frame_size>(int)input_buffer_size){
-        mbedtls_printf("bjwt: file=%s, line=%i, TC5 buffer too small for frame\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL; //TC5 Buffer too small for frame. 
     }
 

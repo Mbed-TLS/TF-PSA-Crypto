@@ -63,12 +63,10 @@ int mbedtls_asn1_get_tag(unsigned char **p,
                          size_t *len, int tag)
 {
     if ((end - *p) < 1) {
-	mbedtls_printf("bjwt: file=%s, line=%i, out of data\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_OUT_OF_DATA;
     }
 
     if (**p != tag) {
-	mbedtls_printf("bjwt: file=%s, line=%i, unexpected tag=%x\n", __FILE__, __LINE__, **p);
         return MBEDTLS_ERR_ASN1_UNEXPECTED_TAG;
     }
 
@@ -193,13 +191,11 @@ int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
 
     if ((ret = mbedtls_asn1_get_tag(p, end, &integer_length, MBEDTLS_ASN1_INTEGER)) != 0) {
         *p = start;
-	mbedtls_printf("bjwt: file=%s, line=%i, mbedtls_asn1_get_tag failed\n", __FILE__, __LINE__);
         return ret;
     }
 
     if (integer_length == 0) {
         *p = start;
-	mbedtls_printf("bjwt: file=%s, line=%i, length =0\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_INVALID_DATA;
     }
 
@@ -207,7 +203,6 @@ int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
 
     if (negative) {
         *p = start;
-	mbedtls_printf("bjwt: file=%s, line=%i, number is negative\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_INVALID_DATA;
     }
 
@@ -218,7 +213,6 @@ int mbedtls_asn1_get_integer(unsigned char **p, const unsigned char *end,
         ((*p)[0] == 0) &&
         (((*p)[1] & 0x80) == 0)) {
         *p = start;
-	mbedtls_printf("bjwt: file=%s, line=%i, number is overlong encoded\n", __FILE__, __LINE__);
         return MBEDTLS_ERR_ASN1_INVALID_DATA;
     }
 
