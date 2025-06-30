@@ -164,7 +164,7 @@ Public headers and sample programs are considered public. Library code (includin
 
 #### New type for signature algorithms
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): Define a new type `mbedtls_pk_sigalg_t` which is a subset of `mbedtls_pk_type_t`, containing only the values that are meaningful as a signature algorithm in an X.509 structure.
+ACTION: Define a new type `mbedtls_pk_sigalg_t` which is a subset of `mbedtls_pk_type_t`, containing only the values that are meaningful as a signature algorithm in an X.509 structure. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
 ```
 typedef enum {
@@ -258,7 +258,7 @@ There is currently no way to access the underlying PSA key of a PK context. A nw
 
 Keep `mbedtls_pk_get_psa_attributes()`.
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): update the documentation of `mbedtls_pk_get_psa_attributes()`.
+ACTION: update the documentation of `mbedtls_pk_get_psa_attributes()`. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
 Notes:
 
@@ -279,9 +279,9 @@ mbedtls_pk_copy_public_from_psa()
 
 There is already a function to wrap a PSA private key in a PK context: `mbedtls_pk_setup_opaque()`. The function's name no longer makes sense, since there is no longer a concept of “opaque” PK contexts, and no longer a ”setup“ operation on PK contexts.
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): rename `mbedtls_pk_setup_opaque()` to `mbedtls_pk_wrap_psa()` and adjust the documentation accordingly. (Updating internal references to “opaque” is out of scope and will be done later: [Update terminology from “opaque” to “wrapped”](#update-terminology-from-opaque-to-wrapped).)
+ACTION: rename `mbedtls_pk_setup_opaque()` to `mbedtls_pk_wrap_psa()` and adjust the documentation accordingly. (Updating internal references to “opaque” is out of scope and will be done later: [Update terminology from “opaque” to “wrapped”](#update-terminology-from-opaque-to-wrapped).) Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): remove mentions of operations other than sign and verify from the documentation.
+ACTION: remove mentions of operations other than sign and verify from the documentation. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
 The function is somewhat dangerous, since the PK context will silently become invalid if the PSA key is destroyed. Experience in 3.x has shown the function to be handy nonetheless, so we shouldn't remove it without clear alternatives.
 
@@ -365,7 +365,7 @@ mbedtls_pk_encrypt()
 
 #### Privatization
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): Move all private API elements to an private header:
+ACTION: Move all private API elements to an private header `mbedtls/private/pk.h`:
 
 ```
 mbedtls_pk_type_t
