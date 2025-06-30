@@ -1,0 +1,8 @@
+Features
+   * Add a new function mbedtls_asn1_write_integer() that encodes an arbitrary
+     precision integer into ASN.1 DER format. This function replaces
+     mbedtls_asn1_write_mpi(), which has been made internal-only.
+Removals
+   * Remove mbedtls_asn1_write_mpi() from the public API. This has been replaced
+     by mbedtls_asn1_write_integer(), which does not use the legacy mbedtls_mpi
+     type.
