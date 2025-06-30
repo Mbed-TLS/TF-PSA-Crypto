@@ -431,7 +431,7 @@ One of the [project goals](#project-goal) is to prepare for moving crypto to be 
 
 Given the choice of keeping PK permissive ([signature functionality](#signature-functionality) keeping `mbedtls_pk_sign_ext()`, cheating workflow chosen for [dual-algorithm RSA signature](#dual-algorithm-rsa-signature)), the combined behavior of PK and TLS remains mostly unchanged from Mbed TLS 3.6.
 
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10160): test `mbedtls_ssl_conf_own_cert()` to ensure that it doesn't cheat on key policies. TODO: is this still critical? (It's definitely a good idea, but maybe can wait until after the release?)
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10160): test `mbedtls_ssl_conf_own_cert()` to ensure that it doesn't cheat on key policies. Note: this would be nice, but at this point, it does not seem critical to do it before the 1.0/4.0 release. However, if we don't implement the tests, we do need to be mindful of not breaking cases that are currently possible. A draft exists in [#10217](https://github.com/Mbed-TLS/mbedtls/pull/10217).
 
 ## Open questions
 
