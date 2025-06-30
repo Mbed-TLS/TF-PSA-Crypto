@@ -1,17 +1,23 @@
-## Low-level crypto functions are no longer part of the public API
+## Private declarations
 
-Low-level crypto functions, that is, all non-PSA crypto functions except a few
-that don't have a proper PSA replacement yet, have been removed from the public
-API.
+Since Mbed TLS 3.0, some things that are declared in a public header are not part of the stable application programming interface (API), but instead are considered private. Private elements may be removed or may have their semantics changed in a future minor release without notice.
 
-If your application was using those functions, please see
-`docs/psa-transition.md` (currently in the Mbed TLS repo) for ways to migrate to
-the PSA API instead.
+### Understanding private declarations in public headers
 
-Some of the associated types (for example, `mbedtls_aes_context`) still need to
-be visible to the compiler, so the headers declaring them (for example, `aes.h`)
-are still on the default include path, but we recommend you no longer include
-them directly.
+In TF-PSA-Crypto 1.x, private elements in header files include:
+
+* Anything appearing in a header file whose path contains `/private` (unless re-exported and documented in another non-private header).
+* Structure and union fields declared with `MBEDTLS_PRIVATE(field_name)` in the source code, and appearing as `private_field_name` in the rendered documentation. (This was already the case since Mbed TLS 3.0.)
+* Any preprocessor macro that is not documented with a Doxygen comment.
+  In the source code, Doxygen comments start with `/**` or `/*!`. If a macro only has a comment above that starts with `/*`, the macro is considered private.
+  In the rendered documentation, private macros appear with only an automatically rendered parameter list, value and location, but no custom text.
+* Any declaration that is guarded by the preprocessor macro `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`.
+
+### Usage of private declarations
+
+Some private declarations are present in public headers for technical reasons, because they need to be visible to the compiler. Others are present for historical reasons and may be cleaned up in later versions of the library. We strongly recommend against relying on these declarations, since they may be removed or may have their semantics changed without notice.
+
+Note that Mbed TLS 4.0 still relies on some private interfaces of TF-PSA-Crypto 1.0. We expect to remove this reliance gradually in future minor releases.
 
 Sample programs have not been fully updated yet and some of them might still
 use APIs that are no longer public. You can recognize them by the fact that they
@@ -25,10 +31,3 @@ We strongly recommend against defining `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` or
 may not compile or work with future minor releases. If there's something you
 want to do that you feel can only be achieved by using one of these two macros,
 please reach out on github or the mailing list.
-
-The following modules had functions removed from the public API:
-- see private-decls/ subdirectory for now - one file per header, to avoid
-  conflicts caused by all PRs editing the same place in this file, to be merged
-  at the end as part of https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/232
-- also do one brief ChangeLog entry per PR, with a name starting with privatize
-  (eg privatize-aes.txt), also to be merged at the end as part of 232.
