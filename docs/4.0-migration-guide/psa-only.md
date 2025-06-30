@@ -33,13 +33,13 @@ TODO: entropy sources, RNG options
 
 The configuration option `MBEDTLS_PSA_INJECT_ENTROPY` has been removed. TF-PSA-Crypto 1.0 does not provide a way to store an entropy seed in the key store. This will be reimplemented in a future minor version.
 
-### Low-level crypto functions are no longer part of the public API
+### No direct access to specific algorithms
 
-Low-level crypto functions, that is, all non-PSA crypto functions except a few
-that don't have a proper PSA replacement yet, have been removed from the public
-API.
+All modules that are specific to a particular cryptographic mechanism have been removed from the API. There are a few exceptions, for some mechanisms that are not yet present in the PSA API: `mbedtls/lms.h` and `mbedtls/nist_kw.h` remain part of the API.
 
-The following header files, and their former content, are no longer available.
+The high-level legacy module `mbedtls/cipher.h` has also been removed. The high-level legacy modules `mbedtls/md.h` and `mbedtls/pk.h` remain present with reduced functionality (see “[Changes to MD and PK](#changes-to-md-and-pk)”). TF-PSA-Crypto also retains non-PSA interfaces for data formats, platform support and miscellaneous utility functions.
+
+In full detail, the following header files, and their former content, are no longer available.
 
 ```
 everest/Hacl_Curve25519.h
