@@ -1,0 +1,3 @@
+Changes
+   * Removed references to legacy HMAC, AEAD programs from the top doc comments
+     in programs/psa/aead_demo.c, programs/psa/hmac_demo.c.
