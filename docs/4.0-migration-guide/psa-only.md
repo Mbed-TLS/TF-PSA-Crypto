@@ -93,6 +93,6 @@ The functions `mbedtls_ecc_group_to_psa()` and `mbedtls_ecc_group_from_psa()` ha
 
 ### Removal of alternative cryptographic module implementations
 
-TF-PSA-Crypto no longer supports replacing a whole cryptographic module or an individual cryptographic function by defining a macro `MBEDTLS_xxx_ALT` and providing a custom implementation of the same interface. Instead, use PSA accelerator drivers.
+TF-PSA-Crypto no longer supports replacing a whole cryptographic module or an individual cryptographic function by defining a macro `MBEDTLS_xxx_ALT` and providing a custom implementation of the same interface. Instead, use PSA transparent drivers (i.e. accelerator drivers).
 
-The PK module no longer supports `MBEDTLS_PK_RSA_ALT`. Instead, for opaque keys (RSA or otherwise), use PSA secure element drivers.
+The PK module no longer supports `MBEDTLS_PK_RSA_ALT`. Instead, for opaque keys (RSA or otherwise), use PSA opaque drivers.
