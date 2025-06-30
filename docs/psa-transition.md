@@ -4,9 +4,7 @@
 
 ## Introduction
 
-Mbed TLS is gradually moving from legacy `mbedtls_xxx` APIs to newer `psa_xxx` APIs for cryptography. Note that this only concerns cryptography APIs, not X.509 or SSL/TLS APIs.
-
-This guide is intended to help migrate existing applications that use Mbed TLS for cryptography. It aims to cover common use cases, but cannot cover all possible scenarios.
+TF-PSA-Crypto, the successor of Mbed TLS 3.x for cryptography, has replaced most `mbedtls_xxx` cryptography APIs to newer `psa_xxx` APIs. This guide is intended to help migrate existing applications that used Mbed TLS for cryptography. It aims to cover common use cases, but cannot cover all possible scenarios.
 
 ### Suggested reading
 
@@ -25,9 +23,9 @@ Then use the [summary of API modules](#summary-of-api-modules), the table of con
 
 ### Additional resources
 
-* [Mbed TLS open issues](https://github.com/Mbed-TLS/mbedtls/issues)
+* [TF-PSA-Crypto open issues](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues) (some [Mbed TLS issues]([TF-PSA-Crypto open issues](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues)) may also still be relevant)
 * [PSA API open issues](https://github.com/ARM-software/psa-api/issues) (not just cryptography APIs)
-* [Mbed TLS mailing list](https://lists.trustedfirmware.org/mailman3/lists/mbed-tls.lists.trustedfirmware.org/)
+* [Mbed TLS mailing list](https://lists.trustedfirmware.org/mailman3/lists/mbed-tls.lists.trustedfirmware.org/) (also covers TF-PSA-Crypto)
 
 ### Why change the API?
 
@@ -41,8 +39,13 @@ Then use the [summary of API modules](#summary-of-api-modules), the table of con
 * Mbed TLS 2.15.0 (Nov 2018): first release with a draft implementation of the PSA API.
 * Mbed TLS 2.18.0 (Jun 2019): The PSA API is available in the default build.
 * Mbed TLS 3.1.0 (Dec 2021): TLS 1.3 support is the first major feature that requires the PSA API.
-* Mbed TLS 4.0.0 (2024?): X.509 and TLS require the PSA API. Removal of some legacy crypto APIs.
-* Mbed TLS 5.0.0 (??): Removal of the remaining non-PSA crypto APIs.
+* TF-PSA-Crypto 1.0.0 (Sep 2025): Removal of most legacy crypto APIs. Drop support for builds without the PSA subsystem and for legacy configuration of cryptographic mechanisms.
+  The corresponding release Mbed TLS 4.0.0 drops support for cryptography calls that bypass PSA.
+* TF-PSA-Crypto 2.0.0 (??): Removal of the remaining non-PSA crypto APIs.
+
+### Compatibility with Mbed TLS 3.6
+
+Most of the new APIs suggested in this document are already present in Mbed TLS in the [3.6 long-time support branch](https://github.com/Mbed-TLS/mbedtls/tree/mbedtls-3.6). This document should indicate which features were added in TF-PSA-Crypto 1.x. However, if your application needs to be compatible with both Mbed TLS 3.6 and TF-PSA-Crypto 1.x, we invite you to consult the [PSA transition guide for Mbed TLS 3.6](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6/docs/psa-transition.md).
 
 ## General considerations
 
@@ -72,6 +75,10 @@ The PSA subsystem has an internal random generator. As a consequence, you do not
 Mbed TLS functions return a status of type `int`: 0 for success (or occasionally a positive value which is the output length), or a negative value `MBEDTLS_ERR_xxx` indicating an error.
 
 PSA functions return a status of type [`psa_status_t`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__error/#group__error_1ga05676e70ba5c6a7565aff3c36677c1f9): `PSA_SUCCESS == 0` for success, or a negative value [`PSA_ERROR_xxx`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__error/) indicating an error.
+
+In Mbed TLS 3.x, there is no overlap between `MBEDTLS_ERR_xxx` values and `PSA_ERROR_xxx` values, so applications consuming error codes do not need to observe this distinction fully.
+
+Since TF-PSA-Crypto 1.0, the error sets have been fully merged. Many former `MBEDTLS_ERR_xxx` error codes have been merged with `PSA_ERROR_xxx` error codes with similar semantics. Functions returning `int` can return `PSA_ERROR_xxx` values, and some `MBEDTLS_ERR_xxx` constants are now aliases to a `PSA_ERROR_xxx` value. This also applies to Mbed TLS 4.0 onwards.
 
 ### Memory management
 
@@ -212,13 +219,13 @@ For example, the following configuration enables hashing with SHA-256, AEAD with
 #define PSA_WANT_ALG_ECDH
 ```
 
-If a mechanism is not enabled by `PSA_WANT_xxx`, Mbed TLS will normally not include it. This allows builds that use few features to have a small code size. However, this is not guaranteed: a mechanism that is not explicitly requested can be enabled because it is a dependency of another configuration option, because it is used internally, or because the granularity is not fine enough to distinguish between it and another mechanism that is requested.
+If a mechanism is not enabled by `PSA_WANT_xxx`, TF-PSA-Crypto will normally not include it. This allows builds that use few features to have a small code size. However, this is not guaranteed: a mechanism that is not explicitly requested can be enabled because it is a dependency of another configuration option, because it is used internally, or because the granularity is not fine enough to distinguish between it and another mechanism that is requested.
 
 Under the hood, `PSA_WANT_xxx` enables the necessary legacy modules. Note that if a mechanism has a PSA accelerator driver, the corresponding legacy module is typically not needed. Thus applications that use a cryptographic mechanism both through the legacy API and through the PSA API need to explicitly enable both the `PSA_WANT_xxx` symbols and the `MBEDTLS_xxx` symbols.
 
 ### Optimization options
 
-When PSA Crypto mechanisms are implemented by the built-in code from Mbed TLS, the legacy optimization options (e.g. `MBEDTLS_SHA256_SMALLER`, `MBEDTLS_ECP_WINDOW_SIZE`, etc.) apply to the PSA implementation as well (they invoke the same code under the hood).
+When PSA Crypto mechanisms are implemented by the built-in code from TF-PSA-Crypto, the legacy optimization options (e.g. `MBEDTLS_SHA256_SMALLER`, `MBEDTLS_ECP_WINDOW_SIZE`, etc.) apply to the PSA implementation as well (they invoke the same code under the hood).
 
 The PSA Crypto API may use accelerator drivers. In this case any options controlling the driver behavior are driver-specific.
 
@@ -247,11 +254,11 @@ $ programs/psa/psa_constant_names alg 0x06000609
 PSA_ALG_ECDSA(PSA_ALG_SHA_256)
 ```
 
-The other functions in `error.h` are specific to the construction of Mbed TLS error code and are not relevant to the PSA API. PSA error codes are never the combination of multiple codes.
+Since TF-PSA-Crypto 1.0, legacy functions always return an `MBEDTLS_ERR_xxx` constant or a `psa_status_t` constant (`PSA_SUCCESS`, `PSA_OPERATION_INCOMPLETE` or `PSA_ERROR_xxx`). Functions no longer return values that are the sum of a “low-level” and a “high-level” error code.
 
 ### Constant-time functions
 
-The PSA API does not have an equivalent to the timing-side-channel-resistance utility functions in `constant_time.h`. Continue using `constant_time.h` as needed.
+The PSA API does not have an equivalent to the timing-side-channel-resistance utility functions in `mbedtls/constant_time.h`. Continue using `mbedtls/constant_time.h` as needed.
 
 Note that the PSA API does include features that reduce the need for `mbedtls_ct_memcmp`:
 
@@ -642,11 +649,13 @@ You can remove the Mbed TLS RNG boilerplate (`mbedtls_entropy_init`, `mbedtls_ct
 
 Unless explicitly configured otherwise, the PSA random generator uses the default entropy sources configured through the legacy interface (`MBEDTLS_ENTROPY_xxx` symbols). Its set of sources is equivalent to an entropy object configured with `mbedtls_entropy_init`.
 
-A future version of Mbed TLS will include a PSA interface for configuring entropy sources. This is likely to replace the legacy interface in Mbed TLS 4.0.
+A future version of TF-PSA-Crypto will include a PSA interface for configuring entropy sources.
 
 ### Deterministic pseudorandom generation
 
-The PSA API does not have a dedicated interface for pseudorandom generation. The [key derivation interface](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/) can serve a similar purpose in some applications, but it does not offer CTR\_DRBG or HMAC\_DRBG. If you need these algorithms, keep using `ctr_drbg.h` and `hmac_drbg.h`, but note that they may be removed from the public API in Mbed TLS 4.0.
+The PSA API does not have a dedicated interface for pseudorandom generation. The [key derivation interface](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/) can serve a similar purpose in some applications, but it does not offer CTR\_DRBG or HMAC\_DRBG.
+
+We expect to add PSA APIs to DRBG mechanisms in a future version of TF-PSA-Crypto.
 
 ## Asymmetric cryptography
 
@@ -970,7 +979,7 @@ Unlike the legacy API, where `mbedtls_pk_sign` and `mbedtls_ecdsa_write_signatur
 
 The legacy API includes an API for “restartable” ECC operations: the operation returns after doing partial computation, and can be resumed. This is intended for highly constrained devices where long cryptographic calculations need to be broken up to poll some inputs, where interrupt-based scheduling is not desired. The legacy API consists of the functions `mbedtls_pk_sign_restartable`, `mbedtls_pk_verify_restartable`, `mbedtls_ecdsa_sign_restartable`, `mbedtls_ecdsa_verify_restartable`, `mbedtls_ecdsa_write_signature_restartable`, `mbedtls_ecdsa_read_signature_restartable`, as well as several configuration and data manipulation functions.
 
-The PSA API offers similar functionality via “interruptible” public-key operations. As of Mbed TLS 3.5, it is only implemented for ECDSA, for the same curves as the legacy API. This will likely be extended to ECDH in the short term. At the time of writing, no extension is planned to other curves or other algorithms.
+The PSA API offers similar functionality via “interruptible” public-key operations. As of TF-PSA-Crypto 1.0, it is only implemented for ECDSA and ECDH, for the same curves as the legacy API. (Mbed TLS 3.6 only has interruptible ECDSA signature, not ECDH key agrement.) At the time of writing, no extension is planned to other curves or other algorithms.
 
 The flow of operations for an interruptible signature operation is as follows:
 
@@ -1230,7 +1239,7 @@ The bit-size used by the PSA API is the size of the private key. For most curves
 | Curve25519 | 253 | 255 | 256 | 255 |
 | Curve448 | 446 | 448 | 448 | 448 |
 
-There is no exact PSA equivalent of the type `mbedtls_ecp_curve_type` and the function `mbedtls_ecp_get_type`, but the curve family encodes the same information. `PSA_ECC_FAMILY_MONTGOMERY` is the only Montgomery family. All other families supported in Mbed TLS 3.4.0 are short Weierstrass families.
+There is no exact PSA equivalent of the type `mbedtls_ecp_curve_type` and the function `mbedtls_ecp_get_type`, but the curve family encodes the same information. `PSA_ECC_FAMILY_MONTGOMERY` is the only Montgomery family. All other families supported in TF-PSA-Crypto 1.0 are short Weierstrass families.
 
 There is no PSA equivalent for the following functionality:
 
@@ -1299,20 +1308,22 @@ A PSA key object is immutable, so there is no need for an equivalent of `mbedtls
 
 ### LMS signatures
 
-A future version of Mbed TLS will support LMS keys and signatures through the PSA API (`psa_generate_key`, `psa_export_public_key`, `psa_import_key`, `psa_sign_hash`, `psa_verify_hash`, etc.). However, this is likely to happen after Mbed TLS 4.0, therefore the next major version of Mbed TLS will likely keep the existing `lms.h` interface.
+A future version of TF-PSA-Crypto will likely support LMS keys and signatures through the PSA API (`psa_generate_key`, `psa_export_public_key`, `psa_import_key`, `psa_sign_hash`, `psa_verify_hash`, etc.). For the time being, `mbedtls/lms.h` is the only interface to LMS.
 
 ### PK format support interfaces
 
-The interfaces in `base64.h`, `asn1.h`, `asn1write.h`, `oid.h` and `pem.h` are intended to support X.509 and key file formats. They have no PSA equivalent since they are not directly about cryptography.
+The interfaces in `base64.h`, `asn1.h`, `asn1write.h` and `pem.h` are intended to support X.509 and key file formats. Since these APIs are not directly about cryptography, there is no PSA replacement in Mbed TLS 3.6 or in TF-PSA-Crypto 1.0.
 
-In Mbed TLS 4.0, we are planning to keep the ASN.1 interfaces mostly unchanged. The evolution of Base64, OID and PEM as separate interfaces is still undecided at the time of writing.
+TF-PSA-Crypto 1.0 removes direct access to OID values and functions formerly in `mbedtls/oid.h`. OID lookup is only used internally to parse and write keys and other objects.
 
 ## EC-JPAKE
 
-The PSA API exposes EC-JPAKE via the algorithm [`PSA_ALG_JPAKE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/crypto__extra_8h/#c.PSA_ALG_JPAKE) and the PAKE API functions. At the time of writing, the PAKE API is still experimental, but it should offer the same functionality as the legacy `ecjpake.h`. Please consult the documentation of your version of Mbed TLS for more information.
+The PSA API exposes EC-JPAKE via the algorithm [`PSA_ALG_JPAKE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/crypto__extra_8h/#c.PSA_ALG_JPAKE) and the PAKE API functions.
 
 Please note a few differences between the two APIs: the legacy API is geared towards the use of EC-JPAKE in TLS 1.2, whereas the PSA API is protocol-agnostic.
 
 * The PSA API is finer-grained and offers more flexibility in message ordering. Where the legacy API makes a single function call, the PSA API may require multiple calls.
 * The legacy API uses the TLS 1.2 wire format in the input or output format of several functions. In particular, one of the messages embeds the curve identifier in the TLS protocol. The PSA API uses protocol-agnostic formats.
 * The legacy API always applies the key derivation specified by TLS 1.2 to the shared secret. With the PSA API, use a key derivation with `PSA_ALG_TLS12_ECJPAKE_TO_PMS` for the same calculation.
+
+TF-PSA-Crypto implements the official PSA Crypto PAKE API 1.2. Note that Mbed TLS 3.6 implements a beta version of the PAKE API, which is not fully compatible.
