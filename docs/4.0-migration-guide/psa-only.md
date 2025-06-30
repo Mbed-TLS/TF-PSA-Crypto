@@ -68,6 +68,7 @@ mbedtls/ecjpake.h
 mbedtls/ecp.h
 mbedtls/entropy.h
 mbedtls/gcm.h
+mbedtls/hkdf.h
 mbedtls/hmac_drbg.h
 mbedtls/md5.h
 mbedtls/pkcs12.h
