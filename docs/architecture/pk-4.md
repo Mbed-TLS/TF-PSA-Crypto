@@ -354,6 +354,15 @@ There is a risk that the current API will be suboptimal when we port its impleme
 
 ### Removals
 
+#### Removed functions
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/297): remove the encrypt/decrypt functions.
+
+```
+mbedtls_pk_decrypt()
+mbedtls_pk_encrypt()
+```
+
 #### Privatization
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204): Move all private API elements to an private header:
@@ -368,8 +377,6 @@ mbedtls_pk_info_from_type()
 mbedtls_pk_setup()
 mbedtls_pk_get_len()
 mbedtls_pk_can_do()
-mbedtls_pk_decrypt()
-mbedtls_pk_encrypt()
 mbedtls_pk_debug()
 mbedtls_pk_get_name()
 mbedtls_pk_get_type()
