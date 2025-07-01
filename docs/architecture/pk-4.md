@@ -164,7 +164,7 @@ Public headers and sample programs are considered public. Library code (includin
 
 #### New type for signature algorithms
 
-ACTION: Define a new type `mbedtls_pk_sigalg_t` which is a subset of `mbedtls_pk_type_t`, containing only the values that are meaningful as a signature algorithm in an X.509 structure. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/346): Define a new type `mbedtls_pk_sigalg_t` which is a subset of `mbedtls_pk_type_t`, containing only the values that are meaningful as a signature algorithm in an X.509 structure. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
 ```
 typedef enum {
@@ -177,11 +177,11 @@ typedef enum {
 
 Keep the same numerical values as `mbedtls_pk_type_t`, so that a `mbedtls_pk_sigalg_t` value can be cast to `mbedtls_pk_type_t` in library code that still uses this deprecated type.
 
-Move `x509*.h` and `oid.h` to the new type.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10264): Move `x509*.h` to the new type.
 
 This task together with the changes to `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()` described in “[Signature functionality](#signature-functionality)” remove the need for `mbedtls_pk_type_t` to be in the public API of Mbed TLS. Follow-up: make it (and `mbedtls_pk_get_type()`) private in “[Privatization](#privatization)”.
 
-ACTION: define public aliases for backward compatibility (it costs us pretty much nothing, and will facilitate the transition).
+Maybe define public aliases for backward compatibility (it costs us pretty much nothing, and will facilitate the transition).
 ```
 MBEDTLS_PK_NONE = MBEDTLS_PK_SIGALG_NONE
 MBEDTLS_PK_RSA = MBEDTLS_PK_SIGALG_RSA
@@ -189,6 +189,8 @@ MBEDTLS_PK_RSASSA_PSS = MBEDTLS_PK_SIGALG_RSASSA_PSS
 MBEDTLS_PK_ECDSA = MBEDTLS_PK_SIGALG_ECDSA
 MBEDTLS_PK_ECKEY = MBEDTLS_PK_SIGALG_ECDSA
 ```
+
+TODO: investigate merging `MBEDTLS_PK_ECKEY` with `MBEDTLS_PK_ECDSA`. Do we rely on the difference anywhere that's still relevant?
 
 #### `mbedtls_pk_can_do()`
 
@@ -243,9 +245,9 @@ Note that the change of semantics on public keys will break [`ssl_pick_cert()`](
 
 To ease the transition, we will call the new function `mbedtls_pk_can_do_psa`. We will keep the current `mbedtls_pk_can_do_ext` as a private function until Mbed TLS stops using it (a [GitHub code search](https://github.com/search?q=%22mbedtls_pk_can_do_ext%28%22+path%3A*.c+NOT+path%3A**%2Fpk.c+NOT+path%3A**%2Fssl_*.c+NOT+path%3A**%2Fx509_c%3F%3F.c+NOT+path%3A**%2Ftest_suite_pk*.c&type=code&ref=advsearch) suggests application developers don't use this function).
 
-ACTION: Implement and unit-test `mbedtls_pk_can_do_psa()`. Reuse most of the code of `mbedtls_pk_can_do_ext()` (it will probably help to break it into smaller functions). Should be done before 1.0, but can be done after.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/351): Implement and unit-test `mbedtls_pk_can_do_psa()`. Reuse most of the code of `mbedtls_pk_can_do_ext()` (it will probably help to break it into smaller functions). Should be done before 1.0, but can be done after.
 
-ACTION: migrate TLS to `mbedtls_pk_can_do_psa()`. Can be done after 4.0.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10266): migrate TLS to `mbedtls_pk_can_do_psa()`. Can be done after 4.0.
 
 ### PSA bridges
 
@@ -265,7 +267,7 @@ PK sometimes needs to choose between ECDSA variants, when it builds PSA attribut
 * To import an ECC key during parsing, and to sign with a built-in ECC key, when `MBEDTLS_PK_USE_PSA_EC_DATA` is enabled. This uses the macro `MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET` defined in `pk_internal.h`.
 * In `mbedtls_pk_get_psa_attributes()` to choose the default policy for an ECC key used for signature.
 
-ACTION (crypto-ecdsa): change `MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET` to a public macro `MBEDTLS_PK_ALG_ECDSA`. Switch `mbedtls_pk_get_psa_attributes()` to it.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/345): change `MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET` to a public macro `MBEDTLS_PK_ALG_ECDSA`. Switch `mbedtls_pk_get_psa_attributes()` to it.
 
 #### `mbedtls_pk_get_psa_attributes()`
 
@@ -290,9 +292,9 @@ mbedtls_pk_copy_public_from_psa()
 
 There is already a function to wrap a PSA private key in a PK context: `mbedtls_pk_setup_opaque()`. The function's name no longer makes sense, since there is no longer a concept of “opaque” PK contexts, and no longer a ”setup“ operation on PK contexts.
 
-ACTION: rename `mbedtls_pk_setup_opaque()` to `mbedtls_pk_wrap_psa()` and adjust the documentation accordingly. (Updating internal references to “opaque” is out of scope and will be done later: [Update terminology from “opaque” to “wrapped”](#update-terminology-from-opaque-to-wrapped).) Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
+ACTION (crypto-opaque): rename `mbedtls_pk_setup_opaque()` to `mbedtls_pk_wrap_psa()` and adjust the documentation accordingly. (Updating internal references to “opaque” is out of scope and will be done later: [Update terminology from “opaque” to “wrapped”](#update-terminology-from-opaque-to-wrapped).) Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
-ACTION: remove mentions of operations other than sign and verify from the documentation. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/205): remove mentions of operations other than sign and verify from the documentation. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
 
 The function is somewhat dangerous, since the PK context will silently become invalid if the PSA key is destroyed. Experience in 3.x has shown the function to be handy nonetheless, so we shouldn't remove it without clear alternatives.
 
@@ -331,18 +333,17 @@ mbedtls_pk_verify()
 mbedtls_pk_sign()
 ```
 
-ACTION: document that `mbedtls_pk_sign()` are legacy functions, that perform the same algorithm that `mbedtls_pk_get_psa_attributes()` would perform under the hood if given a sign or verify usage.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/347): document that `mbedtls_pk_sign()` are legacy functions, that perform the same algorithm that `mbedtls_pk_get_psa_attributes()` would perform under the hood if given a sign or verify usage.
 
 Tweak the following:
 ```
-mbedtls_pk_verify()
-mbedtls_pk_sign()
+mbedtls_pk_verify_ext()
+mbedtls_pk_sign_ext()
 ```
 
-ACTION: remove the `options` parameter to `mbedtls_pk_verify_ext`. Note that we have a changelog entry announcing that it's ignored, this changelog entry needs to be replaced.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/348, https://github.com/Mbed-TLS/mbedtls/issues/10265, https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/349): remove the `options` parameter to `mbedtls_pk_verify_ext`. Note that we have a changelog entry announcing that it's ignored, this changelog entry needs to be replaced.
 
-ACTION: for `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()`, change the `mbedtls_pk_type_t type` parameter (whose type is being removed from the API) to `mbedtls_pk_sigalg_t sigalg`. See “[New type for signature algorithms](new-type-for-signature-algorithms)”.
-
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/346): for `mbedtls_pk_sign_ext()` and `mbedtls_pk_verify_ext()`, change the `mbedtls_pk_type_t type` parameter (whose type is being removed from the API) to `mbedtls_pk_sigalg_t sigalg`. See “[New type for signature algorithms](new-type-for-signature-algorithms)”.
 
 ACTION (https://github.com/Mbed-TLS/mbedtls/issues/5544): remove `MBEDTLS_ERR_PK_SIG_LEN_MISMATCH`. It's mostly useless for RSA, and it doesn't even work for ECDSA.
 
@@ -376,7 +377,13 @@ mbedtls_pk_encrypt()
 
 #### Privatization
 
-ACTION: Move all private API elements to an private header `mbedtls/private/pk.h`:
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/343): Create a header `/include/mbedtls/private/pk.h`. At first, it just includes `../pk.h`.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls-framework/issues/178): Conditionally include `mbedtls/private/pk.h` in the framework.
+
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10263): Conditionally include `mbedtls/private/pk.h` in Mbed TLS.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/344): Move all private API elements to `mbedtls/private/pk.h`:
 
 ```
 mbedtls_pk_type_t
@@ -413,6 +420,8 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/208): Remove the option
 ### Documentation updates
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): update the PSA transition guide.
+
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): write the 1.0 migration guide.
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/209): write changelog entries.
 
