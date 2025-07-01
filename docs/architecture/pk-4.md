@@ -262,8 +262,6 @@ There is currently no way to access the underlying PSA key of a PK context. A nw
 
 Keep `mbedtls_pk_get_psa_attributes()`.
 
-ACTION: update the documentation of `mbedtls_pk_get_psa_attributes()`. Prototyped in  [#204](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/204).
-
 Notes:
 
 * An ECC public key in SubjectPublicKeyInfo format (possibly embedded in a key pair) can specify one of two algorithms: id-ecPublicKey (allows ECDSA signature) or id-ecDH (should not be used for signature). This is encoded in the old API through the PK type: id-ecDH leads to `MBEDTLS_PK_ECKEY_DH`. This is untested (we have no test key with id-ecDH; backlog issue: https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/206). In the new API, you can find out whether a key had id-ecPublicKey or id-ecDH by looking at the algorithm chosen by `mbedtls_pk_get_psa_attributes()`.
@@ -399,8 +397,6 @@ ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/205): remove all mentio
 
 This includes both direct mentions (where a type name, constant name or function name is mentioned), and indirect mentions (e.g. “verify\_ext”, “context has been set up”).
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/207): update unit tests to validate the new interfaces.
-
 #### Remove RSA-ALT
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/208): Remove the option `MBEDTLS_PK_RSA_ALT_SUPPORT` and all code guarded by it, as well as `MBEDTLS_PK_RSA_ALT`.
@@ -429,11 +425,13 @@ ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10075): determine how to pass
 
 This isn't a problem for verification because as a last resort, it's always possible to export a public key and re-import it with a different policy.
 
+Note: the conclusion of this investigation is that with the current design, no particular precautions are needed here.
+
 ## Testing
 
 ### Unit tests
 
-For the most part, the testing work is a matter of adapting the existing tests, and of creating unit tests for the new interfaces. This work is distributed throughout the coding tasks, plus a specific task https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/207 to account for the new tests around changed interafaces.
+For the most part, the testing work is a matter of adapting the existing tests, and of creating unit tests for the new interfaces. This work is distributed throughout the coding tasks.
 
 ### Interface stability testing
 
