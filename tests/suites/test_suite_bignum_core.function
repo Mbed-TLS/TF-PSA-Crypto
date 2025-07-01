@@ -5,6 +5,7 @@
 #include "constant_time_internal.h"
 #include "test/constant_flow.h"
 #include "test/bignum_codepath_check.h"
+#include "mbedtls/asn1write.h"
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 #include "mbedtls/asn1.h"
@@ -1479,5 +1480,44 @@ void asn1_get_and_parse_integer(const data_t *input,
 exit:
     mbedtls_free(integer);
     mbedtls_free(expected);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void encode_decode_asn1_bignum(const data_t *input,
+                               int asn1_frame_length,
+                               int expected_result)
+{
+    int output_buffer_length = 0;
+    size_t number_of_leading_zeros = 0;
+    unsigned char *p = NULL;
+    unsigned char *asn1_frame = NULL;
+    size_t integer_length;
+
+    TEST_CALLOC(asn1_frame, asn1_frame_length);
+
+    unsigned char *integer_head = NULL;
+
+    p = asn1_frame + asn1_frame_length;
+
+    output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame, input->x, input->len);
+
+    TEST_EQUAL(output_buffer_length, expected_result);
+
+    if (output_buffer_length > 0) {
+        while (number_of_leading_zeros < input->len
+               && input->x[number_of_leading_zeros] == 0x0) {
+            number_of_leading_zeros++;
+        }
+        TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + asn1_frame_length, &integer_head,
+                                            &integer_length), 0);
+        TEST_MEMORY_COMPARE(input->x + number_of_leading_zeros,
+                            input->len - number_of_leading_zeros,
+                            integer_head,
+                            integer_length);
+    }
+
+exit:
+    mbedtls_free(asn1_frame);
 }
 /* END_CASE */

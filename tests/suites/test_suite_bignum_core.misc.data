@@ -538,3 +538,24 @@ asn1_get_and_parse_integer:"028201000123456789abcdef0123456789abcdef0123456789ab
 
 Parse raw ASN.1 integer, correct encoding, more data than needed
 asn1_get_and_parse_integer:"02010707":0:"07"
+
+asn_write TC2 Output buffer less than minimum size of 3
+encode_decode_asn1_bignum:"1234567891234567":1:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+asn_write TC3 Output buffer too small for integer
+encode_decode_asn1_bignum:"1234567891234567":4:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+asn_write TC4 Output buffer too small for frame
+encode_decode_asn1_bignum:"1234567891234567":8:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+asn_write TC5 Large output buffer
+encode_decode_asn1_bignum:"1234567891234567":11:10
+
+asn_write TC6 Basic test positive
+encode_decode_asn1_bignum:"1234567891234567":10:10
+
+asn_write TC11 X.690-0207 Clause 8.3.2 1's
+encode_decode_asn1_bignum:"FF01456789123456":11:11
+
+asn_write TC12 X.690-0207 Clause 8.3.2 leading zero's
+encode_decode_asn1_bignum:"0023456789123456":10:9

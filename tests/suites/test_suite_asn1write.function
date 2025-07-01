@@ -599,3 +599,65 @@ exit:
     mbedtls_free(found);
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_asn1_write_integer_positive(data_t *integer, data_t *expected_output)
+{
+    unsigned char *output = NULL;
+    unsigned char *p = NULL;
+    size_t output_length = expected_output->len;
+    int ret;
+
+    /* Reallocate and copy the input to enable ASan to detect a 1-byte overflow
+     * when the input is zero-length, as the test framework allocates a 1-byte
+     * buffer for zero-length inputs. */
+    unsigned char *integer_buf = NULL;
+    size_t integer_length = integer->len;
+    TEST_CALLOC(integer_buf, integer_length);
+    if (integer_length > 0) {
+        memcpy(integer_buf, integer->x, integer->len);
+    }
+
+    /* Test with exactly the right output buffer length */
+    TEST_CALLOC(output, output_length);
+    p = output + output_length;
+
+    ret = mbedtls_asn1_write_integer(&p, output, integer_buf, integer_length);
+    TEST_MEMORY_COMPARE(p, ret, expected_output->x, expected_output->len);
+
+    /* Test with all sizes less than the right length */
+    for (size_t length = 0; length < output_length; length++) {
+        mbedtls_test_set_step(length);
+        mbedtls_free(output);
+        output = NULL;
+        p = NULL;
+
+        if (length == 0) {
+            /* In the zero-length case, we do not handle a NULL output buffer,
+             * but still test for a non-NULL output that is zero-length. */
+            TEST_CALLOC(output, 1);
+        } else {
+            TEST_CALLOC(output, length);
+        }
+        p = output + length;
+        ret = mbedtls_asn1_write_integer(&p, output, integer_buf, integer_length);
+        TEST_EQUAL(ret, MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
+    }
+
+    /* Test with one byte more than the right length */
+    if (output_length < SIZE_MAX) {
+        mbedtls_free(output);
+        output = NULL;
+        p = NULL;
+
+        TEST_CALLOC(output, output_length + 1);
+        p = output + output_length + 1;
+        ret = mbedtls_asn1_write_integer(&p, output, integer_buf, integer_length);
+        TEST_MEMORY_COMPARE(p, ret, expected_output->x, expected_output->len);
+    }
+
+exit:
+    mbedtls_free(output);
+    mbedtls_free(integer_buf);
+}
+/* END_CASE */
