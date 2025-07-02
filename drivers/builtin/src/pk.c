@@ -1058,9 +1058,9 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
 /*
  * Verify a signature
  */
-int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
-                          mbedtls_md_type_t md_alg, const unsigned char *hash,
-                          size_t hash_len, const unsigned char *sig, size_t sig_len)
+int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx, 
+		          mbedtls_md_type_t md_alg, const unsigned char *hash, 
+			  size_t hash_len, const unsigned char *sig, size_t sig_len)
 {
     return mbedtls_pk_verify_ext((mbedtls_pk_sigalg_t) type,
                                  NULL,
