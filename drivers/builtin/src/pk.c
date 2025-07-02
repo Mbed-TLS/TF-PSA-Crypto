@@ -5,6 +5,12 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+/*
+ * This file is private and for internal
+ * use only.
+ */
+#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
+
 #include "common.h"
 
 #if defined(MBEDTLS_PK_C)
