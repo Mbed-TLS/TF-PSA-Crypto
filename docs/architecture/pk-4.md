@@ -333,7 +333,7 @@ mbedtls_pk_verify()
 mbedtls_pk_sign()
 ```
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/347): document that `mbedtls_pk_sign()` are legacy functions, that perform the same algorithm that `mbedtls_pk_get_psa_attributes()` would perform under the hood if given a sign or verify usage.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/347): document that `mbedtls_pk_sign()` and `mbedtls_pk_verify()` are legacy functions, that perform the same algorithm that `mbedtls_pk_get_psa_attributes()` would perform under the hood if given a sign or verify usage.
 
 Tweak the following:
 ```
