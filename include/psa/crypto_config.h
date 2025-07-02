@@ -736,10 +736,7 @@
  *
  * Enable the generic layer for message digest (hashing) and HMAC.
  *
- * Requires: one of: MBEDTLS_MD5_C, MBEDTLS_RIPEMD160_C, MBEDTLS_SHA1_C,
- *                   MBEDTLS_SHA224_C, MBEDTLS_SHA256_C, MBEDTLS_SHA384_C,
- *                   MBEDTLS_SHA512_C, or MBEDTLS_PSA_CRYPTO_C with at least
- *                   one hash.
+ * Requires: MBEDTLS_PSA_CRYPTO_C with at least one hash.
  * Module:  library/md.c
  * Caller:  library/constant_time.c
  *          library/ecdsa.c
@@ -1793,6 +1790,12 @@
  * with the ARMv8 cryptographic extensions if they are available at runtime.
  * If not, the library will fall back to the C implementation.
  *
+ * \note MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT requires the built-in
+ * SHA-256 implementation to be present in the build. This implementation is
+ * included only if PSA_WANT_ALG_SHA_256 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_256 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note If MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT is defined when building
  * for a non-Armv8-A build it will be silently ignored.
  *
@@ -1809,9 +1812,9 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
  *
- * Requires: MBEDTLS_SHA256_C.
+ * Requires: The SHA-256 builtin implementation
  *
- * Module:  library/sha256.c
+ * Module:  drivers/builtin/src/sha256.c
  *
  * Uncomment to have the library check for the Armv8-A SHA-256 crypto extensions
  * and use them if available.
@@ -1834,6 +1837,12 @@
  * with the ARMv8 cryptographic extensions, which must be available at runtime
  * or else an illegal instruction fault will occur.
  *
+ * \note MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY requires the built-in SHA-256
+ * implementation to be present in the build. This implementation is included
+ * only if PSA_WANT_ALG_SHA_256 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_256 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note This allows builds with a smaller code size than with
  * MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
  *
@@ -1850,9 +1859,9 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
  *
- * Requires: MBEDTLS_SHA256_C.
+ * Requires: The SHA-256 builtin implementation
  *
- * Module:  library/sha256.c
+ * Module:  drivers/builtin/src/sha256.c
  *
  * Uncomment to have the library use the Armv8-A SHA-256 crypto extensions
  * unconditionally.
@@ -1885,6 +1894,12 @@
  * with the ARMv8 cryptographic extensions if they are available at runtime.
  * If not, the library will fall back to the C implementation.
  *
+ * \note MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT requires the built-in
+ * SHA-512 implementation to be present in the build. This implementation is
+ * included only if PSA_WANT_ALG_SHA_512 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_512 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note If MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT is defined when building
  * for a non-Aarch64 build it will be silently ignored.
  *
@@ -1897,9 +1912,9 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY.
  *
- * Requires: MBEDTLS_SHA512_C.
+ * Requires: The SHA-512 builtin implementation
  *
- * Module:  library/sha512.c
+ * Module:  drivers/builtin/src/sha512.c
  *
  * Uncomment to have the library check for the A64 SHA-512 crypto extensions
  * and use them if available.
@@ -1913,6 +1928,12 @@
  * with the ARMv8 cryptographic extensions, which must be available at runtime
  * or else an illegal instruction fault will occur.
  *
+ * \note MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT requires the built-in
+ * SHA-512 implementation to be present in the build. This implementation is
+ * included only if PSA_WANT_ALG_SHA_512 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_512 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note This allows builds with a smaller code size than with
  * MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT
  *
@@ -1925,9 +1946,9 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT.
  *
- * Requires: MBEDTLS_SHA512_C.
+ * Requires: The SHA-512 builtin implementation
  *
- * Module:  library/sha512.c
+ * Module:  drivers/builtin/src/sha512.c
  *
  * Uncomment to have the library use the A64 SHA-512 crypto extensions
  * unconditionally.
@@ -2343,27 +2364,6 @@
 #define MBEDTLS_HMAC_DRBG_C
 
 /**
- * \def MBEDTLS_MD5_C
- *
- * Enable the MD5 hash algorithm.
- *
- * Module:  library/md5.c
- * Caller:  library/md.c
- *          library/pem.c
- *          library/ssl_tls.c
- *
- * This module is required for TLS 1.2 depending on the handshake parameters.
- * Further, it is used for checking MD5-signed certificates, and for PBKDF1
- * when decrypting PEM-encoded encrypted keys.
- *
- * \warning   MD5 is considered a weak message digest and its use constitutes a
- *            security risk. If possible, we recommend avoiding dependencies on
- *            it, and considering stronger message digests instead.
- *
- */
-#define MBEDTLS_MD5_C
-
-/**
  * \def MBEDTLS_PKCS1_V15
  *
  * Enable support for PKCS#1 v1.5 encoding.
@@ -2399,17 +2399,6 @@
 #define MBEDTLS_POLY1305_C
 
 /**
- * \def MBEDTLS_RIPEMD160_C
- *
- * Enable the RIPEMD-160 hash algorithm.
- *
- * Module:  library/ripemd160.c
- * Caller:  library/md.c
- *
- */
-#define MBEDTLS_RIPEMD160_C
-
-/**
  * \def MBEDTLS_RSA_C
  *
  * Enable the RSA public-key cryptosystem.
@@ -2428,86 +2417,6 @@
  * Requires: MBEDTLS_BIGNUM_C
  */
 #define MBEDTLS_RSA_C
-
-/**
- * \def MBEDTLS_SHA1_C
- *
- * Enable the SHA1 cryptographic hash algorithm.
- *
- * Module:  library/sha1.c
- * Caller:  library/md.c
- *          library/psa_crypto_hash.c
- *
- * This module is required for TLS 1.2 depending on the handshake parameters,
- * and for SHA1-signed certificates.
- *
- * \warning   SHA-1 is considered a weak message digest and its use constitutes
- *            a security risk. If possible, we recommend avoiding dependencies
- *            on it, and considering stronger message digests instead.
- *
- */
-#define MBEDTLS_SHA1_C
-
-/**
- * \def MBEDTLS_SHA224_C
- *
- * Enable the SHA-224 cryptographic hash algorithm.
- *
- * Module:  library/sha256.c
- * Caller:  library/md.c
- *          library/ssl_cookie.c
- *
- * This module adds support for SHA-224.
- */
-#define MBEDTLS_SHA224_C
-
-/**
- * \def MBEDTLS_SHA256_C
- *
- * Enable the SHA-256 cryptographic hash algorithm.
- *
- * Module:  library/sha256.c
- * Caller:  library/entropy.c
- *          library/md.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module adds support for SHA-256.
- * This module is required for the SSL/TLS 1.2 PRF function.
- */
-#define MBEDTLS_SHA256_C
-
-/**
- * \def MBEDTLS_SHA384_C
- *
- * Enable the SHA-384 cryptographic hash algorithm.
- *
- * Module:  library/sha512.c
- * Caller:  library/md.c
- *          library/psa_crypto_hash.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * Comment to disable SHA-384
- */
-#define MBEDTLS_SHA384_C
-
-/**
- * \def MBEDTLS_SHA512_C
- *
- * Enable SHA-512 cryptographic hash algorithms.
- *
- * Module:  library/sha512.c
- * Caller:  library/entropy.c
- *          library/md.c
- *          library/ssl_tls.c
- *          library/ssl_cookie.c
- *
- * This module adds support for SHA-512.
- */
-#define MBEDTLS_SHA512_C
 
 /** \} name SECTION: Legacy cryptography */
 
