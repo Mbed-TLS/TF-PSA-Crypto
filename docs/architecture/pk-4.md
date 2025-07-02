@@ -377,13 +377,13 @@ mbedtls_pk_encrypt()
 
 #### Privatization
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/343): Create a header `/include/mbedtls/private/pk.h`. At first, it just includes `../pk.h`.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/343): Create a header `/include/mbedtls/private/pk_private.h`. At first, it just includes `../pk.h`.
 
-ACTION (https://github.com/Mbed-TLS/mbedtls-framework/issues/178): Conditionally include `mbedtls/private/pk.h` in the framework.
+ACTION (https://github.com/Mbed-TLS/mbedtls-framework/issues/178): Conditionally include `mbedtls/private/pk_private.h` in the framework.
 
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10263): Conditionally include `mbedtls/private/pk.h` in Mbed TLS.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10263): Conditionally include `mbedtls/private/pk_private.h` in Mbed TLS.
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/344): Move all private API elements to `mbedtls/private/pk.h`:
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/344): Move all private API elements to `mbedtls/private/pk_private.h`:
 
 ```
 mbedtls_pk_type_t
