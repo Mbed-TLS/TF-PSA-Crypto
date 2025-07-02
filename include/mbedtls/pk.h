@@ -10,6 +10,13 @@
 
 #ifndef MBEDTLS_PK_H
 #define MBEDTLS_PK_H
+
+/*
+ * This header is private and for internal
+ * use only.
+ */
+#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
+
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
