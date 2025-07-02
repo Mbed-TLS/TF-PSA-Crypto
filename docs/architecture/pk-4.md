@@ -267,7 +267,7 @@ PK sometimes needs to choose between ECDSA variants, when it builds PSA attribut
 * To import an ECC key during parsing, and to sign with a built-in ECC key, when `MBEDTLS_PK_USE_PSA_EC_DATA` is enabled. This uses the macro `MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET` defined in `pk_internal.h`.
 * In `mbedtls_pk_get_psa_attributes()` to choose the default policy for an ECC key used for signature.
 
-ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/345): change `MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET` to a public macro `MBEDTLS_PK_ALG_ECDSA`. Switch `mbedtls_pk_get_psa_attributes()` to it.
+ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/345): change `MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET` to a public macro `MBEDTLS_PK_ALG_ECDSA`. Switch `mbedtls_pk_get_psa_attributes()` to it. This is nice but not critical for 1.0.
 
 #### `mbedtls_pk_get_psa_attributes()`
 
