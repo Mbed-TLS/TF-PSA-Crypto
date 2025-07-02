@@ -239,13 +239,13 @@ We should change the meaning of the usage flag to indicate what operations can a
 
 This will be closer to how `mbedtls_pk_get_psa_attributes()` works.
 
-#### Implementing `mbedtls_pk_can_do_psa`
-
-Note that the change of semantics on public keys will break [`ssl_pick_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls12_server.c#L687) and [`ssl_tls13_pick_key_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls13_server.c#L1115), as they rely on calling `mbedtls_pk_can_do_ext()` on the public key from the certificate. However, this should be an easy fix: just change these invocations to use `PSA_KEY_USAGE_VERIFY_HASH` as the usage to check.
-
 To ease the transition, we will call the new function `mbedtls_pk_can_do_psa`. We will keep the current `mbedtls_pk_can_do_ext` as a private function until Mbed TLS stops using it (a [GitHub code search](https://github.com/search?q=%22mbedtls_pk_can_do_ext%28%22+path%3A*.c+NOT+path%3A**%2Fpk.c+NOT+path%3A**%2Fssl_*.c+NOT+path%3A**%2Fx509_c%3F%3F.c+NOT+path%3A**%2Ftest_suite_pk*.c&type=code&ref=advsearch) suggests application developers don't use this function).
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/351): Implement and unit-test `mbedtls_pk_can_do_psa()`. Reuse most of the code of `mbedtls_pk_can_do_ext()` (it will probably help to break it into smaller functions). Should be done before 1.0, but can be done after.
+
+#### Migrating to `mbedtls_pk_can_do_psa`
+
+Note that the change of semantics on public keys will break [`ssl_pick_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls12_server.c#L687) and [`ssl_tls13_pick_key_cert()`](https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.3/library/ssl_tls13_server.c#L1115), as they rely on calling `mbedtls_pk_can_do_ext()` on the public key from the certificate. However, this should be an easy fix: just change these invocations to use `PSA_KEY_USAGE_VERIFY_HASH` as the usage to check.
 
 ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10266): migrate TLS to `mbedtls_pk_can_do_psa()`. Can be done after 4.0.
 
