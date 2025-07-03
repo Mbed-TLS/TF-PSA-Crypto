@@ -170,7 +170,7 @@ typedef struct mbedtls_pk_debug_item {
 typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
-        PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+    PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
 /**
  * \brief           Public key container
  */
