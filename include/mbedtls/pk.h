@@ -698,7 +698,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
  *                  (Includes verification of the padding depending on type.)
  *
  * \param type      Signature type (inc. possible padding type) to verify
- * \param options   Pointer to type-specific options, or NULL
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used (see notes)
  * \param hash      Hash of the message to sign
