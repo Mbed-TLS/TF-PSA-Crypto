@@ -22,10 +22,6 @@ if(CMAKE_COMPILER_IS_MSVC)
     endif()
 endif()
 
-if(WIN32)
-    set(libs ${libs} ws2_32 bcrypt)
-endif(WIN32)
-
 if(CMAKE_C_COMPILER_ID MATCHES "AppleClang")
     set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
     set(CMAKE_C_ARCHIVE_FINISH   "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
@@ -35,11 +31,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
     set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 endif()
 
-if(LINK_WITH_PTHREAD)
-    set(libs ${libs} ${CMAKE_THREAD_LIBS_INIT})
-endif()
-
-set(builtin_target ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin)
+set(builtin_target ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin_objs)
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(builtin_static_target ${builtin_target})
 endif()
@@ -49,63 +41,68 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     list(APPEND target_libraries ${builtin_static_target})
 endif()
 
-set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
-
-if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${builtin_static_target} STATIC ${src_builtin})
-    set_base_compile_options(${builtin_static_target})
-    target_compile_options(${builtin_static_target} PRIVATE ${LIBS_C_FLAGS})
-    target_link_libraries(${builtin_static_target} PUBLIC ${libs})
-    if(TARGET ${everest_target})
-        target_link_libraries(${builtin_static_target} PUBLIC ${everest_target})
-    endif()
-
-    if(TARGET ${p256m_target})
-        target_link_libraries(${builtin_static_target} PUBLIC ${p256m_target})
-    endif()
-endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+foreach (target IN LISTS target_libraries)
+    add_library(${target} OBJECT ${src_builtin})
+    set_base_compile_options(${target})
+    target_compile_options(${target} PRIVATE ${LIBS_C_FLAGS})
+    target_include_directories(${target}
+      PRIVATE src include
+              ${TF_PSA_CRYPTO_DIR}/include
+              ${TF_PSA_CRYPTO_DIR}/core
+              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include)
+    set_config_files_compile_definitions(${target})
+endforeach(target)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
-    add_library(${builtin_target} SHARED ${src_builtin})
-    set_base_compile_options(${builtin_target})
-    target_compile_options(${builtin_target} PRIVATE ${LIBS_C_FLAGS})
-    target_link_libraries(${builtin_target} PUBLIC ${libs})
-    if(TARGET ${everest_target})
-        target_link_libraries(${builtin_target} PUBLIC ${everest_target})
-    endif()
-
-    if(TARGET ${p256m_target})
-        target_link_libraries(${builtin_target} PUBLIC ${p256m_target})
-    endif()
+    set_property(TARGET ${builtin_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
-foreach (target IN LISTS target_libraries)
-    target_include_directories(${target}
-      PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-             $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include>
-      PRIVATE ${TF_PSA_CRYPTO_DIR}/core)
-    set_config_files_compile_definitions(${target})
+if(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
-    if(INSTALL_TF_PSA_CRYPTO_HEADERS)
+  install(DIRECTORY include/mbedtls
+    DESTINATION include
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+    GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    FILES_MATCHING PATTERN "*.h")
 
-      install(DIRECTORY include/mbedtls
-        DESTINATION include
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
-        GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        FILES_MATCHING PATTERN "*.h")
+endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
-    endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
-    install(TARGETS ${target}
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/src/dummy_builtin.c" "")
+set(dummy_builtin_target ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin)
+if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+    set(dummy_builtin_static_target ${dummy_builtin_target})
+endif()
+set(target_dummy_libraries ${dummy_builtin_target})
+if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
+    string(APPEND dummy_builtin_static_target "_static")
+    list(APPEND target_libraries ${dummy_builtin_static_target})
+endif()
+
+if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+    add_library(${dummy_builtin_static_target}
+      STATIC "${CMAKE_CURRENT_BINARY_DIR}/src/dummy_builtin.c")
+    install(TARGETS ${dummy_builtin_static_target}
       EXPORT MbedTLSTargets
       DESTINATION ${CMAKE_INSTALL_LIBDIR}
       PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-
-    install(TARGETS ${target}
+    install(TARGETS ${dummy_builtin_static_target}
       EXPORT TF-PSA-CryptoTargets
       DESTINATION ${CMAKE_INSTALL_LIBDIR}
       PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-endforeach(target)
+endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+
+if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
+    add_library(${dummy_builtin_target}
+      SHARED "${CMAKE_CURRENT_BINARY_DIR}/src/dummy_builtin.c")
+    set_property(TARGET ${dummy_builtin_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
+    install(TARGETS ${dummy_builtin_target}
+      EXPORT MbedTLSTargets
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    install(TARGETS ${dummy_builtin_target}
+      EXPORT TF-PSA-CryptoTargets
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
