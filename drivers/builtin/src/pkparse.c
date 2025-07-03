@@ -10,6 +10,9 @@
 #if defined(MBEDTLS_PK_PARSE_C)
 
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #include "mbedtls/asn1.h"
 #include "crypto_oid.h"
 #include "mbedtls/platform_util.h"
