@@ -170,7 +170,7 @@ typedef struct mbedtls_pk_debug_item {
 typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
-    PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+        PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
 /**
  * \brief           Public key container
  */
@@ -719,9 +719,9 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
-int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx, 
-		          mbedtls_md_type_t md_alg, const unsigned char *hash, 
-			  size_t hash_len, const unsigned char *sig, size_t sig_len);
+int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
+                          mbedtls_md_type_t md_alg, const unsigned char *hash,
+                          size_t hash_len, const unsigned char *sig, size_t sig_len);
 
 
 /**
