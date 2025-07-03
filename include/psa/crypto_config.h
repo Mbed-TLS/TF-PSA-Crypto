@@ -734,7 +734,7 @@
 /**
  * \def MBEDTLS_MD_C
  *
- * Enable the generic layer for message digest (hashing) and HMAC.
+ * Enable the generic layer for message digest (hashing).
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C with at least one hash.
  * Module:  library/md.c
@@ -1976,30 +1976,6 @@
  */
 
 /**
- * \def MBEDTLS_AES_C
- *
- * Enable the AES block cipher.
- *
- * Module:  library/aes.c
- * Caller:  library/cipher.c
- *          library/pem.c
- *          library/ctr_drbg.c
- *
- * PEM_PARSE uses AES for decrypting encrypted keys.
- */
-#define MBEDTLS_AES_C
-
-/**
- * \def MBEDTLS_ARIA_C
- *
- * Enable the ARIA block cipher.
- *
- * Module:  library/aria.c
- * Caller:  library/cipher.c
- */
-#define MBEDTLS_ARIA_C
-
-/**
  * \def MBEDTLS_BIGNUM_C
  *
  * Enable the multi-precision integer library.
@@ -2019,109 +1995,6 @@
 #define MBEDTLS_BIGNUM_C
 
 /**
- * \def MBEDTLS_CAMELLIA_C
- *
- * Enable the Camellia block cipher.
- *
- * Module:  library/camellia.c
- * Caller:  library/cipher.c
- */
-#define MBEDTLS_CAMELLIA_C
-
-/**
- * \def MBEDTLS_CCM_C
- *
- * Enable the Counter with CBC-MAC (CCM) mode for 128-bit block cipher.
- *
- * Module:  library/ccm.c
- *
- * Requires: MBEDTLS_CIPHER_C, MBEDTLS_AES_C or MBEDTLS_CAMELLIA_C or
- *                             MBEDTLS_ARIA_C
- *
- * This module enables the AES-CCM ciphersuites, if other requisites are
- * enabled as well.
- */
-#define MBEDTLS_CCM_C
-
-/**
- * \def MBEDTLS_CHACHA20_C
- *
- * Enable the ChaCha20 stream cipher.
- *
- * Module:  library/chacha20.c
- */
-#define MBEDTLS_CHACHA20_C
-
-/**
- * \def MBEDTLS_CHACHAPOLY_C
- *
- * Enable the ChaCha20-Poly1305 AEAD algorithm.
- *
- * Module:  library/chachapoly.c
- *
- * This module requires: MBEDTLS_CHACHA20_C, MBEDTLS_POLY1305_C
- */
-#define MBEDTLS_CHACHAPOLY_C
-
-/**
- * \def MBEDTLS_CIPHER_C
- *
- * Enable the generic cipher layer.
- *
- * Module:  library/cipher.c
- * Caller:  library/ccm.c
- *          library/cmac.c
- *          library/gcm.c
- *          library/nist_kw.c
- *          library/pkcs12.c
- *          library/pkcs5.c
- *          library/psa_crypto_aead.c
- *          library/psa_crypto_mac.c
- *          library/ssl_ciphersuites.c
- *          library/ssl_msg.c
- * Auto-enabled by: MBEDTLS_PSA_CRYPTO_C depending on which ciphers are enabled
- *                  (see the documentation of that option for details).
- *
- * Uncomment to enable generic cipher wrappers.
- */
-#define MBEDTLS_CIPHER_C
-
-/**
- * \def MBEDTLS_CIPHER_MODE_CBC
- *
- * Enable Cipher Block Chaining mode (CBC) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_CBC
-
-/**
- * \def MBEDTLS_CIPHER_MODE_CFB
- *
- * Enable Cipher Feedback mode (CFB) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_CFB
-
-/**
- * \def MBEDTLS_CIPHER_MODE_CTR
- *
- * Enable Counter Block Cipher mode (CTR) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_CTR
-
-/**
- * \def MBEDTLS_CIPHER_MODE_OFB
- *
- * Enable Output Feedback mode (OFB) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_OFB
-
-/**
- * \def MBEDTLS_CIPHER_MODE_XTS
- *
- * Enable Xor-encrypt-xor with ciphertext stealing mode (XTS) for AES.
- */
-#define MBEDTLS_CIPHER_MODE_XTS
-
-/**
  * \def MBEDTLS_CIPHER_NULL_CIPHER
  *
  * Enable NULL cipher.
@@ -2131,35 +2004,6 @@
  * Uncomment this macro to enable the NULL cipher and ciphersuites
  */
 //#define MBEDTLS_CIPHER_NULL_CIPHER
-
-/**
- * \def MBEDTLS_CIPHER_PADDING_PKCS7
- *
- * MBEDTLS_CIPHER_PADDING_XXX: Uncomment or comment macros to add support for
- * specific padding modes in the cipher layer with cipher modes that support
- * padding (e.g. CBC)
- *
- * If you disable all padding modes, only full blocks can be used with CBC.
- *
- * Enable padding modes in the cipher layer.
- */
-#define MBEDTLS_CIPHER_PADDING_PKCS7
-#define MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-#define MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
-#define MBEDTLS_CIPHER_PADDING_ZEROS
-
-/**
- * \def MBEDTLS_CMAC_C
- *
- * Enable the CMAC (Cipher-based Message Authentication Code) mode for block
- * ciphers.
- *
- * Module:  library/cmac.c
- *
- * Requires: MBEDTLS_CIPHER_C, MBEDTLS_AES_C or MBEDTLS_DES_C
- *
- */
-#define MBEDTLS_CMAC_C
 
 /**
  * \def MBEDTLS_CTR_DRBG_C
@@ -2199,22 +2043,6 @@
  * unless \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
  */
 //#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-
-/**
- * \def MBEDTLS_DES_C
- *
- * Enable the DES block cipher.
- *
- * Module:  library/des.c
- * Caller:  library/pem.c
- *          library/cipher.c
- *
- * PEM_PARSE uses DES/3DES for decrypting encrypted keys.
- *
- * \warning   DES/3DES are considered weak ciphers and their use constitutes a
- *            security risk. We recommend considering stronger ciphers instead.
- */
-#define MBEDTLS_DES_C
 
 /**
  * \def MBEDTLS_ECDH_C
@@ -2326,21 +2154,6 @@
 #define MBEDTLS_ECJPAKE_C
 
 /**
- * \def MBEDTLS_GCM_C
- *
- * Enable the Galois/Counter Mode (GCM).
- *
- * Module:  library/gcm.c
- *
- * Requires: MBEDTLS_CIPHER_C, MBEDTLS_AES_C or MBEDTLS_CAMELLIA_C or
- *                             MBEDTLS_ARIA_C
- *
- * This module enables the AES-GCM and CAMELLIA-GCM ciphersuites, if other
- * requisites are enabled as well.
- */
-#define MBEDTLS_GCM_C
-
-/**
  * \def MBEDTLS_GENPRIME
  *
  * Enable the prime-number generation code.
@@ -2387,16 +2200,6 @@
  * This enables support for RSAES-OAEP and RSASSA-PSS operations.
  */
 #define MBEDTLS_PKCS1_V21
-
-/**
- * \def MBEDTLS_POLY1305_C
- *
- * Enable the Poly1305 MAC algorithm.
- *
- * Module:  library/poly1305.c
- * Caller:  library/chachapoly.c
- */
-#define MBEDTLS_POLY1305_C
 
 /**
  * \def MBEDTLS_RSA_C
