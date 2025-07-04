@@ -6,16 +6,13 @@ API changes
      This will not affect most applications since the error values are
      between -32767 and -1 as before.
    * Remove MBEDTLS_PK_RSA_ALT from the PK module.
-   * Replaced MBEDTLS_ERR_PK_SIG_LEN_MISMATCH and
-     MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH error codes with
-     MBEDTLS_ERR_ECP_VERIFY_FAILED and
-     MBEDTLS_ERR_RSA_VERIFY_FAILED
-   * All API functions now use the PSA random generator psa_get_random()
+   * MBEDTLS_ERR_PK_SIG_LEN_MISMATCH is no longer a distinct error code.
+     A valid signature with trailing garbage is now reported as an invalid
+     signature with all algorithms.
+   * All API functions now use the PSA random generator psa_generate_random()
      internally. As a consequence, functions no longer take RNG parameters.
      Please refer to the migration guide at :
-     tf-psa-crypto/docs/4.0-migration-guide.md.
-   * Privatize the functions mbedtls_ecc_group_to_psa and
-     mbedtls_ecc_group_from_psa.
+     docs/4.0-migration-guide.md.
    * mbedtls_pk_verify_ext() ignores the options parameter when an
      MBEDTLS_PK_RSASSA_PSS context type is used. The function assumes that
      salt length is any and that the hash algorithm used for message, encoding
@@ -40,6 +37,9 @@ Removals
    * Removed the MBEDTLS_PSA_INJECT_ENTROPY configuration option from
      crypto_config.h. The functionality that this option was enabling will be
      reintroduced as part of the work on issue #8150.
+   * Remove the functions mbedtls_ecc_group_to_psa() and
+     mbedtls_ecc_group_from_psa(), which are no longer meaningful since
+     ECC groups are no longer exposed directly in the API.
    * MBEDTLS_NO_PLATFORM_ENTROPY and the previously deprecated
      MBEDTLS_ENTROPY_HARDWARE_ALT are removed. See the documentation of
      MBEDTLS_PLATFORM_GET_ENTROPY_ALT for a description on how the entropy
