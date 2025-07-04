@@ -133,7 +133,7 @@ static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
         TEST_EQUAL(mbedtls_pk_import_into_psa(&key, &key_attr, &opaque_id), 0);
         mbedtls_pk_free(&key);
         mbedtls_pk_init(&key);
-        TEST_EQUAL(mbedtls_pk_setup_opaque(&key, opaque_id), 0);
+        TEST_EQUAL(mbedtls_pk_wrap_psa(&key, opaque_id), 0);
         start_buf = buf;
         buf_len = check_buf_len;
         /* Intentionally pass a wrong size for the provided output buffer and check
@@ -212,7 +212,7 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
     TEST_EQUAL(mbedtls_pk_import_into_psa(&priv_key, &key_attr, &opaque_key_id), 0);
     mbedtls_pk_free(&priv_key);
     mbedtls_pk_init(&priv_key);
-    TEST_EQUAL(mbedtls_pk_setup_opaque(&priv_key, opaque_key_id), 0);
+    TEST_EQUAL(mbedtls_pk_wrap_psa(&priv_key, opaque_key_id), 0);
 
     TEST_EQUAL(mbedtls_pk_write_pubkey_der(&priv_key, derived_key_raw,
                                            derived_key_len), pub_key_len);
