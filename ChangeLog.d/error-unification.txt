@@ -1,9 +1,0 @@
-API changes
-   * The PSA and Mbed TLS error spaces are now unified. mbedtls_xxx()
-     functions can now return PSA_ERROR_xxx values.
-     This will not affect most applications since the error values are
-     between -32767 and -1 as before.
-
-Removals
-   * Remove many MBEDTLS_ERR_xxx error codes, superseded by PSA_ERROR_xxx.
-     See the 4.0 migration guide for details.

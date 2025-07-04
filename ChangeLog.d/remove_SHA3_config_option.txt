@@ -1,3 +1,0 @@
-Removals
-   * Removed the MBEDTLS_SHA3_C configuration option from crypto_config.h.
-     SHA3 can now be configured with the PSA_WANT_SHA3_* options.

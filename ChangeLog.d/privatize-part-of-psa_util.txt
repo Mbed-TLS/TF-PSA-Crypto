@@ -1,4 +1,0 @@
-Removals
-   * Remove the functions mbedtls_ecc_group_to_psa() and
-     mbedtls_ecc_group_from_psa(), which are no longer meaningful since
-     ECC groups are no longer exposed directly in the API.
