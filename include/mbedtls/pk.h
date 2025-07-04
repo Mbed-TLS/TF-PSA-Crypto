@@ -10,6 +10,8 @@
 
 #ifndef MBEDTLS_PK_H
 #define MBEDTLS_PK_H
+#define MBEDTLS_PK_HAVE_PRIVATE_HEADER
+
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
