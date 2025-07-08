@@ -15,6 +15,7 @@
 #include "mbedtls/entropy.h"
 #include "entropy_poll.h"
 #include "mbedtls/error_common.h"
+#include <psa/crypto_driver_random.h>
 
 /* In principle, we could support both a built-in source and a custom
  * source. However, it isn't a common need. So for now the two
@@ -45,7 +46,7 @@ int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len,
      */
     *olen = len;
 
-    ret = mbedtls_platform_get_entropy(output, len, &estimate_bits);
+    ret = mbedtls_platform_get_entropy(0, &estimate_bits, output, len);
     if (ret != 0) {
         return ret;
     }

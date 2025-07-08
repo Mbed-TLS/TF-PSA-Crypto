@@ -283,9 +283,15 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
 #include <bcrypt.h>
 #include <intsafe.h>
 
-int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *estimate_bits)
+int mbedtls_platform_get_entropy(psa_driver_get_entropy_flags_t flags,
+                                 size_t *estimate_bits,
+                                 unsigned char *output, size_t output_size)
 {
+    /* We don't implement any flags yet. */
+    if (flags != 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
     /*
      * BCryptGenRandom takes ULONG for size, which is smaller than size_t on
      * 64-bit Windows platforms.
@@ -299,7 +305,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
-    *estimate_bits = 8 * *output_len;
+    *estimate_bits = 8 * output_size;
 
     return 0;
 }
@@ -392,12 +398,18 @@ static int sysctl_arnd_wrapper(unsigned char *buf, size_t buflen)
 
 #include <stdio.h>
 
-int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *estimate_bits)
+int mbedtls_platform_get_entropy(psa_driver_get_entropy_flags_t flags,
+                                 size_t *estimate_bits,
+                                 unsigned char *output, size_t output_size)
 {
     FILE *file;
     size_t read_len;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+
+    /* We don't implement any flags yet. */
+    if (flags != 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
 
 #if defined(HAVE_GETRANDOM)
     ret = getrandom_wrapper(output, output_size, 0);
