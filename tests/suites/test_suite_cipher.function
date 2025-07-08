@@ -1265,7 +1265,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS:MBEDTLS_CIPHER_MODE_WITH_PADDING:MBEDTLS_CIPHER_PADDING_PKCS7 */
 void get_pkcs_padding(data_t *decrypted_block, int exp_ret, int exp_len)
 {
     int ret;
