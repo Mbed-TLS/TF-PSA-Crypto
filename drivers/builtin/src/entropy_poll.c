@@ -35,12 +35,22 @@ int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len,
     size_t entropy_content = 0;
     (void) data;
 
-    ret = mbedtls_platform_get_entropy(output, len, olen, &entropy_content);
+    /* Historically, in PolarSSL and Mbed TLS, the entropy callback provided
+     * full-entropy output, and reported how many bytes in the output buffer
+     * had useful data. Reporting the length was not very useful because
+     * we get the same amount of entropy by processing the whole output bufer,
+     * processing the whole buffer barely costs more CPU time since the buffer
+     * is small, and most entropy sources just fill the whole buffer anyway.
+     * So since TF-PSA-Crypto 1.0, we process the whole buffer.
+     */
+    *olen = len;
+
+    ret = mbedtls_platform_get_entropy(output, len, &entropy_content);
     if (ret != 0) {
         return ret;
     }
 
-    if (entropy_content < (8 * (*olen))) {
+    if (entropy_content < (8 * len)) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 

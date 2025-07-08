@@ -575,9 +575,8 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_C:MBEDTLS_PSA_DRIVER_GET_ENTROPY */
 void entropy_test_driver_callback(void)
 {
-    mbedtls_entropy_context ctx;
     uint8_t data[MBEDTLS_ENTROPY_POLL_PLATFORM_MIN];
-    size_t olen, call_count;
+    size_t olen;
 
     /* Simple callback test -> all fine. */
     TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen), 0);
@@ -599,15 +598,6 @@ void entropy_test_driver_callback(void)
                MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
 
     mbedtls_test_platform_get_entropy_reset();
-
-    /* Return less data than required -> callback will be called more than once. */
-    mbedtls_entropy_init(&ctx);
-    mbedtls_test_platform_get_entropy_set_output_len(
-        TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL);
-    TEST_EQUAL(mbedtls_entropy_func(&ctx, data, sizeof(data)), 0);
-    mbedtls_entropy_free(&ctx);
-    call_count = mbedtls_test_platform_get_entropy_get_call_count();
-    TEST_EQUAL(call_count, TEST_PLATFORM_GET_ENTROPY_EXP_CALL_COUNT);
 
 exit:
     mbedtls_test_platform_get_entropy_reset();

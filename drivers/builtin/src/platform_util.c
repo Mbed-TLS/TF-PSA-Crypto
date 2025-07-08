@@ -284,10 +284,8 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
 #include <intsafe.h>
 
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content)
+                                 size_t *entropy_content)
 {
-    *output_len = 0;
-
     /*
      * BCryptGenRandom takes ULONG for size, which is smaller than size_t on
      * 64-bit Windows platforms.
@@ -301,7 +299,6 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
-    *output_len = output_size;
     *entropy_content = 8 * *output_len;
 
     return 0;
@@ -396,7 +393,7 @@ static int sysctl_arnd_wrapper(unsigned char *buf, size_t buflen)
 #include <stdio.h>
 
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content)
+                                 size_t *entropy_content)
 {
     FILE *file;
     size_t read_len;
@@ -405,8 +402,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
 #if defined(HAVE_GETRANDOM)
     ret = getrandom_wrapper(output, output_size, 0);
     if (ret >= 0) {
-        *output_len = (size_t) ret;
-        *entropy_content = 8 * *output_len;
+        *entropy_content = 8 * (size_t) ret;
         return 0;
     } else if (errno != ENOSYS) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
@@ -422,12 +418,9 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
     if (sysctl_arnd_wrapper(output, output_size) == -1) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
-    *output_len = output_size;
-    *entropy_content = 8 * *output_len;
+    *entropy_content = 8 * output_size;
     return 0;
 #else
-
-    *output_len = 0;
 
     file = fopen("/dev/urandom", "rb");
     if (file == NULL) {
@@ -444,8 +437,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
     }
 
     fclose(file);
-    *output_len = output_size;
-    *entropy_content = 8 * *output_len;
+    *entropy_content = 8 * output_size;
 
     return 0;
 #endif /* HAVE_SYSCTL_ARND */

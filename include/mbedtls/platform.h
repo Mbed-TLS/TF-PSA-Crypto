@@ -453,8 +453,6 @@ mbedtls_platform_context;
  * \param[out] output           Output buffer where the entropy data will be
  *                              stored.
  * \param[in] output_size       Size of the \p output buffer in bytes.
- * \param[out] output_len       Amount of bytes effectively written in the
- *                              \p output buffer.
  * \param[out] entropy_content  Measure of the entropy content (in bits) of the
  *                              data written in the \p output buffer.*
  *
@@ -463,13 +461,13 @@ mbedtls_platform_context;
  *
  * \warning     For the time being TF-PSA-Crypto only supports implementations
  *              that return a maximum entropy output on each call, i.e.
- *              \p entropy_content = `8 * output_len`. Returning a smaller
+ *              \p entropy_content = `8 * output_size`. Returning a smaller
  *              entropy content is the same as returning
  *              MBEDTLS_ERR_ENTROPY_SOURCE_FAILED so the hardware polling will
  *              fail.
  *              In the future TF-PSA-Crypto will be smarter and capable to cope
  *              with entropy sources with lower entropy content (i.e.
- *              0 < \p entropy_content < 8 * output_len) by calling the callback
+ *              0 < \p entropy_content < 8 * output_size) by calling the callback
  *              function in loop.
  *
  * \note        This function is not meant to be called by application code, and
@@ -478,7 +476,7 @@ mbedtls_platform_context;
  *              should call psa_generate_random() to obtain random data.
  */
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content);
+                                 size_t *entropy_content);
 
 /**
  * \brief   This function performs any platform-specific initialization
