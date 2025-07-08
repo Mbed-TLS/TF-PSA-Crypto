@@ -202,6 +202,11 @@
       * instead.
       */
 #    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no sources"
+#  elif MBEDTLS_ENTROPY_TRUE_SOURCES == 0 && !defined(MBEDTLS_ENTROPY_NO_SOURCES_OK)
+     /* Having only the NV seed as an entropy source weakens security.
+      * To indicate that this is acceptable, define
+      * MBEDTLS_ENTROPY_NO_SOURCES_OK. */
+#    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no true sources"
 #  endif
 #endif
 

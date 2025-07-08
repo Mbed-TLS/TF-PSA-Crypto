@@ -1049,6 +1049,22 @@
 //#define MBEDTLS_ENTROPY_FORCE_SHA256
 
 /**
+ * \def MBEDTLS_ENTROPY_NO_SOURCES_OK
+ *
+ * Normally, TF-PSA-Crypto requires at least one "true" entropy source, such
+ * #MBEDTLS_PSA_BUILTIN_GET_ENTROPY or #MBEDTLS_PSA_DRIVER_GET_ENTROPY.
+ *
+ * It is possible to build the library with a seed injected during device
+ * provisioning, thanks to #MBEDTLS_ENTROPY_NV_SEED.
+ * This is only an initial entropy input which is not updated during the
+ * lifetime of the device. Thus, if the seed value is leaked, it is
+ * impossible to recover from this compromise.
+ *
+ * Enable this option if this loss of security is acceptable to you.
+ */
+//#define MBEDTLS_ENTROPY_NO_SOURCES_OK
+
+/**
  * \def MBEDTLS_ENTROPY_NV_SEED
  *
  * Enable the non-volatile (NV) seed file-based entropy source.

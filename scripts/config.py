@@ -50,6 +50,7 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED', # influences the use of ECDH in TLS
     'MBEDTLS_ECP_WITH_MPI_UINT', # disables the default ECP and is experimental
     'MBEDTLS_ENTROPY_FORCE_SHA256', # interacts with CTR_DRBG_128_BIT_KEY
+    'MBEDTLS_ENTROPY_NO_SOURCES_OK', # security control
     'MBEDTLS_HAVE_SSE2', # hardware dependency
     'MBEDTLS_MEMORY_BACKTRACE', # depends on MEMORY_BUFFER_ALLOC_C
     'MBEDTLS_MEMORY_BUFFER_ALLOC_C', # makes sanitizers (e.g. ASan) less effective

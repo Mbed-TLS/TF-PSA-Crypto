@@ -42,6 +42,7 @@ component_test_entropy_nv_seed_only () {
     msg "build: full minus actual entropy (NV seed only)"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+    scripts/config.py set MBEDTLS_ENTROPY_NO_SOURCES_OK
 
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=gcc "$TF_PSA_CRYPTO_ROOT_DIR"
