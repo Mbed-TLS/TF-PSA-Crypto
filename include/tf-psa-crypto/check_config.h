@@ -191,6 +191,20 @@
 #error "MBEDTLS_ECP_C defined (or a subset enabled), but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_ENTROPY_C)
+#  if !defined(MBEDTLS_ENTROPY_HAVE_SOURCES)
+     /* The entropy module needs at least one entropy source, such as
+      * #MBEDTLS_PSA_BUILTIN_GET_ENTROPY or #MBEDTLS_PSA_DRIVER_GET_ENTROPY
+      * or #MBEDTLS_ENTROPY_NV_SEED.
+      *
+      * If your platform has a cryptographic-quality random generator,
+      * disable #MBEDTLS_ENTROPY_C and use #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+      * instead.
+      */
+#    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no sources"
+#  endif
+#endif
+
 #if defined(MBEDTLS_ENTROPY_C) && \
     !(defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA_256))
 #error "MBEDTLS_ENTROPY_C defined, but not all prerequisites"
