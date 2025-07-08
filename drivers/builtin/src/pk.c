@@ -151,6 +151,11 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info)
 /*
  * Initialise a PSA-wrapping context
  */
+int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
+                        const mbedtls_svc_key_id_t key)
+{
+    return mbedtls_pk_wrap_psa(ctx,key);
+}
 int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
                         const mbedtls_svc_key_id_t key)
 {
