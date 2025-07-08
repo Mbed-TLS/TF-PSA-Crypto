@@ -284,7 +284,7 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
 #include <intsafe.h>
 
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *entropy_content)
+                                 size_t *estimate_bits)
 {
     /*
      * BCryptGenRandom takes ULONG for size, which is smaller than size_t on
@@ -299,7 +299,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
-    *entropy_content = 8 * *output_len;
+    *estimate_bits = 8 * *output_len;
 
     return 0;
 }
@@ -393,7 +393,7 @@ static int sysctl_arnd_wrapper(unsigned char *buf, size_t buflen)
 #include <stdio.h>
 
 int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *entropy_content)
+                                 size_t *estimate_bits)
 {
     FILE *file;
     size_t read_len;
@@ -402,7 +402,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
 #if defined(HAVE_GETRANDOM)
     ret = getrandom_wrapper(output, output_size, 0);
     if (ret >= 0) {
-        *entropy_content = 8 * (size_t) ret;
+        *estimate_bits = 8 * (size_t) ret;
         return 0;
     } else if (errno != ENOSYS) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
@@ -418,7 +418,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
     if (sysctl_arnd_wrapper(output, output_size) == -1) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
-    *entropy_content = 8 * output_size;
+    *estimate_bits = 8 * output_size;
     return 0;
 #else
 
@@ -437,7 +437,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
     }
 
     fclose(file);
-    *entropy_content = 8 * output_size;
+    *estimate_bits = 8 * output_size;
 
     return 0;
 #endif /* HAVE_SYSCTL_ARND */

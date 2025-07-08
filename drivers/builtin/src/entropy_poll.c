@@ -32,7 +32,7 @@
 int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len, size_t *olen)
 {
     int ret;
-    size_t entropy_content = 0;
+    size_t estimate_bits = 0;
     (void) data;
 
     /* Historically, in PolarSSL and Mbed TLS, the entropy callback provided
@@ -45,12 +45,12 @@ int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len,
      */
     *olen = len;
 
-    ret = mbedtls_platform_get_entropy(output, len, &entropy_content);
+    ret = mbedtls_platform_get_entropy(output, len, &estimate_bits);
     if (ret != 0) {
         return ret;
     }
 
-    if (entropy_content < (8 * len)) {
+    if (estimate_bits < (8 * len)) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
