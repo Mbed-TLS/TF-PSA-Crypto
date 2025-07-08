@@ -35,7 +35,7 @@
 
 
 /** Critical entropy source failure. */
-#define MBEDTLS_ERR_ENTROPY_SOURCE_FAILED                 -0x003C
+#define MBEDTLS_ERR_ENTROPY_SOURCE_FAILED PSA_ERROR_INSUFFICIENT_ENTROPY
 /** No more sources can be added. */
 #define MBEDTLS_ERR_ENTROPY_MAX_SOURCES                   -0x003E
 /** No sources have been added to poll. */

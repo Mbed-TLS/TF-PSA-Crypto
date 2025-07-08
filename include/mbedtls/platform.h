@@ -462,7 +462,7 @@ mbedtls_platform_context;
  *
  * \retval 0
  *         Success.
- * \retval MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY
  *         The entropy source failed.
  * \retval #PSA_ERROR_NOT_SUPPORTED
  *         The value of \p flags is not supported.
@@ -471,7 +471,7 @@ mbedtls_platform_context;
  *              that return a maximum entropy output on each call, i.e.
  *              \p estimate_bits = `8 * output_size`. Returning a smaller
  *              entropy content is the same as returning
- *              \c MBEDTLS_ERR_ENTROPY_SOURCE_FAILED so the hardware polling will
+ *              #PSA_ERROR_INSUFFICIENT_ENTROPY so the hardware polling will
  *              fail.
  *              In the future TF-PSA-Crypto will be smarter and capable to cope
  *              with entropy sources with lower entropy content (i.e.
