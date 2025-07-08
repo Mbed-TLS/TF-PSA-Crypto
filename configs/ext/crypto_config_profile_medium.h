@@ -243,7 +243,7 @@
 /**
  * \def MBEDTLS_ENTROPY_C
  *
- * Enable the platform-specific entropy code.
+ * Enable the generic entropy code.
  *
  * Module:  library/entropy.c
  * Caller:
@@ -255,17 +255,30 @@
 #define MBEDTLS_ENTROPY_C
 
 /**
- * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+ * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
  *
- * By default Mbed TLS uses standard platform sources (/dev/urandom on Linux
- * and CryptoAPI on Windows) to gather entropy data. If these functions are
- * not available for some reason (ex: working on a baremetal project), the
- * following symbol allows the user to define a custom callback function that
- * Mbed TLS will use to gather entropy data.
- * Public header `mbedtls/platform.h` provides the prototype for this callback
- * function and also the documentation for its parameters.
+ * Enable the custom entropy callback mbedtls_platform_get_entropy()
+ * (declared in mbedtls/platform.h). You need to provide this callback
+ * if you need an entropy source and the built-in entropy callback
+ * provided by #MBEDTLS_PSA_BUILTIN_GET_ENTROPY does not work on your platform.
+ *
+ * Enabling both #MBEDTLS_PSA_BUILTIN_GET_ENTROPY and
+ * #MBEDTLS_PSA_DRIVER_GET_ENTROPY is currently not supported.
+ *
+ * You do not need any entropy source in the following circumstances:
+ *
+ * - If your platform has a fast cryptographic-quality random generator, and
+ *   you enable #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG and provide a random generator
+ *   callback instead.
+ * - If your platform has no source of entropy at all, and you enable
+ *   #MBEDTLS_ENTROPY_NV_SEED and provide a seed in nonvolatile memory
+ *   during the provisioning of the device.
+ * - If you build the library with no random generator.
+ *   Builds with no random generator are not officially supported yet, except
+ *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
+ *   #MBEDTLS_PSA_CRYPTO_C disabled).
  */
-#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+//#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
 /**
  * \def MBEDTLS_ENTROPY_NV_SEED
@@ -605,19 +618,6 @@
 #undef MBEDTLS_PLATFORM_PRINTF_ALT
 #undef MBEDTLS_PLATFORM_STD_EXIT_SUCCESS
 #undef MBEDTLS_PLATFORM_STD_EXIT_FAILURE
-
-/*
- * In order to get an example config that works cleanly out-of-the-box
- * for both baremetal and non-baremetal builds, we detect baremetal builds
- * (either IAR, Arm compiler or __ARM_EABI__ defined), and adjust some
- * variables accordingly.
- */
-#if defined(__IAR_SYSTEMS_ICC__) || defined(__ARMCC_VERSION) || defined(__ARM_EABI__)
-#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
-#else
-/* Use built-in platform entropy functions (TF-M provides its own). */
-#undef MBEDTLS_PLATFORM_GET_ENTROPY_ALT
-#endif
 
 /***********************************************************************
  * Local changes to crypto config below this delimiter

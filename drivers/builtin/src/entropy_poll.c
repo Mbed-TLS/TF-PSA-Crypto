@@ -16,6 +16,19 @@
 #include "entropy_poll.h"
 #include "mbedtls/error_common.h"
 
+/* In principle, we could support both a built-in source and a custom
+ * source. However, it isn't a common need. So for now the two
+ * callback functions have the same name and there can only be one. */
+#if defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY) || defined(MBEDTLS_PSA_DRIVER_GET_ENTROPY)
+
+/* We currently only support a single "true" entropy source (other than the
+ * "fake" source which is the NV seed). It can be either the built-in one
+ * or a user-provided callback. */
+#if defined(MBEDTLS_PSA_DRIVER_GET_ENTROPY) && defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY)
+#error "MBEDTLS_PSA_DRIVER_GET_ENTROPY and MBEDTLS_PSA_BUILTIN_GET_ENTROPY " \
+    "are currently incompatible."
+#endif
+
 int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len, size_t *olen)
 {
     int ret;
@@ -33,6 +46,7 @@ int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len,
 
     return 0;
 }
+#endif /* MBEDTLS_PSA_BUILTIN_GET_ENTROPY || MBEDTLS_PSA_DRIVER_GET_ENTROPY */
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 int mbedtls_nv_seed_poll(void *data,

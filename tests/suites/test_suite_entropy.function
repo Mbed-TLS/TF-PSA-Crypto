@@ -572,8 +572,8 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_C:MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
-void entropy_test_platform_get_entropy_alt(void)
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_C:MBEDTLS_PSA_DRIVER_GET_ENTROPY */
+void entropy_test_driver_callback(void)
 {
     mbedtls_entropy_context ctx;
     uint8_t data[MBEDTLS_ENTROPY_POLL_PLATFORM_MIN];

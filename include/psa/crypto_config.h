@@ -1015,7 +1015,7 @@
 /**
  * \def MBEDTLS_ENTROPY_C
  *
- * Enable the platform-specific entropy code.
+ * Enable the generic entropy code.
  *
  * Module:  library/entropy.c
  * Caller:
@@ -1025,6 +1025,12 @@
  * This module provides a generic entropy pool
  */
 #define MBEDTLS_ENTROPY_C
+
+/* Temporary alias of MBEDTLS_PSA_DRIVER_GET_ENTROPY with incompatible
+ * behavior. We only keep this until the Mbed TLS scripts are updated.
+ * https://github.com/Mbed-TLS/mbedtls/issues/10300
+ */
+//#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 
 /**
  * \def MBEDTLS_ENTROPY_FORCE_SHA256
@@ -1041,19 +1047,6 @@
  * MBEDTLS_SHA512_C are defined. Otherwise the available hash module is used.
  */
 //#define MBEDTLS_ENTROPY_FORCE_SHA256
-
-/**
- * \def MBEDTLS_PLATFORM_GET_ENTROPY_ALT
- *
- * By default TF-PSA-Crypto uses platform-specific sources such as `getrandom()`,
- * `/dev/urandom` or `BCryptGenRandom()` to gather entropy data. If these
- * functions are not available on your platform, the following symbol allows
- * you to define a custom callback function named mbedtls_platform_get_entropy()
- * that Mbed TLS will use to gather entropy data.
- * The public header mbedtls/platform.h provides the prototype for this
- * callback function and also the documentation for its parameters.
- */
-//#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 
 /**
  * \def MBEDTLS_ENTROPY_NV_SEED
@@ -1130,6 +1123,36 @@
  *       not to be supported by PSA functions.
  */
 //#define MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
+
+/**
+ * \def MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+ *
+ * Enable entropy sources for which the library has a built-in driver.
+ * These are:
+ *
+ * - getrandom() on Linux (if syscall() is available at compile time);
+ * - getrandom() on FreeBSD and DragonFlyBSD (if available at compile time);
+ * - `sysctl(KERN_ARND)` on FreeBSD and NetBSD;
+ * - `/dev/urandom` on Unix-like platforms (unless one of the above is used);
+ * - BCryptGenRandom() on Windows.
+ *
+ * You should enable this option if your platform has one of these. If not:
+ *
+ * - You can enable #MBEDTLS_PSA_DRIVER_GET_ENTROPY instead, and provide
+ *   an entropy source callback for your platform.
+ * - If your platform has a fast cryptographic-quality random generator,
+ *   enable #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG and provide a random generator
+ *   callback instead.
+ * - If your platform has no source of entropy at all, you can enable
+ *   #MBEDTLS_ENTROPY_NV_SEED and provide a seed in nonvolatile memory
+ *   during the provisioning of the device.
+ * - The random generator requires a random generator callback,
+ *   an entropy source or a seed in nonvolatile memory.
+ *   Builds with no random generator are not officially supported yet, except
+ *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
+ *   #MBEDTLS_PSA_CRYPTO_C disabled).
+ */
+#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
 
 /** \def MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
  *
@@ -1246,6 +1269,32 @@
  *           the PSA ITS interface
  */
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
+
+/**
+ * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
+ *
+ * Enable the custom entropy callback mbedtls_platform_get_entropy()
+ * (declared in mbedtls/platform.h). You need to provide this callback
+ * if you need an entropy source and the built-in entropy callback
+ * provided by #MBEDTLS_PSA_BUILTIN_GET_ENTROPY does not work on your platform.
+ *
+ * Enabling both #MBEDTLS_PSA_BUILTIN_GET_ENTROPY and
+ * #MBEDTLS_PSA_DRIVER_GET_ENTROPY is currently not supported.
+ *
+ * You do not need any entropy source in the following circumstances:
+ *
+ * - If your platform has a fast cryptographic-quality random generator, and
+ *   you enable #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG and provide a random generator
+ *   callback instead.
+ * - If your platform has no source of entropy at all, and you enable
+ *   #MBEDTLS_ENTROPY_NV_SEED and provide a seed in nonvolatile memory
+ *   during the provisioning of the device.
+ * - If you build the library with no random generator.
+ *   Builds with no random generator are not officially supported yet, except
+ *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
+ *   #MBEDTLS_PSA_CRYPTO_C disabled).
+ */
+//#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
 /**
  * \def MBEDTLS_PSA_ITS_FILE_C

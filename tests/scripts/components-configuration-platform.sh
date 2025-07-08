@@ -22,11 +22,11 @@ component_tf_psa_crypto_build_no_std_function () {
     make
 }
 
-component_tf_psa_crypto_test_platform_get_entropy_alt()
+component_tf_psa_crypto_test_psa_driver_get_entropy_only()
 {
-    msg "build: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
-    # Use hardware polling as the only source for entropy
-    scripts/config.py set MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+    msg "build: default config + MBEDTLS_PSA_DRIVER_GET_ENTROPY - builtin"
+    scripts/config.py unset MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+    scripts/config.py set MBEDTLS_PSA_DRIVER_GET_ENTROPY
     scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
 
     cd $OUT_OF_SOURCE_DIR
@@ -34,7 +34,7 @@ component_tf_psa_crypto_test_platform_get_entropy_alt()
     make
 
     # Run all the tests
-    msg "test: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
+    msg "test: default config + MBEDTLS_PSA_DRIVER_GET_ENTROPY - builtin"
     make test
 }
 

@@ -263,14 +263,15 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
 #endif
 #endif /* MBEDTLS_HAVE_TIME && !MBEDTLS_PLATFORM_MS_TIME_ALT */
 
-#if !defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+#if defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY)
 
 #if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
     !defined(__APPLE__) && !defined(_WIN32) && !defined(__QNXNTO__) && \
     !defined(__HAIKU__) && !defined(__midipix__) && !defined(__MVS__)
 #error \
-    "The default platform entropy sources only work on Unix and Windows. " \
-    "Please enable MBEDTLS_PLATFORM_GET_ENTROPY_ALT and implement " \
+    "The built-in entropy sources only work on Unix and Windows. " \
+    "Please enable MBEDTLS_PSA_DRIVER_GET_ENTROPY instead of " \
+    "MBEDTLS_PSA_BUILTIN_GET_ENTROPY and implement " \
     "mbedtls_platform_get_entropy()."
 #endif
 
@@ -450,4 +451,4 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
 #endif /* HAVE_SYSCTL_ARND */
 }
 #endif /* _WIN32 && !EFIX64 && !EFI32 */
-#endif /* !MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+#endif /* MBEDTLS_PSA_BUILTIN_GET_ENTROPY */
