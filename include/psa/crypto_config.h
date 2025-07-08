@@ -1077,18 +1077,6 @@
 //#define MBEDTLS_ENTROPY_NV_SEED
 
 /**
- * \def MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
- *
- * Do not add default entropy sources in mbedtls_entropy_init().
- *
- * This is useful to have more control over the added entropy sources in an
- * application.
- *
- * Uncomment this macro to prevent loading of default entropy functions.
- */
-//#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-
-/**
  * \def MBEDTLS_PSA_CRYPTO_C
  *
  * Enable the Platform Security Architecture cryptography API.

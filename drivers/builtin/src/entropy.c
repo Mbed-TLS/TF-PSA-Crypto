@@ -40,7 +40,6 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
      * definitions of MBEDTLS_ENTROPY_TRUE_SOURCES in
      * "psa/crypto_adjust_config_derived.h". */
 
-#if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
     /* In principle, we could support both a built-in source and a custom
      * source. However, it isn't a common need. So for now the two
      * callback functions have the same name and there can only be one. */
@@ -55,7 +54,6 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
     ctx->initial_entropy_run = 0;
 #endif
-#endif /* MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES */
 }
 
 void mbedtls_entropy_free(mbedtls_entropy_context *ctx)
