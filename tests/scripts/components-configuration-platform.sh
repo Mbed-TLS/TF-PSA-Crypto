@@ -38,6 +38,27 @@ component_tf_psa_crypto_test_psa_driver_get_entropy_only()
     make test
 }
 
+component_test_entropy_nv_seed_only () {
+    msg "build: full minus actual entropy (NV seed only)"
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=gcc "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: full minus actual entropy (NV seed only)"
+    make test
+
+    # Check that the library seems to refer to the seedfile, but not to
+    # platform entropy sources.
+    grep seedfile library/platform.o
+    not grep getrandom drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    not grep /dev/random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    not grep /dev/.random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    not grep mbedtls_platform_get_entropy drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+}
+
 component_tf_psa_crypto_test_no_date_time () {
     msg "build: default config without MBEDTLS_HAVE_TIME_DATE"
     scripts/config.py unset MBEDTLS_HAVE_TIME_DATE
