@@ -36,8 +36,9 @@ void mbedtls_entropy_init(mbedtls_entropy_context *ctx)
     ctx->accumulator_started = 0;
     mbedtls_md_init(&ctx->accumulator);
 
-    /* Reminder: Update ENTROPY_HAVE_STRONG in the test files
-     *           when adding more strong entropy sources here. */
+    /* Note: the list of sources here must remain consistent with the
+     * definitions of MBEDTLS_ENTROPY_TRUE_SOURCES in
+     * "psa/crypto_adjust_config_derived.h". */
 
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
     /* In principle, we could support both a built-in source and a custom
