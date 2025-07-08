@@ -980,7 +980,7 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Verify a signature with options
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len)
@@ -993,11 +993,11 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, type)) {
+    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) type)) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (type != MBEDTLS_PK_RSASSA_PSS) {
+    if (type != MBEDTLS_PK_SIGALG_RSA_PSS) {
         /* General case: no options */
         if (options != NULL) {
             return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
@@ -1144,7 +1144,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Make a signature given a signature type.
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
@@ -1154,11 +1154,11 @@ int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, pk_type)) {
+    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) pk_type)) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (pk_type != MBEDTLS_PK_RSASSA_PSS) {
+    if (pk_type != MBEDTLS_PK_SIGALG_RSA_PSS) {
         return mbedtls_pk_sign(ctx, md_alg, hash, hash_len,
                                sig, sig_size, sig_len);
     }

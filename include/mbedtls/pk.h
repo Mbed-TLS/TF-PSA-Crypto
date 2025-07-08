@@ -689,7 +689,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len);
@@ -750,7 +750,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
  *
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
