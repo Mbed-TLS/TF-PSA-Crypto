@@ -688,7 +688,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
                           const unsigned char *sig, size_t sig_len);
 
 /**
- * \brief           Verify signature, with options.
+ * \brief           Verify signature, with explicit selection of the signature algorithm.
  *                  (Includes verification of the padding depending on type.)
  *
  * \param type      Signature type (inc. possible padding type) to verify
