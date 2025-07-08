@@ -580,7 +580,7 @@ void entropy_test_driver_callback(void)
     size_t olen, call_count;
 
     /* Simple callback test -> all fine. */
-    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) == 0);
+    TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen), 0);
     TEST_LE_U(1, olen);
     TEST_LE_U(olen, sizeof(data));
 
@@ -588,15 +588,15 @@ void entropy_test_driver_callback(void)
 
     /* Force a failure -> return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED. */
     mbedtls_test_platform_get_entropy_set_force_failure(1);
-    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
-                MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+    TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen),
+               MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
 
     mbedtls_test_platform_get_entropy_reset();
 
     /* Return less entropy than expected -> entropy gathering fails */
     mbedtls_test_platform_get_entropy_set_entropy_content(8 * (sizeof(data) - 1));
-    TEST_ASSERT(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen) ==
-                MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+    TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen),
+               MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
 
     mbedtls_test_platform_get_entropy_reset();
 
@@ -604,7 +604,7 @@ void entropy_test_driver_callback(void)
     mbedtls_entropy_init(&ctx);
     mbedtls_test_platform_get_entropy_set_output_len(
         TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL);
-    TEST_ASSERT(mbedtls_entropy_func(&ctx, data, sizeof(data)) == 0);
+    TEST_EQUAL(mbedtls_entropy_func(&ctx, data, sizeof(data)), 0);
     mbedtls_entropy_free(&ctx);
     call_count = mbedtls_test_platform_get_entropy_get_call_count();
     TEST_EQUAL(call_count, TEST_PLATFORM_GET_ENTROPY_EXP_CALL_COUNT);
