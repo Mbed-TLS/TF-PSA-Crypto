@@ -356,7 +356,7 @@ int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
  * \return    #MBEDTLS_ERR_PK_ALLOC_FAILED on allocation failure.
  */
 int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
-                        const mbedtls_svc_key_id_t key);
+                            const mbedtls_svc_key_id_t key);
 
 /**
  * \brief           Get the size in bits of the underlying key
