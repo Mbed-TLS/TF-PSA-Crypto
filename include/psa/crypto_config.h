@@ -686,6 +686,16 @@
  */
 //#define MBEDTLS_TEST_HOOKS
 
+/**
+ * \def TF_PSA_CRYPTO_VERSION
+ *
+ * Enable version information for TF-PSA-Crypto.
+ *
+ * This option enables functions for getting the version of TF-PSA-Crypto
+ * at runtime defined in include/tf-psa-crypto/version.h.
+ */
+#define TF_PSA_CRYPTO_VERSION
+
 /** \} name SECTION: General and test configuration options */
 
 /**

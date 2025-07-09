@@ -46,6 +46,8 @@
                                                             TF_PSA_CRYPTO_VERSION_PATCH)
 #define TF_PSA_CRYPTO_VERSION_STRING_FULL    "TF-PSA-Crypto " TF_PSA_CRYPTO_VERSION_STRING
 
+#if defined(TF_PSA_CRYPTO_VERSION)
+
 /**
  * Get the version number.
  *
@@ -73,5 +75,6 @@ void tf_psa_crypto_version_get_string(char *string);
  */
 void tf_psa_crypto_version_get_string_full(char *string);
 
+#endif /* TF_PSA_CRYPTO_VERSION */
 
 #endif /* TF_PSA_CRYPTO_VERSION_H */
