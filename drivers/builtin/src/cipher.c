@@ -872,37 +872,6 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_get_pkcs_padding(unsigned char *input,
 }
 #endif /* MBEDTLS_CIPHER_PADDING_PKCS7 */
 
-#if defined(MBEDTLS_CIPHER_PADDING_ZEROS)
-/*
- * Zero padding: fill with 00 ... 00
- */
-static void add_zeros_padding(unsigned char *output,
-                              size_t output_len, size_t data_len)
-{
-    memset(output + data_len, 0, output_len - data_len);
-}
-
-static int get_zeros_padding(unsigned char *input, size_t input_len,
-                             size_t *data_len)
-{
-    size_t i;
-    mbedtls_ct_condition_t done = MBEDTLS_CT_FALSE, prev_done;
-
-    if (NULL == input || NULL == data_len) {
-        return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
-    }
-
-    *data_len = 0;
-    for (i = input_len; i > 0; i--) {
-        prev_done = done;
-        done = mbedtls_ct_bool_or(done, mbedtls_ct_uint_ne(input[i-1], 0));
-        *data_len = mbedtls_ct_size_if(mbedtls_ct_bool_ne(done, prev_done), i, *data_len);
-    }
-
-    return 0;
-}
-#endif /* MBEDTLS_CIPHER_PADDING_ZEROS */
-
 /*
  * No padding: don't pad :)
  *
@@ -1056,12 +1025,6 @@ int mbedtls_cipher_set_padding_mode(mbedtls_cipher_context_t *ctx,
         case MBEDTLS_PADDING_PKCS7:
             ctx->add_padding = add_pkcs_padding;
             ctx->get_padding = mbedtls_get_pkcs_padding;
-            break;
-#endif
-#if defined(MBEDTLS_CIPHER_PADDING_ZEROS)
-        case MBEDTLS_PADDING_ZEROS:
-            ctx->add_padding = add_zeros_padding;
-            ctx->get_padding = get_zeros_padding;
             break;
 #endif
         case MBEDTLS_PADDING_NONE:

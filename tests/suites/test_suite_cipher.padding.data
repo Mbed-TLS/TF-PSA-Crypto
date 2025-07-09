@@ -137,22 +137,6 @@ Check PKCS padding #8 (overlong)
 depends_on:MBEDTLS_CIPHER_PADDING_PKCS7
 check_padding:MBEDTLS_PADDING_PKCS7:"040404":MBEDTLS_ERR_CIPHER_INVALID_PADDING:0
 
-Check zeros padding #1 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ZEROS
-check_padding:MBEDTLS_PADDING_ZEROS:"DABBAD00":0:3
-
-Check zeros padding #2 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ZEROS
-check_padding:MBEDTLS_PADDING_ZEROS:"DABBAD0000":0:3
-
-Check zeros padding #3 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ZEROS
-check_padding:MBEDTLS_PADDING_ZEROS:"DABBAD":0:3
-
-Check zeros padding #4 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ZEROS
-check_padding:MBEDTLS_PADDING_ZEROS:"000000":0:0
-
 Check no padding #1 (correct by definition)
 check_padding:MBEDTLS_PADDING_NONE:"DABBAD00":0:4
 
