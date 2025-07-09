@@ -663,12 +663,5 @@
 #error "MBEDTLS_HAVE_INT32/MBEDTLS_HAVE_INT64 and MBEDTLS_HAVE_ASM cannot be defined simultaneously"
 #endif /* (MBEDTLS_HAVE_INT32 || MBEDTLS_HAVE_INT64) && MBEDTLS_HAVE_ASM */
 
-/*
- * Avoid warning from -pedantic. This is a convenient place for this
- * workaround since this is included by every single file before the
- * #if defined(MBEDTLS_xxx_C) that results in empty translation units.
- */
-typedef int mbedtls_iso_c_forbids_empty_translation_units;
-
 /* *INDENT-ON* */
 #endif /* TF_PSA_CRYPTO_CHECK_CONFIG_H */
