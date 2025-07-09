@@ -872,53 +872,6 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_get_pkcs_padding(unsigned char *input,
 }
 #endif /* MBEDTLS_CIPHER_PADDING_PKCS7 */
 
-#if defined(MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN)
-/*
- * Zeros and len padding: fill with 00 ... 00 ll, where ll is padding length
- */
-static void add_zeros_and_len_padding(unsigned char *output,
-                                      size_t output_len, size_t data_len)
-{
-    size_t padding_len = output_len - data_len;
-    unsigned char i = 0;
-
-    for (i = 1; i < padding_len; i++) {
-        output[data_len + i - 1] = 0x00;
-    }
-    output[output_len - 1] = (unsigned char) padding_len;
-}
-
-static int get_zeros_and_len_padding(unsigned char *input, size_t input_len,
-                                     size_t *data_len)
-{
-    size_t i, pad_idx;
-    unsigned char padding_len;
-    mbedtls_ct_condition_t bad;
-
-    if (NULL == input || NULL == data_len) {
-        return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
-    }
-
-    padding_len = input[input_len - 1];
-    *data_len = input_len - padding_len;
-
-    /* Avoid logical || since it results in a branch */
-    bad = mbedtls_ct_uint_gt(padding_len, input_len);
-    bad = mbedtls_ct_bool_or(bad, mbedtls_ct_uint_eq(padding_len, 0));
-
-    /* The number of bytes checked must be independent of padding_len */
-    pad_idx = input_len - padding_len;
-    for (i = 0; i < input_len - 1; i++) {
-        mbedtls_ct_condition_t is_padding = mbedtls_ct_uint_ge(i, pad_idx);
-        mbedtls_ct_condition_t nonzero_pad_byte;
-        nonzero_pad_byte = mbedtls_ct_bool_if_else_0(is_padding, mbedtls_ct_bool(input[i]));
-        bad = mbedtls_ct_bool_or(bad, nonzero_pad_byte);
-    }
-
-    return mbedtls_ct_error_if_else_0(bad, MBEDTLS_ERR_CIPHER_INVALID_PADDING);
-}
-#endif /* MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN */
-
 #if defined(MBEDTLS_CIPHER_PADDING_ZEROS)
 /*
  * Zero padding: fill with 00 ... 00
@@ -1103,12 +1056,6 @@ int mbedtls_cipher_set_padding_mode(mbedtls_cipher_context_t *ctx,
         case MBEDTLS_PADDING_PKCS7:
             ctx->add_padding = add_pkcs_padding;
             ctx->get_padding = mbedtls_get_pkcs_padding;
-            break;
-#endif
-#if defined(MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN)
-        case MBEDTLS_PADDING_ZEROS_AND_LEN:
-            ctx->add_padding = add_zeros_and_len_padding;
-            ctx->get_padding = get_zeros_and_len_padding;
             break;
 #endif
 #if defined(MBEDTLS_CIPHER_PADDING_ZEROS)
