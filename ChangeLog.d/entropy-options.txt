@@ -1,0 +1,18 @@
+Removals
+   * The options MBEDTLS_NO_PLATFORM_ENTROPY,
+     MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES, MBEDTLS_ENTROPY_HARDWARE_ALT and
+     MBEDTLS_ENTROPY_MIN_HARDWARE have been removed. Entropy sources are
+     now controlled by MBEDTLS_PSA_BUILTIN_GET_ENTROPY and
+     MBEDTLS_PSA_DRIVER_GET_ENTROPY. See “Entropy configuration” in the
+     migration guide for more information.
+   * MBEDTLS_PLATFORM_GET_ENTROPY_ALT, introduced in TF-PSA-Crypto 1.0.0-beta,
+     has been removed in favor of MBEDTLS_PSA_DRIVER_GET_ENTROPY.
+
+API changes
+   * The custom entropy collector callback mbedtls_hardware_poll()
+     (enabled by MBEDTLS_ENTROPY_HARDWARE_ALT) has been replaced by a
+     new callback mbedtls_platform_get_entropy() with different parameters
+     (enabled by MBEDTLS_PSA_DRIVER_GET_ENTROPY). See the new function's
+     documentation and “Custom entropy collector” in the migration guide.
+   * To build the library with only a nonvolatile seed and no actual entropy
+     source, you now need to enable the new option MBEDTLS_ENTROPY_NO_SOURCES_OK.
