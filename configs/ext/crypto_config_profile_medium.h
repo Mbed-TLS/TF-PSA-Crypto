@@ -611,6 +611,11 @@
 // incompatible with baremetal builds in Mbed TLS.
 #undef MBEDTLS_ENTROPY_NV_SEED
 
+// This macro is disabled in TFM Medium but enabled in integrations with
+// supported hardware. Enable it because we need an entropy source in our
+// test builds.
+#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
+
 // These platform-related TF-M settings are not useful here.
 #undef MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 #undef MBEDTLS_PLATFORM_STD_MEM_HDR
