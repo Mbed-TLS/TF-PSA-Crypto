@@ -872,50 +872,6 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_get_pkcs_padding(unsigned char *input,
 }
 #endif /* MBEDTLS_CIPHER_PADDING_PKCS7 */
 
-#if defined(MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS)
-/*
- * One and zeros padding: fill with 80 00 ... 00
- */
-static void add_one_and_zeros_padding(unsigned char *output,
-                                      size_t output_len, size_t data_len)
-{
-    size_t padding_len = output_len - data_len;
-    unsigned char i = 0;
-
-    output[data_len] = 0x80;
-    for (i = 1; i < padding_len; i++) {
-        output[data_len + i] = 0x00;
-    }
-}
-
-static int get_one_and_zeros_padding(unsigned char *input, size_t input_len,
-                                     size_t *data_len)
-{
-    if (NULL == input || NULL == data_len) {
-        return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
-    }
-
-    mbedtls_ct_condition_t in_padding = MBEDTLS_CT_TRUE;
-    mbedtls_ct_condition_t bad = MBEDTLS_CT_TRUE;
-
-    *data_len = 0;
-
-    for (ptrdiff_t i = (ptrdiff_t) (input_len) - 1; i >= 0; i--) {
-        mbedtls_ct_condition_t is_nonzero = mbedtls_ct_bool(input[i]);
-
-        mbedtls_ct_condition_t hit_first_nonzero = mbedtls_ct_bool_and(is_nonzero, in_padding);
-
-        *data_len = mbedtls_ct_size_if(hit_first_nonzero, i, *data_len);
-
-        bad = mbedtls_ct_bool_if(hit_first_nonzero, mbedtls_ct_uint_ne(input[i], 0x80), bad);
-
-        in_padding = mbedtls_ct_bool_and(in_padding, mbedtls_ct_bool_not(is_nonzero));
-    }
-
-    return mbedtls_ct_error_if_else_0(bad, MBEDTLS_ERR_CIPHER_INVALID_PADDING);
-}
-#endif /* MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS */
-
 #if defined(MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN)
 /*
  * Zeros and len padding: fill with 00 ... 00 ll, where ll is padding length
@@ -1147,12 +1103,6 @@ int mbedtls_cipher_set_padding_mode(mbedtls_cipher_context_t *ctx,
         case MBEDTLS_PADDING_PKCS7:
             ctx->add_padding = add_pkcs_padding;
             ctx->get_padding = mbedtls_get_pkcs_padding;
-            break;
-#endif
-#if defined(MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS)
-        case MBEDTLS_PADDING_ONE_AND_ZEROS:
-            ctx->add_padding = add_one_and_zeros_padding;
-            ctx->get_padding = get_one_and_zeros_padding;
             break;
 #endif
 #if defined(MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN)

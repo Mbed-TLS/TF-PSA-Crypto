@@ -137,38 +137,6 @@ Check PKCS padding #8 (overlong)
 depends_on:MBEDTLS_CIPHER_PADDING_PKCS7
 check_padding:MBEDTLS_PADDING_PKCS7:"040404":MBEDTLS_ERR_CIPHER_INVALID_PADDING:0
 
-Check one and zeros padding #1 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"DABBAD0080":0:4
-
-Check one and zeros padding #2 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"DABBAD008000":0:4
-
-Check one and zeros padding #3 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"DABBAD00800000":0:4
-
-Check one and zeros padding #4 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"DABBAD00808000":0:5
-
-Check one and zeros padding #5 (correct)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"800000":0:0
-
-Check one and zeros padding #6 (missing one)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"DABBAD0000":MBEDTLS_ERR_CIPHER_INVALID_PADDING:4
-
-Check one and zeros padding #7 (overlong)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"0000000000":MBEDTLS_ERR_CIPHER_INVALID_PADDING:4
-
-Check one and zeros padding #8 (last byte 0x80 | x)
-depends_on:MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-check_padding:MBEDTLS_PADDING_ONE_AND_ZEROS:"0000000082":MBEDTLS_ERR_CIPHER_INVALID_PADDING:4
-
 Check zeros and len padding #1 (correct)
 depends_on:MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
 check_padding:MBEDTLS_PADDING_ZEROS_AND_LEN:"DABBAD0001":0:4
