@@ -1412,6 +1412,15 @@
  */
 //#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE       256
 
+/**
+ * \def MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *
+ * Minimum security strength (in bits) of the PSA RNG.
+ *
+ * \note Valid values: 128 or default of 256.
+ */
+#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH                 256
+
 /** \} name SECTION: PSA core */
 
 /**
