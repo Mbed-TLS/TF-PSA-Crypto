@@ -765,24 +765,16 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len);
 
 /**
-<<<<<<< HEAD
  * \brief           Verify signature, with explicit selection of the signature algorithm.
  *                  (Includes verification of the padding depending on type.)
  *
  * \param type      Signature type (inc. possible padding type) to verify
-=======
- * \brief           Verify signature, with options.
- *                  (Includes verification of the padding depending on type.)
- *
- * \param type      Signature type (inc. possible padding type) to verify
- * \param options   Pointer to type-specific options, or NULL
->>>>>>> ac0ac3c5a (Create new mbedtls_pk_verify_ext function mbedtls_pk_verify_new)
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used (see notes)
  * \param hash      Hash of the message to sign
@@ -804,16 +796,9 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
-<<<<<<< HEAD
 int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
                           mbedtls_md_type_t md_alg, const unsigned char *hash,
                           size_t hash_len, const unsigned char *sig, size_t sig_len);
-=======
-int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx, 
-		          mbedtls_md_type_t md_alg, const unsigned char *hash, 
-			  size_t hash_len, const unsigned char *sig, size_t sig_len);
->>>>>>> ac0ac3c5a (Create new mbedtls_pk_verify_ext function mbedtls_pk_verify_new)
-
 
 /**
  * \brief           Make signature, including padding if relevant.
