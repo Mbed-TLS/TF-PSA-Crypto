@@ -23,28 +23,14 @@
 #define TF_PSA_CRYPTO_VERSION_MINOR  0
 #define TF_PSA_CRYPTO_VERSION_PATCH  0
 
-#define TENS_DIGIT(x) ((x) / 10)
-#define ONES_DIGIT(x) ((x) % 10)
-#define BCD(x) ((TENS_DIGIT(x) << 4) | ONES_DIGIT(x))
-
 /**
  * The single version number has the following structure:
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define TF_PSA_CRYPTO_VERSION_NUMBER         ((BCD(TF_PSA_CRYPTO_VERSION_MAJOR) << 24) \
-                                              | (BCD(TF_PSA_CRYPTO_VERSION_MINOR) << 16) \
-                                              | (BCD(TF_PSA_CRYPTO_VERSION_PATCH) << 8))
-#define _STRINGIFY(s) #s
-#define STRINGIFY(s) _STRINGIFY(s)
-
-#define VERSION_STRING(major, minor, patch) STRINGIFY(major) "." STRINGIFY(minor) "." STRINGIFY( \
-        patch)
-
-#define TF_PSA_CRYPTO_VERSION_STRING         VERSION_STRING(TF_PSA_CRYPTO_VERSION_MAJOR, \
-                                                            TF_PSA_CRYPTO_VERSION_MINOR, \
-                                                            TF_PSA_CRYPTO_VERSION_PATCH)
-#define TF_PSA_CRYPTO_VERSION_STRING_FULL    "TF-PSA-Crypto " TF_PSA_CRYPTO_VERSION_STRING
+#define TF_PSA_CRYPTO_VERSION_NUMBER        0x01000000
+#define TF_PSA_CRYPTO_VERSION_STRING        "1.0.0"
+#define TF_PSA_CRYPTO_VERSION_STRING_FULL   "TF-PSA-Crypto 1.0.0"
 
 #if defined(TF_PSA_CRYPTO_VERSION)
 
