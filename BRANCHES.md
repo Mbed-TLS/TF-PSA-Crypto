@@ -2,9 +2,10 @@
 
 At any point in time, we have a number of maintained branches, currently consisting of:
 
-- The [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto) branch:
-  this is where the next major version of TF-PSA-Crypto (version 1.0) is being
-  prepared.
+- The [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development) branch:
+  This branch was used to prepare version 1.0.0-beta of TF-PSA-Crypto and continues to host
+  development for future versions.
+
 
 We retain an historical branch [`main`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/main)
 which was providing a mirror of the Mbed TLS implementation of the PSA
@@ -14,4 +15,4 @@ cryptography API. This branch will not receive any changes or updates.
 
 The following branch is currently maintained:
 
-- [`development`](https://github.com/Mbed-TLS/mbedtls/)
+- [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development)
