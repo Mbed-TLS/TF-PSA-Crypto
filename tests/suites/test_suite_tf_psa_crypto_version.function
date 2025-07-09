@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "tf-psa-crypto/tf_psa_crypto_version.h"
+#include "tf-psa-crypto/version.h"
 #include "mbedtls/platform.h"
 /* END_HEADER */
 

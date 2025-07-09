@@ -5,7 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include "tf-psa-crypto/tf_psa_crypto_version.h"
+#include "tf-psa-crypto/version.h"
 #include <string.h>
 
 unsigned int tf_psa_crypto_version_get_number(void)

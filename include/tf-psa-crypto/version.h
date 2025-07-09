@@ -1,5 +1,5 @@
 /**
- * \file tf_psa_crypto_version.h
+ * \file version.h
  *
  * \brief Run-time version information
  */
