@@ -1,83 +1,137 @@
-## Platform-specific Entropy Gathering
+## Entropy configuration
 
-`MBEDTLS_ENTROPY_HARDWARE_ALT` has been renamed to `MBEDTLS_PLATFORM_GET_ENTROPY_ALT`.
-The prototype for the custom entropy callback function changed from:
+TF-PSA-Crypto does not expose an entropy interface to applications. The entropy module of Mbed TLS 3.6 is now for internal use only. As a consequence, its configuration has changed, both to simplify it and to prepare for PSA entropy drivers which will be added in a future minor release.
 
+### Entropy sources and random generation
+
+Many cryptographic mechanisms require a strong random generator. The overall structure of the random generator in TF-PSA-Crypto is the same as in Mbed TLS 3.x, namely:
+
+* If you have a fast, cryptographic-quality source of random data, enable `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`, and do not enable `MBEDTLS_ENTROPY_C`.
+* Otherwise, enable `MBEDTLS_ENTROPY_C`, at least one entropy source and one of the DRBG modules (`MBEDTLS_CTR_DRBG_C` or `MBEDTLS_HMAC_DRBG_C`).
+
+### Configuration of entropy sources
+
+TF-PSA-Crypto 1.0 supports the same entropy sources as Mbed TLS 3.6, but the way to configure them has changed.
+
+* The negative option `MBEDTLS_NO_PLATFORM_ENTROPY` to disable the default entropy collector for Unix-like and Windows platforms no longer exists. It has been replaced by the positive option `MBEDTLS_PSA_BUILTIN_GET_ENTROPY`, which is enabled by default.
+* The option `MBEDTLS_ENTROPY_HARDWARE_ALT`, which allows you to provide a custom entropy collector, has been renamed to `MBEDTLS_PSA_DRIVER_GET_ENTROPY`. This replaces `MBEDTLS_ENTROPY_HARDWARE_ALT`. The callback has a different name and prototype as described in “[Custom hardware collector](#custom-entropy-collector)”.
+* The option `MBEDTLS_ENTROPY_NV_SEED` to enable a nonvolatile seed is unchanged. However, if this is your only entropy source, you must now enable the new option `MBEDTLS_ENTROPY_NO_SOURCES_OK`.
+
+The following table describes common configurations.
+
+<table>
+  <tr valign="top">
+    <th align="left">Configuration</th>
+    <th align="left">Mbed TLS 3.6</th>
+    <th align="left">TF-PSA-Crypto 1.0</th>
+  </tr>
+
+  <tr valign="top">
+    <td><strong>Unix, Linux, Windows</strong></td>
+    <td>(default)</td>
+    <td>(default)</td>
+  </tr>
+
+  <tr valign="top">
+    <td><strong>Embedded platform</strong></td>
+    <td>
+      <pre>
+#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
+      </pre>
+    </td>
+    <td>
+      <pre>
+#undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
+      </pre>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td><strong>Fast external crypto RNG</strong></td>
+    <td>
+      <pre>
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#undef MBEDTLS_ENTROPY_C
+#undef MBEDTLS_CTR_DRBG_C
+      </pre>
+    </td>
+    <td>
+      <pre>
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#undef MBEDTLS_ENTROPY_C
+#undef MBEDTLS_CTR_DRBG_C
+      </pre>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td><strong>NV seed only</strong></td>
+    <td>
+      <pre>
+#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_ENTROPY_NV_SEED
+      </pre>
+    </td>
+    <td>
+      <pre>
+#undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+#define MBEDTLS_ENTROPY_NV_SEED
+#define MBEDTLS_ENTROPY_NO_SOURCES_OK
+      </pre>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td><strong>No entropy at all</strong></td>
+    <td>
+      <pre>
+#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+      </pre>
+    </td>
+    <td>
+      <em>not supported</em>
+    </td>
+  </tr>
+</table>
+
+### Custom entropy collector
+
+The custom entropy collector callback function has changed, to make it match the upcoming PSA entropy driver specification.
+
+Formerly, the callback was enabled by `MBEDTLS_ENTROPY_HARDWARE_ALT` and had the following prototype:
 ```c
+// from <entropy_poll.h>
 int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len,
                           size_t *olen);
+```
+
+The new callback is enabled by `MBEDTLS_PSA_DRIVER_GET_ENTROPY` and has the following prototype:
+```c
 ```
 
 to:
 
 ```c
-int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content);
+// from <mbedtls/platform.h>
+int mbedtls_platform_get_entropy(psa_driver_get_entropy_flags_t flags,
+                                 size_t *estimate_bits,
+                                 unsigned char *output, size_t output_size);
 ```
-
-This new prototype is placed in the public header `mbedtls/platform.h` instead
-of the private `library/entropy_poll.h` one as it was previously.
 
 The `data` parameter was previously always `NULL`, and has been removed.
 
-The new `entropy_content` parameter measures (in bit) the amount of entropy
-contained in the returned `output` buffer.
-For the time being, TF-PSA-Crypto only supports callbacks that provide full
-entropy. That means that the content of the output buffer must be uniformly
-random, allowing you to report that `entropy_content = 8 * *output_len`.
-Typically `*output_len == output_size`, but if it is smaller, the library will
-call the callback again in a loop.
+The new parameter `flags` is a bit-mask of flags that allows the caller to request special behaviors, such as avoiding blocking. The callback should return `PSA_ERROR_NOT_SUPPORTED` if it sees a flag that it does not support. As of TF-PSA-Crypto 1.0, `flags` is always 0.
 
-If you implement this callback for hardware that delivers partial entropy, a
-typical technique is to gather enough entropy then hash the result. Hashing does
-not increase the entropy, but it distributes it throughout the buffer. For
-example, suppose your hardware has a 32-bit register which is documented as
-having a single bit of entropy each time it is read after calling a priming
-function. The following code snippet collects 8 bits of entropy and outputs it
-in one byte.
+The former callback could return less entropy than expected by only filling part of the buffer, and setting `*olen` to a value that is less than `output_size`. The new callback does not have an `olen` parameter, and the caller now reads the whole buffer. The new parameter `estimate_bits` is intended to allow the callback to report that it has accumulated less entropy than expected. However, this is not supported yet in TF-PSA-Crypto 1.0.
 
-```c
-int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content) {
-    uint32_t reads[8];
-    uint8_t hash[32];
-    int ret;
-    psa_status_t status;
-    (void) output_size;
+The new output parameter `estimate_bits` is the amount of entropy that the callback has placed in the output buffer. As of TF-PSA-Crypto 1.0, the output must have full entropy, thus `estimate_bits` must be equal to `8 * output_size`. A future version of TF-PSA-Crypto will allow entropy sources to report smaller amounts.
 
-    for (int i = 0; i < 8; i++) {
-        ret = myhardware_prime_magic_random_register();
-        if (ret != 0) {
-            return PSA_ERROR_INSUFFICIENT_ENTROPY;
-        }
-        reads[i] = myhardware_magic_random_register_read();
-    }
-    size_t hash_len;
+To indicate that entropy is not currently available, the legacy error code `MBEDTLS_ERR_ENTROPY_SOURCE_FAILED` has been replaced by `PSA_ERROR_INSUFFICIENT_ENTROPY`.
 
-    status = psa_hash_compute(PSA_ALG_SHA_256, (uint_t*) reads, sizeof(reads),
-                              hash, sizeof(hash), &hash_len);
-    if (ret != PSA_SUCCESS) {
-        return PSA_ERROR_INSUFFICIENT_ENTROPY;
-    }
+### Removed entropy options
 
-    output[0] = hash[0];
-    *output_len = 1;
-    *entropy_content = 8;
+The option `MBEDTLS_ENTROPY_MIN_HARDWARE` has been removed. The entropy module requests the amount that it needs for the chosen security strength.
 
-    return 0;
-}
-```
-
-`MBEDTLS_ENTROPY_MIN_HARDWARE` is also removed and the entropy module assumes
-that 32 bytes are enough to declare the hardware entropy polling completed.
-This value is not user configurable.
-
-The option MBEDTLS_PLATFORM_GET_ENTROPY_ALT disables the built-in entropy
-sources, unlike its predecessor MBEDTLS_ENTROPY_HARDWARE_ALT, because one
-entropy source is generally sufficient. If you want to add a custom entropy
-source while retaining the platform's default source, call the platform's
-default source in your callback.
-
-The option MBEDTLS_NO_PLATFORM_ENTROPY is removed. TF-PSA-Crypto 1.0 no longer
-supports platforms without an entropy source. This ability will be reintroduced
-in a future minor release.
+The option `MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES` has removed since it is no longer meaningful, now that the entropy module is private. TF-PSA-Crypto 1.0 does not support platforms without an entropy source. This ability will be reintroduced in a future minor release.
