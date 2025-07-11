@@ -30,7 +30,7 @@ void check_compiletime_version(char *version_str)
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_VERSION */
 void check_runtime_version(char *version_str)
 {
     char build_str[100];
