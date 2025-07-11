@@ -2154,15 +2154,6 @@
 #define MBEDTLS_ECJPAKE_C
 
 /**
- * \def MBEDTLS_GENPRIME
- *
- * Enable the prime-number generation code.
- *
- * Requires: MBEDTLS_BIGNUM_C
- */
-#define MBEDTLS_GENPRIME
-
-/**
  * \def MBEDTLS_HMAC_DRBG_C
  *
  * Enable the HMAC_DRBG random generator.
@@ -2175,51 +2166,6 @@
  * Uncomment to enable the HMAC_DRBG random number generator.
  */
 #define MBEDTLS_HMAC_DRBG_C
-
-/**
- * \def MBEDTLS_PKCS1_V15
- *
- * Enable support for PKCS#1 v1.5 encoding.
- *
- * Requires: MBEDTLS_RSA_C
- *
- * This enables support for PKCS#1 v1.5 operations.
- */
-#define MBEDTLS_PKCS1_V15
-
-/**
- * \def MBEDTLS_PKCS1_V21
- *
- * Enable support for PKCS#1 v2.1 encoding.
- *
- * Requires: MBEDTLS_RSA_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any PKCS#1 v2.1 operation.
- *
- * This enables support for RSAES-OAEP and RSASSA-PSS operations.
- */
-#define MBEDTLS_PKCS1_V21
-
-/**
- * \def MBEDTLS_RSA_C
- *
- * Enable the RSA public-key cryptosystem.
- *
- * Module:  library/rsa.c
- *          library/rsa_alt_helpers.c
- * Caller:  library/pk.c
- *          library/psa_crypto.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module is used by the following key exchanges:
- *      RSA, ECDHE-RSA
- *
- * Requires: MBEDTLS_BIGNUM_C
- */
-#define MBEDTLS_RSA_C
 
 /** \} name SECTION: Legacy cryptography */
 
