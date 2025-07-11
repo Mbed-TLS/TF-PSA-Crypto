@@ -689,7 +689,7 @@
 /**
  * \def TF_PSA_CRYPTO_VERSION
  *
- * Enable version information for TF-PSA-Crypto.
+ * Enable run-time version information.
  *
  * This option enables functions for getting the version of TF-PSA-Crypto
  * at runtime defined in include/tf-psa-crypto/version.h.
