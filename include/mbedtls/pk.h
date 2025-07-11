@@ -177,7 +177,7 @@ typedef struct mbedtls_pk_context {
 
     /* The following field is used to store the ID of a private key for:
      * - EC keys (MBEDTLS_PK_ECKEY, MBEDTLS_PK_ECKEY_DH, MBEDTLS_PK_ECDSA)
-     * - Opaque keys (EC or RSA).
+     * - Wrapped keys (EC or RSA).
      *
      * priv_id = MBEDTLS_SVC_KEY_ID_INIT when PK context wraps only the public
      * key.
