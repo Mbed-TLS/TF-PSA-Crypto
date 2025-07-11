@@ -14,6 +14,12 @@
 #ifndef TF_PSA_CRYPTO_BUILD_INFO_H
 #define TF_PSA_CRYPTO_BUILD_INFO_H
 
+/*
+ * Version macros are defined in build_info.h rather than in version.h so that
+ * the user config files have access to them. This is so that users who deploy
+ * applications to multiple devices with different versions of TF-PSA-Crypto
+ * can write configurations that depend on the version.
+ */
 /**
  * The version number x.y.z is split into three parts.
  * Major, Minor, Patchlevel
