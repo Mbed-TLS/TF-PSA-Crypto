@@ -15,6 +15,8 @@
 #ifndef TF_PSA_CRYPTO_VERSION_H
 #define TF_PSA_CRYPTO_VERSION_H
 
+#include "tf-psa-crypto/build_info.h"
+
 #if defined(TF_PSA_CRYPTO_VERSION)
 
 /**
