@@ -90,7 +90,7 @@ typedef enum {
  *
  * The resulting value can be 0, for example if MBEDTLS_ECDH_C is enabled
  * (which allows the pk module to be included) but neither MBEDTLS_ECDSA_C
- * nor MBEDTLS_RSA_C nor any opaque signature mechanism (PSA).
+ * nor MBEDTLS_RSA_C nor any PSA signature mechanism (PSA).
  */
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE 0
 
@@ -299,7 +299,7 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
  * In order for the above operations to succeed, the policy of the wrapped PSA
  * key must allow the specified algorithm.
  *
- * Opaque PK contexts wrapping an EC keys also support \c mbedtls_pk_check_pair(),
+ * PK contexts wrapping an EC keys also support \c mbedtls_pk_check_pair(),
  * whereas RSA ones do not.
  *
  * \warning The PSA wrapped key must remain valid as long as the wrapping PK
