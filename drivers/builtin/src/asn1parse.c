@@ -465,20 +465,6 @@ int mbedtls_asn1_get_alg_null(unsigned char **p,
     return 0;
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_asn1_free_named_data(mbedtls_asn1_named_data *cur)
-{
-    if (cur == NULL) {
-        return;
-    }
-
-    mbedtls_free(cur->oid.p);
-    mbedtls_free(cur->val.p);
-
-    mbedtls_platform_zeroize(cur, sizeof(mbedtls_asn1_named_data));
-}
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
 void mbedtls_asn1_free_named_data_list(mbedtls_asn1_named_data **head)
 {
     mbedtls_asn1_named_data *cur;
