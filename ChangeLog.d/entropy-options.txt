@@ -16,3 +16,6 @@ API changes
      documentation and “Custom entropy collector” in the migration guide.
    * To build the library with only a nonvolatile seed and no actual entropy
      source, you now need to enable the new option MBEDTLS_ENTROPY_NO_SOURCES_OK.
+   * Due to the entropy configuration changes, if you write a configuration file
+     from scratch, the default entropy source MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+     now needs to be enabled explicitly.

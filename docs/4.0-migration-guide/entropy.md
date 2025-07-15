@@ -9,6 +9,14 @@ Many cryptographic mechanisms require a strong random generator. The overall str
 * If you have a fast, cryptographic-quality source of random data, enable `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`, and do not enable `MBEDTLS_ENTROPY_C`.
 * Otherwise, enable `MBEDTLS_ENTROPY_C`, at least one entropy source and one of the DRBG modules (`MBEDTLS_CTR_DRBG_C` or `MBEDTLS_HMAC_DRBG_C`).
 
+Note that compared with Mbed TLS 3.6, if you write a configuration from scratch (as opposed to tweaking the default configuration), you now need to explicitly enable the default entropy source with `MBEDTLS_PSA_BUILTIN_GET_ENTROPY`, unless you use an alternative source. Thus, to build with the default random generator configuration, you need the following settings:
+
+```
+#define MBEDTLS_ENTROPY_C
+#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+#define MBEDTLS_CTR_DRBG_C
+```
+
 ### Configuration of entropy sources
 
 TF-PSA-Crypto 1.0 supports the same entropy sources as Mbed TLS 3.6, but the way to configure them has changed.
