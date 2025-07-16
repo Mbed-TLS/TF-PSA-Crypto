@@ -154,6 +154,11 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info)
 int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
                             const mbedtls_svc_key_id_t key)
 {
+    return mbedtls_pk_wrap_psa(ctx, key);
+}
+int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
+                        const mbedtls_svc_key_id_t key)
+{
     const mbedtls_pk_info_t *info = NULL;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_type_t type;

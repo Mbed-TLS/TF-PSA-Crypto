@@ -1,0 +1,3 @@
+API changes
+   * Rename mbedtls_pk_setup_opaque to mbedtls_pk_wrap_psa.
+
