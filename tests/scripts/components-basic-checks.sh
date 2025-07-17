@@ -26,7 +26,7 @@ component_tf_psa_crypto_check_files () {
     $FRAMEWORK/scripts/check_files.py
 }
 
-components_tf_psa_crypto_check_python_files () {
+component_tf_psa_crypto_check_python_files () {
     msg "Lint: Python scripts"
     $FRAMEWORK/scripts/check-python-files.sh
 }
