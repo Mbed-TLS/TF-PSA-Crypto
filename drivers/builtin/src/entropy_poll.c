@@ -46,7 +46,8 @@ int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len,
      */
     *olen = len;
 
-    ret = mbedtls_platform_get_entropy(0, &estimate_bits, output, len);
+    ret = mbedtls_platform_get_entropy(PSA_DRIVER_GET_ENTROPY_FLAGS_NONE,
+                                       &estimate_bits, output, len);
     if (ret != 0) {
         return ret;
     }
