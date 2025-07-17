@@ -1,4 +1,4 @@
 Removals
-   * Remove mbedtls_asn1_free_named_data, it has now been replaced with 
-     mbedtls_asn1_free_named_data_list or 
+   * Remove mbedtls_asn1_free_named_data, it has now been replaced with
+     mbedtls_asn1_free_named_data_list or
      mbedtls_asn1_free_named_data_list_shallow
