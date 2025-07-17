@@ -1,0 +1,4 @@
+Features
+   * Introduce macros and functions for getting the current version of
+     TF-PSA-Crypto at build time and at runtime. These can be accessed
+     by including "tf-psa-crypto/version.h".
