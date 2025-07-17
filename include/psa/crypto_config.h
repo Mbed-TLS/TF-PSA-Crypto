@@ -2020,25 +2020,6 @@
  */
 
 /**
- * \def MBEDTLS_BIGNUM_C
- *
- * Enable the multi-precision integer library.
- *
- * Module:  library/bignum.c
- *          library/bignum_core.c
- *          library/bignum_mod.c
- *          library/bignum_mod_raw.c
- * Caller:  library/ecp.c
- *          library/ecdsa.c
- *          library/rsa.c
- *          library/rsa_alt_helpers.c
- *          library/ssl_tls.c
- *
- * This module is required for RSA and ECC (ECDH, ECDSA) support.
- */
-#define MBEDTLS_BIGNUM_C
-
-/**
  * \def MBEDTLS_CIPHER_NULL_CIPHER
  *
  * Enable NULL cipher.
@@ -2067,99 +2048,6 @@
  * This module provides the CTR_DRBG AES random number generator.
  */
 #define MBEDTLS_CTR_DRBG_C
-
-/**
- * \def MBEDTLS_ECDH_C
- *
- * Enable the elliptic curve Diffie-Hellman library.
- *
- * Module:  library/ecdh.c
- * Caller:  library/psa_crypto.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module is used by the following key exchanges:
- *      ECDHE-ECDSA, ECDHE-RSA
- *
- * Requires: MBEDTLS_ECP_C
- */
-#define MBEDTLS_ECDH_C
-
-/**
- * \def MBEDTLS_ECP_C
- *
- * Enable the elliptic curve over GF(p) library.
- *
- * Module:  library/ecp.c
- * Caller:  library/ecdh.c
- *          library/ecdsa.c
- *          library/ecjpake.c
- *
- * Requires: MBEDTLS_BIGNUM_C and at least one MBEDTLS_ECP_DP_XXX_ENABLED
- */
-#define MBEDTLS_ECP_C
-
-/**
- * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
- *
- * MBEDTLS_ECP_XXXX_ENABLED: Enables specific curves within the Elliptic Curve
- * module.  By default all supported curves are enabled.
- *
- * Comment macros to disable the curve and functions for it
- */
-/* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
-// #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-// #define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-#define MBEDTLS_ECP_DP_SECP256K1_ENABLED
-#define MBEDTLS_ECP_DP_BP256R1_ENABLED
-#define MBEDTLS_ECP_DP_BP384R1_ENABLED
-#define MBEDTLS_ECP_DP_BP512R1_ENABLED
-/* Montgomery curves (supporting ECP) */
-#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-#define MBEDTLS_ECP_DP_CURVE448_ENABLED
-
-/**
- * \def MBEDTLS_ECDSA_C
- *
- * Enable the elliptic curve DSA library.
- *
- * Module:  library/ecdsa.c
- * Caller:
- *
- * This module is used by the following key exchanges:
- *      ECDHE-ECDSA
- *
- * Requires: MBEDTLS_ECP_C, MBEDTLS_ASN1_WRITE_C, MBEDTLS_ASN1_PARSE_C,
- *           and at least one MBEDTLS_ECP_DP_XXX_ENABLED for a
- *           short Weierstrass curve.
- */
-#define MBEDTLS_ECDSA_C
-
-/**
- * \def MBEDTLS_ECJPAKE_C
- *
- * Enable the elliptic curve J-PAKE library.
- *
- * \note EC J-PAKE support is based on the Thread v1.0.0 specification.
- *       It has not been reviewed for compliance with newer standards such as
- *       Thread v1.1 or RFC 8236.
- *
- * Module:  library/ecjpake.c
- * Caller:
- *
- * This module is used by the following key exchanges:
- *      ECJPAKE
- *
- * Requires: MBEDTLS_ECP_C and either MBEDTLS_MD_C or MBEDTLS_PSA_CRYPTO_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any EC J-PAKE operations.
- */
-#define MBEDTLS_ECJPAKE_C
 
 /**
  * \def MBEDTLS_HMAC_DRBG_C
