@@ -60,7 +60,6 @@
     defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
 #define MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED
 #endif
@@ -111,7 +110,6 @@ typedef enum {
     MBEDTLS_ECP_DP_BP512R1,        /*!< Domain parameters for 512-bit Brainpool curve. */
     MBEDTLS_ECP_DP_CURVE25519,     /*!< Domain parameters for Curve25519. */
     MBEDTLS_ECP_DP_SECP192K1,      /*!< Domain parameters for 192-bit "Koblitz" curve. */
-    MBEDTLS_ECP_DP_SECP224K1,      /*!< Domain parameters for 224-bit "Koblitz" curve. */
     MBEDTLS_ECP_DP_SECP256K1,      /*!< Domain parameters for 256-bit "Koblitz" curve. */
     MBEDTLS_ECP_DP_CURVE448,       /*!< Domain parameters for Curve448. */
 } mbedtls_ecp_group_id;
@@ -334,8 +332,6 @@ mbedtls_ecp_group;
 #define MBEDTLS_ECP_MAX_BITS 256
 #elif defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
 #define MBEDTLS_ECP_MAX_BITS 255
-#elif defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
-#define MBEDTLS_ECP_MAX_BITS 225 // n is slightly above 2^224
 #elif defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
 #define MBEDTLS_ECP_MAX_BITS 224
 #elif defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
@@ -448,8 +444,7 @@ mbedtls_ecp_keypair;
  * \warning     While this format is supported for all concerned curves for
  *              writing, when it comes to parsing, it is not supported for all
  *              curves. Specifically, parsing compressed points on
- *              MBEDTLS_ECP_DP_SECP224R1 and MBEDTLS_ECP_DP_SECP224K1 is not
- *              supported.
+ *              MBEDTLS_ECP_DP_SECP224R1 is not supported.
  */
 #define MBEDTLS_ECP_PF_COMPRESSED      1
 

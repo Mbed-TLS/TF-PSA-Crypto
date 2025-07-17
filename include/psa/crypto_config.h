@@ -845,8 +845,7 @@
  * compressed point format. This parsing is done through ECP module's functions.
  *
  * \note As explained in the description of MBEDTLS_ECP_PF_COMPRESSED (in ecp.h)
- *       the only unsupported curves are MBEDTLS_ECP_DP_SECP224R1 and
- *       MBEDTLS_ECP_DP_SECP224K1.
+ *       the only unsupported curve is MBEDTLS_ECP_DP_SECP224R1.
  */
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
@@ -2169,7 +2168,6 @@
 #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224K1_ENABLED
 #define MBEDTLS_ECP_DP_SECP256K1_ENABLED
 #define MBEDTLS_ECP_DP_BP256R1_ENABLED
 #define MBEDTLS_ECP_DP_BP384R1_ENABLED

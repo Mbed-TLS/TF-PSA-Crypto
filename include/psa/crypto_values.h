@@ -596,12 +596,10 @@
 /** SEC Koblitz curves over prime fields.
  *
  * This family comprises the following curves:
- * secp192k1, secp224k1, secp256k1.
+ * secp192k1, secp256k1.
  * They are defined in _Standards for Efficient Cryptography_,
  * _SEC 2: Recommended Elliptic Curve Domain Parameters_.
  * https://www.secg.org/sec2-v2.pdf
- *
- * \note For secp224k1, the bit-size is 225 (size of a private value).
  *
  * \note Mbed TLS only supports secp192k1 and secp256k1.
  */

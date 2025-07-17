@@ -360,10 +360,6 @@
  *   iso(1) identified-organization(3) certicom(132) curve(0) 31 } */
 #define MBEDTLS_OID_EC_GRP_SECP192K1        MBEDTLS_OID_CERTICOM "\x00\x1f"
 
-/* secp224k1 OBJECT IDENTIFIER ::= {
- *   iso(1) identified-organization(3) certicom(132) curve(0) 32 } */
-#define MBEDTLS_OID_EC_GRP_SECP224K1        MBEDTLS_OID_CERTICOM "\x00\x20"
-
 /* secp256k1 OBJECT IDENTIFIER ::= {
  *   iso(1) identified-organization(3) certicom(132) curve(0) 10 } */
 #define MBEDTLS_OID_EC_GRP_SECP256K1        MBEDTLS_OID_CERTICOM "\x00\x0a"
