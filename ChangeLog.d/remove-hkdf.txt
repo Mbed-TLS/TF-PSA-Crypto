@@ -1,0 +1,3 @@
+Removals
+   * Remove the legacy HKDF implementation as PSA has it's own independent
+     implementation.
