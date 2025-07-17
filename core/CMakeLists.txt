@@ -52,6 +52,14 @@ if(GEN_FILES)
             "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
             ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
         )
+
+    # List generated headers as sources explicitly. Normally CMake finds
+    # headers by tracing include directives, but if that happens before the
+    # generated headers are generated, this process doesn't find them.
+    list(APPEND src_crypto
+        "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
+        ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
+    )
 endif(GEN_FILES)
 
 if(CMAKE_COMPILER_IS_GNUCC)
