@@ -491,30 +491,18 @@
 
 #if defined(PSA_WANT_ALG_HKDF)
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF)
-/*
- * The PSA implementation has its own implementation of HKDF, separate from
- * hkdf.c. No need to enable MBEDTLS_HKDF_C here.
- */
 #define MBEDTLS_PSA_BUILTIN_ALG_HKDF 1
 #endif /* !MBEDTLS_PSA_ACCEL_ALG_HKDF */
 #endif /* PSA_WANT_ALG_HKDF */
 
 #if defined(PSA_WANT_ALG_HKDF_EXTRACT)
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF_EXTRACT)
-/*
- * The PSA implementation has its own implementation of HKDF, separate from
- * hkdf.c. No need to enable MBEDTLS_HKDF_C here.
- */
 #define MBEDTLS_PSA_BUILTIN_ALG_HKDF_EXTRACT 1
 #endif /* !MBEDTLS_PSA_ACCEL_ALG_HKDF_EXTRACT */
 #endif /* PSA_WANT_ALG_HKDF_EXTRACT */
 
 #if defined(PSA_WANT_ALG_HKDF_EXPAND)
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF_EXPAND)
-/*
- * The PSA implementation has its own implementation of HKDF, separate from
- * hkdf.c. No need to enable MBEDTLS_HKDF_C here.
- */
 #define MBEDTLS_PSA_BUILTIN_ALG_HKDF_EXPAND 1
 #endif /* !MBEDTLS_PSA_ACCEL_ALG_HKDF_EXPAND */
 #endif /* PSA_WANT_ALG_HKDF_EXPAND */
