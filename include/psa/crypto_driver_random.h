@@ -33,6 +33,13 @@ extern "C" {
  */
 typedef uint32_t psa_driver_get_entropy_flags_t;
 
+/** Flags requesting the default behavior for a `"get_entropy"` driver entry
+ * point. This is equivalent to \c 0.
+ *
+ * \see ::psa_driver_get_entropy_flags_t
+ */
+#define PSA_DRIVER_GET_ENTROPY_FLAGS_NONE ((psa_driver_get_entropy_flags_t) 0)
+
 /**@}*/
 
 #ifdef __cplusplus
