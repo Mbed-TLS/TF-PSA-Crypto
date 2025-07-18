@@ -11,7 +11,7 @@
  * SEC1 https://www.secg.org/sec1-v2.pdf
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ECDSA_C)
 

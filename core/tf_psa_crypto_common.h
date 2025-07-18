@@ -1,5 +1,5 @@
 /**
- * \file common.h
+ * \file tf_psa_crypto_common.h
  *
  * \brief Utility macros for internal use in the library
  */

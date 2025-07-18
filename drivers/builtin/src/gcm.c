@@ -15,7 +15,7 @@
  * [MGV] 4.1, pp. 12-13, to enhance speed without using too much memory.
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_GCM_C)
 

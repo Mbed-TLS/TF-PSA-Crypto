@@ -12,7 +12,7 @@
 #ifndef MBEDTLS_BIGNUM_MOD_RAW_INVASIVE_H
 #define MBEDTLS_BIGNUM_MOD_RAW_INVASIVE_H
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 #include "mbedtls/bignum.h"
 #include "bignum_mod.h"
 

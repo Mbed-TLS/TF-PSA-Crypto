@@ -19,7 +19,7 @@
  *  This file is part of Mbed TLS (https://tls.mbed.org).
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include <string.h>
 

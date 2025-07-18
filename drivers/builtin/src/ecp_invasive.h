@@ -14,7 +14,7 @@
 #ifndef MBEDTLS_ECP_INVASIVE_H
 #define MBEDTLS_ECP_INVASIVE_H
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 #include "mbedtls/bignum.h"
 #include "bignum_mod.h"
 #include "mbedtls/ecp.h"

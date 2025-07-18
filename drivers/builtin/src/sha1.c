@@ -10,7 +10,7 @@
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_SHA1_C)
 

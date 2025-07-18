@@ -1,6 +1,6 @@
 /* BEGIN_HEADER */
 #include "mbedtls/pkcs12.h"
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 typedef enum {
     USE_NULL_INPUT = 0,

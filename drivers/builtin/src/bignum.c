@@ -21,7 +21,7 @@
  *
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_BIGNUM_C)
 

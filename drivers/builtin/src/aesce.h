@@ -14,7 +14,7 @@
 #ifndef MBEDTLS_AESCE_H
 #define MBEDTLS_AESCE_H
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "mbedtls/aes.h"
 
