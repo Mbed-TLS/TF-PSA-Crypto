@@ -33,6 +33,9 @@ components_tf_psa_crypto_check_python_files () {
 
 component_tf_psa_crypto_check_generated_files () {
     msg "Check generated files"
+    # Ensure we start from a blank slate
+    $FRAMEWORK/scripts/make_generated_files.py --clean
+
     cd $OUT_OF_SOURCE_DIR
     cmake -D GEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
     make
