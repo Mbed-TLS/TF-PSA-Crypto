@@ -8,7 +8,7 @@
 /* This file doesn't use any Mbed TLS function, but grab mbedtls_config.h anyway
  * in case it contains platform-specific #defines related to malloc or
  * stdio functions. */
-#include "mbedtls/build_info.h"
+#include "tf-psa-crypto/build_info.h"
 
 int main(int argc, char **argv)
 {
