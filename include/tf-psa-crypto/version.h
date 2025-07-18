@@ -28,23 +28,16 @@
 unsigned int tf_psa_crypto_version_get_number(void);
 
 /**
- * Get the version string ("x.y.z").
+ * Get a pointer to the version string ("x.y.z").
  *
- * \param string    The string that will receive the value.
- *                  (Should be at least 9 bytes in size)
  */
-void tf_psa_crypto_version_get_string(char *string);
+const char *tf_psa_crypto_version_get_string(void);
 
 /**
- * Get the full version string ("TF-PSA-Crypto x.y.z").
+ * Get a pointer to the full version string ("TF-PSA-Crypto x.y.z").
  *
- * \param string    The string that will receive the value. The version
- *                  string will use 23 bytes AT MOST including a terminating
- *                  null byte.
- *                  (So the buffer should be at least 23 bytes to receive this
- *                  version string).
  */
-void tf_psa_crypto_version_get_string_full(char *string);
+const char *tf_psa_crypto_version_get_string_full(void);
 
 #endif /* TF_PSA_CRYPTO_VERSION */
 

@@ -16,16 +16,14 @@ unsigned int tf_psa_crypto_version_get_number(void)
     return TF_PSA_CRYPTO_VERSION_NUMBER;
 }
 
-void tf_psa_crypto_version_get_string(char *string)
+const char *tf_psa_crypto_version_get_string(void)
 {
-    memcpy(string, TF_PSA_CRYPTO_VERSION_STRING,
-           sizeof(TF_PSA_CRYPTO_VERSION_STRING));
+    return TF_PSA_CRYPTO_VERSION_STRING;
 }
 
-void tf_psa_crypto_version_get_string_full(char *string)
+const char *tf_psa_crypto_version_get_string_full(void)
 {
-    memcpy(string, TF_PSA_CRYPTO_VERSION_STRING_FULL,
-           sizeof(TF_PSA_CRYPTO_VERSION_STRING_FULL));
+    return TF_PSA_CRYPTO_VERSION_STRING_FULL;
 }
 
 #endif /* TF_PSA_CRYPTO_VERSION */
