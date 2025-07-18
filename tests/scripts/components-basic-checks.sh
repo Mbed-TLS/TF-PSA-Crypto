@@ -145,8 +145,6 @@ component_tf_psa_crypto_check_test_helpers () {
 
 component_tf_psa_crypto_check_names () {
     msg "Check: declared and exported names (builds the library)" # < 3s
-    # Make generated files required for check
-    ./scripts/generate_driver_wrappers.py
     $FRAMEWORK/scripts/check_names.py -v
 }
 
