@@ -9,7 +9,6 @@
 
 #if defined(TF_PSA_CRYPTO_VERSION)
 #include "tf-psa-crypto/version.h"
-#include <string.h>
 
 unsigned int tf_psa_crypto_version_get_number(void)
 {
