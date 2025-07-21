@@ -1,4 +1,4 @@
-set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m_objs")
+set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(p256m_static_target ${p256m_target})
 endif()

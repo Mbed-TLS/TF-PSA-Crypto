@@ -1,4 +1,4 @@
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest_objs")
+set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(everest_static_target ${everest_target})
 endif()
