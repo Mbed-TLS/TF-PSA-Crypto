@@ -99,7 +99,7 @@ usual. Exceptions are:
   (`mbedtls_sha256()` etc.) will not be possible for the legacy modules that
   are disabled.
 - Legacy HMAC support (`mbedtls_md_hmac_xxx()`) won't be possible.
-- `MBEDTLS_PKCS[5|7]_C`, `MBEDTLS_HMAC_DRBG_C` and `MBEDTLS_HKDF_C` since they
+- `MBEDTLS_PKCS[5|7]_C` and  `MBEDTLS_HMAC_DRBG_C` since they
   depend on the legacy implementation of HMAC.
   - disabling HMAC_DRBG_C cause deterministic ECDSA (i.e.
   `MBEDTLS_DETERMINISTIC_ECDSA` on the legacy side and 

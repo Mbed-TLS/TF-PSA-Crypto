@@ -1,0 +1,4 @@
+Removals
+   * Remove the legacy HKDF module (mbedtls_hkdf_xxx enabled by
+     MBEDTLS_HKDF_C). Use PSA instead (psa_key_derivation_xxx with
+     PSA_ALG_HKDF, enabled by PSA_WANT_ALG_HKDF).

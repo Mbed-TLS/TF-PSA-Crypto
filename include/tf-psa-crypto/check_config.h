@@ -242,10 +242,6 @@
 #error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_HKDF_C) && !defined(MBEDTLS_MD_C)
-#error "MBEDTLS_HKDF_C defined, but not all prerequisites"
-#endif
-
 #if defined(MBEDTLS_HMAC_DRBG_C) && !defined(MBEDTLS_MD_C)
 #error "MBEDTLS_HMAC_DRBG_C defined, but not all prerequisites"
 #endif
