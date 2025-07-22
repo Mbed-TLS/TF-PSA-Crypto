@@ -53,7 +53,7 @@ component_test_entropy_nv_seed_only () {
 
     # Check that the library seems to refer to the seedfile, but not to
     # platform entropy sources.
-    grep seedfile library/platform.o
+    grep seedfile drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform.c.o
     not grep getrandom drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
     not grep /dev/random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
     not grep /dev/.random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
