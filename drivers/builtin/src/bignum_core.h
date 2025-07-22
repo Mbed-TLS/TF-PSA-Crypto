@@ -68,7 +68,7 @@
 #ifndef MBEDTLS_BIGNUM_CORE_H
 #define MBEDTLS_BIGNUM_CORE_H
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "mbedtls/bignum.h"
 

@@ -109,7 +109,7 @@ This file is included by the PSA headers (header files located in `include/psa`)
 and the PSA core files (located in `core`) to access the configuration options
 defined in
 `include/psa/crypto_config.h` or TF_PSA_CRYPTO_CONFIG_FILE. The PSA core files do
-not include `include/psa/build_info.h` directly but through the `core/common.h`
+not include `include/psa/build_info.h` directly but through the `core/tf_psa_crypto_common.h`
 file.
 
 Both the PSA headers and the PSA core files reference Mbed TLS configuration

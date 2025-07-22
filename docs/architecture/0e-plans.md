@@ -298,7 +298,7 @@ This is similar to `MBEDTLS_ALLOW_PRIVATE_ACCESS` to “bless” access to struc
 
 ACTION (https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/219): in TF-PSA-Crypto, in `private_access.h`, define `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` when `MBEDTLS_ALLOW_PRIVATE_ACCESS` is defined. Add  `#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` just before the first `#include` in every program under `programs` that calls `mbedtls_xxx` functions (just `benchmark.c` at the time of writing).
 
-Since `MBEDTLS_ALLOW_PRIVATE_ACCESS` implies `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`, and `common.h` enables `MBEDTLS_ALLOW_PRIVATE_ACCESS`, parts of the code base that already allow access to private structure fields (library, unit tests) will automatically have access to private functions.
+Since `MBEDTLS_ALLOW_PRIVATE_ACCESS` implies `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS`, and `tf_psa_crypto_common.h` enables `MBEDTLS_ALLOW_PRIVATE_ACCESS`, parts of the code base that already allow access to private structure fields (library, unit tests) will automatically have access to private functions.
 
 ACTION (https://github.com/Mbed-TLS/mbedtls/issues/10082): in Mbed TLS, add `#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` just before the first `#include` in every program under `programs`, except the ones that already have `MBEDTLS_ALLOW_PRIVATE_ACCESS`. The reason to add it program by program is that later we can validate that an individual program no longer requires private identifiers by removing `#define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` from that particular program. This is a prerequisite for any privatization in TF-PSA-Crypto that privatizes something used in Mbed TLS.
 

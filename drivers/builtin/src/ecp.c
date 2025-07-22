@@ -29,7 +29,7 @@
  *     <http://eprint.iacr.org/2004/342.pdf>
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ECP_LIGHT)
 

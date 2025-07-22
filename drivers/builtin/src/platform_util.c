@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"

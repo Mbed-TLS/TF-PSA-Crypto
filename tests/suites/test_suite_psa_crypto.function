@@ -4,7 +4,7 @@
 #include "mbedtls/asn1.h"
 #include "mbedtls/asn1write.h"
 #include "crypto_oid.h"
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "psa_util_internal.h"
 

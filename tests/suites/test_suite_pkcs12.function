@@ -1,6 +1,6 @@
 /* BEGIN_HEADER */
 #include "mbedtls/pkcs12.h"
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_TEST_DEPRECATED) || defined(MBEDTLS_CIPHER_PADDING_PKCS7)
 #define MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7

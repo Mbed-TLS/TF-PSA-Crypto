@@ -10,7 +10,7 @@
  *  http://www.ietf.org/rfc/rfc1321.txt
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_MD5_C)
 

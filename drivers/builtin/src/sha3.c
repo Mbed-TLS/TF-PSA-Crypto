@@ -10,7 +10,7 @@
  *  https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.202.pdf
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(PSA_WANT_ALG_SHA3_224) || \
     defined(PSA_WANT_ALG_SHA3_256) || \

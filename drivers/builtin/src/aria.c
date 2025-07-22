@@ -11,7 +11,7 @@
  * [2] https://tools.ietf.org/html/rfc5794
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ARIA_C)
 
