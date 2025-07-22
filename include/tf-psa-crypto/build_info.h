@@ -159,7 +159,12 @@
  */
 #define TF_PSA_CRYPTO_CONFIG_IS_FINALIZED
 
-#include "tf-psa-crypto/check_config.h"
+/* Up to Mbed TLS 3.6, build_info.h included check_config.h which included
+ * <limits.h>. Keep including it until it's explicitly included everywhere
+ * that uses definitions from <limits.h>.
+ * https://github.com/Mbed-TLS/mbedtls/issues/10305
+ */
+#include <limits.h>
 
 /*
  * Avoid warning from -pedantic. This is a convenient place for this

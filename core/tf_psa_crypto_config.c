@@ -7,3 +7,7 @@
  */
 
 #include <tf-psa-crypto/build_info.h>
+
+/* Consistency checks in the configuration: check for incompatible options,
+ * missing options when at least one of a set needs to be enabled, etc. */
+#include "tf_psa_crypto_check_config.h"
