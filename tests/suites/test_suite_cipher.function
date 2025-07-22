@@ -173,7 +173,7 @@ void cipher_invalid_param_unconditional()
     mbedtls_cipher_context_t valid_ctx;
     mbedtls_cipher_context_t invalid_ctx;
     mbedtls_operation_t valid_operation = MBEDTLS_ENCRYPT;
-    mbedtls_cipher_padding_t valid_mode = MBEDTLS_PADDING_ZEROS;
+    mbedtls_cipher_padding_t valid_mode = MBEDTLS_PADDING_PKCS7;
     unsigned char valid_buffer[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
     int valid_size = sizeof(valid_buffer);
     int valid_bitlen = valid_size * 8;
