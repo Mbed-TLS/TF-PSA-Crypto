@@ -5,9 +5,10 @@
 #include <stdio.h>
 #include "fuzz_common.h"
 
-/* This file doesn't use any Mbed TLS function, but grab mbedtls_config.h anyway
- * in case it contains platform-specific #defines related to malloc or
- * stdio functions. */
+/* Include a version of  build_info.h anyway in case it contains
+ * platform-specific #defines related to malloc or stdio
+ * functions. */
+
 #include "tf-psa-crypto/build_info.h"
 
 int main(int argc, char **argv)
