@@ -1056,9 +1056,10 @@
  *
  * It is possible to build the library with a seed injected during device
  * provisioning, thanks to #MBEDTLS_ENTROPY_NV_SEED.
- * This is only an initial entropy input which is not updated during the
- * lifetime of the device. Thus, if the seed value is leaked, it is
- * impossible to recover from this compromise.
+ * This is only an initial entropy input: without a true entropy source,
+ * the device will not obtain additional entropy during its lifetime.
+ * Thus, if the seed value is leaked, it is impossible to recover from
+ * this compromise.
  *
  * Enable this option if this loss of security is acceptable to you.
  */
