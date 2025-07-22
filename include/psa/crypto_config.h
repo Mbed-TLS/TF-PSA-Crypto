@@ -734,12 +734,9 @@
 /**
  * \def MBEDTLS_MD_C
  *
- * Enable the generic layer for message digest (hashing) and HMAC.
+ * Enable the generic layer for message digest (hashing).
  *
- * Requires: one of: MBEDTLS_MD5_C, MBEDTLS_RIPEMD160_C, MBEDTLS_SHA1_C,
- *                   MBEDTLS_SHA224_C, MBEDTLS_SHA256_C, MBEDTLS_SHA384_C,
- *                   MBEDTLS_SHA512_C, or MBEDTLS_PSA_CRYPTO_C with at least
- *                   one hash.
+ * Requires: MBEDTLS_PSA_CRYPTO_C with at least one hash.
  * Module:  library/md.c
  * Caller:  library/constant_time.c
  *          library/ecdsa.c
@@ -1793,6 +1790,12 @@
  * with the ARMv8 cryptographic extensions if they are available at runtime.
  * If not, the library will fall back to the C implementation.
  *
+ * \note MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT requires the built-in
+ * SHA-256 implementation to be present in the build. This implementation is
+ * included only if PSA_WANT_ALG_SHA_256 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_256 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note If MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT is defined when building
  * for a non-Armv8-A build it will be silently ignored.
  *
@@ -1809,9 +1812,9 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
  *
- * Requires: MBEDTLS_SHA256_C.
+ * Requires: The SHA-256 builtin implementation
  *
- * Module:  library/sha256.c
+ * Module:  drivers/builtin/src/sha256.c
  *
  * Uncomment to have the library check for the Armv8-A SHA-256 crypto extensions
  * and use them if available.
@@ -1834,6 +1837,12 @@
  * with the ARMv8 cryptographic extensions, which must be available at runtime
  * or else an illegal instruction fault will occur.
  *
+ * \note MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY requires the built-in SHA-256
+ * implementation to be present in the build. This implementation is included
+ * only if PSA_WANT_ALG_SHA_256 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_256 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note This allows builds with a smaller code size than with
  * MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
  *
@@ -1850,9 +1859,9 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
  *
- * Requires: MBEDTLS_SHA256_C.
+ * Requires: The SHA-256 builtin implementation
  *
- * Module:  library/sha256.c
+ * Module:  drivers/builtin/src/sha256.c
  *
  * Uncomment to have the library use the Armv8-A SHA-256 crypto extensions
  * unconditionally.
@@ -1885,6 +1894,12 @@
  * with the ARMv8 cryptographic extensions if they are available at runtime.
  * If not, the library will fall back to the C implementation.
  *
+ * \note MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT requires the built-in
+ * SHA-512 implementation to be present in the build. This implementation is
+ * included only if PSA_WANT_ALG_SHA_512 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_512 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note If MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT is defined when building
  * for a non-Aarch64 build it will be silently ignored.
  *
@@ -1897,9 +1912,9 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY.
  *
- * Requires: MBEDTLS_SHA512_C.
+ * Requires: The SHA-512 builtin implementation
  *
- * Module:  library/sha512.c
+ * Module:  drivers/builtin/src/sha512.c
  *
  * Uncomment to have the library check for the A64 SHA-512 crypto extensions
  * and use them if available.
@@ -1913,6 +1928,12 @@
  * with the ARMv8 cryptographic extensions, which must be available at runtime
  * or else an illegal instruction fault will occur.
  *
+ * \note MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT requires the built-in
+ * SHA-512 implementation to be present in the build. This implementation is
+ * included only if PSA_WANT_ALG_SHA_512 is enabled and this results in
+ * MBEDTLS_PSA_BUILTIN_ALG_SHA_512 being defined internally (i.e., no
+ * fully-featured, fallback-free accelerator driver is present).
+ *
  * \note This allows builds with a smaller code size than with
  * MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT
  *
@@ -1925,9 +1946,9 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT.
  *
- * Requires: MBEDTLS_SHA512_C.
+ * Requires: The SHA-512 builtin implementation
  *
- * Module:  library/sha512.c
+ * Module:  drivers/builtin/src/sha512.c
  *
  * Uncomment to have the library use the A64 SHA-512 crypto extensions
  * unconditionally.
@@ -1955,30 +1976,6 @@
  */
 
 /**
- * \def MBEDTLS_AES_C
- *
- * Enable the AES block cipher.
- *
- * Module:  library/aes.c
- * Caller:  library/cipher.c
- *          library/pem.c
- *          library/ctr_drbg.c
- *
- * PEM_PARSE uses AES for decrypting encrypted keys.
- */
-#define MBEDTLS_AES_C
-
-/**
- * \def MBEDTLS_ARIA_C
- *
- * Enable the ARIA block cipher.
- *
- * Module:  library/aria.c
- * Caller:  library/cipher.c
- */
-#define MBEDTLS_ARIA_C
-
-/**
  * \def MBEDTLS_BIGNUM_C
  *
  * Enable the multi-precision integer library.
@@ -1998,109 +1995,6 @@
 #define MBEDTLS_BIGNUM_C
 
 /**
- * \def MBEDTLS_CAMELLIA_C
- *
- * Enable the Camellia block cipher.
- *
- * Module:  library/camellia.c
- * Caller:  library/cipher.c
- */
-#define MBEDTLS_CAMELLIA_C
-
-/**
- * \def MBEDTLS_CCM_C
- *
- * Enable the Counter with CBC-MAC (CCM) mode for 128-bit block cipher.
- *
- * Module:  library/ccm.c
- *
- * Requires: MBEDTLS_CIPHER_C, MBEDTLS_AES_C or MBEDTLS_CAMELLIA_C or
- *                             MBEDTLS_ARIA_C
- *
- * This module enables the AES-CCM ciphersuites, if other requisites are
- * enabled as well.
- */
-#define MBEDTLS_CCM_C
-
-/**
- * \def MBEDTLS_CHACHA20_C
- *
- * Enable the ChaCha20 stream cipher.
- *
- * Module:  library/chacha20.c
- */
-#define MBEDTLS_CHACHA20_C
-
-/**
- * \def MBEDTLS_CHACHAPOLY_C
- *
- * Enable the ChaCha20-Poly1305 AEAD algorithm.
- *
- * Module:  library/chachapoly.c
- *
- * This module requires: MBEDTLS_CHACHA20_C, MBEDTLS_POLY1305_C
- */
-#define MBEDTLS_CHACHAPOLY_C
-
-/**
- * \def MBEDTLS_CIPHER_C
- *
- * Enable the generic cipher layer.
- *
- * Module:  library/cipher.c
- * Caller:  library/ccm.c
- *          library/cmac.c
- *          library/gcm.c
- *          library/nist_kw.c
- *          library/pkcs12.c
- *          library/pkcs5.c
- *          library/psa_crypto_aead.c
- *          library/psa_crypto_mac.c
- *          library/ssl_ciphersuites.c
- *          library/ssl_msg.c
- * Auto-enabled by: MBEDTLS_PSA_CRYPTO_C depending on which ciphers are enabled
- *                  (see the documentation of that option for details).
- *
- * Uncomment to enable generic cipher wrappers.
- */
-#define MBEDTLS_CIPHER_C
-
-/**
- * \def MBEDTLS_CIPHER_MODE_CBC
- *
- * Enable Cipher Block Chaining mode (CBC) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_CBC
-
-/**
- * \def MBEDTLS_CIPHER_MODE_CFB
- *
- * Enable Cipher Feedback mode (CFB) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_CFB
-
-/**
- * \def MBEDTLS_CIPHER_MODE_CTR
- *
- * Enable Counter Block Cipher mode (CTR) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_CTR
-
-/**
- * \def MBEDTLS_CIPHER_MODE_OFB
- *
- * Enable Output Feedback mode (OFB) for symmetric ciphers.
- */
-#define MBEDTLS_CIPHER_MODE_OFB
-
-/**
- * \def MBEDTLS_CIPHER_MODE_XTS
- *
- * Enable Xor-encrypt-xor with ciphertext stealing mode (XTS) for AES.
- */
-#define MBEDTLS_CIPHER_MODE_XTS
-
-/**
  * \def MBEDTLS_CIPHER_NULL_CIPHER
  *
  * Enable NULL cipher.
@@ -2110,35 +2004,6 @@
  * Uncomment this macro to enable the NULL cipher and ciphersuites
  */
 //#define MBEDTLS_CIPHER_NULL_CIPHER
-
-/**
- * \def MBEDTLS_CIPHER_PADDING_PKCS7
- *
- * MBEDTLS_CIPHER_PADDING_XXX: Uncomment or comment macros to add support for
- * specific padding modes in the cipher layer with cipher modes that support
- * padding (e.g. CBC)
- *
- * If you disable all padding modes, only full blocks can be used with CBC.
- *
- * Enable padding modes in the cipher layer.
- */
-#define MBEDTLS_CIPHER_PADDING_PKCS7
-#define MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-#define MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
-#define MBEDTLS_CIPHER_PADDING_ZEROS
-
-/**
- * \def MBEDTLS_CMAC_C
- *
- * Enable the CMAC (Cipher-based Message Authentication Code) mode for block
- * ciphers.
- *
- * Module:  library/cmac.c
- *
- * Requires: MBEDTLS_CIPHER_C, MBEDTLS_AES_C or MBEDTLS_DES_C
- *
- */
-#define MBEDTLS_CMAC_C
 
 /**
  * \def MBEDTLS_CTR_DRBG_C
@@ -2178,22 +2043,6 @@
  * unless \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
  */
 //#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-
-/**
- * \def MBEDTLS_DES_C
- *
- * Enable the DES block cipher.
- *
- * Module:  library/des.c
- * Caller:  library/pem.c
- *          library/cipher.c
- *
- * PEM_PARSE uses DES/3DES for decrypting encrypted keys.
- *
- * \warning   DES/3DES are considered weak ciphers and their use constitutes a
- *            security risk. We recommend considering stronger ciphers instead.
- */
-#define MBEDTLS_DES_C
 
 /**
  * \def MBEDTLS_ECDH_C
@@ -2305,30 +2154,6 @@
 #define MBEDTLS_ECJPAKE_C
 
 /**
- * \def MBEDTLS_GCM_C
- *
- * Enable the Galois/Counter Mode (GCM).
- *
- * Module:  library/gcm.c
- *
- * Requires: MBEDTLS_CIPHER_C, MBEDTLS_AES_C or MBEDTLS_CAMELLIA_C or
- *                             MBEDTLS_ARIA_C
- *
- * This module enables the AES-GCM and CAMELLIA-GCM ciphersuites, if other
- * requisites are enabled as well.
- */
-#define MBEDTLS_GCM_C
-
-/**
- * \def MBEDTLS_GENPRIME
- *
- * Enable the prime-number generation code.
- *
- * Requires: MBEDTLS_BIGNUM_C
- */
-#define MBEDTLS_GENPRIME
-
-/**
  * \def MBEDTLS_HMAC_DRBG_C
  *
  * Enable the HMAC_DRBG random generator.
@@ -2341,173 +2166,6 @@
  * Uncomment to enable the HMAC_DRBG random number generator.
  */
 #define MBEDTLS_HMAC_DRBG_C
-
-/**
- * \def MBEDTLS_MD5_C
- *
- * Enable the MD5 hash algorithm.
- *
- * Module:  library/md5.c
- * Caller:  library/md.c
- *          library/pem.c
- *          library/ssl_tls.c
- *
- * This module is required for TLS 1.2 depending on the handshake parameters.
- * Further, it is used for checking MD5-signed certificates, and for PBKDF1
- * when decrypting PEM-encoded encrypted keys.
- *
- * \warning   MD5 is considered a weak message digest and its use constitutes a
- *            security risk. If possible, we recommend avoiding dependencies on
- *            it, and considering stronger message digests instead.
- *
- */
-#define MBEDTLS_MD5_C
-
-/**
- * \def MBEDTLS_PKCS1_V15
- *
- * Enable support for PKCS#1 v1.5 encoding.
- *
- * Requires: MBEDTLS_RSA_C
- *
- * This enables support for PKCS#1 v1.5 operations.
- */
-#define MBEDTLS_PKCS1_V15
-
-/**
- * \def MBEDTLS_PKCS1_V21
- *
- * Enable support for PKCS#1 v2.1 encoding.
- *
- * Requires: MBEDTLS_RSA_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any PKCS#1 v2.1 operation.
- *
- * This enables support for RSAES-OAEP and RSASSA-PSS operations.
- */
-#define MBEDTLS_PKCS1_V21
-
-/**
- * \def MBEDTLS_POLY1305_C
- *
- * Enable the Poly1305 MAC algorithm.
- *
- * Module:  library/poly1305.c
- * Caller:  library/chachapoly.c
- */
-#define MBEDTLS_POLY1305_C
-
-/**
- * \def MBEDTLS_RIPEMD160_C
- *
- * Enable the RIPEMD-160 hash algorithm.
- *
- * Module:  library/ripemd160.c
- * Caller:  library/md.c
- *
- */
-#define MBEDTLS_RIPEMD160_C
-
-/**
- * \def MBEDTLS_RSA_C
- *
- * Enable the RSA public-key cryptosystem.
- *
- * Module:  library/rsa.c
- *          library/rsa_alt_helpers.c
- * Caller:  library/pk.c
- *          library/psa_crypto.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module is used by the following key exchanges:
- *      RSA, ECDHE-RSA
- *
- * Requires: MBEDTLS_BIGNUM_C
- */
-#define MBEDTLS_RSA_C
-
-/**
- * \def MBEDTLS_SHA1_C
- *
- * Enable the SHA1 cryptographic hash algorithm.
- *
- * Module:  library/sha1.c
- * Caller:  library/md.c
- *          library/psa_crypto_hash.c
- *
- * This module is required for TLS 1.2 depending on the handshake parameters,
- * and for SHA1-signed certificates.
- *
- * \warning   SHA-1 is considered a weak message digest and its use constitutes
- *            a security risk. If possible, we recommend avoiding dependencies
- *            on it, and considering stronger message digests instead.
- *
- */
-#define MBEDTLS_SHA1_C
-
-/**
- * \def MBEDTLS_SHA224_C
- *
- * Enable the SHA-224 cryptographic hash algorithm.
- *
- * Module:  library/sha256.c
- * Caller:  library/md.c
- *          library/ssl_cookie.c
- *
- * This module adds support for SHA-224.
- */
-#define MBEDTLS_SHA224_C
-
-/**
- * \def MBEDTLS_SHA256_C
- *
- * Enable the SHA-256 cryptographic hash algorithm.
- *
- * Module:  library/sha256.c
- * Caller:  library/entropy.c
- *          library/md.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module adds support for SHA-256.
- * This module is required for the SSL/TLS 1.2 PRF function.
- */
-#define MBEDTLS_SHA256_C
-
-/**
- * \def MBEDTLS_SHA384_C
- *
- * Enable the SHA-384 cryptographic hash algorithm.
- *
- * Module:  library/sha512.c
- * Caller:  library/md.c
- *          library/psa_crypto_hash.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * Comment to disable SHA-384
- */
-#define MBEDTLS_SHA384_C
-
-/**
- * \def MBEDTLS_SHA512_C
- *
- * Enable SHA-512 cryptographic hash algorithms.
- *
- * Module:  library/sha512.c
- * Caller:  library/entropy.c
- *          library/md.c
- *          library/ssl_tls.c
- *          library/ssl_cookie.c
- *
- * This module adds support for SHA-512.
- */
-#define MBEDTLS_SHA512_C
 
 /** \} name SECTION: Legacy cryptography */
 

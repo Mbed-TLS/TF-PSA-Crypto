@@ -426,6 +426,7 @@ RSA Validate Params, toy example, non-primes, no PRNG
 mbedtls_rsa_validate_params:"2d":"9":"5":"7":"17":0:0
 
 RSA Validate Params, toy example, non-primes, PRNG
+depends_on:MBEDTLS_GENPRIME
 mbedtls_rsa_validate_params:"2d":"9":"5":"7":"17":1:MBEDTLS_ERR_RSA_KEY_CHECK_FAILED
 
 RSA Validate Params
@@ -441,6 +442,7 @@ RSA Validate Params, non-prime, no PRNG
 mbedtls_rsa_validate_params:"":"e79a373182bfaa722eb035f772ad2a9464bd842de59432c18bbab3a7dfeae318c9b915ee487861ab665a40bd6cda560152578e8579016c929df99fea05b4d64efca1d543850bc8164b40d71ed7f3fa4105df0fb9b9ad2a18ce182c8a4f4f975bea9aa0b9a1438a27a28e97ac8330ef37383414d1bd64607d6979ac050424fd18":"c6749cbb0db8c5a177672d4728a8b22392b2fc4d3b8361d5c0d5055a1b4e46d821f757c24eef2a51c561941b93b3ace7340074c058c9bb48e7e7414f42c41da4cccb5c2ba91deb30c586b7fb18af12a52995592ad139d3be429add6547e044becedaf31fa3b39421e24ee034fbf367d11f6b8f88ee483d163b431e1654ad3e89":"":"":0:0
 
 RSA Validate Params, non-prime, PRNG
+depends_on:MBEDTLS_GENPRIME
 mbedtls_rsa_validate_params:"":"e79a373182bfaa722eb035f772ad2a9464bd842de59432c18bbab3a7dfeae318c9b915ee487861ab665a40bd6cda560152578e8579016c929df99fea05b4d64efca1d543850bc8164b40d71ed7f3fa4105df0fb9b9ad2a18ce182c8a4f4f975bea9aa0b9a1438a27a28e97ac8330ef37383414d1bd64607d6979ac050424fd18":"c6749cbb0db8c5a177672d4728a8b22392b2fc4d3b8361d5c0d5055a1b4e46d821f757c24eef2a51c561941b93b3ace7340074c058c9bb48e7e7414f42c41da4cccb5c2ba91deb30c586b7fb18af12a52995592ad139d3be429add6547e044becedaf31fa3b39421e24ee034fbf367d11f6b8f88ee483d163b431e1654ad3e89":"":"":1:MBEDTLS_ERR_RSA_KEY_CHECK_FAILED
 
 RSA Deduce Private, toy example

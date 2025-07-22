@@ -456,7 +456,9 @@ int mbedtls_asn1_write_integer(unsigned char **p,
         number_of_leading_zeros++;
     }
 
-    integer_start = integer + number_of_leading_zeros;
+    if (integer != NULL) {
+        integer_start = integer + number_of_leading_zeros;
+    }
 
     integer_length -= number_of_leading_zeros;
 

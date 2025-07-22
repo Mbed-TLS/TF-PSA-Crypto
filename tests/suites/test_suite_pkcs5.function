@@ -2,6 +2,10 @@
 #include "mbedtls/error_common.h"
 #include "mbedtls/pkcs5.h"
 #include "mbedtls/cipher.h"
+
+#if defined(MBEDTLS_TEST_DEPRECATED) || defined(MBEDTLS_CIPHER_PADDING_PKCS7)
+#define MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7
+#endif
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -28,7 +32,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C */
+/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7 */
 void pbes2_encrypt(int params_tag, data_t *params_hex, data_t *pw,
                    data_t *data, int outsize, int ref_ret,
                    data_t *ref_out)
@@ -76,7 +80,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C */
+/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7 */
 void pbes2_decrypt(int params_tag, data_t *params_hex, data_t *pw,
                    data_t *data, int outsize, int ref_ret,
                    data_t *ref_out)

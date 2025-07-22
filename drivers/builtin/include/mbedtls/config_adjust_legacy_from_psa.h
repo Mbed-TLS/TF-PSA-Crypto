@@ -785,6 +785,19 @@
 #endif
 #endif /* PSA_WANT_ALG_OFB */
 
+/* Placeholder for future support of XTS through the PSA API.
+ * For now, this appeases check_names.py by ensuring that
+ * MBEDTLS_CIPHER_MODE_XTS is defined somewhere, as it would
+ * otherwise not be defined in any headers.
+ */
+#if 0
+#if !defined(MBEDTLS_PSA_ACCEL_ALG_XTS) || \
+    defined(PSA_HAVE_SOFT_BLOCK_CIPHER)
+#define MBEDTLS_PSA_BUILTIN_ALG_XTS 1
+#define MBEDTLS_CIPHER_MODE_XTS
+#endif
+#endif
+
 #if defined(PSA_WANT_ALG_ECB_NO_PADDING) &&     \
     !defined(MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING)
 #define MBEDTLS_PSA_BUILTIN_ALG_ECB_NO_PADDING 1

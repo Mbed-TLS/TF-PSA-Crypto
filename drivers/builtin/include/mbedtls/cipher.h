@@ -192,9 +192,6 @@ typedef enum {
 /** Supported cipher padding types. */
 typedef enum {
     MBEDTLS_PADDING_PKCS7 = 0,     /**< PKCS7 padding (default).        */
-    MBEDTLS_PADDING_ONE_AND_ZEROS, /**< ISO/IEC 7816-4 padding.         */
-    MBEDTLS_PADDING_ZEROS_AND_LEN, /**< ANSI X.923 padding.             */
-    MBEDTLS_PADDING_ZEROS,         /**< Zero padding (not reversible). */
     MBEDTLS_PADDING_NONE,          /**< Never pad (full blocks only).   */
 } mbedtls_cipher_padding_t;
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
