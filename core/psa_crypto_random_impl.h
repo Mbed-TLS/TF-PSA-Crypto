@@ -20,6 +20,20 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #include "mbedtls/entropy.h"
 
+#if defined(PSA_WANT_ALG_SHA_512) && defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
+MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_512, "Invalid CRYPTO_RNG_HASH algorithm");
+#define MBEDTLS_ENTROPY_SHA512_ACCUMULATOR
+#define MBEDTLS_ENTROPY_MD  MBEDTLS_MD_SHA512
+#define MBEDTLS_ENTROPY_BLOCK_SIZE      64      /**< Block size of entropy accumulator (SHA-512) */
+#else
+#if defined(PSA_WANT_ALG_SHA_256)
+MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256, "Invalid CRYPTO_RNG_HASH algorithm");
+#define MBEDTLS_ENTROPY_SHA256_ACCUMULATOR
+#define MBEDTLS_ENTROPY_MD  MBEDTLS_MD_SHA256
+#define MBEDTLS_ENTROPY_BLOCK_SIZE      32      /**< Block size of entropy accumulator (SHA-256) */
+#endif
+#endif
+
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_CTR_DRBG_C)
 
