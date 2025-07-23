@@ -67,25 +67,28 @@
 extern "C" {
 #endif
 
-typedef enum {
+/*typedef enum {
     MBEDTLS_PK_SIGALG_NONE = 0,
     MBEDTLS_PK_SIGALG_RSA_PKCS1V15,
     MBEDTLS_PK_SIGALG_RSA_PSS,
     MBEDTLS_PK_SIGALG_ECDSA,
-} mbedtls_pk_sigalg_t;
+} mbedtls_pk_sigalg_t;*/
+
 
 /**
  * \brief          Public key types
  */
 typedef enum {
-    MBEDTLS_PK_NONE = MBEDTLS_PK_SIGALG_NONE,
-    MBEDTLS_PK_RSA = MBEDTLS_PK_SIGALG_RSA_PKCS1V15,
-    MBEDTLS_PK_RSASSA_PSS = MBEDTLS_PK_SIGALG_RSA_PSS,
-    MBEDTLS_PK_ECDSA = MBEDTLS_PK_SIGALG_ECDSA,
+    MBEDTLS_PK_NONE=0,
+    MBEDTLS_PK_RSA,
+    MBEDTLS_PK_RSASSA_PSS,
+    MBEDTLS_PK_ECDSA,
     MBEDTLS_PK_ECKEY,
     MBEDTLS_PK_ECKEY_DH,
     MBEDTLS_PK_OPAQUE,
 } mbedtls_pk_type_t;
+
+typedef mbedtls_pk_type_t mbedtls_pk_sigalg_t;
 
 /**
  * \brief           Maximum size of a signature made by mbedtls_pk_sign().

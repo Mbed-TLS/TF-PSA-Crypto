@@ -1002,7 +1002,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (type != MBEDTLS_PK_SIGALG_RSA_PSS) {
+    if (type != MBEDTLS_PK_RSASSA_PSS) {
         /* General case: no options */
         if (options != NULL) {
             return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
@@ -1173,7 +1173,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (pk_type != MBEDTLS_PK_SIGALG_RSA_PSS) {
+    if (pk_type != MBEDTLS_PK_RSASSA_PSS) {
         return mbedtls_pk_sign(ctx, md_alg, hash, hash_len,
                                sig, sig_size, sig_len);
     }
