@@ -1,3 +1,5 @@
+fuzz/fuzz_privkey
+fuzz/fuzz_pubkey
 psa/aead_demo
 psa/crypto_examples
 psa/hmac_demo
