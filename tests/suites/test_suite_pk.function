@@ -282,7 +282,7 @@ static int pk_setup(mbedtls_pk_context *pk, mbedtls_pk_type_t pk_type, int curve
                                      PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE |
                                      PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_COPY |
                                      PSA_KEY_USAGE_EXPORT,
-                                     MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET(PSA_ALG_ANY_HASH),
+                                     MBEDTLS_PK_ALG_ECDSA(PSA_ALG_ANY_HASH),
                                      PSA_ALG_NONE,
                                      &pk->priv_id), 0);
         memcpy(pk->pub_raw, pub_key_data, pub_key_data_len);

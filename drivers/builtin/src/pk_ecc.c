@@ -47,7 +47,7 @@ int mbedtls_pk_ecc_set_key(mbedtls_pk_context *pk, unsigned char *key, size_t ke
         flags = PSA_KEY_USAGE_EXPORT;
     } else {
         psa_set_key_algorithm(&attributes,
-                              MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET(PSA_ALG_ANY_HASH));
+                              MBEDTLS_PK_ALG_ECDSA(PSA_ALG_ANY_HASH));
         flags = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE |
                 PSA_KEY_USAGE_EXPORT;
     }
