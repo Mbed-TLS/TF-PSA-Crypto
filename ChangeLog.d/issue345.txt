@@ -1,0 +1,4 @@
+Features
+   * Helper symbol MBEDTLS_PK_ALG_ECDSA is added to the public "mbedtls/pk.h"
+     header file. It allows to automatically select the proper ECDSA algorithm,
+     deterministic or randomized, based on #MBEDTLS_ECDSA_DETERMINISTIC.
