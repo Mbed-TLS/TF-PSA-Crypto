@@ -67,14 +67,6 @@
 extern "C" {
 #endif
 
-/*typedef enum {
-    MBEDTLS_PK_SIGALG_NONE = 0,
-    MBEDTLS_PK_SIGALG_RSA_PKCS1V15,
-    MBEDTLS_PK_SIGALG_RSA_PSS,
-    MBEDTLS_PK_SIGALG_ECDSA,
-} mbedtls_pk_sigalg_t;*/
-
-
 /**
  * \brief          Public key types
  */
