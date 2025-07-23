@@ -263,6 +263,16 @@ typedef void mbedtls_pk_restart_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /**
+ * PK helper that can be used to automatically pick the proper ECDSA algorithm
+ * variant (deterministic VS random) based on #MBEDTLS_ECDSA_DETERMINISTIC.
+ */
+#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_DETERMINISTIC_ECDSA(hash_alg)
+#else
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_ECDSA(hash_alg)
+#endif
+
+/**
  * \brief           Return information associated with the given PK type
  *
  * \param pk_type   PK type to search for.
