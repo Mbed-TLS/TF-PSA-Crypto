@@ -33,6 +33,9 @@ components_tf_psa_crypto_check_python_files () {
 
 component_tf_psa_crypto_check_generated_files () {
     msg "Check generated files"
+    # Ensure we start from a blank slate
+    $FRAMEWORK/scripts/make_generated_files.py --clean
+
     cd $OUT_OF_SOURCE_DIR
     cmake -D GEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
     make
@@ -142,8 +145,6 @@ component_tf_psa_crypto_check_test_helpers () {
 
 component_tf_psa_crypto_check_names () {
     msg "Check: declared and exported names (builds the library)" # < 3s
-    # Make generated files required for check
-    ./scripts/generate_driver_wrappers.py
     $FRAMEWORK/scripts/check_names.py -v
 }
 
