@@ -22,11 +22,11 @@ component_tf_psa_crypto_build_no_std_function () {
     make
 }
 
-component_tf_psa_crypto_test_platform_get_entropy_alt()
+component_tf_psa_crypto_test_psa_driver_get_entropy_only()
 {
-    msg "build: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
-    # Use hardware polling as the only source for entropy
-    scripts/config.py set MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+    msg "build: default config + MBEDTLS_PSA_DRIVER_GET_ENTROPY - builtin"
+    scripts/config.py unset MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+    scripts/config.py set MBEDTLS_PSA_DRIVER_GET_ENTROPY
     scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
 
     cd $OUT_OF_SOURCE_DIR
@@ -34,8 +34,33 @@ component_tf_psa_crypto_test_platform_get_entropy_alt()
     make
 
     # Run all the tests
-    msg "test: default config + MBEDTLS_PLATFORM_GET_ENTROPY_ALT"
+    msg "test: default config + MBEDTLS_PSA_DRIVER_GET_ENTROPY - builtin"
     make test
+}
+
+component_test_entropy_nv_seed_only () {
+    msg "build: full minus actual entropy (NV seed only)"
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+    scripts/config.py set MBEDTLS_ENTROPY_NO_SOURCES_OK
+    # Disable the temporary alias while it exists.
+    # https://github.com/Mbed-TLS/mbedtls/issues/10300
+    scripts/config.py unset MBEDTLS_PLATFORM_GET_ENTROPY_ALT
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=gcc "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: full minus actual entropy (NV seed only)"
+    make test
+
+    # Check that the library seems to refer to the seedfile, but not to
+    # platform entropy sources.
+    grep seedfile drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform.c.o
+    not grep getrandom drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    not grep /dev/random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    not grep /dev/.random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    not grep mbedtls_platform_get_entropy drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
 }
 
 component_tf_psa_crypto_test_no_date_time () {

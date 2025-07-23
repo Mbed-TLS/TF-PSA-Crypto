@@ -35,7 +35,7 @@
 
 
 /** Critical entropy source failure. */
-#define MBEDTLS_ERR_ENTROPY_SOURCE_FAILED                 -0x003C
+#define MBEDTLS_ERR_ENTROPY_SOURCE_FAILED PSA_ERROR_INSUFFICIENT_ENTROPY
 /** No more sources can be added. */
 #define MBEDTLS_ERR_ENTROPY_MAX_SOURCES                   -0x003E
 /** No sources have been added to poll. */
@@ -240,7 +240,7 @@ int mbedtls_entropy_update_seed_file(mbedtls_entropy_context *ctx, const char *p
  */
 int mbedtls_entropy_self_test(int verbose);
 
-#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+#if defined(MBEDTLS_PSA_DRIVER_GET_ENTROPY)
 /**
  * \brief          Checkup routine
  *
@@ -255,7 +255,7 @@ int mbedtls_entropy_self_test(int verbose);
  * \return         0 if successful, or 1 if a test failed
  */
 int mbedtls_entropy_source_self_test(int verbose);
-#endif /* MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+#endif /* MBEDTLS_PSA_DRIVER_GET_ENTROPY */
 #endif /* MBEDTLS_SELF_TEST */
 
 #ifdef __cplusplus

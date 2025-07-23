@@ -21,17 +21,9 @@ extern "C" {
 #define MBEDTLS_ENTROPY_POLL_PLATFORM_MIN        32
 
 /**
- * This function get called from the entropy module when it's gathering entropy
- * data. Backends are:
- * - On Windows, Linux or BSD systems there's no need to define
- *   MBEDTLS_PLATFORM_GET_ENTROPY_ALT. In this case Mbed TLS uses platform-specific
- *   sources such as getrandom(), /dev/urandom or BCryptGenRandom() to gather
- *   entropy data.
- * - on baremetal plaform instead define MBEDTLS_PLATFORM_GET_ENTROPY_ALT and
- *   provide the custom implementation of mbedtls_platform_get_entropy().
- *   See mbedtls/platform.h for the documentation of the function.
- *
- * \note The function must accept \p data == NULL.
+ * This function is either provided by the library
+ * (if #MBEDTLS_PSA_BUILTIN_GET_ENTROPY is enabled)
+ * or provided externally (if #MBEDTLS_PSA_DRIVER_GET_ENTROPY is enabled).
  */
 int mbedtls_entropy_poll_platform(void *data, unsigned char *output, size_t len, size_t *olen);
 
