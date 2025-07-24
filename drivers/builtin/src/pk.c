@@ -976,7 +976,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t)type)) {
+    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) type)) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
@@ -1139,7 +1139,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t)pk_type)) {
+    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) pk_type)) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
