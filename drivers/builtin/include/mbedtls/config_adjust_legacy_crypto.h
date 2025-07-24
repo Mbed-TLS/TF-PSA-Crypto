@@ -97,7 +97,6 @@
     defined(MBEDTLS_PEM_PARSE_C) || \
     defined(MBEDTLS_ENTROPY_C) || \
     defined(MBEDTLS_PK_C) || \
-    defined(MBEDTLS_PKCS12_C) || \
     defined(MBEDTLS_RSA_C)
 #define MBEDTLS_MD_LIGHT
 #endif

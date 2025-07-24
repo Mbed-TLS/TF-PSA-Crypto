@@ -11,7 +11,7 @@
 #include "test/psa_exercise_key.h"
 #endif
 
-#if defined(MBEDTLS_PKCS12_C) || defined(MBEDTLS_PKCS5_C)
+#if defined(MBEDTLS_PKCS5_C)
 #define HAVE_mbedtls_pk_parse_key_pkcs8_encrypted_der
 #endif
 
