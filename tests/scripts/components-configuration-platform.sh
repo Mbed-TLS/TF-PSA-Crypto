@@ -56,11 +56,11 @@ component_test_entropy_nv_seed_only () {
 
     # Check that the library seems to refer to the seedfile, but not to
     # platform entropy sources.
-    grep seedfile drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform.c.o
-    not grep getrandom drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
-    not grep /dev/random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
-    not grep /dev/.random drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
-    not grep mbedtls_platform_get_entropy drivers/builtin/CMakeFiles/builtin_objs.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin_objs.dir/src/platform*.o
+    grep seedfile drivers/builtin/CMakeFiles/builtin.dir/src/platform.c.o
+    not grep getrandom drivers/builtin/CMakeFiles/builtin.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin.dir/src/platform*.o
+    not grep /dev/random drivers/builtin/CMakeFiles/builtin.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin.dir/src/platform*.o
+    not grep /dev/.random drivers/builtin/CMakeFiles/builtin.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin.dir/src/platform*.o
+    not grep mbedtls_platform_get_entropy drivers/builtin/CMakeFiles/builtin.dir/src/entropy*.o drivers/builtin/CMakeFiles/builtin.dir/src/platform*.o
 }
 
 component_tf_psa_crypto_test_no_date_time () {
