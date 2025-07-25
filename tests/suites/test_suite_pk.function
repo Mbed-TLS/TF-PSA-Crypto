@@ -760,7 +760,7 @@ exit:
 void pk_invalid_param()
 {
     mbedtls_pk_context ctx;
-    mbedtls_pk_type_t pk_type = 0;
+    mbedtls_pk_sigalg_t pk_type = 0;
     unsigned char buf[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
     size_t buf_size = sizeof(buf);
 
