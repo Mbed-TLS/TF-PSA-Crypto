@@ -1088,7 +1088,7 @@ For the choice of DRBG, we preserve the existing behavior: pick CTR\_DRBG if ena
 We can deduce the sizes used in entropy and for DRBG internals from just two settings:
 
 * `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` indicating the minimum strength of the RNG. Only 128 and 256 are meant to be useful values. Default to 256.
-* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured. Default to SHA-256.
+* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured. This is a `PSA_ALG_xxx` macro. Default to SHA-256.
 
 For CTR\_DRBG, use AES-256 if `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > 128` and AES-128 otherwise.
 
@@ -1143,6 +1143,8 @@ The new configuration checks ensure that the RNG configuration options achieve t
 * If CTR\_DRBG is used, the AES key size is chosen based on the strength. A strength of more than 256 is an error.
 * If HMAC\_DRBG is used, the size of the hash must be at least `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`.
 * The size of the hash `MBEDTLS_PSA_CRYPTO_RNG_HASH` must be at least 256 bits (32 bytes). We could in principle support smaller hashes, but we would need more complex strength calculations, and nobody needs this in 2025.
+
+The checks that depend on `MBEDTLS_PSA_CRYPTO_RNG_HASH` can't be done with preprocessor conditions, since the definition of `PSA_ALG_xxx` are compile-time constants but not preprocessor constants (they contain casts). They need to be static asserts. Since `check_config.h` only has preprocessor checks, it seems reasonable to put the static asserts in `psa_crypto_random_impl.h` instead. The existing or new preprocessor checks can also go into `psa_crypto_random_impl.h` for consistency.
 
 #### Builds without entropy
 
