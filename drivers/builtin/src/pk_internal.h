@@ -63,7 +63,7 @@ static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_c
         id = mbedtls_ecc_group_from_psa(curve, psa_get_key_bits(&opaque_attrs));
         psa_reset_key_attributes(&opaque_attrs);
     } else {
-        id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->ec_bits);
+        id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->bits);
     }
 
     return id;
@@ -140,6 +140,47 @@ int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
 #else
 #define MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET  PSA_ALG_ECDSA
 #endif
+
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+/*
+ * Parse a private RSA key.
+ */
+int mbedtls_pk_rsa_set_key(mbedtls_pk_context *pk, const unsigned char *key, size_t key_len);
+
+/*
+ * Parse an RSA public key.
+ */
+int mbedtls_pk_rsa_set_pubkey(mbedtls_pk_context *pk, const unsigned char *key, size_t key_len);
+
+/*
+ * Set the public key field in PK context by exporting it from the private key.
+ */
+int mbedtls_pk_rsa_set_pubkey_from_prv(mbedtls_pk_context *pk);
+
+/*
+ * Set the padding for the RSA key.
+ */
+static inline int mbedtls_pk_set_rsa_padding(mbedtls_pk_context *pk, mbedtls_pk_rsa_padding_t type)
+{
+    if ((type != MBEDTLS_PK_RSA_PKCS_V15) && (type != MBEDTLS_PK_RSA_PKCS_V21)) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+
+    pk->rsa_padding = type;
+
+    return 0;
+}
+
+/*
+ * Set the hash algorithm to be used with RSA public key.
+ */
+static inline int mbedtls_pk_set_rsa_hash_alg(mbedtls_pk_context *pk, psa_algorithm_t alg)
+{
+    pk->rsa_hash_alg = alg;
+
+    return 0;
+}
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #if defined(MBEDTLS_TEST_HOOKS)
 MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(

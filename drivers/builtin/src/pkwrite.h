@@ -21,7 +21,8 @@
  * Max sizes of key per types. Shown as tag + len (+ content).
  */
 
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+
 /*
  * RSA public keys:
  *  SubjectPublicKeyInfo  ::=  SEQUENCE  {          1 + 3
@@ -33,8 +34,12 @@
  *      modulus           INTEGER,  -- n            1 + 3 + MPI_MAX + 1
  *      publicExponent    INTEGER   -- e            1 + 3 + MPI_MAX + 1
  *  }
+ *
+ * SubjectPublicKeyInfo => 23 bytes (max)
+ * RSAPublicKey => PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
  */
-#define MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES    (38 + 2 * MBEDTLS_MPI_MAX_SIZE)
+#define MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES    \
+    23 + PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
 
 /*
  * RSA private keys:
@@ -51,17 +56,15 @@
  *      otherPrimeInfos   OtherPrimeInfos OPTIONAL  0 (not supported)
  *  }
  */
-#define MBEDTLS_MPI_MAX_SIZE_2  (MBEDTLS_MPI_MAX_SIZE / 2 + \
-                                 MBEDTLS_MPI_MAX_SIZE % 2)
-#define MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES    (47 + 3 * MBEDTLS_MPI_MAX_SIZE \
-                                             + 5 * MBEDTLS_MPI_MAX_SIZE_2)
+#define MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES    \
+    PSA_KEY_EXPORT_RSA_KEY_PAIR_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
 
-#else /* MBEDTLS_RSA_C */
+#else /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #define MBEDTLS_PK_RSA_PUB_DER_MAX_BYTES   0
 #define MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES   0
 
-#endif /* MBEDTLS_RSA_C */
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 
