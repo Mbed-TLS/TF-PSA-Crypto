@@ -161,7 +161,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `config_psa.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-exposed-for-exposed-macros) |
 | `constant_time.h` | `mbedtls_ct_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
-| `des.h` | `mbedtls_des_` | Expose | [context types](#headers-with-context-types) |
+| `des.h` | `mbedtls_des_` | Expose or remove | [context types](#headers-with-context-types), [Removal of DES](#removal-of-des) |
 | `dhm.h` | `mbedtls_dhm_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `ecdh.h` | `mbedtls_ecdh_` | Expose | [context types](#headers-with-context-types) |
 | `ecdsa.h` | `mbedtls_ecdsa_` | Expose | [context types](#headers-with-context-types) |
@@ -180,7 +180,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `oid.h` | `mbedtls_oid_` | Private | [OID interface](#oid-interface) |
 | `pem.h` | `mbedtls_pem_` | TBD | [Base64 and PEM](#base64-and-pem) |
 | `pk.h` | `mbedtls_pk_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
-| `pkcs12.h` | `mbedtls_pkcs12_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
+| `pkcs12.h` | `mbedtls_pkcs12_` | Private or Remove | [can be made fully private](#headers-that-can-be-made-fully-private), [Removal of DES](#removal-of-des) |
 | `pkcs5.h` | `mbedtls_pkcs5_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `platform.h` | `mbedtls_platform_` | Public | [Platform headers](#platform-headers) |
 | `platform_time.h` | `mbedtls_*time*` | Public | [Platform headers](#platform-headers) |
@@ -387,6 +387,8 @@ sha3.h
 sha512.h
 ```
 
+(Noting that `des.h` may be [removed altogether alongside DES](#removal-of-des).)
+
 Main loss of functionality:
 
 * Self-test functions. See [PSA self-test interface](#psa-self-test-interface)
@@ -418,6 +420,8 @@ pkcs12.h
 pkcs5.h
 rsa.h
 ```
+
+(Noting that `pkcs12.h` may be [removed altogether alongside DES](#removal-of-des).)
 
 Places where some of these headers are used:
 
@@ -844,7 +848,7 @@ Options that can be set via adjustment, and can currently also be set directly. 
 | `MBEDTLS_CIPHER_MODE_OFB` | `PSA_WANT_ALG_OFB` |  |
 | `MBEDTLS_CIPHER_PADDING_PKCS7` | `PSA_WANT_ALG_CBC_PKCS7` |  |
 | `MBEDTLS_CMAC_C` | `PSA_WANT_ALG_CMAC` |  |
-| `MBEDTLS_DES_C` | `PSA_WANT_KEY_TYPE_DES` | May be removed: [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164) |
+| `MBEDTLS_DES_C` | `PSA_WANT_KEY_TYPE_DES` | [May be removed](#removal-of-des) |
 | `MBEDTLS_ECDH_C` | `PSA_WANT_ALG_ECDH` |  |
 | `MBEDTLS_ECDSA_C` | `PSA_WANT_ALG_ECDSA`, `PSA_WANT_ALG_DETERMINISTIC_ECDSA` |  |
 | `MBEDTLS_ECDSA_DETERMINISTIC` | `PSA_WANT_ALG_DETERMINISTIC_ECDSA` |  |
@@ -942,7 +946,7 @@ Options that can currently be set directly, and cannot be set via adjustment. Su
 | `MBEDTLS_NO_UDBL_DIVISION` | Keep | Tune built-in crypto |
 | `MBEDTLS_PEM_PARSE_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
 | `MBEDTLS_PEM_WRITE_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
-| `MBEDTLS_PKCS12_C` | Keep | No longer an exposed API, but functionality accessed through PK. Need doc update. |
+| `MBEDTLS_PKCS12_C` | Remove? | [Only relevant for DES](#removal-of-des). |
 | `MBEDTLS_PKCS5_C` | Keep | No longer an exposed API, but functionality accessed through PK. Need doc update. |
 | `MBEDTLS_PK_C` | Keep | No PSA equivalent yet |
 | `MBEDTLS_PK_PARSE_C` | Keep | No PSA equivalent yet |
@@ -1333,6 +1337,18 @@ MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
 MBEDTLS_CIPHER_PADDING_ZEROS
 MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
 ```
+
+#### Removal of DES
+
+We want to remove DES: [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164).
+
+The PKCS12 module in Mbed TLS is really [PKCS#5 v1.5](https://datatracker.ietf.org/doc/html/rfc2898#section-6.1), which combines PBKDF1 with an old cipher (DES or some cipher that Mbed TLS doesn't support (any longer)). With the removal of DES, the PKCS12 is no longer relevant. It is superseded by the PKCS5 module, which implements PBES2 which uses PBKDF2 and can use more modern ciphers such as AES.
+
+Thus this involves:
+
+* Remove all code guarded by `MBEDTLS_PKCS12_C`. This will be done in [Mbed-TLS/TF-PSA-Crypto#389](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/389).
+* Remove all code guarded by `MBEDTLS_DES_C` or `PSA_WANT_KEY_TYPE_DES`. This is planned in [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164).
+* Remove all tests guarded by `MBEDTLS_DES_C`. In some cases, this may involve writing an alternative test case using AES, if there wasn't already one. This is planned in [Mbed-TLS/TF-PSA-Crypto#374](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/374).
 
 ### Loss of asymmetric cryptography
 
