@@ -60,6 +60,36 @@ typedef struct {
 #define MBEDTLS_PSA_HMAC_OPERATION_INIT { 0, PSA_HASH_OPERATION_INIT, { 0 } }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
+#define PSA_AES_BLOCK_SIZE 16
+#define PSA_DES_BLOCK_SIZE 8
+
+#if defined(PSA_WANT_KEY_TYPE_AES)
+#define PSA_CMAC_MAX_BLOCK_SIZE PSA_AES_BLOCK_SIZE /**< The longest block used by CMAC is that of AES. */
+#else
+#define PSA_CMAC_MAX_BLOCK_SIZE PSA_DES_BLOCK_SIZE /**< The longest block used by CMAC is that of 3DES. */
+#endif
+
+typedef struct {
+    /** The CMAC key identifier for cipher operations */
+    psa_key_id_t MBEDTLS_PRIVATE(key_id);
+
+    /** The internal state of the CMAC algorithm.  */
+    unsigned char MBEDTLS_PRIVATE(state)[PSA_CMAC_MAX_BLOCK_SIZE];
+
+    /** Unprocessed data - either data that was not block aligned and is still
+     *  pending processing, or the final block. */
+    unsigned char MBEDTLS_PRIVATE(unprocessed_block)[PSA_CMAC_MAX_BLOCK_SIZE];
+
+    /** The length of data pending processing. */
+    size_t MBEDTLS_PRIVATE(unprocessed_len);
+
+    uint8_t MBEDTLS_PRIVATE(cipher_block_length);
+
+    struct psa_cipher_operation_s cipher_ctx;
+} mbedtls_psa_cmac_operation_t;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
+
 typedef struct {
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
     union {
@@ -68,7 +98,7 @@ typedef struct {
         mbedtls_psa_hmac_operation_t MBEDTLS_PRIVATE(hmac);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
-        mbedtls_cipher_context_t MBEDTLS_PRIVATE(cmac);
+        mbedtls_psa_cmac_operation_t MBEDTLS_PRIVATE(cmac);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_mac_operation_t;
