@@ -1421,6 +1421,13 @@
  */
 #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH                 256
 
+/**
+ * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL
+ *
+ *  Interval before reseed is performed by default.
+ */
+//#define MBEDTLS_PSA_RNG_RESEED_INTERVAL 1000
+
 /** \} name SECTION: PSA core */
 
 /**
