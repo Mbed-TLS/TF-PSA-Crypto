@@ -43,8 +43,8 @@
  * \{
  */
 
-#if !defined(MBEDTLS_HMAC_DRBG_RESEED_INTERVAL)
-#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000   /**< Interval before reseed is performed by default */
+#if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
+#define MBEDTLS_PSA_RNG_RESEED_INTERVAL   10000   /**< Interval before reseed is performed by default */
 #endif
 
 #if !defined(MBEDTLS_HMAC_DRBG_MAX_INPUT)
@@ -107,7 +107,7 @@ typedef struct mbedtls_hmac_drbg_context {
  * This function makes the context ready for mbedtls_hmac_drbg_seed(),
  * mbedtls_hmac_drbg_seed_buf() or mbedtls_hmac_drbg_free().
  *
- * \note                The reseed interval is #MBEDTLS_HMAC_DRBG_RESEED_INTERVAL
+ * \note                The reseed interval is #MBEDTLS_PSA_RNG_RESEED_INTERVAL
  *                      by default. Override this value by calling
  *                      mbedtls_hmac_drbg_set_reseed_interval().
  *
@@ -257,7 +257,7 @@ void mbedtls_hmac_drbg_set_entropy_len(mbedtls_hmac_drbg_context *ctx,
  * or mbedtls_hmac_drbg_random_with_add() after which the entropy function
  * is called again.
  *
- * The default value is #MBEDTLS_HMAC_DRBG_RESEED_INTERVAL.
+ * The default value is #MBEDTLS_PSA_RNG_RESEED_INTERVAL.
  *
  * \param ctx           The HMAC_DRBG context.
  * \param interval      The reseed interval.
