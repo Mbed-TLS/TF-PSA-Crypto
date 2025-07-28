@@ -566,7 +566,7 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                      - #MBEDTLS_PK_ECDSA or #MBEDTLS_PK_ECKEY
  *                        if \p usage is SIGN/VERIFY:
  *                        #PSA_ALG_DETERMINISTIC_ECDSA(#PSA_ALG_ANY_HASH)
- *                        if #MBEDTLS_ECDSA_DETERMINISTIC is enabled,
+ *                        if #MBEDTLS_PK_ALG_ECDSA is set,
  *                        otherwise #PSA_ALG_ECDSA(#PSA_ALG_ANY_HASH).
  *                      - #MBEDTLS_PK_ECKEY_DH or #MBEDTLS_PK_ECKEY
  *                        if \p usage is DERIVE:
@@ -649,7 +649,7 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  resulting PK context will perform the corresponding
  *                  algorithm for that PK context type.
  *                  * For ECDSA, the choice of deterministic vs randomized will
- *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
+ *                    be based on #MBEDTLS_PK_ALG_ECDSA.
  *                  * For an RSA key, the output PK context will allow
  *                    sign/verify regardless of the original key's policy.
  *                    The original key's policy determines the output key's padding
