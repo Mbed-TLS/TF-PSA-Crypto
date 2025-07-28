@@ -84,7 +84,7 @@ void mbedtls_ctr_drbg_init(mbedtls_ctr_drbg_context *ctx)
      * See mbedtls_ctr_drbg_set_nonce_len(). */
     ctx->reseed_counter = -1;
 
-    ctx->reseed_interval = MBEDTLS_CTR_DRBG_RESEED_INTERVAL;
+    ctx->reseed_interval = MBEDTLS_PSA_RNG_RESEED_INTERVAL;
 }
 
 /*
@@ -109,7 +109,7 @@ void mbedtls_ctr_drbg_free(mbedtls_ctr_drbg_context *ctx)
     mbedtls_aes_free(&ctx->aes_ctx);
 #endif
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_ctr_drbg_context));
-    ctx->reseed_interval = MBEDTLS_CTR_DRBG_RESEED_INTERVAL;
+    ctx->reseed_interval = MBEDTLS_PSA_RNG_RESEED_INTERVAL;
     ctx->reseed_counter = -1;
 }
 
