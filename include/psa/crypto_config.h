@@ -1009,22 +1009,6 @@
 //#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
 
 /**
- * \def MBEDTLS_ENTROPY_FORCE_SHA256
- *
- * Force the entropy accumulator to use a SHA-256 accumulator instead of the
- * default SHA-512 based one (if both are available).
- *
- * Requires: MBEDTLS_SHA256_C
- *
- * On 32-bit systems SHA-256 can be much faster than SHA-512. Use this option
- * if you have performance concerns.
- *
- * This option is only useful if both MBEDTLS_SHA256_C and
- * MBEDTLS_SHA512_C are defined. Otherwise the available hash module is used.
- */
-//#define MBEDTLS_ENTROPY_FORCE_SHA256
-
-/**
  * \def MBEDTLS_ENTROPY_NO_SOURCES_OK
  *
  * Normally, TF-PSA-Crypto requires at least one "true" entropy source, such
