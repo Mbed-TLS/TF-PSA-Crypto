@@ -739,7 +739,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
                                   mbedtls_pk_restart_ctx *rs_ctx);
 
 /**
- * \brief           Verify signature, with options.
+ * \brief           Verify signature, with explicit selection of the signature algorithm.
  *                  (Includes verification of the padding depending on type.)
  *
  * \param type      Signature type (inc. possible padding type) to verify
