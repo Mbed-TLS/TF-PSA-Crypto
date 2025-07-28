@@ -739,11 +739,10 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
                                   mbedtls_pk_restart_ctx *rs_ctx);
 
 /**
- * \brief           Verify signature, with options.
+ * \brief           Verify signature, with explicit selection of the signature algorithm.
  *                  (Includes verification of the padding depending on type.)
  *
  * \param type      Signature type (inc. possible padding type) to verify
- * \param options   Pointer to type-specific options, or NULL
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used (see notes)
  * \param hash      Hash of the message to sign
@@ -765,7 +764,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len);
@@ -799,7 +798,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
 int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
                           mbedtls_md_type_t md_alg, const unsigned char *hash,
                           size_t hash_len, const unsigned char *sig, size_t sig_len);
-
 
 /**
  * \brief           Make signature, including padding if relevant.

@@ -967,9 +967,9 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 }
 
 /*
- * Verify a signature with options
+ * Verify a signature, with explicit selection of the signature algorithm.
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len)
@@ -987,11 +987,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type, const void *options,
     }
 
     if (type != MBEDTLS_PK_RSASSA_PSS) {
-        /* General case: no options */
-        if (options != NULL) {
-            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-        }
-
         return mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
     }
 
@@ -1062,14 +1057,7 @@ int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
                           mbedtls_md_type_t md_alg, const unsigned char *hash,
                           size_t hash_len, const unsigned char *sig, size_t sig_len)
 {
-    return mbedtls_pk_verify_ext((mbedtls_pk_sigalg_t) type,
-                                 NULL,
-                                 ctx,
-                                 md_alg,
-                                 hash,
-                                 hash_len,
-                                 sig,
-                                 sig_len);
+    return mbedtls_pk_verify_ext(type, ctx, md_alg, hash, hash_len, sig, sig_len);
 }
 
 /*

@@ -778,12 +778,12 @@ void pk_invalid_param()
                                              buf, buf_size,
                                              NULL));
     TEST_EQUAL(MBEDTLS_ERR_PK_BAD_INPUT_DATA,
-               mbedtls_pk_verify_ext(pk_type, NULL,
+               mbedtls_pk_verify_ext(pk_type,
                                      &ctx, MBEDTLS_MD_NONE,
                                      NULL, buf_size,
                                      buf, buf_size));
     TEST_EQUAL(MBEDTLS_ERR_PK_BAD_INPUT_DATA,
-               mbedtls_pk_verify_ext(pk_type, NULL,
+               mbedtls_pk_verify_ext(pk_type,
                                      &ctx, MBEDTLS_MD_SHA256,
                                      NULL, 0,
                                      buf, buf_size));
@@ -817,7 +817,6 @@ void valid_parameters()
     mbedtls_pk_context pk;
     unsigned char buf[1];
     size_t len;
-    void *options = NULL;
 
     mbedtls_pk_init(&pk);
     PSA_INIT();
@@ -865,7 +864,7 @@ void valid_parameters()
                                   buf, sizeof(buf)) ==
                 MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_NONE, options,
+    TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_NONE,
                                       &pk,
                                       MBEDTLS_MD_NONE,
                                       NULL, 0,
@@ -1043,7 +1042,7 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
     TEST_ASSERT(pk_fill_rsa_public_key_fields(&pk, mod, input_N->x, input_N->len,
                                               input_E->x, input_E->len) == 0);
 
-    ret = mbedtls_pk_verify_ext(pk_type, NULL, &pk,
+    ret = mbedtls_pk_verify_ext(pk_type, &pk,
                                 digest, message_str->x, message_str->len,
                                 result_str->x, sig_len);
 
@@ -1289,7 +1288,7 @@ void pk_rsa_overflow()
     TEST_EQUAL(mbedtls_pk_setup(&pk,
                                 mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
 
-    TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, NULL, &pk,
+    TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, &pk,
                                      MBEDTLS_MD_NONE, hash, hash_len, sig, sig_len),
                MBEDTLS_ERR_PK_INVALID_ALG);
 
@@ -1490,7 +1489,7 @@ void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
     TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
                                    sig, sizeof(sig), &sig_len), 0);
 
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
+    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
 exit:
     mbedtls_pk_free(&pk);
@@ -1550,11 +1549,11 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
 
     /* verify_ext() is not supported when using an opaque context. */
     if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
+        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
                                          hash, hash_len, sig, sig_len),
                    MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
     } else {
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
+        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
                                          hash, hash_len, sig, sig_len),
                    MBEDTLS_ERR_PK_TYPE_MISMATCH);
     }
@@ -1566,7 +1565,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(pk_type)), 0);
     TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, pkey, pkey_len), 0);
 
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, NULL, &pk, md_alg,
+    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
 
 exit:
