@@ -30,9 +30,6 @@
 #if defined(MBEDTLS_PKCS5_C)
 #include "mbedtls/pkcs5.h"
 #endif
-#if defined(MBEDTLS_PKCS12_C)
-#include "mbedtls/pkcs12.h"
-#endif
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 
@@ -844,7 +841,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
  * free it after use.
  *
  */
-#if defined(MBEDTLS_PKCS12_C) || defined(MBEDTLS_PKCS5_C)
+#if defined(MBEDTLS_PKCS5_C)
 MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     mbedtls_pk_context *pk,
     unsigned char *key, size_t keylen,
@@ -855,10 +852,6 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     unsigned char *buf;
     unsigned char *p, *end;
     mbedtls_asn1_buf pbe_alg_oid, pbe_params;
-#if defined(MBEDTLS_PKCS12_C) && defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
-    mbedtls_cipher_type_t cipher_alg;
-    mbedtls_md_type_t md_alg;
-#endif
     size_t outlen = 0;
 
     p = key;
@@ -900,24 +893,6 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
 
     buf = p;
 
-    /*
-     * Decrypt EncryptedData with appropriate PBE
-     */
-#if defined(MBEDTLS_PKCS12_C) && defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
-    if (mbedtls_oid_get_pkcs12_pbe_alg(&pbe_alg_oid, &md_alg, &cipher_alg) == 0) {
-        if ((ret = mbedtls_pkcs12_pbe_ext(&pbe_params, MBEDTLS_PKCS12_PBE_DECRYPT,
-                                          cipher_alg, md_alg,
-                                          pwd, pwdlen, p, len, buf, len, &outlen)) != 0) {
-            if (ret == MBEDTLS_ERR_PKCS12_PASSWORD_MISMATCH) {
-                return MBEDTLS_ERR_PK_PASSWORD_MISMATCH;
-            }
-
-            return ret;
-        }
-
-        decrypted = 1;
-    } else
-#endif /* MBEDTLS_PKCS12_C && MBEDTLS_CIPHER_PADDING_PKCS7 && MBEDTLS_CIPHER_C */
 #if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
     if (MBEDTLS_OID_CMP(MBEDTLS_OID_PKCS5_PBES2, &pbe_alg_oid) == 0) {
         if ((ret = mbedtls_pkcs5_pbes2_ext(&pbe_params, MBEDTLS_PKCS5_DECRYPT, pwd, pwdlen,
@@ -941,7 +916,7 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     }
     return pk_parse_key_pkcs8_unencrypted_der(pk, buf, outlen);
 }
-#endif /* MBEDTLS_PKCS12_C || MBEDTLS_PKCS5_C */
+#endif /* MBEDTLS_PKCS5_C */
 
 /***********************************************************************
  *
@@ -1048,7 +1023,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
         return ret;
     }
 
-#if defined(MBEDTLS_PKCS12_C) || defined(MBEDTLS_PKCS5_C)
+#if defined(MBEDTLS_PKCS5_C)
     /* Avoid calling mbedtls_pem_read_buffer() on non-null-terminated string */
     if (key[keylen - 1] != '\0') {
         ret = MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT;
@@ -1069,7 +1044,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
     } else if (ret != MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT) {
         return ret;
     }
-#endif /* MBEDTLS_PKCS12_C || MBEDTLS_PKCS5_C */
+#endif /* MBEDTLS_PKCS5_C */
 #else
     ((void) pwd);
     ((void) pwdlen);
@@ -1082,7 +1057,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
      * We try the different DER format parsers to see if one passes without
      * error
      */
-#if defined(MBEDTLS_PKCS12_C) || defined(MBEDTLS_PKCS5_C)
+#if defined(MBEDTLS_PKCS5_C)
     if (pwdlen != 0) {
         unsigned char *key_copy;
 
@@ -1108,7 +1083,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
     if (ret == MBEDTLS_ERR_PK_PASSWORD_MISMATCH) {
         return ret;
     }
-#endif /* MBEDTLS_PKCS12_C || MBEDTLS_PKCS5_C */
+#endif /* MBEDTLS_PKCS5_C */
 
     ret = pk_parse_key_pkcs8_unencrypted_der(pk, key, keylen);
     if (ret == 0) {

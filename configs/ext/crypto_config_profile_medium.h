@@ -546,7 +546,6 @@
  *          library/cmac.c
  *          library/gcm.c
  *          library/nist_kw.c
- *          library/pkcs12.c
  *          library/pkcs5.c
  *          library/psa_crypto_aead.c
  *          library/psa_crypto_mac.c
