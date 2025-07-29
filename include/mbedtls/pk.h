@@ -263,6 +263,18 @@ typedef void mbedtls_pk_restart_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /**
+ * This helper exposes which ECDSA variant the PK module uses by default:
+ * this is deterministic ECDSA if available, or randomized otherwise.
+ *
+ * \warning This default algorithm selection might change in the future.
+ */
+#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_DETERMINISTIC_ECDSA(hash_alg)
+#else
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_ECDSA(hash_alg)
+#endif
+
+/**
  * \brief           Return information associated with the given PK type
  *
  * \param pk_type   PK type to search for.
@@ -553,9 +565,7 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                        if \p usage is ENCRYPT/DECRYPT.
  *                      - #MBEDTLS_PK_ECDSA or #MBEDTLS_PK_ECKEY
  *                        if \p usage is SIGN/VERIFY:
- *                        #PSA_ALG_DETERMINISTIC_ECDSA(#PSA_ALG_ANY_HASH)
- *                        if #MBEDTLS_ECDSA_DETERMINISTIC is enabled,
- *                        otherwise #PSA_ALG_ECDSA(#PSA_ALG_ANY_HASH).
+ *                        #MBEDTLS_PK_ALG_ECDSA.
  *                      - #MBEDTLS_PK_ECKEY_DH or #MBEDTLS_PK_ECKEY
  *                        if \p usage is DERIVE:
  *                        #PSA_ALG_ECDH.
@@ -637,7 +647,7 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  resulting PK context will perform the corresponding
  *                  algorithm for that PK context type.
  *                  * For ECDSA, the choice of deterministic vs randomized will
- *                    be based on the compile-time setting #MBEDTLS_ECDSA_DETERMINISTIC.
+ *                    be based on #MBEDTLS_PK_ALG_ECDSA.
  *                  * For an RSA key, the output PK context will allow
  *                    sign/verify regardless of the original key's policy.
  *                    The original key's policy determines the output key's padding

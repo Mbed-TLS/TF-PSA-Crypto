@@ -134,13 +134,6 @@ int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
                                        const unsigned char *prv, size_t prv_len);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
-/* Helper for (deterministic) ECDSA */
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#define MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET  PSA_ALG_DETERMINISTIC_ECDSA
-#else
-#define MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET  PSA_ALG_ECDSA
-#endif
-
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
 /*
  * Parse a private RSA key.

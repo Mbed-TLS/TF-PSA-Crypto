@@ -443,11 +443,7 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                     if (!sign_ok) {
                         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
                     }
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-                    alg = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_ANY_HASH);
-#else
-                    alg = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
-#endif
+                    alg = MBEDTLS_PK_ALG_ECDSA(PSA_ALG_ANY_HASH);
                     break;
                 case PSA_KEY_USAGE_DERIVE:
                     alg = PSA_ALG_ECDH;

@@ -513,7 +513,7 @@ static int eckey_sign_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
 
     if (psa_sign_hash_get_num_ops(op) == 0) {
         psa_algorithm_t alg =
-            MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET(mbedtls_md_psa_alg_from_type(md_alg));
+            MBEDTLS_PK_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg));
 
         status = psa_sign_hash_start(op, pk->priv_id, alg, hash, hash_len);
         if (status != PSA_SUCCESS) {

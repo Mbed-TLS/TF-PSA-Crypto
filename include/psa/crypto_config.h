@@ -2153,20 +2153,6 @@
 #define MBEDTLS_ECDSA_C
 
 /**
- * \def MBEDTLS_ECDSA_DETERMINISTIC
- *
- * Enable deterministic ECDSA (RFC 6979).
- * Standard ECDSA is "fragile" in the sense that lack of entropy when signing
- * may result in a compromise of the long-term signing key. This is avoided by
- * the deterministic variant.
- *
- * Requires: MBEDTLS_HMAC_DRBG_C, MBEDTLS_ECDSA_C
- *
- * Comment this macro to disable deterministic ECDSA.
- */
-#define MBEDTLS_ECDSA_DETERMINISTIC
-
-/**
  * \def MBEDTLS_ECJPAKE_C
  *
  * Enable the elliptic curve J-PAKE library.
