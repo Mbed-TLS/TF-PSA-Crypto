@@ -11,7 +11,7 @@
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_AES_C)
 
@@ -1817,27 +1817,24 @@ int mbedtls_aes_self_test(int verbose)
     mbedtls_aes_init(&ctx);
 
     if (verbose != 0) {
-#if defined(MBEDTLS_AESNI_HAVE_CODE)
-#if MBEDTLS_AESNI_HAVE_CODE == 1
-        mbedtls_printf("  AES note: AESNI code present (assembly implementation).\n");
-#elif MBEDTLS_AESNI_HAVE_CODE == 2
-        mbedtls_printf("  AES note: AESNI code present (intrinsics implementation).\n");
-#else
-#error "Unrecognised value for MBEDTLS_AESNI_HAVE_CODE"
-#endif
-        if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
-            mbedtls_printf("  AES note: using AESNI.\n");
-        } else
-#endif
-#if defined(MBEDTLS_AESCE_HAVE_CODE)
-        if (MBEDTLS_AESCE_HAS_SUPPORT()) {
-            mbedtls_printf("  AES note: using AESCE.\n");
-        } else
-#endif
-        {
-#if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
-            mbedtls_printf("  AES note: built-in implementation.\n");
-#endif
+        mbedtls_aes_implementation aes_imp = mbedtls_aes_get_implementation();
+        switch (aes_imp) {
+            case MBEDTLS_AES_IMP_AESNI_ASM:
+                mbedtls_printf("  AES note: AESNI code present (assembly implementation).\n");
+                mbedtls_printf("  AES note: using AESNI.\n");
+                break;
+            case MBEDTLS_AES_IMP_AESNI_INTRINSICS:
+                mbedtls_printf("  AES note: AESNI code present (intrinsics implementation).\n");
+                mbedtls_printf("  AES note: using AESNI.\n");
+                break;
+            case MBEDTLS_AES_IMP_AESCE:
+                mbedtls_printf("  AES note: using AESCE.\n");
+                break;
+            case MBEDTLS_AES_IMP_SOFTWARE:
+                mbedtls_printf("  AES note: built-in implementation.\n");
+                break;
+            case MBEDTLS_AES_IMP_UNKNOWN:
+                break;
         }
     }
 

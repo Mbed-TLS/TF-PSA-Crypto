@@ -50,12 +50,6 @@
 /*----------------------------------------------------------------------------*/
 /* Helper flags for complex dependencies */
 
-/* Indicates whether we expect mbedtls_entropy_init to initialize some strong
- * entropy source. */
-#if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
-#define ENTROPY_HAVE_STRONG
-#endif
-
 
 /*----------------------------------------------------------------------------*/
 /* Helper Functions */

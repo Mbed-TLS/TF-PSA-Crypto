@@ -19,7 +19,7 @@
  *  This file is part of Mbed TLS (https://tls.mbed.org)
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ECDH_C) && defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)
 

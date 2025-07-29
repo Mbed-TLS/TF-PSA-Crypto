@@ -46,4 +46,13 @@
 #define PSA_WANT_ALG_RSA_PSS_ANY_SALT PSA_WANT_ALG_RSA_PSS
 #endif
 
+/* Temporary alias with incompatible behavior.
+ * We only keep this until the Mbed TLS scripts are updated.
+ * https://github.com/Mbed-TLS/mbedtls/issues/10300
+ */
+#if defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
+#undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+#endif
+
 #endif /* PSA_CRYPTO_ADJUST_CONFIG_SYNONYMS_H */

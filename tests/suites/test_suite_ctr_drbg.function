@@ -124,6 +124,8 @@ void ctr_drbg_special_behaviours()
     unsigned char additional[512];
 
     mbedtls_ctr_drbg_init(&ctx);
+
+    AES_PSA_INIT();
     memset(output, 0, sizeof(output));
     memset(additional, 0, sizeof(additional));
 
@@ -146,6 +148,7 @@ void ctr_drbg_special_behaviours()
                 MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG);
 exit:
     mbedtls_ctr_drbg_free(&ctx);
+    AES_PSA_DONE();
 }
 /* END_CASE */
 

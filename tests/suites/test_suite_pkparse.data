@@ -920,11 +920,13 @@ pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256
 Parse RSA Key #100 (768-bit)
 pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_768_clear.der":"":0
 
+# Key bit length is not multiple of 8
 Parse RSA Key #100 (769-bit)
-pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_769_clear.der":"":0
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_769_clear.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
 
+# Key bit length is not multiple of 8
 Parse RSA Key #100 (770-bit)
-pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_770_clear.der":"":0
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_770_clear.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
 
 Parse RSA Key #100 (776-bit)
 pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_776_clear.der":"":0

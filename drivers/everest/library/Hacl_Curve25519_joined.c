@@ -28,7 +28,7 @@
 #define _DEFAULT_SOURCE
 #endif
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 #include "mbedtls/private_access.h"
 
 #if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)

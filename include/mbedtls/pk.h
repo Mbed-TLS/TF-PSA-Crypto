@@ -73,12 +73,14 @@ extern "C" {
 typedef enum {
     MBEDTLS_PK_NONE=0,
     MBEDTLS_PK_RSA,
+    MBEDTLS_PK_RSASSA_PSS,
+    MBEDTLS_PK_ECDSA,
     MBEDTLS_PK_ECKEY,
     MBEDTLS_PK_ECKEY_DH,
-    MBEDTLS_PK_ECDSA,
-    MBEDTLS_PK_RSASSA_PSS,
     MBEDTLS_PK_OPAQUE,
 } mbedtls_pk_type_t;
+
+typedef mbedtls_pk_type_t mbedtls_pk_sigalg_t;
 
 /**
  * \brief           Maximum size of a signature made by mbedtls_pk_sign().
@@ -132,6 +134,14 @@ typedef enum {
  * code can be adjusted and this define removed. */
 #define MBEDTLS_PK_USE_PSA_EC_DATA
 
+/* This is identical to MBEDTLS_PK_USE_PSA_EC_DATA above, but for RSA keys.
+ * The main reason for having it is that framework code is shared between
+ * the develoment branch and the 3.6 LTS one and we need a way to tell from which
+ * of the two we're building.
+ * This symbol is not used in builtin driver and tests and it can be removed
+ * at the same time as MBEDTLS_PK_USE_PSA_EC_DATA. */
+#define MBEDTLS_PK_USE_PSA_RSA_DATA
+
 /**
  * \brief           Types for interfacing with the debug module
  */
@@ -140,6 +150,7 @@ typedef enum {
     MBEDTLS_PK_DEBUG_MPI,
     MBEDTLS_PK_DEBUG_ECP,
     MBEDTLS_PK_DEBUG_PSA_EC,
+    MBEDTLS_PK_DEBUG_PSA_RSA,
 } mbedtls_pk_debug_type;
 
 /**
@@ -165,6 +176,19 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
     PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+
+#define MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN \
+    PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
+
+#define MBEDTLS_PK_MAX_PUBKEY_RAW_LEN \
+    (MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN > MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN) ? \
+    MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN : MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN
+
+typedef enum {
+    MBEDTLS_PK_RSA_PKCS_V15 = 0,
+    MBEDTLS_PK_RSA_PKCS_V21,
+} mbedtls_pk_rsa_padding_t;
+
 /**
  * \brief           Public key container
  */
@@ -185,12 +209,32 @@ typedef struct mbedtls_pk_context {
      * Other keys still use the pk_ctx to store their own context. */
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);
 
-    /* The following fields are meant for storing an EC public key in raw format.
-     * Key types other than EC ones still use pk_ctx to store their own context. */
-    uint8_t MBEDTLS_PRIVATE(pub_raw)[MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN]; /**< Raw public key   */
-    size_t MBEDTLS_PRIVATE(pub_raw_len);            /**< Valid bytes in "pub_raw" */
-    psa_ecc_family_t MBEDTLS_PRIVATE(ec_family);    /**< EC family of pk */
-    size_t MBEDTLS_PRIVATE(ec_bits);                /**< Curve's bits of pk */
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    /* Public EC or RSA key in raw format, where raw here means the format returned
+     * by psa_export_public_key(). */
+    uint8_t MBEDTLS_PRIVATE(pub_raw)[MBEDTLS_PK_MAX_PUBKEY_RAW_LEN];
+
+    /* Lenght of the raw key above in bytes. */
+    size_t MBEDTLS_PRIVATE(pub_raw_len);
+
+    /* Bits of the private/public key. */
+    size_t MBEDTLS_PRIVATE(bits);
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY || PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    /* EC family. Only applies to EC keys. */
+    psa_ecc_family_t MBEDTLS_PRIVATE(ec_family);
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    /* Padding associated to the RSA key. It only affects RSA public key since
+     * the private one is imported into PSA with v1.5 as main algorithm and
+     * v2.1 as enrollment algorithm. */
+    mbedtls_pk_rsa_padding_t MBEDTLS_PRIVATE(rsa_padding);
+
+    /* Hash algorithm to be used with RSA public key. */
+    psa_algorithm_t rsa_hash_alg;
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 } mbedtls_pk_context;
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
@@ -695,11 +739,10 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
                                   mbedtls_pk_restart_ctx *rs_ctx);
 
 /**
- * \brief           Verify signature, with options.
+ * \brief           Verify signature, with explicit selection of the signature algorithm.
  *                  (Includes verification of the padding depending on type.)
  *
  * \param type      Signature type (inc. possible padding type) to verify
- * \param options   Pointer to type-specific options, or NULL
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used (see notes)
  * \param hash      Hash of the message to sign
@@ -721,7 +764,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len);
@@ -755,7 +798,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
 int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
                           mbedtls_md_type_t md_alg, const unsigned char *hash,
                           size_t hash_len, const unsigned char *sig, size_t sig_len);
-
 
 /**
  * \brief           Make signature, including padding if relevant.
@@ -813,7 +855,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
  *
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_type_t pk_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,

@@ -15,7 +15,7 @@
  * http://tools.ietf.org/html/rfc6070 (Test vectors)
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_PKCS5_C)
 

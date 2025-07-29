@@ -191,6 +191,29 @@
 #error "MBEDTLS_ECP_C defined (or a subset enabled), but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_ENTROPY_C)
+#  if !defined(MBEDTLS_ENTROPY_HAVE_SOURCES)
+     /* The entropy module needs at least one entropy source, such as
+      * #MBEDTLS_PSA_BUILTIN_GET_ENTROPY or #MBEDTLS_PSA_DRIVER_GET_ENTROPY
+      * or #MBEDTLS_ENTROPY_NV_SEED.
+      *
+      * If your platform has a cryptographic-quality random generator,
+      * disable #MBEDTLS_ENTROPY_C and use #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+      * instead.
+      */
+/* Error suppressed until we fix up our test scripts.
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/370 */
+//#    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no sources"
+#  elif MBEDTLS_ENTROPY_TRUE_SOURCES == 0 && !defined(MBEDTLS_ENTROPY_NO_SOURCES_OK)
+     /* Having only the NV seed as an entropy source weakens security.
+      * To indicate that this is acceptable, define
+      * MBEDTLS_ENTROPY_NO_SOURCES_OK. */
+/* Error suppressed until we fix up our test scripts.
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/370 */
+//#    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no true sources"
+#  endif
+#endif
+
 #if defined(MBEDTLS_ENTROPY_C) && \
     !(defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA_256))
 #error "MBEDTLS_ENTROPY_C defined, but not all prerequisites"
@@ -240,10 +263,6 @@
 
 #if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_POLY1305_C)
 #error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_HKDF_C) && !defined(MBEDTLS_MD_C)
-#error "MBEDTLS_HKDF_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_HMAC_DRBG_C) && !defined(MBEDTLS_MD_C)

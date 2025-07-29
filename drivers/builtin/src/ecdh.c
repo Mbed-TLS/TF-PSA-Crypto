@@ -12,7 +12,7 @@
  * RFC 4492
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ECDH_C)
 

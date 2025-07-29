@@ -193,6 +193,11 @@ void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
     USE_PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_keyfile(&priv_key, priv_key_file, NULL), 0);
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    if (mbedtls_pk_get_type(&priv_key) == MBEDTLS_PK_RSA) {
+        TEST_EQUAL(mbedtls_pk_rsa_set_pubkey_from_prv(&priv_key), 0);
+    }
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
     TEST_EQUAL(mbedtls_pk_load_file(pub_key_file, &pub_key_raw,
                                     &pub_key_len), 0);
 

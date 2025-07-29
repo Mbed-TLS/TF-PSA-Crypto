@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <limits.h>
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 #include "constant_time_internal.h"
 #include "mbedtls/constant_time.h"
 #include "mbedtls/error_common.h"
