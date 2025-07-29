@@ -5,7 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "mbedtls/pk.h"
 #include "mbedtls/error_common.h"
@@ -21,13 +21,13 @@ int mbedtls_pk_ecc_set_group(mbedtls_pk_context *pk, mbedtls_ecp_group_id grp_id
 
     /* group may already be initialized; if so, make sure IDs match */
     if ((pk->ec_family != 0 && pk->ec_family != ec_family) ||
-        (pk->ec_bits != 0 && pk->ec_bits != ec_bits)) {
+        (pk->bits != 0 && pk->bits != ec_bits)) {
         return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
     }
 
     /* set group */
     pk->ec_family = ec_family;
-    pk->ec_bits = ec_bits;
+    pk->bits = ec_bits;
 
     return 0;
 }
@@ -103,7 +103,7 @@ static int pk_ecc_set_pubkey_psa_ecp_fallback(mbedtls_pk_context *pk,
     mbedtls_ecp_group_id ecp_group_id;
     int ret;
 
-    ecp_group_id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->ec_bits);
+    ecp_group_id = mbedtls_ecc_group_from_psa(pk->ec_family, pk->bits);
 
     mbedtls_ecp_keypair_init(&ecp_key);
     ret = mbedtls_ecp_group_load(&(ecp_key.grp), ecp_group_id);
@@ -152,7 +152,7 @@ int mbedtls_pk_ecc_set_pubkey(mbedtls_pk_context *pk, const unsigned char *pub, 
 
     psa_set_key_usage_flags(&key_attrs, 0);
     psa_set_key_type(&key_attrs, PSA_KEY_TYPE_ECC_PUBLIC_KEY(pk->ec_family));
-    psa_set_key_bits(&key_attrs, pk->ec_bits);
+    psa_set_key_bits(&key_attrs, pk->bits);
 
     if ((psa_import_key(&key_attrs, pk->pub_raw, pk->pub_raw_len,
                         &key_id) != PSA_SUCCESS) ||

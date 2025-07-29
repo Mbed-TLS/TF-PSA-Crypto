@@ -5,7 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ASN1_WRITE_C) || defined(MBEDTLS_ASN1_PARSE_C) || \
     defined(PSA_HAVE_ALG_SOME_ECDSA)
@@ -456,7 +456,9 @@ int mbedtls_asn1_write_integer(unsigned char **p,
         number_of_leading_zeros++;
     }
 
-    integer_start = integer + number_of_leading_zeros;
+    if (integer != NULL) {
+        integer_start = integer + number_of_leading_zeros;
+    }
 
     integer_length -= number_of_leading_zeros;
 

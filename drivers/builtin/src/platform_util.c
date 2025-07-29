@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"
@@ -263,14 +263,15 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
 #endif
 #endif /* MBEDTLS_HAVE_TIME && !MBEDTLS_PLATFORM_MS_TIME_ALT */
 
-#if !defined(MBEDTLS_PLATFORM_GET_ENTROPY_ALT)
+#if defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY)
 
 #if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
     !defined(__APPLE__) && !defined(_WIN32) && !defined(__QNXNTO__) && \
     !defined(__HAIKU__) && !defined(__midipix__) && !defined(__MVS__)
 #error \
-    "The default platform entropy sources only work on Unix and Windows. " \
-    "Please enable MBEDTLS_PLATFORM_GET_ENTROPY_ALT and implement " \
+    "The built-in entropy sources only work on Unix and Windows. " \
+    "Please enable MBEDTLS_PSA_DRIVER_GET_ENTROPY instead of " \
+    "MBEDTLS_PSA_BUILTIN_GET_ENTROPY and implement " \
     "mbedtls_platform_get_entropy()."
 #endif
 
@@ -282,10 +283,14 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
 #include <bcrypt.h>
 #include <intsafe.h>
 
-int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content)
+int mbedtls_platform_get_entropy(psa_driver_get_entropy_flags_t flags,
+                                 size_t *estimate_bits,
+                                 unsigned char *output, size_t output_size)
 {
-    *output_len = 0;
+    /* We don't implement any flags yet. */
+    if (flags != 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
 
     /*
      * BCryptGenRandom takes ULONG for size, which is smaller than size_t on
@@ -300,8 +305,7 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
 
-    *output_len = output_size;
-    *entropy_content = 8 * *output_len;
+    *estimate_bits = 8 * output_size;
 
     return 0;
 }
@@ -394,18 +398,23 @@ static int sysctl_arnd_wrapper(unsigned char *buf, size_t buflen)
 
 #include <stdio.h>
 
-int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
-                                 size_t *output_len, size_t *entropy_content)
+int mbedtls_platform_get_entropy(psa_driver_get_entropy_flags_t flags,
+                                 size_t *estimate_bits,
+                                 unsigned char *output, size_t output_size)
 {
     FILE *file;
     size_t read_len;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
+    /* We don't implement any flags yet. */
+    if (flags != 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
 #if defined(HAVE_GETRANDOM)
     ret = getrandom_wrapper(output, output_size, 0);
     if (ret >= 0) {
-        *output_len = (size_t) ret;
-        *entropy_content = 8 * *output_len;
+        *estimate_bits = 8 * (size_t) ret;
         return 0;
     } else if (errno != ENOSYS) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
@@ -421,12 +430,9 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
     if (sysctl_arnd_wrapper(output, output_size) == -1) {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }
-    *output_len = output_size;
-    *entropy_content = 8 * *output_len;
+    *estimate_bits = 8 * output_size;
     return 0;
 #else
-
-    *output_len = 0;
 
     file = fopen("/dev/urandom", "rb");
     if (file == NULL) {
@@ -443,11 +449,10 @@ int mbedtls_platform_get_entropy(unsigned char *output, size_t output_size,
     }
 
     fclose(file);
-    *output_len = output_size;
-    *entropy_content = 8 * *output_len;
+    *estimate_bits = 8 * output_size;
 
     return 0;
 #endif /* HAVE_SYSCTL_ARND */
 }
 #endif /* _WIN32 && !EFIX64 && !EFI32 */
-#endif /* !MBEDTLS_PLATFORM_GET_ENTROPY_ALT */
+#endif /* MBEDTLS_PSA_BUILTIN_GET_ENTROPY */

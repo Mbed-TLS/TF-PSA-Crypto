@@ -11,7 +11,7 @@
  *  http://info.isl.ntt.co.jp/crypt/eng/camellia/dl/01espec.pdf
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_CAMELLIA_C)
 

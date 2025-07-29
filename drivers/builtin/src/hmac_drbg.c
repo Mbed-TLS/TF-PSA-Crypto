@@ -11,7 +11,7 @@
  *  References below are based on rev. 1 (January 2012).
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_HMAC_DRBG_C)
 

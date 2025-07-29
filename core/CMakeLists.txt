@@ -5,6 +5,7 @@ set(src_crypto
     psa_crypto_slot_management.c
     psa_crypto_storage.c
     psa_its_file.c
+    tf_psa_crypto_version.c
 )
 
 if(GEN_FILES)
@@ -72,9 +73,9 @@ if (NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRAR
 endif(NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 set(tfpsacrypto_target "${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto")
-set(builtin_target "${TF_PSA_CRYPTO_TARGET_PREFIX}builtin_objs")
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest_objs")
-set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m_objs")
+set(builtin_target "${TF_PSA_CRYPTO_TARGET_PREFIX}builtin")
+set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
+set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
 
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(tfpsacrypto_static_target ${tfpsacrypto_target})

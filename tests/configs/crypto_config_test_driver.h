@@ -22,6 +22,7 @@
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
 #define MBEDTLS_ENTROPY_FORCE_SHA256
+#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
 
 /*
  * Configuration options that may need to be additionally enabled for the

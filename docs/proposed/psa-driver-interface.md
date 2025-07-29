@@ -820,7 +820,9 @@ This section describes some minimal validity requirements for standard key types
 A driver can declare an entropy source by providing a `"get_entropy"` entry point. This entry point has the following prototype for a driver with the prefix `"acme"`:
 
 ```
-psa_status_t acme_get_entropy(uint32_t flags,
+typedef uint32_t psa_driver_get_entropy_flags_t;
+
+psa_status_t acme_get_entropy(psa_driver_get_entropy_flags_t flags,
                               size_t *estimate_bits,
                               uint8_t *output,
                               size_t output_size);
@@ -838,24 +840,29 @@ Note that there is no output parameter indicating how many bytes the driver wrot
 The entry point may return the following statuses:
 
 * `PSA_SUCCESS`: success. The output buffer contains some entropy.
-* `PSA_ERROR_INSUFFICIENT_ENTROPY`: no entropy is available without blocking. This is only permitted if the `PSA_DRIVER_GET_ENTROPY_BLOCK` flag is clear. The core may call `get_entropy` again later, giving time for entropy to be gathered or for adverse environmental conditions to be rectified.
+* `PSA_ERROR_INSUFFICIENT_ENTROPY`: no entropy is available without blocking. This is only permitted if the `PSA_DRIVER_GET_ENTROPY_NONBLOCK` flag is set. The core may call `get_entropy` again later, giving time for entropy to be gathered or for adverse environmental conditions to be rectified.
+* `PSA_ERROR_NOT_SUPPORTED`: a flag is not recognized. The core may try again with different flags.
 * Other error codes indicate a transient or permanent failure of the entropy source.
 
 Unlike most other entry points, if multiple transparent drivers include a `"get_entropy"` point, the core will call all of them (as well as the entry points from opaque drivers). Fallback is not applicable to `"get_entropy"`.
 
 #### Entropy collection flags
 
-* `PSA_DRIVER_GET_ENTROPY_BLOCK`: If this flag is set, the driver should block until it has at least one bit of entropy. If this flag is clear, the driver should avoid blocking if no entropy is readily available.
+* `PSA_DRIVER_GET_ENTROPY_NONBLOCK`: If this flag is clean, the driver should block until it has at least one bit of entropy. If this flag is set, the driver should avoid blocking if no entropy is readily available.
 * `PSA_DRIVER_GET_ENTROPY_KEEPALIVE`: This flag is intended to help with energy management for entropy-generating peripherals. If this flag is set, the driver should expect another call to `acme_get_entropy` after a short time. If this flag is clear, the core is not expecting to call the `"get_entropy"` entry point again within a short amount of time (but it may do so nonetheless).
+
+A very simple core can just pass `flags=0`. All entropy drivers should support this case.
+
+If the entry point returns `PSA_ERROR_NOT_SUPPORTED`, the core may try calling the entry point again with fewer flags. Drivers should be consistent from one call to the next with respect to which flags they support. The core may cache an acceptable flag mask on its first call to an entry point.
 
 #### Entropy collection and blocking
 
-The intent of the `BLOCK` and `KEEPALIVE` [flags](#entropy-collection-flags) is to support drivers for TRNG (True Random Number Generator, i.e. an entropy source peripheral) that have a long ramp-up time, especially on platforms with multiple entropy sources.
+The intent of the `NONBLOCK` and `KEEPALIVE` [flags](#entropy-collection-flags) is to support drivers for TRNG (True Random Number Generator, i.e. an entropy source peripheral) that have a long ramp-up time, especially on platforms with multiple entropy sources.
 
 Here is a suggested call sequence for entropy collection that leverages these flags:
 
-1. The core makes a first round of calls to `"get_entropy"` on every source with the `BLOCK` flag clear and the `KEEPALIVE` flag set, so that drivers can prepare the TRNG peripheral.
-2. The core makes a second round of calls with the `BLOCK` flag set and the `KEEPALIVE` flag clear to gather needed entropy.
+1. The core makes a first round of calls to `"get_entropy"` on every source with the `NONBLOCK` flag set and the `KEEPALIVE` flag set, so that drivers can prepare the TRNG peripheral.
+2. The core makes a second round of calls with the `NONBLOCK` flag clear and the `KEEPALIVE` flag clear to gather needed entropy.
 3. If the second round does not collect enough entropy, the core makes more similar rounds, until the total amount of collected entropy is sufficient.
 
 ### Miscellaneous driver entry points

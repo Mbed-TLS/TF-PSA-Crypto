@@ -1,6 +1,10 @@
 /* BEGIN_HEADER */
 #include "mbedtls/pkcs12.h"
-#include "common.h"
+#include "tf_psa_crypto_common.h"
+
+#if defined(MBEDTLS_TEST_DEPRECATED) || defined(MBEDTLS_CIPHER_PADDING_PKCS7)
+#define MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7
+#endif
 
 typedef enum {
     USE_NULL_INPUT = 0,
@@ -69,7 +73,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C */
+/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7 */
 void pkcs12_pbe_encrypt(int params_tag, int cipher, int md, data_t *params_hex, data_t *pw,
                         data_t *data, int outsize, int ref_ret, data_t *ref_out)
 {
@@ -124,7 +128,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C */
+/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7 */
 void pkcs12_pbe_decrypt(int params_tag, int cipher, int md, data_t *params_hex, data_t *pw,
                         data_t *data, int outsize, int ref_ret, data_t *ref_out)
 {

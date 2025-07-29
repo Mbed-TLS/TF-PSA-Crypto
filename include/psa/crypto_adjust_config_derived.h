@@ -20,6 +20,41 @@
     "automatically at the right point."
 #endif /* */
 
+/* The number of "true" entropy sources (excluding NV seed).
+ * This must be consistent with mbedtls_entropy_init() in entropy.c.
+ */
+/* Define auxiliary macros, because in standard C, defined(xxx) is only
+ * allowed directly on an #if or #elif line, not in recursive expansion. */
+#if defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY)
+#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY_DEFINED 1
+#else
+#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY_DEFINED 0
+#endif
+#if defined(MBEDTLS_PSA_DRIVER_GET_ENTROPY)
+#define MBEDTLS_PSA_DRIVER_GET_ENTROPY_DEFINED 1
+#else
+#define MBEDTLS_PSA_DRIVER_GET_ENTROPY_DEFINED 0
+#endif
+
+#define MBEDTLS_ENTROPY_TRUE_SOURCES ( \
+        MBEDTLS_PSA_BUILTIN_GET_ENTROPY_DEFINED + \
+        MBEDTLS_PSA_DRIVER_GET_ENTROPY_DEFINED + \
+        0)
+
+/* Whether there is at least one entropy source for the entropy module.
+ *
+ * Note that when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled, the entropy
+ * module is unused and the configuration will typically not include any
+ * entropy source, so this macro will typically remain undefined.
+ */
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+#define MBEDTLS_ENTROPY_HAVE_SOURCES (MBEDTLS_ENTROPY_TRUE_SOURCES + 1)
+#elif MBEDTLS_ENTROPY_TRUE_SOURCES != 0
+#define MBEDTLS_ENTROPY_HAVE_SOURCES MBEDTLS_ENTROPY_TRUE_SOURCES
+#else
+#undef MBEDTLS_ENTROPY_HAVE_SOURCES
+#endif
+
 #if defined(PSA_WANT_ALG_ECDSA) || defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
 #define PSA_HAVE_ALG_SOME_ECDSA
 #endif

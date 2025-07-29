@@ -595,22 +595,6 @@ int mbedtls_asn1_get_alg_null(unsigned char **p,
 const mbedtls_asn1_named_data *mbedtls_asn1_find_named_data(const mbedtls_asn1_named_data *list,
                                                             const char *oid, size_t len);
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-/**
- * \brief       Free a mbedtls_asn1_named_data entry
- *
- * \deprecated  This function is deprecated and will be removed in a
- *              future version of the library.
- *              Please use mbedtls_asn1_free_named_data_list()
- *              or mbedtls_asn1_free_named_data_list_shallow().
- *
- * \param entry The named data entry to free.
- *              This function calls mbedtls_free() on
- *              `entry->oid.p` and `entry->val.p`.
- */
-void MBEDTLS_DEPRECATED mbedtls_asn1_free_named_data(mbedtls_asn1_named_data *entry);
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
 /**
  * \brief       Free all entries in a mbedtls_asn1_named_data list.
  *

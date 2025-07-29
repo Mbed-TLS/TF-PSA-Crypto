@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
 #include <stdint.h>
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "psa/crypto.h"
 

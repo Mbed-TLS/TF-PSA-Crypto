@@ -19,7 +19,7 @@
 #include "tf-psa-crypto/build_info.h"
 
 #include "psa/crypto.h"
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #include "mbedtls/entropy.h"
 

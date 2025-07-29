@@ -11,7 +11,7 @@
  *  ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1-1.asn
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_PKCS12_C)
 

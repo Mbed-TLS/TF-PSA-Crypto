@@ -5,7 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_ASN1_PARSE_C) || defined(MBEDTLS_ASN1_WRITE_C) || \
     defined(PSA_HAVE_ALG_SOME_ECDSA)
@@ -464,20 +464,6 @@ int mbedtls_asn1_get_alg_null(unsigned char **p,
 
     return 0;
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_asn1_free_named_data(mbedtls_asn1_named_data *cur)
-{
-    if (cur == NULL) {
-        return;
-    }
-
-    mbedtls_free(cur->oid.p);
-    mbedtls_free(cur->val.p);
-
-    mbedtls_platform_zeroize(cur, sizeof(mbedtls_asn1_named_data));
-}
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
 
 void mbedtls_asn1_free_named_data_list(mbedtls_asn1_named_data **head)
 {

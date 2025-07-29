@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 static void fill_arrays(unsigned char *a,
                         unsigned char *b,
