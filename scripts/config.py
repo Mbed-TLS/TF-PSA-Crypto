@@ -170,8 +170,10 @@ class TFPSACryptoConfig(config_common.Config):
         super().__init__()
         configfile = TFPSACryptoConfigFile(filename)
         self.configfiles.append(configfile)
-        self.settings.update({name: config_common.Setting(configfile, active, name, value, section)
-                             for (active, name, value, section) in configfile.parse_file()})
+        self.settings.update({
+            name: config_common.Setting(configfile, active, name, value, section)
+            for (active, name, value, section) in configfile.parse_file()
+        })
 
     def set(self, name, value=None):
         """Set name to the given value and make it active."""
