@@ -565,9 +565,7 @@ int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
  *                        if \p usage is ENCRYPT/DECRYPT.
  *                      - #MBEDTLS_PK_ECDSA or #MBEDTLS_PK_ECKEY
  *                        if \p usage is SIGN/VERIFY:
- *                        #PSA_ALG_DETERMINISTIC_ECDSA(#PSA_ALG_ANY_HASH)
- *                        if #MBEDTLS_PK_ALG_ECDSA is set,
- *                        otherwise #PSA_ALG_ECDSA(#PSA_ALG_ANY_HASH).
+ *                        #MBEDTLS_PK_ALG_ECDSA.
  *                      - #MBEDTLS_PK_ECKEY_DH or #MBEDTLS_PK_ECKEY
  *                        if \p usage is DERIVE:
  *                        #PSA_ALG_ECDH.
