@@ -1422,7 +1422,12 @@
 /**
  * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL
  *
- *  Interval before reseed is performed by default.
+ * In CTR_DRBG and HMAC_DRBG, the interval before the DRBG is reseeded from entropy.
+ * The interval is the number of requests to the random generator, for any purpose.
+ *
+ * \note Requests have a maximum size (which depends on the library configuration
+ * and is currently unspecified), so the maximum number of bytes before a reseed
+ * is the interval multiplied by the maximum request size.
  */
 //#define MBEDTLS_PSA_RNG_RESEED_INTERVAL 1000
 
