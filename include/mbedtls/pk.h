@@ -298,7 +298,7 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx);
  *                  If this is \c NULL, this function does nothing.
  *
  * \note            For contexts that have been set up with
- *                  mbedtls_pk_setup_opaque(), this does not free the underlying
+ *                  mbedtls_pk_wrap_psa(), this does not free the underlying
  *                  PSA key and you still need to call psa_destroy_key()
  *                  independently if you want to destroy that key.
  */
