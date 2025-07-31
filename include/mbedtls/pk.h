@@ -268,7 +268,7 @@ typedef void mbedtls_pk_restart_ctx;
  *
  * \warning This default algorithm selection might change in the future.
  */
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
 #define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_DETERMINISTIC_ECDSA(hash_alg)
 #else
 #define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_ECDSA(hash_alg)
