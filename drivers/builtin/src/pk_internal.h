@@ -12,6 +12,9 @@
 #define MBEDTLS_PK_INTERNAL_H
 
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include "mbedtls/ecp.h"

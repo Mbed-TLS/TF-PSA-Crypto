@@ -37,6 +37,9 @@
 #endif
 #if defined(MBEDTLS_PK_C)
 #include <mbedtls/pk.h>
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #endif
 #if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
 #include <mbedtls/cipher.h>

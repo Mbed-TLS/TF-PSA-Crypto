@@ -56,6 +56,9 @@
 #include "mbedtls/gcm.h"
 #include "mbedtls/md5.h"
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #include "pk_wrap.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"

@@ -8,6 +8,9 @@
 #include "tf_psa_crypto_common.h"
 
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #include "mbedtls/error_common.h"
 #include "mbedtls/ecp.h"
 #include "pk_internal.h"

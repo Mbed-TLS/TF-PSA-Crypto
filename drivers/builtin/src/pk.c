@@ -15,6 +15,9 @@
 
 #if defined(MBEDTLS_PK_C)
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #include "pk_wrap.h"
 #include "pkwrite.h"
 #include "pk_internal.h"
