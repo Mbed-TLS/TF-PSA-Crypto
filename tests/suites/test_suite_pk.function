@@ -1291,7 +1291,6 @@ void pk_rsa_overflow()
     TEST_EQUAL(mbedtls_pk_setup(&pk,
                                 mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
 
-#if defined(MBEDTLS_PKCS1_V21)
     TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                      MBEDTLS_MD_NONE, hash, hash_len, sig, sig_len),
                MBEDTLS_ERR_PK_INVALID_ALG);
@@ -1301,7 +1300,6 @@ void pk_rsa_overflow()
                MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
     TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_RSASSA_PSS, &pk,
-#if defined(MBEDTLS_PKCS1_V21)
     TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                    MBEDTLS_MD_NONE, hash, hash_len,
                                    sig, sizeof(sig), &sig_len),
