@@ -1299,7 +1299,6 @@ void pk_rsa_overflow()
                                  sig, sig_len),
                MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_RSASSA_PSS, &pk,
     TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                    MBEDTLS_MD_NONE, hash, hash_len,
                                    sig, sizeof(sig), &sig_len),
