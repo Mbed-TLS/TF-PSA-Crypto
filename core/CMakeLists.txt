@@ -24,12 +24,47 @@ if(GEN_FILES)
             ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
 
-    add_custom_target(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target
+    execute_process(
+        COMMAND
+            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
+            ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
+            --list ""
+        WORKING_DIRECTORY
+            ${CMAKE_CURRENT_SOURCE_DIR}/..
+        OUTPUT_VARIABLE
+            TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS)
+    # Turn newline-terminated non-empty list into semicolon-separated list.
+    string(REPLACE "\n" ";"
+           TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS "${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
+    string(REGEX REPLACE ";\$" ""
+           TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS "${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
+    # Prepend the binary dir to all element of TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS,
+    # using features that exist in CMake 3.5.1.
+    string(REPLACE ";" ";${CMAKE_CURRENT_BINARY_DIR}/"
+           TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS
+           "${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
+    set(TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS
+        "${CMAKE_CURRENT_BINARY_DIR}/${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
+
+    add_custom_command(
+        OUTPUT ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
+        COMMAND
+            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
+                ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
+                ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS
-            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h
-            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c
+            ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
+            ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/mbedtls_framework/config_checks_generator.py
     )
-endif()
+
+    add_custom_target(
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target
+        DEPENDS
+            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
+            ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
+        )
+endif(GEN_FILES)
 
 if(CMAKE_COMPILER_IS_GNUCC)
     set(LIBS_C_FLAGS -Wmissing-declarations -Wmissing-prototypes)
