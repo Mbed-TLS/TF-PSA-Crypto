@@ -867,7 +867,7 @@ void valid_parameters()
                                   buf, sizeof(buf)) ==
                 MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_NONE, options,
+    TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_NONE,
                                       &pk,
                                       MBEDTLS_MD_NONE,
                                       NULL, 0,
