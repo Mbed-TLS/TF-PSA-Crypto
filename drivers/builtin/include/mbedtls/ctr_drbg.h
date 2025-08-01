@@ -104,15 +104,8 @@
  *
  * \brief The amount of entropy used per seed by default, in bytes.
  */
-#if !defined(MBEDTLS_CTR_DRBG_ENTROPY_LEN)
-#if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
-/** This is 48 bytes because the entropy module uses SHA-512.
- */
-#define MBEDTLS_CTR_DRBG_ENTROPY_LEN        48
-
-#else /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
-
-/** This is 32 bytes because the entropy module uses SHA-256.
+/** This is always 32 bytes.
+ *  RNG strengths above 256 bits are not supported.
  */
 #if !defined(MBEDTLS_CTR_DRBG_USE_128_BIT_KEY)
 /** \warning To achieve a 256-bit security strength, you must pass a nonce
@@ -120,8 +113,6 @@
  */
 #endif /* !defined(MBEDTLS_CTR_DRBG_USE_128_BIT_KEY) */
 #define MBEDTLS_CTR_DRBG_ENTROPY_LEN        32
-#endif /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
-#endif /* !defined(MBEDTLS_CTR_DRBG_ENTROPY_LEN) */
 
 #if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
 #define MBEDTLS_PSA_RNG_RESEED_INTERVAL    10000
