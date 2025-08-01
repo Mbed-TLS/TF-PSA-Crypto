@@ -24,3 +24,11 @@
 #include "tf_psa_crypto_check_config.h"
 /* Automatically generated checks */
 #include "tf_psa_crypto_config_check_final.h"
+
+/* For MBEDTLS_STATIC_ASSERT */
+#include "tf_psa_crypto_common.h"
+/* For PSA_HASH_LENGTH */
+#include <psa/crypto_sizes.h>
+
+/* Additional domain-specific checks */
+#include "psa_crypto_random_impl.h"

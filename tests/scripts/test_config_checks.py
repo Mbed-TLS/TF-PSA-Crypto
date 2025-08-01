@@ -65,10 +65,117 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
         self.bad_case('#define MBEDTLS_PADLOCK_C',
                       error=('MBEDTLS_PADLOCK_C was removed'))
 
-    def test_crypto_nv_seed_only_with_entropy_no_sources_ok(self) -> None:
-        """NV-seed-only configuration with MBEDTLS_ENTROPY_NO_SOURCES_OK defined
-        to acknowledge that there is no true entropy source and that the
-        loss of security is acceptable.
+
+class CryptoTestRNGConfigChecks(unittest_config_checks.TestConfigChecks):
+    """TF-PSA-Crypto unit tests for random generator config checks."""
+
+    PROJECT_CONFIG_C = 'core/tf_psa_crypto_config.c'
+    PROJECT_SPECIFIC_INCLUDE_DIRECTORIES = [
+        'drivers/builtin/include',
+    ]
+
+    def test_rng_no_drbg(self) -> None:
+        """Check that a mostly complete library can't be built without a DRBG."""
+        self.bad_case('''
+                      #undef MBEDTLS_CTR_DRBG_C
+                      #undef MBEDTLS_HMAC_DRBG_C
+                      #undef PSA_WANT_ALG_DETERMINISTIC_ECDSA // would reenable HMAC_DRBG
+                      ''',
+                      error=r'No DRBG module')
+
+    def test_rng_ctr_drbg_only(self) -> None:
+        """Check that CTR_DRBG suffices as a DRBG."""
+        self.good_case('''
+                       #define MBEDTLS_CTR_DRBG_C
+                       #undef MBEDTLS_HMAC_DRBG_C
+                       #undef PSA_WANT_ALG_DETERMINISTIC_ECDSA // would reenable HMAC_DRBG
+                       ''')
+
+    def test_rng_hmac_drbg_only(self) -> None:
+        """Check that HMAC_DRBG suffices as a DRBG."""
+        self.good_case('''
+                       #undef MBEDTLS_CTR_DRBG_C
+                       #define MBEDTLS_HMAC_DRBG_C
+                       ''')
+
+    def test_rng_strength_256_ok(self) -> None:
+        """Check that the default config meets a 256-bit RNG strength."""
+        self.good_case('''
+                       #undef MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+                       #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 256
+                       ''')
+
+    def test_rng_strength_1024_bad(self) -> None:
+        """Check that a 1024-bit RNG strength is rejected.
+
+        This is more than we can reasonably foresee at this time
+        (you would need a 1024-bit hash).
+        """
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+                      #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 1024
+                      ''',
+                      error=r'hash size.*MBEDTLS_PSA_CRYPTO_RNG_STRENGTH')
+
+    def test_rng_strength_256_aes_128(self) -> None:
+        """Check that AES-128 is flagged as not achieving 256-bit RNG strength.
+
+        Assumes that the default DRBG is CTR_DRBG.
+        """
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+                      #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 256
+                      #define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+                      ''',
+                      error=r'strength.*128-bit AES')
+
+    def test_rng_strength_default_aes_128(self) -> None:
+        """Check that AES-128 is flagged as not achieving the default RNG strength.
+
+        Assumes that the default DRBG is CTR_DRBG.
+        """
+        self.bad_case('''
+                      #define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+                      ''',
+                      error=r'strength.*128-bit AES')
+
+    def test_rng_strength_256_sha_1(self) -> None:
+        """Check that SHA-1 is flagged as not achieving 256-bit strength.
+        """
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+                      #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 256
+                      #define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_1
+                      ''',
+                      # Currently rejected with a generic check (only
+                      # whitelisted hash algorithms are allowed).
+                      # If we remove the whitelist, this should still be
+                      # rejected because the hash is too small.
+                      error=r'Invalid hashing algorithm for MBEDTLS_PSA_CRYPTO_RNG_HASH')
+
+    def test_rng_entropy_no_source(self) -> None:
+        """Removed all default entropy sources."""
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+                      ''',
+                      error=r'no sources')
+
+    def test_rng_entropy_nv_seed_only_unconfirmed(self) -> None:
+        """Removed all default entropy sources and added NV seed.
+
+        This should be rejected because it is a somewhat insecure
+        configuration that may have arisen accidentally.
+        """
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+                      #define MBEDTLS_ENTROPY_NV_SEED
+                      ''',
+                      error=r'no true sources')
+
+    def test_rng_entropy_nv_seed_only_acknowledged(self) -> None:
+        """Removed all default entropy sources and added NV seed.
+
+        Check that this is ok when explicitly acknowledged.
         """
         self.good_case('''
                        #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
@@ -76,19 +183,13 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
                        #define MBEDTLS_ENTROPY_NO_SOURCES_OK
                        ''')
 
-    def test_crypto_nv_seed_only_without_entropy_no_sources_ok(self) -> None:
-        """NV-seed-only configuration without MBEDTLS_ENTROPY_NO_SOURCES_OK defined
-        An error expected from tf_psa_crypto_check_config.h.
-        """
-        self.bad_case('''
-                      #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
-                      #define MBEDTLS_ENTROPY_NV_SEED
-                      ''',
-                      error=(r'Entropy module enabled, but no true sources'))
-
     def test_crypto_external_rng_with_nv_seed(self) -> None:
-        """External RNG and NV seed
-        An error expected from tf_psa_crypto_check_config.h.
+        """Activated the external RNG and the NV seed.
+
+        Currently should result in an error, because the NV seed would not
+        be used, so the security would be lower than users might expect.
+        If we implement the NV seed together with the external RNG,
+        this should become a good case.
         """
         self.bad_case('''
                       #define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
@@ -97,6 +198,7 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
                       error=(
                           r'MBEDTLS_ENTROPY_NV_SEED has no effect when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled' # pylint: disable=line-too-long
                       ))
+
 
 if __name__ == '__main__':
     unittest.main()
