@@ -8834,57 +8834,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     return PSA_SUCCESS;
 }
 
-psa_status_t psa_pake_setup(
-    psa_pake_operation_t *operation,
-    const psa_pake_cipher_suite_t *cipher_suite)
-{
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-
-    if (operation->stage != PSA_PAKE_OPERATION_STAGE_SETUP) {
-        status = PSA_ERROR_BAD_STATE;
-        goto exit;
-    }
-
-    if (PSA_ALG_IS_PAKE(cipher_suite->algorithm) == 0 ||
-        PSA_ALG_IS_HASH(cipher_suite->hash) == 0) {
-        status = PSA_ERROR_INVALID_ARGUMENT;
-        goto exit;
-    }
-
-    /* Make sure the variable-purpose part of the operation is zeroed.
-     * Initializing the operation does not necessarily take care of it,
-     * since the context is a union and initializing a union does not
-     * necessarily initialize all of its members. */
-    memset(&operation->data, 0, sizeof(operation->data));
-
-    operation->alg = cipher_suite->algorithm;
-    operation->primitive = PSA_PAKE_PRIMITIVE(cipher_suite->type,
-                                              cipher_suite->family, cipher_suite->bits);
-    operation->data.inputs.cipher_suite = *cipher_suite;
-
-#if defined(PSA_WANT_ALG_JPAKE)
-    if (operation->alg == PSA_ALG_JPAKE) {
-        psa_jpake_computation_stage_t *computation_stage =
-            &operation->computation_stage.jpake;
-
-        memset(computation_stage, 0, sizeof(*computation_stage));
-        computation_stage->step = PSA_PAKE_STEP_KEY_SHARE;
-    } else
-#endif /* PSA_WANT_ALG_JPAKE */
-    {
-        status = PSA_ERROR_NOT_SUPPORTED;
-        goto exit;
-    }
-
-    operation->stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
-
-    return PSA_SUCCESS;
-exit:
-    psa_pake_abort(operation);
-    return status;
-}
-
-psa_status_t psa_pake_set_password_key(
+static psa_status_t psa_pake_set_password_key(
     psa_pake_operation_t *operation,
     mbedtls_svc_key_id_t password)
 {
@@ -8929,6 +8879,57 @@ exit:
     }
     unlock_status = psa_unregister_read_under_mutex(slot);
     return (status == PSA_SUCCESS) ? unlock_status : status;
+}
+
+psa_status_t psa_pake_setup(
+    psa_pake_operation_t *operation,
+    mbedtls_svc_key_id_t password_key,
+    const psa_pake_cipher_suite_t *cipher_suite)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    if (operation->stage != PSA_PAKE_OPERATION_STAGE_SETUP) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+    if (PSA_ALG_IS_PAKE(cipher_suite->algorithm) == 0 ||
+        PSA_ALG_IS_HASH(cipher_suite->hash) == 0) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    /* Make sure the variable-purpose part of the operation is zeroed.
+     * Initializing the operation does not necessarily take care of it,
+     * since the context is a union and initializing a union does not
+     * necessarily initialize all of its members. */
+    memset(&operation->data, 0, sizeof(operation->data));
+
+    operation->alg = cipher_suite->algorithm;
+    operation->primitive = PSA_PAKE_PRIMITIVE(cipher_suite->type,
+                                              cipher_suite->family, cipher_suite->bits);
+    operation->data.inputs.cipher_suite = *cipher_suite;
+
+#if defined(PSA_WANT_ALG_JPAKE)
+    if (operation->alg == PSA_ALG_JPAKE) {
+        psa_jpake_computation_stage_t *computation_stage =
+            &operation->computation_stage.jpake;
+
+        memset(computation_stage, 0, sizeof(*computation_stage));
+        computation_stage->step = PSA_PAKE_STEP_KEY_SHARE;
+    } else
+#endif /* PSA_WANT_ALG_JPAKE */
+    {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+
+    operation->stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+
+    return psa_pake_set_password_key(operation, password_key);
+exit:
+    psa_pake_abort(operation);
+    return status;
 }
 
 psa_status_t psa_pake_set_user(
