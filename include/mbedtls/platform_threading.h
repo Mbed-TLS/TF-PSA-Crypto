@@ -1,7 +1,17 @@
 /**
  * \file platform_threading.h
  *
- * \brief Platform interface for threading
+ * \brief Platform interface for threading.
+ *
+ * Alternative implementations of the threading abstraction need to
+ * implement the header, types and functions documented in this file:
+ *
+ * - Provide a header file `"threading_alt.h"` that defines the following:
+ *     - The type `mbedtls_platform_mutex_t` of mutex objects.
+ *
+ * - Either define inline versions of the functions listed in this file
+ *   in `"threading_alt.h"`, or provide linkable versions of the functions
+ *   at link time.
  */
 /*
  *  Copyright The Mbed TLS Contributors
