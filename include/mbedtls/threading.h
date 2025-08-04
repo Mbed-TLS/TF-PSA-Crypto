@@ -73,14 +73,65 @@ void mbedtls_threading_free_alt(void);
 #endif /* MBEDTLS_THREADING_ALT */
 
 #if defined(MBEDTLS_THREADING_C)
-/*
- * The function pointers for mutex_init, mutex_free, mutex_ and mutex_unlock
+/** Initialize and set up a mutex.
  *
- * All these functions are expected to work or the result will be undefined.
+ * \note    The mutex may not be used until one thread has completed a call
+ *          to mbedtls_mutex_init().
+ *
+ * \note    This function may allocate resources. Call mbedtls_mutex_free()
+ *          to free these resources.
+ *
+ * \note    mbedtls_mutex_init() does not return a status code.
+ *          If it fails, it should leave its argument (the mutex)
+ *          in a state such that mbedtls_mutex_lock() will fail when
+ *          called with this argument.
+ *
+ * \param[out] mutex    The mutex to initialize.
  */
 extern void (*mbedtls_mutex_init)(mbedtls_threading_mutex_t *mutex);
+
+/** Destroy a mutex.
+ *
+ * A destroyed mutex does not hold any resources.
+ *
+ * \note    As soon as one thread has started a call to this function,
+ *          no other thread may access the mutex in any way, including
+ *          concurrent calls to this function. Once the call returns,
+ *          you may call mbedtls_mutex_init() again on the mutex.
+ *
+ * \param[in,out] mutex The mutex to destroy.
+ */
 extern void (*mbedtls_mutex_free)(mbedtls_threading_mutex_t *mutex);
+
+/** Lock a mutex.
+ *
+ * \note    The mutex must have been initialized and must not be
+ *          already locked by the same state (no recursive locking).
+ *          Otherwise the behavior is undefined.
+ *
+ * \param[in,out] mutex The mutex to lock.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                      The mutex could not be locked.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The mutex is in an invalid state.
+ */
 extern int (*mbedtls_mutex_lock)(mbedtls_threading_mutex_t *mutex);
+
+/** Unlock a mutex.
+ *
+ * \note    The mutex must have been locked by the same thread.
+ *          Otherwise the behavior is undefined.
+ *
+ * \param[in,out] mutex The mutex to unlock.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                      The mutex could not be unlocked.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The mutex is in an invalid state.
+ */
 extern int (*mbedtls_mutex_unlock)(mbedtls_threading_mutex_t *mutex);
 
 /*
