@@ -24,6 +24,8 @@ extern "C" {
 /** Locking / unlocking / free failed with error code. */
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E
 
+#if defined(MBEDTLS_THREADING_C)
+
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include <pthread.h>
 typedef struct mbedtls_threading_mutex_t {
@@ -42,37 +44,31 @@ typedef struct mbedtls_threading_mutex_t {
 #if defined(MBEDTLS_THREADING_ALT)
 /* You should define the mbedtls_threading_mutex_t type in your header */
 #include "threading_alt.h"
-
-/**
- * \brief           Set your alternate threading implementation function
- *                  pointers and initialize global mutexes. If used, this
- *                  function must be called once in the main thread before any
- *                  other Mbed TLS function is called, and
- *                  mbedtls_threading_free_alt() must be called once in the main
- *                  thread after all other Mbed TLS functions.
- *
- * \note            mutex_init() and mutex_free() don't return a status code.
- *                  If mutex_init() fails, it should leave its argument (the
- *                  mutex) in a state such that mutex_lock() will fail when
- *                  called with this argument.
- *
- * \param mutex_init    the init function implementation
- * \param mutex_free    the free function implementation
- * \param mutex_lock    the lock function implementation
- * \param mutex_unlock  the unlock function implementation
- */
-void mbedtls_threading_set_alt(void (*mutex_init)(mbedtls_threading_mutex_t *),
-                               void (*mutex_free)(mbedtls_threading_mutex_t *),
-                               int (*mutex_lock)(mbedtls_threading_mutex_t *),
-                               int (*mutex_unlock)(mbedtls_threading_mutex_t *));
-
-/**
- * \brief               Free global mutexes.
- */
-void mbedtls_threading_free_alt(void);
 #endif /* MBEDTLS_THREADING_ALT */
 
-#if defined(MBEDTLS_THREADING_C)
+/**
+ * \brief   Initialize global mutexes.
+ *
+ * If your application calls TF-PSA-Crypto or Mbed TLS functions from more
+ * than one thred, you must call this function exactly once before calling
+ * any other library function.
+ *
+ * \note    Calling this function is optional on threading implementations
+ *          where a mutex can be initialized statically.
+ */
+void mbedtls_threading_setup(void);
+
+/**
+ * \brief   Destroy global mutexes.
+ *
+ * If you have called mbedtls_threading_setup(), you may call this
+ * function to destroy resources consumed by global mutexes.
+ *
+ * Do not call this function while any TF-PSA-Crypto or Mbed TLS function
+ * call is in progress in any thread, or while the PSA subsystem is active.
+ */
+void mbedtls_threading_teardown(void);
+
 /** Initialize and set up a mutex.
  *
  * \note    The mutex may not be used until one thread has completed a call
@@ -88,7 +84,7 @@ void mbedtls_threading_free_alt(void);
  *
  * \param[out] mutex    The mutex to initialize.
  */
-extern void (*mbedtls_mutex_init)(mbedtls_threading_mutex_t *mutex);
+void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex);
 
 /** Destroy a mutex.
  *
@@ -101,7 +97,7 @@ extern void (*mbedtls_mutex_init)(mbedtls_threading_mutex_t *mutex);
  *
  * \param[in,out] mutex The mutex to destroy.
  */
-extern void (*mbedtls_mutex_free)(mbedtls_threading_mutex_t *mutex);
+void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex);
 
 /** Lock a mutex.
  *
@@ -117,7 +113,7 @@ extern void (*mbedtls_mutex_free)(mbedtls_threading_mutex_t *mutex);
  * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
  *                      The mutex is in an invalid state.
  */
-extern int (*mbedtls_mutex_lock)(mbedtls_threading_mutex_t *mutex);
+int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
 
 /** Unlock a mutex.
  *
@@ -132,7 +128,7 @@ extern int (*mbedtls_mutex_lock)(mbedtls_threading_mutex_t *mutex);
  * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
  *                      The mutex is in an invalid state.
  */
-extern int (*mbedtls_mutex_unlock)(mbedtls_threading_mutex_t *mutex);
+int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
 
 /*
  * Global mutexes
