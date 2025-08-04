@@ -1,7 +1,6 @@
 [submodule "framework"]
 	path = framework
 	url = https://github.com/Mbed-TLS/mbedtls-framework
-
-[submodule "everest"]
+[submodule "drivers/everest"]
 	path = drivers/everest
 	url = https://github.com/gilles-peskine-arm/TF-everest
