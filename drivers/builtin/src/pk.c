@@ -980,7 +980,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (type != MBEDTLS_PK_RSASSA_PSS) {
+    if (type != MBEDTLS_PK_SIGALG_RSA_PSS) {
         return mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
     }
 
@@ -1051,7 +1051,13 @@ int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
                           mbedtls_md_type_t md_alg, const unsigned char *hash,
                           size_t hash_len, const unsigned char *sig, size_t sig_len)
 {
-    return mbedtls_pk_verify_ext(type, ctx, md_alg, hash, hash_len, sig, sig_len);
+    return mbedtls_pk_verify_ext((mbedtls_pk_sigalg_t) type,
+                                 ctx,
+                                 md_alg,
+                                 hash,
+                                 hash_len,
+                                 sig,
+                                 sig_len);
 }
 
 /*
@@ -1137,7 +1143,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (pk_type != MBEDTLS_PK_RSASSA_PSS) {
+    if (pk_type != MBEDTLS_PK_SIGALG_RSA_PSS) {
         return mbedtls_pk_sign(ctx, md_alg, hash, hash_len,
                                sig, sig_size, sig_len);
     }

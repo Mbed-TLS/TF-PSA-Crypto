@@ -848,7 +848,7 @@ void valid_parameters()
                                 buf, sizeof(buf), &len) ==
                 MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_ASSERT(mbedtls_pk_sign_ext(MBEDTLS_PK_NONE, &pk,
+    TEST_ASSERT(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_NONE, &pk,
                                     MBEDTLS_MD_NONE,
                                     NULL, 0,
                                     buf, sizeof(buf), &len) ==
@@ -867,7 +867,7 @@ void valid_parameters()
                                   buf, sizeof(buf)) ==
                 MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_NONE,
+    TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_NONE,
                                       &pk,
                                       MBEDTLS_MD_NONE,
                                       NULL, 0,
@@ -1291,7 +1291,7 @@ void pk_rsa_overflow()
     TEST_EQUAL(mbedtls_pk_setup(&pk,
                                 mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
 
-    TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, &pk,
+    TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                      MBEDTLS_MD_NONE, hash, hash_len, sig, sig_len),
                MBEDTLS_ERR_PK_INVALID_ALG);
 
@@ -1299,7 +1299,7 @@ void pk_rsa_overflow()
                                  sig, sig_len),
                MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_RSASSA_PSS, &pk,
+    TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                    MBEDTLS_MD_NONE, hash, hash_len,
                                    sig, sizeof(sig), &sig_len),
                MBEDTLS_ERR_PK_KEY_INVALID_FORMAT);
@@ -1541,7 +1541,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
      * The PSA key was setup to use PKCS1 v1.5 signature algorithm, but here we try
      * to use it for PSS (PKCS1 v2.1) and it should fail. */
     if (key_pk_type == MBEDTLS_PK_RSA) {
-        TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_RSASSA_PSS, &pk, md_alg, hash, hash_len,
+        TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, md_alg, hash, hash_len,
                                        sig, sizeof(sig), &sig_len),
                    MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
     }
