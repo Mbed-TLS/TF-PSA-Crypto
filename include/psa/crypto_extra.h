@@ -893,7 +893,6 @@ struct psa_pake_cipher_suite_s {
     psa_pake_primitive_type_t type;
     psa_pake_family_t family;
     uint16_t  bits;
-    psa_algorithm_t hash;
     uint32_t key_confirmation;
 };
 
