@@ -50,6 +50,43 @@
 #endif /* MBEDTLS_HAVE_TIME_DATE && !MBEDTLS_PLATFORM_GMTIME_R_ALT */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
+void mbedtls_platform_mutex_init(mbedtls_platform_mutex_t *mutex)
+{
+    (void) pthread_mutex_init(mutex, NULL);
+}
+
+void mbedtls_platform_mutex_free(mbedtls_platform_mutex_t *mutex)
+{
+    (void) pthread_mutex_destroy(mutex);
+}
+
+int mbedtls_platform_mutex_lock(mbedtls_platform_mutex_t *mutex)
+{
+    if (pthread_mutex_lock(mutex) != 0) {
+        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
+    }
+    return 0;
+}
+
+int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex)
+{
+    if (pthread_mutex_unlock(mutex) != 0) {
+        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
+    }
+    return 0;
+}
+
+/*
+ * With pthreads we can statically initialize mutexes
+ */
+#if defined(MBEDTLS_TEST_HOOKS)
+#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1 }
+#else
+#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER }
+#endif
+
+#endif /* MBEDTLS_THREADING_PTHREAD */
+
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
 {
     if (mutex == NULL) {
@@ -62,7 +99,7 @@ void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
      * hit, so state transitions are checked in tests only via the state
      * variable. Please make sure any new mutex that gets added is exercised in
      * tests; see framework/tests/src/threading_helpers.c for more details. */
-    (void) pthread_mutex_init(&mutex->mutex, NULL);
+    mbedtls_platform_mutex_init(&mutex->mutex);
 }
 
 void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
@@ -71,7 +108,7 @@ void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
         return;
     }
 
-    (void) pthread_mutex_destroy(&mutex->mutex);
+    mbedtls_platform_mutex_free(&mutex->mutex);
 }
 
 int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex)
@@ -80,11 +117,7 @@ int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex)
         return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
     }
 
-    if (pthread_mutex_lock(&mutex->mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-
-    return 0;
+    return mbedtls_platform_mutex_lock(&mutex->mutex);
 }
 
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
@@ -92,20 +125,9 @@ int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
     if (mutex == NULL) {
         return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
     }
-
-    if (pthread_mutex_unlock(&mutex->mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-
-    return 0;
+    return mbedtls_platform_mutex_unlock(&mutex->mutex);
 }
 
-/*
- * With pthreads we can statically initialize mutexes
- */
-#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1 }
-
-#endif /* MBEDTLS_THREADING_PTHREAD */
 
 /*
  * Set functions pointers and initialize global mutexes

@@ -26,25 +26,23 @@ extern "C" {
 
 #if defined(MBEDTLS_THREADING_C)
 
-#if defined(MBEDTLS_THREADING_PTHREAD)
-#include <pthread.h>
-typedef struct mbedtls_threading_mutex_t {
-    pthread_mutex_t MBEDTLS_PRIVATE(mutex);
+#include "mbedtls/platform_threading.h"
 
+typedef struct mbedtls_threading_mutex_t {
+    mbedtls_platform_mutex_t MBEDTLS_PRIVATE(mutex);
+
+#if defined(MBEDTLS_TEST_HOOKS)
     /* WARNING - state should only be accessed when holding the mutex lock in
      * framework/tests/src/threading_helpers.c, otherwise corruption can occur.
      * state will be 0 after a failed init or a free, and nonzero after a
      * successful init. This field is for testing only and thus not considered
      * part of the public API of Mbed TLS and may change without notice.*/
     char MBEDTLS_PRIVATE(state);
-
-} mbedtls_threading_mutex_t;
 #endif
+} mbedtls_threading_mutex_t;
 
-#if defined(MBEDTLS_THREADING_ALT)
-/* You should define the mbedtls_threading_mutex_t type in your header */
-#include "threading_alt.h"
-#endif /* MBEDTLS_THREADING_ALT */
+/* For test purposes only. See <test/threading_helpers.h>. */
+#define MBEDTLS_TEST_HOOKS_FOR_MUTEX_USAGE 0x01000001
 
 /**
  * \brief   Initialize global mutexes.
