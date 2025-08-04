@@ -19,6 +19,8 @@
 
 #include "mbedtls/threading.h"
 
+#include "threading_internal.h"
+
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
 
 #if !defined(_WIN32) && (defined(unix) || \
@@ -87,6 +89,15 @@ int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex)
 
 #endif /* MBEDTLS_THREADING_PTHREAD */
 
+#if defined(MBEDTLS_TEST_HOOKS)
+/* See threading_helpers.c */
+void (*mbedtls_test_hook_mutex_init_post)(mbedtls_threading_mutex_t *mutex);
+void (*mbedtls_test_hook_mutex_free_pre)(mbedtls_threading_mutex_t *mutex);
+void (*mbedtls_test_hook_mutex_lock_post)(mbedtls_threading_mutex_t *mutex,
+                                          int ret);
+void (*mbedtls_test_hook_mutex_unlock_pre)(mbedtls_threading_mutex_t *mutex);
+#endif
+
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
 {
     if (mutex == NULL) {
@@ -100,6 +111,12 @@ void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
      * variable. Please make sure any new mutex that gets added is exercised in
      * tests; see framework/tests/src/threading_helpers.c for more details. */
     mbedtls_platform_mutex_init(&mutex->mutex);
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_test_hook_mutex_init_post != NULL) {
+        mbedtls_test_hook_mutex_init_post(mutex);
+    }
+#endif
 }
 
 void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
@@ -107,6 +124,12 @@ void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
     if (mutex == NULL) {
         return;
     }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_test_hook_mutex_free_pre != NULL) {
+        mbedtls_test_hook_mutex_free_pre(mutex);
+    }
+#endif
 
     mbedtls_platform_mutex_free(&mutex->mutex);
 }
@@ -117,7 +140,15 @@ int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex)
         return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
     }
 
-    return mbedtls_platform_mutex_lock(&mutex->mutex);
+    int ret = mbedtls_platform_mutex_lock(&mutex->mutex);
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_test_hook_mutex_lock_post != NULL) {
+        mbedtls_test_hook_mutex_lock_post(mutex, ret);
+    }
+#endif
+
+    return ret;
 }
 
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
@@ -125,6 +156,13 @@ int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
     if (mutex == NULL) {
         return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
     }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_test_hook_mutex_unlock_pre != NULL) {
+        mbedtls_test_hook_mutex_unlock_pre(mutex);
+    }
+#endif
+
     return mbedtls_platform_mutex_unlock(&mutex->mutex);
 }
 
