@@ -67,8 +67,6 @@
 extern "C" {
 #endif
 
-typedef mbedtls_pk_type_t mbedtls_pk_sigalg_t;
-
 /**
  * \brief           Maximum size of a signature made by mbedtls_pk_sign().
  */
