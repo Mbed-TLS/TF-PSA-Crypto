@@ -732,35 +732,54 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
 #define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE        ((psa_key_type_t) 0x4400)
 #define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE          ((psa_key_type_t) 0x7400)
+#define PSA_KEY_TYPE_SPAKE2P_CURVE_MASK             ((psa_key_type_t) 0x00ff)
 
 /** SPAKE2+ key pair.
  *
  * Not implemented yet.
  */
 #define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(curve)            \
-    (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | (curve))
+    (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | ((curve) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK))
 
 /** SPAKE2+ public key.
  *
- * Not implemented yet.
+ * The key material of a SPAKE2+ public key is the SPAKE2+ registration
+ * record \c w0 || \c L defined by RFC 9383: the scalar \c w0 encoded as
+ * a big-endian byte string of ceiling(m/8) bytes, where m is the bit
+ * size of the curve order, followed by the point \c L = \c w1 * \c G in
+ * uncompressed representation (`0x04 || x || y`). This is the format
+ * accepted by psa_import_key() and produced by psa_export_key().
+ *
+ * Only SECP_R1 curves are currently supported.
  */
 #define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(curve)          \
-    (PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE | (curve))
+    (PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE | ((curve) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK))
 
 /** Whether a key type is a SPAKE2+ key pair type. */
 #define PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(type)          \
-    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+    (((type) & ~PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) ==         \
      PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE)
 
 /** Whether a key type is a SPAKE2+ public key type. */
 #define PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(type)        \
-    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+    (((type) & ~PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) ==         \
      PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
 
 /** Whether a key type is a SPAKE2+ key pair or public key type. */
 #define PSA_KEY_TYPE_IS_SPAKE2P(type)                   \
     ((PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) &       \
-      ~PSA_KEY_TYPE_ECC_CURVE_MASK) == PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+      ~PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) == PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+
+/** Extract the ECC curve family from a SPAKE2+ key type.
+ *
+ * \param type A SPAKE2+ key type (key pair or public key).
+ *
+ * \return The elliptic curve family id (a \c PSA_ECC_FAMILY_xxx value).
+ */
+#define PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(type) \
+    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_SPAKE2P(type) ? \
+                         ((type) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) : \
+                         0))
 
 #define PSA_ALG_SPAKE2P_HMAC_BASE               ((psa_algorithm_t) 0x0a000400)
 
@@ -2107,6 +2126,8 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
     const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;
     return v;
 }
+
+
 
 #ifdef __cplusplus
 }

@@ -253,6 +253,28 @@
 #endif /* missing accel */
 #endif /* PSA_WANT_ALG_JPAKE */
 
+/* SPAKE2+ key types.
+ *
+ * SPAKE2+ key management (import validates w0 and the point L, export
+ * computes L = w1 * G, and deriving a key pair reduces scalars modulo the
+ * group order) runs in the core and needs EC group data, point arithmetic
+ * and bignum even when no SPAKE2+ algorithm is enabled, for example in a
+ * build that only provisions or transports registration records. */
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
+#define MBEDTLS_BIGNUM_C
+#define MBEDTLS_ECP_C
+#if defined(PSA_WANT_ECC_SECP_R1_256)
+#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_384)
+#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_521)
+#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
+#endif
+#endif /* PSA_WANT_KEY_TYPE_SPAKE2P_* */
+
 /* ECC: key types: enable built-ins as needed.
  *
  * We need the key type built-in:
