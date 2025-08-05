@@ -83,6 +83,7 @@
 #define PSA_WANT_ALG_SHA3_384                   1
 #define PSA_WANT_ALG_SHA3_512                   1
 #define PSA_WANT_ALG_STREAM_CIPHER              1
+#define PSA_WANT_ALG_SPAKE2P_HMAC               1
 #define PSA_WANT_ALG_TLS12_PRF                  1
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
 #define PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS       1
@@ -119,6 +120,7 @@
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY    1
 
 /*
  * The following symbols extend and deprecate the legacy
