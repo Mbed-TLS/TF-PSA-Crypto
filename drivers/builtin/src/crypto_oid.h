@@ -340,10 +340,6 @@
  *   iso(1) member-body(2) us(840) ansi-X9-62(10045) curves(3) prime(1) 1 } */
 #define MBEDTLS_OID_EC_GRP_SECP192R1        MBEDTLS_OID_ANSI_X9_62 "\x03\x01\x01"
 
-/* secp224r1 OBJECT IDENTIFIER ::= {
- *   iso(1) identified-organization(3) certicom(132) curve(0) 33 } */
-#define MBEDTLS_OID_EC_GRP_SECP224R1        MBEDTLS_OID_CERTICOM "\x00\x21"
-
 /* secp256r1 OBJECT IDENTIFIER ::= {
  *   iso(1) member-body(2) us(840) ansi-X9-62(10045) curves(3) prime(1) 7 } */
 #define MBEDTLS_OID_EC_GRP_SECP256R1        MBEDTLS_OID_ANSI_X9_62 "\x03\x01\x07"

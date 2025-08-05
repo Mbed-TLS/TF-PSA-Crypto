@@ -143,14 +143,6 @@
 #endif
 #endif
 
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-#if defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224)
-#undef MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224
-#else
-#define MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224 1
-#endif
-#endif
-
 #if defined(PSA_WANT_ECC_SECP_R1_256)
 #if defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256)
 #undef MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256

@@ -86,7 +86,6 @@
 #define PSA_WANT_ECC_SECP_K1_192                1
 #define PSA_WANT_ECC_SECP_K1_256                1
 #define PSA_WANT_ECC_SECP_R1_192                1
-#define PSA_WANT_ECC_SECP_R1_224                1
 /* For secp256r1, consider enabling #MBEDTLS_PSA_P256M_DRIVER_ENABLED
  * (see the description in mbedtls/mbedtls_config.h for details). */
 #define PSA_WANT_ECC_SECP_R1_256                1
@@ -843,9 +842,6 @@
  * Enable the support for parsing public keys of type Short Weierstrass
  * (MBEDTLS_ECP_DP_SECP_XXX and MBEDTLS_ECP_DP_BP_XXX) which are using the
  * compressed point format. This parsing is done through ECP module's functions.
- *
- * \note As explained in the description of MBEDTLS_ECP_PF_COMPRESSED (in ecp.h)
- *       the only unsupported curve is MBEDTLS_ECP_DP_SECP224R1.
  */
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
@@ -2163,7 +2159,6 @@
  */
 /* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
 #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
