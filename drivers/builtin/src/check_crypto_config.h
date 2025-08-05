@@ -133,4 +133,11 @@
 #error "PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS defined, but not all prerequisites"
 #endif
 
+#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_GENERATE)) && \
+    !defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
+#error "PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_xxx defined, but not all prerequisites"
+#endif
 #endif /* MBEDTLS_CHECK_CRYPTO_CONFIG_H */
