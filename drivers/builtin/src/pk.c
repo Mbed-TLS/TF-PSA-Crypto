@@ -204,7 +204,7 @@ int mbedtls_pk_can_do(const mbedtls_pk_context *ctx, mbedtls_pk_type_t type)
         return 0;
     }
 
-    return ctx->pk_info->can_do((mbedtls_pk_type_t) type);
+    return ctx->pk_info->can_do(type);
 }
 
 /*
