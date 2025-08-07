@@ -1,0 +1,7 @@
+Removals
+   * Support for EC curves secp224r1 and secp224k1 is removed.
+
+Default behavior changes
+   * Curves secp192k1 and secp192r1 are now disabled by default. They are meant
+     to be used for internal testing only and they can be removed in a future
+     release of the library.
