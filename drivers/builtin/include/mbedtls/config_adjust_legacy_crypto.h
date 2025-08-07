@@ -55,6 +55,19 @@
 #define MBEDTLS_PSA_CRYPTO_CLIENT
 #endif /* MBEDTLS_PSA_CRYPTO_C */
 
+/**
+ * \def MBEDTLS_USE_PSA_CRYPTO
+ *
+ * Make the X.509 and TLS libraries use PSA for cryptographic operations as
+ * much as possible, and enable new APIs for using keys handled by PSA Crypto.
+ *
+ * \note This is a legacy symbol which still exists for backward compatibility.
+ *       Up to Mbed TLS 3.x, it was not enabled by default. Now it is always
+ *       enabled, and it will eventually disappear from the code base. This
+ *       is not part of the public API of TF-PSA-Crypto or of Mbed TLS >=4.0.
+ */
+#define MBEDTLS_USE_PSA_CRYPTO
+
 /* Auto-enable CIPHER_C when any of the unauthenticated ciphers is builtin
  * in PSA. */
 #if defined(MBEDTLS_PSA_CRYPTO_C) && \
