@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "mbedtls/pk.h"
 #include "fuzz_common.h"
+#include "mbedtls/private/pk_private.h"
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
 {

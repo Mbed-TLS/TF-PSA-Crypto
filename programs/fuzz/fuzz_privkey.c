@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/pk.h"
+#include "mbedtls/private/pk_private.h"
 #include "mbedtls/private/entropy.h"
 #include "mbedtls/private/ctr_drbg.h"
 #include "fuzz_common.h"
