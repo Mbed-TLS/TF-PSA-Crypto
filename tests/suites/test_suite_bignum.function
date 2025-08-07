@@ -1192,6 +1192,8 @@ void mpi_gcd_modinv_odd_both(char *input_A, char *input_N,
     TEST_EQUAL(mbedtls_test_read_mpi(&A, input_A), 0);
     TEST_EQUAL(mbedtls_test_read_mpi(&N, input_N), 0);
     TEST_EQUAL(mbedtls_test_read_mpi(&exp_G, result_G), 0);
+    /* If there is no inverse then the value returned in I will be
+     * indeterminate, and so not useful or possible to test. */
     if (has_inverse) {
         TEST_EQUAL(mbedtls_test_read_mpi(&exp_I, result_I), 0);
     }
@@ -1201,8 +1203,6 @@ void mpi_gcd_modinv_odd_both(char *input_A, char *input_N,
     if (res == 0) {
         TEST_ASSERT(sign_is_valid(&G));
         TEST_EQUAL(mbedtls_mpi_cmp_mpi(&G, &exp_G), 0);
-        /* If there is no inverse then the value returned in I will be
-         * indeterminate, and so not useful or possible to test. */
         if (has_inverse) {
             TEST_ASSERT(sign_is_valid(&I));
             TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
@@ -1216,8 +1216,6 @@ void mpi_gcd_modinv_odd_both(char *input_A, char *input_N,
     if (res == 0) {
         TEST_ASSERT(sign_is_valid(&G));
         TEST_EQUAL(mbedtls_mpi_cmp_mpi(&G, &exp_G), 0);
-        /* If there is no inverse then the value returned in I will be
-         * indeterminate, and so not useful or possible to test. */
         if (has_inverse) {
             TEST_ASSERT(sign_is_valid(&I));
             TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
@@ -1236,8 +1234,6 @@ void mpi_gcd_modinv_odd_both(char *input_A, char *input_N,
     if (res == 0) {
         TEST_ASSERT(sign_is_valid(&G));
         TEST_EQUAL(mbedtls_mpi_cmp_mpi(&G, &exp_G), 0);
-        /* If there is no inverse then the value returned in I will be
-         * indeterminate, and so not useful or possible to test. */
         if (has_inverse) {
             TEST_ASSERT(sign_is_valid(&I));
             TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
@@ -1252,6 +1248,24 @@ void mpi_gcd_modinv_odd_both(char *input_A, char *input_N,
     /* Test pointer aliasing where &A == &N. This should fail. */
     res = mbedtls_mpi_gcd_modinv_odd(&G, &I, &A, /* N */ &A);
     TEST_EQUAL(res, MBEDTLS_ERR_MPI_BAD_INPUT_DATA);
+
+    /* Test G & I initialized to a number with more limbs than N. */
+    if (N.n > 0) {
+        TEST_EQUAL(mbedtls_mpi_grow(&G, N.n * 2), 0);
+        memset(G.p, 0x2d, G.n * sizeof(mbedtls_mpi_uint));
+        TEST_EQUAL(mbedtls_mpi_grow(&I, N.n * 2), 0);
+        memset(I.p, 0x2f, I.n * sizeof(mbedtls_mpi_uint));
+        res = mbedtls_mpi_gcd_modinv_odd(&G, &I, &A, &N);
+        TEST_EQUAL(res, return_code);
+        if (res == 0) {
+            TEST_ASSERT(sign_is_valid(&G));
+            TEST_EQUAL(mbedtls_mpi_cmp_mpi(&G, &exp_G), 0);
+            if (has_inverse) {
+                TEST_ASSERT(sign_is_valid(&I));
+                TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
+            }
+        }
+    }
 
 exit:
     mbedtls_mpi_free(&G); mbedtls_mpi_free(&I); mbedtls_mpi_free(&A); mbedtls_mpi_free(&N);
@@ -1300,6 +1314,18 @@ void mpi_gcd_modinv_odd_only_gcd(char *input_A, char *input_N,
     res = mbedtls_mpi_gcd_modinv_odd(&G, NULL, &A, /* N */ &A);
     TEST_EQUAL(res, MBEDTLS_ERR_MPI_BAD_INPUT_DATA);
 
+    /* Test G initialized to a number with more limbs than N. */
+    if (N.n > 0) {
+        TEST_EQUAL(mbedtls_mpi_grow(&G, N.n * 2), 0);
+        memset(G.p, 0x2b, G.n * sizeof(mbedtls_mpi_uint));
+        res = mbedtls_mpi_gcd_modinv_odd(&G, NULL, &A, &N);
+        TEST_EQUAL(res, return_code);
+        if (res == 0) {
+            TEST_ASSERT(sign_is_valid(&G));
+            TEST_EQUAL(mbedtls_mpi_cmp_mpi(&G, &exp_G), 0);
+        }
+    }
+
 exit:
     mbedtls_mpi_free(&G); mbedtls_mpi_free(&A); mbedtls_mpi_free(&N);
     mbedtls_mpi_free(&exp_G);
@@ -1317,14 +1343,14 @@ void mpi_gcd_modinv_odd_only_modinv(char *input_A, char *input_N,
     mbedtls_mpi_init(&exp_I);
     TEST_EQUAL(mbedtls_test_read_mpi(&A, input_A), 0);
     TEST_EQUAL(mbedtls_test_read_mpi(&N, input_N), 0);
+    /* If there is no inverse then the value returned in I will be
+     * indeterminate, and so not useful or possible to test. */
     if (has_inverse) {
         TEST_EQUAL(mbedtls_test_read_mpi(&exp_I, result_I), 0);
     }
 
     res = mbedtls_mpi_gcd_modinv_odd(NULL, &I, &A, &N);
     TEST_EQUAL(res, return_code);
-    /* If there is no inverse then the value returned in I will be
-     * indeterminate, and so not useful or possible to test. */
     if (res == 0 && has_inverse) {
         TEST_ASSERT(sign_is_valid(&I));
         TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
@@ -1334,8 +1360,6 @@ void mpi_gcd_modinv_odd_only_modinv(char *input_A, char *input_N,
     TEST_EQUAL(mbedtls_test_read_mpi(&I, input_A), 0);
     res = mbedtls_mpi_gcd_modinv_odd(NULL, &I, /* A */ &I, &N);
     TEST_EQUAL(res, return_code);
-    /* If there is no inverse then the value returned in I will be
-     * indeterminate, and so not useful or possible to test. */
     if (res == 0 && has_inverse) {
         TEST_ASSERT(sign_is_valid(&I));
         TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
@@ -1349,6 +1373,18 @@ void mpi_gcd_modinv_odd_only_modinv(char *input_A, char *input_N,
     /* Test pointer aliasing where &A == &N. This should fail. */
     res = mbedtls_mpi_gcd_modinv_odd(NULL, &I, &A, /* N */ &A);
     TEST_EQUAL(res, MBEDTLS_ERR_MPI_BAD_INPUT_DATA);
+
+    /* Test I initialized to a number with more limbs than N. */
+    if (N.n > 0) {
+        TEST_EQUAL(mbedtls_mpi_grow(&I, N.n * 2), 0);
+        memset(I.p, 0x29, I.n * sizeof(mbedtls_mpi_uint));
+        res = mbedtls_mpi_gcd_modinv_odd(NULL, &I, &A, &N);
+        TEST_EQUAL(res, return_code);
+        if (res == 0 && has_inverse) {
+            TEST_ASSERT(sign_is_valid(&I));
+            TEST_EQUAL(mbedtls_mpi_cmp_mpi(&I, &exp_I), 0);
+        }
+    }
 
 exit:
     mbedtls_mpi_free(&I); mbedtls_mpi_free(&A); mbedtls_mpi_free(&N);
