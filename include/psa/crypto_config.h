@@ -869,13 +869,11 @@
 //#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
 //#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
 //#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
-//#define MBEDTLS_CTR_DRBG_RESEED_INTERVAL        10000 /**< Interval before reseed is performed by default */
 
 /* HMAC_DRBG options */
 //#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
 //#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
 //#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
-//#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000 /**< Interval before reseed is performed by default */
 
 /* PSA options */
 /**
@@ -1420,6 +1418,18 @@
  * \note Valid values: 128 or default of 256.
  */
 #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH                 256
+
+/**
+ * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL
+ *
+ * In CTR_DRBG and HMAC_DRBG, the interval before the DRBG is reseeded from entropy.
+ * The interval is the number of requests to the random generator, for any purpose.
+ *
+ * \note Requests have a maximum size (which depends on the library configuration
+ * and is currently unspecified), so the maximum number of bytes before a reseed
+ * is the interval multiplied by the maximum request size.
+ */
+//#define MBEDTLS_PSA_RNG_RESEED_INTERVAL 1000
 
 /** \} name SECTION: PSA core */
 

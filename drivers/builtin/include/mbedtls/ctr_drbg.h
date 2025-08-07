@@ -123,8 +123,8 @@
 #endif /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
 #endif /* !defined(MBEDTLS_CTR_DRBG_ENTROPY_LEN) */
 
-#if !defined(MBEDTLS_CTR_DRBG_RESEED_INTERVAL)
-#define MBEDTLS_CTR_DRBG_RESEED_INTERVAL    10000
+#if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
+#define MBEDTLS_PSA_RNG_RESEED_INTERVAL    10000
 /**< The interval before reseed is performed by default. */
 #endif
 
@@ -237,7 +237,7 @@ mbedtls_ctr_drbg_context;
  *                      or mbedtls_ctr_drbg_free().
  *
  * \note                The reseed interval is
- *                      #MBEDTLS_CTR_DRBG_RESEED_INTERVAL by default.
+ *                      #MBEDTLS_PSA_RNG_RESEED_INTERVAL by default.
  *                      You can override it by calling
  *                      mbedtls_ctr_drbg_set_reseed_interval().
  *
@@ -430,7 +430,7 @@ int mbedtls_ctr_drbg_set_nonce_len(mbedtls_ctr_drbg_context *ctx,
  * or mbedtls_ctr_drbg_random_with_add() after which the entropy function
  * is called again.
  *
- * The default value is #MBEDTLS_CTR_DRBG_RESEED_INTERVAL.
+ * The default value is #MBEDTLS_PSA_RNG_RESEED_INTERVAL.
  *
  * \param ctx           The CTR_DRBG context.
  * \param interval      The reseed interval.
