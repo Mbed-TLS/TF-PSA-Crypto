@@ -7,6 +7,7 @@
 #include "mbedtls/private/pk_private.h"
 #include "mbedtls/private/entropy.h"
 #include "mbedtls/private/ctr_drbg.h"
+#include "mbedtls/private/pk_private.h"
 #include "fuzz_common.h"
 
 //4 Kb should be enough for every bug ;-)
