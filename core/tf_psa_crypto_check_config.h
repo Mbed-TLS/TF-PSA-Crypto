@@ -223,6 +223,14 @@
 #error "MBEDTLS_CTR_DRBG_ENTROPY_LEN value too high"
 #endif
 
+#if defined(MBEDTLS_ENTROPY_C) && \
+    defined(MBEDTLS_PSA_CRYPTO_RNG_HASH) && \
+    !(defined(MBEDTLS_ENTROPY_NV_SEED) || \
+      defined(MBEDTLS_PSA_DRIVER_GET_ENTROPY) || \
+      defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY)) 
+#error "MBEDTLS_PSA_CRYPTO_RNG_HASH defined, but not all prerequisites"
+#endif
+
 #if defined(__has_feature)
 #if __has_feature(memory_sanitizer)
 #define MBEDTLS_HAS_MEMSAN // #undef at the end of this paragraph
