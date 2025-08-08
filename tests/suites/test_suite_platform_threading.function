@@ -1,0 +1,129 @@
+/* BEGIN_HEADER */
+/* Basic tests for the threading interface.
+ */
+
+#include "mbedtls/threading.h"
+
+#include "test/threading_helpers.h"
+
+#include <psa/crypto.h>
+
+typedef enum {
+    DO_NOTHING,
+    DO_INCREMENT,
+    DO_PSA_INIT,
+    DO_PSA_INIT_FREE,
+} thread_behavior_t;
+
+typedef struct {
+    size_t index;
+    thread_behavior_t behavior;
+    size_t times;
+} thread_context_t;
+
+typedef struct {
+    mbedtls_threading_mutex_t mutex;
+    volatile unsigned long counter;
+} shared_data_t;
+shared_data_t global_data;
+
+static mbedtls_test_thread_return_t thread_body(void *ctx_arg) {
+    const thread_context_t *ctx = ctx_arg;
+
+    for (size_t i = 0; i < ctx->times; i++) {
+        switch (ctx->behavior) {
+            case DO_INCREMENT:
+                TEST_EQUAL(mbedtls_mutex_lock(&global_data.mutex), 0);
+                ++global_data.counter;
+                TEST_EQUAL(mbedtls_mutex_unlock(&global_data.mutex), 0);
+                break;
+
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+            case DO_PSA_INIT:
+                PSA_ASSERT(psa_crypto_init());
+                break;
+
+            case DO_PSA_INIT_FREE:
+                PSA_ASSERT(psa_crypto_init());
+                mbedtls_psa_crypto_free();
+                break;
+#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
+
+            default:
+                TEST_EQUAL(ctx->behavior, DO_NOTHING);
+                break;
+        }
+    }
+
+exit:
+    return MBEDTLS_TEST_THREAD_RETURN_0;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_THREADING_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void parallel_peers(int thread_count_arg, int behavior, int times)
+{
+    size_t thread_count = (size_t) thread_count_arg;
+    mbedtls_test_thread_t *threads = NULL;
+    thread_context_t *contexts = NULL;
+
+    memset(&global_data, 0, sizeof(global_data));
+    mbedtls_mutex_init(&global_data.mutex);
+
+    TEST_CALLOC(threads, thread_count);
+    TEST_CALLOC(contexts, thread_count);
+
+    for (size_t i = 0; i < thread_count; i++) {
+        contexts[i].index = i;
+        contexts[i].behavior = behavior;
+        contexts[i].times = times;
+        TEST_EQUAL(mbedtls_test_thread_create(&threads[i],
+                                              thread_body,
+                                              &contexts[i]), 0);
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    /* Check that the system is in the expected state.
+     * Some of the checks assume that thread_count and times are
+     * both nonzero. */
+    switch (behavior) {
+        case DO_INCREMENT:
+            TEST_EQUAL(global_data.counter, thread_count * times);
+            break;
+
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+        case DO_PSA_INIT:
+        {
+            unsigned char buf[4];
+            PSA_ASSERT(psa_generate_random(buf, sizeof(buf)));
+            break;
+        }
+
+        case DO_PSA_INIT_FREE:
+        {
+            unsigned char buf[4];
+            TEST_EQUAL(psa_generate_random(buf, sizeof(buf)),
+                       PSA_ERROR_BAD_STATE);
+            break;
+        }
+#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
+    }
+
+exit:
+    mbedtls_mutex_free(&global_data.mutex);
+    mbedtls_free(threads);
+    mbedtls_free(contexts);
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+    mbedtls_psa_crypto_free();
+#endif
+}
+/* END_CASE */

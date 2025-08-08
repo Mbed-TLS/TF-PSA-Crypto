@@ -1,0 +1,32 @@
+Parallel 1: do nothing
+parallel_peers:1:DO_NOTHING:1
+
+Parallel 2: do nothing
+parallel_peers:2:DO_NOTHING:1
+
+Parallel 2: increment *1
+parallel_peers:2:DO_INCREMENT:1
+
+Parallel 2: increment *100000
+parallel_peers:2:DO_INCREMENT:100000
+
+Parallel 20: increment *10000
+parallel_peers:20:DO_INCREMENT:10000
+
+Parallel 200: increment *1000
+parallel_peers:200:DO_INCREMENT:1000
+
+Parallel 2000: increment *100
+parallel_peers:2000:DO_INCREMENT:100
+
+Parallel 100: PSA init *1
+parallel_peers:100:DO_PSA_INIT:1
+
+Parallel 100: PSA init *100
+parallel_peers:100:DO_PSA_INIT:100
+
+Parallel 100: PSA init and free *1
+parallel_peers:100:DO_PSA_INIT_FREE:1
+
+Parallel 100: PSA init and free *100
+parallel_peers:100:DO_PSA_INIT_FREE:100
