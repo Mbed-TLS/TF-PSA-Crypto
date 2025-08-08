@@ -6,6 +6,7 @@
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include "mbedtls/threading.h"
+#include "test/threading_helpers.h"
 #endif
 
 /* Modes for ctr_drbg_validate */
@@ -96,8 +97,8 @@ exit:
 }
 
 static const int thread_random_reps = 10;
-void *thread_random_function(void *ctx); /* only used conditionally in ctr_drbg_threads */
-void *thread_random_function(void *ctx)
+mbedtls_test_thread_return_t thread_random_function(void *ctx); /* only used conditionally in ctr_drbg_threads */
+mbedtls_test_thread_return_t thread_random_function(void *ctx)
 {
     unsigned char out[16];
     memset(out, 0, sizeof(out));
@@ -107,7 +108,7 @@ void *thread_random_function(void *ctx)
     }
 
 exit:
-    return NULL;
+    return MBEDTLS_TEST_THREAD_RETURN_0;
 }
 /* END_HEADER */
 

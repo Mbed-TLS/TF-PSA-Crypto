@@ -1334,7 +1334,7 @@ same_key_context;
 /* Attempt to import the key in ctx. This handles any valid error codes
  * and reports an error for any invalid codes. This function also insures
  * that once imported by some thread, all threads can use the key. */
-static void *thread_import_key(void *ctx)
+static mbedtls_test_thread_return_t thread_import_key(void *ctx)
 {
     mbedtls_svc_key_id_t returned_key_id;
     same_key_context *skc = (struct same_key_context *) ctx;
@@ -1405,10 +1405,10 @@ exit:
     /* Key attributes may have been returned by psa_get_key_attributes(),
      * reset them as required. */
     psa_reset_key_attributes(&got_attributes);
-    return NULL;
+    return MBEDTLS_TEST_THREAD_RETURN_0;
 }
 
-static void *thread_use_and_destroy_key(void *ctx)
+static mbedtls_test_thread_return_t thread_use_and_destroy_key(void *ctx)
 {
     same_key_context *skc = (struct same_key_context *) ctx;
 
@@ -1434,7 +1434,7 @@ static void *thread_use_and_destroy_key(void *ctx)
     }
 
 exit:
-    return NULL;
+    return MBEDTLS_TEST_THREAD_RETURN_0;
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 
@@ -1449,7 +1449,7 @@ typedef struct generate_key_context {
     int reps;
 }
 generate_key_context;
-static void *thread_generate_key(void *ctx)
+static mbedtls_test_thread_return_t thread_generate_key(void *ctx)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t got_attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -1493,7 +1493,7 @@ exit:
      * thus reset them as required.
      */
     psa_reset_key_attributes(&got_attributes);
-    return NULL;
+    return MBEDTLS_TEST_THREAD_RETURN_0;
 }
 #endif /* MBEDTLS_THREADING_PTHREAD */
 

@@ -127,7 +127,7 @@ typedef struct {
     int do_init;
 } thread_psa_init_ctx_t;
 
-static void *thread_psa_init_function(void *ctx)
+static mbedtls_test_thread_return_t thread_psa_init_function(void *ctx)
 {
     thread_psa_init_ctx_t *init_context = (thread_psa_init_ctx_t *) ctx;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -170,7 +170,7 @@ static void *thread_psa_init_function(void *ctx)
     }
 
 exit:
-    return NULL;
+    return MBEDTLS_TEST_THREAD_RETURN_0;
 }
 #endif /* defined MBEDTLS_THREADING_PTHREAD */
 
