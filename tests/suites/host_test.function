@@ -523,6 +523,14 @@ static int execute_tests(int argc, const char **argv)
     mbedtls_test_mutex_usage_init();
 #endif
 
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_threading_setup();
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    /* The global mutexes survive between calls. We must not count them. */
+    mbedtls_test_mutex_usage_set_baseline();
+#endif
+#endif
+
     /*
      * The C standard doesn't guarantee that all-bits-0 is the representation
      * of a NULL pointer. We do however use that in our code for initializing
@@ -773,6 +781,10 @@ static int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_threading_teardown();
+#endif
 
 #if defined(MBEDTLS_TEST_MUTEX_USAGE)
     mbedtls_test_mutex_usage_end();
