@@ -24,8 +24,11 @@
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"
-#include "mbedtls/threading.h"
 #include "mbedtls/error_common.h"
+
+#if defined(MBEDTLS_THREADING_C)
+#include "threading_internal.h"
+#endif
 
 #include <stddef.h>
 

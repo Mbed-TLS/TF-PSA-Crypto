@@ -20,8 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/platform.h"
+
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "threading_internal.h"
 #endif
 
 
