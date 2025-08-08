@@ -27,7 +27,7 @@ typedef struct {
 } shared_data_t;
 shared_data_t global_data;
 
-static mbedtls_test_thread_return_t thread_body(void *ctx_arg) {
+static mbedtls_platform_thread_return_t thread_body(void *ctx_arg) {
     const thread_context_t *ctx = ctx_arg;
 
     for (size_t i = 0; i < ctx->times; i++) {
@@ -56,7 +56,44 @@ static mbedtls_test_thread_return_t thread_body(void *ctx_arg) {
     }
 
 exit:
-    return MBEDTLS_TEST_THREAD_RETURN_0;
+    return MBEDTLS_PLATFORM_THREAD_RETURN_0;
+}
+
+typedef struct {
+    mbedtls_threading_mutex_t mutex;
+    mbedtls_threading_condition_t cond;
+    size_t times;
+    unsigned count;
+    unsigned done;
+} exchange_pool_t;
+
+static mbedtls_platform_thread_return_t producer_body(void *ctx_arg) {
+    exchange_pool_t *pool = ctx_arg;
+
+    for (size_t i = 0; i < pool->times; i++) {
+        TEST_EQUAL(mbedtls_mutex_lock(&pool->mutex), 0);
+        ++pool->count;
+        TEST_EQUAL(mbedtls_mutex_unlock(&pool->mutex), 0);
+    }
+
+exit:
+    return MBEDTLS_PLATFORM_THREAD_RETURN_0;
+}
+
+static mbedtls_platform_thread_return_t consumer_body(void *ctx_arg) {
+    exchange_pool_t *pool = ctx_arg;
+
+    TEST_EQUAL(mbedtls_mutex_lock(&pool->mutex), 0);
+    while (!pool->done) {
+        TEST_EQUAL(mbedtls_condition_variable_wait(&pool->cond, &pool->mutex), 0);
+        if (pool->count > 0) {
+            --pool->count;
+        }
+    }
+    TEST_EQUAL(mbedtls_mutex_unlock(&pool->mutex), 0);
+
+exit:
+    return MBEDTLS_PLATFORM_THREAD_RETURN_0;
 }
 
 /* END_HEADER */
@@ -70,7 +107,7 @@ exit:
 void parallel_peers(int thread_count_arg, int behavior, int times)
 {
     size_t thread_count = (size_t) thread_count_arg;
-    mbedtls_test_thread_t *threads = NULL;
+    mbedtls_platform_thread_object_t *threads = NULL;
     thread_context_t *contexts = NULL;
 
     memset(&global_data, 0, sizeof(global_data));
@@ -83,13 +120,13 @@ void parallel_peers(int thread_count_arg, int behavior, int times)
         contexts[i].index = i;
         contexts[i].behavior = behavior;
         contexts[i].times = times;
-        TEST_EQUAL(mbedtls_test_thread_create(&threads[i],
-                                              thread_body,
-                                              &contexts[i]), 0);
+        TEST_EQUAL(mbedtls_platform_thread_create(&threads[i],
+                                                  thread_body,
+                                                  &contexts[i]), 0);
     }
 
     for (size_t i = 0; i < thread_count; i++) {
-        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+        TEST_EQUAL(mbedtls_platform_thread_join(&threads[i]), 0);
     }
 
     /* Check that the system is in the expected state.
@@ -125,5 +162,57 @@ exit:
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
     mbedtls_psa_crypto_free();
 #endif
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void producers_consumers(int producers_count_arg,
+                         int consumers_count_arg,
+                         int times_arg)
+{
+    size_t producers_count = (size_t) producers_count_arg;
+    size_t consumers_count = (size_t) consumers_count_arg;
+    mbedtls_platform_thread_object_t *producers = NULL;
+    mbedtls_platform_thread_object_t *consumers = NULL;
+    exchange_pool_t pool;
+
+    mbedtls_mutex_init(&pool.mutex);
+    TEST_EQUAL(mbedtls_condition_variable_setup(&pool.cond), 0);
+    pool.times = times_arg;
+    pool.count = 0;
+    pool.done = 0;
+
+    TEST_CALLOC(producers, producers_count);
+    TEST_CALLOC(consumers, consumers_count);
+
+    for (size_t i = 0; i < producers_count; i++) {
+        TEST_EQUAL(mbedtls_platform_thread_create(&producers[i],
+                                                  producer_body,
+                                                  &pool), 0);
+    }
+    for (size_t i = 0; i < consumers_count; i++) {
+        TEST_EQUAL(mbedtls_platform_thread_create(&consumers[i],
+                                                  producer_body,
+                                                  &pool), 0);
+    }
+
+    for (size_t i = 0; i < producers_count; i++) {
+        TEST_EQUAL(mbedtls_platform_thread_join(&producers[i]), 0);
+    }
+
+    TEST_EQUAL(mbedtls_mutex_lock(&pool.mutex), 0);
+    pool.done = 1;
+    TEST_EQUAL(mbedtls_mutex_unlock(&pool.mutex), 0);
+    TEST_EQUAL(mbedtls_condition_variable_broadcast(&pool.cond), 0);
+
+    for (size_t i = 0; i < consumers_count; i++) {
+        TEST_EQUAL(mbedtls_platform_thread_join(&consumers[i]), 0);
+    }
+
+exit:
+    mbedtls_mutex_free(&pool.mutex);
+    mbedtls_condition_variable_destroy(&pool.cond);
+    mbedtls_free(consumers);
+    mbedtls_free(producers);
 }
 /* END_CASE */

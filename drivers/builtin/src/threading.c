@@ -86,14 +86,41 @@ int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex)
     return wrap_error(mtx_unlock(mutex));
 }
 
+int mbedtls_condition_variable_setup(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(cnd_init(cond));
+}
+
+int mbedtls_condition_variable_destroy(mbedtls_threading_condition_t *cond)
+{
+    cnd_destroy(cond);
+    return 0;
+}
+
+int mbedtls_condition_variable_signal(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(cnd_signal(cond));
+}
+
+int mbedtls_condition_variable_broadcast(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(cnd_broadcast(cond));
+}
+
+int mbedtls_condition_variable_wait(mbedtls_threading_condition_t *cond,
+                                    mbedtls_threading_mutex_t *mutex)
+{
+    return wrap_error(cnd_wait(cond, &mutex->mutex));
+}
+
 #endif /* MBEDTLS_THREADING_C11 */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include <errno.h>
 
-int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex)
+static int wrap_error(int err)
 {
-    switch (pthread_mutex_init(mutex, NULL)) {
+    switch (err) {
         case 0:
             return 0;
         case ENOMEM:
@@ -103,6 +130,11 @@ int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex)
     }
 }
 
+int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex)
+{
+    return wrap_error(pthread_mutex_init(mutex, NULL));
+}
+
 void mbedtls_platform_mutex_destroy(mbedtls_platform_mutex_t *mutex)
 {
     (void) pthread_mutex_destroy(mutex);
@@ -110,18 +142,38 @@ void mbedtls_platform_mutex_destroy(mbedtls_platform_mutex_t *mutex)
 
 int mbedtls_platform_mutex_lock(mbedtls_platform_mutex_t *mutex)
 {
-    if (pthread_mutex_lock(mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-    return 0;
+    return wrap_error(pthread_mutex_lock(mutex));
 }
 
 int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex)
 {
-    if (pthread_mutex_unlock(mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-    return 0;
+    return wrap_error(pthread_mutex_unlock(mutex));
+}
+
+int mbedtls_condition_variable_setup(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(pthread_cond_init(cond, NULL));
+}
+
+int mbedtls_condition_variable_destroy(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(pthread_cond_destroy(cond));
+}
+
+int mbedtls_condition_variable_signal(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(pthread_cond_signal(cond));
+}
+
+int mbedtls_condition_variable_broadcast(mbedtls_threading_condition_t *cond)
+{
+    return wrap_error(pthread_cond_broadcast(cond));
+}
+
+int mbedtls_condition_variable_wait(mbedtls_threading_condition_t *cond,
+                                    mbedtls_threading_mutex_t *mutex)
+{
+    return wrap_error(pthread_cond_wait(cond, &mutex->mutex));
 }
 
 /*

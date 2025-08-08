@@ -8,6 +8,8 @@
  *
  * - Provide a header file `"threading_alt.h"` that defines the following:
  *     - The type ::mbedtls_platform_mutex_t` of mutex objects.
+ *     - The type ::mbedtls_platform_condition_variable_t` of condition
+ *       variable objects.
  *     - The types ::mbedtls_platform_thread_object_t and
  *       ::mbedtls_platform_thread_return_t, and the macro
  *       ::MBEDTLS_PLATFORM_THREAD_RETURN_0. See the documentation
@@ -34,6 +36,7 @@ extern "C" {
 #if defined(MBEDTLS_THREADING_C11)
 #include <threads.h>
 typedef mtx_t mbedtls_platform_mutex_t;
+typedef cnd_t mbedtls_platform_condition_variable_t;
 typedef thrd_t mbedtls_platform_thread_object_t;
 typedef int mbedtls_platform_thread_return_t;
 #define MBEDTLS_PLATFORM_THREAD_RETURN_0 0
@@ -47,6 +50,16 @@ typedef int mbedtls_platform_thread_return_t;
  * mbedtls_platform_mutex_lock() and mbedtls_platform_mutex_unlock().
  */
 typedef pthread_mutex_t mbedtls_platform_mutex_t;
+
+/** Type of a condition variable mutex object.
+ *
+ * Used by mbedtls_platform_condition_variable_setup(),
+ * mbedtls_platform_condition_variable_destroy(),
+ * mbedtls_platform_condition_variable_signal(),
+ * mbedtls_platform_condition_variable_broadcast() and
+ * mbedtls_platform_condition_variable_wait().
+ */
+typedef pthread_cond_t mbedtls_platform_condition_variable_t;
 
 /** Type of an active thread.
  *
@@ -146,6 +159,97 @@ int mbedtls_platform_mutex_lock(mbedtls_platform_mutex_t *mutex);
  *                      The mutex is in an invalid state.
  */
 int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex);
+
+/** Platform callback to set up a condition variable.
+ *
+ * \param[in,out] cond  The condition variable to set up.
+ *                      The behavior is undefined if \p cond is
+ *                      already set up.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *                      Insufficient memory. You may use this error code
+ *                      to indicate that some other resource is exhausted
+ *                      if no other error code is more suitable.
+ */
+int mbedtls_platform_condition_variable_setup(mbedtls_platform_condition_variable_t *cond);
+
+/** Platform callback to destroy a condition variable.
+ *
+ * \param[in,out] cond  The condition variable to destroy.
+ *                      The behavior is undefined if \p cond is
+ *                      already not set up or if there are threads
+ *                      waiting on \p cond.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_platform_condition_variable_destroy(mbedtls_platform_condition_variable_t *cond);
+
+/** Platform callback to signal one consumer on a condition variable.
+ *
+ * Wake up a thread that is currently waiting on \p cond. Do nothing if
+ * no thread is waiting on \p cond.
+ *
+ * \param[in,out] cond  The condition variable to signal.
+ *                      The behavior is undefined if \p cond is
+ *                      not set up.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_platform_condition_variable_signal(mbedtls_platform_condition_variable_t *cond);
+
+/** Platform callback to signal all consumers on a condition variable.
+ *
+ * Wake up all threads that are currently waiting on \p cond.
+ *
+ * \param[in,out] cond  The condition variable to signal.
+ *                      The behavior is undefined if \p cond is
+ *                      not set up.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_platform_condition_variable_broadcast(mbedtls_platform_condition_variable_t *cond);
+
+/** Platform callback to wait on a condition variable.
+ *
+ * On entry to this function, atomically unlock \p mutex and block until
+ * another thread sends a signal on \p cond. When this happens, atomically
+ * lock \p mutex and return.
+ *
+ * Spurious wakeups (i.e. returning even if the condition variable has
+ * not been signalled) are permitted, but should be rare.
+ *
+ * \param[in,out] cond  The condition variable to wait on.
+ *                      The behavior is undefined if \p cond is
+ *                      not set up.
+ * \param[in,out] mutex The mutex to lock while not waiting.
+ *                      The behavior is undefined if \p mutex is
+ *                      not locked by the calling thread.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_platform_condition_variable_wait(mbedtls_platform_condition_variable_t *cond,
+                                              mbedtls_platform_mutex_t *mutex);
 
 /** The type of a function that implements a thread.
  *

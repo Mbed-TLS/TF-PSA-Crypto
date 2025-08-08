@@ -131,6 +131,100 @@ int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
  *                      The mutex is in an invalid state.
  */
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
+/** The type of condition variables.
+ */
+typedef mbedtls_platform_condition_variable_t mbedtls_threading_condition_t;
+
+/** Set up a condition variable.
+ *
+ * \param[in,out] cond  The condition variable to set up.
+ *                      The behavior is undefined if \p cond is
+ *                      already set up.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *                      Insufficient memory or other resource.
+ */
+int mbedtls_condition_variable_setup(mbedtls_threading_condition_t *cond);
+
+/** Destroy a condition variable.
+ *
+ * \param[in,out] cond  The condition variable to destroy.
+ *                      The behavior is undefined if \p cond is
+ *                      already not set up or if there are threads
+ *                      waiting on \p cond.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_condition_variable_destroy(mbedtls_threading_condition_t *cond);
+
+/** Signal one consumer on a condition variable.
+ *
+ * Wake up a thread that is currently waiting on \p cond. Do nothing if
+ * no thread is waiting on \p cond.
+ *
+ * \param[in,out] cond  The condition variable to signal.
+ *                      The behavior is undefined if \p cond is
+ *                      not set up.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_condition_variable_signal(mbedtls_threading_condition_t *cond);
+
+/** Signal all consumers on a condition variable.
+ *
+ * Wake up all threads that are currently waiting on \p cond.
+ *
+ * \param[in,out] cond  The condition variable to signal.
+ *                      The behavior is undefined if \p cond is
+ *                      not set up.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_condition_variable_broadcast(mbedtls_threading_condition_t *cond);
+
+/** Wait on a condition variable.
+ *
+ * On entry to this function, atomically unlock \p mutex and block until
+ * another thread sends a signal on \p cond. When this happens, atomically
+ * lock \p mutex and return.
+ *
+ * \note    On some platforms, mbedtls_condition_variable_wait() may
+ *          return even if the condition variable has not been signalled
+ *          (spurious wakeup). The mutex is unlocked normally even in
+ *          that case.
+ *
+ * \param[in,out] cond  The condition variable to wait on.
+ *                      The behavior is undefined if \p cond is
+ *                      not set up.
+ * \param[in,out] mutex The mutex to lock while not waiting.
+ *                      The behavior is undefined if \p mutex is
+ *                      not locked by the calling thread.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      The condition variable is in an invalid state.
+ *                      Note that such an error condition have undefined
+ *                      behavior.
+ */
+int mbedtls_condition_variable_wait(mbedtls_threading_condition_t *cond,
+                                    mbedtls_threading_mutex_t *mutex);
 
 /* Internal definition, kept in a public header until Mbed TLS stops
  * using it. */

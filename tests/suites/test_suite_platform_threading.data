@@ -30,3 +30,15 @@ parallel_peers:100:DO_PSA_INIT_FREE:1
 
 Parallel 100: PSA init and free *100
 parallel_peers:100:DO_PSA_INIT_FREE:100
+
+Producers-consumers: 1-1 *1
+producers_consumers:1:1:1
+
+Producers-consumers: 1-100 *100
+producers_consumers:10:10:100
+
+Producers-consumers: 100-1 *100
+producers_consumers:100:1:100
+
+Producers-consumers: 10-10 *100
+producers_consumers:100:1:100
