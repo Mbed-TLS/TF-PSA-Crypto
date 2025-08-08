@@ -44,6 +44,10 @@ typedef struct mbedtls_threading_mutex_t {
 /* For test purposes only. See <test/threading_helpers.h>. */
 #define MBEDTLS_TEST_HOOKS_FOR_MUTEX_USAGE 0x01000001
 
+/* For test purposes only. See <test/threading_helpers.h>. */
+#define MBEDTLS_PLATFORM_THREADING_THREAD 0x01000001
+
+
 /**
  * \brief   Initialize global mutexes.
  *

@@ -7,7 +7,11 @@
  * implement the header, types and functions documented in this file:
  *
  * - Provide a header file `"threading_alt.h"` that defines the following:
- *     - The type `mbedtls_platform_mutex_t` of mutex objects.
+ *     - The type ::mbedtls_platform_mutex_t` of mutex objects.
+ *     - The types ::mbedtls_platform_thread_object_t and
+ *       ::mbedtls_platform_thread_return_t, and the macro
+ *       ::MBEDTLS_PLATFORM_THREAD_RETURN_0. See the documentation
+ *       of mbedtls_platform_thread_create().
  *
  * - Either define inline versions of the functions listed in this file
  *   in `"threading_alt.h"`, or provide linkable versions of the functions
@@ -30,16 +34,46 @@ extern "C" {
 #if defined(MBEDTLS_THREADING_C11)
 #include <threads.h>
 typedef mtx_t mbedtls_platform_mutex_t;
-#define MBEDTLS_TEST_THREAD_RETURN_0 0
-#endif
+typedef thrd_t mbedtls_platform_thread_object_t;
+typedef int mbedtls_platform_thread_return_t;
+#define MBEDTLS_PLATFORM_THREAD_RETURN_0 0
+#endif /* MBEDTLS_THREADING_C11 */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include <pthread.h>
+/** Type of a mutex object.
+ *
+ * Used by mbedtls_platform_mutex_init(), mbedtls_platform_mutex_free(),
+ * mbedtls_platform_mutex_lock() and mbedtls_platform_mutex_unlock().
+ */
 typedef pthread_mutex_t mbedtls_platform_mutex_t;
-#endif
+
+/** Type of an active thread.
+ *
+ * Used by mbedtls_platform_thread_create() and
+ * mbedtls_platform_thread_join().
+ */
+typedef pthread_t mbedtls_platform_thread_object_t;
+
+/** Type returned by the function that implements a thread.
+ *
+ * This can be `void` if thread functions do not return a value on
+ * your platform.
+ *
+ * See mbedtls_platform_thread_create().
+ */
+typedef void *mbedtls_platform_thread_return_t;
+
+/** A value of type ::mbedtls_test_thread_return_t, to return from
+ * a test thread function.
+ *
+ * This can be a macro with an empty expansion if
+ * ::mbedtls_test_thread_return_t is `void`.
+ */
+#define MBEDTLS_PLATFORM_THREAD_RETURN_0 NULL
+#endif /* MBEDTLS_THREADING_PTHREAD */
 
 #if defined(MBEDTLS_THREADING_ALT)
-/* You should define the type mbedtls_platform_mutex_t type in your header */
 #include "threading_alt.h"
 #endif /* MBEDTLS_THREADING_ALT */
 
@@ -110,6 +144,74 @@ int mbedtls_platform_mutex_lock(mbedtls_platform_mutex_t *mutex);
  *                      The mutex is in an invalid state.
  */
 int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex);
+
+/** The type of a function that implements a thread.
+ *
+ * \param[in,out] param A pointer to arbitrary data passed to the thread.
+ *
+ * \return #MBEDTLS_PLATFORM_THREAD_RETURN_0
+ *
+ * See mbedtls_platform_thread_create().
+ */
+typedef mbedtls_platform_thread_return_t (mbedtls_platform_thread_function_t)(void *param);
+
+/** Platform callback to start a thread.
+ *
+ * \note    As of TF-PSA-Crypto 1.0 and Mbed TLS 4.0, there is no plan to
+ *          ever call this function from the library. It is only meant to
+ *          be used in sample programs and tests. If your platform does
+ *          not provide a way to create threads at runtime, you can omit
+ *          mbedtls_platform_thread_create() and mbedtls_platform_thread_join()
+ *          or make them stub functions that always return an error.
+ *          If you do this, you will be able to compile and use the library
+ *          normally, but you will not be able to run some of the tests
+ *          and sample programs.
+ *
+ * \param[out] thread   The object that will represent the active
+ *                      or terminated thread.
+ * \param[in] func      The code of the thread. This function is called
+ *                      with one parameter which is \p param. If this
+ *                      function returns a value other than
+ *                      #MBEDTLS_PLATFORM_THREAD_RETURN_0, the behavior
+ *                      is undefined.
+ * \param[in,out] param A pointer to arbitrary data passed to the thread.
+ *
+ * \retval 0            Success.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *                      Insufficient memory. You may use this error code
+ *                      to indicate that some other resource is exhausted
+ *                      if no other error code is more suitable.
+ * \retval ret          Any other negative value to indicate other errors.
+ */
+int mbedtls_platform_thread_create(mbedtls_platform_thread_object_t *thread,
+                                   mbedtls_platform_thread_function_t *func,
+                                   void *param);
+
+/** Wait for a thread to exit.
+ *
+ * A thread exits by returning from its function.
+ *
+ * This abstraction does not provide a way to return a value from the thread
+ * function. (Functions can store output in an object accessible via the
+ * thread parameter.)
+ *
+ *
+ *
+ * \param[in,out] thread    The object that represents a thread.
+ *                          The thread may be active or may already have
+ *                          exited.
+ *                          This is guaranteed to be an object populated
+ *                          by mbedtls_platform_thread_create(), and on
+ *                          which mbedtls_platform_thread_join() has not
+ *                          been called yet. Otherwise the behavior is
+ *                          undefined.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_THREADING_BAD_INPUT_DATA
+ *                      Suggested error code if \p thread is invalid and
+ *                      the implementation was able to detect it.
+ */
+int mbedtls_platform_thread_join(mbedtls_platform_thread_object_t *thread);
 
 #endif /* MBEDTLS_THREADING_C */
 
