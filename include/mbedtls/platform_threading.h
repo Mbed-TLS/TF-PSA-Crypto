@@ -110,6 +110,8 @@ int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex);
  * you may call mbedtls_mutex_init() again on the mutex.
  *
  * \param[in,out] mutex The mutex to destroy.
+ *                      It is guaranteed to have been set up and not
+ *                      destroyed yet. Otherwise the behavior is undefined.
  */
 void mbedtls_platform_mutex_destroy(mbedtls_platform_mutex_t *mutex);
 
