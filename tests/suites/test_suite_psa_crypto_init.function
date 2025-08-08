@@ -127,7 +127,7 @@ typedef struct {
     int do_init;
 } thread_psa_init_ctx_t;
 
-static mbedtls_test_thread_return_t thread_psa_init_function(void *ctx)
+static mbedtls_platform_thread_return_t thread_psa_init_function(void *ctx)
 {
     thread_psa_init_ctx_t *init_context = (thread_psa_init_ctx_t *) ctx;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -170,7 +170,7 @@ static mbedtls_test_thread_return_t thread_psa_init_function(void *ctx)
     }
 
 exit:
-    return MBEDTLS_TEST_THREAD_RETURN_0;
+    return MBEDTLS_PLATFORM_THREAD_RETURN_0;
 }
 #endif /* defined MBEDTLS_THREADING_C */
 
@@ -234,9 +234,9 @@ void psa_threaded_init(int arg_thread_count)
     thread_psa_init_ctx_t init_context_2;
 
     size_t thread_count = (size_t) arg_thread_count;
-    mbedtls_test_thread_t *threads = NULL;
+    mbedtls_platform_thread_object_t *threads = NULL;
 
-    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+    TEST_CALLOC(threads, sizeof(mbedtls_platform_thread_object_t) * thread_count);
 
     init_context.do_init = 1;
 
@@ -244,14 +244,14 @@ void psa_threaded_init(int arg_thread_count)
      * threads. */
     for (size_t i = 0; i < thread_count; i++) {
         TEST_EQUAL(
-            mbedtls_test_thread_create(&threads[i],
+            mbedtls_platform_thread_create(&threads[i],
                                        thread_psa_init_function,
                                        (void *) &init_context),
             0);
     }
 
     for (size_t i = 0; i < thread_count; i++) {
-        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+        TEST_EQUAL(mbedtls_platform_thread_join(&threads[i]), 0);
     }
 
     PSA_DONE();
@@ -264,13 +264,13 @@ void psa_threaded_init(int arg_thread_count)
         if (i & 1) {
 
             TEST_EQUAL(
-                mbedtls_test_thread_create(&threads[i],
+                mbedtls_platform_thread_create(&threads[i],
                                            thread_psa_init_function,
                                            (void *) &init_context),
                 0);
         } else {
             TEST_EQUAL(
-                mbedtls_test_thread_create(&threads[i],
+                mbedtls_platform_thread_create(&threads[i],
                                            thread_psa_init_function,
                                            (void *) &init_context_2),
                 0);
@@ -278,7 +278,7 @@ void psa_threaded_init(int arg_thread_count)
     }
 
     for (size_t i = 0; i < thread_count; i++) {
-        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+        TEST_EQUAL(mbedtls_platform_thread_join(&threads[i]), 0);
     }
 exit:
 
