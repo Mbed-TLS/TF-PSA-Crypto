@@ -21,6 +21,8 @@
 
 #include "threading_internal.h"
 
+#include <psa/crypto_values.h>
+
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
 
 #if !defined(_WIN32) && (defined(unix) || \
@@ -52,41 +54,56 @@
 #endif /* MBEDTLS_HAVE_TIME_DATE && !MBEDTLS_PLATFORM_GMTIME_R_ALT */
 
 #if defined(MBEDTLS_THREADING_C11)
-void mbedtls_platform_mutex_init(mbedtls_platform_mutex_t *mutex)
+static int wrap_error(int threads_ret)
 {
-    (void) mtx_init(mutex, mtx_plain);
+    switch (threads_ret) {
+        case thrd_success:
+            return 0;
+        case thrd_nomem:
+            return PSA_ERROR_INSUFFICIENT_MEMORY;
+        default:
+            return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
+    }
 }
 
-void mbedtls_platform_mutex_free(mbedtls_platform_mutex_t *mutex)
+int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex)
 {
-    (void) mtx_destroy(mutex);
+    return wrap_error(mtx_init(mutex, mtx_plain));
+}
+MBEDTLS_STATIC_TESTABLE
+void mbedtls_platform_mutex_destroy(mbedtls_platform_mutex_t *mutex)
+{
+    mtx_destroy(mutex);
 }
 
 int mbedtls_platform_mutex_lock(mbedtls_platform_mutex_t *mutex)
 {
-    if (mtx_lock(mutex) != thrd_success) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-    return 0;
+    return wrap_error(mtx_lock(mutex));
 }
 
 int mbedtls_platform_mutex_unlock(mbedtls_platform_mutex_t *mutex)
 {
-    if (mtx_unlock(mutex) != thrd_success) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-    return 0;
+    return wrap_error(mtx_unlock(mutex));
 }
 
 #endif /* MBEDTLS_THREADING_C11 */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
-void mbedtls_platform_mutex_init(mbedtls_platform_mutex_t *mutex)
+#include <errno.h>
+
+int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex)
 {
-    (void) pthread_mutex_init(mutex, NULL);
+    switch (pthread_mutex_init(mutex, NULL)) {
+        case 0:
+            return 0;
+        case ENOMEM:
+            return PSA_ERROR_INSUFFICIENT_MEMORY;
+        default:
+            return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
+    }
 }
 
-void mbedtls_platform_mutex_free(mbedtls_platform_mutex_t *mutex)
+void mbedtls_platform_mutex_destroy(mbedtls_platform_mutex_t *mutex)
 {
     (void) pthread_mutex_destroy(mutex);
 }
@@ -139,7 +156,9 @@ void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
      * hit, so state transitions are checked in tests only via the state
      * variable. Please make sure any new mutex that gets added is exercised in
      * tests; see framework/tests/src/threading_helpers.c for more details. */
-    mbedtls_platform_mutex_init(&mutex->mutex);
+    /* We don't have a way to return an error code yet, so we just leave
+     * the mutex in a bad state. This should be improved. */
+    (void) mbedtls_platform_mutex_setup(&mutex->mutex);
 
 #if defined(MBEDTLS_TEST_HOOKS)
     if (mbedtls_test_hook_mutex_init_post != NULL) {
@@ -160,7 +179,7 @@ void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
     }
 #endif
 
-    mbedtls_platform_mutex_free(&mutex->mutex);
+    mbedtls_platform_mutex_destroy(&mutex->mutex);
 }
 
 int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex)

@@ -87,31 +87,31 @@ typedef void *mbedtls_platform_thread_return_t;
  * This function may allocate resources. mbedtls_platform_mutex_free()
  * should free these resources.
  *
- * mbedtls_platform_mutex_init() does not return a status code.
- * If it fails, it should leave its argument (the mutex)
- * in a state such that mbedtls_platform_mutex_lock() will fail when
- * called with this argument.
- *
  * \param[out] mutex    The mutex to initialize.
+ *
+ * \retval 0            Success.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *                      Insufficient memory. You may use this error code
+ *                      to indicate that some other resource is exhausted
+ *                      if no other error code is more suitable.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                      The mutex could not be set up.
  */
-void mbedtls_platform_mutex_init(mbedtls_platform_mutex_t *mutex);
+int mbedtls_platform_mutex_setup(mbedtls_platform_mutex_t *mutex);
 
 /** Platform callback to destroy a mutex.
  *
  * This function frees any resource allocated by
- * mbedtls_platform_mutex_init().
+ * mbedtls_platform_mutex_setup().
  *
  * As soon as one thread has started a call to this function,
  * no other thread may access the mutex in any way, including
  * concurrent calls to this function. Once the call returns,
  * you may call mbedtls_mutex_init() again on the mutex.
  *
- * Calling mbedtls_platform_mutex_free() on an already freed mutex
- * should do nothing.
- *
  * \param[in,out] mutex The mutex to destroy.
  */
-void mbedtls_platform_mutex_free(mbedtls_platform_mutex_t *mutex);
+void mbedtls_platform_mutex_destroy(mbedtls_platform_mutex_t *mutex);
 
 /** Platform callback to lock a mutex.
  *
