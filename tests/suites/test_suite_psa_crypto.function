@@ -27,7 +27,7 @@
 #define TEST_DRIVER_LOCATION 0x7fffff
 #endif
 
-#if defined(MBEDTLS_THREADING_PTHREAD)
+#if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"
 #endif
 
@@ -1315,7 +1315,7 @@ exit:
 }
 #endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE */
 
-#if defined(MBEDTLS_THREADING_PTHREAD)
+#if defined(MBEDTLS_THREADING_C)
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
 typedef struct same_key_context {
@@ -1495,7 +1495,7 @@ exit:
     psa_reset_key_attributes(&got_attributes);
     return MBEDTLS_TEST_THREAD_RETURN_0;
 }
-#endif /* MBEDTLS_THREADING_PTHREAD */
+#endif /* MBEDTLS_THREADING_C */
 
 /* END_HEADER */
 
@@ -1963,9 +1963,7 @@ exit:
 }
 /* END_CASE */
 
-
-#if defined(MBEDTLS_THREADING_PTHREAD)
-/* BEGIN_CASE depends_on:MBEDTLS_THREADING_PTHREAD:MBEDTLS_PSA_CRYPTO_STORAGE_C */
+/* BEGIN_CASE depends_on:MBEDTLS_THREADING_C:MBEDTLS_PSA_CRYPTO_STORAGE_C */
 void concurrently_use_same_persistent_key(data_t *data,
                                           int type_arg,
                                           int bits_arg,
@@ -2033,7 +2031,6 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
-#endif
 
 /* BEGIN_CASE */
 void import_and_exercise_key(data_t *data,
@@ -10245,9 +10242,7 @@ exit:
 }
 /* END_CASE */
 
-#if defined MBEDTLS_THREADING_PTHREAD
-
-/* BEGIN_CASE depends_on:MBEDTLS_THREADING_PTHREAD */
+/* BEGIN_CASE depends_on:MBEDTLS_THREADING_C */
 void concurrently_generate_keys(int type_arg,
                                 int bits_arg,
                                 int usage_arg,
@@ -10296,7 +10291,6 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
-#endif
 
 /* BEGIN_CASE */
 void generate_key(int type_arg,

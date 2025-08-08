@@ -121,7 +121,7 @@ static void custom_entropy_init(mbedtls_entropy_context *ctx)
 
 #endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
 
-#if defined MBEDTLS_THREADING_PTHREAD
+#if defined MBEDTLS_THREADING_C
 
 typedef struct {
     int do_init;
@@ -172,7 +172,7 @@ static mbedtls_test_thread_return_t thread_psa_init_function(void *ctx)
 exit:
     return MBEDTLS_TEST_THREAD_RETURN_0;
 }
-#endif /* defined MBEDTLS_THREADING_PTHREAD */
+#endif /* defined MBEDTLS_THREADING_C */
 
 /* END_HEADER */
 
@@ -227,7 +227,7 @@ void deinit_without_init(int count)
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_THREADING_PTHREAD */
+/* BEGIN_CASE depends_on:MBEDTLS_THREADING_C */
 void psa_threaded_init(int arg_thread_count)
 {
     thread_psa_init_ctx_t init_context;
