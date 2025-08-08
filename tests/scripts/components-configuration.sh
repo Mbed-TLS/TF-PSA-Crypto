@@ -23,6 +23,10 @@ test_with_valgrind () {
 ## Exclude suites that contain some constant-time tests, but whose focus
 ## isn't on constant-time tests.
 test_with_valgrind_constant_time () {
+    # additional valgrind testing on top of non-instrumented testing.
+    if [[ $MBEDTLS_TEST_CONFIGURATION != *valgrind_cf* ]]; then
+        declare MBEDTLS_TEST_CONFIGURATION="${MBEDTLS_TEST_CONFIGURATION}+valgrind_cf"
+    fi
     declare GLOBIGNORE="tests/suites/test_suite_constant_time_hmac.data"
     test_with_valgrind tests/suites/*constant_time*.data
 }
