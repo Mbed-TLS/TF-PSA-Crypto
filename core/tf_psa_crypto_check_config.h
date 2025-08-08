@@ -633,22 +633,40 @@
 #error "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY defined on non-Armv8-A system"
 #endif
 
-#if defined(MBEDTLS_THREADING_PTHREAD)
-#if !defined(MBEDTLS_THREADING_C) || defined(MBEDTLS_THREADING_IMPL)
-#error "MBEDTLS_THREADING_PTHREAD defined, but not all prerequisites"
+#if defined(MBEDTLS_THREADING_C)
+#  undef MBEDTLS_THREADING_IMPL // temporary macro
+
+#  if defined(MBEDTLS_THREADING_ALT)
+#    if defined(MBEDTLS_THREADING_IMPL)
+#      error "MBEDTLS_THREADING_ALT can't be enabled with another threading implementation"
+#    else
+#      define MBEDTLS_THREADING_IMPL
+#    endif
+#  endif
+
+#  if defined(MBEDTLS_THREADING_C11)
+#    if defined(MBEDTLS_THREADING_IMPL)
+#      error "MBEDTLS_THREADING_C11 can't be enabled with another threading implementation"
+#    else
+#      define MBEDTLS_THREADING_IMPL
+#    endif
+#  endif
+
+#  if defined(MBEDTLS_THREADING_PTHREAD)
+#    if defined(MBEDTLS_THREADING_IMPL)
+#      error "MBEDTLS_THREADING_PTHREAD can't be enabled with another threading implementation"
+#    else
+#      define MBEDTLS_THREADING_IMPL
+#    endif
+#  endif
+
+#  if !defined(MBEDTLS_THREADING_IMPL)
+#    error "MBEDTLS_THREADING_C requires a threading implementation " \
+           "(MBEDTLS_THREADING_ALT, MBEDTLS_THREADING_C11 or MBEDTLS_THREADING_PTHREAD)"
+#  endif
+
+#  undef MBEDTLS_THREADING_IMPL // temporary macro
 #endif
-#define MBEDTLS_THREADING_IMPL // undef at the end of this paragraph
-#endif
-#if defined(MBEDTLS_THREADING_ALT)
-#if !defined(MBEDTLS_THREADING_C) || defined(MBEDTLS_THREADING_IMPL)
-#error "MBEDTLS_THREADING_ALT defined, but not all prerequisites"
-#endif
-#define MBEDTLS_THREADING_IMPL // undef at the end of this paragraph
-#endif
-#if defined(MBEDTLS_THREADING_C) && !defined(MBEDTLS_THREADING_IMPL)
-#error "MBEDTLS_THREADING_C defined, single threading implementation required"
-#endif
-#undef MBEDTLS_THREADING_IMPL // temporary macro defined above
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO) && !defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #error "MBEDTLS_USE_PSA_CRYPTO defined, but not all prerequisites"

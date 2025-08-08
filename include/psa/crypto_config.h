@@ -432,6 +432,20 @@
 //#define MBEDTLS_THREADING_PTHREAD
 
 /**
+ * \def MBEDTLS_THREADING_C11
+ *
+ * Enable the C11 wrapper layer for the threading layer.
+ *
+ * Note that applications must call mbedtls_threading_setup() before
+ * any other library function.
+ *
+ * Requires: MBEDTLS_THREADING_C
+ *
+ * Uncomment this to enable C11 mutexes.
+ */
+//#define MBEDTLS_THREADING_C11
+
+/**
  * \def MBEDTLS_THREADING_C
  *
  * Enable the threading abstraction layer.
@@ -448,7 +462,7 @@
  * provided).
  *
  * You will have to enable either MBEDTLS_THREADING_ALT or
- * MBEDTLS_THREADING_PTHREAD.
+ * MBEDTLS_THREADING_C11 or MBEDTLS_THREADING_PTHREAD.
  *
  * Enable this layer to allow use of mutexes within Mbed TLS
  */

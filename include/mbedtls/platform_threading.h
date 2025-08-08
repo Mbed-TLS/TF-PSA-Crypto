@@ -30,6 +30,7 @@ extern "C" {
 #if defined(MBEDTLS_THREADING_C11)
 #include <threads.h>
 typedef mtx_t mbedtls_platform_mutex_t;
+#define MBEDTLS_TEST_THREAD_RETURN_0 0
 #endif
 
 #if defined(MBEDTLS_THREADING_PTHREAD)

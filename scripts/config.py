@@ -71,6 +71,7 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT', # setting *_USE_ARMV8_A_CRYPTO is sufficient
     'MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN', # build dependency (clang+memsan)
     'MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND', # build dependency (valgrind headers)
+    'MBEDTLS_THREADING_C11', # incompatible with MBEDTLS_THREADING_PTHREAD
     'MBEDTLS_PSA_STATIC_KEY_SLOTS', # only relevant for embedded devices
     'MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE', # only relevant for embedded devices
     *PSA_UNSUPPORTED_FEATURE,
