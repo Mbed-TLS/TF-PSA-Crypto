@@ -25,22 +25,14 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #include "mbedtls/ctr_drbg.h"
 
-#if defined(MBEDTLS_ENTROPY_C) && \
-    (defined(MBEDTLS_PSA_CRYPTO_RNG_HASH) && \
-    !defined(PSA_WANT_ALG_SHA_512)) \
-    && defined(MBEDTLS_CTR_DRBG_ENTROPY_LEN) && (MBEDTLS_CTR_DRBG_ENTROPY_LEN > 32)
-
-MBEDTLS_STATIC_ASSERT(
-    MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256, "MBEDTLS_CTR_DRBG_ENTROPY_LEN value too high");
+#if !defined(PSA_WANT_ALG_SHA_256)
+MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256,
+                      "SHA_256 used as the hash for the random generator, but not enabled");
 #endif
 
-#if defined(MBEDTLS_ENTROPY_C) && \
-    defined(MBEDTLS_PSA_CRYPTO_RNG_HASH) && \
-    !defined(PSA_WANT_ALG_SHA_512) && \
-    defined(PSA_WANT_ALG_SHA_256)
-
-MBEDTLS_STATIC_ASSERT(
-    MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256, "MBEDTLS_PSA_CRYPTO_RNG_HASH defined, but not all prerequisites");
+#if !defined(PSA_WANT_ALG_SHA_512)
+MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_512,
+                      "SHA_512 used as the hash for the random generator, but not enabled");
 #endif
 
 #undef MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
