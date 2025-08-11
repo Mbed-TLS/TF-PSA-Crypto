@@ -1420,6 +1420,15 @@
 #define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH                 256
 
 /**
+ * \def MBEDTLS_PSA_CRYPTO_RNG_HASH
+ *
+ * Hash algorithm to use for the entropy module.
+ *
+ * \note Set to a PSA_ALG_SHA_XXX.
+ */
+#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
+
+/**
  * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL
  *
  * In CTR_DRBG and HMAC_DRBG, the interval before the DRBG is reseeded from entropy.
