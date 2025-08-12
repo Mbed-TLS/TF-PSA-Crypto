@@ -1092,7 +1092,15 @@ void test_vec_crypt(int cipher_id, int operation, data_t *key,
     memset(output, 0x00, sizeof(output));
 
     /* Prepare context */
+#if !defined(MBEDTLS_TEST_DEPRECATED)    
     (void) use_psa;
+#else
+    if (use_psa == 1) {
+        PSA_ASSERT(psa_crypto_init());
+        TEST_ASSERT(0 == mbedtls_cipher_setup_psa(&ctx,
+                                                  mbedtls_cipher_info_from_type(cipher_id), 0));
+    } else
+#endif /* !MBEDTLS_TEST_DEPRECATED */
     TEST_ASSERT(0 == mbedtls_cipher_setup(&ctx,
                                           mbedtls_cipher_info_from_type(cipher_id)));
 
