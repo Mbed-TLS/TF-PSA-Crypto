@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 /* Support for GCM either through Mbed TLS SW implementation or PSA */
-#if defined(PSA_WANT_ALG_GCM) || defined(PSA_WANT_ALG_GCM)
+#if defined(MBEDTLS_GCM_C) || defined(PSA_WANT_ALG_GCM)
 #define MBEDTLS_CIPHER_HAVE_GCM_VIA_LEGACY_OR_USE_PSA
 #endif
 
