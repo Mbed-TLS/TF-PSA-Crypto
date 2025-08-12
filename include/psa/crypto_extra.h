@@ -705,9 +705,9 @@ typedef uint32_t psa_pake_primitive_t;
  *         ::psa_pake_primitive_t.
  */
 #define PSA_PAKE_PRIMITIVE(pake_type, pake_family, pake_bits) \
-    ((pake_bits & 0xFFFF) != pake_bits) ? 0 :                 \
+    (((pake_bits & 0xFFFF) != pake_bits) ? 0 :                 \
     ((psa_pake_primitive_t) (((pake_type) << 24 |             \
-                              (pake_family) << 16) | (pake_bits)))
+                              (pake_family) << 16) | (pake_bits))))
 
 /** The key share being sent to or received from the peer.
  *
@@ -784,7 +784,7 @@ typedef uint32_t psa_pake_primitive_t;
  *                      return 0.
  */
 #define PSA_PAKE_OUTPUT_SIZE(alg, primitive, output_step)               \
-    (alg == PSA_ALG_IS_JPAKE(alg) &&                                           \
+    (PSA_ALG_IS_JPAKE(alg) &&                                           \
      primitive == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,      \
                                      PSA_ECC_FAMILY_SECP_R1, 256) ?    \
      (                                                                 \
@@ -814,7 +814,7 @@ typedef uint32_t psa_pake_primitive_t;
  *                      the parameters are incompatible, return 0.
  */
 #define PSA_PAKE_INPUT_SIZE(alg, primitive, input_step)                 \
-    (alg == PSA_ALG_IS_JPAKE(alg) &&                                           \
+    (PSA_ALG_IS_JPAKE(alg) &&                                           \
      primitive == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,      \
                                      PSA_ECC_FAMILY_SECP_R1, 256) ?    \
      (                                                                 \
