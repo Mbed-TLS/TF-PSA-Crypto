@@ -699,10 +699,10 @@ The sections “[RSA mechanism selection](#rsa-mechanism-selection)”, “[Elli
 
 #### RSA mechanism selection
 
-The PK types `MBEDTLS_PK_RSA`, `MBEDTLS_PK_RSASSA_PSS` and `MBEDTLS_PK_RSA_ALT` correspond to RSA key types in the PSA API. In the PSA API, key pairs and public keys are separate object types.
+The PK types `MBEDTLS_PK_RSA`, `MBEDTLS_PK_RSASSA_PSS` correspond to `MBEDTLS_PK_SIGALG_RSA_PKCS1V15` and `MBEDTLS_PK_SIGALG_RSA_PSS` in the PSA API. In the PSA API, key pairs and public keys are separate object types.
 See “[RSA-ALT interface](#rsa-alt-interface)” for more information about `MBEDTLS_PK_RSA_ALT`.
 
-The PSA API uses policies and algorithm parameters rather than key types to distinguish between RSA-based mechanisms. The PSA algorithm selection corresponds to the `mbedtls_pk_type_t` value passed to `mbedtls_pk_{sign,verify}_ext`. It also replaces the use of `mbedtls_rsa_set_padding` on an `mbedtls_rsa_context` object. See the list of algorithms below and the signature and encryption sections for more information.
+The PSA API uses policies and algorithm parameters rather than key types to distinguish between RSA-based mechanisms. The PSA algorithm selection corresponds to the `mbedtls_pk_sigalg_t` value passed to `mbedtls_pk_{sign,verify}_ext`. It also replaces the use of `mbedtls_rsa_set_padding` on an `mbedtls_rsa_context` object. See the list of algorithms below and the signature and encryption sections for more information.
 
 An RSA public key has the type [`PSA_KEY_TYPE_RSA_PUBLIC_KEY`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga9ba0878f56c8bcd1995ac017a74f513b).
 
@@ -718,7 +718,7 @@ The following cryptographic algorithms work with RSA keys:
 
 #### Elliptic curve mechanism selection
 
-The PK types `MBEDTLS_PK_ECKEY`, `MBEDTLS_PK_ECKEY_DH` and `MBEDTLS_PK_ECDSA` correspond to elliptic-curve key types in the PSA API. In the PSA API, key pairs and public keys are separate object types. The PSA API uses policies and algorithm parameters rather than key types to distinguish between the PK EC types.
+The PK type `MBEDTLS_PK_SIGALG_ECDSA` corresponds to the elliptic-curve key types in the PSA API. In the PSA API, key pairs and public keys are separate object types. The PSA API uses policies and algorithm parameters rather than key types to distinguish between the PK EC types.
 
 An ECC public key has the type [`PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve)`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1gad54c03d3b47020e571a72cd01d978cf2) where `curve` is a curve family identifier.
 
@@ -822,8 +822,7 @@ Here is some sample code illustrating the above process, with error checking omi
 ```
 mbedtls_pk_context pk;
 mbedtls_pk_init(&pk);
-mbedtls_pk_parse_key(&pk, key_buffer, key_buffer_length, NULL, 0,
-                     mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE);
+mbedtls_pk_parse_key(&pk, key_buffer, key_buffer_length, NULL, 0);
 psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attributes);
 psa_key_id_t key_id;
@@ -906,7 +905,7 @@ This section discusses how to use a PSA key in a context that requires a PK obje
 
 * [`mbedtls_pk_copy_from_psa`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1ab8e88836fd9ee344ffe630c40447bd08) copies a PSA key into a PK object. The PSA key must be exportable. The PK object remains valid even if the PSA key is destroyed.
 * [`mbedtls_pk_copy_public_from_psa`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a2a50247a528889c12ea0ddddb8b15a4e) copies the public part of a PSA key into a PK object. The PK object remains valid even if the PSA key is destroyed.
-* [`mbedtls_pk_setup_opaque`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a4c04ac22ab9c1ae09cc29438c308bf05) sets up a PK object that wraps the PSA key. The PK object has the type `MBEDTLS_PK_OPAQUE` regardless of whether the key is an RSA or ECC key. The PK object can only be used as permitted by the PSA key's policy. The PK object contains a reference to the PSA key identifier, therefore PSA key must not be destroyed as long as the PK object remains alive.
+* [`mbedtls_pk_wrap_psa`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a4c04ac22ab9c1ae09cc29438c308bf05) sets up a PK object that wraps the PSA key. The PK object has the type `MBEDTLS_PK_OPAQUE` regardless of whether the key is an RSA or ECC key. The PK object can only be used as permitted by the PSA key's policy. The PK object contains a reference to the PSA key identifier, therefore PSA key must not be destroyed as long as the PK object remains alive.
 
 Here is some sample code illustrating how to use the PK module to format a PSA public key or the public key of a PSA key pair.
 ```
@@ -1071,6 +1070,7 @@ There is no PSA equivalent to Mbed TLS's custom key type names exposed by `mbedt
 
 The PSA API has a generic interface for key agreement, covering the main use of both `ecdh.h` and `dhm.h`.
 
+Static ECDH is no longer supported by the PSA API, as it has been deprecated by https://datatracker.ietf.org/doc/html/rfc9325.
 <!-- TODO: static FFDH/ECDH (including `mbedtls_ecdh_get_params`)
  https://github.com/Mbed-TLS/mbedtls/pull/7766#discussion_r1410568541
  -->
