@@ -3025,21 +3025,23 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
         PSA_ECC_FAMILY_SECP_R1, 256);
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     unsigned char *input_buffer = NULL;
-    const size_t size_key_share = PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE, primitive,
+    const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
+
+    const size_t size_key_share = PSA_PAKE_INPUT_SIZE(alg, primitive,
                                                       PSA_PAKE_STEP_KEY_SHARE);
     unsigned char *output_buffer = NULL;
     size_t output_len = 0;
-    size_t output_size = PSA_PAKE_OUTPUT_SIZE(PSA_ALG_JPAKE, primitive,
+    size_t output_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
                                               PSA_PAKE_STEP_KEY_SHARE);
     int in_driver = (forced_status_setup_arg == PSA_SUCCESS);
 
     TEST_CALLOC(input_buffer,
-                PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE, primitive,
+                PSA_PAKE_INPUT_SIZE(alg, primitive,
                                     PSA_PAKE_STEP_KEY_SHARE));
     memset(input_buffer, 0xAA, size_key_share);
 
     TEST_CALLOC(output_buffer,
-                PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE, primitive,
+                PSA_PAKE_INPUT_SIZE(alg, primitive,
                                     PSA_PAKE_STEP_KEY_SHARE));
     memset(output_buffer, 0x55, output_size);
 
@@ -3049,15 +3051,14 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
 
     if (pw_data->len > 0) {
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-        psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+        psa_set_key_algorithm(&attributes, alg);
         psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
         PSA_ASSERT(psa_import_key(&attributes, pw_data->x, pw_data->len,
                                   &key));
     }
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
 
     mbedtls_test_driver_pake_hooks.forced_status = forced_status_setup;
 
@@ -3198,7 +3199,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_JPAKE:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256 */
-void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
+void ecjpake_rounds(int alg_arg, int primitive_arg,
                     int derive_alg_arg, data_t *pw_data,
                     int client_input_first, int in_driver)
 {
@@ -3206,7 +3207,6 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     psa_pake_operation_t server = psa_pake_operation_init();
     psa_pake_operation_t client = psa_pake_operation_init();
     psa_algorithm_t alg = alg_arg;
-    psa_algorithm_t hash_alg = hash_arg;
     psa_algorithm_t derive_alg = derive_alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -3234,7 +3234,6 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive_arg);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
 
     /* Get shared key */
     PSA_ASSERT(psa_key_derivation_setup(&server_derive, derive_alg));

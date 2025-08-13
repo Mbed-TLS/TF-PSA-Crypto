@@ -587,7 +587,7 @@ exit:
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_JPAKE */
 void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
-                   int primitive_arg, int hash_arg, char *user_arg, char *peer_arg,
+                   int primitive_arg, char *user_arg, char *peer_arg,
                    int test_input,
                    int err_stage_arg,
                    int expected_error_arg)
@@ -598,7 +598,6 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     psa_pake_primitive_t primitive = primitive_arg;
     psa_key_type_t key_type_pw = key_type_pw_arg;
     psa_key_usage_t key_usage_pw = key_usage_pw_arg;
-    psa_algorithm_t hash_alg = hash_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     ecjpake_error_stage_t err_stage = err_stage_arg;
@@ -629,7 +628,6 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
 
     PSA_ASSERT(psa_pake_abort(&operation));
 
@@ -770,7 +768,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_JPAKE */
-void ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
+void ecjpake_rounds_inject(int alg_arg, int primitive_arg,
                            int client_input_first,
                            data_t *pw_data,
                            int err_stage_arg,
@@ -781,7 +779,6 @@ void ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
     psa_pake_operation_t server = psa_pake_operation_init();
     psa_pake_operation_t client = psa_pake_operation_init();
     psa_algorithm_t alg = alg_arg;
-    psa_algorithm_t hash_alg = hash_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     ecjpake_error_stage_t err_stage = err_stage_arg;
@@ -797,7 +794,6 @@ void ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive_arg);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
 
     PSA_ASSERT(psa_pake_setup(&server, key, &cipher_suite));
     PSA_ASSERT(psa_pake_setup(&client, key, &cipher_suite));
@@ -829,7 +825,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_JPAKE */
-void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
+void ecjpake_rounds(int alg_arg, int primitive_arg,
                     int derive_alg_arg, data_t *pw_data,
                     int client_input_first, int destroy_key,
                     int err_stage_arg)
@@ -838,7 +834,6 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     psa_pake_operation_t server = psa_pake_operation_init();
     psa_pake_operation_t client = psa_pake_operation_init();
     psa_algorithm_t alg = alg_arg;
-    psa_algorithm_t hash_alg = hash_arg;
     psa_algorithm_t derive_alg = derive_alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -858,7 +853,6 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive_arg);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
 
     /* Get shared key */
     PSA_ASSERT(psa_key_derivation_setup(&server_derive, derive_alg));
@@ -928,7 +922,7 @@ exit:
 /* BEGIN_CASE */
 void ecjpake_size_macros()
 {
-    const psa_algorithm_t alg = PSA_ALG_JPAKE;
+    const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
     const size_t bits = 256;
     const psa_pake_primitive_t prim = PSA_PAKE_PRIMITIVE(
         PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, bits);
@@ -987,12 +981,11 @@ void pake_input_getters_password()
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
 
     PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
@@ -1048,12 +1041,11 @@ void pake_input_getters_cipher_suite()
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
 
     PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
@@ -1095,12 +1087,11 @@ void pake_input_getters_user()
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
 
     PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
@@ -1168,12 +1159,11 @@ void pake_input_getters_peer()
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
 
     PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));

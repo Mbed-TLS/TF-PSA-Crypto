@@ -220,11 +220,11 @@ psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
     operation->alg = cipher_suite.algorithm;
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
-    if (cipher_suite.algorithm == PSA_ALG_JPAKE) {
+    if (PSA_ALG_IS_JPAKE(cipher_suite.algorithm)) {
         if (cipher_suite.type != PSA_PAKE_PRIMITIVE_TYPE_ECC ||
             cipher_suite.family != PSA_ECC_FAMILY_SECP_R1 ||
             cipher_suite.bits != 256 ||
-            cipher_suite.hash != PSA_ALG_SHA_256) {
+            PSA_ALG_GET_HASH(cipher_suite.algorithm) != PSA_ALG_SHA_256) {
             status = PSA_ERROR_NOT_SUPPORTED;
             goto error;
         }
@@ -304,7 +304,7 @@ static psa_status_t mbedtls_psa_pake_output_internal(
      * and data is sliced down by parsing the ECPoint records in order
      * to return the right parts on each step.
      */
-    if (operation->alg == PSA_ALG_JPAKE) {
+    if (PSA_ALG_IS_JPAKE(operation->alg)) {
         /* Initialize & write round on KEY_SHARE sequences */
         if (step == PSA_JPAKE_X1_STEP_KEY_SHARE) {
             ret = mbedtls_ecjpake_write_round_one(&operation->ctx.jpake,
@@ -424,7 +424,7 @@ static psa_status_t mbedtls_psa_pake_input_internal(
      *
      * This causes any input error to be only detected on the last step.
      */
-    if (operation->alg == PSA_ALG_JPAKE) {
+    if (PSA_ALG_IS_JPAKE(operation->alg)) {
         /*
          * Copy input to local buffer and format it as the Mbed TLS API
          * expects, i.e. as defined by draft-cragie-tls-ecjpake-01 section 7.
@@ -525,7 +525,7 @@ psa_status_t mbedtls_psa_pake_get_implicit_key(
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
-    if (operation->alg == PSA_ALG_JPAKE) {
+    if (PSA_ALG_IS_JPAKE(operation->alg)) {
         ret = mbedtls_ecjpake_write_shared_key(&operation->ctx.jpake,
                                                output,
                                                output_size,
@@ -551,7 +551,7 @@ psa_status_t mbedtls_psa_pake_abort(mbedtls_psa_pake_operation_t *operation)
     operation->password_len = 0;
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
-    if (operation->alg == PSA_ALG_JPAKE) {
+    if (PSA_ALG_IS_JPAKE(operation->alg)) {
         operation->role = MBEDTLS_ECJPAKE_NONE;
         mbedtls_platform_zeroize(operation->buffer, sizeof(operation->buffer));
         operation->buffer_length = 0;
