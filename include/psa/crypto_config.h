@@ -870,11 +870,6 @@
 //#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
 //#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
 
-/* HMAC_DRBG options */
-//#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
-//#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
-//#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
-
 /* PSA options */
 /**
  * Use HMAC_DRBG with the specified hash algorithm for HMAC_DRBG for the
@@ -1317,8 +1312,6 @@
 //#define MBEDTLS_PSA_STATIC_KEY_SLOTS
 
 /* Entropy options */
-//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
-//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_PLATFORM_FILE
@@ -2072,7 +2065,7 @@
  *
  * Enable the CTR_DRBG AES-based random generator.
  * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
+ * To use AES-128 instead, enable \c MBEDTLS_PSA_CRYPTO_RNG_STRENGTH above.
  *
  * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
  * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
@@ -2081,7 +2074,8 @@
  * \warning When using PSA, the user should call `psa_crypto_init()` before
  *          using any CTR_DRBG operation (except `mbedtls_ctr_drbg_init()`).
  *
- * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
+ * \note AES-128 will be used if \c MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *       is set accordingly.
  *
  * \note To achieve a 256-bit security strength with CTR_DRBG,
  *       you must use AES-256 *and* use sufficient entropy.
@@ -2097,14 +2091,6 @@
  * This module provides the CTR_DRBG AES random number generator.
  */
 #define MBEDTLS_CTR_DRBG_C
-
-/** \def MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
- *
- * Uncomment this macro to use a 128-bit key in the CTR_DRBG module.
- * Without this, CTR_DRBG uses a 256-bit key
- * unless \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- */
-//#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
 
 /**
  * \def MBEDTLS_ECDH_C
