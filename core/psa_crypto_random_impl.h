@@ -42,19 +42,7 @@ MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_512,
 #include "mbedtls/hmac_drbg.h"
 #if defined(PSA_WANT_ALG_SHA_512) && defined(PSA_WANT_ALG_SHA_256)
 #include <limits.h>
-#if SIZE_MAX > 0xffffffff
-/* Looks like a 64-bit system, so prefer SHA-512. */
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA512
-#else
-/* Looks like a 32-bit system, so prefer SHA-256. */
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
-#endif
-#elif defined(PSA_WANT_ALG_SHA_512)
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA512
-#elif defined(PSA_WANT_ALG_SHA_256)
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
-#else
-#error "No hash algorithm available for HMAC_DBRG."
+#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
 #endif
 
 #else /* !MBEDTLS_CTR_DRBG_C && !MBEDTLS_HMAC_DRBG_C*/
