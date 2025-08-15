@@ -864,31 +864,6 @@
  */
 #define MBEDTLS_PK_WRITE_C
 
-/* CTR_DRBG options */
-//#define MBEDTLS_CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
-//#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
-//#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
-//#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
-
-/* PSA options */
-/**
- * Use HMAC_DRBG with the specified hash algorithm for HMAC_DRBG for the
- * PSA crypto subsystem.
- *
- * If this option is unset, the library chooses a hash (currently between
- * SHA512 and SHA256) based on availability and unspecified heuristics.
- *
- * \note The PSA crypto subsystem uses the first available mechanism amongst
- *       the following:
- *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG if enabled;
- *       - Entropy from #MBEDTLS_ENTROPY_C plus CTR_DRBG with AES
- *         if #MBEDTLS_CTR_DRBG_C is enabled;
- *       - Entropy from #MBEDTLS_ENTROPY_C plus HMAC_DRBG.
- *
- *       A future version may reevaluate the prioritization of DRBG mechanisms.
- */
-//#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
-
 /** \} name SECTION: Cryptographic mechanism selection (extended API) */
 
 /**
