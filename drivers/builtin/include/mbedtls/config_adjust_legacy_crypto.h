@@ -53,6 +53,11 @@
  */
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 #define MBEDTLS_PSA_CRYPTO_CLIENT
+/* Enable  MBEDTLS_ENTROPY_C in not client-only builds without an
+ * external entropy source. */
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#define MBEDTLS_ENTROPY_C
+#endif
 #endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /**

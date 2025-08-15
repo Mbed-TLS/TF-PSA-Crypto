@@ -515,7 +515,7 @@
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED) &&\
-    ( !defined(MBEDTLS_PLATFORM_C) || !defined(MBEDTLS_ENTROPY_C) )
+    !defined(MBEDTLS_PLATFORM_C)
 #error "MBEDTLS_ENTROPY_NV_SEED defined, but not all prerequisites"
 #endif
 

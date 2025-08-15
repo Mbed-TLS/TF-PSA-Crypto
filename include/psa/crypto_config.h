@@ -958,20 +958,6 @@
  * \{
  */
 
-/**
- * \def MBEDTLS_ENTROPY_C
- *
- * Enable the generic entropy code.
- *
- * Module:  library/entropy.c
- * Caller:
- *
- * Requires: MBEDTLS_SHA512_C or MBEDTLS_SHA256_C
- *
- * This module provides a generic entropy pool
- */
-#define MBEDTLS_ENTROPY_C
-
 /* Temporary alias of MBEDTLS_PSA_DRIVER_GET_ENTROPY with incompatible
  * behavior. We only keep this until the Mbed TLS scripts are updated.
  * https://github.com/Mbed-TLS/mbedtls/issues/10300
