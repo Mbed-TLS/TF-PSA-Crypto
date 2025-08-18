@@ -22,6 +22,8 @@ TF-PSA-Crypto does not provide English text corresponding to error codes. The fu
 
 Many legacy error codes have been removed in favor of PSA error codes. Generally, functions that returned a legacy error code in the table below in Mbed TLS 3.6 now return the PSA error code listed on the same row. Similarly, callbacks should apply the same changes to error code, unless there has been a relevant change to the callback's interface.
 
+#### Specific error codes
+
 | Legacy constant (Mbed TLS 3.6) | PSA constant (TF-PSA-Crypto 1.0) |
 | ------------------------------ | ---------------------------------------------- |
 | `MBEDTLS_ERR_ECP_IN_PROGRESS` | `PSA_OPERATION_INCOMPLETE` |
@@ -32,5 +34,18 @@ Many legacy error codes have been removed in favor of PSA error codes. Generally
 | `MBEDTLS_ERR_PK_SIG_LEN_MISMATCH` | `PSA_ERROR_INVALID_SIGNATURE` |
 | `MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED` | `PSA_ERROR_NOT_SUPPORTED` |
 | `MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED` | `PSA_ERROR_HARDWARE_FAILURE` |
-| `MBEDTLS_ERR_RSA_VERIFY_FAILED` | `PSA_ERROR_INVALID_SIGNATURE` |
 
+#### General Replacements
+
+The module-specific error codes in the table below have been replaced with a single PSA error code. Here `xxx` corresponds to all modules (e.g. `ASN1` or `PK`) with the specific error code.
+
+| Legacy constant (Mbed TLS 3.6)  | PSA constant (TF-PSA-Crypto 1.0) |
+|---------------------------------| ---------------------------------------------- |
+| `MBEDTLS_ERR_xxx_BAD_INPUT`     | `PSA_ERROR_INVALID_ARGUMENT` |
+| `MBEDTLS_ERR_xxx_BAD_INPUT_DATA` | `PSA_ERROR_INVALID_ARGUMENT` |
+| `MBEDTLS_ERR_xxx_ALLOC_FAILED`  | `PSA_ERROR_INSUFFICIENT_MEMORY` |
+| `MBEDTLS_ERR_xxx_AUTH_FAILED`   | `PSA_ERROR_INVALID_SIGNATURE` |
+| `MBEDTLS_ERR_xxx_VERIFY_FAILED` | `PSA_ERROR_INVALID_SIGNATURE` |
+| `MBEDTLS_ERR_xxx_BUFFER_TOO_SMALL`     | `PSA_ERROR_BUFFER_TOO_SMALL` |
+| `MBEDTLS_ERR_xxx_OUTPUT_TOO_LARGE` | `PSA_ERROR_BUFFER_TOO_SMALL` |
+| `MBEDTLS_ERR_xxx_INVALID_PADDING` | `PSA_ERROR_INVALID_PADDING` |
