@@ -322,6 +322,17 @@ static inline psa_status_t psa_driver_wrapper_verify_hash(
     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
     const uint8_t *signature, size_t signature_length )
 {
+{% with entry_point = "verify_hash" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+hash,
+hash_length,
+signature,
+signature_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -388,12 +399,18 @@ static inline psa_status_t psa_driver_wrapper_verify_hash(
                                                                signature,
                                                                signature_length ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline uint32_t psa_driver_wrapper_sign_hash_get_num_ops(
@@ -642,6 +659,13 @@ static inline psa_status_t psa_driver_wrapper_get_key_buffer_size_from_key_data(
     size_t data_length,
     size_t *key_buffer_size )
 {
+{% with entry_point = "get_key_buffer_size_from_key_data" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+data,
+data_length,
+key_buffer_size
+{% endmacro %}
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
     psa_key_type_t key_type = psa_get_key_type(attributes);
@@ -649,6 +673,7 @@ static inline psa_status_t psa_driver_wrapper_get_key_buffer_size_from_key_data(
     *key_buffer_size = 0;
     switch( location )
     {
+#if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
         case PSA_CRYPTO_TEST_DRIVER_LOCATION:
             *key_buffer_size = mbedtls_test_opaque_size_function( key_type,
@@ -657,12 +682,19 @@ static inline psa_status_t psa_driver_wrapper_get_key_buffer_size_from_key_data(
                     PSA_SUCCESS : PSA_ERROR_NOT_SUPPORTED );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
+#endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
+
         default:
             (void)key_type;
             (void)data;
             (void)data_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith -%}
 }
 
 static inline psa_status_t psa_driver_wrapper_generate_key(
@@ -671,6 +703,16 @@ static inline psa_status_t psa_driver_wrapper_generate_key(
     const uint8_t *custom_data, size_t custom_data_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length )
 {
+{% with entry_point = "generate_key" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+custom,
+custom_data,
+custom_data_length,
+key_buffer,
+key_buffer_size,
+key_buffer_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION(psa_get_key_lifetime(attributes));
@@ -739,6 +781,11 @@ static inline psa_status_t psa_driver_wrapper_generate_key(
                 attributes, key_buffer, key_buffer_size, key_buffer_length );
             break;
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
         default:
@@ -748,6 +795,7 @@ static inline psa_status_t psa_driver_wrapper_generate_key(
     }
 
     return( status );
+{% endwith -%}
 }
 
 static inline psa_status_t psa_driver_wrapper_import_key(
@@ -1538,6 +1586,22 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
     const uint8_t *plaintext, size_t plaintext_length,
     uint8_t *ciphertext, size_t ciphertext_size, size_t *ciphertext_length )
 {
+{% with entry_point = "aead_encrypt" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+nonce,
+nonce_length,
+additional_data,
+additional_data_length,
+plaintext,
+plaintext_length,
+ciphertext,
+ciphertext_size,
+ciphertext_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -1573,12 +1637,23 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
                         ciphertext, ciphertext_size, ciphertext_length ) );
 
         /* Add cases for opaque driver here */
+#if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
+#if defined(PSA_CRYPTO_DRIVER_TEST)
+        /* test opaque driver does not support AEAD */
+#endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
+#endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith -%}
 }
 
 static inline psa_status_t psa_driver_wrapper_aead_decrypt(
@@ -1590,6 +1665,22 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
     const uint8_t *ciphertext, size_t ciphertext_length,
     uint8_t *plaintext, size_t plaintext_size, size_t *plaintext_length )
 {
+{% with entry_point = "aead_decrypt" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+nonce,
+nonce_length,
+additional_data,
+additional_data_length,
+ciphertext,
+ciphertext_length,
+plaintext,
+plaintext_size,
+plaintext_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -1625,12 +1716,23 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
                         plaintext, plaintext_size, plaintext_length ) );
 
         /* Add cases for opaque driver here */
+#if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
+#if defined(PSA_CRYPTO_DRIVER_TEST)
+        /* test opaque driver does not support AEAD */
+#endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+#endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
+
 
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_aead_encrypt_setup(
@@ -2023,6 +2125,18 @@ static inline psa_status_t psa_driver_wrapper_mac_compute(
     size_t mac_size,
     size_t *mac_length )
 {
+{% with entry_point = "mac_compute" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+input,
+input_length,
+mac,
+mac_size,
+mac_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -2064,6 +2178,11 @@ static inline psa_status_t psa_driver_wrapper_mac_compute(
                 mac, mac_size, mac_length );
             return( status );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
             /* Key is declared with a lifetime not known to us */
@@ -2078,6 +2197,7 @@ static inline psa_status_t psa_driver_wrapper_mac_compute(
             (void) status;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_mac_sign_setup(
@@ -2087,6 +2207,14 @@ static inline psa_status_t psa_driver_wrapper_mac_sign_setup(
     size_t key_buffer_size,
     psa_algorithm_t alg )
 {
+{% with entry_point = "mac_sign_setup" -%}
+{% macro entry_point_param(driver) -%}
+operation,
+attributes,
+key_buffer,
+key_buffer_size,
+alg
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -2140,6 +2268,11 @@ static inline psa_status_t psa_driver_wrapper_mac_sign_setup(
 
             return( status );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
             /* Key is declared with a lifetime not known to us */
@@ -2150,6 +2283,7 @@ static inline psa_status_t psa_driver_wrapper_mac_sign_setup(
             (void) alg;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_mac_verify_setup(
@@ -2229,6 +2363,12 @@ static inline psa_status_t psa_driver_wrapper_mac_update(
     const uint8_t *input,
     size_t input_length )
 {
+{% with entry_point = "mac_update" -%}
+{% macro entry_point_param(driver) -%}
+operation,
+input,
+input_length
+{% endmacro %}
     switch( operation->id )
     {
 #if defined(MBEDTLS_PSA_BUILTIN_MAC)
@@ -2249,12 +2389,18 @@ static inline psa_status_t psa_driver_wrapper_mac_update(
                         &operation->ctx.opaque_test_driver_ctx,
                         input, input_length ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
             (void) input;
             (void) input_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_mac_sign_finish(
@@ -2263,6 +2409,13 @@ static inline psa_status_t psa_driver_wrapper_mac_sign_finish(
     size_t mac_size,
     size_t *mac_length )
 {
+{% with entry_point = "mac_sign_finish" -%}
+{% macro entry_point_param(driver) -%}
+operation,
+mac,
+mac_size,
+mac_length
+{% endmacro %}
     switch( operation->id )
     {
 #if defined(MBEDTLS_PSA_BUILTIN_MAC)
@@ -2283,6 +2436,11 @@ static inline psa_status_t psa_driver_wrapper_mac_sign_finish(
                         &operation->ctx.opaque_test_driver_ctx,
                         mac, mac_size, mac_length ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
             (void) mac;
@@ -2290,6 +2448,7 @@ static inline psa_status_t psa_driver_wrapper_mac_sign_finish(
             (void) mac_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith -%}
 }
 
 static inline psa_status_t psa_driver_wrapper_mac_verify_finish(
@@ -2328,6 +2487,10 @@ static inline psa_status_t psa_driver_wrapper_mac_verify_finish(
 static inline psa_status_t psa_driver_wrapper_mac_abort(
     psa_mac_operation_t *operation )
 {
+{% with entry_point = "mac_abort" -%}
+{% macro entry_point_param(driver) -%}
+operation
+{% endmacro %}
     switch( operation->id )
     {
 #if defined(MBEDTLS_PSA_BUILTIN_MAC)
@@ -2344,10 +2507,16 @@ static inline psa_status_t psa_driver_wrapper_mac_abort(
             return( mbedtls_test_opaque_mac_abort(
                         &operation->ctx.opaque_test_driver_ctx ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith -%}
 }
 
 /*
@@ -2481,6 +2650,18 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
     size_t *shared_secret_length
  )
 {
+{% with entry_point = "key_agreement" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+peer_key,
+peer_key_length,
+shared_secret,
+shared_secret_size,
+shared_secret_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -2540,6 +2721,11 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
                         peer_key_length, shared_secret, shared_secret_size,
                         shared_secret_length ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
+
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
         default:
@@ -2554,6 +2740,7 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
             return( PSA_ERROR_NOT_SUPPORTED );
 
     }
+{% endwith -%}
 }
 
 static inline psa_status_t psa_driver_wrapper_pake_setup(

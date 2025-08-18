@@ -78,6 +78,11 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size(
     const psa_key_attributes_t *attributes,
     size_t *key_buffer_size )
 {
+{% with entry_point = "get_key_buffer_size" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer_size
+{% endmacro %}
     psa_key_location_t location = PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
     psa_key_type_t key_type = psa_get_key_type(attributes);
     size_t key_bits = psa_get_key_bits(attributes);
@@ -103,11 +108,18 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size(
                     PSA_SUCCESS : PSA_ERROR_NOT_SUPPORTED );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 
+#if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
+{% with nest_indent=8 %}
+{% include "OS-template-opaque.jinja" -%}
+{% endwith -%}
+#endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
+
         default:
             (void)key_type;
             (void)key_bits;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith -%}
 }
 
 psa_status_t psa_driver_wrapper_export_public_key(

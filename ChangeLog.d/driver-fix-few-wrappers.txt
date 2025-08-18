@@ -1,0 +1,13 @@
+Changes
+    * These driver wrappers are fixed and now generate correct dispatch
+      code that calls the proper opaque driver's entry point. This
+      enables writing an opaque driver that can do TLS1.3 without exposing
+      any key.
+      - `get_key_buffer_size`
+      - `get_key_buffer_size_from_key_data`
+      - `generate_key`
+      - `key_agreement`
+      - `mac_sign_setup`, `mac_update`, `mac_sign_finish`, `mac_abort`
+      - `mac_compute`
+      - `aead_decrypt`, `aead_encrypt`
+      - `verify_hash`
