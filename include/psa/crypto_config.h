@@ -1018,8 +1018,8 @@
  *
  * Module:  library/psa_crypto.c
  *
- * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_ENTROPY_C,
+ * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_PSA_CRYPTO_C,
+ *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_PSA_CRYPTO_C,
  *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
  * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
  *               is enabled in PSA (unless it's fully accelerated, see
