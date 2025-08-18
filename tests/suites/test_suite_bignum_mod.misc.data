@@ -121,10 +121,10 @@ Test mbedtls_mpi_residue_setup #6 m->limbs < r-> limbs && m > r
 mpi_residue_setup:"ff":"000000000000000000000000000000000000000000000001":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
 
 Test mbedtls_mpi_residue_setup #7 r == m
-mpi_residue_setup:"fe":"fe":-4
+mpi_residue_setup:"fe":"fe":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
 
 Test mbedtls_mpi_residue_setup #8 r > m
-mpi_residue_setup:"fe":"ff":-4
+mpi_residue_setup:"fe":"ff":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
 
 Test mbedtls_mpi_mod_io_neg #1 input_r < modulo m
 mpi_mod_io_neg:"fe":"fd":0
