@@ -1066,7 +1066,7 @@
  *
  * \note The entropy collector will write to the seed file before entropy is
  *       given to an external source, to update it.
- * 
+ *
  * \note Enabling this configuration requires #MBEDTLS_PSA_CRYPTO_RNG_HASH
  *       to be set to a supported PSA_ALG_SHA_XXX hash algorithm.
  */
@@ -1135,7 +1135,7 @@
  *   Builds with no random generator are not officially supported yet, except
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
- * 
+ *
  * \note Enabling this configuration requires #MBEDTLS_PSA_CRYPTO_RNG_HASH
  *       to be set to a supported PSA_ALG_SHA_XXX hash algorithm.
  */
@@ -1280,7 +1280,7 @@
  *   Builds with no random generator are not officially supported yet, except
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
- * 
+ *
  * \note Enabling this configuration requires #MBEDTLS_PSA_CRYPTO_RNG_HASH
  *       to be set to a supported PSA_ALG_SHA_XXX hash algorithm.
  */
