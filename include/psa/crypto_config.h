@@ -1067,8 +1067,9 @@
  * \note The entropy collector will write to the seed file before entropy is
  *       given to an external source, to update it.
  *
- * \note Enabling this configuration requires #MBEDTLS_PSA_CRYPTO_RNG_HASH
- *       to be set to a supported PSA_ALG_SHA_XXX hash algorithm.
+ * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
+ *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ *       Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  */
 //#define MBEDTLS_ENTROPY_NV_SEED
 
@@ -1136,8 +1137,9 @@
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
  *
- * \note Enabling this configuration requires #MBEDTLS_PSA_CRYPTO_RNG_HASH
- *       to be set to a supported PSA_ALG_SHA_XXX hash algorithm.
+ * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
+ *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ *       Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  */
 #define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
 
@@ -1281,8 +1283,9 @@
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
  *
- * \note Enabling this configuration requires #MBEDTLS_PSA_CRYPTO_RNG_HASH
- *       to be set to a supported PSA_ALG_SHA_XXX hash algorithm.
+ * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
+ *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ *       Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  */
 //#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
@@ -1431,9 +1434,15 @@
 /**
  * \def MBEDTLS_PSA_CRYPTO_RNG_HASH
  *
- * Hash algorithm to use for the entropy module.
+ * \brief Hash algorithm to use for the entropy module.
  *
- * \note Set to a PSA_ALG_SHA_XXX.
+ * Is enabled and set if MBEDTLS_PSA_CRYPTO_C
+ * and !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
+ * By default, this macro is set based on the presence of
+ * PSA_WANT_ALG_SHA_256 or PSA_WANT_ALG_SHA_512.
+ *
+ * \note You may override this by explicitly defining it to a
+ * supported hash algorithm (PSA_ALG_SHA_256 or PSA_ALG_SHA_512).
  */
 //#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 
