@@ -20,11 +20,6 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #include "mbedtls/entropy.h"
 
-/* Choose a DRBG based on configuration and availability */
-#if defined(MBEDTLS_CTR_DRBG_C)
-
-#include "mbedtls/ctr_drbg.h"
-
 #if !defined(PSA_WANT_ALG_SHA_256)
 MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256,
                       "SHA_256 used as the hash for the random generator, but not enabled");
@@ -35,13 +30,17 @@ MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_512,
                       "SHA_512 used as the hash for the random generator, but not enabled");
 #endif
 
+/* Choose a DRBG based on configuration and availability */
+#if defined(MBEDTLS_CTR_DRBG_C)
+
+#include "mbedtls/ctr_drbg.h"
+
 #undef MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
 
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 
 #include "mbedtls/hmac_drbg.h"
 #if defined(PSA_WANT_ALG_SHA_512) && defined(PSA_WANT_ALG_SHA_256)
-#include <limits.h>
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
 #endif
 
