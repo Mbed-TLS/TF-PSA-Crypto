@@ -102,16 +102,14 @@
 
 /** \def MBEDTLS_CTR_DRBG_ENTROPY_LEN
  *
- * \brief The amount of entropy used per seed by default, in bytes.
+ * \brief Amount of entropy (in bytes) used during (re)seeding.
+ *
+ * This value optimizes entropy collection.It conveys the amount
+ * of entropy the entropy pool hash can hold/output . It does not control
+ * RNG strength directly.
+ *
+ * Defaults to 32 bytes (SHA-256 output size).
  */
-/** This is always 32 bytes.
- *  RNG strengths above 256 bits are not supported.
- */
-#if !defined(MBEDTLS_CTR_DRBG_USE_128_BIT_KEY)
-/** \warning To achieve a 256-bit security strength, you must pass a nonce
- *           to mbedtls_ctr_drbg_seed().
- */
-#endif /* !defined(MBEDTLS_CTR_DRBG_USE_128_BIT_KEY) */
 #define MBEDTLS_CTR_DRBG_ENTROPY_LEN        32
 
 #if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
