@@ -10,6 +10,7 @@
 #ifndef MBEDTLS_ENTROPY_H
 #define MBEDTLS_ENTROPY_H
 #include "mbedtls/private_access.h"
+#include "mbedtls/psa_util.h"
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -19,7 +20,7 @@
 
 #define MBEDTLS_ENTROPY_BLOCK_SIZE PSA_HASH_LENGTH(MBEDTLS_PSA_CRYPTO_RNG_HASH)
 /* For MBEDTLS_ENTROPY_MD convert PSA_ALG_SHA_256/512 -> MBEDTLS_MD_SHA256/512 */
-#define MBEDTLS_ENTROPY_MD (MBEDTLS_PSA_CRYPTO_RNG_HASH & 0xff)
+#define MBEDTLS_ENTROPY_MD (mbedtls_md_type_from_psa_alg(MBEDTLS_PSA_CRYPTO_RNG_HASH))
 
 #if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"
