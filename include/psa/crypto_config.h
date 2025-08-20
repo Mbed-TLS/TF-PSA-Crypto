@@ -1050,7 +1050,12 @@
  * This is crucial (if not required) on systems that do not have a
  * cryptographic entropy source (in hardware or kernel) available.
  *
- * Requires: MBEDTLS_ENTROPY_C, MBEDTLS_PLATFORM_C
+ * Requires: MBEDTLS_PSA_CRYPTO_C,
+ *           !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           MBEDTLS_PLATFORM_C
+ *
+ * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
+ *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
  *
  * \note The read/write functions that are used by the entropy source are
  *       determined in the platform layer, and can be modified at runtime and/or
@@ -1066,10 +1071,6 @@
  *
  * \note The entropy collector will write to the seed file before entropy is
  *       given to an external source, to update it.
- *
- * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
- *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
- *       Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  */
 //#define MBEDTLS_ENTROPY_NV_SEED
 
@@ -1113,8 +1114,13 @@
  * \def MBEDTLS_PSA_BUILTIN_GET_ENTROPY
  *
  * Enable entropy sources for which the library has a built-in driver.
- * These are:
  *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *
+ * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
+ *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ *
+ * These are:
  * - getrandom() on Linux (if syscall() is available at compile time);
  * - getrandom() on FreeBSD and DragonFlyBSD (if available at compile time);
  * - `sysctl(KERN_ARND)` on FreeBSD and NetBSD;
@@ -1136,10 +1142,6 @@
  *   Builds with no random generator are not officially supported yet, except
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
- *
- * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
- *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
- *       Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  */
 #define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
 
@@ -1262,6 +1264,11 @@
 /**
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
  *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *
+ * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
+ *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ *
  * Enable the custom entropy callback mbedtls_platform_get_entropy()
  * (declared in mbedtls/platform.h). You need to provide this callback
  * if you need an entropy source and the built-in entropy callback
@@ -1282,10 +1289,6 @@
  *   Builds with no random generator are not officially supported yet, except
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
- *
- * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
- *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
- *       Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  */
 //#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
@@ -1434,15 +1437,18 @@
 /**
  * \def MBEDTLS_PSA_CRYPTO_RNG_HASH
  *
- * \brief Hash algorithm to use for the entropy module.
+ * \brief Hash algorithm to use for the entropy module and for HMAC_DRBG if configured.
  *
- * Is enabled and set if MBEDTLS_PSA_CRYPTO_C
- * and !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
- * By default, this macro is set based on the presence of
- * PSA_WANT_ALG_SHA_256 or PSA_WANT_ALG_SHA_512.
+ * If the option is disabled, it is automatically defined in
+ * crypto_adjust_config_derived.h based on:
+ * - Whether MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
+ * PSA_WANT_ALG_SHA_256, PSA_WANT_ALG_SHA_512, MBEDTLS_CTR_DRBG_C,
+ * and MBEDTLS_HMAC_DRBG_C are defined
+ * - The value of MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
  *
- * \note You may override this by explicitly defining it to a
- * supported hash algorithm (PSA_ALG_SHA_256 or PSA_ALG_SHA_512).
+ * Enable this option only if you need to override its automatic definition. It takes
+ * effect only if MBEDTLS_PSA_CRYPTO_C is enabled and
+ * MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
  */
 //#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 
