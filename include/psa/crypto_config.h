@@ -108,11 +108,9 @@
 #define PSA_WANT_KEY_TYPE_CAMELLIA              1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_DES                   1
-//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
-//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
 
 /*
@@ -1899,14 +1897,6 @@
  */
 //#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
 
-/**
- * \def MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT
- *
- * \deprecated This is now known as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
- * This name is now deprecated, but may still be used as an alternative form for
- * this option.
- */
-//#define MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT
 
 /**
  * \def MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
@@ -1945,15 +1935,6 @@
  * unconditionally.
  */
 //#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
-
-/**
- * \def MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY
- *
- * \deprecated This is now known as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
- * This name is now deprecated, but may still be used as an alternative form for
- * this option.
- */
-//#define MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY
 
 /**
  * \def MBEDTLS_SHA512_SMALLER
