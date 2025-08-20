@@ -364,16 +364,6 @@
 #define MBEDTLS_CIPHER_PADDING_PKCS7
 #endif
 
-/* Backwards compatibility for some macros which were renamed to reflect that
- * they are related to Armv8, not aarch64. */
-#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT) && \
-    !defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT)
-#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
-#endif
-#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY) && !defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY)
-#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
-#endif
-
 /* Some internal helpers to determine which operation modes are available. */
 
 #if defined(PSA_WANT_ALG_GCM) || defined(PSA_WANT_ALG_CCM) || \
