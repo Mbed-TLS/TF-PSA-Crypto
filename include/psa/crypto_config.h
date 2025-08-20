@@ -1054,9 +1054,6 @@
  *           !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  *           MBEDTLS_PLATFORM_C
  *
- * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
- *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
- *
  * \note The read/write functions that are used by the entropy source are
  *       determined in the platform layer, and can be modified at runtime and/or
  *       compile-time depending on the flags (MBEDTLS_PLATFORM_NV_SEED_*) used.
@@ -1116,9 +1113,6 @@
  * Enable entropy sources for which the library has a built-in driver.
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
- *
- * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
- *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
  *
  * These are:
  * - getrandom() on Linux (if syscall() is available at compile time);
@@ -1265,9 +1259,6 @@
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
- *
- * \note This option takes effect only when #MBEDTLS_PSA_CRYPTO_C is enabled
- *       and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
  *
  * Enable the custom entropy callback mbedtls_platform_get_entropy()
  * (declared in mbedtls/platform.h). You need to provide this callback
