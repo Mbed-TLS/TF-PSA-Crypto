@@ -102,12 +102,13 @@
 
 /** \def MBEDTLS_CTR_DRBG_ENTROPY_LEN
  *
- * \brief Amount of entropy (in bytes) used during (re)seeding.
+ * \brief Amount of entropy (in bytes) used during (seeding.
  *
- * This value optimizes entropy collection.It conveys the amount
- * of entropy the entropy pool hash can hold/output.
+ * This value can be used to optimize entropy collection. It conveys the amount
+ * of entropy the entropy pool hash can hold and output before having to collect
+ * entropy again. (Entropy collection can potentially be expensive.)
  *
- * Defaults to 32 bytes (SHA-256 output size).
+ * Defaults to 32 bytes (optimized for SHA-256 output size).
  */
 #define MBEDTLS_CTR_DRBG_ENTROPY_LEN        32
 
