@@ -147,7 +147,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
+void persistent_key_destroy(int owner_id_arg, int key_id_arg,
                             int first_type_arg, data_t *first_data,
                             int second_type_arg, data_t *second_data)
 {
@@ -165,13 +165,6 @@ void persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
 
     PSA_ASSERT(psa_import_key(&attributes, first_data->x, first_data->len,
                               &returned_key_id));
-
-    if (restart) {
-        psa_close_key(key_id);
-        PSA_DONE();
-        PSA_ASSERT(psa_crypto_init());
-    }
-    TEST_EQUAL(psa_is_key_present_in_storage(key_id), 1);
 
     /* Destroy the key */
     PSA_ASSERT(psa_destroy_key(key_id));
