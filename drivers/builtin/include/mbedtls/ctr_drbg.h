@@ -105,8 +105,7 @@
  * \brief Amount of entropy (in bytes) used during (re)seeding.
  *
  * This value optimizes entropy collection.It conveys the amount
- * of entropy the entropy pool hash can hold/output . It does not control
- * RNG strength directly.
+ * of entropy the entropy pool hash can hold/output.
  *
  * Defaults to 32 bytes (SHA-256 output size).
  */
