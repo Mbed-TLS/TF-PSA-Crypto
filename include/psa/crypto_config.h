@@ -804,9 +804,6 @@
  *
  * Auto-enables: MBEDTLS_MD_C
  *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any PKCS5 operations.
- *
  * This module adds support for the PKCS#5 functions.
  */
 #define MBEDTLS_PKCS5_C
@@ -913,9 +910,6 @@
  *
  * Requires: MBEDTLS_BASE64_C
  *           optionally PSA_WANT_ALG_MD5
- *
- * \warning When parsing password-protected files, if MD5 is provided only by
- * a PSA driver, you must call psa_crypto_init() before the first file.
  *
  * This modules adds support for decoding / parsing PEM files.
  */
