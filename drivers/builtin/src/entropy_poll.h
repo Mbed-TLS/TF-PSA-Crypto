@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 #ifndef PSA_CRYPTO_ENTROPY_POLL_H
-#define PSA_CRYPTO_GENTROPY_POLL_H
+#define PSA_CRYPTO_ENTROPY_POLL_H
 
 #include "tf-psa-crypto/build_info.h"
 
