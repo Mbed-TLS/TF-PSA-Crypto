@@ -1811,10 +1811,6 @@
  * \note \c CFLAGS must be set to a minimum of \c -march=armv8-a+crypto for
  * armclang <= 6.9
  *
- * \note This was previously known as MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT.
- * That name is deprecated, but may still be used as an alternative form for this
- * option.
- *
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
  *
@@ -1849,10 +1845,6 @@
  *
  * \note \c CFLAGS must be set to a minimum of \c -march=armv8-a+crypto for
  * armclang <= 6.9
- *
- * \note This was previously known as MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY.
- * That name is deprecated, but may still be used as an alternative form for this
- * option.
  *
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
