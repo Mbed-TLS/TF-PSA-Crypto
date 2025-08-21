@@ -802,7 +802,7 @@
  *          library/ssl*_server.c
  *          library/x509.c
  *
- * Requires: MBEDTLS_MD_C, MBEDTLS_RSA_C or MBEDTLS_ECP_C
+ * Requires: MBEDTLS_MD_C, the built-in RSA or ECP implementation
  *
  * Uncomment to enable generic public key wrappers.
  */
@@ -936,7 +936,7 @@
  *          library/x509_csr.c
  *
  * Requires: MBEDTLS_BASE64_C
- *           optionally MBEDTLS_MD5_C, or PSA Crypto with MD5 (see below)
+ *           optionally PSA_WANT_ALG_MD5
  *
  * \warning When parsing password-protected files, if MD5 is provided only by
  * a PSA driver, you must call psa_crypto_init() before the first file.
@@ -1470,7 +1470,7 @@
  * Module:  library/aesce.c
  * Caller:  library/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  *
  * \warning Runtime detection only works on Linux. For non-Linux operating
  *          system, Armv8-A Cryptographic Extensions must be supported by
@@ -1541,7 +1541,7 @@
  *
  * Module:  library/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  */
 //#define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 
@@ -1564,13 +1564,9 @@
  *
  * Remove decryption operation for AES, ARIA and Camellia block cipher.
  *
- * \note  This feature is incompatible with insecure block cipher,
- *        MBEDTLS_DES_C, and cipher modes which always require decryption
- *        operation, MBEDTLS_CIPHER_MODE_CBC, MBEDTLS_CIPHER_MODE_XTS and
- *        MBEDTLS_NIST_KW_C. This feature is incompatible with following
- *        supported PSA equivalence PSA_WANT_ALG_ECB_NO_PADDING,
- *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7 and
- *        PSA_WANT_KEY_TYPE_DES.
+ * \note  This feature is incompatible with PSA_WANT_ALG_ECB_NO_PADDING,
+ *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7,
+ *        PSA_WANT_KEY_TYPE_DES and MBEDTLS_NIST_KW_C.
  *
  * Module:  library/aes.c
  *          library/aesce.c
@@ -1678,7 +1674,7 @@
  *
  * Module:  library/gcm.c
  *
- * Requires: MBEDTLS_GCM_C
+ * Requires: The GCM built-in implementation
  */
 //#define MBEDTLS_GCM_LARGE_TABLE
 
