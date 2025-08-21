@@ -757,21 +757,12 @@
  * Caller:  library/constant_time.c
  *          library/ecdsa.c
  *          library/ecjpake.c
- *          library/hkdf.c
  *          library/hmac_drbg.c
  *          library/pk.c
  *          library/pkcs5.c
- *          library/pkcs12.c
  *          library/psa_crypto_ecp.c
  *          library/psa_crypto_rsa.c
  *          library/rsa.c
- *          library/ssl_cookie.c
- *          library/ssl_msg.c
- *          library/ssl_tls.c
- *          library/x509.c
- *          library/x509_crt.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
  *
  * Uncomment to enable generic message digest wrappers.
  */
@@ -797,10 +788,6 @@
  *
  * Module:  library/pk.c
  * Caller:  library/psa_crypto_rsa.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *          library/x509.c
  *
  * Requires: MBEDTLS_MD_C, the built-in RSA or ECP implementation
  *
@@ -830,8 +817,6 @@
  * Enable the generic public (asymmetric) key parser.
  *
  * Module:  library/pkparse.c
- * Caller:  library/x509_crt.c
- *          library/x509_csr.c
  *
  * Requires: MBEDTLS_ASN1_PARSE_C, MBEDTLS_PK_C
  *
@@ -868,7 +853,6 @@
  * Enable the generic public (asymmetric) key writer.
  *
  * Module:  library/pkwrite.c
- * Caller:  library/x509write.c
  *
  * Requires: MBEDTLS_ASN1_WRITE_C, MBEDTLS_PK_C
  *
@@ -891,9 +875,7 @@
  * Enable the generic ASN1 parser.
  *
  * Module:  library/asn1.c
- * Caller:  library/x509.c
- *          library/pkcs12.c
- *          library/pkcs5.c
+ * Caller:  library/pkcs5.c
  *          library/pkparse.c
  */
 #define MBEDTLS_ASN1_PARSE_C
@@ -906,9 +888,6 @@
  * Module:  library/asn1write.c
  * Caller:  library/ecdsa.c
  *          library/pkwrite.c
- *          library/x509_create.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
  */
 #define MBEDTLS_ASN1_WRITE_C
 
@@ -931,9 +910,6 @@
  *
  * Module:  library/pem.c
  * Caller:  library/pkparse.c
- *          library/x509_crl.c
- *          library/x509_crt.c
- *          library/x509_csr.c
  *
  * Requires: MBEDTLS_BASE64_C
  *           optionally PSA_WANT_ALG_MD5
@@ -952,8 +928,6 @@
  *
  * Module:  library/pem.c
  * Caller:  library/pkwrite.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
  *
  * Requires: MBEDTLS_BASE64_C
  *
