@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/pk.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/entropy.h"
+#include "mbedtls/private/ctr_drbg.h"
 #include "fuzz_common.h"
 
 //4 Kb should be enough for every bug ;-)

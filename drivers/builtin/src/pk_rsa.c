@@ -8,7 +8,7 @@
 #include "tf_psa_crypto_common.h"
 
 #include "mbedtls/pk.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "pk_internal.h"
 
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
