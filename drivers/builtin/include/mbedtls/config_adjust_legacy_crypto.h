@@ -347,8 +347,7 @@
 
 /* Helper symbol to state that there is support for ECDH, either through
  * library implementation (ECDH_C) or through PSA. */
-#if (defined(MBEDTLS_USE_PSA_CRYPTO) && defined(PSA_WANT_ALG_ECDH)) || \
-    (!defined(MBEDTLS_USE_PSA_CRYPTO) && defined(MBEDTLS_ECDH_C))
+#if defined(PSA_WANT_ALG_ECDH)
 #define MBEDTLS_CAN_ECDH
 #endif
 

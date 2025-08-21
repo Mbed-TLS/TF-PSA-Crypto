@@ -358,7 +358,7 @@ typedef struct mbedtls_cipher_context_t {
     mbedtls_cmac_context_t *MBEDTLS_PRIVATE(cmac_ctx);
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && !defined(MBEDTLS_DEPRECATED_REMOVED)
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
     /** Indicates whether the cipher operations should be performed
      *  by Mbed TLS' own crypto library or an external implementation
      *  of the PSA Crypto API.
@@ -367,7 +367,7 @@ typedef struct mbedtls_cipher_context_t {
      *  mbedtls_cipher_setup_psa().
      */
     unsigned char MBEDTLS_PRIVATE(psa_enabled);
-#endif /* MBEDTLS_USE_PSA_CRYPTO && !MBEDTLS_DEPRECATED_REMOVED */
+#endif /* !MBEDTLS_DEPRECATED_REMOVED */
 
 } mbedtls_cipher_context_t;
 
@@ -636,7 +636,6 @@ void mbedtls_cipher_free(mbedtls_cipher_context_t *ctx);
 int mbedtls_cipher_setup(mbedtls_cipher_context_t *ctx,
                          const mbedtls_cipher_info_t *cipher_info);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
 /**
  * \brief               This function initializes a cipher context for
@@ -666,7 +665,6 @@ int MBEDTLS_DEPRECATED mbedtls_cipher_setup_psa(mbedtls_cipher_context_t *ctx,
                                                 const mbedtls_cipher_info_t *cipher_info,
                                                 size_t taglen);
 #endif /* MBEDTLS_DEPRECATED_REMOVED */
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /**
  * \brief        This function returns the block size of the given cipher
