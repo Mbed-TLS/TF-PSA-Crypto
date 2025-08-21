@@ -1820,7 +1820,7 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
  *
- * Requires: The SHA-256 builtin implementation
+ * Requires: The SHA-256 built-in implementation
  *
  * Module:  drivers/builtin/src/sha256.c
  *
@@ -1867,7 +1867,7 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
  *
- * Requires: The SHA-256 builtin implementation
+ * Requires: The SHA-256 built-in implementation
  *
  * Module:  drivers/builtin/src/sha256.c
  *
@@ -1920,7 +1920,7 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY.
  *
- * Requires: The SHA-512 builtin implementation
+ * Requires: The SHA-512 built-in implementation
  *
  * Module:  drivers/builtin/src/sha512.c
  *
@@ -1954,7 +1954,7 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT.
  *
- * Requires: The SHA-512 builtin implementation
+ * Requires: The SHA-512 built-in implementation
  *
  * Module:  drivers/builtin/src/sha512.c
  *
