@@ -212,12 +212,6 @@ void persistent_slot_lifecycle(int lifetime_arg, int owner_id_arg, int id_arg,
     uint8_t *reexported = NULL;
     size_t reexported_length = -1;
 
-#if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
-    mbedtls_svc_key_id_t wrong_owner_id =
-        mbedtls_svc_key_id_make(owner_id_arg + 1, id_arg);
-    mbedtls_svc_key_id_t invalid_svc_key_id = MBEDTLS_SVC_KEY_ID_INIT;
-#endif
-
     TEST_USES_KEY_ID(id);
 
     mbedtls_test_set_step(1);
