@@ -44,9 +44,7 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 
 #include "mbedtls/hmac_drbg.h"
-#if defined(PSA_WANT_ALG_SHA_512) && defined(PSA_WANT_ALG_SHA_256)
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
-#endif
 
 #else /* !MBEDTLS_CTR_DRBG_C && !MBEDTLS_HMAC_DRBG_C*/
 
