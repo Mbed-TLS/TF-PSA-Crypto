@@ -10,6 +10,7 @@
 #ifndef MBEDTLS_ENTROPY_H
 #define MBEDTLS_ENTROPY_H
 #include "mbedtls/private_access.h"
+#include "mbedtls/psa_util.h"
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -17,16 +18,14 @@
 
 #include "md.h"
 
-#if defined(PSA_WANT_ALG_SHA_512) && !defined(MBEDTLS_ENTROPY_FORCE_SHA256)
-#define MBEDTLS_ENTROPY_SHA512_ACCUMULATOR
-#define MBEDTLS_ENTROPY_MD  MBEDTLS_MD_SHA512
-#define MBEDTLS_ENTROPY_BLOCK_SIZE      64      /**< Block size of entropy accumulator (SHA-512) */
+
+#if defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
+#define MBEDTLS_ENTROPY_BLOCK_SIZE PSA_HASH_LENGTH(MBEDTLS_PSA_CRYPTO_RNG_HASH)
+/* For MBEDTLS_ENTROPY_MD convert PSA_ALG_SHA_256/512 -> MBEDTLS_MD_SHA256/512 */
+#define MBEDTLS_ENTROPY_MD (mbedtls_md_type_from_psa_alg(MBEDTLS_PSA_CRYPTO_RNG_HASH))
 #else
-#if defined(PSA_WANT_ALG_SHA_256)
-#define MBEDTLS_ENTROPY_SHA256_ACCUMULATOR
-#define MBEDTLS_ENTROPY_MD  MBEDTLS_MD_SHA256
-#define MBEDTLS_ENTROPY_BLOCK_SIZE      32      /**< Block size of entropy accumulator (SHA-256) */
-#endif
+#define MBEDTLS_ENTROPY_BLOCK_SIZE 32
+#define MBEDTLS_ENTROPY_MD MBEDTLS_MD_SHA256
 #endif
 
 #if defined(MBEDTLS_THREADING_C)

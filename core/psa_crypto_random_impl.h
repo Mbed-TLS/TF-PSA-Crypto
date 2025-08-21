@@ -20,31 +20,31 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #include "mbedtls/entropy.h"
 
+#if !defined(PSA_WANT_ALG_SHA_256)
+MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256,
+                      "SHA_256 used as the hash for the random generator, but not enabled");
+#endif
+
+#if !defined(PSA_WANT_ALG_SHA_512)
+MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_512,
+                      "SHA_512 used as the hash for the random generator, but not enabled");
+#endif
+
+MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
+                      (MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_512),
+                      "Invalid hashing algorithm for MBEDTLS_PSA_CRYPTO_RNG_HASH");
+
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_CTR_DRBG_C)
 
 #include "mbedtls/ctr_drbg.h"
+
 #undef MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
 
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 
 #include "mbedtls/hmac_drbg.h"
-#if defined(PSA_WANT_ALG_SHA_512) && defined(PSA_WANT_ALG_SHA_256)
-#include <limits.h>
-#if SIZE_MAX > 0xffffffff
-/* Looks like a 64-bit system, so prefer SHA-512. */
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA512
-#else
-/* Looks like a 32-bit system, so prefer SHA-256. */
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
-#endif
-#elif defined(PSA_WANT_ALG_SHA_512)
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA512
-#elif defined(PSA_WANT_ALG_SHA_256)
-#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
-#else
-#error "No hash algorithm available for HMAC_DBRG."
-#endif
+#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
 
 #else /* !MBEDTLS_CTR_DRBG_C && !MBEDTLS_HMAC_DRBG_C*/
 
