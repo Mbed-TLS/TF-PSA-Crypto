@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_PK_H
-#define PSA_CRYPTO_PK_H
-#define PSA_CRYPTO_PK_HAVE_PRIVATE_HEADER
+#ifndef PSA_CRYPTO_MBEDTLS_PK_H
+#define PSA_CRYPTO_MBEDTLS_PK_H
+#define MBEDTLS_PK_HAVE_PRIVATE_HEADER
 
 #include "mbedtls/private_access.h"
 
@@ -1172,4 +1172,4 @@ int mbedtls_pk_write_pubkey(unsigned char **p, unsigned char *start,
 }
 #endif
 
-#endif /* PSA_CRYPTO_PK_H */
+#endif /* PSA_CRYPTO_MBEDTLS_PK_H */
