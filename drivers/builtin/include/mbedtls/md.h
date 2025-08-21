@@ -11,8 +11,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_MD_H
-#define MBEDTLS_MD_H
+#ifndef PSA_CRYPTO_MBEDTLS_MD_H
+#define PSA_CRYPTO_MBEDTLS_MD_H
 #include "mbedtls/private_access.h"
 
 #include <stddef.h>
@@ -523,4 +523,4 @@ int mbedtls_md_hmac(const mbedtls_md_info_t *md_info, const unsigned char *key, 
 }
 #endif
 
-#endif /* MBEDTLS_MD_H */
+#endif /* PSA_CRYPTO_MBEDTLS_MD_H */

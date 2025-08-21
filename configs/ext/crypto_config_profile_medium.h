@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef PROFILE_M_PSA_CRYPTO_CONFIG_H
-#define PROFILE_M_PSA_CRYPTO_CONFIG_H
+#ifndef PSA_CRYPTO_PROFILE_M_PSA_CRYPTO_CONFIG_H
+#define PSA_CRYPTO_PROFILE_M_PSA_CRYPTO_CONFIG_H
 
 /**
  * \name SECTION: Platform abstraction layer
@@ -647,4 +647,4 @@
 #include "crypto_accelerator_config.h"
 #endif
 
-#endif /* PROFILE_M_PSA_CRYPTO_CONFIG_H */
+#endif /* PSA_CRYPTO_PROFILE_M_PSA_CRYPTO_CONFIG_H */

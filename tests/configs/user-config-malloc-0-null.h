@@ -6,6 +6,9 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#ifndef PSA_CRYPTO_CONFIG_MALLOC_ZERO_NULL_H
+#define PSA_CRYPTO_CONFIG_MALLOC_ZERO_NULL_H
+
 #include <stdlib.h>
 
 #ifndef MBEDTLS_PLATFORM_STD_CALLOC
@@ -20,3 +23,5 @@ static inline void *custom_calloc(size_t nmemb, size_t size)
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_PLATFORM_STD_CALLOC custom_calloc
 #endif
+
+#endif /* PSA_CRYPTO_CONFIG_MALLOC_ZERO_NULL_H */

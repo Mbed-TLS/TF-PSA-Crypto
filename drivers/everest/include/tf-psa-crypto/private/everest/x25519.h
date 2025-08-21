@@ -19,8 +19,8 @@
  *  This file is part of Mbed TLS (https://tls.mbed.org)
  */
 
-#ifndef MBEDTLS_X25519_H
-#define MBEDTLS_X25519_H
+#ifndef PSA_CRYPTO_X25519_H
+#define PSA_CRYPTO_X25519_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -193,4 +193,4 @@ int mbedtls_x25519_read_public( mbedtls_x25519_context *ctx,
 }
 #endif
 
-#endif /* x25519.h */
+#endif /* PSA_CRYPTO_PRIVATE_EVEREST_X25519_H */

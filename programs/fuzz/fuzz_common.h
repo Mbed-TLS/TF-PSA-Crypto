@@ -6,6 +6,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifndef PSA_CRYPTO_FUZZ_COMMON_H
+#define PSA_CRYPTO_FUZZ_COMMON_H
+
 typedef struct fuzzBufferOffset {
     const uint8_t *Data;
     size_t Size;
@@ -26,3 +29,5 @@ int fuzz_recv_timeout(void *ctx, unsigned char *buf, size_t len,
 
 /* Implemented in the fuzz_*.c sources and required by fuzz_onefile.c */
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
+
+#endif /* PSA_CRYPTO_FUZZ_COMMON_H */

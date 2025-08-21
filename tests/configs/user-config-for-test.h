@@ -10,6 +10,9 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#ifndef PSA_CRYPTO_USER_CONFIG_FOR_TEST_H
+#define PSA_CRYPTO_USER_CONFIG_FOR_TEST_H
+
 #if defined(MBEDTLS_PSA_INJECT_ENTROPY)
 /* The #MBEDTLS_PSA_INJECT_ENTROPY feature requires two extra platform
  * functions, which must be configured as #MBEDTLS_PLATFORM_NV_SEED_READ_MACRO
@@ -27,3 +30,5 @@ int mbedtls_test_inject_entropy_seed_write(unsigned char *buf, size_t len);
 #define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO mbedtls_test_inject_entropy_seed_read
 #define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO mbedtls_test_inject_entropy_seed_write
 #endif /* MBEDTLS_PSA_INJECT_ENTROPY */
+
+#endif /* PSA_CRYPTO_USER_CONFIG_FOR_TEST_H */

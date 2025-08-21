@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef TEST_PSA_TEST_WRAPPERS_H
-#define TEST_PSA_TEST_WRAPPERS_H
+#ifndef PSA_CRYPTO_PSA_TEST_WRAPPERS_H
+#define PSA_CRYPTO_PSA_TEST_WRAPPERS_H
 
 #ifdef __cplusplus
 extern "C" {

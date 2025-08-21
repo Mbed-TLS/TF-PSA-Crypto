@@ -21,6 +21,9 @@
  *   the main library, since they determine the ABI between the two.)
  */
 
+#ifndef PSA_CRYPTO_CONFIG_DRIVER_EXTENSION_H
+#define PSA_CRYPTO_CONFIG_DRIVER_EXTENSION_H
+
 #include "psa/crypto_legacy.h"
 
 #if defined(PSA_WANT_ALG_CBC_NO_PADDING)
@@ -663,3 +666,4 @@
 #define MBEDTLS_PSA_ACCEL_KEY_TYPE_RAW_DATA 1
 #endif
 #endif
+#endif /* PSA_CRYPTO_CONFIG_DRIVER_EXTENSION_H */

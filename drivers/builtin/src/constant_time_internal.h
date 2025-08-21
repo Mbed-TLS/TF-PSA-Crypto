@@ -5,8 +5,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CONSTANT_TIME_INTERNAL_H
-#define MBEDTLS_CONSTANT_TIME_INTERNAL_H
+#ifndef PSA_CRYPTO_CONSTANT_TIME_INTERNAL_H
+#define PSA_CRYPTO_CONSTANT_TIME_INTERNAL_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -576,4 +576,4 @@ int mbedtls_ct_memcmp_partial(const void *a,
 /* Include the implementation of static inline functions above. */
 #include "constant_time_impl.h"
 
-#endif /* MBEDTLS_CONSTANT_TIME_INTERNAL_H */
+#endif /* PSA_CRYPTO_CONSTANT_TIME_INTERNAL_H */

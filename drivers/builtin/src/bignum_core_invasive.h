@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_BIGNUM_CORE_INVASIVE_H
-#define MBEDTLS_BIGNUM_CORE_INVASIVE_H
+#ifndef PSA_CRYPTO_BIGNUM_CORE_INVASIVE_H
+#define PSA_CRYPTO_BIGNUM_CORE_INVASIVE_H
 
 #include "bignum_core.h"
 
@@ -20,4 +20,4 @@ extern void (*mbedtls_unsafe_codepath_hook)(void);
 
 #endif /* MBEDTLS_TEST_HOOKS && !MBEDTLS_THREADING_C */
 
-#endif /* MBEDTLS_BIGNUM_CORE_INVASIVE_H */
+#endif /* PSA_CRYPTO_BIGNUM_CORE_INVASIVE_H */

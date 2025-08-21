@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_MD_PSA_H
-#define MBEDTLS_MD_PSA_H
+#ifndef PSA_CRYPTO_MD_PSA_H
+#define PSA_CRYPTO_MD_PSA_H
 
 #include "tf_psa_crypto_common.h"
 
@@ -23,4 +23,4 @@
  */
 int mbedtls_md_error_from_psa(psa_status_t status);
 
-#endif /* MBEDTLS_MD_PSA_H */
+#endif /* PSA_CRYPTO_MD_PSA_H */

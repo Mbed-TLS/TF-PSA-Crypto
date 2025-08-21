@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_PK_WRAP_H
-#define MBEDTLS_PK_WRAP_H
+#ifndef PSA_CRYPTO_PK_WRAP_H
+#define PSA_CRYPTO_PK_WRAP_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -102,4 +102,4 @@ int mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t psa_alg_md,
                                 size_t *sig_len);
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
-#endif /* MBEDTLS_PK_WRAP_H */
+#endif /* PSA_CRYPTO_PK_WRAP_H */

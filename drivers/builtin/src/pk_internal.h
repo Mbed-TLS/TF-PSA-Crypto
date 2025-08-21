@@ -8,8 +8,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_PK_INTERNAL_H
-#define MBEDTLS_PK_INTERNAL_H
+#ifndef PSA_CRYPTO_PK_INTERNAL_H
+#define PSA_CRYPTO_PK_INTERNAL_H
 
 #include "mbedtls/pk.h"
 #if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
@@ -189,4 +189,4 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
 int mbedtls_pk_load_file(const char *path, unsigned char **buf, size_t *n);
 #endif
 
-#endif /* MBEDTLS_PK_INTERNAL_H */
+#endif /* PSA_CRYPTO_PK_INTERNAL_H */

@@ -6,8 +6,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef P256M_DRIVER_ENTRYPOINTS_H
-#define P256M_DRIVER_ENTRYPOINTS_H
+#ifndef PSA_CRYPTO_P256M_DRIVER_ENTRYPOINTS_H
+#define PSA_CRYPTO_P256M_DRIVER_ENTRYPOINTS_H
 
 #if defined(MBEDTLS_PSA_P256M_DRIVER_ENABLED)
 #ifndef PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT
@@ -216,4 +216,4 @@ psa_status_t p256_transparent_verify_hash(
     const uint8_t *signature,
     size_t signature_length);
 
-#endif /* P256M_DRIVER_ENTRYPOINTS_H */
+#endif /* PSA_CRYPTO_P256M_DRIVER_ENTRYPOINTS_H */

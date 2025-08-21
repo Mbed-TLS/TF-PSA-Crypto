@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_BASE64_INTERNAL
-#define MBEDTLS_BASE64_INTERNAL
+#ifndef PSA_CRYPTO_BASE64_INTERNAL
+#define PSA_CRYPTO_BASE64_INTERNAL
 
 #include "tf_psa_crypto_common.h"
 
@@ -42,4 +42,4 @@ signed char mbedtls_ct_base64_dec_value(unsigned char c);
 
 #endif /* MBEDTLS_TEST_HOOKS */
 
-#endif /* MBEDTLS_BASE64_INTERNAL */
+#endif /* PSA_CRYPTO_BASE64_INTERNAL */

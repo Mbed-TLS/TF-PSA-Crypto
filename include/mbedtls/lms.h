@@ -12,8 +12,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_LMS_H
-#define MBEDTLS_LMS_H
+#ifndef PSA_CRYPTO_LMS_H
+#define PSA_CRYPTO_LMS_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -430,4 +430,4 @@ int mbedtls_lms_sign(mbedtls_lms_private_t *ctx,
 }
 #endif
 
-#endif /* MBEDTLS_LMS_H */
+#endif /* PSA_CRYPTO_LMS_H */

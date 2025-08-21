@@ -13,8 +13,8 @@
  * in order to catch dependency issues early.
  */
 
-#ifndef MBEDTLS_CHECK_CRYPTO_CONFIG_H
-#define MBEDTLS_CHECK_CRYPTO_CONFIG_H
+#ifndef PSA_CRYPTO_CHECK_CRYPTO_CONFIG_H
+#define PSA_CRYPTO_CHECK_CRYPTO_CONFIG_H
 
 #if defined(PSA_WANT_ALG_CCM) && \
     !(defined(PSA_WANT_KEY_TYPE_AES) || \
@@ -133,4 +133,4 @@
 #error "PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS defined, but not all prerequisites"
 #endif
 
-#endif /* MBEDTLS_CHECK_CRYPTO_CONFIG_H */
+#endif /* PSA_CRYPTO_CHECK_CRYPTO_CONFIG_H */

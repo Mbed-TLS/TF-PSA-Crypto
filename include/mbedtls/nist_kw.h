@@ -20,8 +20,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_NIST_KW_H
-#define MBEDTLS_NIST_KW_H
+#ifndef PSA_CRYPTO_NIST_KW_H
+#define PSA_CRYPTO_NIST_KW_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -103,4 +103,4 @@ psa_status_t mbedtls_nist_kw_unwrap(mbedtls_svc_key_id_t key,
 }
 #endif
 
-#endif /* MBEDTLS_NIST_KW_H */
+#endif /* PSA_CRYPTO_NIST_KW_H */

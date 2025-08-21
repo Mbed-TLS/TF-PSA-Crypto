@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_LIBRARY_ALIGNMENT_H
-#define MBEDTLS_LIBRARY_ALIGNMENT_H
+#ifndef PSA_CRYPTO_LIBRARY_ALIGNMENT_H
+#define PSA_CRYPTO_LIBRARY_ALIGNMENT_H
 
 #include <stdint.h>
 #include <string.h>
@@ -681,4 +681,4 @@ static const uint16_t mbedtls_byte_order_detector = { 0x100 };
         }                                                                        \
     }
 
-#endif /* MBEDTLS_LIBRARY_ALIGNMENT_H */
+#endif /* PSA_CRYPTO_LIBRARY_ALIGNMENT_H */

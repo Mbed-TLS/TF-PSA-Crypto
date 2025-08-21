@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_PSA_UTIL_H
-#define MBEDTLS_PSA_UTIL_H
+#ifndef PSA_CRYPTO_PSA_UTIL_H
+#define PSA_CRYPTO_PSA_UTIL_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -196,4 +196,4 @@ int mbedtls_ecdsa_der_to_raw(size_t bits, const unsigned char *der, size_t der_l
 
 /**@}*/
 
-#endif /* MBEDTLS_PSA_UTIL_H */
+#endif /* PSA_CRYPTO_PSA_UTIL_H */

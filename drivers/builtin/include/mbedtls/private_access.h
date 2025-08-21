@@ -11,8 +11,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_PRIVATE_ACCESS_H
-#define MBEDTLS_PRIVATE_ACCESS_H
+#ifndef PSA_CRYPTO_MBEDTLS_PRIVATE_ACCESS_H
+#define PSA_CRYPTO_MBEDTLS_PRIVATE_ACCESS_H
 
 #ifndef MBEDTLS_ALLOW_PRIVATE_ACCESS
 /* Public use: do not declare private identifiers. */
@@ -50,4 +50,4 @@
 
 #endif
 
-#endif /* MBEDTLS_PRIVATE_ACCESS_H */
+#endif /* PSA_CRYPTO_MBEDTLS_PRIVATE_ACCESS_H */

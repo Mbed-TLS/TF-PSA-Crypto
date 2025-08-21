@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_BASE64_H
-#define MBEDTLS_BASE64_H
+#ifndef PSA_CRYPTO_BASE64_H
+#define PSA_CRYPTO_BASE64_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -79,4 +79,4 @@ int mbedtls_base64_self_test(int verbose);
 }
 #endif
 
-#endif /* base64.h */
+#endif /* PSA_CRYPTO_BASE64_H */

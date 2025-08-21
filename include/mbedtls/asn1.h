@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_ASN1_H
-#define MBEDTLS_ASN1_H
+#ifndef PSA_CRYPTO_ASN1_H
+#define PSA_CRYPTO_ASN1_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -623,4 +623,4 @@ void mbedtls_asn1_free_named_data_list_shallow(mbedtls_asn1_named_data *name);
 }
 #endif
 
-#endif /* asn1.h */
+#endif /* PSA_CRYPTO_ASN1_H */

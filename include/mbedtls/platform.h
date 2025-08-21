@@ -23,8 +23,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_PLATFORM_H
-#define MBEDTLS_PLATFORM_H
+#ifndef PSA_MBEDTLS_CRYPTO_PLATFORM_H
+#define PSA_MBEDTLS_CRYPTO_PLATFORM_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -523,4 +523,4 @@ void mbedtls_platform_teardown(mbedtls_platform_context *ctx);
 }
 #endif
 
-#endif /* platform.h */
+#endif /* PSA_MBEDTLS_CRYPTO_PLATFORM_H */

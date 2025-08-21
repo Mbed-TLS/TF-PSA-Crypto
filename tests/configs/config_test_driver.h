@@ -10,11 +10,11 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CONFIG_H
-#define MBEDTLS_CONFIG_H
+#ifndef PSA_CRYPTO_CONFIG_TEST_DRIVER_H
+#define PSA_CRYPTO_CONFIG_TEST_DRIVER_H
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 
-#endif /* MBEDTLS_CONFIG_H */
+#endif /* PSA_CRYPTO_CONFIG_TEST_DRIVER_H */

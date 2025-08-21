@@ -15,8 +15,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef TF_PSA_CRYPTO_CHECK_CONFIG_H
-#define TF_PSA_CRYPTO_CHECK_CONFIG_H
+#ifndef PSA_CRYPTO_CHECK_CONFIG_H
+#define PSA_CRYPTO_CHECK_CONFIG_H
 
 /* *INDENT-OFF* */
 
@@ -647,4 +647,4 @@
 #endif /* (MBEDTLS_HAVE_INT32 || MBEDTLS_HAVE_INT64) && MBEDTLS_HAVE_ASM */
 
 /* *INDENT-ON* */
-#endif /* TF_PSA_CRYPTO_CHECK_CONFIG_H */
+#endif /* PSA_CRYPTO_CHECK_CONFIG_H */

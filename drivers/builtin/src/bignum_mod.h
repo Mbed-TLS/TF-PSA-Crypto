@@ -66,8 +66,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_BIGNUM_MOD_H
-#define MBEDTLS_BIGNUM_MOD_H
+#ifndef PSA_CRYPTO_BIGNUM_MOD_H
+#define PSA_CRYPTO_BIGNUM_MOD_H
 
 #include "tf_psa_crypto_common.h"
 
@@ -449,4 +449,4 @@ int mbedtls_mpi_mod_write(const mbedtls_mpi_mod_residue *r,
                           size_t buflen,
                           mbedtls_mpi_mod_ext_rep ext_rep);
 
-#endif /* MBEDTLS_BIGNUM_MOD_H */
+#endif /* PSA_CRYPTO_BIGNUM_MOD_H */

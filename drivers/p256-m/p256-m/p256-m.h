@@ -5,8 +5,8 @@
  * Author: Manuel Pégourié-Gonnard.
  * SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef P256_M_H
-#define P256_M_H
+#ifndef PSA_CRYPTO_P256_M_H
+#define PSA_CRYPTO_P256_M_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -132,4 +132,4 @@ int p256_public_from_private(uint8_t pub[64], const uint8_t priv[32]);
 }
 #endif
 
-#endif /* P256_M_H */
+#endif /* PSA_CRYPTO_P256_M_H */
