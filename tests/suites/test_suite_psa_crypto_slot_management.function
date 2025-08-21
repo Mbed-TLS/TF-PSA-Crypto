@@ -698,7 +698,7 @@ void many_transient_keys(int max_keys_arg)
                                   &exported_length));
         TEST_MEMORY_COMPARE(exported, exported_length,
                             (uint8_t *) &i, sizeof(i));
-       psa_destroy_key(keys[i]); 
+        psa_destroy_key(keys[i]);
     }
 
 exit:
