@@ -34,7 +34,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 #if defined(MBEDTLS_ASN1_WRITE_C) || defined(MBEDTLS_ASN1_PARSE_C) || \
     defined(PSA_HAVE_ALG_SOME_ECDSA)
@@ -390,8 +390,8 @@ int mbedtls_asn1_write_integer(unsigned char **p,
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif /* PSA_CRYPTO_ASN1_WRITE_C */
+#endif /* MBEDTLS_ASN1_WRITE_C */
 
 #endif /* PSA_CRYPTO_ASN1_WRITE_H */
