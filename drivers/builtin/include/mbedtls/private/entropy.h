@@ -18,15 +18,9 @@
 
 #include "mbedtls/md.h"
 
-
-#if defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
 #define MBEDTLS_ENTROPY_BLOCK_SIZE PSA_HASH_LENGTH(MBEDTLS_PSA_CRYPTO_RNG_HASH)
 /* For MBEDTLS_ENTROPY_MD convert PSA_ALG_SHA_256/512 -> MBEDTLS_MD_SHA256/512 */
 #define MBEDTLS_ENTROPY_MD (mbedtls_md_type_from_psa_alg(MBEDTLS_PSA_CRYPTO_RNG_HASH))
-#else
-#define MBEDTLS_ENTROPY_BLOCK_SIZE 32
-#define MBEDTLS_ENTROPY_MD MBEDTLS_MD_SHA256
-#endif
 
 #if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"
