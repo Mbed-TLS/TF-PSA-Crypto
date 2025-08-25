@@ -1018,9 +1018,13 @@
  *
  * Module:  library/psa_crypto.c
  *
- * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_PSA_CRYPTO_C,
- *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_PSA_CRYPTO_C,
- *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
+ * Requires: either MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
+ *           or MBEDTLS_CTR_DRBG_C,
+ *           or MBEDTLS_HMAC_DRBG_C.
+ *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
+ *           random generator, then either PSA_WANT_ALG_SHA_256 or
+ *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
+ *
  * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
  *               is enabled in PSA (unless it's fully accelerated, see
  *               docs/driver-only-builds.md about that).
