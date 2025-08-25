@@ -216,7 +216,7 @@
 
 #if defined(MBEDTLS_ENTROPY_C) && \
     !(defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA_256))
-#error "MBEDTLS_ENTROPY_C defined, but not all prerequisites"
+#error "Entropy module enabled but neither SHA-256 nor SHA-512 is available"
 #endif
 
 #if defined(__has_feature)
@@ -548,11 +548,10 @@
 #error "MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO and MBEDTLS_PLATFORM_STD_NV_SEED_WRITE cannot be defined simultaneously"
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) &&                                    \
-    !( ( ( defined(MBEDTLS_CTR_DRBG_C) || defined(MBEDTLS_HMAC_DRBG_C) ) && \
-         defined(MBEDTLS_ENTROPY_C) ) ||                                \
-       defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) )
-#error "MBEDTLS_PSA_CRYPTO_C defined, but not all prerequisites (missing RNG)"
+#if defined(MBEDTLS_PSA_CRYPTO_C) &&                                 \
+    !(defined(MBEDTLS_CTR_DRBG_C) || defined(MBEDTLS_HMAC_DRBG_C) || \
+       defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG))
+#error "MBEDTLS_PSA_CRYPTO_C defined, but missing RNG"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_HAVE_SOFT_BLOCK_MODE) && \

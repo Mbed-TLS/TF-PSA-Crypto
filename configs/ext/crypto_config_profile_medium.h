@@ -239,21 +239,6 @@
  * This section sets PSA specific settings.
  * \{
  */
-
-/**
- * \def MBEDTLS_ENTROPY_C
- *
- * Enable the generic entropy code.
- *
- * Module:  library/entropy.c
- * Caller:
- *
- * Requires: MBEDTLS_SHA512_C or MBEDTLS_SHA256_C
- *
- * This module provides a generic entropy pool
- */
-#define MBEDTLS_ENTROPY_C
-
 /**
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
  *
@@ -289,7 +274,9 @@
  * This is crucial (if not required) on systems that do not have a
  * cryptographic entropy source (in hardware or kernel) available.
  *
- * Requires: MBEDTLS_ENTROPY_C, MBEDTLS_PLATFORM_C
+ * Requires: MBEDTLS_PSA_CRYPTO_C,
+ *           !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           MBEDTLS_PLATFORM_C
  *
  * \note The read/write functions that are used by the entropy source are
  *       determined in the platform layer, and can be modified at runtime and/or
@@ -315,9 +302,13 @@
  *
  * Module:  library/psa_crypto.c
  *
- * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
+ * Requires: either MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
+ *           or MBEDTLS_CTR_DRBG_C,
+ *           or MBEDTLS_HMAC_DRBG_C.
+ *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
+ *           random generator, then either PSA_WANT_ALG_SHA_256 or
+ *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
+ *
  * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
  *               is enabled in PSA (unless it's fully accelerated, see
  *               docs/driver-only-builds.md about that).
