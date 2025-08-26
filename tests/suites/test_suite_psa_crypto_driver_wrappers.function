@@ -3018,6 +3018,7 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
     psa_status_t expected_status = expected_status_arg;
     psa_pake_operation_t operation = psa_pake_operation_init();
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
+    mbedtls_svc_key_id_t shared_key_id;
     psa_key_derivation_operation_t implicit_key =
         psa_key_derivation_operation_init_short();
     psa_pake_primitive_t primitive = PSA_PAKE_PRIMITIVE(
@@ -3153,16 +3154,12 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
             memset(&mbedtls_test_driver_pake_hooks.hits, 0,
                    sizeof(mbedtls_test_driver_pake_hooks.hits));
 
-            mbedtls_svc_key_id_t shared_key_id;
-
             TEST_EQUAL(psa_pake_get_shared_key(&operation, &attributes, &shared_key_id),
                        expected_status);
 
-            psa_key_derivation_input_key(&implicit_key,
-                                         PSA_KEY_DERIVATION_INPUT_SECRET,
-                                         shared_key_id);
-
-            psa_destroy_key(shared_key_id);
+            PSA_ASSERT(psa_key_derivation_input_key(&implicit_key,
+                                                    PSA_KEY_DERIVATION_INPUT_SECRET,
+                                                    shared_key_id));
 
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 2);
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.implicit_key, 1);
@@ -3202,6 +3199,7 @@ exit:
     mbedtls_free(input_buffer);
     mbedtls_free(output_buffer);
     psa_destroy_key(key);
+    psa_destroy_key(shared_key_id);
     mbedtls_test_driver_pake_hooks =
         mbedtls_test_driver_pake_hooks_init();
     PSA_DONE();
@@ -3306,11 +3304,11 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total,
                pake_in_driver ? pake_expected_hit_count++ : pake_expected_hit_count);
 
-    psa_destroy_key(shared_key_id);
 exit:
     psa_key_derivation_abort(&server_derive);
     psa_key_derivation_abort(&client_derive);
     psa_destroy_key(key);
+    psa_destroy_key(shared_key_id);
     psa_pake_abort(&server);
     psa_pake_abort(&client);
     PSA_DONE();

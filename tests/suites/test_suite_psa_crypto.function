@@ -11239,12 +11239,12 @@ void ecjpake_rounds(int alg_arg, int primitive_arg,
     psa_destroy_key(key_id);
 
     PSA_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key_id));
-    psa_destroy_key(key_id);
 
 exit:
     psa_key_derivation_abort(&server_derive);
     psa_key_derivation_abort(&client_derive);
     psa_destroy_key(key);
+    psa_destroy_key(key_id);
     psa_pake_abort(&server);
     psa_pake_abort(&client);
     PSA_DONE();
