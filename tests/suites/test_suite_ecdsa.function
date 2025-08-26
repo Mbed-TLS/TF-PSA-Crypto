@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/private/ecdsa.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/aria.h"
+#include "mbedtls/private/aria.h"
 
 /* Maximum size of data used by test vectors
  * WARNING: to be adapted if and when adding larger test cases */

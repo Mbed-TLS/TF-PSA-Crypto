@@ -17,8 +17,8 @@
 #include "crypto_oid.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"
-#include "mbedtls/error_common.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/ecp.h"
 #include "pk_internal.h"
 
 #include <string.h>
@@ -31,7 +31,7 @@
 #include "mbedtls/pem.h"
 #endif
 #if defined(MBEDTLS_PKCS5_C)
-#include "mbedtls/pkcs5.h"
+#include "mbedtls/private/pkcs5.h"
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)

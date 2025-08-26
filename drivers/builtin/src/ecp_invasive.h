@@ -15,9 +15,9 @@
 #define MBEDTLS_ECP_INVASIVE_H
 
 #include "tf_psa_crypto_common.h"
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 #include "bignum_mod.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 
 /*
  * Curve modulus types

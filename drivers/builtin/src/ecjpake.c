@@ -14,9 +14,9 @@
 
 #if defined(MBEDTLS_ECJPAKE_C)
 
-#include "mbedtls/ecjpake.h"
+#include "mbedtls/private/ecjpake.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

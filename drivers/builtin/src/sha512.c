@@ -30,9 +30,9 @@
 
 #if defined(MBEDTLS_SHA512_C) || defined(MBEDTLS_SHA384_C)
 
-#include "mbedtls/sha512.h"
+#include "mbedtls/private/sha512.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
   #define UL64(x) x##ui64

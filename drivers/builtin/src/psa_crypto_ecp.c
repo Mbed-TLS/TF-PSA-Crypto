@@ -20,10 +20,10 @@
 #include <string.h>
 #include "mbedtls/platform.h"
 
-#include <mbedtls/ecdsa.h>
-#include <mbedtls/ecdh.h>
-#include <mbedtls/ecp.h>
-#include <mbedtls/error_common.h>
+#include <mbedtls/private/ecdsa.h>
+#include <mbedtls/private/ecdh.h>
+#include <mbedtls/private/ecp.h>
+#include <mbedtls/private/error_common.h>
 
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_BASIC) || \
     defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \

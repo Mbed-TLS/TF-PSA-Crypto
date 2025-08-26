@@ -17,10 +17,10 @@
 
 #include <string.h>
 
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #if defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
 #if !((defined(MBEDTLS_ARCH_IS_ARMV8_A) && defined(MBEDTLS_AESCE_C)) || \

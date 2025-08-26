@@ -23,13 +23,13 @@
 #include "pk_internal.h"
 
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #endif
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/private/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)

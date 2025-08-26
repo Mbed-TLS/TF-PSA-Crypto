@@ -148,7 +148,7 @@
  *   this symbol should be consulted after its inclusion.
  *   (e.g. MBEDTLS_MD_LIGHT)
  */
-#include "mbedtls/config_psa.h"
+#include "mbedtls/private/config_psa.h"
 
 #include "mbedtls/config_adjust_legacy_crypto.h"
 

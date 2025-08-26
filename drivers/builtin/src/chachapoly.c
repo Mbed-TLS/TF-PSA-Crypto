@@ -10,9 +10,9 @@
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
 
-#include "mbedtls/chachapoly.h"
+#include "mbedtls/private/chachapoly.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/constant_time.h"
 
 #include <string.h>

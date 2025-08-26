@@ -15,11 +15,11 @@
 #include "psa_crypto_pake.h"
 #include "psa_crypto_slot_management.h"
 
-#include <mbedtls/ecjpake.h>
+#include <mbedtls/private/ecjpake.h>
 #include "psa_util_internal.h"
 
 #include <mbedtls/platform.h>
-#include <mbedtls/error_common.h>
+#include <mbedtls/private/error_common.h>
 #include <string.h>
 
 /*

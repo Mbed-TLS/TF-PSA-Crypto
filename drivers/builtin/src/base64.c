@@ -14,7 +14,7 @@
 #include "mbedtls/base64.h"
 #include "base64_internal.h"
 #include "constant_time_internal.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <stdint.h>
 

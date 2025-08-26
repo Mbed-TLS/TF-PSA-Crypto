@@ -9,7 +9,7 @@
 #include "tf_psa_crypto_common.h"
 
 /* This is needed for MBEDTLS_ERR_XXX macros */
-#include <mbedtls/error_common.h>
+#include <mbedtls/private/error_common.h>
 
 #if defined(MBEDTLS_ASN1_WRITE_C)
 #include <mbedtls/asn1write.h>
@@ -30,10 +30,10 @@
 #endif
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) ||    \
     defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-#include <mbedtls/rsa.h>
+#include <mbedtls/private/rsa.h>
 #endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include <mbedtls/ecp.h>
+#include <mbedtls/private/ecp.h>
 #endif
 #if defined(MBEDTLS_PK_C)
 #include <mbedtls/pk.h>
@@ -42,9 +42,9 @@
 #endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #endif
 #if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
-#include <mbedtls/cipher.h>
+#include <mbedtls/private/cipher.h>
 #endif
-#include <mbedtls/entropy.h>
+#include <mbedtls/private/entropy.h>
 
 /* PSA_SUCCESS is kept at the top of each error table since
  * it's the most common status when everything functions properly. */

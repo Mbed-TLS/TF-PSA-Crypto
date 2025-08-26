@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 #include "mbedtls/asn1.h"
 #if defined(MBEDTLS_ASN1_WRITE_C)
 #include "mbedtls/asn1write.h"

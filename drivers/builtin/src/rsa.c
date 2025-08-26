@@ -27,7 +27,7 @@
 
 #if defined(MBEDTLS_RSA_C)
 
-#include "mbedtls/rsa.h"
+#include "mbedtls/private/rsa.h"
 #include "bignum_core.h"
 #include "bignum_internal.h"
 #include "rsa_alt_helpers.h"
@@ -35,7 +35,7 @@
 #include "crypto_oid.h"
 #include "mbedtls/asn1write.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "constant_time_internal.h"
 #include "mbedtls/constant_time.h"
 #include "md_psa.h"

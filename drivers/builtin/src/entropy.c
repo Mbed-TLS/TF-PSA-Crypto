@@ -9,10 +9,10 @@
 
 #if defined(MBEDTLS_ENTROPY_C)
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/private/entropy.h"
 #include "entropy_poll.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

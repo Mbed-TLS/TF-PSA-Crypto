@@ -22,7 +22,7 @@
 #include <stddef.h>
 
 #if defined(MBEDTLS_CIPHER_C)
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 #endif
 
 #include "mbedtls/md.h"

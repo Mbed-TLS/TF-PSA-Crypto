@@ -18,7 +18,7 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #else /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/private/entropy.h"
 
 #if !defined(PSA_WANT_ALG_SHA_256)
 MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256,
@@ -37,13 +37,13 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_CTR_DRBG_C)
 
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/ctr_drbg.h"
 
 #undef MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
 
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/private/hmac_drbg.h"
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
 
 #else /* !MBEDTLS_CTR_DRBG_C && !MBEDTLS_HMAC_DRBG_C*/

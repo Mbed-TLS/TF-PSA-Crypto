@@ -19,13 +19,13 @@
 
 #if defined(MBEDTLS_PKCS5_C)
 
-#include "mbedtls/pkcs5.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/pkcs5.h"
+#include "mbedtls/private/error_common.h"
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 #include "mbedtls/asn1.h"
 #if defined(MBEDTLS_CIPHER_C)
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 #endif /* MBEDTLS_CIPHER_C */
 #include "crypto_oid.h"
 #endif /* MBEDTLS_ASN1_PARSE_C */

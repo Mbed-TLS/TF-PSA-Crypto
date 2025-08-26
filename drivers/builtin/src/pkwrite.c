@@ -16,14 +16,14 @@
 #include "mbedtls/asn1write.h"
 #include "crypto_oid.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "pk_internal.h"
 
 #include <string.h>
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/bignum.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/bignum.h"
+#include "mbedtls/private/ecp.h"
 #include "mbedtls/platform_util.h"
 #endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
