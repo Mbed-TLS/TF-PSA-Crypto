@@ -1704,6 +1704,9 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
                                      const psa_key_attributes_t *attributes,
                                      mbedtls_svc_key_id_t *key);
 
+psa_status_t psa_pake_get_implicit_key(psa_pake_operation_t *operation,
+                                       psa_key_derivation_operation_t *output);
+
 /** Abort a PAKE operation.
  *
  * Aborting an operation frees all associated resources except for the \c
