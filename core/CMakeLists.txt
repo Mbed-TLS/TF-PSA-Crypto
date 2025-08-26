@@ -104,8 +104,11 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     add_library(${tfpsacrypto_static_target} STATIC
         ${src_crypto}
         $<TARGET_OBJECTS:${builtin_static_target}>
-        $<TARGET_OBJECTS:${everest_static_target}>
         $<TARGET_OBJECTS:${p256m_static_target}>)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../drivers/everest/CMakeLists.txt")
+        add_library(${tfpsacrypto_static_target} STATIC
+            $<TARGET_OBJECTS:${everest_static_target}>)
+    endif()
     set_base_compile_options(${tfpsacrypto_static_target})
     target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
@@ -120,9 +123,13 @@ endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     set(CMAKE_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
     add_library(${tfpsacrypto_target} SHARED
-        ${src_crypto} $<TARGET_OBJECTS:${builtin_target}>
-        ${src_crypto} $<TARGET_OBJECTS:${everest_target}>
-        ${src_crypto} $<TARGET_OBJECTS:${p256m_target}>)
+        ${src_crypto}
+        $<TARGET_OBJECTS:${builtin_target}>
+        $<TARGET_OBJECTS:${p256m_target}>)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../drivers/everest/CMakeLists.txt")
+        add_library(${tfpsacrypto_static_target}
+            $<TARGET_OBJECTS:${everest_static_target}>)
+    endif()
     set_base_compile_options(${tfpsacrypto_target})
     target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION 4.0.0 SOVERSION 16)

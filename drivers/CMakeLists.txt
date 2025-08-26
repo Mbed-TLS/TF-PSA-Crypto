@@ -1,3 +1,5 @@
-add_subdirectory(everest)
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/everest/CMakeLists.txt")
+    add_subdirectory(everest)
+endif()
 add_subdirectory(p256-m)
 add_subdirectory(builtin)

@@ -90,6 +90,35 @@ component_tf_psa_crypto_test_default_no_deprecated () {
     make test
 }
 
+component_tf_psa_crypto_test_default_no_everest () {
+    msg "build: default (no Everest)" # ~ 30s
+
+    # Simulate the absence of Everest
+    mv everest everest.hidden
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: default (no Everest)" # ~ 5s
+    make test
+
+    mv everest.hidden everest
+}
+
+component_tf_psa_crypto_test_full_everest () {
+    msg "build: full + Everest" # ~ 30s
+    scripts/config.py full
+    scripts/config.py set MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: fulL + Everest" # ~ 5s
+    make test
+}
+
 component_tf_psa_crypto_build_tfm () {
     # TF-M configuration needs a TF-M platform.
     cp configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"

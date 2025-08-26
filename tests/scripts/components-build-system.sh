@@ -10,7 +10,30 @@
 ################################################################
 
 component_test_tf_psa_crypto_shared () {
-    msg "build/test: shared libraries" # ~ 2min
+    msg "build/test: default (no Everest), shared libraries" # ~ 2min
+
+    # Simulate the absence of Everest
+    mv everest everest.hidden
+
+    # We're not building in the OUT_OF_SOURCE_DIR directory in this case
+    # because we want "tfpsacrypto_dlopen" program to be accessible as
+    # "<tf-psa-crypto-root>/programs/test/tfpsacrypto_dlopen"
+    # in dlopen_demo.sh below.
+    cmake -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+    ldd programs/test/benchmark | grep libtfpsacrypto
+    make test
+    $FRAMEWORK/tests/programs/dlopen_demo.sh
+
+    mv everest.hidden everest
+}
+
+component_test_tf_psa_crypto_full_everest_shared () {
+    msg "build/test: full + Everest, shared libraries" # ~ 2min
+
+    scripts/config.py full
+    scripts/config.py set MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED
+
     # We're not building in the OUT_OF_SOURCE_DIR directory in this case
     # because we want "tfpsacrypto_dlopen" program to be accessible as
     # "<tf-psa-crypto-root>/programs/test/tfpsacrypto_dlopen"
