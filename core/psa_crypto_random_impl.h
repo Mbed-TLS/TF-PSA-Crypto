@@ -19,6 +19,7 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 #else /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 
 #include "mbedtls/private/entropy.h"
+#include "mbedtls/private/error_common.h"
 
 #if !defined(PSA_WANT_ALG_SHA_256)
 MBEDTLS_STATIC_ASSERT(MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256,
@@ -45,6 +46,11 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
 
 #include "mbedtls/private/hmac_drbg.h"
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
+
+#if MBEDTLS_PSA_CRYPTO_RNG_STRENGTH == 256
+MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_512),
+                      "MBEDTLS_PSA_CRYPTO_RNG_HASH must be set to PSA_ALG_SHA_512 when using HMAC_DRBG for the PSA RNG with 256-bit security strength");
+#endif
 
 #else /* !MBEDTLS_CTR_DRBG_C && !MBEDTLS_HMAC_DRBG_C*/
 
@@ -117,8 +123,17 @@ static inline int mbedtls_psa_drbg_seed(mbedtls_psa_drbg_context_t *drbg_ctx,
     return mbedtls_ctr_drbg_seed(drbg_ctx, mbedtls_entropy_func, entropy, custom, len);
 #elif defined(MBEDTLS_HMAC_DRBG_C)
     const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE);
-    return mbedtls_hmac_drbg_seed(drbg_ctx, md_info, mbedtls_entropy_func, entropy, custom, len);
+#if MBEDTLS_PSA_CRYPTO_RNG_STRENGTH == 256
+    if (MBEDTLS_PSA_HMAC_DRBG_MD_TYPE != MBEDTLS_MD_SHA512) {
+        /* The HMAC_DRBG hash algorithm must be PSA_ALG_SHA_512 when HMAC_DRBG
+         * is the PSA RNG with 256-bit security strength.
+         * MBEDTLS_PSA_CRYPTO_RNG_HASH must be set to PSA_ALG_SHA_512.
+         */
+        return MBEDTLS_ERR_ERROR_GENERIC_ERROR;
+    }
 #endif
+    return mbedtls_hmac_drbg_seed(drbg_ctx, md_info, mbedtls_entropy_func, entropy, custom, len);
+#endif /* MBEDTLS_HMAC_DRBG_C */
 }
 
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
