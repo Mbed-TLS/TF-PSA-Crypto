@@ -35,7 +35,7 @@
 /** The input arguments are not acceptable. */
 #define MBEDTLS_ERR_MPI_NOT_ACCEPTABLE                    -0x000E
 /** Memory allocation failed. */
-#define MBEDTLS_ERR_MPI_ALLOC_FAILED                      -0x0010
+#define MBEDTLS_ERR_MPI_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
 
 #define MBEDTLS_MPI_CHK(f)       \
     do                           \

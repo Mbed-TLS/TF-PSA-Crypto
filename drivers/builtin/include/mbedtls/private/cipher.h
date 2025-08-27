@@ -39,7 +39,7 @@
 /** Bad input parameters. */
 #define MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA       -0x6100
 /** Failed to allocate memory. */
-#define MBEDTLS_ERR_CIPHER_ALLOC_FAILED         -0x6180
+#define MBEDTLS_ERR_CIPHER_ALLOC_FAILED         PSA_ERROR_INSUFFICIENT_MEMORY
 /** Input data contains invalid padding and is rejected. */
 #define MBEDTLS_ERR_CIPHER_INVALID_PADDING      -0x6200
 /** Decryption of block requires a full block. */

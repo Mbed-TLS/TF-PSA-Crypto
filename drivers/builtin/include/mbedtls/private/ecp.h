@@ -40,7 +40,7 @@
 /** The signature is not valid. */
 #define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00
 /** Memory allocation failed. */
-#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      -0x4D80
+#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
 /** Generation of random value, such as ephemeral key, failed. */
 #define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00
 /** Invalid private or public key. */

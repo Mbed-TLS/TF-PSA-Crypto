@@ -25,7 +25,7 @@
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100
 /** Failed to allocate memory. */
-#define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180
+#define MBEDTLS_ERR_MD_ALLOC_FAILED                       PSA_ERROR_INSUFFICIENT_MEMORY
 /** Opening or reading of file failed. */
 #define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200
 

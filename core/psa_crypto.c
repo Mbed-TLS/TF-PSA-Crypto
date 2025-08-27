@@ -357,8 +357,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_ASN1_LENGTH_MISMATCH:
         case MBEDTLS_ERR_ASN1_INVALID_DATA:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_ASN1_ALLOC_FAILED:
-            return PSA_ERROR_INSUFFICIENT_MEMORY;
 #endif
 
 #if defined(MBEDTLS_CAMELLIA_C)
@@ -391,8 +389,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_CIPHER_ALLOC_FAILED:
-            return PSA_ERROR_INSUFFICIENT_MEMORY;
         case MBEDTLS_ERR_CIPHER_INVALID_PADDING:
             return PSA_ERROR_INVALID_PADDING;
         case MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED:
@@ -451,8 +447,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_MD_BAD_INPUT_DATA:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_MD_ALLOC_FAILED:
-            return PSA_ERROR_INSUFFICIENT_MEMORY;
 #if defined(MBEDTLS_FS_IO)
         case MBEDTLS_ERR_MD_FILE_IO_ERROR:
             return PSA_ERROR_STORAGE_FAILURE;
@@ -474,13 +468,9 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_MPI_NOT_ACCEPTABLE:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_MPI_ALLOC_FAILED:
-            return PSA_ERROR_INSUFFICIENT_MEMORY;
 #endif
 
 #if defined(MBEDTLS_PK_C)
-        case MBEDTLS_ERR_PK_ALLOC_FAILED:
-            return PSA_ERROR_INSUFFICIENT_MEMORY;
         case MBEDTLS_ERR_PK_TYPE_MISMATCH:
         case MBEDTLS_ERR_PK_BAD_INPUT_DATA:
             return PSA_ERROR_INVALID_ARGUMENT;
@@ -536,8 +526,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_ECP_VERIFY_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
-        case MBEDTLS_ERR_ECP_ALLOC_FAILED:
-            return PSA_ERROR_INSUFFICIENT_MEMORY;
         case MBEDTLS_ERR_ECP_RANDOM_FAILED:
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
 
