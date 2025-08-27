@@ -38,7 +38,7 @@
 /** The requested feature is not available, for example, the requested curve is not supported. */
 #define MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE               -0x4E80
 /** The signature is not valid. */
-#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00
+#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     PSA_ERROR_INVALID_SIGNATURE
 /** Memory allocation failed. */
 #define MBEDTLS_ERR_ECP_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
 /** Generation of random value, such as ephemeral key, failed. */

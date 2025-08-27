@@ -45,7 +45,7 @@
 /** Decryption of block requires a full block. */
 #define MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED  -0x6280
 /** Authentication failed (for AEAD modes). */
-#define MBEDTLS_ERR_CIPHER_AUTH_FAILED          -0x6300
+#define MBEDTLS_ERR_CIPHER_AUTH_FAILED          PSA_ERROR_INVALID_SIGNATURE
 /** The context is invalid. For example, because it was freed. */
 #define MBEDTLS_ERR_CIPHER_INVALID_CONTEXT      -0x6380
 

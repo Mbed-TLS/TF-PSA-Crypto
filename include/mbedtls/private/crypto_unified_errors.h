@@ -56,4 +56,13 @@
 /** Input invalid. */
 #define MBEDTLS_ERR_X509_BAD_INPUT_DATA                   PSA_ERROR_INVALID_ARGUMENT
 
+/** Error parsing the signature */
+#define MBEDTLS_ERR_PKCS7_INVALID_SIGNATURE               PSA_ERROR_INVALID_SIGNATURE
+/** Verification Failed */
+#define MBEDTLS_ERR_PKCS7_VERIFY_FAIL                     PSA_ERROR_INVALID_SIGNATURE
+/** The signature tag or value invalid. */
+#define MBEDTLS_ERR_X509_INVALID_SIGNATURE                PSA_ERROR_INVALID_SIGNATURE
+/** Certificate verification failed, e.g. CRL, CA or signature check failed. */
+#define MBEDTLS_ERR_X509_CERT_VERIFY_FAILED               PSA_ERROR_INVALID_SIGNATURE
+
 #endif /* MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H */

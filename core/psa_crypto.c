@@ -362,16 +362,9 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_NOT_SUPPORTED;
 #endif
 
-#if defined(MBEDTLS_CCM_C)
-        case MBEDTLS_ERR_CCM_AUTH_FAILED:
-            return PSA_ERROR_INVALID_SIGNATURE;
-#endif
-
 #if defined(MBEDTLS_CHACHAPOLY_C)
         case MBEDTLS_ERR_CHACHAPOLY_BAD_STATE:
             return PSA_ERROR_BAD_STATE;
-        case MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED:
-            return PSA_ERROR_INVALID_SIGNATURE;
 #endif
 
 #if defined(MBEDTLS_CIPHER_C)
@@ -381,8 +374,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_INVALID_PADDING;
         case MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_CIPHER_AUTH_FAILED:
-            return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_CIPHER_INVALID_CONTEXT:
             return PSA_ERROR_CORRUPTION_DETECTED;
 #endif
@@ -409,11 +400,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE:
         case MBEDTLS_ERR_ENTROPY_SOURCE_FAILED:
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
-
-#if defined(MBEDTLS_GCM_C)
-        case MBEDTLS_ERR_GCM_AUTH_FAILED:
-            return PSA_ERROR_INVALID_SIGNATURE;
-#endif
 
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) &&        \
             defined(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE)
@@ -491,8 +477,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_RSA_PUBLIC_FAILED:
         case MBEDTLS_ERR_RSA_PRIVATE_FAILED:
             return PSA_ERROR_CORRUPTION_DETECTED;
-        case MBEDTLS_ERR_RSA_VERIFY_FAILED:
-            return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_RSA_RNG_FAILED:
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
 #endif
@@ -502,8 +486,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_ECP_VERIFY_FAILED:
-            return PSA_ERROR_INVALID_SIGNATURE;
         case MBEDTLS_ERR_ECP_RANDOM_FAILED:
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
 
