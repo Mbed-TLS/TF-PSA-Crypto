@@ -371,8 +371,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #if defined(MBEDTLS_CIPHER_C)
         case MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_CIPHER_INVALID_PADDING:
-            return PSA_ERROR_INVALID_PADDING;
         case MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED:
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_CIPHER_INVALID_CONTEXT:
@@ -469,8 +467,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_NOT_SUPPORTED;
 
 #if defined(MBEDTLS_RSA_C)
-        case MBEDTLS_ERR_RSA_INVALID_PADDING:
-            return PSA_ERROR_INVALID_PADDING;
         case MBEDTLS_ERR_RSA_KEY_GEN_FAILED:
             return PSA_ERROR_HARDWARE_FAILURE;
         case MBEDTLS_ERR_RSA_KEY_CHECK_FAILED:

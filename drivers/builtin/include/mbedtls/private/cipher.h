@@ -41,7 +41,7 @@
 /** Failed to allocate memory. */
 #define MBEDTLS_ERR_CIPHER_ALLOC_FAILED         PSA_ERROR_INSUFFICIENT_MEMORY
 /** Input data contains invalid padding and is rejected. */
-#define MBEDTLS_ERR_CIPHER_INVALID_PADDING      -0x6200
+#define MBEDTLS_ERR_CIPHER_INVALID_PADDING      PSA_ERROR_INVALID_PADDING
 /** Decryption of block requires a full block. */
 #define MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED  -0x6280
 /** Authentication failed (for AEAD modes). */
