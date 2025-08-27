@@ -38,7 +38,7 @@ cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0012 NEW)
 
 set(TF_PSA_CRYPTO_VERSION 1.0.0)
-set(TF_PSA_CRYPTO_SOVERSION 0)
+set(TF_PSA_CRYPTO_SOVERSION 1)
 
 if(TEST_CPP)
     project("TF-PSA-Crypto"
