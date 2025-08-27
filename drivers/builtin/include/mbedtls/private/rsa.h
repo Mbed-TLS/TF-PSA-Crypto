@@ -32,7 +32,7 @@
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_RSA_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** Input data contains invalid padding and is rejected. */
-#define MBEDTLS_ERR_RSA_INVALID_PADDING                   -0x4100
+#define MBEDTLS_ERR_RSA_INVALID_PADDING                   PSA_ERROR_INVALID_PADDING
 /** Something failed during generation of a key. */
 #define MBEDTLS_ERR_RSA_KEY_GEN_FAILED                    -0x4180
 /** Key failed to pass the validity check of the library. */
