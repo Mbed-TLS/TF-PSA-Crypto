@@ -17,6 +17,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "psa/crypto_values.h"
 
 #include <stddef.h>
 #include "mbedtls/platform_util.h"
