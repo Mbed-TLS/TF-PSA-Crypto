@@ -35,8 +35,6 @@
 #include "psa/crypto.h"
 #endif
 
-/** Memory allocation failed. */
-#define MBEDTLS_ERR_PK_ALLOC_FAILED        -0x3F80
 /** Type mismatch, eg attempt to encrypt with an ECDSA key */
 #define MBEDTLS_ERR_PK_TYPE_MISMATCH       -0x3F00
 /** Bad input parameters to function. */
@@ -315,7 +313,7 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  *            used, invalid key identifier).
  * \return    #MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE if the key is not an ECC or
  *            RSA key pair.
- * \return    #MBEDTLS_ERR_PK_ALLOC_FAILED on allocation failure.
+ * \return    #PSA_ERROR_INSUFFICIENT_MEMORY on allocation failure.
  */
 int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
                         const mbedtls_svc_key_id_t key);

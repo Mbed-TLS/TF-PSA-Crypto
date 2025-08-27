@@ -12,6 +12,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "private/crypto_unified_errors.h"
 
 #include <stddef.h>
 
@@ -25,8 +26,6 @@
 #define MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT          -0x1080
 /** PEM string is not as expected. */
 #define MBEDTLS_ERR_PEM_INVALID_DATA                      -0x1100
-/** Failed to allocate memory. */
-#define MBEDTLS_ERR_PEM_ALLOC_FAILED                      -0x1180
 /** RSA IV is not in hex-format. */
 #define MBEDTLS_ERR_PEM_INVALID_ENC_IV                    -0x1200
 /** Unsupported key encryption algorithm. */

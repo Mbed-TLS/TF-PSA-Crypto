@@ -44,8 +44,6 @@
 #define MBEDTLS_ERR_ASN1_LENGTH_MISMATCH                  -0x0066
 /** Data is invalid. */
 #define MBEDTLS_ERR_ASN1_INVALID_DATA                     -0x0068
-/** Memory allocation failed */
-#define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     -0x006A
 
 /** \} name ASN1 Error codes */
 
@@ -416,7 +414,7 @@ int mbedtls_asn1_get_bitstring_null(unsigned char **p,
  * \return      #MBEDTLS_ERR_ASN1_UNEXPECTED_TAG if the input starts with
  *              an ASN.1 SEQUENCE in which an element has a tag that
  *              is different from \p tag.
- * \return      #MBEDTLS_ERR_ASN1_ALLOC_FAILED if a memory allocation failed.
+ * \return      #PSA_ERROR_INSUFFICIENT_MEMORY if a memory allocation failed.
  * \return      An ASN.1 error code if the input does not start with
  *              a valid ASN.1 SEQUENCE.
  */

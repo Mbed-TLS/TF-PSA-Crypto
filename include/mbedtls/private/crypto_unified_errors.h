@@ -26,4 +26,19 @@
 /** Destination buffer is too small. */
 #define MBEDTLS_ERR_X509_BUFFER_TOO_SMALL                 PSA_ERROR_BUFFER_TOO_SMALL
 
+/** Memory allocation failed. */
+#define MBEDTLS_ERR_PK_ALLOC_FAILED                       PSA_ERROR_INSUFFICIENT_MEMORY
+/** Failed to allocate memory. */
+#define MBEDTLS_ERR_PEM_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
+/** Memory allocation failed */
+#define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     PSA_ERROR_INSUFFICIENT_MEMORY
+/** LMS failed to allocate space for a private key */
+#define MBEDTLS_ERR_LMS_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
+/** Allocation of memory failed. */
+#define MBEDTLS_ERR_PKCS7_ALLOC_FAILED                    PSA_ERROR_INSUFFICIENT_MEMORY
+/** Memory allocation failed */
+#define MBEDTLS_ERR_SSL_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
+/** Allocation of memory failed. */
+#define MBEDTLS_ERR_X509_ALLOC_FAILED                     PSA_ERROR_INSUFFICIENT_MEMORY
+
 #endif /* MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H */
