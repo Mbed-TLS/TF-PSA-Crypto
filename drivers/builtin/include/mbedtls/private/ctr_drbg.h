@@ -111,20 +111,12 @@
 /**< The interval before reseed is performed by default. */
 #endif
 
-#if !defined(MBEDTLS_CTR_DRBG_MAX_INPUT)
 #define MBEDTLS_CTR_DRBG_MAX_INPUT          256
 /**< The maximum number of additional input Bytes. */
-#endif
-
-#if !defined(MBEDTLS_CTR_DRBG_MAX_REQUEST)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST        1024
 /**< The maximum number of requested Bytes per call. */
-#endif
-
-#if !defined(MBEDTLS_CTR_DRBG_MAX_SEED_INPUT)
 #define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT     384
 /**< The maximum size of seed or reseed buffer in bytes. */
-#endif
 
 /** \} name SECTION: Module settings */
 

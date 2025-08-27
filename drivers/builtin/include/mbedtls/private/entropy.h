@@ -46,13 +46,8 @@
  * \{
  */
 
-#if !defined(MBEDTLS_ENTROPY_MAX_SOURCES)
 #define MBEDTLS_ENTROPY_MAX_SOURCES     20      /**< Maximum number of sources supported */
-#endif
-
-#if !defined(MBEDTLS_ENTROPY_MAX_GATHER)
 #define MBEDTLS_ENTROPY_MAX_GATHER      128     /**< Maximum amount requested from entropy sources */
-#endif
 
 /** \} name SECTION: Module settings */
 
