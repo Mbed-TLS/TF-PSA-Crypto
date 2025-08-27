@@ -41,4 +41,17 @@
 /** Allocation of memory failed. */
 #define MBEDTLS_ERR_X509_ALLOC_FAILED                     PSA_ERROR_INSUFFICIENT_MEMORY
 
+/** Bad input parameters to function. */
+#define MBEDTLS_ERR_PK_BAD_INPUT_DATA                     PSA_ERROR_INVALID_ARGUMENT
+/** Bad input parameters to function. */
+#define MBEDTLS_ERR_PEM_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
+/** Bad data has been input to an LMS function */
+#define MBEDTLS_ERR_LMS_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
+/** Input invalid. */
+#define MBEDTLS_ERR_PKCS7_BAD_INPUT_DATA                  PSA_ERROR_INVALID_ARGUMENT
+/** Bad input parameters to function. */
+#define MBEDTLS_ERR_SSL_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
+/** Input invalid. */
+#define MBEDTLS_ERR_X509_BAD_INPUT_DATA                   PSA_ERROR_INVALID_ARGUMENT
+
 #endif /* MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H */

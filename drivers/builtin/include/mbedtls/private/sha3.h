@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 /** SHA-3 input data was malformed. */
-#define MBEDTLS_ERR_SHA3_BAD_INPUT_DATA                 -0x0076
+#define MBEDTLS_ERR_SHA3_BAD_INPUT_DATA                 PSA_ERROR_INVALID_ARGUMENT
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**

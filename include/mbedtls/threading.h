@@ -12,6 +12,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "private/crypto_unified_errors.h"
 
 #include <stdlib.h>
 

@@ -23,7 +23,7 @@
 #include <stdint.h>
 
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  -0x2f80
+#define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  PSA_ERROR_INVALID_ARGUMENT
 /** Unexpected ASN.1 data. */
 #define MBEDTLS_ERR_PKCS5_INVALID_FORMAT                  -0x2f00
 /** Requested encryption or digest alg not available. */

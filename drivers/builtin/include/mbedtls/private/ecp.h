@@ -32,7 +32,7 @@
  * ECP error codes
  */
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80
+#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** The buffer is too small to write to. */
 #define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
 /** The requested feature is not available, for example, the requested curve is not supported. */

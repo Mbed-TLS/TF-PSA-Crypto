@@ -37,7 +37,7 @@
 /** The selected feature is not available. */
 #define MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE  -0x6080
 /** Bad input parameters. */
-#define MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA       -0x6100
+#define MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA       PSA_ERROR_INVALID_ARGUMENT
 /** Failed to allocate memory. */
 #define MBEDTLS_ERR_CIPHER_ALLOC_FAILED         PSA_ERROR_INSUFFICIENT_MEMORY
 /** Input data contains invalid padding and is rejected. */

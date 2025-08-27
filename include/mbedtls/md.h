@@ -23,7 +23,7 @@
 /** The selected feature is not available. */
 #define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100
+#define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     PSA_ERROR_INVALID_ARGUMENT
 /** Failed to allocate memory. */
 #define MBEDTLS_ERR_MD_ALLOC_FAILED                       PSA_ERROR_INSUFFICIENT_MEMORY
 

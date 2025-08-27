@@ -47,9 +47,8 @@
 /** Invalid data input length. */
 #define MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH              -0x0022
 
-/* Error codes in range 0x0021-0x0025 */
 /** Invalid input data. */
-#define MBEDTLS_ERR_AES_BAD_INPUT_DATA                    -0x0021
+#define MBEDTLS_ERR_AES_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 
 #ifdef __cplusplus
 extern "C" {
