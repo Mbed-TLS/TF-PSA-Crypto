@@ -1372,18 +1372,21 @@
  *
  * \brief Hash algorithm to use for the entropy module and for HMAC_DRBG if configured.
  *
- * If the option is disabled, it is automatically defined in
- * crypto_adjust_config_derived.h based on:
- * - Whether MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
- * PSA_WANT_ALG_SHA_256, PSA_WANT_ALG_SHA_512, MBEDTLS_CTR_DRBG_C,
- * and MBEDTLS_HMAC_DRBG_C are defined
- * - The value of MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
+ * If SHA-256 is enabled, the default value of MBEDTLS_PSA_CRYPTO_RNG_HASH is
+ * PSA_ALG_SHA_256, except in the specific case where:
+ *   - the PSA RNG is HMAC_DRBG,
+ *   - MBEDTLS_PSA_CRYPTO_RNG_STRENGTH is set to 256, and
+ *   - SHA-512 is also available.
+ * In that case, the default is PSA_ALG_SHA_512.
  *
- * Enable this option only if you need to override its automatic definition. It takes
- * effect only if MBEDTLS_PSA_CRYPTO_C is enabled and
- * MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ * If SHA-256 is disabled and SHA-512 is available, the default is also
+ * PSA_ALG_SHA_512.
+ *
+ * To override this default, set MBEDTLS_PSA_CRYPTO_RNG_HASH explicitly in your
+ * configuration. Only two values are supported: PSA_ALG_SHA_256 and
+ * PSA_ALG_SHA_512.
  */
-//#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512
+//#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 
 /**
  * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL

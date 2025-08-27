@@ -72,12 +72,33 @@
 #endif
 
 #if !defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
-#if defined(PSA_WANT_ALG_SHA_512)
+
+#if defined(PSA_WANT_ALG_SHA_256)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && \
+    !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) && \
+    !defined(MBEDTLS_CTR_DRBG_C) && \
+    defined(MBEDTLS_HMAC_DRBG_C) && \
+    defined(PSA_WANT_ALG_SHA_512) && \
+    MBEDTLS_PSA_CRYPTO_RNG_STRENGTH == 256
 #define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512
-#elif defined(PSA_WANT_ALG_SHA_256)
-#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 #else
+#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 #endif
+#endif /* PSA_WANT_ALG_SHA_256 */
+
+#if !defined(MBEDTLS_PSA_CRYPTO_RNG_HASH) && defined(PSA_WANT_ALG_SHA_512)
+#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512
 #endif
+
+#if !defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
+#if (defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG))
+#error "Not able to define MBEDTLS_PSA_CRYPTO_RNG_HASH for the entropy module."
+#endif
+#if defined(MBEDTLS_HMAC_DRBG_C)
+#error "Not able to define MBEDTLS_PSA_CRYPTO_RNG_HASH for HMAC_DRBG."
+#endif
+#endif /* !MBEDTLS_PSA_CRYPTO_RNG_HASH */
+
+#endif /* !MBEDTLS_PSA_CRYPTO_RNG_HASH */
 
 #endif /* PSA_CRYPTO_ADJUST_CONFIG_DERIVED_H */
