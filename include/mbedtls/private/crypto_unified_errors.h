@@ -1,0 +1,29 @@
+/**
+ * \file crypto_unified_errors.h
+ *
+ * \brief Contains definitions of unified error codes for public modules.
+ */
+/*
+ *  Copyright The Mbed TLS Contributors
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ */
+
+#ifndef MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H
+#define MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H
+
+/** Output buffer too small. */
+#define MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL               PSA_ERROR_BUFFER_TOO_SMALL
+/** Buffer too small when writing ASN.1 data structure. */
+#define MBEDTLS_ERR_ASN1_BUF_TOO_SMALL                    PSA_ERROR_BUFFER_TOO_SMALL
+/** Input/output buffer is too small to contain requited data */
+#define MBEDTLS_ERR_LMS_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
+/** The output buffer is too small. */
+#define MBEDTLS_ERR_PK_BUFFER_TOO_SMALL                   PSA_ERROR_BUFFER_TOO_SMALL
+/** Buffer is too small to hold the data. */
+#define MBEDTLS_ERR_NET_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
+/** A buffer is too small to receive or write a message */
+#define MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
+/** Destination buffer is too small. */
+#define MBEDTLS_ERR_X509_BUFFER_TOO_SMALL                 PSA_ERROR_BUFFER_TOO_SMALL
+
+#endif /* MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H */

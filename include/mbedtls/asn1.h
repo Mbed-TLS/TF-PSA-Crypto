@@ -13,6 +13,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 #include "mbedtls/platform_util.h"
+#include "private/crypto_unified_errors.h"
 
 #include <stddef.h>
 
@@ -45,8 +46,6 @@
 #define MBEDTLS_ERR_ASN1_INVALID_DATA                     -0x0068
 /** Memory allocation failed */
 #define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     -0x006A
-/** Buffer too small when writing ASN.1 data structure. */
-#define MBEDTLS_ERR_ASN1_BUF_TOO_SMALL                    -0x006C
 
 /** \} name ASN1 Error codes */
 

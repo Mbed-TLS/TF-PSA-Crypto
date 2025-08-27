@@ -15,6 +15,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "private/crypto_unified_errors.h"
 
 #include "mbedtls/md.h"
 
@@ -60,8 +61,6 @@
 #define MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE -0x3A00
 /** Unavailable feature, e.g. RSA disabled for RSA key. */
 #define MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE -0x3980
-/** The output buffer is too small. */
-#define MBEDTLS_ERR_PK_BUFFER_TOO_SMALL    -0x3880
 
 #ifdef __cplusplus
 extern "C" {
