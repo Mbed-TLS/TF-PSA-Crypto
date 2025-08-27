@@ -346,8 +346,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_AES_INVALID_KEY_LENGTH:
         case MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_AES_BAD_INPUT_DATA:
-            return PSA_ERROR_INVALID_ARGUMENT;
 #endif
 
 #if defined(MBEDTLS_ASN1_PARSE_C) || defined(MBEDTLS_ASN1_WRITE_C)
@@ -360,21 +358,13 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #endif
 
 #if defined(MBEDTLS_CAMELLIA_C)
-        case MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA:
         case MBEDTLS_ERR_CAMELLIA_INVALID_INPUT_LENGTH:
             return PSA_ERROR_NOT_SUPPORTED;
 #endif
 
 #if defined(MBEDTLS_CCM_C)
-        case MBEDTLS_ERR_CCM_BAD_INPUT:
-            return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_CCM_AUTH_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
-#endif
-
-#if defined(MBEDTLS_CHACHA20_C)
-        case MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA:
-            return PSA_ERROR_INVALID_ARGUMENT;
 #endif
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
@@ -387,8 +377,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #if defined(MBEDTLS_CIPHER_C)
         case MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA:
-            return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_CIPHER_INVALID_PADDING:
             return PSA_ERROR_INVALID_PADDING;
         case MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED:
@@ -425,8 +413,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #if defined(MBEDTLS_GCM_C)
         case MBEDTLS_ERR_GCM_AUTH_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
-        case MBEDTLS_ERR_GCM_BAD_INPUT:
-            return PSA_ERROR_INVALID_ARGUMENT;
 #endif
 
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) &&        \
@@ -445,8 +431,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #if defined(MBEDTLS_MD_LIGHT)
         case MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_MD_BAD_INPUT_DATA:
-            return PSA_ERROR_INVALID_ARGUMENT;
 #if defined(MBEDTLS_FS_IO)
         case MBEDTLS_ERR_MD_FILE_IO_ERROR:
             return PSA_ERROR_STORAGE_FAILURE;
@@ -458,8 +442,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_MPI_FILE_IO_ERROR:
             return PSA_ERROR_STORAGE_FAILURE;
 #endif
-        case MBEDTLS_ERR_MPI_BAD_INPUT_DATA:
-            return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_MPI_INVALID_CHARACTER:
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_MPI_NEGATIVE_VALUE:
@@ -472,7 +454,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 
 #if defined(MBEDTLS_PK_C)
         case MBEDTLS_ERR_PK_TYPE_MISMATCH:
-        case MBEDTLS_ERR_PK_BAD_INPUT_DATA:
             return PSA_ERROR_INVALID_ARGUMENT;
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) || defined(MBEDTLS_FS_IO) || \
             defined(MBEDTLS_PSA_ITS_FILE_C)
@@ -501,8 +482,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_NOT_SUPPORTED;
 
 #if defined(MBEDTLS_RSA_C)
-        case MBEDTLS_ERR_RSA_BAD_INPUT_DATA:
-            return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_RSA_INVALID_PADDING:
             return PSA_ERROR_INVALID_PADDING;
         case MBEDTLS_ERR_RSA_KEY_GEN_FAILED:
@@ -519,7 +498,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #endif
 
 #if defined(MBEDTLS_ECP_LIGHT)
-        case MBEDTLS_ERR_ECP_BAD_INPUT_DATA:
         case MBEDTLS_ERR_ECP_INVALID_KEY:
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:

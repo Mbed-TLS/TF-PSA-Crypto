@@ -12,6 +12,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "private/crypto_unified_errors.h"
 
 #include <stdlib.h>
 
@@ -19,8 +20,6 @@
 extern "C" {
 #endif
 
-/** Bad input parameters to function. */
-#define MBEDTLS_ERR_THREADING_BAD_INPUT_DATA              -0x001C
 /** Locking / unlocking / free failed with error code. */
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E
 

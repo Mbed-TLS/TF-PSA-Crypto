@@ -27,7 +27,7 @@
 #include <stddef.h>
 
 /** Invalid input parameter(s). */
-#define MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA         -0x0051
+#define MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA         PSA_ERROR_INVALID_ARGUMENT
 
 #ifdef __cplusplus
 extern "C" {

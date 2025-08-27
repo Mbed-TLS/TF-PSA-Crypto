@@ -12,6 +12,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "psa/crypto_values.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -23,7 +24,7 @@
 /** An error occurred while reading from or writing to a file. */
 #define MBEDTLS_ERR_MPI_FILE_IO_ERROR                     -0x0002
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_MPI_BAD_INPUT_DATA                    -0x0004
+#define MBEDTLS_ERR_MPI_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** There is an invalid character in the digit string. */
 #define MBEDTLS_ERR_MPI_INVALID_CHARACTER                 -0x0006
 /** The buffer is too small to write to. */

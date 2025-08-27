@@ -30,7 +30,7 @@
  * RSA Error codes
  */
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_RSA_BAD_INPUT_DATA                    -0x4080
+#define MBEDTLS_ERR_RSA_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** Input data contains invalid padding and is rejected. */
 #define MBEDTLS_ERR_RSA_INVALID_PADDING                   -0x4100
 /** Something failed during generation of a key. */
