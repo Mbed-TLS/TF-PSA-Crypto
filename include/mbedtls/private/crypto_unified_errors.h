@@ -10,6 +10,7 @@
 
 #ifndef MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H
 #define MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H
+#include "psa/crypto_values.h"
 
 /** Output buffer too small. */
 #define MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL               PSA_ERROR_BUFFER_TOO_SMALL
