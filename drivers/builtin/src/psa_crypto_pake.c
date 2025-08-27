@@ -109,9 +109,6 @@ static psa_status_t mbedtls_ecjpake_to_psa_error(int ret)
         case MBEDTLS_ERR_ECP_INVALID_KEY:
         case MBEDTLS_ERR_ECP_VERIFY_FAILED:
             return PSA_ERROR_DATA_INVALID;
-        case MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:
-        case MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED:

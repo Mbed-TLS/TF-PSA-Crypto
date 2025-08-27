@@ -143,7 +143,7 @@ void mbedtls_pem_free(mbedtls_pem_context *ctx);
  *                  and \p buf buffers.
  *
  * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL if \p buf isn't large
+ * \return          #PSA_ERROR_BUFFER_TOO_SMALL if \p buf isn't large
  *                  enough to hold the PEM buffer. In  this case, `*olen` holds
  *                  the required minimum size of \p buf.
  * \return          Another PEM or BASE64 error code on other kinds of failure.

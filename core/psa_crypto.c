@@ -359,8 +359,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_ASN1_ALLOC_FAILED:
             return PSA_ERROR_INSUFFICIENT_MEMORY;
-        case MBEDTLS_ERR_ASN1_BUF_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
 #endif
 
 #if defined(MBEDTLS_CAMELLIA_C)
@@ -431,8 +429,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
 #if defined(MBEDTLS_GCM_C)
         case MBEDTLS_ERR_GCM_AUTH_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
-        case MBEDTLS_ERR_GCM_BUFFER_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_GCM_BAD_INPUT:
             return PSA_ERROR_INVALID_ARGUMENT;
 #endif
@@ -472,8 +468,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_MPI_INVALID_CHARACTER:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_MPI_NEGATIVE_VALUE:
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_MPI_DIVISION_BY_ZERO:
@@ -509,8 +503,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE:
         case MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_PK_BUFFER_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
 #endif
 
         case MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED:
@@ -532,8 +524,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_CORRUPTION_DETECTED;
         case MBEDTLS_ERR_RSA_VERIFY_FAILED:
             return PSA_ERROR_INVALID_SIGNATURE;
-        case MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_RSA_RNG_FAILED:
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
 #endif
@@ -542,8 +532,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_ECP_BAD_INPUT_DATA:
         case MBEDTLS_ERR_ECP_INVALID_KEY:
             return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_ECP_VERIFY_FAILED:

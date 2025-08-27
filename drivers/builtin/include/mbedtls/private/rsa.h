@@ -44,7 +44,7 @@
 /** The PKCS#1 verification failed. */
 #define MBEDTLS_ERR_RSA_VERIFY_FAILED                     PSA_ERROR_INVALID_SIGNATURE
 /** The output buffer for decryption is not large enough. */
-#define MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE                  -0x4400
+#define MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE                  PSA_ERROR_BUFFER_TOO_SMALL
 /** The random generator failed to generate non-zeros. */
 #define MBEDTLS_ERR_RSA_RNG_FAILED                        -0x4480
 

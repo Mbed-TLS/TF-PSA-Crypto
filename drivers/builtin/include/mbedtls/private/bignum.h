@@ -27,7 +27,7 @@
 /** There is an invalid character in the digit string. */
 #define MBEDTLS_ERR_MPI_INVALID_CHARACTER                 -0x0006
 /** The buffer is too small to write to. */
-#define MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL                  -0x0008
+#define MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
 /** The input arguments are negative or result in illegal output. */
 #define MBEDTLS_ERR_MPI_NEGATIVE_VALUE                    -0x000A
 /** The input argument for division is zero, which is not allowed. */
