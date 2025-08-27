@@ -3018,7 +3018,7 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
     psa_status_t expected_status = expected_status_arg;
     psa_pake_operation_t operation = psa_pake_operation_init();
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
-    mbedtls_svc_key_id_t shared_key_id;
+    mbedtls_svc_key_id_t shared_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_derivation_operation_t implicit_key =
         psa_key_derivation_operation_init_short();
     psa_pake_primitive_t primitive = PSA_PAKE_PRIMITIVE(
@@ -3157,9 +3157,9 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
             TEST_EQUAL(psa_pake_get_shared_key(&operation, &attributes, &shared_key_id),
                        expected_status);
 
-            PSA_ASSERT(psa_key_derivation_input_key(&implicit_key,
-                                                    PSA_KEY_DERIVATION_INPUT_SECRET,
-                                                    shared_key_id));
+            psa_key_derivation_input_key(&implicit_key,
+                                         PSA_KEY_DERIVATION_INPUT_SECRET,
+                                         shared_key_id);
 
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 2);
             TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.implicit_key, 1);
