@@ -106,7 +106,7 @@ static psa_status_t mbedtls_ecjpake_to_psa_error(int ret)
     /* Only legacy error codes need to be translated.
      * Those are either a low-level error code (-127..-2)
      * or a high-level error code (<= -0x1000). */
-    if (ret > -0x1000 && ret < -0x80) {
+    if (ret > -0x1000 && ret <= -0x80) {
         return (psa_status_t) ret;
     }
     switch (ret) {
