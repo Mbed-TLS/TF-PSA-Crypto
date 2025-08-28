@@ -2,14 +2,17 @@
  * \file crypto_unified_errors.h
  *
  * \brief Contains definitions of unified error codes for public modules.
+ *
+ * \note Include mbedtls/compat-3.h rather than this file if using the old
+ *       error codes in this file.
  */
 /*
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H
-#define MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H
+#ifndef PSA_CRYPTO_UNIFIED_ERRORS_H
+#define PSA_CRYPTO_UNIFIED_ERRORS_H
 #include "psa/crypto_values.h"
 
 /** Output buffer too small. */
@@ -66,4 +69,4 @@
 /** Certificate verification failed, e.g. CRL, CA or signature check failed. */
 #define MBEDTLS_ERR_X509_CERT_VERIFY_FAILED               PSA_ERROR_INVALID_SIGNATURE
 
-#endif /* MBEDTLS_PRIVATE_CRYPTO_UNIFIED_ERRORS_H */
+#endif /* PSA_CRYPTO_UNIFIED_ERRORS_H */
