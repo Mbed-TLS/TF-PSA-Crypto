@@ -13,7 +13,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 #include "mbedtls/platform_util.h"
-#include "private/crypto_unified_errors.h"
+#include "psa/crypto_unified_errors.h"
 
 #include <stddef.h>
 
