@@ -9,6 +9,7 @@
 #include "mbedtls/private/ecp.h"
 #include "mbedtls/psa_util.h"
 #include "pk_internal.h"
+#include "pkparse_invasive.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 #include "test/psa_exercise_key.h"
@@ -273,6 +274,21 @@ void pk_parse_key_encrypted(data_t *buf, data_t *pass, int result)
 
     TEST_EQUAL(mbedtls_pk_parse_key_pkcs8_encrypted_der(&pk, buf->x, buf->len,
                                                         pass->x, pass->len), result);
+exit:
+    mbedtls_pk_free(&pk);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS:MBEDTLS_PKCS5_C */
+void pk_parse_key_unencrypted(data_t *buf, int result)
+{
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init(&pk);
+    USE_PSA_INIT();
+
+    TEST_EQUAL(pk_parse_key_pkcs8_unencrypted_der(&pk, buf->x, buf->len), result);
 exit:
     mbedtls_pk_free(&pk);
     USE_PSA_DONE();
