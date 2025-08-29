@@ -9378,9 +9378,9 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
     }
 
     status = psa_driver_wrapper_pake_get_shared_key(operation,
-                                                      shared_key,
-                                                      sizeof(shared_key),
-                                                      &shared_key_len);
+                                                    shared_key,
+                                                    sizeof(shared_key),
+                                                    &shared_key_len);
 
     if (status != PSA_SUCCESS) {
         goto exit;
