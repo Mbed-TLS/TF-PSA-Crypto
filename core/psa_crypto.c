@@ -9377,7 +9377,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
         goto exit;
     }
 
-    status = psa_driver_wrapper_pake_get_implicit_key(operation,
+    status = psa_driver_wrapper_pake_get_shared_key(operation,
                                                       shared_key,
                                                       sizeof(shared_key),
                                                       &shared_key_len);
