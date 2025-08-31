@@ -69,6 +69,7 @@
 #include "mbedtls/private/sha512.h"
 #include "psa_util_internal.h"
 #include "mbedtls/threading.h"
+#include "threading_internal.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF) ||          \
     defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF_EXTRACT) ||  \
