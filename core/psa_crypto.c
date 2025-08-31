@@ -9377,10 +9377,10 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
         goto exit;
     }
 
-    status = psa_driver_wrapper_pake_get_implicit_key(operation,
-                                                      shared_key,
-                                                      sizeof(shared_key),
-                                                      &shared_key_len);
+    status = psa_driver_wrapper_pake_get_shared_key(operation,
+                                                    shared_key,
+                                                    sizeof(shared_key),
+                                                    &shared_key_len);
 
     if (status != PSA_SUCCESS) {
         goto exit;
@@ -9396,55 +9396,6 @@ exit:
 
     abort_status = psa_pake_abort(operation);
 
-    return status == PSA_SUCCESS ? abort_status : status;
-}
-
-psa_status_t psa_pake_get_implicit_key(
-    psa_pake_operation_t *operation,
-    psa_key_derivation_operation_t *output)
-{
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    psa_status_t abort_status = PSA_ERROR_CORRUPTION_DETECTED;
-    uint8_t shared_key[MBEDTLS_PSA_JPAKE_BUFFER_SIZE];
-    size_t shared_key_len = 0;
-
-    if (operation->stage != PSA_PAKE_OPERATION_STAGE_COMPUTATION) {
-        status = PSA_ERROR_BAD_STATE;
-        goto exit;
-    }
-
-#if defined(PSA_WANT_ALG_JPAKE)
-    if (PSA_ALG_IS_JPAKE(operation->alg)) {
-        psa_jpake_computation_stage_t *computation_stage =
-            &operation->computation_stage.jpake;
-        if (computation_stage->round != PSA_JPAKE_FINISHED) {
-            status = PSA_ERROR_BAD_STATE;
-            goto exit;
-        }
-    } else
-#endif /* PSA_WANT_ALG_JPAKE */
-    {
-        status = PSA_ERROR_NOT_SUPPORTED;
-        goto exit;
-    }
-
-    status = psa_driver_wrapper_pake_get_implicit_key(operation,
-                                                      shared_key,
-                                                      sizeof(shared_key),
-                                                      &shared_key_len);
-
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-    status = psa_key_derivation_input_bytes(output,
-                                            PSA_KEY_DERIVATION_INPUT_SECRET,
-                                            shared_key,
-                                            shared_key_len);
-
-    mbedtls_platform_zeroize(shared_key, sizeof(shared_key));
-exit:
-    abort_status = psa_pake_abort(operation);
     return status == PSA_SUCCESS ? abort_status : status;
 }
 
