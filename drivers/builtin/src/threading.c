@@ -62,10 +62,6 @@ static int err_from_posix(int posix_ret)
 
 static void threading_mutex_init_pthread(mbedtls_platform_mutex_t *mutex)
 {
-    if (mutex == NULL) {
-        return;
-    }
-
     /* One problem here is that calling lock on a pthread mutex without first
      * having initialised it is undefined behaviour. Obviously we cannot check
      * this here in a thread safe manner without a significant performance
@@ -77,29 +73,17 @@ static void threading_mutex_init_pthread(mbedtls_platform_mutex_t *mutex)
 
 static void threading_mutex_free_pthread(mbedtls_platform_mutex_t *mutex)
 {
-    if (mutex == NULL) {
-        return;
-    }
-
     (void) pthread_mutex_destroy(mutex);
 }
 
 static int threading_mutex_lock_pthread(mbedtls_platform_mutex_t *mutex)
 {
-    if (mutex == NULL) {
-        return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
-    }
-
     int posix_ret = pthread_mutex_lock(mutex);
     return err_from_posix(posix_ret);
 }
 
 static int threading_mutex_unlock_pthread(mbedtls_platform_mutex_t *mutex)
 {
-    if (mutex == NULL) {
-        return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
-    }
-
     int posix_ret = pthread_mutex_unlock(mutex);
     return err_from_posix(posix_ret);
 }
