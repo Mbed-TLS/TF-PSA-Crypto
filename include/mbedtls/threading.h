@@ -73,15 +73,10 @@ void mbedtls_threading_free_alt(void);
 #endif /* MBEDTLS_THREADING_ALT */
 
 #if defined(MBEDTLS_THREADING_C)
-/*
- * The function pointers for mutex_init, mutex_free, mutex_ and mutex_unlock
- *
- * All these functions are expected to work or the result will be undefined.
- */
-extern void (*mbedtls_mutex_init)(mbedtls_threading_mutex_t *mutex);
-extern void (*mbedtls_mutex_free)(mbedtls_threading_mutex_t *mutex);
-extern int (*mbedtls_mutex_lock)(mbedtls_threading_mutex_t *mutex);
-extern int (*mbedtls_mutex_unlock)(mbedtls_threading_mutex_t *mutex);
+void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex);
+void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex);
+int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
+int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
 
 /*
  * Global mutexes
