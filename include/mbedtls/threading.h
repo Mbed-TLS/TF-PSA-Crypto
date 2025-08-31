@@ -43,10 +43,20 @@ typedef pthread_mutex_t mbedtls_platform_mutex_t;
  *                  mbedtls_threading_free_alt() must be called once in the main
  *                  thread after all other Mbed TLS functions.
  *
+ * \note            Functions should return #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  if a mutex usage error is detected. However, it is
+ *                  acceptable for usage errors to result in undefined behavior
+ *                  (including deadlocks and crashes) if detecting usage errors
+ *                  is not practical on your platform.
+ *
  * \note            mutex_init() and mutex_free() don't return a status code.
  *                  If mutex_init() fails, it should leave its argument (the
  *                  mutex) in a state such that mutex_lock() will fail when
  *                  called with this argument.
+ *
+ * \note            The library will always unlock a mutex from the same
+ *                  thread that locked it, and will never lock a mutex
+ *                  in a thread that has already locked it.
  *
  * \param mutex_init    the init function implementation
  * \param mutex_free    the free function implementation
@@ -76,9 +86,88 @@ typedef struct mbedtls_threading_mutex_t {
 
 } mbedtls_threading_mutex_t;
 
+/** Initialize a mutex (mutual exclusion lock).
+ *
+ * \note            This function may fail internally, but for historical
+ *                  reasons, it does not return a value. If the mutex
+ *                  initialization fails internally, mbedtls_mutex_free()
+ *                  will still work normally, and all other mutex functions
+ *                  will fail safely with a nonzero return code.
+ *
+ * \note            The behavior is undefined if
+ *                  \p mutex is already initialized, or
+ *                  if this function is called concurrently on the same
+ *                  object from multiple threads.
+ *
+ * \param mutex     The mutex to initialize.
+ */
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex);
+
+/** Destroy a mutex.
+ *
+ * After this function returns, you may call mbedtls_mutex_init()
+ * again on \p mutex.
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p mutex has not been initialized with
+ *                    mbedtls_mutex_init();
+ *                  - this function is called concurrently on the same
+ *                    object from multiple threads;
+ *                  - \p mutex is locked.
+ *
+ * \param mutex     The mutex to destroy.
+ */
 void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex);
+
+/** Lock a mutex.
+ *
+ * It must not be already locked by the calling thread
+ * (mutexes are not recursive).
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p mutex has not been initialized with
+ *                    mbedtls_mutex_init(), or has already been freed
+ *                    with mbedtls_mutex_free();
+ *                  - \p mutex is already locked by the same thread.
+ *
+ * \param mutex     The mutex to lock.
+ *
+ * \retval 0
+ *                  Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  mbedtls_mutex_init() failed,
+ *                  or a mutex usage error was detected.
+ *                  Note that depending on the platform, a mutex usage
+ *                  error may result in a deadlock, a crash or other
+ *                  undesirable behavior instead of returning an error.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *                  There were insufficient resources to initialize or
+ *                  lock the mutex.
+ */
 int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
+
+/** Unlock a mutex.
+ *
+ * It must be currently locked by the calling thread.
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p mutex has not been initialized with
+ *                    mbedtls_mutex_init(), or has already been freed
+ *                    with mbedtls_mutex_free();
+ *                  - \p mutex is not locked;
+ *                  - \p mutex was locked by a different thread.
+ *
+ * \param mutex     The mutex to unlock.
+ *
+ * \retval 0
+ *                  Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  mbedtls_mutex_init() failed,
+ *                  or a mutex usage error was detected.
+ *                  Note that depending on the platform, a mutex usage
+ *                  error may result in a deadlock, a crash or other
+ *                  undesirable behavior instead of returning an error.
+ */
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
 
 /*
