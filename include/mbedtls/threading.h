@@ -143,6 +143,10 @@ void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex);
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
  *                  There were insufficient resources to initialize or
  *                  lock the mutex.
+ * \retval #PSA_ERROR_BAD_STATE
+ *                  The compilation option #MBEDTLS_THREADING_ALT is
+ *                  enabled, and mbedtls_threading_set_alt() has not
+ *                  been called.
  */
 int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
 
@@ -167,6 +171,10 @@ int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
  *                  Note that depending on the platform, a mutex usage
  *                  error may result in a deadlock, a crash or other
  *                  undesirable behavior instead of returning an error.
+ * \retval #PSA_ERROR_BAD_STATE
+ *                  The compilation option #MBEDTLS_THREADING_ALT is
+ *                  enabled, and mbedtls_threading_set_alt() has not
+ *                  been called.
  */
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
 

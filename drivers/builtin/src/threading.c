@@ -19,6 +19,8 @@
 
 #include "threading_internal.h"
 
+#include <psa/crypto_values.h>
+
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
 
 #if !defined(_WIN32) && (defined(unix) || \
@@ -104,7 +106,7 @@ int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_un
 static int threading_mutex_fail(mbedtls_platform_mutex_t *mutex)
 {
     ((void) mutex);
-    return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
+    return PSA_ERROR_BAD_STATE;
 }
 static void threading_mutex_dummy(mbedtls_platform_mutex_t *mutex)
 {
