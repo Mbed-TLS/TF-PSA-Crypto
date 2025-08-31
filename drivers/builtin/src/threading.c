@@ -50,6 +50,16 @@
 #endif /* MBEDTLS_HAVE_TIME_DATE && !MBEDTLS_PLATFORM_GMTIME_R_ALT */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
+static int err_from_posix(int posix_ret)
+{
+    switch (posix_ret) {
+        case 0:
+            return 0;
+        default:
+            return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
+    }
+}
+
 static void threading_mutex_init_pthread(mbedtls_platform_mutex_t *mutex)
 {
     if (mutex == NULL) {
@@ -80,11 +90,8 @@ static int threading_mutex_lock_pthread(mbedtls_platform_mutex_t *mutex)
         return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
     }
 
-    if (pthread_mutex_lock(mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-
-    return 0;
+    int posix_ret = pthread_mutex_lock(mutex);
+    return err_from_posix(posix_ret);
 }
 
 static int threading_mutex_unlock_pthread(mbedtls_platform_mutex_t *mutex)
@@ -93,11 +100,8 @@ static int threading_mutex_unlock_pthread(mbedtls_platform_mutex_t *mutex)
         return MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
     }
 
-    if (pthread_mutex_unlock(mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-
-    return 0;
+    int posix_ret = pthread_mutex_unlock(mutex);
+    return err_from_posix(posix_ret);
 }
 
 void (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_init_pthread;
