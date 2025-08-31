@@ -29,10 +29,12 @@ extern "C" {
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include <pthread.h>
 typedef pthread_mutex_t mbedtls_platform_mutex_t;
+typedef pthread_cond_t mbedtls_platform_condition_variable_t;
 #endif
 
 #if defined(MBEDTLS_THREADING_ALT)
-/* You should define the mbedtls_platform_mutex_t type in your header */
+/* You should define the types mbedtls_platform_mutex_t and
+ * mbedtls_platform_condition_variable_t in your header. */
 #include "threading_alt.h"
 
 /**
@@ -62,11 +64,23 @@ typedef pthread_mutex_t mbedtls_platform_mutex_t;
  * \param mutex_free    the free function implementation
  * \param mutex_lock    the lock function implementation
  * \param mutex_unlock  the unlock function implementation
+ * \param cond_init     The condition variable initialization implementation.
+ * \param cond_destroy  The condition variable destroy implementation.
+ * \param cond_signal   The condition variable signal implementation.
+ * \param cond_broadcast The condition variable broadcast implementation.
+ * \param cond_wait     The condition variable wait implementation.
  */
-void mbedtls_threading_set_alt(void (*mutex_init)(mbedtls_platform_mutex_t *),
-                               void (*mutex_free)(mbedtls_platform_mutex_t *),
-                               int (*mutex_lock)(mbedtls_platform_mutex_t *),
-                               int (*mutex_unlock)(mbedtls_platform_mutex_t *));
+void mbedtls_threading_set_alt(
+    void (*mutex_init)(mbedtls_platform_mutex_t *),
+    void (*mutex_free)(mbedtls_platform_mutex_t *),
+    int (*mutex_lock)(mbedtls_platform_mutex_t *),
+    int (*mutex_unlock)(mbedtls_platform_mutex_t *),
+    int (*cond_init)(mbedtls_platform_condition_variable_t *),
+    void (*cond_destroy)(mbedtls_platform_condition_variable_t *),
+    int (*cond_signal)(mbedtls_platform_condition_variable_t *),
+    int (*cond_broadcast)(mbedtls_platform_condition_variable_t *),
+    int (*cond_wait)(mbedtls_platform_condition_variable_t *,
+                     mbedtls_platform_mutex_t *));
 
 /**
  * \brief               Free global mutexes.
@@ -85,6 +99,10 @@ typedef struct mbedtls_threading_mutex_t {
     char MBEDTLS_PRIVATE(state);
 
 } mbedtls_threading_mutex_t;
+
+typedef struct mbedtls_threading_condition_variable_t {
+    mbedtls_platform_condition_variable_t MBEDTLS_PRIVATE(cond);
+} mbedtls_threading_condition_variable_t;
 
 /** Initialize a mutex (mutual exclusion lock).
  *
@@ -177,6 +195,132 @@ int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
  *                  been called.
  */
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
+
+/** Initialize a condition variable.
+ *
+ * \note            The behavior is undefined if
+ *                  \p cond is already initialized, or
+ *                  if this function is called concurrently on the same
+ *                  object from multiple threads.
+ *
+ * \param cond      The condition variable to initialize.
+ *
+ * \retval 0
+ *                  Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  The condition variable is already initialized
+ *                  (on platforms where this can be detected),
+ *                  or an unpecified error occurred.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *                  There were insufficient resources to initialize the object.
+ * \retval #PSA_ERROR_BAD_STATE
+ *                  The compilation option #MBEDTLS_THREADING_ALT is
+ *                  enabled, and mbedtls_threading_set_alt() has not
+ *                  been called.
+ */
+int mbedtls_condition_variable_init(
+    mbedtls_threading_condition_variable_t *cond);
+
+
+/** Destroy a condition variable.
+ *
+ * After this function returns, you may call mbedtls_condition_variable_init()
+ * again on \p cond.
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p cond has not been initialized with
+ *                    mbedtls_condition_variable_init();
+ *                  - any function is called concurrently on the same
+ *                    object from another thread.
+ *
+ * \param cond      The condition variable to destroy.
+ */
+void mbedtls_condition_variable_free(
+    mbedtls_threading_condition_variable_t *cond);
+
+/** Raise a signal a condition variable to wake up one thread.
+ *
+ * Do nothing, successfully, if no thread is waiting.
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p cond has not been initialized with
+ *                    mbedtls_condition_variable_init(), or has already been
+ *                    freed with mbedtls_condition_variable_free().
+ *
+ * \param cond      The condition variable to signal.
+ *
+ * \retval 0
+ *                  Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  A usage error was detected.
+ *                  Note that depending on the platform, a condition variable
+ *                  usage error may result in a deadlock, a crash or other
+ *                  undesirable behavior instead of returning an error.
+ * \retval #PSA_ERROR_BAD_STATE
+ *                  The compilation option #MBEDTLS_THREADING_ALT is
+ *                  enabled, and mbedtls_threading_set_alt() has not
+ *                  been called.
+ */
+int mbedtls_condition_variable_signal(
+    mbedtls_threading_condition_variable_t *cond);
+
+/** Raise a signal a condition variable to wake up all waiting threads.
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p cond has not been initialized with
+ *                    mbedtls_condition_variable_init(), or has already been
+ *                    freed with mbedtls_condition_variable_free().
+ *
+ * \param cond      The condition variable to signal.
+ *
+ * \retval 0
+ *                  Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  A usage error was detected.
+ *                  Note that depending on the platform, a condition variable
+ *                  usage error may result in a deadlock, a crash or other
+ *                  undesirable behavior instead of returning an error.
+ * \retval #PSA_ERROR_BAD_STATE
+ *                  The compilation option #MBEDTLS_THREADING_ALT is
+ *                  enabled, and mbedtls_threading_set_alt() has not
+ *                  been called.
+ */
+int mbedtls_condition_variable_broadcast(
+    mbedtls_threading_condition_variable_t *cond);
+
+/** Wait for a signal on a condition variable.
+ *
+ * When this function is called, it atomically unlocks \p mutex.
+ * On waking up, it atomically locks \p mutex.
+ *
+ * \note            The behavior is undefined if:
+ *                  - \p mutex has not been initialized with
+ *                    mbedtls_mutex_init(), or has already been
+ *                    freed with mbedtls_mutex_free();
+ *                  - \p cond has not been initialized with
+ *                    mbedtls_condition_variable_init(), or has already been
+ *                    freed with mbedtls_condition_variable_free();
+ *                   - \p mutex is not currently locked by the calling thread.
+ *
+ * \param cond      The condition variable to wait on.
+ * \param mutex     The mutex to unlock and re-lock.
+ *                  It must currently be locked by the calling thread.
+ *
+ * \retval 0
+ *                  Success.
+ * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ *                  A usage error was detected.
+ *                  Note that depending on the platform, a condition variable
+ *                  usage error may result in a deadlock, a crash or other
+ *                  undesirable behavior instead of returning an error.
+ * \retval #PSA_ERROR_BAD_STATE
+ *                  The compilation option #MBEDTLS_THREADING_ALT is
+ *                  enabled, and mbedtls_threading_set_alt() has not
+ *                  been called.
+ */
+int mbedtls_condition_variable_wait(
+    mbedtls_threading_condition_variable_t *cond,
+    mbedtls_threading_mutex_t *mutex);
 
 /*
  * Global mutexes

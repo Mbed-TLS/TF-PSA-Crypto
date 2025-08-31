@@ -100,6 +100,41 @@ int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_un
  */
 #define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1 }
 
+int mbedtls_condition_variable_init(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    int posix_ret = pthread_cond_init(&cond->cond, NULL);
+    return err_from_posix(posix_ret);
+}
+
+void mbedtls_condition_variable_free(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    (void) pthread_cond_destroy(&cond->cond);
+}
+
+int mbedtls_condition_variable_signal(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    int posix_ret = pthread_cond_signal(&cond->cond);
+    return err_from_posix(posix_ret);
+}
+
+int mbedtls_condition_variable_broadcast(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    int posix_ret = pthread_cond_broadcast(&cond->cond);
+    return err_from_posix(posix_ret);
+}
+
+int mbedtls_condition_variable_wait(
+    mbedtls_threading_condition_variable_t *cond,
+    mbedtls_threading_mutex_t *mutex)
+{
+    int posix_ret = pthread_cond_wait(&cond->cond, &mutex->mutex);
+    return err_from_posix(posix_ret);
+}
+
 #endif /* MBEDTLS_THREADING_PTHREAD */
 
 #if defined(MBEDTLS_THREADING_ALT)
@@ -118,6 +153,7 @@ void (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_dum
 void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_dummy;
 int (*mbedtls_mutex_lock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fail;
 int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fail;
+
 #endif /* MBEDTLS_THREADING_ALT */
 
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
@@ -143,18 +179,88 @@ int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
 
 
 #if defined(MBEDTLS_THREADING_ALT)
+
+static int (*cond_init_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
+
+int mbedtls_condition_variable_init(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    if (*cond_init_ptr == NULL) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    return (*cond_init_ptr)(&cond->cond);
+}
+
+static void (*cond_destroy_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
+
+void mbedtls_condition_variable_free(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    if (*cond_destroy_ptr == NULL) {
+        return;
+    }
+    return (*cond_destroy_ptr)(&cond->cond);
+}
+
+static int (*cond_signal_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
+
+int mbedtls_condition_variable_signal(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    if (*cond_signal_ptr == NULL) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    return (*cond_signal_ptr)(&cond->cond);
+}
+
+static int (*cond_broadcast_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
+
+int mbedtls_condition_variable_broadcast(
+    mbedtls_threading_condition_variable_t *cond)
+{
+    if (*cond_broadcast_ptr == NULL) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    return (*cond_broadcast_ptr)(&cond->cond);
+}
+
+static int (*cond_wait_ptr)(mbedtls_platform_condition_variable_t *,
+                            mbedtls_platform_mutex_t *) = NULL;
+
+int mbedtls_condition_variable_wait(
+    mbedtls_threading_condition_variable_t *cond,
+    mbedtls_threading_mutex_t *mutex)
+{
+    if (*cond_wait_ptr == NULL) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    return (*cond_wait_ptr)(&cond->cond, &mutex->mutex);
+}
+
 /*
  * Set functions pointers and initialize global mutexes
  */
-void mbedtls_threading_set_alt(void (*mutex_init)(mbedtls_platform_mutex_t *),
-                               void (*mutex_free)(mbedtls_platform_mutex_t *),
-                               int (*mutex_lock)(mbedtls_platform_mutex_t *),
-                               int (*mutex_unlock)(mbedtls_platform_mutex_t *))
+void mbedtls_threading_set_alt(
+    void (*mutex_init)(mbedtls_platform_mutex_t *),
+    void (*mutex_free)(mbedtls_platform_mutex_t *),
+    int (*mutex_lock)(mbedtls_platform_mutex_t *),
+    int (*mutex_unlock)(mbedtls_platform_mutex_t *),
+    int (*cond_init)(mbedtls_platform_condition_variable_t *),
+    void (*cond_destroy)(mbedtls_platform_condition_variable_t *),
+    int (*cond_signal)(mbedtls_platform_condition_variable_t *),
+    int (*cond_broadcast)(mbedtls_platform_condition_variable_t *),
+    int (*cond_wait)(mbedtls_platform_condition_variable_t *,
+                     mbedtls_platform_mutex_t *))
 {
     mbedtls_mutex_init_ptr = mutex_init;
     mbedtls_mutex_free_ptr = mutex_free;
     mbedtls_mutex_lock_ptr = mutex_lock;
     mbedtls_mutex_unlock_ptr = mutex_unlock;
+    cond_init_ptr = cond_init;
+    cond_destroy_ptr = cond_destroy;
+    cond_signal_ptr = cond_signal;
+    cond_broadcast_ptr = cond_broadcast;
+    cond_wait_ptr = cond_wait;
 
 #if defined(MBEDTLS_FS_IO)
     mbedtls_mutex_init(&mbedtls_threading_readdir_mutex);
