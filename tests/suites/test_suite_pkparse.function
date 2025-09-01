@@ -9,7 +9,6 @@
 #include "mbedtls/private/ecp.h"
 #include "mbedtls/psa_util.h"
 #include "pk_internal.h"
-#include "pkparse_invasive.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 #include "test/psa_exercise_key.h"

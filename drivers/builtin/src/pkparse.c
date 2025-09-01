@@ -20,7 +20,6 @@
 #include "mbedtls/private/error_common.h"
 #include "mbedtls/private/ecp.h"
 #include "pk_internal.h"
-#include "pkparse_invasive.h"
 
 #include <string.h>
 
