@@ -2,6 +2,8 @@ ECDSA primitive hash zero #1
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecdsa_prim_zero:MBEDTLS_ECP_DP_SECP192R1
 
+# Test case #2 was removed because it was using curve secp224r1 which has been removed
+
 ECDSA primitive hash zero #3
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
 ecdsa_prim_zero:MBEDTLS_ECP_DP_SECP256R1
@@ -17,6 +19,8 @@ ecdsa_prim_zero:MBEDTLS_ECP_DP_SECP521R1
 ECDSA primitive random #1
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecdsa_prim_random:MBEDTLS_ECP_DP_SECP192R1
+
+# Test case #2 was removed because it was using curve secp224r1 which has been removed
 
 ECDSA primitive random #3
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
@@ -46,6 +50,8 @@ ECDSA write-read hash zero #1
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecdsa_write_read_zero:MBEDTLS_ECP_DP_SECP192R1
 
+# Test case #2 was removed because it was using curve secp224r1 which has been removed
+
 ECDSA write-read hash zero #3
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
 ecdsa_write_read_zero:MBEDTLS_ECP_DP_SECP256R1
@@ -61,6 +67,8 @@ ecdsa_write_read_zero:MBEDTLS_ECP_DP_SECP521R1
 ECDSA write-read random #1
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecdsa_write_read_random:MBEDTLS_ECP_DP_SECP192R1
+
+# Test case #2 was removed because it was using curve secp224r1 which has been removed
 
 ECDSA write-read random #3
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED

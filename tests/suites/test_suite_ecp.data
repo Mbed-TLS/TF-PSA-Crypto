@@ -25,6 +25,8 @@ ECP curve info #6
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
 mbedtls_ecp_curve_info:MBEDTLS_ECP_DP_SECP256R1:23:256:"secp256r1"
 
+# Test case #7 was removed because it was using curve secp224r1 which has been removed
+
 ECP curve info #8
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 mbedtls_ecp_curve_info:MBEDTLS_ECP_DP_SECP192R1:19:192:"secp192r1"
@@ -305,6 +307,7 @@ ECP read binary #16 (Curve448, non-canonical)
 depends_on:MBEDTLS_ECP_DP_CURVE448_ENABLED
 ecp_read_binary:MBEDTLS_ECP_DP_CURVE448:"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff":"0":"1":0
 
+
 ECP tls read point #1 (zero, invalid length byte)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 mbedtls_ecp_tls_read_point:MBEDTLS_ECP_DP_SECP192R1:"0200":"01":"01":"00":MBEDTLS_ERR_ECP_BAD_INPUT_DATA
@@ -336,6 +339,8 @@ mbedtls_ecp_group_metadata:MBEDTLS_ECP_DP_SECP192K1:192:MBEDTLS_ECP_TYPE_SHORT_W
 Check ECP group metadata #2 secp192r1 (SEC 2)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 mbedtls_ecp_group_metadata:MBEDTLS_ECP_DP_SECP192R1:192:MBEDTLS_ECP_TYPE_SHORT_WEIERSTRASS:"fffffffffffffffffffffffffffffffeffffffffffffffff":"":"64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1":"188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012":"07192b95ffc8da78631011ed6b24cdd573f977a11e794811":"ffffffffffffffffffffffff99def836146bc9b1b4d22831":19
+
+# Test cases #3 and #4 were removed because they were using curve secp224r1 which has been removed
 
 Check ECP group metadata #5 secp256k1 (SEC 2)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
@@ -1174,6 +1179,8 @@ ecp_setup #1 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_setup:"fffffffffffffffffffffffffffffffeffffffffffffffff":MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_COORDINATE:0
 
+# Test case #2 was removed because it was using curve secp224r1 which has been removed
+
 ecp_setup #3 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
 ecp_mod_setup:"ffffffff00000001000000000000000000000000ffffffffffffffffffffffff":MBEDTLS_ECP_DP_SECP256R1:MBEDTLS_ECP_MOD_COORDINATE:0
@@ -1206,6 +1213,8 @@ ecp_setup #10 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_setup:"fffffffffffffffffffffffffffffffffffffffeffffee37":MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_COORDINATE:0
 
+# Test case #11 was removed because it was using curve secp224k1 which has been removed
+
 ecp_setup #12 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
 ecp_mod_setup:"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f":MBEDTLS_ECP_DP_SECP256K1:MBEDTLS_ECP_MOD_COORDINATE:0
@@ -1217,6 +1226,8 @@ ecp_mod_setup:"000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffff
 ecp_setup #14 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_setup:"ffffffffffffffffffffffff99def836146bc9b1b4d22831":MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_SCALAR:0
+
+# Test case #15 was removed because it was using curve secp224r1 which has been removed
 
 ecp_setup #16 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
@@ -1250,6 +1261,8 @@ ecp_setup #23 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_setup:"fffffffffffffffffffffffe26f2fc170f69466a74defd8d":MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_SCALAR:0
 
+# Test case #24 was removed because it was using curve secp224k1 which has been removed
+
 ecp_setup #25 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
 ecp_mod_setup:"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141":MBEDTLS_ECP_DP_SECP256K1:MBEDTLS_ECP_MOD_SCALAR:0
@@ -1279,6 +1292,8 @@ ecp_mod_mul_inv:"4acca2d7100bad687080217babfb490d23dd6460a0007f24":MBEDTLS_ECP_D
 ecp_mul_inv #3 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_mul_inv:"c4fd9a06df9b4efa94531578af8b5886ec0ada82884199f7":MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_SCALAR
+
+# Test cases #4, #5 and #6 were removed because they were using curve secp224r1 which has been removed
 
 ecp_mul_inv #7 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
@@ -1424,6 +1439,8 @@ ecp_mul_inv #39 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_mul_inv:"d2a10413f48d7bcc18a9b7c53c7914c5302c9c9e48b2eb62":MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_SCALAR
 
+# Test cases from #40 to #42 were removed because they were using curve secp224k1 which has been removed
+
 ecp_mul_inv #43 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
 ecp_mod_mul_inv:"9fd95fed98cc1c2ef91b5dc02fa84f63597e15a3326c07f2918afb3ffd093343":MBEDTLS_ECP_DP_SECP256K1:MBEDTLS_ECP_MOD_SCALAR
@@ -1463,6 +1480,8 @@ ecp_mod_mul_inv:"c4fd9a06df9b4efa94531578af8b5886ec0ada82884199f7":MBEDTLS_ECP_D
 ecp_mul_inv #51.1 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_mul_inv:"fffffffffffffffffffffffffffffffefffffffffffffffe":MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_COORDINATE
+
+# Test cases #52, #53, #54 were removed because they were using curve secp224r1 which has been removed
 
 ecp_mul_inv #55 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
@@ -1544,6 +1563,8 @@ ecp_mul_inv #69.1 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_mul_inv:"fffffffffffffffffffffffffffffffffffffffeffffee36":MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_COORDINATE
 
+# Test cases from #70 to #75 were removed because they were using curve secp224k1 which has been removed
+
 ecp_mul_inv #76 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
 ecp_mod_mul_inv:"9fd95fed98cc1c2ef91b5dc02fa84f63597e15a3326c07f2918afb3ffd093343":MBEDTLS_ECP_DP_SECP256K1:MBEDTLS_ECP_MOD_COORDINATE
@@ -1597,6 +1618,8 @@ ecp_mod_add_sub:"3653f8dd9b1f282e4067c3584ee207f8da94e3e8ab73738f":"ffed9235288b
 ecp_add_sub #3 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_add_sub:"dc38f519b91751dacdbd47d364be8049a372db8f6e405d93":"ef8acd128b4f2fc15f3f57ebf30b94fa82523e86feac7eb7":MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_SCALAR
+
+# Test cases from #4 to #6 were removed because they were using curve secp224r1 which has been removed
 
 # Use the test data "modulus - 1" and "modulus - 2" to ensure the sum overflow case be tested.
 ecp_add_sub #7.0 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256R1)
@@ -1789,6 +1812,8 @@ ecp_add_sub #39 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_add_sub:"3fb62d2c81862fc9634f806fabf4a07c566002249b191bf4":"b474c7e89286a1754abcb06ae8abb93f01d89a024cdce7a6":MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_SCALAR
 
+# Test cases from #40 to #42 were removed because they were using curve secp224k1 which has been removed
+
 # Use the test data "modulus - 1" and "modulus - 2" to ensure the sum overflow case be tested.
 ecp_add_sub #43.0 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
@@ -1834,6 +1859,8 @@ ecp_mod_read_write:"c320a4737c2b3abe14a03569d26b949692e5dfe8cb1855fe":MBEDTLS_EC
 ecp_read_write #2 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_read_write:"9623d7cfa9ae7a34254499c7001d9a88096d373742f9a039":MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_SCALAR
+
+# Test cases #3 and #4 were removed because they were using curve secp224r1 which has been removed
 
 ecp_read_write #7 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
@@ -1934,6 +1961,8 @@ ecp_read_write #31 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_read_write:"c24f6aa83bf36a147c2f7ad016edc5d467164890d49d0ac1":MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_SCALAR
 
+# Test cases from #32 to #34 were removed because they were using curve secp224k1 which has been removed
+
 # The following data was generated by random.getrandbits(256).
 ecp_read_write #35 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
@@ -1959,6 +1988,8 @@ ecp_mod_random:MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_COORDINATE
 ecp_random #2 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192R1)
 depends_on:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 ecp_mod_random:MBEDTLS_ECP_DP_SECP192R1:MBEDTLS_ECP_MOD_SCALAR
+
+# Test cases #3 and #4 were removed because they were using curve secp224r1 which has been removed
 
 ecp_random #5 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
@@ -2023,6 +2054,8 @@ ecp_mod_random:MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_COORDINATE
 ecp_random #20 MBEDTLS_ECP_MOD_SCALAR(MBEDTLS_ECP_DP_SECP192K1)
 depends_on:MBEDTLS_ECP_DP_SECP192K1_ENABLED
 ecp_mod_random:MBEDTLS_ECP_DP_SECP192K1:MBEDTLS_ECP_MOD_SCALAR
+
+# Test cases #21 and #22 were removed because they were using curve secp224k1 which has been removed
 
 ecp_random #23 MBEDTLS_ECP_MOD_COORDINATE(MBEDTLS_ECP_DP_SECP256K1)
 depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED
