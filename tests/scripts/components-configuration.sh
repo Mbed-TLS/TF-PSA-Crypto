@@ -146,3 +146,29 @@ component_tf_psa_crypto_test_memory_buffer_allocator () {
     msg "test: MBEDTLS_MEMORY_BUFFER_ALLOC_C"
     make test
 }
+
+support_test_chacha20_variations () {
+    case $(uname -m) in
+        aarch64) true;;
+        *) false;;
+    esac
+}
+
+component_test_chacha20_neon_variations () {
+    msg "ChaCha20 Neon scalar and multiblock variations"
+
+    scripts/config.py set PSA_WANT_KEY_TYPE_AES
+    scripts/config.py set PSA_WANT_KEY_TYPE_CHACHA20
+    scripts/config.py set PSA_WANT_ALG_SHA_256
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    for x in 0 1 2 3 4 5 6; do
+        msg "multiblock = $x"
+
+        make clean
+        make -C tests test_suite_chacha20 CFLAGS="-DMBEDTLS_CHACHA20_NEON_MULTIBLOCK=$x"
+        ./tests/test_suite_chacha20
+    done
+}
