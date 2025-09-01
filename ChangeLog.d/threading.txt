@@ -1,0 +1,10 @@
+Features
+   * The threading platform abstraction now exposes condition variables
+     in addition to mutexes.
+
+Requirement changes
+   * Implementations of MBEDTLS_THREADING_ALT must now provide condition
+     variables in addition to mutexes. Furthermore, the type of mutex
+     objects provided by the platform functions is now called
+     mbedtls_platform_mutex_t, distinct from the API type
+     mbedtls_threading_mutex_t.
