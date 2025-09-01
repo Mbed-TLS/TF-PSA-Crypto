@@ -1372,19 +1372,19 @@
  *
  * \brief Hash algorithm to use for the entropy module and for HMAC_DRBG if configured.
  *
- * If SHA-256 is enabled, the default value of MBEDTLS_PSA_CRYPTO_RNG_HASH is
- * PSA_ALG_SHA_256, except in the specific case where:
- *   - the PSA RNG is HMAC_DRBG,
- *   - MBEDTLS_PSA_CRYPTO_RNG_STRENGTH is set to 256, and
- *   - SHA-512 is also available.
- * In that case, the default is PSA_ALG_SHA_512.
+ * If the entropy module is enabled (#MBEDTLS_PSA_CRYPTO_C enabled and
+ * #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG disabled):
+ * - The hash size must be at least 32 bytes (i.e., 256 bits).
+ * - Only two values are currently allowed: PSA_ALG_SHA_256 and PSA_ALG_SHA_512.
+ *   A future version may lift this limitation.
  *
- * If SHA-256 is disabled and SHA-512 is available, the default is also
- * PSA_ALG_SHA_512.
+ * If #MBEDTLS_HMAC_DRBG_C is enabled, the hash size (in bits) must be
+ * at least #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
  *
- * To override this default, set MBEDTLS_PSA_CRYPTO_RNG_HASH explicitly in your
- * configuration. Only two values are supported: PSA_ALG_SHA_256 and
- * PSA_ALG_SHA_512.
+ * If #MBEDTLS_PSA_CRYPTO_RNG_HASH is not explicitly set in the configuration,
+ * a default hash that satisfies the above constraints is selected
+ * automatically. If no suitable default can be selected, this will result in a
+ * build error.
  */
 //#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 
