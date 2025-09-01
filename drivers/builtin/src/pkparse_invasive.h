@@ -18,9 +18,10 @@
 
 #if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PK_PARSE_C)
 
-MBEDTLS_STATIC_TESTABLE int pk_parse_key_pkcs8_unencrypted_der(mbedtls_pk_context *pk,
-                                                     const unsigned char *key,
-                                                     size_t keylen);
+MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_unencrypted_der(
+    mbedtls_pk_context *pk,
+    const unsigned char *key,
+    size_t keylen);
 
 #endif
 

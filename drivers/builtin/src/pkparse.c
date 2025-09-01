@@ -441,9 +441,9 @@ static int pk_parse_key_rfc8410_der(mbedtls_pk_context *pk,
         return ret;
     }
 
-    /* pk_parse_key_pkcs8_unencrypted_der() only supports version 1 PKCS8 keys,
-     * which never contain a public key. As such, derive the public key
-     * unconditionally. */
+    /* mbedtls_pk_parse_key_pkcs8_unencrypted_der() only supports version 1
+     * PKCS8 keys, which never contain a public key. As such, derive the public
+     * key unconditionally. */
     if ((ret = mbedtls_pk_ecc_set_pubkey_from_prv(pk, key, len)) != 0) {
         return ret;
     }
@@ -730,7 +730,7 @@ static int pk_parse_key_sec1_der(mbedtls_pk_context *pk,
  *   PK context on failure.
  *
  */
-MBEDTLS_STATIC_TESTABLE int pk_parse_key_pkcs8_unencrypted_der(
+MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_unencrypted_der(
     mbedtls_pk_context *pk,
     const unsigned char *key, size_t keylen)
 {
@@ -918,7 +918,7 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     if (decrypted == 0) {
         return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
     }
-    return pk_parse_key_pkcs8_unencrypted_der(pk, buf, outlen);
+    return mbedtls_pk_parse_key_pkcs8_unencrypted_der(pk, buf, outlen);
 }
 #endif /* MBEDTLS_PKCS5_C */
 
@@ -1016,8 +1016,9 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
                                       key, NULL, 0, &len);
     }
     if (ret == 0) {
-        if ((ret = pk_parse_key_pkcs8_unencrypted_der(pk,
-                                                      pem.buf, pem.buflen)) != 0) {
+        if ((ret = mbedtls_pk_parse_key_pkcs8_unencrypted_der(pk,
+                                                              pem.buf,
+                                                              pem.buflen)) != 0) {
             mbedtls_pk_free(pk);
         }
 
@@ -1089,7 +1090,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
     }
 #endif /* MBEDTLS_PKCS5_C */
 
-    ret = pk_parse_key_pkcs8_unencrypted_der(pk, key, keylen);
+    ret = mbedtls_pk_parse_key_pkcs8_unencrypted_der(pk, key, keylen);
     if (ret == 0) {
         return 0;
     }

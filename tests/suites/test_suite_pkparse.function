@@ -288,7 +288,7 @@ void pk_parse_key_unencrypted(data_t *buf, int result)
     mbedtls_pk_init(&pk);
     USE_PSA_INIT();
 
-    TEST_EQUAL(pk_parse_key_pkcs8_unencrypted_der(&pk, buf->x, buf->len), result);
+    TEST_EQUAL(mbedtls_pk_parse_key_pkcs8_unencrypted_der(&pk, buf->x, buf->len), result);
 exit:
     mbedtls_pk_free(&pk);
     USE_PSA_DONE();
