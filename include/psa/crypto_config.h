@@ -1018,9 +1018,11 @@
  *
  * Module:  library/psa_crypto.c
  *
- * Requires: either MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
- *           or MBEDTLS_CTR_DRBG_C,
- *           or MBEDTLS_HMAC_DRBG_C.
+ * Requires: one of the following:
+ *           - MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           - MBEDTLS_CTR_DRBG_C
+ *           - MBEDTLS_HMAC_DRBG_C
+ *
  *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
  *           random generator, then either PSA_WANT_ALG_SHA_256 or
  *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
@@ -1028,6 +1030,14 @@
  * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
  *               is enabled in PSA (unless it's fully accelerated, see
  *               docs/driver-only-builds.md about that).
+ *
+ * \note The PSA crypto subsystem prioritizes DRBG mechanisms as follows:
+ *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG, if enabled
+ *       - CTR_DRBG (AES), seeded by the entropy module, if
+ *         #MBEDTLS_CTR_DRBG_C is enabled
+ *       - HMAC_DRBG, seeded by the entropy module
+ *
+ *       A future version may reevaluate the prioritization of DRBG mechanisms.
  */
 #define MBEDTLS_PSA_CRYPTO_C
 
@@ -2033,28 +2043,15 @@
  *
  * Enable the CTR_DRBG AES-based random generator.
  * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, enable \c MBEDTLS_PSA_CRYPTO_RNG_STRENGTH above.
+ * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
  *
- * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
- * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
- * is used.
- *
- * \warning When using PSA, the user should call `psa_crypto_init()` before
- *          using any CTR_DRBG operation (except `mbedtls_ctr_drbg_init()`).
- *
- * \note AES-128 will be used if \c MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
- *       is set accordingly.
- *
- * \note To achieve a 256-bit security strength with CTR_DRBG,
- *       you must use AES-256 *and* use sufficient entropy.
- *       See ctr_drbg.h for more details.
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
  *
  * Module:  library/ctr_drbg.c
- * Caller:
  *
- * Requires: MBEDTLS_AES_C or
- *           (PSA_WANT_KEY_TYPE_AES and PSA_WANT_ALG_ECB_NO_PADDING and
- *            MBEDTLS_PSA_CRYPTO_C)
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
  *
  * This module provides the CTR_DRBG AES random number generator.
  */
