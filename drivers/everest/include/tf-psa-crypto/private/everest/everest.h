@@ -19,8 +19,8 @@
  *  This file is part of Mbed TLS (https://tls.mbed.org).
  */
 
-#ifndef PSA_CRYPTO_PRIVATE_EVEREST_H
-#define PSA_CRYPTO_PRIVATE_EVEREST_H
+#ifndef PSA_CRYPTO_PRIVATE_EVEREST_EVEREST_H
+#define PSA_CRYPTO_PRIVATE_EVEREST_EVEREST_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -234,4 +234,4 @@ int mbedtls_everest_calc_secret( mbedtls_ecdh_context_everest *ctx, size_t *olen
 }
 #endif
 
-#endif /* PSA_CRYPTO_PRIVATE_EVEREST_H */
+#endif /* PSA_CRYPTO_PRIVATE_EVEREST_EVEREST_H */

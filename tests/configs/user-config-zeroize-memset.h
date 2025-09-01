@@ -7,8 +7,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_CONFIG_ZEROISE_MEMSET_H
-#define PSA_CRYPTO_CONFIG_ZEROISE_MEMSET_H
+#ifndef PSA_CRYPTO_TESTS_CONFIGS_CONFIG_ZEROISE_MEMSET_H
+#define PSA_CRYPTO_TESTS_CONFIGS_CONFIG_ZEROISE_MEMSET_H
 
 #include <string.h>
 
@@ -19,4 +19,4 @@
 
 #define mbedtls_platform_zeroize(buf, len) memset(buf, 0, len)
 
-#endif /* PSA_CRYPTO_CONFIG_ZEROISE_MEMSET_H */
+#endif /* PSA_CRYPTO_TESTS_CONFIGS_CONFIG_ZEROISE_MEMSET_H */

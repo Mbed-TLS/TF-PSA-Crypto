@@ -21,8 +21,8 @@
  *   the main library, since they determine the ABI between the two.)
  */
 
-#ifndef PSA_CRYPTO_CONFIG_DRIVER_EXTENSION_H
-#define PSA_CRYPTO_CONFIG_DRIVER_EXTENSION_H
+#ifndef PSA_CRYPTO_TESTS_CONFIGS_CONFIG_DRIVER_EXTENSION_H
+#define PSA_CRYPTO_TESTS_CONFIGS_CONFIG_DRIVER_EXTENSION_H
 
 #include "psa/crypto_legacy.h"
 
@@ -666,4 +666,4 @@
 #define MBEDTLS_PSA_ACCEL_KEY_TYPE_RAW_DATA 1
 #endif
 #endif
-#endif /* PSA_CRYPTO_CONFIG_DRIVER_EXTENSION_H */
+#endif /* PSA_CRYPTO_TESTS_CONFIGS_CONFIG_DRIVER_EXTENSION_H */

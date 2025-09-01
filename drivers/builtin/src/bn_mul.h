@@ -21,8 +21,8 @@
  *         . Alpha                . MIPS32
  *         . C, longlong          . C, generic
  */
-#ifndef PSA_CRYPTO_BN_MUL_H
-#define PSA_CRYPTO_BN_MUL_H
+#ifndef PSA_CRYPTO_LIBRARY_BN_MUL_H
+#define PSA_CRYPTO_LIBRARY_BN_MUL_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -1091,4 +1091,4 @@
 #endif /* MULADDC_X8_CORE */
 
 /* *INDENT-ON* */
-#endif /* PSA_CRYPTO_BN_MUL_H */
+#endif /* PSA_CRYPTO_LIBRARY_BN_MUL_H */

@@ -10,8 +10,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef PSA_CRYPTO_AESNI_H
-#define PSA_CRYPTO_AESNI_H
+#ifndef PSA_CRYPTO_LIBRARY_AESNI_H
+#define PSA_CRYPTO_LIBRARY_AESNI_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -159,4 +159,4 @@ int mbedtls_aesni_setkey_enc(unsigned char *rk,
 #endif /* MBEDTLS_AESNI_HAVE_CODE */
 #endif  /* MBEDTLS_AESNI_C && (MBEDTLS_ARCH_IS_X64 || MBEDTLS_ARCH_IS_X86) */
 
-#endif /* PSA_CRYPTO_AESNI_H */
+#endif /* PSA_CRYPTO_LIBRARY_AESNI_H */

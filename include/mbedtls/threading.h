@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef PSA_CRYPTO_THREADING_H
-#define PSA_CRYPTO_THREADING_H
+#ifndef PSA_CRYPTO_MBEDTLS_THREADING_H
+#define PSA_CRYPTO_MBEDTLS_THREADING_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -134,4 +134,4 @@ extern mbedtls_threading_mutex_t mbedtls_threading_psa_rngdata_mutex;
 }
 #endif
 
-#endif /* PSA_CRYPTO_THREADING_H */
+#endif /* PSA_CRYPTO_MBEDTLS_THREADING_H */

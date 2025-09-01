@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef PSA_CRYPTO_PEM_H
-#define PSA_CRYPTO_PEM_H
+#ifndef PSA_CRYPTO_MBEDTLS_PEM_H
+#define PSA_CRYPTO_MBEDTLS_PEM_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -157,4 +157,4 @@ int mbedtls_pem_write_buffer(const char *header, const char *footer,
 }
 #endif
 
-#endif /* PSA_CRYPTO_PEM_H */
+#endif /* PSA_CRYPTO_MBEDTLS_PEM_H */

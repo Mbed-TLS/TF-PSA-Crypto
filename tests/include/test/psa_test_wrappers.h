@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_PSA_TEST_WRAPPERS_H
-#define PSA_CRYPTO_PSA_TEST_WRAPPERS_H
+#ifndef PSA_CRYPTO_TEST_PSA_TEST_WRAPPERS_H
+#define PSA_CRYPTO_TEST_PSA_TEST_WRAPPERS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -811,6 +811,6 @@ psa_status_t mbedtls_test_wrap_psa_verify_message(
 }
 #endif
 
-#endif /* TEST_PSA_TEST_WRAPPERS_H */
+#endif /* PSA_CRYPTO_TEST_PSA_TEST_WRAPPERS_H */
 
 /* End of automatically generated file. */
