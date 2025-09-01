@@ -46,7 +46,7 @@
  * \{
  */
 
-#define MBEDTLS_ENTROPY_MAX_SOURCES     20      /**< Maximum number of sources supported */
+#define MBEDTLS_ENTROPY_MAX_SOURCES     4       /**< Maximum number of sources supported. Should be just 2 eventually. */
 #define MBEDTLS_ENTROPY_MAX_GATHER      128     /**< Maximum amount requested from entropy sources */
 
 /** \} name SECTION: Module settings */
