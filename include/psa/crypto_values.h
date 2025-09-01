@@ -600,8 +600,6 @@
  * They are defined in _Standards for Efficient Cryptography_,
  * _SEC 2: Recommended Elliptic Curve Domain Parameters_.
  * https://www.secg.org/sec2-v2.pdf
- *
- * \note Mbed TLS only supports secp192k1 and secp256k1.
  */
 #define PSA_ECC_FAMILY_SECP_K1           ((psa_ecc_family_t) 0x17)
 
