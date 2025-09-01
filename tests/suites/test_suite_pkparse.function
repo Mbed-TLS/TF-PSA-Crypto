@@ -280,7 +280,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS:MBEDTLS_PKCS5_C */
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
 void pk_parse_key_unencrypted(data_t *buf, int result)
 {
     mbedtls_pk_context pk;
