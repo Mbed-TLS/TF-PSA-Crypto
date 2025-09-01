@@ -58,7 +58,7 @@ static int err_from_posix(int posix_ret)
         case 0:
             return 0;
         default:
-            return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
+            return MBEDTLS_ERR_THREADING_USAGE_ERROR;
     }
 }
 

@@ -19,8 +19,17 @@
 extern "C" {
 #endif
 
-/** Locking / unlocking / free failed with error code. */
-#define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E
+/** Detected error in mutex or condition variable usage.
+ *
+ * Note that depending on the platform, many usage errors of
+ * synchronization primitives have undefined behavior. But where
+ * it is practical to detect usage errors at runtime, mutex and
+ * condition primitives can return this error code.
+ */
+#define MBEDTLS_ERR_THREADING_USAGE_ERROR                 -0x001E
+
+/** A historical alias for #MBEDTLS_ERR_THREADING_USAGE_ERROR. */
+#define MBEDTLS_ERR_THREADING_MUTEX_ERROR MBEDTLS_ERR_THREADING_USAGE_ERROR
 
 #if defined(MBEDTLS_THREADING_C)
 
@@ -43,7 +52,7 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *                  mbedtls_threading_free_alt() must be called once in the main
  *                  thread after all other Mbed TLS functions.
  *
- * \note            Functions should return #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \note            Functions should return #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  if a mutex usage error is detected. However, it is
  *                  acceptable for usage errors to result in undefined behavior
  *                  (including deadlocks and crashes) if detecting usage errors
@@ -150,7 +159,7 @@ void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex);
  *
  * \retval 0
  *                  Success.
- * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \retval #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  mbedtls_mutex_init() failed,
  *                  or a mutex usage error was detected.
  *                  Note that depending on the platform, a mutex usage
@@ -181,7 +190,7 @@ int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex);
  *
  * \retval 0
  *                  Success.
- * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \retval #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  mbedtls_mutex_init() failed,
  *                  or a mutex usage error was detected.
  *                  Note that depending on the platform, a mutex usage
@@ -205,7 +214,7 @@ int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
  *
  * \retval 0
  *                  Success.
- * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \retval #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  The condition variable is already initialized
  *                  (on platforms where this can be detected),
  *                  or an unpecified error occurred.
@@ -249,7 +258,7 @@ void mbedtls_condition_variable_free(
  *
  * \retval 0
  *                  Success.
- * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \retval #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  A usage error was detected.
  *                  Note that depending on the platform, a condition variable
  *                  usage error may result in a deadlock, a crash or other
@@ -273,7 +282,7 @@ int mbedtls_condition_variable_signal(
  *
  * \retval 0
  *                  Success.
- * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \retval #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  A usage error was detected.
  *                  Note that depending on the platform, a condition variable
  *                  usage error may result in a deadlock, a crash or other
@@ -306,7 +315,7 @@ int mbedtls_condition_variable_broadcast(
  *
  * \retval 0
  *                  Success.
- * \retval #MBEDTLS_ERR_THREADING_MUTEX_ERROR
+ * \retval #MBEDTLS_ERR_THREADING_USAGE_ERROR
  *                  A usage error was detected.
  *                  Note that depending on the platform, a condition variable
  *                  usage error may result in a deadlock, a crash or other
