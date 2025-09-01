@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_ERROR_COMMON_H
-#define MBEDTLS_ERROR_COMMON_H
+#ifndef PSA_CRYPTO_MBEDTLS_PRIVATE_ERROR_COMMON_H
+#define PSA_CRYPTO_MBEDTLS_PRIVATE_ERROR_COMMON_H
 
 #include "tf-psa-crypto/build_info.h"
 #include <psa/crypto_values.h>
@@ -76,4 +76,4 @@ static inline int mbedtls_error_add(int high, int low)
 }
 #endif
 
-#endif /* error_common.h */
+#endif /* PSA_CRYPTO_MBEDTLS_PRIVATE_ERROR_COMMON_H */

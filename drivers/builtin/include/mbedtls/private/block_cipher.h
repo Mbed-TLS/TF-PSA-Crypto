@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_BLOCK_CIPHER_H
-#define MBEDTLS_BLOCK_CIPHER_H
+#ifndef PSA_CRYPTO_MBEDTLS_PRIVATE_BLOCK_CIPHER_H
+#define PSA_CRYPTO_MBEDTLS_PRIVATE_BLOCK_CIPHER_H
 
 #include "mbedtls/private_access.h"
 
@@ -73,4 +73,4 @@ typedef struct {
 }
 #endif
 
-#endif /* MBEDTLS_BLOCK_CIPHER_H */
+#endif /* PSA_CRYPTO_MBEDTLS_PRIVATE_BLOCK_CIPHER_H */

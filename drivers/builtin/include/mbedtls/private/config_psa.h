@@ -15,8 +15,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CONFIG_PSA_H
-#define MBEDTLS_CONFIG_PSA_H
+#ifndef PSA_CRYPTO_MBEDTLS_PRIVATE_CONFIG_PSA_H
+#define PSA_CRYPTO_MBEDTLS_PRIVATE_CONFIG_PSA_H
 
 #include "psa/crypto_legacy.h"
 
@@ -45,4 +45,4 @@
 
 #include "psa/crypto_adjust_auto_enabled.h"
 
-#endif /* MBEDTLS_CONFIG_PSA_H */
+#endif /* PSA_CRYPTO_MBEDTLS_PRIVATE_CONFIG_PSA_H */

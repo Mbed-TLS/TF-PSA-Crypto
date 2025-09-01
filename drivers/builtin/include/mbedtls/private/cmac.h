@@ -12,8 +12,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CMAC_H
-#define MBEDTLS_CMAC_H
+#ifndef PSA_CRYPTO_MBEDTLS_PRIVATE_CMAC_H
+#define PSA_CRYPTO_MBEDTLS_PRIVATE_CMAC_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -224,4 +224,4 @@ int mbedtls_cmac_self_test(int verbose);
 }
 #endif
 
-#endif /* MBEDTLS_CMAC_H */
+#endif /* PSA_CRYPTO_MBEDTLS_PRIVATE_CMAC_H */

@@ -11,8 +11,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_HMAC_DRBG_H
-#define MBEDTLS_HMAC_DRBG_H
+#ifndef PSA_CRYPTO_MBEDTLS_PRIVATE_HMAC_DRBG_H
+#define PSA_CRYPTO_MBEDTLS_PRIVATE_HMAC_DRBG_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -431,4 +431,4 @@ int mbedtls_hmac_drbg_self_test(int verbose);
 }
 #endif
 
-#endif /* hmac_drbg.h */
+#endif /* PSA_CRYPTO_MBEDTLS_PRIVATE_HMAC_DRBG_H */
