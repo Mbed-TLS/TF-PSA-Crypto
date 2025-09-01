@@ -2163,7 +2163,7 @@
  * Module:  library/hmac_drbg.c
  * Caller:
  *
- * Requires: MBEDTLS_MD_C, PSA_WANT_ALG_SHA_256 or PSA_WANT_ALG_SHA_512
+ * Requires: MBEDTLS_MD_C
  *
  * Uncomment to enable the HMAC_DRBG random number generator.
  */

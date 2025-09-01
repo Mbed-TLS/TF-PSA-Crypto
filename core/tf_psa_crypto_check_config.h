@@ -252,9 +252,7 @@
 #error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_HMAC_DRBG_C) && \
-    (!defined(MBEDTLS_MD_C) || \
-     !(defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA_512)))
+#if defined(MBEDTLS_HMAC_DRBG_C) && !defined(MBEDTLS_MD_C)
 #error "MBEDTLS_HMAC_DRBG_C defined, but not all prerequisites"
 #endif
 
