@@ -20,6 +20,17 @@
 
 #include "psa/crypto.h"
 
+typedef enum {
+    MBEDTLS_PK_RS_OP_VERIFY,
+    MBEDTLS_PK_RS_OP_SIGN,
+} mbedtls_pk_rs_op_t;
+
+typedef struct {
+    mbedtls_pk_rs_op_t op_type;
+    void *op;
+    mbedtls_svc_key_id_t pub_id;
+} mbedtls_pk_psa_restartable_ctx_t;
+
 struct mbedtls_pk_info_t {
     /** Public key type */
     mbedtls_pk_type_t type;
