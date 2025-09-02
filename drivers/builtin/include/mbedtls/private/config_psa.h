@@ -18,8 +18,6 @@
 #ifndef MBEDTLS_CONFIG_PSA_H
 #define MBEDTLS_CONFIG_PSA_H
 
-#include "psa/crypto_legacy.h"
-
 #include "psa/crypto_adjust_config_synonyms.h"
 
 #include "psa/crypto_adjust_config_dependencies.h"
