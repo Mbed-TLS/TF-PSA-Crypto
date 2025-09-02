@@ -40,6 +40,10 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
 
 #include "mbedtls/private/ctr_drbg.h"
 
+#if MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > PSA_BYTES_TO_BITS(MBEDTLS_CTR_DRBG_KEYSIZE)
+#error "The CTR_DRBG key size (in bits) must be at least MBEDTLS_PSA_CRYPTO_RNG_STRENGTH"
+#endif
+
 #undef MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
 
 #elif defined(MBEDTLS_HMAC_DRBG_C)
