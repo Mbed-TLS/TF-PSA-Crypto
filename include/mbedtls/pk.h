@@ -294,7 +294,7 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  *     * verify, verify_ext, sign, sign_ext: ECDSA.
  * * RSA:
  *     * sign: use the primary algorithm in the wrapped PSA key;
- *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_RSASSA_PSS, otherwise
+ *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_SIGALG_RSA_PSS, otherwise
  *       it falls back to the sign() case;
  *     * verify, verify_ext: not supported.
  *
@@ -398,15 +398,15 @@ size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
  *                    possibly other permissions as documented for the
  *                    \p usage parameter.
  *                    The permitted algorithm policy is determined as follows
- *                    based on the #mbedtls_pk_type_t type of \p pk,
+ *                    based on the #mbedtls_pk_sigalg_t type of \p pk,
  *                    the chosen \p usage and other factors:
- *                      - #MBEDTLS_PK_RSA whose underlying
+ *                      - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 whose underlying
  *                        context uses the PKCS#1 v1.5 padding mode:
  *                        #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH)
  *                        if \p usage is SIGN/VERIFY, and
  *                        #PSA_ALG_RSA_PKCS1V15_CRYPT
  *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_RSA whose underlying
+ *                      - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 whose underlying
  *                        context uses the PKCS#1 v2.1 padding mode
  *                        and the digest type corresponding to the PSA
  *                        algorithm \c hash:
@@ -488,7 +488,7 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  - must be an RSA or EC key pair or public key (FFDH is not supported in PK).
  *
  *                  The resulting PK object will be a transparent type:
- *                  - #MBEDTLS_PK_RSA for RSA keys or
+ *                  - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 for RSA keys or
  *                  - #MBEDTLS_PK_ECKEY for EC keys.
  *
  *                  Once this functions returns the PK object will be completely
@@ -521,7 +521,7 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  The key must be an RSA or ECC key. It can be either a
  *                  public key or a key pair, and only the public key is copied.
  *                  The resulting PK object will be a transparent type:
- *                  - #MBEDTLS_PK_RSA for RSA keys or
+ *                  - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 for RSA keys or
  *                  - #MBEDTLS_PK_ECKEY for EC keys.
  *
  *                  Once this functions returns the PK object will be completely
@@ -557,7 +557,7 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  * \param sig       Signature to verify
  * \param sig_len   Signature length
  *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
+ * \note            For keys of type #MBEDTLS_PK_SIGALG_RSA_PKCS1V15, the signature algorithm is
  *                  either PKCS#1 v1.5 or PSS (accepting any salt length),
  *                  depending on the padding mode in the underlying RSA context.
  *                  For a pk object constructed by parsing, this is PKCS#1 v1.5
@@ -622,7 +622,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  *                  is used instead, or an error returned if it is invalid.
  *
  * \note            \p options parameter is kept for backward compatibility.
- *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
+ *                  If key type is different from MBEDTLS_PK_SIGALG_RSA_PSS it must
  *                  be NULL, otherwise it's just ignored.
  */
 int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
@@ -647,7 +647,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
  *
- * \note            For keys of type #MBEDTLS_PK_RSA, the signature algorithm is
+ * \note            For keys of type #MBEDTLS_PK_SIGALG_RSA_PKCS1V15, the signature algorithm is
  *                  either PKCS#1 v1.5 or PSS (using the largest possible salt
  *                  length up to the hash length), depending on the padding mode
  *                  in the underlying RSA context. For a pk object constructed
@@ -682,7 +682,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \return          0 on success, or a specific error code.
  *
- * \note            When \p pk_type is #MBEDTLS_PK_RSASSA_PSS,
+ * \note            When \p pk_type is #MBEDTLS_PK_SIGALG_RSA_PSS,
  *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
  *
  */
