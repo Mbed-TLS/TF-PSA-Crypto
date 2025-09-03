@@ -485,10 +485,6 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  - must be exportable and
  *                  - must be an RSA or EC key pair or public key (FFDH is not supported in PK).
  *
- *                  The resulting PK object will be a transparent type:
- *                  - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 for RSA keys or
- *                  - #MBEDTLS_PK_ECKEY for EC keys.
- *
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
@@ -518,9 +514,6 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *
  *                  The key must be an RSA or ECC key. It can be either a
  *                  public key or a key pair, and only the public key is copied.
- *                  The resulting PK object will be a transparent type:
- *                  - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 for RSA keys or
- *                  - #MBEDTLS_PK_ECKEY for EC keys.
  *
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
