@@ -406,7 +406,21 @@
 /**
  * \def MBEDTLS_THREADING_ALT
  *
- * Provide your own alternate threading implementation.
+ * Provide your own alternate implementation of threading primitives:
+ * mutexes and condition variables. If you enable this option:
+ *
+ * - Provide a header file `"threading_alt.h"`, defining the following
+ *  elements:
+ *     - The type `mbedtls_platform_mutex_t` of mutex objects.
+ *     - The type `mbedtls_platform_condition_variable_t` of
+ *       condition variable objects.
+ *
+ * - Call the function mbedtls_threading_set_alt() in your application
+ *   before calling any other library function (in particular before
+ *   calling psa_crypto_init()).
+ *
+ * See mbedtls/threading.h for more details, especially the documentation
+ * of mbedtls_threading_set_alt().
  *
  * Requires: MBEDTLS_THREADING_C
  *
@@ -438,11 +452,11 @@
  *
  * Module:  library/threading.c
  *
- * This allows different threading implementations (self-implemented or
- * provided).
+ * This allows different threading implementations (built-in or
+ * provided externally).
  *
- * You will have to enable either MBEDTLS_THREADING_ALT or
- * MBEDTLS_THREADING_PTHREAD.
+ * You will have to enable either #MBEDTLS_THREADING_ALT or
+ * #MBEDTLS_THREADING_PTHREAD.
  *
  * Enable this layer to allow use of mutexes within Mbed TLS
  */

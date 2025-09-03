@@ -1,7 +1,8 @@
 /**
  * \file threading_internal.h
  *
- * \brief Threading interfaces used by the test framework
+ * \brief Threading interfaces used internally in the library and
+ *        by the test framework.
  */
 /*
  *  Copyright The Mbed TLS Contributors

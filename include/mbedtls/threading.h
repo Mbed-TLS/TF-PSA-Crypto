@@ -67,10 +67,12 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *                  thread that locked it, and will never lock a mutex
  *                  in a thread that has already locked it.
  *
- * \param mutex_init    the init function implementation
- * \param mutex_free    the free function implementation
- * \param mutex_lock    the lock function implementation
- * \param mutex_unlock  the unlock function implementation
+ * \note            Spurious wakeups on condition variables are permitted.
+ *
+ * \param mutex_init    The mutex init function implementation.
+ * \param mutex_free    The mutex destroy function implementation.
+ * \param mutex_lock    The mutex lock function implementation.
+ * \param mutex_unlock  The mutex unlock function implementation.
  * \param cond_init     The condition variable initialization implementation.
  * \param cond_destroy  The condition variable destroy implementation.
  * \param cond_signal   The condition variable signal implementation.
@@ -245,7 +247,7 @@ int mbedtls_condition_variable_init(
 void mbedtls_condition_variable_free(
     mbedtls_threading_condition_variable_t *cond);
 
-/** Raise a signal a condition variable to wake up one thread.
+/** Wake up one thread that is waiting on the given condition variable.
  *
  * Do nothing, successfully, if no thread is waiting.
  *
@@ -271,7 +273,7 @@ void mbedtls_condition_variable_free(
 int mbedtls_condition_variable_signal(
     mbedtls_threading_condition_variable_t *cond);
 
-/** Raise a signal a condition variable to wake up all waiting threads.
+/** Wake up all threads that are waiting on the given condition variable.
  *
  * \note            The behavior is undefined if:
  *                  - \p cond has not been initialized with
@@ -295,10 +297,17 @@ int mbedtls_condition_variable_signal(
 int mbedtls_condition_variable_broadcast(
     mbedtls_threading_condition_variable_t *cond);
 
-/** Wait for a signal on a condition variable.
+/** Wait for a wakeup signal on a condition variable.
  *
- * When this function is called, it atomically unlocks \p mutex.
- * On waking up, it atomically locks \p mutex.
+ * On entry, this function atomically unlocks \p mutex and blocks until
+ * another thread calls mbedtls_condition_variable_signal() or
+ * mbedtls_condition_variable_broadcast() on \p cond.
+ *
+ * Before returning, this function locks \p mutex.
+ *
+ * \note            On some platforms, it is possible for this function
+ *                  to stop blocking even if no signal is raised on \p cond
+ *                  (spurious wakeup).
  *
  * \note            The behavior is undefined if:
  *                  - \p mutex has not been initialized with
