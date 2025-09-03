@@ -138,6 +138,19 @@ typedef struct mbedtls_psa_stats_s {
  */
 void mbedtls_psa_get_stats(mbedtls_psa_stats_t *stats);
 
+/** \addtogroup policy Key policies
+ * @{
+ */
+
+/** Whether the key pair or public key can be used as the public side in a
+ * key agreement
+ *
+ * \warning This is temporary until PSA Crypto API officially supports it.
+ */
+#define PSA_KEY_USAGE_DERIVE_PUBLIC         ((psa_key_usage_t) 0x00800000)
+
+/**@}*/
+
 /** \addtogroup crypto_types
  * @{
  */
