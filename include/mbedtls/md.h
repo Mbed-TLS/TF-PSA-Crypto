@@ -337,6 +337,8 @@ MBEDTLS_CHECK_RETURN_TYPICAL
 int mbedtls_md(const mbedtls_md_info_t *md_info, const unsigned char *input, size_t ilen,
                unsigned char *output);
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
 /**
  * \brief           This function returns the list of digests supported by the
  *                  generic digest module.
@@ -518,6 +520,8 @@ MBEDTLS_CHECK_RETURN_TYPICAL
 int mbedtls_md_hmac(const mbedtls_md_info_t *md_info, const unsigned char *key, size_t keylen,
                     const unsigned char *input, size_t ilen,
                     unsigned char *output);
+
+#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 #ifdef __cplusplus
 }
