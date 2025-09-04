@@ -153,23 +153,39 @@ int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fa
 
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
 {
+    /* Although double init is documented as undefined behavior,
+     * be nice and make it a no-op. (Not an error because for
+     * historical reasons, this function returns void.) */
+    if (mutex->initialized) {
+        return;
+    }
+
     int ret = (*mbedtls_mutex_init_ptr)(&mutex->mutex);
     mutex->initialized = (ret == 0);
 }
 
 void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
 {
+    if (!mutex->initialized) {
+        return;
+    }
     (*mbedtls_mutex_free_ptr)(&mutex->mutex);
     mutex->initialized = 0;
 }
 
 int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex)
 {
+    if (!mutex->initialized) {
+        return MBEDTLS_ERR_THREADING_USAGE_ERROR;
+    }
     return (*mbedtls_mutex_lock_ptr)(&mutex->mutex);
 }
 
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
 {
+    if (!mutex->initialized) {
+        return MBEDTLS_ERR_THREADING_USAGE_ERROR;
+    }
     return (*mbedtls_mutex_unlock_ptr)(&mutex->mutex);
 }
 

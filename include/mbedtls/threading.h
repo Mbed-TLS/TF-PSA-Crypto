@@ -144,11 +144,14 @@ void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex);
  * again on \p mutex.
  *
  * \note            The behavior is undefined if:
- *                  - \p mutex has not been initialized with
- *                    mbedtls_mutex_init();
  *                  - this function is called concurrently on the same
  *                    object from multiple threads;
  *                  - \p mutex is locked.
+ *
+ * \note            This function does nothing if:
+ *                  - \p mutex is all-bits-zero or `{0}`.
+ *                  - The last function called on \p mutex is
+ *                    mbedtls_mutex_free() (i.e. a double free is safe).
  *
  * \param mutex     The mutex to destroy.
  */

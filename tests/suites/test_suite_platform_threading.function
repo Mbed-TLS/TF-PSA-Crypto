@@ -32,6 +32,38 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void mutex_usage_no_init()
+{
+    mbedtls_threading_mutex_t mutex;
+    memset(&mutex, 0, sizeof(mutex));
+
+    TEST_EQUAL(mbedtls_mutex_lock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    TEST_EQUAL(mbedtls_mutex_unlock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    mbedtls_mutex_free(&mutex);
+
+exit:
+    mbedtls_mutex_free(&mutex);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mutex_usage_double_free()
+{
+    mbedtls_threading_mutex_t mutex;
+
+    mbedtls_mutex_init(&mutex);
+    mbedtls_mutex_free(&mutex);
+
+    TEST_EQUAL(mbedtls_mutex_lock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    TEST_EQUAL(mbedtls_mutex_unlock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    mbedtls_mutex_free(&mutex);
+
+exit:
+    mbedtls_mutex_free(&mutex);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 /* There is no single-threaded test for wait() on a condition variable
  * because that can't work: wait() blocks until another thread signals,
  * so a minimum of two threads are necessary. */
