@@ -414,17 +414,9 @@ size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
  *                        if \p usage is SIGN/VERIFY, and
  *                        #PSA_ALG_RSA_OAEP(\c hash)
  *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_SIGALG_ECDSA or #MBEDTLS_PK_ECKEY
+ *                      - #MBEDTLS_PK_SIGALG_ECDSA
  *                        if \p usage is SIGN/VERIFY:
  *                        #MBEDTLS_PK_ALG_ECDSA.
- *                      - #MBEDTLS_PK_ECKEY_DH or #MBEDTLS_PK_ECKEY
- *                        if \p usage is DERIVE:
- *                        #PSA_ALG_ECDH.
- *                        sign flags are removed if the type is
- *                        set to a public key type.
- *                        The underlying key must allow \p usage.
- *                        Note that the enrollment algorithm set with
- *                        psa_set_key_enrollment_algorithm() is not copied.
  *
  * \return          0 on success.
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if \p pk does not contain
