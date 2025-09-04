@@ -35,6 +35,11 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
                       (MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_512),
                       "Invalid hashing algorithm for MBEDTLS_PSA_CRYPTO_RNG_HASH");
 
+MBEDTLS_STATIC_ASSERT(PSA_BYTES_TO_BITS(PSA_HASH_LENGTH(
+                                            MBEDTLS_PSA_CRYPTO_RNG_HASH))
+                      >= MBEDTLS_PSA_CRYPTO_RNG_STRENGTH,
+                      "The hash size (in bits) of MBEDTLS_PSA_CRYPTO_RNG_HASH must be at least MBEDTLS_PSA_CRYPTO_RNG_STRENGTH");
+
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_CTR_DRBG_C)
 
@@ -55,11 +60,6 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
 
 #include "mbedtls/private/hmac_drbg.h"
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_ENTROPY_MD
-
-MBEDTLS_STATIC_ASSERT(PSA_BYTES_TO_BITS(PSA_HASH_LENGTH(
-                                            MBEDTLS_PSA_CRYPTO_RNG_HASH))
-                      >= MBEDTLS_PSA_CRYPTO_RNG_STRENGTH,
-                      "The hash size (in bits) of MBEDTLS_PSA_CRYPTO_RNG_HASH must be at least MBEDTLS_PSA_CRYPTO_RNG_STRENGTH");
 
 #else /* !MBEDTLS_CTR_DRBG_C && !MBEDTLS_HMAC_DRBG_C*/
 
@@ -128,16 +128,17 @@ static inline int mbedtls_psa_drbg_seed(mbedtls_psa_drbg_context_t *drbg_ctx,
                                         mbedtls_entropy_context *entropy,
                                         const unsigned char *custom, size_t len)
 {
+    if (PSA_BYTES_TO_BITS(PSA_HASH_LENGTH(MBEDTLS_PSA_CRYPTO_RNG_HASH)) <
+        MBEDTLS_PSA_CRYPTO_RNG_STRENGTH) {
+        /* MBEDTLS_PSA_CRYPTO_RNG_HASH size (in bits) must be at least
+         * MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
+         */
+        return MBEDTLS_ERR_ERROR_GENERIC_ERROR;
+    }
 #if defined(MBEDTLS_CTR_DRBG_C)
     return mbedtls_ctr_drbg_seed(drbg_ctx, mbedtls_entropy_func, entropy, custom, len);
 #elif defined(MBEDTLS_HMAC_DRBG_C)
     const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE);
-    if ((PSA_HASH_LENGTH(MBEDTLS_PSA_CRYPTO_RNG_HASH)*8) < MBEDTLS_PSA_CRYPTO_RNG_STRENGTH) {
-        /* For HMAC_DRBG, MBEDTLS_PSA_CRYPTO_RNG_HASH size (in bits) must be
-         * at least MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
-         */
-        return MBEDTLS_ERR_ERROR_GENERIC_ERROR;
-    }
     return mbedtls_hmac_drbg_seed(drbg_ctx, md_info, mbedtls_entropy_func, entropy, custom, len);
 #endif /* MBEDTLS_HMAC_DRBG_C */
 }
