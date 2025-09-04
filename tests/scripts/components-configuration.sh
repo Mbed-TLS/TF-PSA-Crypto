@@ -10,9 +10,9 @@
 test_with_valgrind () {
     for data_file in "$@"; do
         suite="${data_file##*/}"; suite="${suite%.data}"
-        exe="tests/$suite"
-        log_file="tests/MemoryChecker.$suite.log"
-        make -C tests "$suite"
+        exe="$OUT_OF_SOURCE_DIR/tests/$suite"
+        log_file="$OUT_OF_SOURCE_DIR/tests/MemoryChecker.$suite.log"
+        make -C "$OUT_OF_SOURCE_DIR" "$suite"
         valgrind -q --tool=memcheck --track-origins=yes --log-file="$log_file" "$exe"
         not grep . -- "$log_file"
     done
@@ -176,7 +176,9 @@ component_tf_psa_crypto_test_memory_buffer_allocator () {
 component_test_default_valgrind_cf () {
     msg "build: default config, constant flow with Valgrind"
     scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
-    make lib
+
+    cmake -DCMAKE_BUILD_TYPE:String=Release -B "$OUT_OF_SOURCE_DIR"
+    make -C "$OUT_OF_SOURCE_DIR" tfpsacrypto
 
     msg "test: default config, constant flow with Valgrind, selected suites"
     test_with_valgrind_constant_time tests/suites/*constant_time*.data
@@ -187,7 +189,9 @@ component_test_psa_assume_exclusive_buffers_valgrind_cf () {
     scripts/config.py full
     scripts/config.py set MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
     scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
-    make lib
+
+    cmake -DCMAKE_BUILD_TYPE:String=Release -B "$OUT_OF_SOURCE_DIR"
+    make -C "$OUT_OF_SOURCE_DIR" tfpsacrypto
 
     msg "test: full config + MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS, constant flow with Valgrind, selected suites"
     test_with_valgrind_constant_time tests/suites/*constant_time*.data
