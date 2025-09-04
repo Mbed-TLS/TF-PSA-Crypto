@@ -31,5 +31,17 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
         self.good_case('',
                        '#error "mbedtls_config.h was read"')
 
+    def test_crypto_nv_seed_only(self) -> None:
+        """An error expected from tf_psa_crypto_check_config.h with an
+        NV-seed-only configuration but MBEDTLS_ENTROPY_NO_SOURCES_OK not
+        defined.
+        """
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+                      #define MBEDTLS_ENTROPY_NV_SEED
+                      #undef MBEDTLS_ENTROPY_NO_SOURCES_OK
+                      ''',
+                      error=(r'Entropy module enabled \(MBEDTLS_ENTROPY_C\), but no true sources'))
+
 if __name__ == '__main__':
     unittest.main()
