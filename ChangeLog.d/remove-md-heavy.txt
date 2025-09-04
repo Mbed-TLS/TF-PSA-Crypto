@@ -1,0 +1,18 @@
+Removals
+   * The following functions have been removed from the MD module: 
+         mbedtls_md_list()
+         mbedtls_md_info_from_string()
+         mbedtls_md_get_name()
+         mbedtls_md_info_from_ctx()
+         mbedtls_md_file()
+         mbedtls_md_hmac_starts()
+         mbedtls_md_hmac_update()
+         mbedtls_md_hmac_finish()
+         mbedtls_md_hmac_reset()
+         mbedtls_md_hmac()
+     To use HMAC, please use the psa_mac_ API. Getting string metadata for
+     hash algorithms is no longer supported.
+API changes
+   * The hmac parameter of the mbedtls_md_setup() function must now always be
+     set to 0 as HMAC is no longer supported by MD. To use HMAC, please use
+     the psa_mac_ API.
