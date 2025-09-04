@@ -1375,7 +1375,7 @@
  *
  * \note Valid values: 128 or default of 256.
  */
-#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH                 256
+//#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH               256
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_RNG_HASH
