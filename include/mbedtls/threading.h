@@ -58,11 +58,6 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *                  (including deadlocks and crashes) if detecting usage errors
  *                  is not practical on your platform.
  *
- * \note            mutex_init() and mutex_free() don't return a status code.
- *                  If mutex_init() fails, it should leave its argument (the
- *                  mutex) in a state such that mutex_lock() will fail when
- *                  called with this argument.
- *
  * \note            The library will always unlock a mutex from the same
  *                  thread that locked it, and will never lock a mutex
  *                  in a thread that has already locked it.
@@ -80,7 +75,7 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  * \param cond_wait     The condition variable wait implementation.
  */
 void mbedtls_threading_set_alt(
-    void (*mutex_init)(mbedtls_platform_mutex_t *),
+    int (*mutex_init)(mbedtls_platform_mutex_t *),
     void (*mutex_free)(mbedtls_platform_mutex_t *),
     int (*mutex_lock)(mbedtls_platform_mutex_t *),
     int (*mutex_unlock)(mbedtls_platform_mutex_t *),
@@ -99,6 +94,19 @@ void mbedtls_threading_free_alt(void);
 
 typedef struct mbedtls_threading_mutex_t {
     mbedtls_platform_mutex_t MBEDTLS_PRIVATE(mutex);
+
+    /* Whether the mutex has been initialized successfully.
+     *
+     * Attempting to lock or destroy a platform mutex that hasn't been
+     * successfully initialized can cause a crash or other undefined
+     * behavior on some platforms. Keeping track of a successful
+     * initialization makes it possible to turn such misuse into
+     * a predictable error. This is especially useful because
+     * mbedtls_mutex_init() doesn't return an error code, for
+     * historical reasons, so the application cannot handle such
+     * failures by itself.
+     */
+    char MBEDTLS_PRIVATE(initialized);
 
     /* WARNING - state should only be accessed when holding the mutex lock in
      * framework/tests/src/threading_helpers.c, otherwise corruption can occur.
