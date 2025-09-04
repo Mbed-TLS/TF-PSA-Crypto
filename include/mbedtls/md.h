@@ -187,6 +187,9 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx);
  *                  to use.
  * \param hmac      Defines if HMAC is used. 0: HMAC is not used (saves some memory),
  *                  or non-zero: HMAC is used with this context.
+ * \note            From TF-PSA-Crypto 1.0 and Mbed TLS 4.0 onwards, \p hmac MUST be
+ *                  set to 0. HMAC operations are no longer supported via MD and
+ *                  may only be performed via the psa_mac_ API.
  *
  * \return          \c 0 on success.
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
