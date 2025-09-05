@@ -153,13 +153,6 @@ int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fa
 
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
 {
-    /* Although double init is documented as undefined behavior,
-     * be nice and make it a no-op. (Not an error because for
-     * historical reasons, this function returns void.) */
-    if (mutex->initialized) {
-        return;
-    }
-
     int ret = (*mbedtls_mutex_init_ptr)(&mutex->mutex);
     mutex->initialized = (ret == 0);
 }
