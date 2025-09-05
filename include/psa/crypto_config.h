@@ -937,13 +937,6 @@
  * This section sets PSA specific settings.
  * \{
  */
-
-/* Temporary alias of MBEDTLS_PSA_DRIVER_GET_ENTROPY with incompatible
- * behavior. We only keep this until the Mbed TLS scripts are updated.
- * https://github.com/Mbed-TLS/mbedtls/issues/10300
- */
-//#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
-
 /**
  * \def MBEDTLS_ENTROPY_NO_SOURCES_OK
  *
