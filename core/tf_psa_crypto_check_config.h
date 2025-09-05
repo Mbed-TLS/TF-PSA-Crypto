@@ -602,12 +602,10 @@
 #error "MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY defined on non-Aarch64 system"
 #endif
 
-/*
 #if defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT) && \
     defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY)
 #error "Must only define one of MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_*"
 #endif
-*/
 
 #if defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY)
@@ -617,11 +615,9 @@
 
 #endif
 
-/*
 #if defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY) && !defined(MBEDTLS_ARCH_IS_ARMV8_A)
 #error "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY defined on non-Armv8-A system"
 #endif
-*/
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #if !defined(MBEDTLS_THREADING_C) || defined(MBEDTLS_THREADING_IMPL)
