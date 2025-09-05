@@ -177,8 +177,10 @@ component_test_default_valgrind_cf () {
     msg "build: default config, constant flow with Valgrind"
     scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
 
-    cmake -DCMAKE_BUILD_TYPE:String=Release -B "$OUT_OF_SOURCE_DIR"
-    make -C "$OUT_OF_SOURCE_DIR" tfpsacrypto
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DCMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    make tfpsacrypto
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
 
     msg "test: default config, constant flow with Valgrind, selected suites"
     test_with_valgrind_constant_time tests/suites/*constant_time*.data
@@ -190,8 +192,10 @@ component_test_psa_assume_exclusive_buffers_valgrind_cf () {
     scripts/config.py set MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
     scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
 
-    cmake -DCMAKE_BUILD_TYPE:String=Release -B "$OUT_OF_SOURCE_DIR"
-    make -C "$OUT_OF_SOURCE_DIR" tfpsacrypto
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DCMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    make tfpsacrypto
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
 
     msg "test: full config + MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS, constant flow with Valgrind, selected suites"
     test_with_valgrind_constant_time tests/suites/*constant_time*.data
