@@ -349,6 +349,15 @@
  */
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
 
+/**
+ * \def MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *
+ * Minimum security strength (in bits) of the PSA RNG.
+ *
+ * \note Valid values: 128 or default of 256.
+ */
+#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH               128
+
 /** \} name SECTION: PSA core */
 
 /**

@@ -40,6 +40,11 @@ MBEDTLS_STATIC_ASSERT((MBEDTLS_PSA_CRYPTO_RNG_HASH == PSA_ALG_SHA_256) || \
 
 #include "mbedtls/private/ctr_drbg.h"
 
+#if (MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > 128) && \
+    defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#error "CTR_DRBG cannot meet the configured RNG strength using only 128-bit AES keys."
+#endif
+
 #if MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > PSA_BYTES_TO_BITS(MBEDTLS_CTR_DRBG_KEYSIZE)
 #error "The CTR_DRBG key size (in bits) must be at least MBEDTLS_PSA_CRYPTO_RNG_STRENGTH"
 #endif
