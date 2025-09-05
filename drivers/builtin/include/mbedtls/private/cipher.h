@@ -853,8 +853,9 @@ int mbedtls_cipher_set_padding_mode(mbedtls_cipher_context_t *ctx,
  * \note            Some ciphers do not use IVs nor nonce. For these
  *                  ciphers, this function has no effect.
  *
- * \note            For #MBEDTLS_CIPHER_CHACHA20, the nonce length must
- *                  be 12, and the initial counter value is 0.
+ * \note            For #MBEDTLS_CIPHER_CHACHA20, @p iv_len must be either:
+ *                  - 12 bytes: nonce only, initial counter = 0 (default).
+ *                  - 16 bytes: 4-byte counter(little-endian) + 12-byte nonce.
  *
  * \note            For #MBEDTLS_CIPHER_CHACHA20_POLY1305, the nonce length
  *                  must be 12.

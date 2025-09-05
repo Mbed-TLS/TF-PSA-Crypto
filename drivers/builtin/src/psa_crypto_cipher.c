@@ -380,8 +380,25 @@ psa_status_t mbedtls_psa_cipher_set_iv(
     mbedtls_psa_cipher_operation_t *operation,
     const uint8_t *iv, size_t iv_length)
 {
-    if (iv_length != operation->iv_length) {
-        return PSA_ERROR_INVALID_ARGUMENT;
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_STREAM_CIPHER) && \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_CHACHA20)
+    if (operation->alg == PSA_ALG_STREAM_CIPHER) {
+        /* ChaCha20 allows a 12-byte nonce or a 16-byte value consisting of
+         * a 4-byte counter followed by a 12-byte nonce.
+         * So the IV length must be either 12 or 16 bytes. */
+        if (((mbedtls_cipher_type_t)
+            (&operation->ctx.cipher)->cipher_info->type) == MBEDTLS_CIPHER_CHACHA20) {
+            if (iv_length != 12 && iv_length != 16) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+        }
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_STREAM_CIPHER &&
+          MBEDTLS_PSA_BUILTIN_KEY_TYPE_CHACHA20 */
+    {
+        if (iv_length != operation->iv_length) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
     }
 
     return mbedtls_to_psa_error(

@@ -525,9 +525,8 @@
  * \note For ChaCha20 and ChaCha20_Poly1305, Mbed TLS only supports
  *       12-byte nonces.
  *
- * \note For ChaCha20, the initial counter value is 0. To encrypt or decrypt
- *       with the initial counter value 1, you can process and discard a
- *       64-byte block before the real data.
+ * \note For ChaCha20, the initial counter value is 0. To set custom counter value,
+ *       provide a 16-byte IV (4-byte little-endian counter + 12-byte nonce).
  */
 #define PSA_KEY_TYPE_CHACHA20                       ((psa_key_type_t) 0x2004)
 
