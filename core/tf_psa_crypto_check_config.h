@@ -219,6 +219,11 @@
 #error "Entropy module enabled but neither SHA-256 nor SHA-512 is available"
 #endif
 
+#if (MBEDTLS_PSA_CRYPTO_RNG_STRENGTH != 128) && \
+    (MBEDTLS_PSA_CRYPTO_RNG_STRENGTH != 256)
+#error "MBEDTLS_PSA_CRYPTO_RNG_STRENGTH must be 128 or 256"
+#endif
+
 #if defined(__has_feature)
 #if __has_feature(memory_sanitizer)
 #define MBEDTLS_HAS_MEMSAN // #undef at the end of this paragraph
