@@ -64,19 +64,48 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *
  * \note            Spurious wakeups on condition variables are permitted.
  *
- * \param mutex_init    The mutex init function implementation.
- * \param mutex_free    The mutex destroy function implementation.
- * \param mutex_lock    The mutex lock function implementation.
- * \param mutex_unlock  The mutex unlock function implementation.
- * \param cond_init     The condition variable initialization implementation.
- * \param cond_destroy  The condition variable destroy implementation.
- * \param cond_signal   The condition variable signal implementation.
- * \param cond_broadcast The condition variable broadcast implementation.
- * \param cond_wait     The condition variable wait implementation.
+ * \param mutex_init    The mutex init function implementation. <br>
+ *                      The behavior is undefined if the mutex is already
+ *                      initialized and has not been destroyed.
+ * \param mutex_destroy The mutex destroy function implementation. <br>
+ *                      This function must free any resources associated
+ *                      with the mutex object. <br>
+ *                      The behavior is undefined if the mutex was not
+ *                      initialized, if it has already been destroyed,
+ *                      if it is currently locked, or if this function
+ *                      is called concurrently from multiple threads.
+ * \param mutex_lock    The mutex lock function implementation. <br>
+ *                      The behavior is undefined if the mutex was not
+ *                      initialized, if it has already been destroyed, or if
+ *                      it is currently locked by the calling thread.
+ * \param mutex_unlock  The mutex unlock function implementation. <br>
+ *                      The behavior is undefined if the mutex is not
+ *                      currently locked by the calling thread.
+ * \param cond_init     The condition variable initialization implementation. <br>
+ *                      The behavior is undefined if the variable is already
+ *                      initialized.
+ * \param cond_destroy  The condition variable destroy implementation. <br>
+ *                      This function must free any resources associated
+ *                      with the condition variable object. <br>
+ *                      The behavior is undefined if the condition variable
+ *                      was not initialized, if it has already been destroyed,
+ *                      if a thread is waiting on it, or if this function
+ *                      is called concurrently from multiple threads.
+ * \param cond_signal   The condition variable signal implementation. <br>
+ *                      The behavior is undefined if the condition variable
+ *                      was not initialized or if it has already been destroyed.
+ * \param cond_broadcast The condition variable broadcast implementation. <br>
+ *                      The behavior is undefined if the condition variable
+ *                      was not initialized or if it has already been destroyed.
+ * \param cond_wait     The condition variable wait implementation. <br>
+ *                      The behavior is undefined if the the mutex or the
+ *                      condition variable are not both initialized,
+ *                      if one of them has already been destroyed, or if the
+ *                      mutex is not currently locked by the calling thread.
  */
 void mbedtls_threading_set_alt(
     int (*mutex_init)(mbedtls_platform_mutex_t *),
-    void (*mutex_free)(mbedtls_platform_mutex_t *),
+    void (*mutex_destroy)(mbedtls_platform_mutex_t *),
     int (*mutex_lock)(mbedtls_platform_mutex_t *),
     int (*mutex_unlock)(mbedtls_platform_mutex_t *),
     int (*cond_init)(mbedtls_platform_condition_variable_t *),
@@ -122,6 +151,9 @@ typedef struct mbedtls_threading_condition_variable_t {
 } mbedtls_threading_condition_variable_t;
 
 /** Initialize a mutex (mutual exclusion lock).
+ *
+ * You must call this function on a mutex object before using it for any
+ * purpose.
  *
  * \note            This function may fail internally, but for historical
  *                  reasons, it does not return a value. If the mutex

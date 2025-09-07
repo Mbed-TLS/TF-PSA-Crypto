@@ -68,7 +68,7 @@ static int threading_mutex_init_pthread(mbedtls_platform_mutex_t *mutex)
     return err_from_posix(posix_ret);
 }
 
-static void threading_mutex_free_pthread(mbedtls_platform_mutex_t *mutex)
+static void threading_mutex_destroy_pthread(mbedtls_platform_mutex_t *mutex)
 {
     (void) pthread_mutex_destroy(mutex);
 }
@@ -86,7 +86,7 @@ static int threading_mutex_unlock_pthread(mbedtls_platform_mutex_t *mutex)
 }
 
 int (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_init_pthread;
-void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_free_pthread;
+void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_destroy_pthread;
 int (*mbedtls_mutex_lock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_lock_pthread;
 int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_unlock_pthread;
 
@@ -248,7 +248,7 @@ int mbedtls_condition_variable_wait(
  */
 void mbedtls_threading_set_alt(
     int (*mutex_init)(mbedtls_platform_mutex_t *),
-    void (*mutex_free)(mbedtls_platform_mutex_t *),
+    void (*mutex_destroy)(mbedtls_platform_mutex_t *),
     int (*mutex_lock)(mbedtls_platform_mutex_t *),
     int (*mutex_unlock)(mbedtls_platform_mutex_t *),
     int (*cond_init)(mbedtls_platform_condition_variable_t *),
@@ -259,7 +259,7 @@ void mbedtls_threading_set_alt(
                      mbedtls_platform_mutex_t *))
 {
     mbedtls_mutex_init_ptr = mutex_init;
-    mbedtls_mutex_free_ptr = mutex_free;
+    mbedtls_mutex_free_ptr = mutex_destroy;
     mbedtls_mutex_lock_ptr = mutex_lock;
     mbedtls_mutex_unlock_ptr = mutex_unlock;
     cond_init_ptr = cond_init;
