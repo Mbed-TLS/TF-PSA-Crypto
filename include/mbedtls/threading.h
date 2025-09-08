@@ -66,7 +66,8 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *
  * \param mutex_init    The mutex init function implementation. <br>
  *                      The behavior is undefined if the mutex is already
- *                      initialized and has not been destroyed.
+ *                      initialized and has not been destroyed, or if this
+ *                      function is called concurrently from multiple threads.
  * \param mutex_destroy The mutex destroy function implementation. <br>
  *                      This function must free any resources associated
  *                      with the mutex object. <br>
@@ -83,7 +84,8 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *                      currently locked by the calling thread.
  * \param cond_init     The condition variable initialization implementation. <br>
  *                      The behavior is undefined if the variable is already
- *                      initialized.
+ *                      initialized, if it has been destroyed, or if this
+ *                      function is called concurrently from multiple threads.
  * \param cond_destroy  The condition variable destroy implementation. <br>
  *                      This function must free any resources associated
  *                      with the condition variable object. <br>
@@ -98,8 +100,8 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *                      The behavior is undefined if the condition variable
  *                      was not initialized or if it has already been destroyed.
  * \param cond_wait     The condition variable wait implementation. <br>
- *                      The behavior is undefined if the the mutex or the
- *                      condition variable are not both initialized,
+ *                      The behavior is undefined if the mutex and the
+ *                      condition variable have not both been initialized,
  *                      if one of them has already been destroyed, or if the
  *                      mutex is not currently locked by the calling thread.
  */
@@ -161,10 +163,10 @@ typedef struct mbedtls_threading_condition_variable_t {
  *                  will still work normally, and all other mutex functions
  *                  will fail safely with a nonzero return code.
  *
- * \note            The behavior is undefined if
- *                  \p mutex is already initialized, or
- *                  if this function is called concurrently on the same
- *                  object from multiple threads.
+ * \note            The behavior is undefined if:
+ *                  - \p mutex is already initialized;
+ *                  - this function is called concurrently on the same
+ *                    object from multiple threads.
  *
  * \param mutex     The mutex to initialize.
  */
@@ -176,8 +178,10 @@ void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex);
  * again on \p mutex.
  *
  * \note            The behavior is undefined if:
- *                  - this function is called concurrently on the same
- *                    object from multiple threads;
+ *                  - any function is called concurrently on the same
+ *                    object from another thread;
+ *                  - mbedtls_mutex_init() has never been called on the
+ *                    object, and it is not all-bits-zero or `{0}`;
  *                  - \p mutex is locked.
  *
  * \note            This function does nothing if:
@@ -250,10 +254,10 @@ int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
 
 /** Initialize a condition variable.
  *
- * \note            The behavior is undefined if
- *                  \p cond is already initialized, or
- *                  if this function is called concurrently on the same
- *                  object from multiple threads.
+ * \note            The behavior is undefined if:
+ *                  - \p cond is already initialized;
+ *                  - this function is called concurrently on the same
+ *                    object from multiple threads.
  *
  * \param cond      The condition variable to initialize.
  *
