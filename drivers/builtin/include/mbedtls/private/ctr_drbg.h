@@ -15,10 +15,9 @@
  *
  * The security strength as defined in NIST SP 800-90A is
  * 128 bits when AES-128 is used and 256 bits otherwise, provided that
- * #MBEDTLS_CTR_DRBG_ENTROPY_LEN is kept at its default value (and not
- * overridden in mbedtls_config.h) and that the DRBG instance is set up with
- * default parameters. See the documentation of mbedtls_ctr_drbg_seed() for
- * more information.
+ * #MBEDTLS_CTR_DRBG_ENTROPY_LEN is kept at its default value and that the DRBG
+ * instance is set up with default parameters. See the documentation of
+ * mbedtls_ctr_drbg_seed() for more information.
  */
 /*
  *  Copyright The Mbed TLS Contributors
@@ -91,20 +90,8 @@
 #define MBEDTLS_CTR_DRBG_KEYBITS            (MBEDTLS_CTR_DRBG_KEYSIZE * 8)   /**< The key size for the DRBG operation, in bits. */
 #define MBEDTLS_CTR_DRBG_SEEDLEN            (MBEDTLS_CTR_DRBG_KEYSIZE + MBEDTLS_CTR_DRBG_BLOCKSIZE)   /**< The seed length, calculated as (counter + AES key). */
 
-/**
- * \name SECTION: Module settings
- *
- * The configuration options you can set for this module are in this section.
- * Either change them in mbedtls_config.h or define them using the compiler command
- * line.
- * \{
- */
-
-/** \def MBEDTLS_CTR_DRBG_ENTROPY_LEN
- *
- * \brief The amount of entropy used per seed by default, in bytes.
- */
 #define MBEDTLS_CTR_DRBG_ENTROPY_LEN        32
+/**< The amount of entropy used per seed by default, in bytes. */
 
 #if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
 #define MBEDTLS_PSA_RNG_RESEED_INTERVAL    10000
@@ -117,8 +104,6 @@
 /**< The maximum number of requested Bytes per call. */
 #define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT     384
 /**< The maximum size of seed or reseed buffer in bytes. */
-
-/** \} name SECTION: Module settings */
 
 #define MBEDTLS_CTR_DRBG_PR_OFF             0
 /**< Prediction resistance is disabled. */
