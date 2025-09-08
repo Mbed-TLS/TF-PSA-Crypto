@@ -274,6 +274,6 @@ int mbedtls_ecp_modulus_setup(mbedtls_mpi_mod_modulus *N,
                               const mbedtls_ecp_group_id id,
                               const mbedtls_ecp_modulus_type ctype);
 
-#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_LIGHT */
 
 #endif /* MBEDTLS_ECP_INVASIVE_H */
