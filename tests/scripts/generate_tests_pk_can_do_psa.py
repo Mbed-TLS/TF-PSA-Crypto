@@ -117,6 +117,14 @@ PK_CONTEXTS = {
                 'PSA_KEY_USAGE_SIGN_HASH',
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH)': [
+                'PSA_KEY_USAGE_SIGN_HASH',
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_SHA_256)': [
+                'PSA_KEY_USAGE_SIGN_HASH',
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
             'PSA_ALG_RSA_PKCS1V15_CRYPT': [
                 'PSA_KEY_USAGE_DECRYPT',
                 'PSA_KEY_USAGE_ENCRYPT',
@@ -137,6 +145,12 @@ PK_CONTEXTS = {
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
             'PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_256)': [
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH)': [
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_SHA_256)': [
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
             'PSA_ALG_RSA_PKCS1V15_CRYPT': [
@@ -204,6 +218,14 @@ PK_CONTEXTS = {
                 'PSA_KEY_USAGE_SIGN_HASH',
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH)': [
+                'PSA_KEY_USAGE_SIGN_HASH',
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_SHA_256)': [
+                'PSA_KEY_USAGE_SIGN_HASH',
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
             'PSA_ALG_RSA_PKCS1V15_CRYPT': [
                 'PSA_KEY_USAGE_DECRYPT',
                 'PSA_KEY_USAGE_ENCRYPT',
@@ -224,6 +246,12 @@ PK_CONTEXTS = {
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
             'PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_256)': [
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH)': [
+                'PSA_KEY_USAGE_VERIFY_HASH',
+            ],
+            'PSA_ALG_RSA_PSS(PSA_ALG_SHA_256)': [
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
             'PSA_ALG_RSA_PKCS1V15_CRYPT': [
@@ -248,6 +276,7 @@ DEPENDS_ON = {
     'MBEDTLS_PK_RSA': ['PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY'],
     'PSA_ALG_RSA_PKCS1V15_SIGN': ['PSA_WANT_ALG_RSA_PKCS1V15_SIGN'],
     'PSA_ALG_RSA_PSS_ANY_SALT': ['PSA_WANT_ALG_RSA_PSS'],
+    'PSA_ALG_RSA_PSS': ['PSA_WANT_ALG_RSA_PSS'],
     'PSA_ALG_RSA_PKCS1V15_CRYPT': ['PSA_WANT_ALG_RSA_PKCS1V15_CRYPT'],
     'PSA_ALG_RSA_OAEP': ['PSA_WANT_ALG_RSA_OAEP'],
 }
@@ -262,6 +291,8 @@ TEST_ALG = [
     'PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_256)',
     'PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH)',
     'PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_256)',
+    'PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH)',
+    'PSA_ALG_RSA_PSS(PSA_ALG_SHA_256)',
     # Key agreement
     'PSA_ALG_ECDH',
     # Encryption
