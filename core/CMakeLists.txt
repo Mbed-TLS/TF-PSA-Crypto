@@ -125,7 +125,7 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
         ${src_crypto} $<TARGET_OBJECTS:${p256m_target}>)
     set_base_compile_options(${tfpsacrypto_target})
     target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
-    set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION 4.0.0 SOVERSION 16)
+    set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION ${TF_PSA_CRYPTO_VERSION} SOVERSION ${TF_PSA_CRYPTO_SOVERSION})
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
 
     if(GEN_FILES)

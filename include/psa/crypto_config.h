@@ -876,36 +876,6 @@
  */
 #define MBEDTLS_PK_WRITE_C
 
-/* CTR_DRBG options */
-//#define MBEDTLS_CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
-//#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
-//#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
-//#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
-
-/* HMAC_DRBG options */
-//#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
-//#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
-//#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
-
-/* PSA options */
-/**
- * Use HMAC_DRBG with the specified hash algorithm for HMAC_DRBG for the
- * PSA crypto subsystem.
- *
- * If this option is unset, the library chooses a hash (currently between
- * SHA512 and SHA256) based on availability and unspecified heuristics.
- *
- * \note The PSA crypto subsystem uses the first available mechanism amongst
- *       the following:
- *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG if enabled;
- *       - Entropy from #MBEDTLS_ENTROPY_C plus CTR_DRBG with AES
- *         if #MBEDTLS_CTR_DRBG_C is enabled;
- *       - Entropy from #MBEDTLS_ENTROPY_C plus HMAC_DRBG.
- *
- *       A future version may reevaluate the prioritization of DRBG mechanisms.
- */
-//#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
-
 /** \} name SECTION: Cryptographic mechanism selection (extended API) */
 
 /**
@@ -1000,41 +970,11 @@
  * \{
  */
 
-/**
- * \def MBEDTLS_ENTROPY_C
- *
- * Enable the generic entropy code.
- *
- * Module:  library/entropy.c
- * Caller:
- *
- * Requires: MBEDTLS_SHA512_C or MBEDTLS_SHA256_C
- *
- * This module provides a generic entropy pool
- */
-#define MBEDTLS_ENTROPY_C
-
 /* Temporary alias of MBEDTLS_PSA_DRIVER_GET_ENTROPY with incompatible
  * behavior. We only keep this until the Mbed TLS scripts are updated.
  * https://github.com/Mbed-TLS/mbedtls/issues/10300
  */
 //#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
-
-/**
- * \def MBEDTLS_ENTROPY_FORCE_SHA256
- *
- * Force the entropy accumulator to use a SHA-256 accumulator instead of the
- * default SHA-512 based one (if both are available).
- *
- * Requires: MBEDTLS_SHA256_C
- *
- * On 32-bit systems SHA-256 can be much faster than SHA-512. Use this option
- * if you have performance concerns.
- *
- * This option is only useful if both MBEDTLS_SHA256_C and
- * MBEDTLS_SHA512_C are defined. Otherwise the available hash module is used.
- */
-//#define MBEDTLS_ENTROPY_FORCE_SHA256
 
 /**
  * \def MBEDTLS_ENTROPY_NO_SOURCES_OK
@@ -1090,12 +1030,27 @@
  *
  * Module:  library/psa_crypto.c
  *
- * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
+ * Requires: one of the following:
+ *           - MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           - MBEDTLS_CTR_DRBG_C
+ *           - MBEDTLS_HMAC_DRBG_C
+ *
+ *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
+ *           random generator, then either PSA_WANT_ALG_SHA_256 or
+ *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
+ *
  * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
  *               is enabled in PSA (unless it's fully accelerated, see
  *               docs/driver-only-builds.md about that).
+ *
+ * \note The PSA crypto subsystem prioritizes DRBG mechanisms as follows:
+ *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG, if enabled
+ *       - CTR_DRBG (AES), seeded by the entropy module, if
+ *         #MBEDTLS_CTR_DRBG_C is enabled
+ *       - HMAC_DRBG, seeded by the entropy module, if
+ *         #MBEDTLS_HMAC_DRBG_C is enabled
+ *
+ *       A future version may reevaluate the prioritization of DRBG mechanisms.
  */
 #define MBEDTLS_PSA_CRYPTO_C
 
@@ -1345,8 +1300,6 @@
 //#define MBEDTLS_PSA_STATIC_KEY_SLOTS
 
 /* Entropy options */
-//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
-//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_PLATFORM_FILE
@@ -1435,25 +1388,26 @@
  *
  * \note Valid values: 128 or default of 256.
  */
-#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH                 256
+//#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH               256
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_RNG_HASH
  *
  * \brief Hash algorithm to use for the entropy module and for HMAC_DRBG if configured.
  *
- * If the option is disabled, it is automatically defined in
- * crypto_adjust_config_derived.h based on:
- * - Whether MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
- * PSA_WANT_ALG_SHA_256, PSA_WANT_ALG_SHA_512, MBEDTLS_CTR_DRBG_C,
- * and MBEDTLS_HMAC_DRBG_C are defined
- * - The value of MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
+ * The hash size (in bits) must be at least #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
  *
- * Enable this option only if you need to override its automatic definition. It takes
- * effect only if MBEDTLS_PSA_CRYPTO_C is enabled and
- * MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled.
+ * In addition, if the entropy module is enabled (#MBEDTLS_PSA_CRYPTO_C is enabled
+ * and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled):
+ * - The hash size must be at least 32 bytes (i.e., 256 bits).
+ * - Only two values are currently allowed: PSA_ALG_SHA_256 and PSA_ALG_SHA_512.
+ *   A future version may lift this limitation.
+ *
+ * If #MBEDTLS_PSA_CRYPTO_RNG_HASH is not explicitly set in the configuration,
+ * a default hash that satisfies the above constraints is selected automatically.
+ * If no suitable default can be selected, this will result in a build error.
  */
-//#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512
+//#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
 
 /**
  * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL
@@ -2100,39 +2054,19 @@
  *
  * Enable the CTR_DRBG AES-based random generator.
  * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
+ * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
  *
- * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
- * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
- * is used.
- *
- * \warning When using PSA, the user should call `psa_crypto_init()` before
- *          using any CTR_DRBG operation (except `mbedtls_ctr_drbg_init()`).
- *
- * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- *
- * \note To achieve a 256-bit security strength with CTR_DRBG,
- *       you must use AES-256 *and* use sufficient entropy.
- *       See ctr_drbg.h for more details.
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
  *
  * Module:  library/ctr_drbg.c
- * Caller:
  *
- * Requires: MBEDTLS_AES_C or
- *           (PSA_WANT_KEY_TYPE_AES and PSA_WANT_ALG_ECB_NO_PADDING and
- *            MBEDTLS_PSA_CRYPTO_C)
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
  *
  * This module provides the CTR_DRBG AES random number generator.
  */
 #define MBEDTLS_CTR_DRBG_C
-
-/** \def MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
- *
- * Uncomment this macro to use a 128-bit key in the CTR_DRBG module.
- * Without this, CTR_DRBG uses a 256-bit key
- * unless \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- */
-//#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
 
 /**
  * \def MBEDTLS_ECDH_C

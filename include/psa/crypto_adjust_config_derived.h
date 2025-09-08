@@ -71,17 +71,31 @@
 #define PSA_WANT_ALG_SOME_PAKE 1
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#define MBEDTLS_PSA_CRYPTO_USE_INTERNAL_RNG
+/*
+ * If the RNG strength is not explicitly defined in the configuration, define
+ * it here to its default value. This ensures it is available for use in
+ * adjusting the configuration of RNG internal modules in
+ * config_adjust_legacy_crypto.h.
+ */
+#if !defined(MBEDTLS_PSA_CRYPTO_RNG_STRENGTH)
+#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 256
 #endif
 
-#if !defined(MBEDTLS_PSA_CRYPTO_RNG_HASH) && defined(MBEDTLS_PSA_CRYPTO_USE_INTERNAL_RNG)
-#if defined(PSA_WANT_ALG_SHA_512)
-#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512
-#elif defined(PSA_WANT_ALG_SHA_256)
+#if !defined(MBEDTLS_PSA_CRYPTO_RNG_HASH)
+
+#if defined(PSA_WANT_ALG_SHA_256)
 #define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
+#elif defined(PSA_WANT_ALG_SHA_512)
+#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512
 #else
+#if (defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG))
+#error "Not able to define MBEDTLS_PSA_CRYPTO_RNG_HASH for the entropy module."
 #endif
+#if defined(MBEDTLS_HMAC_DRBG_C)
+#error "Not able to define MBEDTLS_PSA_CRYPTO_RNG_HASH for HMAC_DRBG."
 #endif
+#endif /* !PSA_WANT_ALG_SHA_256, !PSA_WANT_ALG_SHA_512 */
+
+#endif /* !MBEDTLS_PSA_CRYPTO_RNG_HASH */
 
 #endif /* PSA_CRYPTO_ADJUST_CONFIG_DERIVED_H */

@@ -53,6 +53,11 @@
  */
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 #define MBEDTLS_PSA_CRYPTO_CLIENT
+/* Enable  MBEDTLS_ENTROPY_C in not client-only builds without an
+ * external entropy source. */
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#define MBEDTLS_ENTROPY_C
+#endif
 #endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /**
@@ -374,17 +379,6 @@
 #if defined(PSA_WANT_ALG_GCM) || defined(PSA_WANT_ALG_CCM) || \
     defined(PSA_WANT_ALG_CHACHA20_POLY1305)
 #define MBEDTLS_SSL_HAVE_AEAD
-#endif
-
-/* Deduce MBEDTLS_CTR_DRBG_USE_128_BIT_KEY from MBEDTLS_PSA_CRYPTO_RNG_STRENGTH */
-#if defined(MBEDTLS_PSA_CRYPTO_RNG_STRENGTH)
-#if (MBEDTLS_PSA_CRYPTO_RNG_STRENGTH == 128)
-#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-#elif (MBEDTLS_PSA_CRYPTO_RNG_STRENGTH == 256)
-#undef MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-#else
-#error "MBEDTLS_PSA_CRYPTO_RNG_STRENGTH must be 128 or 256"
-#endif
 #endif
 
 #endif /* MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H */

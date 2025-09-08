@@ -10,16 +10,14 @@
  * Bit Generators</em>.
  *
  * The Mbed TLS implementation of CTR_DRBG uses AES-256 (default) or AES-128
- * (if \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is enabled at compile time)
- * as the underlying block cipher, with a derivation function.
+ * (if #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH is 128) as the underlying block cipher,
+ * with a derivation function.
  *
  * The security strength as defined in NIST SP 800-90A is
- * 128 bits when AES-128 is used (\c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY enabled)
- * and 256 bits otherwise, provided that #MBEDTLS_CTR_DRBG_ENTROPY_LEN is
- * kept at its default value (and not overridden in mbedtls_config.h) and that the
- * DRBG instance is set up with default parameters.
- * See the documentation of mbedtls_ctr_drbg_seed() for more
- * information.
+ * 128 bits when AES-128 is used and 256 bits otherwise, provided that
+ * #MBEDTLS_CTR_DRBG_ENTROPY_LEN is kept at its default value and that the DRBG
+ * instance is set up with default parameters. See the documentation of
+ * mbedtls_ctr_drbg_seed() for more information.
  */
 /*
  *  Copyright The Mbed TLS Contributors
@@ -72,61 +70,40 @@
 
 #define MBEDTLS_CTR_DRBG_BLOCKSIZE          16 /**< The block size used by the cipher. */
 
-#if defined(MBEDTLS_CTR_DRBG_USE_128_BIT_KEY)
+#if MBEDTLS_PSA_CRYPTO_RNG_STRENGTH == 128
+#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
 #define MBEDTLS_CTR_DRBG_KEYSIZE            16
 /**< The key size in bytes used by the cipher.
  *
  * Compile-time choice: 16 bytes (128 bits)
- * because #MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is enabled.
+ * because #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH is 128.
  */
 #else
 #define MBEDTLS_CTR_DRBG_KEYSIZE            32
 /**< The key size in bytes used by the cipher.
  *
  * Compile-time choice: 32 bytes (256 bits)
- * because \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is disabled.
+ * because #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH is NOT 128.
  */
 #endif
 
 #define MBEDTLS_CTR_DRBG_KEYBITS            (MBEDTLS_CTR_DRBG_KEYSIZE * 8)   /**< The key size for the DRBG operation, in bits. */
 #define MBEDTLS_CTR_DRBG_SEEDLEN            (MBEDTLS_CTR_DRBG_KEYSIZE + MBEDTLS_CTR_DRBG_BLOCKSIZE)   /**< The seed length, calculated as (counter + AES key). */
 
-/**
- * \name SECTION: Module settings
- *
- * The configuration options you can set for this module are in this section.
- * Either change them in mbedtls_config.h or define them using the compiler command
- * line.
- * \{
- */
-
-/** \def MBEDTLS_CTR_DRBG_ENTROPY_LEN
- *
- * \brief The amount of entropy used per seed by default, in bytes.
- */
 #define MBEDTLS_CTR_DRBG_ENTROPY_LEN        32
+/**< The amount of entropy used per seed by default, in bytes. */
 
 #if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
 #define MBEDTLS_PSA_RNG_RESEED_INTERVAL    10000
 /**< The interval before reseed is performed by default. */
 #endif
 
-#if !defined(MBEDTLS_CTR_DRBG_MAX_INPUT)
 #define MBEDTLS_CTR_DRBG_MAX_INPUT          256
 /**< The maximum number of additional input Bytes. */
-#endif
-
-#if !defined(MBEDTLS_CTR_DRBG_MAX_REQUEST)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST        1024
 /**< The maximum number of requested Bytes per call. */
-#endif
-
-#if !defined(MBEDTLS_CTR_DRBG_MAX_SEED_INPUT)
 #define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT     384
 /**< The maximum size of seed or reseed buffer in bytes. */
-#endif
-
-/** \} name SECTION: Module settings */
 
 #define MBEDTLS_CTR_DRBG_PR_OFF             0
 /**< Prediction resistance is disabled. */
@@ -365,15 +342,13 @@ void mbedtls_ctr_drbg_set_prediction_resistance(mbedtls_ctr_drbg_context *ctx,
  *
  * \note                The security strength of CTR_DRBG is bounded by the
  *                      entropy length. Thus:
- *                      - When using AES-256
- *                        (\c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is disabled,
- *                        which is the default),
+ *                      - When using AES-256 (#MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *                        is 256, which is the default),
  *                        \p len must be at least 32 (in bytes)
  *                        to achieve a 256-bit strength.
- *                      - When using AES-128
- *                        (\c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is enabled)
- *                        \p len must be at least 16 (in bytes)
- *                        to achieve a 128-bit strength.
+ *                      - When using AES-128 (#MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *                        is 128) \p len must be at least 16 (in bytes) to
+ *                        achieve a 128-bit strength.
  *
  * \param ctx           The CTR_DRBG context.
  * \param len           The amount of entropy to grab, in bytes.

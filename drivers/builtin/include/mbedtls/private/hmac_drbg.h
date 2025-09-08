@@ -47,17 +47,9 @@
 #define MBEDTLS_PSA_RNG_RESEED_INTERVAL   10000   /**< Interval before reseed is performed by default */
 #endif
 
-#if !defined(MBEDTLS_HMAC_DRBG_MAX_INPUT)
 #define MBEDTLS_HMAC_DRBG_MAX_INPUT         256     /**< Maximum number of additional input bytes */
-#endif
-
-#if !defined(MBEDTLS_HMAC_DRBG_MAX_REQUEST)
 #define MBEDTLS_HMAC_DRBG_MAX_REQUEST       1024    /**< Maximum number of requested bytes per call */
-#endif
-
-#if !defined(MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT)
 #define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT    384     /**< Maximum size of (re)seed buffer */
-#endif
 
 /** \} name SECTION: Module settings */
 
