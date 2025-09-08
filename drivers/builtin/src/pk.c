@@ -441,7 +441,7 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
     switch (usage) {
         case PSA_KEY_USAGE_SIGN_HASH:
         case PSA_KEY_USAGE_VERIFY_HASH:
-            if (!PSA_ALG_IS_SIGN_MESSAGE(alg)) {
+            if (!PSA_ALG_IS_SIGN_HASH(alg)) {
                 return 0;
             }
             break;
