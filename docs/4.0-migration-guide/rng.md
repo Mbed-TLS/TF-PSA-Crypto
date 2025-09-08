@@ -10,6 +10,6 @@ The built-in random number generator is now configured through three options:
 * `MBEDTLS_PSA_RNG_RESEED_INTERVAL`: Sets the reseed interval for both CTR_DRBG and HMAC_DRBG. It replaces `MBEDTLS_CTR_DRBG_RESEED_INTERVAL` and `MBEDTLS_HMAC_DRBG_RESEED_INTERVAL`.
 * `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`: Specifies the security strength in bits. The default is 256 bits. If you previously enabled `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY` in Mbed TLS 3.6, you should now set `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` to 128, although this is not recommended.
 
-The entropy module is now automatically enabled when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled, and MBEDTLS_ENTROPY_C has been removed.
+The entropy module is now automatically enabled when `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` is disabled, and `MBEDTLS_ENTROPY_C` has been removed.
 The following Mbed TLS 3.6 configuration options have been removed without any counterpart in TF-PSA-Crypto. Their corresponding APIs were also removed, making these options no longer relevant:
-MBEDTLS_ENTROPY_MAX_GATHER, MBEDTLS_ENTROPY_MAX_SOURCES, MBEDTLS_CTR_DRBG_ENTROPY_LEN, MBEDTLS_CTR_DRBG_MAX_INPUT, MBEDTLS_CTR_DRBG_MAX_REQUEST, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT, MBEDTLS_HMAC_DRBG_MAX_INPUT, MBEDTLS_HMAC_DRBG_MAX_REQUEST, and MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT.
+`MBEDTLS_ENTROPY_MAX_GATHER`, `MBEDTLS_ENTROPY_MAX_SOURCES`, `MBEDTLS_CTR_DRBG_ENTROPY_LEN`, `MBEDTLS_CTR_DRBG_MAX_INPUT`, `MBEDTLS_CTR_DRBG_MAX_REQUEST`, `MBEDTLS_CTR_DRBG_MAX_SEED_INPUT`, `MBEDTLS_HMAC_DRBG_MAX_INPUT`, `MBEDTLS_HMAC_DRBG_MAX_REQUEST`, and `MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT`.
