@@ -432,8 +432,6 @@ exit:
 int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
                           psa_key_usage_t usage)
 {
-    int has_private, want_private, has_public;
-
     /* A context with null pk_info is not set up yet and can't do anything. */
     if (pk == NULL || pk->pk_info == NULL) {
         return 0;
@@ -465,11 +463,11 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
     }
 
     /* Basic checks on private and public keys availability */
-    has_private = !mbedtls_svc_key_id_is_null(pk->priv_id);
-    has_public = has_private || (pk->pub_raw_len > 0);
-    want_private = ((usage & (PSA_KEY_USAGE_SIGN_HASH |
-                              PSA_KEY_USAGE_DECRYPT |
-                              PSA_KEY_USAGE_DERIVE)) != 0);
+    int has_private = !mbedtls_svc_key_id_is_null(pk->priv_id);
+    int has_public = has_private || (pk->pub_raw_len > 0);
+    int want_private = ((usage & (PSA_KEY_USAGE_SIGN_HASH |
+                                  PSA_KEY_USAGE_DECRYPT |
+                                  PSA_KEY_USAGE_DERIVE)) != 0);
     if ((!has_public && !has_private) ||
         (want_private && !has_private)) {
         return 0;
