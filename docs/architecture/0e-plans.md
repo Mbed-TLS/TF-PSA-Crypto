@@ -1075,7 +1075,7 @@ This section is about the parameters of the DRBG (including how it communicates 
 
 Many of the [RNG options](#impacted-rng-options) are mostly meaningless now that the DRBG modules and the entropy module are no longer public. In this section, we determine which options are still relevant, either because they are algorithm choices or because they are a security/resources compromise.
 
-For notions of strength, we follow [NIST SP 800-90A r1](https://doi.org/10.6028/NIST.SP.800-90Ar1) (especially table 2 p. 38 for HMAC\_DRBG) and table 3 p. 49 for CTR\_DRBG), and [NIST SP 800-57 part 1 r1](https://doi.org/10.6028/NIST.SP.800-57pt1r5) §5.6.1.
+For notions of strength, we follow [NIST SP 800-90A r1](https://doi.org/10.6028/NIST.SP.800-90Ar1) (especially table 2 p. 38 for HMAC\_DRBG) and table 3 p. 49 for CTR\_DRBG), and [NIST SP 800-57 part 1 r5](https://doi.org/10.6028/NIST.SP.800-57pt1r5) §5.6.1.
 
 The RNG uses the following algorithms:
 
@@ -1283,7 +1283,14 @@ Reasons to do this:
 * It is used in a very large number of places, both in Mbed TLS and in third-party code. Keeping it around will both save us work during the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x, and facilitate the transition for our users.
 * If we don't do this, then we'll have to change some code in Mbed TLS. In the `full` configuration, Mbed TLS links to several md functions: `mbedtls_md`, `mbedtls_md_error_from_psa`, `mbedtls_md_get_size`, `mbedtls_md_info_from_type` (in addition to macros, enum constants and static inline functions from `mbedtls/md.h`).
 
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/8450): Privatize the parts of `md.h` that are not MD-light.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/8450): Privatize the parts of `md.h` that are not MD-light. That is:
+
+* Functions that are currently available when `MBEDTLS_MD_LIGHT` is defined and `MBEDTLS_MD_C` is not defined, will be declared unconditionally in `mbedtls/md.h`.
+* Functions that are currently available only when `MBEDTLS_MD_C`, will now be declared in `mbedtls/md.h` only when `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` is defined.
+* `mbedtls_md_engine_t` (not a public interface, but used to define the public type `mbedtls_md_context_t`) should have no Doxygen documentation.
+* `MBEDTLS_ERR_MD_FILE_IO_ERROR` should be guarded by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` since it is only used by functions that are becoming private. (Or we could remove it, together with `mbedtls_md_file()`.)
+* The function `mbedtls_md_setup()` is only partially covered by `MBEDTLS_MD_C`. Specifically, the light configuration omits HMAC support. The whole code needs to stay (it's used by HMAC_DRBG and PKCS5), but the documentation should now state that the `hmac` argument must be 0. (Alternatively, we remove the `hmac` argument and split the function in two.)
+* Nothing changes in `md.c` (unless we go for more extensive work that removes the private features that we already don't need).
 
 ### Shrunk-down `pk.h`
 
