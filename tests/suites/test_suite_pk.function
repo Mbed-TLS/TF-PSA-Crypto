@@ -845,9 +845,12 @@ void pk_can_do_psa(int test_number, int pk_type, int key_type, int curve_or_keyb
             pk.pk_info = &mbedtls_ecdsa_opaque_info;
         } else
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
         if (PSA_KEY_TYPE_IS_RSA(key_type)) {
             pk.pk_info = &mbedtls_rsa_opaque_info;
-        } else {
+        } else
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
+        {
             TEST_FAIL("Unknown key type");
         }
     } else {

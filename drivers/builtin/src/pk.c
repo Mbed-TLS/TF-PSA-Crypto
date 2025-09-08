@@ -480,6 +480,7 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
     } else {
         mbedtls_pk_type_t pk_type = mbedtls_pk_get_type(pk);
         switch (pk_type) {
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
             case MBEDTLS_PK_RSA:
             case MBEDTLS_PK_RSASSA_PSS:
                 if (PSA_ALG_IS_RSA_OAEP(alg) ||
@@ -489,6 +490,7 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
                     return 1;
                 }
                 break;
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
             case MBEDTLS_PK_ECKEY:
@@ -503,13 +505,13 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
                     return 1;
                 }
                 break;
-#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
             case MBEDTLS_PK_ECKEY_DH:
                 if (PSA_ALG_IS_ECDH(alg)) {
                     return 1;
                 }
                 break;
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
             default:
                 return 0;
