@@ -792,7 +792,7 @@ void pk_can_do_psa_basic_checks(void)
     mbedtls_pk_init(&pk);
     PSA_INIT();
 
-    /* PK context NULL or not initialized */
+    /* PK context NULL or not set up */
     TEST_EQUAL(mbedtls_pk_can_do_psa(NULL, PSA_ALG_NONE, 0), 0);
     TEST_EQUAL(mbedtls_pk_can_do_psa(&pk, PSA_ALG_NONE, 0), 0);
 
