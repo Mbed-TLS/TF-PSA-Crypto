@@ -142,7 +142,7 @@
  * based buffer to 'allocate' dynamic memory. (replaces calloc() and free()
  * calls)
  *
- * Module:  library/memory_buffer_alloc.c
+ * Module:  drivers/builtin/src/memory_buffer_alloc.c
  *
  * Requires: MBEDTLS_PLATFORM_C
  *           MBEDTLS_PLATFORM_MEMORY (to use it within Mbed TLS)
@@ -164,7 +164,7 @@
  * \note This abstraction layer must be enabled on Windows (including MSYS2)
  * as other modules rely on it for a fixed snprintf implementation.
  *
- * Module:  library/platform.c
+ * Module:  drivers/builtin/src/platform.c
  * Caller:  Most other .c files
  *
  * This module enables abstraction of common (libc) functions.
@@ -270,6 +270,8 @@
 /**
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
  *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *
  * Enable the custom entropy callback mbedtls_platform_get_entropy()
  * (declared in mbedtls/platform.h). You need to provide this callback
  * if you need an entropy source and the built-in entropy callback
@@ -328,7 +330,7 @@
  *
  * Enable the Platform Security Architecture cryptography API.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  *
  * Requires: either MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
  *           or MBEDTLS_CTR_DRBG_C,
@@ -358,7 +360,7 @@
  * `psa/crypto_platform.h`, in which case it can skip or replace the
  * inclusion of `"crypto_spe.h"`.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  *
  */
@@ -369,7 +371,7 @@
  *
  * Enable the Platform Security Architecture persistent key storage.
  *
- * Module:  library/psa_crypto_storage.c
+ * Module:  core/psa_crypto_storage.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C,
  *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
@@ -446,9 +448,9 @@
  * Uncommenting this macro reduces the size of AES code by ~300 bytes
  * on v8-M/Thumb2.
  *
- * Module:  library/aes.c
+ * Module:  drivers/builtin/src/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  */
 #define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 
@@ -471,10 +473,10 @@
  * Requires support for asm() in compiler.
  *
  * Used in:
- *      library/aesni.h
- *      library/aria.c
- *      library/bn_mul.h
- *      library/constant_time.c
+ *      drivers/builtin/src/aesni.h
+ *      drivers/builtin/src/aria.c
+ *      drivers/builtin/src/bn_mul.h
+ *      drivers/builtin/src/constant_time.c
  *
  * Required by:
  *      MBEDTLS_AESCE_C
@@ -551,54 +553,14 @@
  */
 
 /**
- * \def MBEDTLS_AES_C
- *
- * Enable the AES block cipher.
- *
- * Module:  library/aes.c
- * Caller:  library/cipher.c
- *          library/pem.c
- *          library/ctr_drbg.c
- *
- * PEM_PARSE uses AES for decrypting encrypted keys.
- */
-#define MBEDTLS_AES_C
-
-/**
- * \def MBEDTLS_CIPHER_C
- *
- * Enable the generic cipher layer.
- *
- * Module:  library/cipher.c
- * Caller:  library/ccm.c
- *          library/cmac.c
- *          library/gcm.c
- *          library/nist_kw.c
- *          library/pkcs5.c
- *          library/psa_crypto_aead.c
- *          library/psa_crypto_mac.c
- *          library/ssl_ciphersuites.c
- *          library/ssl_msg.c
- * Auto-enabled by: MBEDTLS_PSA_CRYPTO_C depending on which ciphers are enabled
- *                  (see the documentation of that option for details).
- *
- * Uncomment to enable generic cipher wrappers.
- */
-#define MBEDTLS_CIPHER_C
-
-/**
  * \def MBEDTLS_CTR_DRBG_C
  *
  * Enable the CTR_DRBG AES-based random generator.
  * The CTR_DRBG generator uses AES-256 by default.
  * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
  *
- * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
- * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
- * is used.
- *
- * \warning When using PSA, the user should call `psa_crypto_init()` before
- *          using any CTR_DRBG operation (except `mbedtls_ctr_drbg_init()`).
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
  *
  * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
  *
@@ -606,12 +568,11 @@
  *       you must use AES-256 *and* use sufficient entropy.
  *       See ctr_drbg.h for more details.
  *
- * Module:  library/ctr_drbg.c
+ * Module:  drivers/builtin/src/ctr_drbg.c
  * Caller:
  *
- * Requires: MBEDTLS_AES_C or
- *           (PSA_WANT_KEY_TYPE_AES and PSA_WANT_ALG_ECB_NO_PADDING and
- *            MBEDTLS_PSA_CRYPTO_C)
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
  *
  * This module provides the CTR_DRBG AES random number generator.
  */
