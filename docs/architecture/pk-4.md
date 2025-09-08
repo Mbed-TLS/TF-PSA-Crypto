@@ -235,7 +235,7 @@ We should change the meaning of the usage flag to indicate what operations can a
 * `PSA_KEY_USAGE_DECRYPT` means a key pair that can be used to decrypt;
 * `PSA_KEY_USAGE_ENCRYPT` means a public key or key pair that can be used to encrypt;
 * `PSA_KEY_USAGE_DERIVE` means a key pair that can be used as the private side in a key agreement;
-* `PSA_KEY_USAGE_DERIVE_PUBLIC`: flag for a key pair or public key that can be used as the public side in a key agreement. This flag does not currently exist in PSA, and [may be added as part of adding s similar function to the PSA API](https://github.com/ARM-software/psa-api/issues/279). In the meantime, give it the value 0x80000000. Note that changing the value will be an ABI change.
+* `PSA_KEY_USAGE_DERIVE_PUBLIC`: flag for a key pair or public key that can be used as the public side in a key agreement. This flag does not currently exist in PSA, and [may be added as part of adding s similar function to the PSA API](https://github.com/ARM-software/psa-api/issues/279). In the meantime, give it the value 0x00800000. (We are considering reserving the top 8 bits of usage flags for platform-specific use, so avoid those bits to avoid potential confusion). Note that changing the value will be an ABI change.
 
 This will be closer to how `mbedtls_pk_get_psa_attributes()` works.
 
