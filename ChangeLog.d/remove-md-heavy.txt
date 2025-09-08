@@ -1,5 +1,5 @@
 Removals
-   * The following functions have been removed from the MD module: 
+   * The following functions have been removed from the MD module:
          mbedtls_md_list()
          mbedtls_md_info_from_string()
          mbedtls_md_get_name()
