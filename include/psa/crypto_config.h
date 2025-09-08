@@ -1035,7 +1035,8 @@
  *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG, if enabled
  *       - CTR_DRBG (AES), seeded by the entropy module, if
  *         #MBEDTLS_CTR_DRBG_C is enabled
- *       - HMAC_DRBG, seeded by the entropy module
+ *       - HMAC_DRBG, seeded by the entropy module, if
+ *         #MBEDTLS_HMAC_DRBG_C is enabled
  *
  *       A future version may reevaluate the prioritization of DRBG mechanisms.
  */
