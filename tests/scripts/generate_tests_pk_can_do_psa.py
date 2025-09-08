@@ -279,14 +279,14 @@ TEST_USAGE = [
     'PSA_KEY_USAGE_DERIVE_PUBLIC',
 ]
 
-def populate_depends_on(**kw_arg_list):
+def populate_depends_on(**kwargs):
     """
     Generate the depends_on list based on the parameters that are passed. Check
     DEPENDS_ON dictionary for the full list.
     """
     depends_on = []
     known_deps = [dep
-                  for arg in kw_arg_list.values()
+                  for arg in kwargs.values()
                   for dep in DEPENDS_ON
                   if dep in arg]
     for dep in known_deps:
@@ -294,7 +294,7 @@ def populate_depends_on(**kw_arg_list):
     # Usage of enrollment algorithm is only supported when PSA_CRYPTO_C is set.
     # This is important in psasim tests because in that case PSA_CRYPTO_C is
     # not set.
-    if kw_arg_list['alg2'] != 'PSA_ALG_NONE':
+    if kwargs['alg2'] != 'PSA_ALG_NONE':
         depends_on.extend(['MBEDTLS_PSA_CRYPTO_C'])
     return depends_on
 
@@ -426,8 +426,6 @@ def main():
                                                        test_alg, test_usage)
                                 )
                                 test_number = test_number + 1
-
-    print("".join(output_content))
 
     output_file = os.path.join(os.path.dirname(__file__),
                                os.path.pardir, os.path.pardir,
