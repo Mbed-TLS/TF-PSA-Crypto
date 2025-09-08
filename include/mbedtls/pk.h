@@ -340,21 +340,22 @@ size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
  * \param pk        The context to query. It must have been initialized.
  * \param alg       PSA algorithm to check against.
  *                  Allowed values are:
- *                  - PSA_ALG_RSA_PKCS1V15_SIGN(hash),
- *                  - PSA_ALG_RSA_PSS_ANY_SALT(hash),
- *                  - PSA_ALG_RSA_PKCS1V15_CRYPT,
- *                  - PSA_ALG_RSA_OAEP(hash),
- *                  - PSA_ALG_ECDSA(hash),
- *                  - MBEDTLS_PK_ALG_ECDSA(hash),
+ *                  - #PSA_ALG_RSA_PKCS1V15_SIGN(hash),
+ *                  - #PSA_ALG_RSA_PSS(hash),
+ *                  - #PSA_ALG_RSA_PSS_ANY_SALT(hash),
+ *                  - #PSA_ALG_RSA_PKCS1V15_CRYPT,
+ *                  - #PSA_ALG_RSA_OAEP(hash),
+ *                  - #PSA_ALG_ECDSA(hash),
+ *                  - #MBEDTLS_PK_ALG_ECDSA(hash),
  *                  where hash is a specified algorithm.
  * \param usage     PSA usage flag that the key must be verified against.
  *                  A single flag from the following list must be specified:
- *                  - PSA_KEY_USAGE_SIGN_HASH,
- *                  - PSA_KEY_USAGE_VERIFY_HASH,
- *                  - PSA_KEY_USAGE_DECRYPT,
- *                  - PSA_KEY_USAGE_ENCRYPT,
- *                  - PSA_KEY_USAGE_DERIVE,
- *                  - PSA_KEY_USAGE_DERIVE_PUBLIC.
+ *                  - #PSA_KEY_USAGE_SIGN_HASH,
+ *                  - #PSA_KEY_USAGE_VERIFY_HASH,
+ *                  - #PSA_KEY_USAGE_DECRYPT,
+ *                  - #PSA_KEY_USAGE_ENCRYPT,
+ *                  - #PSA_KEY_USAGE_DERIVE,
+ *                  - #PSA_KEY_USAGE_DERIVE_PUBLIC.
  *
  * \return          1 if the key can do operation on the given type.
  * \return          0 if the key cannot do the operations or the context that
