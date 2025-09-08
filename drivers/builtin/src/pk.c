@@ -475,46 +475,44 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
 
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
         return is_psa_key_compatible_with_alg_usage(pk->priv_id, alg, usage);
+    } else if (has_private) {
+        return is_psa_key_compatible_with_alg_usage(pk->priv_id, alg, usage);
     } else {
-        if (has_private) {
-            return is_psa_key_compatible_with_alg_usage(pk->priv_id, alg, usage);
-        } else {
-            mbedtls_pk_type_t pk_type = mbedtls_pk_get_type(pk);
-            switch (pk_type) {
-                case MBEDTLS_PK_RSA:
-                case MBEDTLS_PK_RSASSA_PSS:
-                    if (PSA_ALG_IS_RSA_OAEP(alg) ||
-                        PSA_ALG_IS_RSA_PSS(alg) ||
-                        PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) ||
-                        (alg == PSA_ALG_RSA_PKCS1V15_CRYPT)) {
-                        return 1;
-                    }
-                    break;
+        mbedtls_pk_type_t pk_type = mbedtls_pk_get_type(pk);
+        switch (pk_type) {
+            case MBEDTLS_PK_RSA:
+            case MBEDTLS_PK_RSASSA_PSS:
+                if (PSA_ALG_IS_RSA_OAEP(alg) ||
+                    PSA_ALG_IS_RSA_PSS(alg) ||
+                    PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) ||
+                    (alg == PSA_ALG_RSA_PKCS1V15_CRYPT)) {
+                    return 1;
+                }
+                break;
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-                case MBEDTLS_PK_ECKEY:
-                    if (PSA_ALG_IS_ECDH(alg) ||
-                        (PSA_ALG_IS_ECDSA(alg) && pk->ec_family != PSA_ECC_FAMILY_MONTGOMERY)) {
-                        return 1;
-                    }
-                    break;
+            case MBEDTLS_PK_ECKEY:
+                if (PSA_ALG_IS_ECDH(alg) ||
+                    (PSA_ALG_IS_ECDSA(alg) && pk->ec_family != PSA_ECC_FAMILY_MONTGOMERY)) {
+                    return 1;
+                }
+                break;
 
-                case MBEDTLS_PK_ECDSA:
-                    if (PSA_ALG_IS_ECDSA(alg) && pk->ec_family != PSA_ECC_FAMILY_MONTGOMERY) {
-                        return 1;
-                    }
-                    break;
+            case MBEDTLS_PK_ECDSA:
+                if (PSA_ALG_IS_ECDSA(alg) && pk->ec_family != PSA_ECC_FAMILY_MONTGOMERY) {
+                    return 1;
+                }
+                break;
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
-                case MBEDTLS_PK_ECKEY_DH:
-                    if (PSA_ALG_IS_ECDH(alg)) {
-                        return 1;
-                    }
-                    break;
+            case MBEDTLS_PK_ECKEY_DH:
+                if (PSA_ALG_IS_ECDH(alg)) {
+                    return 1;
+                }
+                break;
 
-                default:
-                    return 0;
-            }
+            default:
+                return 0;
         }
     }
 
