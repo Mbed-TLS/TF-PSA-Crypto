@@ -1920,15 +1920,7 @@ Parse Public EC Key #2a (RFC 5480, PEM, secp192r1, compressed)
 depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP192R1_ENABLED
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_pub.comp.pem":0
 
-Parse Public EC Key #3 (RFC 5480, secp224r1)
-depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_224
-pk_parse_public_keyfile_ec:"../framework/data_files/ec_224_pub.pem":0
-
-# Compressed points parsing does not support MBEDTLS_ECP_DP_SECP224R1 and
-# MBEDTLS_ECP_DP_SECP224K1. Therefore a failure is expected in this case
-Parse Public EC Key #3a (RFC 5480, secp224r1, compressed)
-depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP224R1_ENABLED
-pk_parse_public_keyfile_ec:"../framework/data_files/ec_224_pub.comp.pem":MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE
+# Test case #3 was removed because it was using curve secp224r1 which has been removed
 
 Parse Public EC Key #4 (RFC 5480, secp256r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
@@ -2042,13 +2034,7 @@ Parse EC Key #5c (PKCS8 PEM, with parameters)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
 pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8param.pem":"NULL":0
 
-Parse EC Key #8 (SEC1 PEM, secp224r1)
-depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_224
-pk_parse_keyfile_ec:"../framework/data_files/ec_224_prv.pem":"NULL":0
-
-Parse EC Key #8a (SEC1 PEM, secp224r1, compressed)
-depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP224R1_ENABLED
-pk_parse_keyfile_ec:"../framework/data_files/ec_224_prv.comp.pem":"NULL":0
+# Test case #8 was removed because it was using curve secp224r1 which has been removed
 
 Parse EC Key #9 (SEC1 PEM, secp256r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256

@@ -659,11 +659,7 @@ void ecp_read_binary(int id, data_t *buf, char *x, char *y, char *z,
             TEST_ASSERT(mbedtls_mpi_cmp_mpi(&P.Y, &Y) == 0);
             TEST_ASSERT(mbedtls_mpi_cmp_mpi(&P.Z, &Z) == 0);
 
-            if (buf->x[0] == 0x04 &&
-                /* (reading compressed format supported only for
-                 *  Short Weierstrass curves with prime p where p = 3 mod 4) */
-                id != MBEDTLS_ECP_DP_SECP224R1 &&
-                id != MBEDTLS_ECP_DP_SECP224K1) {
+            if (buf->x[0] == 0x04) {
                 /* re-encode in compressed format and test read again */
                 mbedtls_mpi_free(&P.Y);
                 buf->x[0] = 0x02 + mbedtls_mpi_get_bit(&Y, 0);
@@ -1585,13 +1581,6 @@ void ecp_mod_p_generic_raw(int curve_id,
             curve_func = &mbedtls_ecp_mod_p192_raw;
             break;
 #endif
-#if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) && defined(MBEDTLS_ECP_NIST_OPTIM)
-        case MBEDTLS_ECP_DP_SECP224R1:
-            limbs = BITS_TO_LIMBS(224) * 2;
-            curve_bits = 224;
-            curve_func = &mbedtls_ecp_mod_p224_raw;
-            break;
-#endif
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) && defined(MBEDTLS_ECP_NIST_OPTIM)
         case MBEDTLS_ECP_DP_SECP256R1:
             limbs = BITS_TO_LIMBS(256) * 2;
@@ -1618,13 +1607,6 @@ void ecp_mod_p_generic_raw(int curve_id,
             limbs = BITS_TO_LIMBS(192) * 2;
             curve_bits = 192;
             curve_func = &mbedtls_ecp_mod_p192k1_raw;
-            break;
-#endif
-#if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
-        case MBEDTLS_ECP_DP_SECP224K1:
-            limbs = BITS_TO_LIMBS(224) * 2;
-            curve_bits = 224;
-            curve_func = &mbedtls_ecp_mod_p224k1_raw;
             break;
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)

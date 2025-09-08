@@ -77,7 +77,6 @@
     defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_192) || \
     defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_256) || \
     defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192) || \
-    defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224) || \
     defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256) || \
     defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_384) || \
     defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_521)
@@ -136,12 +135,10 @@
 #if defined(MBEDTLS_ECDSA_C) &&            \
     ( !defined(MBEDTLS_ECP_C) ||           \
       !( defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) || \
          defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
          defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
          defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
          defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) || \
          defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) || \
          defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) ||   \
          defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) ||   \
@@ -176,7 +173,6 @@
 
 #if defined(MBEDTLS_ECP_LIGHT) && ( !defined(MBEDTLS_BIGNUM_C) || (    \
     !defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) &&                  \
-    !defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) &&                  \
@@ -184,7 +180,6 @@
     !defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)   &&                  \
     !defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)   &&                  \
     !defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) &&                  \
-    !defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) &&                 \
     !defined(MBEDTLS_ECP_DP_CURVE448_ENABLED) ) )

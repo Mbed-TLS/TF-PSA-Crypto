@@ -77,7 +77,6 @@ static int check_ecc_parameters(psa_ecc_family_t family, size_t *bits)
         case PSA_ECC_FAMILY_SECP_K1:
             switch (*bits) {
                 case 192:
-                /* secp224k1 is not and will not be supported in PSA (#3541). */
                 case 256:
                     return PSA_SUCCESS;
             }

@@ -83,15 +83,17 @@
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_512         1
 #define PSA_WANT_ECC_MONTGOMERY_255             1
 #define PSA_WANT_ECC_MONTGOMERY_448             1
-#define PSA_WANT_ECC_SECP_K1_192                1
 #define PSA_WANT_ECC_SECP_K1_256                1
-#define PSA_WANT_ECC_SECP_R1_192                1
-#define PSA_WANT_ECC_SECP_R1_224                1
 /* For secp256r1, consider enabling #MBEDTLS_PSA_P256M_DRIVER_ENABLED
  * (see the description in mbedtls/mbedtls_config.h for details). */
 #define PSA_WANT_ECC_SECP_R1_256                1
 #define PSA_WANT_ECC_SECP_R1_384                1
 #define PSA_WANT_ECC_SECP_R1_521                1
+/* These 2 curves are not part of the public API. They are kept for internal
+ * testing only, but they might be removed in a future version of the
+ * library. */
+//#define PSA_WANT_ECC_SECP_K1_192                1
+//#define PSA_WANT_ECC_SECP_R1_192                1
 
 #define PSA_WANT_DH_RFC7919_2048                1
 #define PSA_WANT_DH_RFC7919_3072                1
@@ -857,10 +859,6 @@
  * Enable the support for parsing public keys of type Short Weierstrass
  * (MBEDTLS_ECP_DP_SECP_XXX and MBEDTLS_ECP_DP_BP_XXX) which are using the
  * compressed point format. This parsing is done through ECP module's functions.
- *
- * \note As explained in the description of MBEDTLS_ECP_PF_COMPRESSED (in ecp.h)
- *       the only unsupported curves are MBEDTLS_ECP_DP_SECP224R1 and
- *       MBEDTLS_ECP_DP_SECP224K1.
  */
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
@@ -2177,13 +2175,11 @@
  * Comment macros to disable the curve and functions for it
  */
 /* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
-#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
+// #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224K1_ENABLED
+// #define MBEDTLS_ECP_DP_SECP192K1_ENABLED
 #define MBEDTLS_ECP_DP_SECP256K1_ENABLED
 #define MBEDTLS_ECP_DP_BP256R1_ENABLED
 #define MBEDTLS_ECP_DP_BP384R1_ENABLED

@@ -178,11 +178,6 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
             *bits = 192;
             return PSA_ECC_FAMILY_SECP_R1;
 #endif
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-        case MBEDTLS_ECP_DP_SECP224R1:
-            *bits = 224;
-            return PSA_ECC_FAMILY_SECP_R1;
-#endif
 #if defined(PSA_WANT_ECC_SECP_R1_256)
         case MBEDTLS_ECP_DP_SECP256R1:
             *bits = 256;
@@ -223,7 +218,6 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
             *bits = 192;
             return PSA_ECC_FAMILY_SECP_K1;
 #endif
-    /* secp224k1 is not and will not be supported in PSA (#3541). */
 #if defined(PSA_WANT_ECC_SECP_K1_256)
         case MBEDTLS_ECP_DP_SECP256K1:
             *bits = 256;
@@ -249,10 +243,6 @@ mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
 #if defined(PSA_WANT_ECC_SECP_R1_192)
                 case 192:
                     return MBEDTLS_ECP_DP_SECP192R1;
-#endif
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-                case 224:
-                    return MBEDTLS_ECP_DP_SECP224R1;
 #endif
 #if defined(PSA_WANT_ECC_SECP_R1_256)
                 case 256:
@@ -305,7 +295,6 @@ mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
                 case 192:
                     return MBEDTLS_ECP_DP_SECP192K1;
 #endif
-            /* secp224k1 is not and will not be supported in PSA (#3541). */
 #if defined(PSA_WANT_ECC_SECP_K1_256)
                 case 256:
                     return MBEDTLS_ECP_DP_SECP256K1;

@@ -63,7 +63,6 @@
     (defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512) && \
     !defined(MBEDTLS_PSA_ACCEL_ECC_BRAINPOOL_P_R1_512)) || \
     (defined(PSA_WANT_ECC_SECP_R1_192) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192)) || \
-    (defined(PSA_WANT_ECC_SECP_R1_224) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224)) || \
     (defined(PSA_WANT_ECC_SECP_R1_256) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256)) || \
     (defined(PSA_WANT_ECC_SECP_R1_384) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_384)) || \
     (defined(PSA_WANT_ECC_SECP_R1_521) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_521)) || \
@@ -177,15 +176,6 @@
 #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 #endif /* missing accel */
 #endif /* PSA_WANT_ECC_SECP_R1_192 */
-
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-#if !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224) || \
-    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES) || \
-    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_ALGS)
-#define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_224 1
-#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
-#endif /* missing accel */
-#endif /* PSA_WANT_ECC_SECP_R1_224 */
 
 #if defined(PSA_WANT_ECC_SECP_R1_256)
 #if !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256) || \
