@@ -40,9 +40,6 @@ void mutex_usage_no_init()
     TEST_EQUAL(mbedtls_mutex_lock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
     TEST_EQUAL(mbedtls_mutex_unlock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
     mbedtls_mutex_free(&mutex);
-
-exit:
-    mbedtls_mutex_free(&mutex);
 }
 /* END_CASE */
 
