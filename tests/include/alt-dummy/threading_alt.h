@@ -7,8 +7,12 @@
 #ifndef THREADING_ALT_H
 #define THREADING_ALT_H
 
-typedef struct mbedtls_threading_mutex_t {
+typedef struct {
     int dummy;
-} mbedtls_threading_mutex_t;
+} mbedtls_platform_mutex_t;
+
+typedef struct {
+    int dummy;
+} mbedtls_platform_condition_variable_t;
 
 #endif /* threading_alt.h */
