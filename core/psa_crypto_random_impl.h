@@ -128,6 +128,7 @@ static inline int mbedtls_psa_drbg_seed(mbedtls_psa_drbg_context_t *drbg_ctx,
                                         mbedtls_entropy_context *entropy,
                                         const unsigned char *custom, size_t len)
 {
+#if !defined(MBEDTLS_STATIC_ASSERT_SUPPORT)
     if (PSA_BYTES_TO_BITS(PSA_HASH_LENGTH(MBEDTLS_PSA_CRYPTO_RNG_HASH)) <
         MBEDTLS_PSA_CRYPTO_RNG_STRENGTH) {
         /* MBEDTLS_PSA_CRYPTO_RNG_HASH size (in bits) must be at least
@@ -135,6 +136,7 @@ static inline int mbedtls_psa_drbg_seed(mbedtls_psa_drbg_context_t *drbg_ctx,
          */
         return MBEDTLS_ERR_ERROR_GENERIC_ERROR;
     }
+#endif
 #if defined(MBEDTLS_CTR_DRBG_C)
     return mbedtls_ctr_drbg_seed(drbg_ctx, mbedtls_entropy_func, entropy, custom, len);
 #elif defined(MBEDTLS_HMAC_DRBG_C)
