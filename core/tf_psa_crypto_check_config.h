@@ -517,7 +517,9 @@
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED) &&\
-    !defined(MBEDTLS_PLATFORM_C)
+    (!defined(MBEDTLS_PSA_CRYPTO_C) || \
+     defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) || \
+     !defined(MBEDTLS_PLATFORM_C))
 #error "MBEDTLS_ENTROPY_NV_SEED defined, but not all prerequisites"
 #endif
 
