@@ -1946,17 +1946,6 @@
  */
 
 /**
- * \def MBEDTLS_CIPHER_NULL_CIPHER
- *
- * Enable NULL cipher.
- * Warning: Only do so when you know what you are doing. This allows for
- * encryption or channels without any security!
- *
- * Uncomment this macro to enable the NULL cipher and ciphersuites
- */
-//#define MBEDTLS_CIPHER_NULL_CIPHER
-
-/**
  * \def MBEDTLS_CTR_DRBG_C
  *
  * Enable the CTR_DRBG AES-based random generator.

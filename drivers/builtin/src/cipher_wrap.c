@@ -48,10 +48,6 @@
 #include "mbedtls/private/ccm.h"
 #endif
 
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER)
-#include <string.h>
-#endif
-
 #include "mbedtls/platform.h"
 
 enum mbedtls_cipher_base_index {
@@ -96,9 +92,6 @@ enum mbedtls_cipher_base_index {
 #endif
 #if defined(MBEDTLS_GCM_C) && defined(MBEDTLS_CAMELLIA_C)
     MBEDTLS_CIPHER_BASE_INDEX_GCM_CAMELLIA,
-#endif
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER)
-    MBEDTLS_CIPHER_BASE_INDEX_NULL_BASE,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_XTS) && defined(MBEDTLS_AES_C)
     MBEDTLS_CIPHER_BASE_INDEX_XTS_AES,
@@ -2041,77 +2034,6 @@ static const mbedtls_cipher_info_t chachapoly_info = {
 };
 #endif /* MBEDTLS_CHACHAPOLY_C */
 
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER)
-static int null_crypt_stream(void *ctx, size_t length,
-                             const unsigned char *input,
-                             unsigned char *output)
-{
-    ((void) ctx);
-    memmove(output, input, length);
-    return 0;
-}
-
-static int null_setkey(void *ctx, const unsigned char *key,
-                       unsigned int key_bitlen)
-{
-    ((void) ctx);
-    ((void) key);
-    ((void) key_bitlen);
-
-    return 0;
-}
-
-static void *null_ctx_alloc(void)
-{
-    return (void *) 1;
-}
-
-static void null_ctx_free(void *ctx)
-{
-    ((void) ctx);
-}
-
-static const mbedtls_cipher_base_t null_base_info = {
-    MBEDTLS_CIPHER_ID_NULL,
-    NULL,
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_OFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_STREAM)
-    null_crypt_stream,
-#endif
-    null_setkey,
-#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-    null_setkey,
-#endif
-    null_ctx_alloc,
-    null_ctx_free
-};
-
-static const mbedtls_cipher_info_t null_cipher_info = {
-    "NULL",
-    1,
-    0 >> MBEDTLS_IV_SIZE_SHIFT,
-    0 >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_STREAM,
-    MBEDTLS_CIPHER_NULL,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_NULL_BASE
-};
-#endif /* defined(MBEDTLS_CIPHER_NULL_CIPHER) */
-
 const mbedtls_cipher_definition_t mbedtls_cipher_definitions[] =
 {
 #if defined(MBEDTLS_AES_C)
@@ -2264,10 +2186,6 @@ const mbedtls_cipher_definition_t mbedtls_cipher_definitions[] =
     { MBEDTLS_CIPHER_CHACHA20_POLY1305,    &chachapoly_info },
 #endif
 
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER)
-    { MBEDTLS_CIPHER_NULL,                 &null_cipher_info },
-#endif /* MBEDTLS_CIPHER_NULL_CIPHER */
-
     { MBEDTLS_CIPHER_NONE, NULL }
 };
 
@@ -2317,9 +2235,6 @@ const mbedtls_cipher_base_t * const mbedtls_cipher_base_lookup_table[] = {
 #endif
 #if defined(MBEDTLS_GCM_C) && defined(MBEDTLS_CAMELLIA_C)
     [MBEDTLS_CIPHER_BASE_INDEX_GCM_CAMELLIA] = &gcm_camellia_info,
-#endif
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER)
-    [MBEDTLS_CIPHER_BASE_INDEX_NULL_BASE] = &null_base_info,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_XTS) && defined(MBEDTLS_AES_C)
     [MBEDTLS_CIPHER_BASE_INDEX_XTS_AES] = &xts_aes_info
