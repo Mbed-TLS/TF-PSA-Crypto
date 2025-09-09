@@ -58,30 +58,56 @@ typedef pthread_cond_t mbedtls_platform_condition_variable_t;
  *                  (including deadlocks and crashes) if detecting usage errors
  *                  is not practical on your platform.
  *
- * \note            mutex_init() and mutex_free() don't return a status code.
- *                  If mutex_init() fails, it should leave its argument (the
- *                  mutex) in a state such that mutex_lock() will fail when
- *                  called with this argument.
- *
  * \note            The library will always unlock a mutex from the same
  *                  thread that locked it, and will never lock a mutex
  *                  in a thread that has already locked it.
  *
  * \note            Spurious wakeups on condition variables are permitted.
  *
- * \param mutex_init    The mutex init function implementation.
- * \param mutex_free    The mutex destroy function implementation.
- * \param mutex_lock    The mutex lock function implementation.
- * \param mutex_unlock  The mutex unlock function implementation.
- * \param cond_init     The condition variable initialization implementation.
- * \param cond_destroy  The condition variable destroy implementation.
- * \param cond_signal   The condition variable signal implementation.
- * \param cond_broadcast The condition variable broadcast implementation.
- * \param cond_wait     The condition variable wait implementation.
+ * \param mutex_init    The mutex init function implementation. <br>
+ *                      The behavior is undefined if the mutex is already
+ *                      initialized and has not been destroyed, or if this
+ *                      function is called concurrently from multiple threads.
+ * \param mutex_destroy The mutex destroy function implementation. <br>
+ *                      This function must free any resources associated
+ *                      with the mutex object. <br>
+ *                      The behavior is undefined if the mutex was not
+ *                      initialized, if it has already been destroyed,
+ *                      if it is currently locked, or if this function
+ *                      is called concurrently from multiple threads.
+ * \param mutex_lock    The mutex lock function implementation. <br>
+ *                      The behavior is undefined if the mutex was not
+ *                      initialized, if it has already been destroyed, or if
+ *                      it is currently locked by the calling thread.
+ * \param mutex_unlock  The mutex unlock function implementation. <br>
+ *                      The behavior is undefined if the mutex is not
+ *                      currently locked by the calling thread.
+ * \param cond_init     The condition variable initialization implementation. <br>
+ *                      The behavior is undefined if the variable is already
+ *                      initialized, if it has been destroyed, or if this
+ *                      function is called concurrently from multiple threads.
+ * \param cond_destroy  The condition variable destroy implementation. <br>
+ *                      This function must free any resources associated
+ *                      with the condition variable object. <br>
+ *                      The behavior is undefined if the condition variable
+ *                      was not initialized, if it has already been destroyed,
+ *                      if a thread is waiting on it, or if this function
+ *                      is called concurrently from multiple threads.
+ * \param cond_signal   The condition variable signal implementation. <br>
+ *                      The behavior is undefined if the condition variable
+ *                      was not initialized or if it has already been destroyed.
+ * \param cond_broadcast The condition variable broadcast implementation. <br>
+ *                      The behavior is undefined if the condition variable
+ *                      was not initialized or if it has already been destroyed.
+ * \param cond_wait     The condition variable wait implementation. <br>
+ *                      The behavior is undefined if the mutex and the
+ *                      condition variable have not both been initialized,
+ *                      if one of them has already been destroyed, or if the
+ *                      mutex is not currently locked by the calling thread.
  */
 void mbedtls_threading_set_alt(
-    void (*mutex_init)(mbedtls_platform_mutex_t *),
-    void (*mutex_free)(mbedtls_platform_mutex_t *),
+    int (*mutex_init)(mbedtls_platform_mutex_t *),
+    void (*mutex_destroy)(mbedtls_platform_mutex_t *),
     int (*mutex_lock)(mbedtls_platform_mutex_t *),
     int (*mutex_unlock)(mbedtls_platform_mutex_t *),
     int (*cond_init)(mbedtls_platform_condition_variable_t *),
@@ -100,6 +126,19 @@ void mbedtls_threading_free_alt(void);
 typedef struct mbedtls_threading_mutex_t {
     mbedtls_platform_mutex_t MBEDTLS_PRIVATE(mutex);
 
+    /* Whether the mutex has been initialized successfully.
+     *
+     * Attempting to lock or destroy a platform mutex that hasn't been
+     * successfully initialized can cause a crash or other undefined
+     * behavior on some platforms. Keeping track of a successful
+     * initialization makes it possible to turn such misuse into
+     * a predictable error. This is especially useful because
+     * mbedtls_mutex_init() doesn't return an error code, for
+     * historical reasons, so the application cannot handle such
+     * failures by itself.
+     */
+    char MBEDTLS_PRIVATE(initialized);
+
     /* WARNING - state should only be accessed when holding the mutex lock in
      * framework/tests/src/threading_helpers.c, otherwise corruption can occur.
      * state will be 0 after a failed init or a free, and nonzero after a
@@ -115,16 +154,19 @@ typedef struct mbedtls_threading_condition_variable_t {
 
 /** Initialize a mutex (mutual exclusion lock).
  *
+ * You must call this function on a mutex object before using it for any
+ * purpose.
+ *
  * \note            This function may fail internally, but for historical
  *                  reasons, it does not return a value. If the mutex
  *                  initialization fails internally, mbedtls_mutex_free()
  *                  will still work normally, and all other mutex functions
  *                  will fail safely with a nonzero return code.
  *
- * \note            The behavior is undefined if
- *                  \p mutex is already initialized, or
- *                  if this function is called concurrently on the same
- *                  object from multiple threads.
+ * \note            The behavior is undefined if:
+ *                  - \p mutex is already initialized;
+ *                  - this function is called concurrently on the same
+ *                    object from multiple threads.
  *
  * \param mutex     The mutex to initialize.
  */
@@ -136,11 +178,16 @@ void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex);
  * again on \p mutex.
  *
  * \note            The behavior is undefined if:
- *                  - \p mutex has not been initialized with
- *                    mbedtls_mutex_init();
- *                  - this function is called concurrently on the same
- *                    object from multiple threads;
+ *                  - any function is called concurrently on the same
+ *                    object from another thread;
+ *                  - mbedtls_mutex_init() has never been called on the
+ *                    object, and it is not all-bits-zero or `{0}`;
  *                  - \p mutex is locked.
+ *
+ * \note            This function does nothing if:
+ *                  - \p mutex is all-bits-zero or `{0}`.
+ *                  - The last function called on \p mutex is
+ *                    mbedtls_mutex_free() (i.e. a double free is safe).
  *
  * \param mutex     The mutex to destroy.
  */
@@ -207,10 +254,10 @@ int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex);
 
 /** Initialize a condition variable.
  *
- * \note            The behavior is undefined if
- *                  \p cond is already initialized, or
- *                  if this function is called concurrently on the same
- *                  object from multiple threads.
+ * \note            The behavior is undefined if:
+ *                  - \p cond is already initialized;
+ *                  - this function is called concurrently on the same
+ *                    object from multiple threads.
  *
  * \param cond      The condition variable to initialize.
  *

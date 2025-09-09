@@ -24,7 +24,7 @@
  * threading interface was last changed in a way that may impact the
  * test framework, with the lower byte incremented as necessary
  * if multiple changes happened between releases. */
-#define MBEDTLS_THREADING_INTERNAL_VERSION 0x04000000
+#define MBEDTLS_THREADING_INTERNAL_VERSION 0x04000001
 
 #if defined(MBEDTLS_THREADING_C)
 
@@ -34,7 +34,7 @@
  * They are exposed for the sake of the mutex usage verification framework
  * (see framework/tests/src/threading_helpers.c).
  */
-extern void (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *mutex);
+extern int (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *mutex);
 extern void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *mutex);
 extern int (*mbedtls_mutex_lock_ptr)(mbedtls_platform_mutex_t *mutex);
 extern int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *mutex);

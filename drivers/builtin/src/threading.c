@@ -62,18 +62,13 @@ static int err_from_posix(int posix_ret)
     }
 }
 
-static void threading_mutex_init_pthread(mbedtls_platform_mutex_t *mutex)
+static int threading_mutex_init_pthread(mbedtls_platform_mutex_t *mutex)
 {
-    /* One problem here is that calling lock on a pthread mutex without first
-     * having initialised it is undefined behaviour. Obviously we cannot check
-     * this here in a thread safe manner without a significant performance
-     * hit, so state transitions are checked in tests only via the state
-     * variable. Please make sure any new mutex that gets added is exercised in
-     * tests; see framework/tests/src/threading_helpers.c for more details. */
-    (void) pthread_mutex_init(mutex, NULL);
+    int posix_ret = pthread_mutex_init(mutex, NULL);
+    return err_from_posix(posix_ret);
 }
 
-static void threading_mutex_free_pthread(mbedtls_platform_mutex_t *mutex)
+static void threading_mutex_destroy_pthread(mbedtls_platform_mutex_t *mutex)
 {
     (void) pthread_mutex_destroy(mutex);
 }
@@ -90,15 +85,15 @@ static int threading_mutex_unlock_pthread(mbedtls_platform_mutex_t *mutex)
     return err_from_posix(posix_ret);
 }
 
-void (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_init_pthread;
-void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_free_pthread;
+int (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_init_pthread;
+void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_destroy_pthread;
 int (*mbedtls_mutex_lock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_lock_pthread;
 int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_unlock_pthread;
 
 /*
  * With pthreads we can statically initialize mutexes
  */
-#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1 }
+#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1, 1 }
 
 int mbedtls_condition_variable_init(
     mbedtls_threading_condition_variable_t *cond)
@@ -149,7 +144,7 @@ static void threading_mutex_dummy(mbedtls_platform_mutex_t *mutex)
     return;
 }
 
-void (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_dummy;
+int (*mbedtls_mutex_init_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fail;
 void (*mbedtls_mutex_free_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_dummy;
 int (*mbedtls_mutex_lock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fail;
 int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fail;
@@ -158,21 +153,32 @@ int (*mbedtls_mutex_unlock_ptr)(mbedtls_platform_mutex_t *) = threading_mutex_fa
 
 void mbedtls_mutex_init(mbedtls_threading_mutex_t *mutex)
 {
-    (*mbedtls_mutex_init_ptr)(&mutex->mutex);
+    int ret = (*mbedtls_mutex_init_ptr)(&mutex->mutex);
+    mutex->initialized = (ret == 0);
 }
 
 void mbedtls_mutex_free(mbedtls_threading_mutex_t *mutex)
 {
+    if (!mutex->initialized) {
+        return;
+    }
     (*mbedtls_mutex_free_ptr)(&mutex->mutex);
+    mutex->initialized = 0;
 }
 
 int mbedtls_mutex_lock(mbedtls_threading_mutex_t *mutex)
 {
+    if (!mutex->initialized) {
+        return MBEDTLS_ERR_THREADING_USAGE_ERROR;
+    }
     return (*mbedtls_mutex_lock_ptr)(&mutex->mutex);
 }
 
 int mbedtls_mutex_unlock(mbedtls_threading_mutex_t *mutex)
 {
+    if (!mutex->initialized) {
+        return MBEDTLS_ERR_THREADING_USAGE_ERROR;
+    }
     return (*mbedtls_mutex_unlock_ptr)(&mutex->mutex);
 }
 
@@ -241,8 +247,8 @@ int mbedtls_condition_variable_wait(
  * Set functions pointers and initialize global mutexes
  */
 void mbedtls_threading_set_alt(
-    void (*mutex_init)(mbedtls_platform_mutex_t *),
-    void (*mutex_free)(mbedtls_platform_mutex_t *),
+    int (*mutex_init)(mbedtls_platform_mutex_t *),
+    void (*mutex_destroy)(mbedtls_platform_mutex_t *),
     int (*mutex_lock)(mbedtls_platform_mutex_t *),
     int (*mutex_unlock)(mbedtls_platform_mutex_t *),
     int (*cond_init)(mbedtls_platform_condition_variable_t *),
@@ -253,7 +259,7 @@ void mbedtls_threading_set_alt(
                      mbedtls_platform_mutex_t *))
 {
     mbedtls_mutex_init_ptr = mutex_init;
-    mbedtls_mutex_free_ptr = mutex_free;
+    mbedtls_mutex_free_ptr = mutex_destroy;
     mbedtls_mutex_lock_ptr = mutex_lock;
     mbedtls_mutex_unlock_ptr = mutex_unlock;
     cond_init_ptr = cond_init;

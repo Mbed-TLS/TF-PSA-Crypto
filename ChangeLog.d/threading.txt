@@ -4,7 +4,14 @@ Features
 
 Requirement changes
    * Implementations of MBEDTLS_THREADING_ALT must now provide condition
-     variables in addition to mutexes. Furthermore, the type of mutex
-     objects provided by the platform functions is now called
-     mbedtls_platform_mutex_t, distinct from the API type
-     mbedtls_threading_mutex_t.
+     variables in addition to mutexes.
+
+API changes
+   * The mutex functions provided by platforms where MBEDTLS_THREADING_ALT is
+     enabled have changed in minor ways:
+     - The type of mutex objects provided by the platform functions is
+       now called mbedtls_platform_mutex_t, distinct from the API type
+       mbedtls_threading_mutex_t.
+     - The mutex_init function now returns an error code.
+     - Mutex functions other than mutex_init can now assume that the mutex
+       has been successfully initialized.
