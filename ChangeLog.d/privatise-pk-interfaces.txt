@@ -1,7 +1,6 @@
 API changes
    * The following PK interfaces are now private and should no longer be used.
        mbedtls_pk_type_t
-       mbedtls_pk_rsassa_pss_options
        mbedtls_pk_debug_type
        mbedtls_pk_debug_item
        MBEDTLS_PK_DEBUG_MAX_ITEMS
@@ -17,3 +16,6 @@ API changes
        mbedtls_pk_ec()
        mbedtls_pk_parse_subpubkey()
        mbedtls_pk_write_pubkey()
+       mbedtls_pk_verify_new()
+
+   * mbedtls_pk_rsassa_pss_options() has been removed from the interface.
