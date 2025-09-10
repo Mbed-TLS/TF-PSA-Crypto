@@ -18,4 +18,5 @@ API changes
        mbedtls_pk_write_pubkey()
        mbedtls_pk_verify_new()
 
-   * mbedtls_pk_rsassa_pss_options() has been removed from the interface.
+Removals
+   * mbedtls_pk_rsassa_pss_options has been removed from the interface.
