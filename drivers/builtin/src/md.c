@@ -535,7 +535,6 @@ int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md
 #if defined(MBEDTLS_MD_C)
     ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
     if (ctx->hmac_ctx == NULL) {
-        mbedtls_md_free(ctx);
         return MBEDTLS_ERR_MD_ALLOC_FAILED;
     }
 #else
@@ -1155,7 +1154,10 @@ int mbedtls_md_hmac(const mbedtls_md_info_t *md_info,
 
     mbedtls_md_init(&ctx);
 
-    if ((ret = mbedtls_md_setup(&ctx, md_info, 1)) != 0) {
+    if ((ret = mbedtls_md_setup(&ctx, md_info, 0)) != 0) {
+        goto cleanup;
+    }
+    if ((ret = mbedtls_md_hmac_setup(&ctx, md_info)) != 0) {
         goto cleanup;
     }
 

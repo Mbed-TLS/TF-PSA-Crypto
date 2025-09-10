@@ -383,7 +383,10 @@ int mbedtls_pkcs5_pbkdf2_hmac_ext(mbedtls_md_type_t md_alg,
 
     mbedtls_md_init(&md_ctx);
 
-    if ((ret = mbedtls_md_setup(&md_ctx, md_info, 1)) != 0) {
+    if ((ret = mbedtls_md_setup(&md_ctx, md_info, 0)) != 0) {
+        goto exit;
+    }
+    if ((ret = mbedtls_md_hmac_setup(&md_ctx, md_info)) != 0) {
         goto exit;
     }
     ret = pkcs5_pbkdf2_hmac(&md_ctx, password, plen, salt, slen,

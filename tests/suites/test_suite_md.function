@@ -364,7 +364,8 @@ void md_hmac_multi(int md_type, int trunc_size, data_t *key_str,
 
     md_info = mbedtls_md_info_from_type(md_type);
     TEST_ASSERT(md_info != NULL);
-    TEST_EQUAL(0, mbedtls_md_setup(&ctx, md_info, 1));
+    TEST_EQUAL(0, mbedtls_md_setup(&ctx, md_info, 0));
+    TEST_EQUAL(0, mbedtls_md_hmac_setup(&ctx, md_info));
 #if defined(MBEDTLS_MD_C)
     TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx) == md_info);
 #endif

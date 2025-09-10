@@ -100,7 +100,11 @@ int mbedtls_hmac_drbg_seed_buf(mbedtls_hmac_drbg_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-    if ((ret = mbedtls_md_setup(&ctx->md_ctx, md_info, 1)) != 0) {
+    if ((ret = mbedtls_md_setup(&ctx->md_ctx, md_info, 0)) != 0) {
+        return ret;
+    }
+    if ((ret = mbedtls_md_hmac_setup(&ctx->md_ctx, md_info)) != 0) {
+        mbedtls_md_free(&ctx->md_ctx);
         return ret;
     }
 
@@ -229,7 +233,11 @@ int mbedtls_hmac_drbg_seed(mbedtls_hmac_drbg_context *ctx,
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t md_size;
 
-    if ((ret = mbedtls_md_setup(&ctx->md_ctx, md_info, 1)) != 0) {
+    if ((ret = mbedtls_md_setup(&ctx->md_ctx, md_info, 0)) != 0) {
+        return ret;
+    }
+    if ((ret = mbedtls_md_hmac_setup(&ctx->md_ctx, md_info)) != 0) {
+        mbedtls_md_free(&ctx->md_ctx);
         return ret;
     }
 
