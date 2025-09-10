@@ -80,20 +80,6 @@ typedef enum {
                                            or smaller (MD5 and earlier) */
 #endif
 
-#if defined(PSA_WANT_ALG_SHA3_224)
-#define MBEDTLS_MD_MAX_BLOCK_SIZE         144 /* the longest known is SHA3-224 */
-#elif defined(PSA_WANT_ALG_SHA3_256)
-#define MBEDTLS_MD_MAX_BLOCK_SIZE         136
-#elif defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA_384)
-#define MBEDTLS_MD_MAX_BLOCK_SIZE         128
-#elif defined(PSA_WANT_ALG_SHA3_384)
-#define MBEDTLS_MD_MAX_BLOCK_SIZE         104
-#elif defined(PSA_WANT_ALG_SHA3_512)
-#define MBEDTLS_MD_MAX_BLOCK_SIZE         72
-#else
-#define MBEDTLS_MD_MAX_BLOCK_SIZE         64
-#endif
-
 /**
  * Opaque struct.
  *
