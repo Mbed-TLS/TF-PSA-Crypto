@@ -412,23 +412,24 @@ static int is_psa_key_compatible_with_alg_usage(mbedtls_svc_key_id_t key_id,
         return 0;
     }
 
-    /* PSA_KEY_USAGE_DERIVE_PUBLIC deserves a special treatment. It's not an usage
-     * flag tied to the key, but it's the permisson to call psa_export_public_key
-     * which is always present. The reason is that, in order to use such a key in
-     * a public-side key agreement, the public key needs to be exported. That's
-     * different from other usages where it's possible to call for an operation
-     * directly on the key object.
-     * Therefore for PSA_KEY_USAGE_DERIVE_PUBLIC we skip the check on usage and
-     * just rely on algorithms check below.
+    key_type = psa_get_key_type(&key_attr);
+
+    /* PSA_KEY_USAGE_DERIVE_PUBLIC deserves a special treatment (see the
+     * definition of the symbol for further details). Therefore we skip normal
+     * checks and only verify that the key is an ECC one and that the requested
+     * algorithm is PSA_ALG_ECDH.
      */
-    if (usage != PSA_KEY_USAGE_DERIVE_PUBLIC) {
-        ret = ((psa_get_key_usage_flags(&key_attr) & usage) == usage);
-        if (ret == 0) {
-            goto exit;
-        }
+    if ((usage == PSA_KEY_USAGE_DERIVE_PUBLIC) && (alg == PSA_ALG_ECDH) &&
+        PSA_KEY_TYPE_IS_ECC(key_type)) {
+        ret = 1;
+        goto exit;
     }
 
-    key_type = psa_get_key_type(&key_attr);
+    ret = ((psa_get_key_usage_flags(&key_attr) & usage) == usage);
+    if (ret == 0) {
+        goto exit;
+    }
+
     ret = is_alg_compatible_with_key(alg, key_type, psa_get_key_algorithm(&key_attr));
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     ret |= is_alg_compatible_with_key(alg, key_type, psa_get_key_enrollment_algorithm(&key_attr));

@@ -393,17 +393,12 @@ def get_expected_result(pk_type, key_type_bits, alg, alg2, usage, test_usage, te
             return 1
         return 0
 
-    # PSA_KEY_USAGE_DERIVE_PUBLIC deserves a special treatment. It's not an usage
-    # flag tied to the key, but it's the permisson to call psa_export_public_key
-    # which is always present. The reason is that, in order to use such a key in
-    # a public-side key agreement, the public key needs to be exported. That's
-    # different from other usages where it's possible to call for an operation
-    # directly on the object.
-    # Therefore for PSA_KEY_USAGE_DERIVE_PUBLIC we only rely on key type and
-    # algorithms to be OK, ignoring key_usage.
+    # PSA_KEY_USAGE_DERIVE_PUBLIC deserves a special treatment (see the definition
+    # of this symbol for further details). Therefore we only rely on key type and
+    # testing algorithm to be OK.
     if ('PSA_KEY_USAGE_DERIVE_PUBLIC' in test_usage) and \
        ('ECC' in key_type_bits) and \
-       ('PSA_ALG_ECDH' in (alg, alg2)) and ('PSA_ALG_ECDH' in test_alg):
+       ('PSA_ALG_ECDH' in test_alg):
         return 1
 
     # Check for wrong usage
