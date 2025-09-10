@@ -94,7 +94,7 @@ typedef enum {
 /* Defined internally in library/md_wrap.h. */
 typedef struct mbedtls_md_info_t mbedtls_md_info_t;
 
-/**
+/*
  * Used internally to indicate whether a context uses legacy or PSA.
  *
  * Internal use only.
