@@ -101,7 +101,7 @@ component_build_platform_alt () {
     # We can only compile, not link, since we don't have any implementations
     # suitable for testing with the dummy alt headers.
     cd $OUT_OF_SOURCE_DIR
-    CFLAGS="-I $TF_PSA_CRYPTO_ROOT_DIR/tests/include/alt-dummy -Werror" cmake -DCMAKE_BUILD_TYPE:String=Check $TF_PSA_CRYPTO_ROOT_DIR
+    CFLAGS="-I $TF_PSA_CRYPTO_ROOT_DIR/tests/include/alt-dummy -pedantic -Werror" cmake -DCMAKE_BUILD_TYPE:String=Check $TF_PSA_CRYPTO_ROOT_DIR
     make tfpsacrypto
 }
 

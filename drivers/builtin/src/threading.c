@@ -205,7 +205,7 @@ void mbedtls_condition_variable_free(
     if (*cond_destroy_ptr == NULL) {
         return;
     }
-    return (*cond_destroy_ptr)(&cond->cond);
+    (*cond_destroy_ptr)(&cond->cond);
 }
 
 static int (*cond_signal_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
