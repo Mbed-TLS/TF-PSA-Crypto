@@ -187,7 +187,7 @@ MBEDTLS_CHECK_RETURN_TYPICAL
 int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info, int hmac);
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
-/*
+/**
  * \brief           This function allocates internal structures for HMAC
  *                  operations.
  *
