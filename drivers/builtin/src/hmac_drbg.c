@@ -104,7 +104,6 @@ int mbedtls_hmac_drbg_seed_buf(mbedtls_hmac_drbg_context *ctx,
         return ret;
     }
     if ((ret = mbedtls_md_hmac_setup(&ctx->md_ctx, md_info)) != 0) {
-        mbedtls_md_free(&ctx->md_ctx);
         return ret;
     }
 
@@ -237,7 +236,6 @@ int mbedtls_hmac_drbg_seed(mbedtls_hmac_drbg_context *ctx,
         return ret;
     }
     if ((ret = mbedtls_md_hmac_setup(&ctx->md_ctx, md_info)) != 0) {
-        mbedtls_md_free(&ctx->md_ctx);
         return ret;
     }
 

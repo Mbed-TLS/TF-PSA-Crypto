@@ -535,6 +535,7 @@ int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md
 #if defined(MBEDTLS_MD_C)
     ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
     if (ctx->hmac_ctx == NULL) {
+        mbedtls_md_free(ctx);
         return MBEDTLS_ERR_MD_ALLOC_FAILED;
     }
 #else
