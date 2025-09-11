@@ -16,7 +16,7 @@ from typing import List
 import scripts_path # pylint: disable=unused-import
 from mbedtls_framework import psa_compliance
 
-PSA_ARCH_TESTS_REF = 'v23.06_API1.5_ADAC_EAC'
+PSA_ARCH_TESTS_REF = 'v25.02_API1.8_CRYPTO_1.2.1'
 
 # PSA Compliance tests we expect to fail due to known defects in Mbed TLS /
 # TF-PSA-Crypto (or the test suite).
