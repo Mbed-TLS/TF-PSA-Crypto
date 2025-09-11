@@ -550,6 +550,80 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 #define PSA_ALG_IS_JPAKE(alg) \
     (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_JPAKE_BASE)
 
+#define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE        ((psa_key_type_t) 0x4400)
+#define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE          ((psa_key_type_t) 0x7400)
+
+/** SPAKE2+ key pair.
+ *
+ * Not implemented yet.
+ */
+#define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(curve)            \
+    (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | (curve))
+
+/** SPAKE2+ public key.
+ *
+ * Not implemented yet.
+ */
+#define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(curve)          \
+    (PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE | (curve))
+
+/** Whether a key type is a SPAKE2+ key pair type. */
+#define PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(type)          \
+    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+     PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE)
+
+/** Whether a key type is a SPAKE2+ public key type. */
+#define PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(type)        \
+    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+     PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+
+/** Whether a key type is a SPAKE2+ key pair or public key type. */
+#define PSA_KEY_TYPE_IS_SPAKE2P(type)                   \
+    ((PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) &       \
+      ~PSA_KEY_TYPE_ECC_CURVE_MASK) == PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+
+#define PSA_ALG_SPAKE2P_HMAC_BASE               ((psa_algorithm_t) 0x0a000400)
+
+/** SPAKE2+ algorithm using HMAC for key confirmation.
+ *
+ * Not implemented yet.
+ */
+#define PSA_ALG_SPAKE2P_HMAC(hash_alg)                                  \
+    (PSA_ALG_SPAKE2P_HMAC_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
+#define PSA_ALG_IS_SPAKE2P_HMAC(alg)                                    \
+    (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_SPAKE2P_HMAC_BASE)
+
+/** SPAKE2+ algorithm using CMAC for key confirmation.
+ *
+ * Not implemented yet.
+ */
+#define PSA_ALG_SPAKE2P_CMAC_BASE               ((psa_algorithm_t) 0x0a000500)
+#define PSA_ALG_SPAKE2P_CMAC(hash_alg)                          \
+    (PSA_ALG_SPAKE2P_CMAC_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
+#define PSA_ALG_IS_SPAKE2P_CMAC(alg)                            \
+    (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_SPAKE2P_CMAC_BASE)
+
+/** SPAKE2+ algorithm variant used by the Matter specification version 1.2.
+ *
+ * Not implemented yet.
+ */
+#define PSA_ALG_SPAKE2P_MATTER                  ((psa_algorithm_t) 0x0a000609)
+
+/** Whether the specified algorithm is any SPAKE2+ algorithm variant.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is of the form #PSA_ALG_SPAKE2P_CMAC(\c hash_alg),
+ *         #PSA_ALG_SPAKE2P_HMAC(\c hash_alg) or #PSA_ALG_SPAKE2P_MATTER
+ *         for some hash algorithm \c hash_alg, 0 otherwise.
+ *         This macro may return either 0 or 1 if \p alg is not a supported
+ *         algorithm identifier.
+ */
+#define PSA_ALG_IS_SPAKE2P(alg)         \
+    (PSA_ALG_IS_SPAKE2P_HMAC(alg) ||    \
+     PSA_ALG_IS_SPAKE2P_CMAC(alg) ||    \
+     (alg) == PSA_ALG_SPAKE2P_MATTER)
+
 /** @} */
 
 /** \defgroup pake Password-authenticated key exchange (PAKE)
