@@ -104,20 +104,20 @@ component_release_tf_psa_crypto_test_valgrind_constant_flow_psa () {
 }
 
 component_tf_psa_crypto_test_tsan () {
-    msg "build: TSan (clang)"
+    msg "build: full config, TSan (clang)"
     scripts/config.py full
     scripts/config.py set MBEDTLS_THREADING_C
     scripts/config.py set MBEDTLS_THREADING_PTHREAD
-    # Self-tests do not currently use multiple threads.
+    # Self-tests are not thread-safe, and this affects ECC code even when
+    # not running the self-tests.
+    # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/443
     scripts/config.py unset MBEDTLS_SELF_TEST
-    # Interruptible ECC tests are not thread safe
-    scripts/config.py unset MBEDTLS_ECP_RESTARTABLE
 
     cd $OUT_OF_SOURCE_DIR
     CC=clang cmake -DCMAKE_BUILD_TYPE:String=TSan "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
-    msg "test: main suites (TSan)"
+    msg "test: full config, main suites (TSan)"
     make test
 }
 
