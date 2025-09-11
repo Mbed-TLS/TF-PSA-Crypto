@@ -276,4 +276,32 @@ int mbedtls_ecp_modulus_setup(mbedtls_mpi_mod_modulus *N,
 
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_LIGHT */
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
+typedef struct {
+    unsigned long mbedtls_mpi_mul_mod;
+    unsigned long ecp_add_mixed;
+    unsigned long ecp_double_jac;
+} mbedtls_ecp_trace_counts_t;
+
+static inline void mbedtls_ecp_trace_counts_reset(
+    mbedtls_ecp_trace_counts_t *trace_counts)
+{
+    if (trace_counts != NULL) {
+        memset(trace_counts, 0, sizeof(*trace_counts));
+    }
+}
+
+/* If non-null, some functions in ecp.c increment the relevant counter
+ * each time they run. Not thread-safe! */
+extern mbedtls_ecp_trace_counts_t *mbedtls_ecp_trace_counts_live;
+
+#if defined(MBEDTLS_SELF_TEST)
+/* If non-null, invoked by the self tests to compare trace counts on the
+ * first iterations with test counts on subsequent iterations. */
+extern void (*mbedtls_ecp_self_test_trace_counts_compare)(
+    const mbedtls_ecp_trace_counts_t *reference,
+    const mbedtls_ecp_trace_counts_t *live);
+#endif /* MBEDTLS_SELF_TEST */
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
+
 #endif /* MBEDTLS_ECP_INVASIVE_H */

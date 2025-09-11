@@ -68,6 +68,21 @@ inline static int mbedtls_ecp_group_cmp(mbedtls_ecp_group *grp1,
     return 0;
 }
 
+#if defined(MBEDTLS_TEST_HOOKS)
+static void mbedtls_test_ecp_trace_counts_compare(
+    const mbedtls_ecp_trace_counts_t *reference,
+    const mbedtls_ecp_trace_counts_t *live)
+{
+    TEST_EQUAL(reference->mbedtls_mpi_mul_mod, live->mbedtls_mpi_mul_mod);
+    TEST_EQUAL(reference->ecp_add_mixed, live->ecp_add_mixed);
+    TEST_EQUAL(reference->ecp_double_jac, live->ecp_double_jac);
+
+exit:
+    ;
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -1460,7 +1475,20 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
 void ecp_selftest()
 {
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_ecp_trace_counts_t live_trace_counts;
+    mbedtls_ecp_trace_counts_live = &live_trace_counts;
+    mbedtls_ecp_self_test_trace_counts_compare = mbedtls_test_ecp_trace_counts_compare;
+#endif
+
     TEST_ASSERT(mbedtls_ecp_self_test(1) == 0);
+
+exit:
+    ;
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_ecp_trace_counts_live = NULL;
+    mbedtls_ecp_self_test_trace_counts_compare = NULL;
+#endif
 }
 /* END_CASE */
 
