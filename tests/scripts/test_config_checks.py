@@ -41,7 +41,7 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
                       #define MBEDTLS_ENTROPY_NV_SEED
                       #undef MBEDTLS_ENTROPY_NO_SOURCES_OK
                       ''',
-                      error=(r'Entropy module enabled \(MBEDTLS_ENTROPY_C\), but no true sources'))
+                      error=(r'Entropy module enabled, but no true sources'))
 
 if __name__ == '__main__':
     unittest.main()
