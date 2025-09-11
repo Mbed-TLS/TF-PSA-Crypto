@@ -12,9 +12,7 @@
 component_tf_psa_crypto_test_psa_compliance () {
     msg "unit test: test_psa_compliance.py"
 
-    # Following tests use secp224r1 EC curve or DES which is removed in tf-psa-crypto
-    # therefore they are disabled temporarly.
-    CC=gcc tests/scripts/test_psa_compliance.py --expected-failures 202 203 204 205 216 232 233 234 235 236 237 238 244 248 249 252 253
+    CC=gcc tests/scripts/test_psa_compliance.py
 }
 
 support_tf_psa_crypto_test_psa_compliance () {
