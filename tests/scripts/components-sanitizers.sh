@@ -103,7 +103,24 @@ component_release_tf_psa_crypto_test_valgrind_constant_flow_psa () {
     make memcheck
 }
 
-component_tf_psa_crypto_test_tsan () {
+component_tf_psa_crypto_test_default_tsan () {
+    # Default config, with MBEDTLS_TEST_HOOKS (and thus the mutex usage
+    # verification framework, which affects concurrent behavior) disabled.
+    msg "build: default config, TSan (clang)"
+    scripts/config.py set MBEDTLS_THREADING_C
+    scripts/config.py set MBEDTLS_THREADING_PTHREAD
+
+    cd $OUT_OF_SOURCE_DIR
+    CC=clang cmake -DCMAKE_BUILD_TYPE:String=TSan "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    msg "test: default config, main suites (TSan)"
+    make test
+}
+
+component_tf_psa_crypto_test_full_tsan () {
+    # Full config, with MBEDTLS_TEST_HOOKS (and thus the mutex usage
+    # verification framework, which affects concurrent behavior) enabled.
     msg "build: full config, TSan (clang)"
     scripts/config.py full
     scripts/config.py set MBEDTLS_THREADING_C
