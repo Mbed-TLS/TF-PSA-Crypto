@@ -108,10 +108,6 @@ component_tf_psa_crypto_test_tsan () {
     scripts/config.py full
     scripts/config.py set MBEDTLS_THREADING_C
     scripts/config.py set MBEDTLS_THREADING_PTHREAD
-    # Self-tests are not thread-safe, and this affects ECC code even when
-    # not running the self-tests.
-    # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/443
-    scripts/config.py unset MBEDTLS_SELF_TEST
 
     cd $OUT_OF_SOURCE_DIR
     CC=clang cmake -DCMAKE_BUILD_TYPE:String=TSan "$TF_PSA_CRYPTO_ROOT_DIR"
