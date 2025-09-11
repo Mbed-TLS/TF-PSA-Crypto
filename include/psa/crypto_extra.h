@@ -746,6 +746,16 @@ typedef uint32_t psa_pake_primitive_t;
  */
 #define PSA_PAKE_STEP_ZK_PROOF                  ((psa_pake_step_t) 0x03)
 
+/** The key confirmation value.
+ *
+ * This is only used with PAKE algorithms with an explicit key confirmation
+ * phase.
+ *
+ * Refer to the documentation of the PAKE algorithm for information about
+ * the input format.
+ */
+#define PSA_PAKE_STEP_CONFIRM                   ((psa_pake_step_t) 0x04)
+
 /**@}*/
 
 /** A sufficient output buffer size for psa_pake_output().
@@ -1444,6 +1454,41 @@ psa_status_t psa_pake_set_peer(psa_pake_operation_t *operation,
  */
 psa_status_t psa_pake_set_role(psa_pake_operation_t *operation,
                                psa_pake_role_t role);
+
+/** Set the context data for a password-authenticated key exchange.
+ *
+ * Not all PAKE algorithms use context data. Only call this function
+ * for algorithms that need it.
+ *
+ * \param[in,out] operation     The operation object to specify the
+ *                              application's role for. It must have been set up
+ *                              by psa_pake_setup() and not yet in use (neither
+ *                              psa_pake_output() nor psa_pake_input() has been
+ *                              called yet). It must be an operation for which
+ *                              the context hasn't been specified
+ *                              (psa_pake_set_context() hasn't been called yet).
+ * \param[in] context           The context to set.
+ * \param context_len           The length of \p context in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The algorithm in \p operation does not use a context.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The library configuration does not support PAKE algorithms with
+ *         a context, or this specific context value is not supported for
+ *         the given \p operation.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid, or
+ *         the library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+psa_status_t psa_pake_set_context(psa_pake_operation_t *operation,
+                                  const uint8_t *context,
+                                  size_t context_len);
 
 /** Get output for a step of a password-authenticated key exchange.
  *

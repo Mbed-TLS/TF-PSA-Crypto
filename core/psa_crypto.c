@@ -6536,6 +6536,26 @@ psa_status_t psa_key_derivation_output_key(
                                                 key);
 }
 
+psa_status_t psa_key_derivation_verify_bytes(
+    psa_key_derivation_operation_t *operation,
+    const uint8_t *expected,
+    size_t expected_length)
+{
+    (void) operation;
+    (void) expected;
+    (void) expected_length;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_key_derivation_verify_key(
+    psa_key_derivation_operation_t *operation,
+    psa_key_id_t expected)
+{
+    (void) operation;
+    (void) expected;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
 
 /****************************************************************/
 /* Key derivation: operation management */
@@ -8968,6 +8988,16 @@ psa_status_t psa_pake_set_role(
 exit:
     psa_pake_abort(operation);
     return status;
+}
+
+psa_status_t psa_pake_set_context(
+    psa_pake_operation_t *operation,
+    const uint8_t *context, size_t context_len)
+{
+    (void) operation;
+    (void) context;
+    (void) context_len;
+    return PSA_ERROR_NOT_SUPPORTED;
 }
 
 /* Auxiliary function to convert core computation stage to single driver step. */
