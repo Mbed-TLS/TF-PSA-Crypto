@@ -179,11 +179,20 @@ static inline int mbedtls_pk_set_rsa_hash_alg(mbedtls_pk_context *pk, psa_algori
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #if defined(MBEDTLS_TEST_HOOKS)
+
 MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     mbedtls_pk_context *pk,
     unsigned char *key, size_t keylen,
     const unsigned char *pwd, size_t pwdlen);
-#endif
+
+#if defined(MBEDTLS_PK_PARSE_C)
+MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_unencrypted_der(
+    mbedtls_pk_context *pk,
+    const unsigned char *key,
+    size_t keylen);
+#endif /* MBEDTLS_PK_PARSE_C */
+
+#endif /* MBEDTLS_TEST_HOOKS */
 
 #if defined(MBEDTLS_FS_IO)
 int mbedtls_pk_load_file(const char *path, unsigned char **buf, size_t *n);

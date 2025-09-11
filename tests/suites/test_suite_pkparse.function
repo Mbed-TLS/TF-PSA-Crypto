@@ -279,6 +279,21 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void pk_parse_key_unencrypted(data_t *buf, int result)
+{
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init(&pk);
+    USE_PSA_INIT();
+
+    TEST_EQUAL(mbedtls_pk_parse_key_pkcs8_unencrypted_der(&pk, buf->x, buf->len), result);
+exit:
+    mbedtls_pk_free(&pk);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PK_WRITE_C */
 void pk_parse_fix_montgomery(data_t *input_key, data_t *exp_output)
 {
