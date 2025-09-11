@@ -330,6 +330,56 @@ int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
  */
 size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
 
+/** Whether the key pair or public key can be used as the public side in a
+ * key agreement.
+ *
+ * This is not an usage flag tied to the key, but it's the permisson to call
+ * psa_export_public_key() on a key which is always present. The reason is that,
+ * in order to use such a key in a public-side key agreement, the public key
+ * needs to be exported. That's different from other usages where it's possible
+ * to call for an operation directly on the key object.
+ * An important consequence of this is that for this usage to be valid a key
+ * doesn't need to have PSA_ALG_ECDH as main/enrollment algorithm. It only
+ * need to be an ECC key.
+ *
+ * \warning This is temporary until PSA Crypto API officially supports it.
+ */
+#define PSA_KEY_USAGE_DERIVE_PUBLIC         ((psa_key_usage_t) 0x00800000)
+
+/**
+ * \brief           Tell if the key wrapped in the PK context is able to perform
+ *                  the \p usage operation using the \p alg algorithm. This should
+ *                  not necessarily be supported by PK APIs, but more in
+ *                  general by importing the key into PSA and then performing
+ *                  the operation.
+ *
+ * \param pk        The context to query. It must have been initialized.
+ * \param alg       PSA algorithm to check against.
+ *                  Allowed values are:
+ *                  - #PSA_ALG_RSA_PKCS1V15_SIGN(hash),
+ *                  - #PSA_ALG_RSA_PSS(hash),
+ *                  - #PSA_ALG_RSA_PSS_ANY_SALT(hash),
+ *                  - #PSA_ALG_RSA_PKCS1V15_CRYPT,
+ *                  - #PSA_ALG_RSA_OAEP(hash),
+ *                  - #PSA_ALG_ECDSA(hash),
+ *                  - #MBEDTLS_PK_ALG_ECDSA(hash),
+ *                  where hash is a specified algorithm.
+ * \param usage     PSA usage flag that the key must be verified against.
+ *                  A single flag from the following list must be specified:
+ *                  - #PSA_KEY_USAGE_SIGN_HASH,
+ *                  - #PSA_KEY_USAGE_VERIFY_HASH,
+ *                  - #PSA_KEY_USAGE_DECRYPT,
+ *                  - #PSA_KEY_USAGE_ENCRYPT,
+ *                  - #PSA_KEY_USAGE_DERIVE,
+ *                  - #PSA_KEY_USAGE_DERIVE_PUBLIC.
+ *
+ * \return          1 if the key can do operation on the given type.
+ * \return          0 if the key cannot do the operations or the context that
+ *                  has been initialized but not set up.
+ */
+int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
+                          psa_key_usage_t usage);
+
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 /**
  * \brief           Determine valid PSA attributes that can be used to
