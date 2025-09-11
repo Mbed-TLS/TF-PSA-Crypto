@@ -382,6 +382,9 @@ void ecp_test_vect(int id, char *dA_str, char *xA_str, char *yA_str,
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
 #if defined(MBEDTLS_TEST_HOOKS)
     reference_trace_counts_G = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_G.mbedtls_mpi_mul_mod);
+    TEST_LE_U(1, reference_trace_counts_G.ecp_add_mixed);
+    TEST_LE_U(1, reference_trace_counts_G.ecp_double_jac);
 #endif
 
     mbedtls_ecp_trace_counts_reset(&live_trace_counts);
@@ -392,6 +395,9 @@ void ecp_test_vect(int id, char *dA_str, char *xA_str, char *yA_str,
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
 #if defined(MBEDTLS_TEST_HOOKS)
     reference_trace_counts_other = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_other.mbedtls_mpi_mul_mod);
+    TEST_LE_U(1, reference_trace_counts_other.ecp_add_mixed);
+    TEST_LE_U(1, reference_trace_counts_other.ecp_double_jac);
 #endif
 
     mbedtls_ecp_trace_counts_reset(&live_trace_counts);
@@ -468,6 +474,9 @@ void ecp_test_vec_x(int id, char *dA_hex, char *xA_hex, char *dB_hex,
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xA) == 0);
 #if defined(MBEDTLS_TEST_HOOKS)
     reference_trace_counts_G = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_G.mbedtls_mpi_mul_mod);
+    TEST_EQUAL(0, reference_trace_counts_G.ecp_add_mixed);
+    TEST_EQUAL(0, reference_trace_counts_G.ecp_double_jac);
 #endif
 
     mbedtls_ecp_trace_counts_reset(&live_trace_counts);
@@ -477,6 +486,9 @@ void ecp_test_vec_x(int id, char *dA_hex, char *xA_hex, char *dB_hex,
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xS) == 0);
 #if defined(MBEDTLS_TEST_HOOKS)
     reference_trace_counts_other = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_other.mbedtls_mpi_mul_mod);
+    TEST_EQUAL(0, reference_trace_counts_other.ecp_add_mixed);
+    TEST_EQUAL(0, reference_trace_counts_other.ecp_double_jac);
 #endif
 
     mbedtls_ecp_trace_counts_reset(&live_trace_counts);
