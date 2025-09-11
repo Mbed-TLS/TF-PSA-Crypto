@@ -61,7 +61,7 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
                       #define MBEDTLS_ENTROPY_NV_SEED
                       ''',
                       error=(
-                          r'Providing a non-volatile entropy seed does not enhance the security of an external RNG' # pylint: disable=line-too-long
+                          r'MBEDTLS_ENTROPY_NV_SEED has no effect when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled' # pylint: disable=line-too-long
                       ))
 
 if __name__ == '__main__':

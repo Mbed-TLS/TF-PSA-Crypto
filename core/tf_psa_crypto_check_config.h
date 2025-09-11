@@ -522,7 +522,7 @@
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#error "Providing a non-volatile entropy seed does not enhance the security of an external RNG"
+#error "MBEDTLS_ENTROPY_NV_SEED has no effect when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_NV_SEED_ALT) &&\
