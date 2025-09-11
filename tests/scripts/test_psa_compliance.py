@@ -24,13 +24,6 @@ PSA_ARCH_TESTS_REF = 'v23.06_API1.5_ADAC_EAC'
 # Test number 2xx corresponds to the files in the folder
 # psa-arch-tests/api-tests/dev_apis/crypto/test_c0xx
 EXPECTED_FAILURES = [
-    # Following tests use secp224r1 EC curve or DES which is removed in tf-psa-crypto
-    # therefore they are disabled temporarly.
-    202, 203, 204, 205,
-    216,
-    232, 233, 234, 235, 236, 237, 238,
-    244, 248, 249,
-    252, 253,
 ] # type: List[int]
 
 if __name__ == '__main__':

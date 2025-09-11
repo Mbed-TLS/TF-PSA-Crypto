@@ -1,0 +1,37 @@
+diff --git a/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h b/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h
+index c5a54a9..682b151 100644
+--- a/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h
++++ b/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h
+@@ -53,7 +53,7 @@
+  */
+ #define ARCH_TEST_ECC
+ #define ARCH_TEST_ECC_CURVE_SECP192R1
+-#define ARCH_TEST_ECC_CURVE_SECP224R1
++//#define ARCH_TEST_ECC_CURVE_SECP224R1
+ #define ARCH_TEST_ECC_CURVE_SECP256R1
+ #define ARCH_TEST_ECC_CURVE_SECP384R1
+ 
+@@ -79,10 +79,10 @@
+  *
+  * Comment macros to disable the types
+  */
+-#define ARCH_TEST_DES
+-#define ARCH_TEST_DES_1KEY
+-#define ARCH_TEST_DES_2KEY
+-#define ARCH_TEST_DES_3KEY
++//#define ARCH_TEST_DES
++//#define ARCH_TEST_DES_1KEY
++//#define ARCH_TEST_DES_2KEY
++//#define ARCH_TEST_DES_3KEY
+ 
+ /**
+  * \def  ARCH_TEST_RAW
+@@ -105,7 +105,7 @@
+  *
+  * Enable the ARC4 key type.
+  */
+-#define ARCH_TEST_ARC4
++//#define ARCH_TEST_ARC4
+ 
+ /**
+  * \def ARCH_TEST_CIPHER_MODE_CTR
