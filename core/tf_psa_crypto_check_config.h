@@ -517,10 +517,12 @@
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED) &&\
-    (!defined(MBEDTLS_PSA_CRYPTO_C) || \
-     defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) || \
-     !defined(MBEDTLS_PLATFORM_C))
+    (!defined(MBEDTLS_PSA_CRYPTO_C) || !defined(MBEDTLS_PLATFORM_C))
 #error "MBEDTLS_ENTROPY_NV_SEED defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ENTROPY_NV_SEED) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#error "Providing a non-volatile entropy seed does not enhance the security of an external RNG"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_NV_SEED_ALT) &&\
