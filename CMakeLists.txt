@@ -126,17 +126,6 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     string(APPEND tfpsacrypto_static_target "_static")
 endif()
 
-# Warning string - created as a list for compatibility with CMake 2.8
-set(CTR_DRBG_128_BIT_KEY_WARN_L1 "****  WARNING!  MBEDTLS_CTR_DRBG_USE_128_BIT_KEY defined!\n")
-set(CTR_DRBG_128_BIT_KEY_WARN_L2 "****  Using 128-bit keys for CTR_DRBG limits the security of generated\n")
-set(CTR_DRBG_128_BIT_KEY_WARN_L3 "****  keys and operations that use random values generated to 128-bit security\n")
-
-set(CTR_DRBG_128_BIT_KEY_WARNING "${WARNING_BORDER}"
-                         "${CTR_DRBG_128_BIT_KEY_WARN_L1}"
-                         "${CTR_DRBG_128_BIT_KEY_WARN_L2}"
-                         "${CTR_DRBG_128_BIT_KEY_WARN_L3}"
-                         "${WARNING_BORDER}")
-
 # Python 3 is only needed here to check for configuration warnings.
 if(NOT CMAKE_VERSION VERSION_LESS 3.15.0)
     set(Python3_FIND_STRATEGY LOCATION)
@@ -149,22 +138,6 @@ else()
     if(PYTHONINTERP_FOUND)
         set(TF_PSA_CRYPTO_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
     endif()
-endif()
-
-if(TF_PSA_CRYPTO_PYTHON_EXECUTABLE)
-    # If 128-bit keys are configured for CTR_DRBG, display an appropriate warning
-    execute_process(
-        COMMAND
-            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE} ${TF_PSA_CRYPTO_DIR}/scripts/config.py
-            -f ${TF_PSA_CRYPTO_DIR}/include/psa/crypto_config.h
-            get MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-        RESULT_VARIABLE
-            result
-    )
-    if(${result} EQUAL 0)
-        message(WARNING ${CTR_DRBG_128_BIT_KEY_WARNING})
-    endif()
-
 endif()
 
 # We now potentially need to link all executables against PThreads, if available
