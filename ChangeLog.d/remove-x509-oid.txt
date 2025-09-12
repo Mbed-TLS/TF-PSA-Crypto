@@ -1,0 +1,5 @@
+Removals
+   * The library no longer offers interfaces to look up values by OID
+     or OID by enum values. The compilation option MBEDTLS_OID_C no longer
+     exists. OID tables are included in the build automatically as needed.
+     OIDs that are not relevant to TF-PSA-Crypto have been removed.
