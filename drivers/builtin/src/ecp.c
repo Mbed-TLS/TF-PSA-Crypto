@@ -48,7 +48,7 @@
 /* Traces that can be used to count or check the number of basic operations
  * (MPI multiply modulo, point addition, point doubling) in an
  * ECC operation. */
-#if defined(MBEDTLS_TEST_HOOKS)
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
 mbedtls_ecp_trace_counts_t *mbedtls_ecp_trace_counts_live = NULL;
 
 #define TRACE_POINT(where)                                              \

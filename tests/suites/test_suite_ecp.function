@@ -68,7 +68,7 @@ inline static int mbedtls_ecp_group_cmp(mbedtls_ecp_group *grp1,
     return 0;
 }
 
-#if defined(MBEDTLS_TEST_HOOKS)
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
 static void mbedtls_test_ecp_trace_counts_compare(
     const mbedtls_ecp_trace_counts_t *reference,
     const mbedtls_ecp_trace_counts_t *live)
@@ -80,10 +80,10 @@ static void mbedtls_test_ecp_trace_counts_compare(
 exit:
     ;
 }
-#else /* MBEDTLS_TEST_HOOKS */
+#else /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
 #define mbedtls_ecp_trace_counts_reset(unusued) ((void) 0)
 #define mbedtls_test_ecp_trace_counts_compare(unused0, unused1) ((void) 0)
-#endif /* MBEDTLS_TEST_HOOKS */
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
 
 
 /* END_HEADER */
@@ -1554,7 +1554,7 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
 void ecp_selftest()
 {
-#if defined(MBEDTLS_TEST_HOOKS)
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
     mbedtls_ecp_trace_counts_t live_trace_counts;
     mbedtls_ecp_trace_counts_live = &live_trace_counts;
     mbedtls_ecp_self_test_trace_counts_compare = mbedtls_test_ecp_trace_counts_compare;
@@ -1564,7 +1564,7 @@ void ecp_selftest()
 
 exit:
     ;
-#if defined(MBEDTLS_TEST_HOOKS)
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
     mbedtls_ecp_trace_counts_live = NULL;
     mbedtls_ecp_self_test_trace_counts_compare = NULL;
 #endif
