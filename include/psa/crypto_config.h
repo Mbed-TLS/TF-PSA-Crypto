@@ -2004,7 +2004,7 @@
  * AES support can either be achieved through built-in AES or PSA. Built-in is
  * the default option when present otherwise PSA is used.
  *
- * Module:  library/ctr_drbg.c
+ * Module:  drivers/builtin/src/ctr_drbg.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
  *           PSA_WANT_ALG_ECB_NO_PADDING
