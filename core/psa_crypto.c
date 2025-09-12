@@ -1702,6 +1702,17 @@ psa_status_t psa_export_public_key_iop_abort(psa_export_public_key_iop_t *operat
  */
 static psa_status_t psa_validate_key_policy(const psa_key_policy_t *policy)
 {
+    /* Do not allow PSA_KEY_USAGE_DERIVE_PUBLIC until its numerical value
+     * is enshrined in an official specification. This way, it's ok if
+     * the value changes. Once we start allowing persistent keys with
+     * a numerical value, we're locked into the meaning of that numerical
+     * value, so don't do that if there's a risk that the value might change.
+     *
+     * We introduced PSA_KEY_USAGE_DERIVE_PUBLIC for the sake of
+     * mbedtls_pk_can_do_psa() and psa_check_key_usage(). At this point,
+     * it is never checked by an operation, so there is no compelling
+     * reason to set this flag in a key policy.
+     */
     if ((policy->usage & ~(PSA_KEY_USAGE_EXPORT |
                            PSA_KEY_USAGE_COPY |
                            PSA_KEY_USAGE_ENCRYPT |
