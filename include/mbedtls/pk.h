@@ -327,10 +327,20 @@ size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
 
 /**
  * \brief           Tell if the key wrapped in the PK context is able to perform
- *                  the \p usage operation using the \p alg algorithm. This should
- *                  not necessarily be supported by PK APIs, but more in
- *                  general by importing the key into PSA and then performing
- *                  the operation.
+ *                  the \p usage operation using the \p alg algorithm.
+ *
+ *                  The operation may be a PK function, a PSA operation on
+ *                  the underlying PSA key if the PK object wraps a PSA key,
+ *                  or a PSA operation on a key obtained with
+ *                  mbedtls_pk_import_into_psa().
+ *
+ * \note            As of TF-PSA-Crypto 1.0.0, this function returns \c 0
+ *                  if the key type and policy are suitable for the
+ *                  requested algorithm and usage, even if the key would
+ *                  not work for some other reason, for example an RSA
+ *                  key that is too small for OAEP with the specified hash.
+ *                  This behavior may change without notice in future
+ *                  versions of the library.
  *
  * \param pk        The context to query. It must have been initialized.
  * \param alg       PSA algorithm to check against.
