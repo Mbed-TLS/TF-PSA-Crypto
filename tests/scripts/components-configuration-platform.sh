@@ -87,6 +87,24 @@ component_tf_psa_crypto_test_platform_calloc_macro () {
     make test
 }
 
+component_build_platform_alt () {
+    msg "build: platform MBEDTLS_XXX_ALT" # ~30s
+    scripts/config.py full
+
+    # You can only have one threading implementation: alt or pthread, not both.
+    scripts/config.py unset MBEDTLS_THREADING_PTHREAD
+
+    # Enable all MBEDTLS_xxx_ALT options (including, in particular, those
+    # that require a custom "xxx_alt.h" header).
+    scripts/config.py set-all 'MBEDTLS_[A-Z_0-9]*_ALT'
+
+    # We can only compile, not link, since we don't have any implementations
+    # suitable for testing with the dummy alt headers.
+    cd $OUT_OF_SOURCE_DIR
+    CFLAGS="-I $TF_PSA_CRYPTO_ROOT_DIR/tests/include/alt-dummy -pedantic -Werror" cmake -DCMAKE_BUILD_TYPE:String=Check $TF_PSA_CRYPTO_ROOT_DIR
+    make tfpsacrypto
+}
+
 component_tf_psa_crypto_test_have_int32 () {
     msg "build: gcc, force 32-bit bignum limbs"
     scripts/config.py unset MBEDTLS_HAVE_ASM
