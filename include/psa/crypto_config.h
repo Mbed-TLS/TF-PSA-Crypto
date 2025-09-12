@@ -85,7 +85,7 @@
 #define PSA_WANT_ECC_MONTGOMERY_448             1
 #define PSA_WANT_ECC_SECP_K1_256                1
 /* For secp256r1, consider enabling #MBEDTLS_PSA_P256M_DRIVER_ENABLED
- * (see the description in mbedtls/mbedtls_config.h for details). */
+ * (see the description in psa/crypto_config.h for details). */
 #define PSA_WANT_ECC_SECP_R1_256                1
 #define PSA_WANT_ECC_SECP_R1_384                1
 #define PSA_WANT_ECC_SECP_R1_521                1
@@ -157,7 +157,7 @@
  * based buffer to 'allocate' dynamic memory. (replaces calloc() and free()
  * calls)
  *
- * Module:  library/memory_buffer_alloc.c
+ * Module:  drivers/builtin/src/memory_buffer_alloc.c
  *
  * Requires: MBEDTLS_PLATFORM_C
  *           MBEDTLS_PLATFORM_MEMORY (to use it within Mbed TLS)
@@ -247,7 +247,7 @@
  * \note This abstraction layer must be enabled on Windows (including MSYS2)
  * as other modules rely on it for a fixed snprintf implementation.
  *
- * Module:  library/platform.c
+ * Module:  drivers/builtin/src/platform.c
  * Caller:  Most other .c files
  *
  * This module enables abstraction of common (libc) functions.
@@ -452,7 +452,7 @@
  * PSA crypto functions are ever called from a single thread. Note that
  * this includes indirect calls, for example through PK.
  *
- * Module:  library/threading.c
+ * Module:  drivers/builtin/src/threading.c
  *
  * This allows different threading implementations (built-in or
  * provided externally).
@@ -726,7 +726,7 @@
  *
  * Enable the LMS stateful-hash asymmetric signature algorithm.
  *
- * Module:  library/lms.c
+ * Module:  drivers/builtin/src/lms.c
  * Caller:
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C
@@ -753,25 +753,16 @@
  * Enable the generic layer for message digest (hashing).
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C with at least one hash.
- * Module:  library/md.c
- * Caller:  library/constant_time.c
- *          library/ecdsa.c
- *          library/ecjpake.c
- *          library/hkdf.c
- *          library/hmac_drbg.c
- *          library/pk.c
- *          library/pkcs5.c
- *          library/pkcs12.c
- *          library/psa_crypto_ecp.c
- *          library/psa_crypto_rsa.c
- *          library/rsa.c
- *          library/ssl_cookie.c
- *          library/ssl_msg.c
- *          library/ssl_tls.c
- *          library/x509.c
- *          library/x509_crt.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
+ * Module:  drivers/builtin/src/md.c
+ * Caller:  drivers/builtin/src/constant_time.c
+ *          drivers/builtin/src/ecdsa.c
+ *          drivers/builtin/src/ecjpake.c
+ *          drivers/builtin/src/hmac_drbg.c
+ *          drivers/builtin/src/pk.c
+ *          drivers/builtin/src/pkcs5.c
+ *          drivers/builtin/src/psa_crypto_ecp.c
+ *          drivers/builtin/src/psa_crypto_rsa.c
+ *          drivers/builtin/src/rsa.c
  *
  * Uncomment to enable generic message digest wrappers.
  */
@@ -784,7 +775,7 @@
  * KW (also known as RFC 3394) and KWP (RFC 5649).
  * Currently these modes are only supported with AES.
  *
- * Module:  library/nist_kw.c
+ * Module:  drivers/builtin/src/nist_kw.c
  *
  * Auto enables: PSA_WANT_ALG_ECB_NO_PADDING
  */
@@ -795,14 +786,10 @@
  *
  * Enable the generic public (asymmetric) key layer.
  *
- * Module:  library/pk.c
- * Caller:  library/psa_crypto_rsa.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *          library/x509.c
+ * Module:  drivers/builtin/src/pk.c
+ * Caller:  drivers/builtin/src/psa_crypto_rsa.c
  *
- * Requires: MBEDTLS_MD_C, MBEDTLS_RSA_C or MBEDTLS_ECP_C
+ * Requires: MBEDTLS_MD_C, the built-in RSA or ECP implementation
  *
  * Uncomment to enable generic public key wrappers.
  */
@@ -813,12 +800,9 @@
  *
  * Enable PKCS#5 functions.
  *
- * Module:  library/pkcs5.c
+ * Module:  drivers/builtin/src/pkcs5.c
  *
  * Auto-enables: MBEDTLS_MD_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any PKCS5 operations.
  *
  * This module adds support for the PKCS#5 functions.
  */
@@ -829,9 +813,7 @@
  *
  * Enable the generic public (asymmetric) key parser.
  *
- * Module:  library/pkparse.c
- * Caller:  library/x509_crt.c
- *          library/x509_csr.c
+ * Module:  drivers/builtin/src/pkparse.c
  *
  * Requires: MBEDTLS_ASN1_PARSE_C, MBEDTLS_PK_C
  *
@@ -867,8 +849,7 @@
  *
  * Enable the generic public (asymmetric) key writer.
  *
- * Module:  library/pkwrite.c
- * Caller:  library/x509write.c
+ * Module:  drivers/builtin/src/pkwrite.c
  *
  * Requires: MBEDTLS_ASN1_WRITE_C, MBEDTLS_PK_C
  *
@@ -890,11 +871,9 @@
  *
  * Enable the generic ASN1 parser.
  *
- * Module:  library/asn1.c
- * Caller:  library/x509.c
- *          library/pkcs12.c
- *          library/pkcs5.c
- *          library/pkparse.c
+ * Module:  drivers/builtin/src/asn1.c
+ * Caller:  drivers/builtin/src/pkcs5.c
+ *          drivers/builtin/src/pkparse.c
  */
 #define MBEDTLS_ASN1_PARSE_C
 
@@ -903,12 +882,9 @@
  *
  * Enable the generic ASN1 writer.
  *
- * Module:  library/asn1write.c
- * Caller:  library/ecdsa.c
- *          library/pkwrite.c
- *          library/x509_create.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
+ * Module:  drivers/builtin/src/asn1write.c
+ * Caller:  drivers/builtin/src/ecdsa.c
+ *          drivers/builtin/src/pkwrite.c
  */
 #define MBEDTLS_ASN1_WRITE_C
 
@@ -917,8 +893,8 @@
  *
  * Enable the Base64 module.
  *
- * Module:  library/base64.c
- * Caller:  library/pem.c
+ * Module:  drivers/builtin/src/base64.c
+ * Caller:  drivers/builtin/src/pem.c
  *
  * This module is required for PEM support (required by X.509).
  */
@@ -929,17 +905,11 @@
  *
  * Enable PEM decoding / parsing.
  *
- * Module:  library/pem.c
- * Caller:  library/pkparse.c
- *          library/x509_crl.c
- *          library/x509_crt.c
- *          library/x509_csr.c
+ * Module:  drivers/builtin/src/pem.c
+ * Caller:  drivers/builtin/src/pkparse.c
  *
  * Requires: MBEDTLS_BASE64_C
- *           optionally MBEDTLS_MD5_C, or PSA Crypto with MD5 (see below)
- *
- * \warning When parsing password-protected files, if MD5 is provided only by
- * a PSA driver, you must call psa_crypto_init() before the first file.
+ *           optionally PSA_WANT_ALG_MD5
  *
  * This modules adds support for decoding / parsing PEM files.
  */
@@ -950,10 +920,8 @@
  *
  * Enable PEM encoding / writing.
  *
- * Module:  library/pem.c
- * Caller:  library/pkwrite.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
+ * Module:  drivers/builtin/src/pem.c
+ * Caller:  drivers/builtin/src/pkwrite.c
  *
  * Requires: MBEDTLS_BASE64_C
  *
@@ -1028,7 +996,7 @@
  *
  * Enable the Platform Security Architecture cryptography API.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  *
  * Requires: one of the following:
  *           - MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
@@ -1203,7 +1171,7 @@
  * `psa/crypto_platform.h`, in which case it can skip or replace the
  * inclusion of `"crypto_spe.h"`.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  *
  */
@@ -1214,7 +1182,7 @@
  *
  * Enable the Platform Security Architecture persistent key storage.
  *
- * Module:  library/psa_crypto_storage.c
+ * Module:  core/psa_crypto_storage.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C,
  *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
@@ -1256,7 +1224,7 @@
  * Enable the emulation of the Platform Security Architecture
  * Internal Trusted Storage (PSA ITS) over files.
  *
- * Module:  library/psa_its_file.c
+ * Module:  core/psa_its_file.c
  *
  * Requires: MBEDTLS_FS_IO
  */
@@ -1274,7 +1242,7 @@
  *
  * This option has no effect when #MBEDTLS_PSA_CRYPTO_C is disabled.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  */
 #define MBEDTLS_PSA_KEY_STORE_DYNAMIC
@@ -1443,9 +1411,9 @@
  *   not supported.
  * - GCC, x86-64 or x86-32, target supporting AESNI: supported.
  *   For this assembly-less implementation, you must currently compile
- *   `library/aesni.c` and `library/aes.c` with machine options to enable
- *   SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul` or
- *   `clang -maes -mpclmul`.
+ *   `drivers/builtin/src/aesni.c` and `drivers/builtin/src/aes.c` with machine
+ *   options to enable SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul`
+ *   or `clang -maes -mpclmul`.
  * - Non-x86 targets: this option is silently ignored.
  * - Other compilers: this option is silently ignored.
  *
@@ -1453,8 +1421,8 @@
  * Above, "GCC" includes compatible compilers such as Clang.
  * The limitations on target support are likely to be relaxed in the future.
  *
- * Module:  library/aesni.c
- * Caller:  library/aes.c
+ * Module:  drivers/builtin/src/aesni.c
+ * Caller:  drivers/builtin/src/aes.c
  *
  * Requires: MBEDTLS_HAVE_ASM (on some platforms, see note)
  *
@@ -1467,10 +1435,10 @@
  *
  * Enable AES cryptographic extension support on Armv8.
  *
- * Module:  library/aesce.c
- * Caller:  library/aes.c
+ * Module:  drivers/builtin/src/aesce.c
+ * Caller:  drivers/builtin/src/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  *
  * \warning Runtime detection only works on Linux. For non-Linux operating
  *          system, Armv8-A Cryptographic Extensions must be supported by
@@ -1539,9 +1507,9 @@
  * Uncommenting this macro reduces the size of AES code by ~300 bytes
  * on v8-M/Thumb2.
  *
- * Module:  library/aes.c
+ * Module:  drivers/builtin/src/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  */
 //#define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 
@@ -1564,20 +1532,16 @@
  *
  * Remove decryption operation for AES, ARIA and Camellia block cipher.
  *
- * \note  This feature is incompatible with insecure block cipher,
- *        MBEDTLS_DES_C, and cipher modes which always require decryption
- *        operation, MBEDTLS_CIPHER_MODE_CBC, MBEDTLS_CIPHER_MODE_XTS and
- *        MBEDTLS_NIST_KW_C. This feature is incompatible with following
- *        supported PSA equivalence PSA_WANT_ALG_ECB_NO_PADDING,
- *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7 and
- *        PSA_WANT_KEY_TYPE_DES.
+ * \note  This feature is incompatible with PSA_WANT_ALG_ECB_NO_PADDING,
+ *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7,
+ *        PSA_WANT_KEY_TYPE_DES and MBEDTLS_NIST_KW_C.
  *
- * Module:  library/aes.c
- *          library/aesce.c
- *          library/aesni.c
- *          library/aria.c
- *          library/camellia.c
- *          library/cipher.c
+ * Module:  drivers/builtin/src/aes.c
+ *          drivers/builtin/src/aesce.c
+ *          drivers/builtin/src/aesni.c
+ *          drivers/builtin/src/aria.c
+ *          drivers/builtin/src/camellia.c
+ *          drivers/builtin/src/cipher.c
  */
 //#define MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
 
@@ -1676,9 +1640,9 @@
  * The mbedtls_gcm_context size will increase by 3840 bytes.
  * The code size will increase by roughly 344 bytes.
  *
- * Module:  library/gcm.c
+ * Module:  drivers/builtin/src/gcm.c
  *
- * Requires: MBEDTLS_GCM_C
+ * Requires: The GCM built-in implementation
  */
 //#define MBEDTLS_GCM_LARGE_TABLE
 
@@ -1690,10 +1654,10 @@
  * Requires support for asm() in compiler.
  *
  * Used in:
- *      library/aesni.h
- *      library/aria.c
- *      library/bn_mul.h
- *      library/constant_time.c
+ *      drivers/builtin/src/aesni.h
+ *      drivers/builtin/src/aria.c
+ *      drivers/builtin/src/bn_mul.h
+ *      drivers/builtin/src/constant_time.c
  *
  * Required by:
  *      MBEDTLS_AESCE_C
@@ -1720,7 +1684,7 @@
  *
  * Used in:
  *      include/mbedtls/bignum.h
- *      library/bignum.c
+ *      drivers/builtin/src/bignum.c
  *
  * The bignum code uses double-width division to speed up some operations.
  * Double-width division is often implemented in software that needs to
@@ -1746,7 +1710,7 @@
  * The platform lacks support for 32x32 -> 64-bit multiplication.
  *
  * Used in:
- *      library/poly1305.c
+ *      drivers/builtin/src/poly1305.c
  *
  * Some parts of the library may use multiplication of two unsigned 32-bit
  * operands with a 64-bit result in order to speed up computations. On some
@@ -1856,7 +1820,7 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
  *
- * Requires: The SHA-256 builtin implementation
+ * Requires: The SHA-256 built-in implementation
  *
  * Module:  drivers/builtin/src/sha256.c
  *
@@ -1903,7 +1867,7 @@
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
  *
- * Requires: The SHA-256 builtin implementation
+ * Requires: The SHA-256 built-in implementation
  *
  * Module:  drivers/builtin/src/sha256.c
  *
@@ -1956,7 +1920,7 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY.
  *
- * Requires: The SHA-512 builtin implementation
+ * Requires: The SHA-512 built-in implementation
  *
  * Module:  drivers/builtin/src/sha512.c
  *
@@ -1990,7 +1954,7 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT.
  *
- * Requires: The SHA-512 builtin implementation
+ * Requires: The SHA-512 built-in implementation
  *
  * Module:  drivers/builtin/src/sha512.c
  *
@@ -2020,25 +1984,6 @@
  */
 
 /**
- * \def MBEDTLS_BIGNUM_C
- *
- * Enable the multi-precision integer library.
- *
- * Module:  library/bignum.c
- *          library/bignum_core.c
- *          library/bignum_mod.c
- *          library/bignum_mod_raw.c
- * Caller:  library/ecp.c
- *          library/ecdsa.c
- *          library/rsa.c
- *          library/rsa_alt_helpers.c
- *          library/ssl_tls.c
- *
- * This module is required for RSA and ECC (ECDH, ECDSA) support.
- */
-#define MBEDTLS_BIGNUM_C
-
-/**
  * \def MBEDTLS_CIPHER_NULL_CIPHER
  *
  * Enable NULL cipher.
@@ -2059,7 +2004,7 @@
  * AES support can either be achieved through built-in AES or PSA. Built-in is
  * the default option when present otherwise PSA is used.
  *
- * Module:  library/ctr_drbg.c
+ * Module:  drivers/builtin/src/ctr_drbg.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
  *           PSA_WANT_ALG_ECB_NO_PADDING
@@ -2069,104 +2014,11 @@
 #define MBEDTLS_CTR_DRBG_C
 
 /**
- * \def MBEDTLS_ECDH_C
- *
- * Enable the elliptic curve Diffie-Hellman library.
- *
- * Module:  library/ecdh.c
- * Caller:  library/psa_crypto.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module is used by the following key exchanges:
- *      ECDHE-ECDSA, ECDHE-RSA
- *
- * Requires: MBEDTLS_ECP_C
- */
-#define MBEDTLS_ECDH_C
-
-/**
- * \def MBEDTLS_ECP_C
- *
- * Enable the elliptic curve over GF(p) library.
- *
- * Module:  library/ecp.c
- * Caller:  library/ecdh.c
- *          library/ecdsa.c
- *          library/ecjpake.c
- *
- * Requires: MBEDTLS_BIGNUM_C and at least one MBEDTLS_ECP_DP_XXX_ENABLED
- */
-#define MBEDTLS_ECP_C
-
-/**
- * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
- *
- * MBEDTLS_ECP_XXXX_ENABLED: Enables specific curves within the Elliptic Curve
- * module.  By default all supported curves are enabled.
- *
- * Comment macros to disable the curve and functions for it
- */
-/* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
-// #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-// #define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-#define MBEDTLS_ECP_DP_SECP256K1_ENABLED
-#define MBEDTLS_ECP_DP_BP256R1_ENABLED
-#define MBEDTLS_ECP_DP_BP384R1_ENABLED
-#define MBEDTLS_ECP_DP_BP512R1_ENABLED
-/* Montgomery curves (supporting ECP) */
-#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-#define MBEDTLS_ECP_DP_CURVE448_ENABLED
-
-/**
- * \def MBEDTLS_ECDSA_C
- *
- * Enable the elliptic curve DSA library.
- *
- * Module:  library/ecdsa.c
- * Caller:
- *
- * This module is used by the following key exchanges:
- *      ECDHE-ECDSA
- *
- * Requires: MBEDTLS_ECP_C, MBEDTLS_ASN1_WRITE_C, MBEDTLS_ASN1_PARSE_C,
- *           and at least one MBEDTLS_ECP_DP_XXX_ENABLED for a
- *           short Weierstrass curve.
- */
-#define MBEDTLS_ECDSA_C
-
-/**
- * \def MBEDTLS_ECJPAKE_C
- *
- * Enable the elliptic curve J-PAKE library.
- *
- * \note EC J-PAKE support is based on the Thread v1.0.0 specification.
- *       It has not been reviewed for compliance with newer standards such as
- *       Thread v1.1 or RFC 8236.
- *
- * Module:  library/ecjpake.c
- * Caller:
- *
- * This module is used by the following key exchanges:
- *      ECJPAKE
- *
- * Requires: MBEDTLS_ECP_C and either MBEDTLS_MD_C or MBEDTLS_PSA_CRYPTO_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any EC J-PAKE operations.
- */
-#define MBEDTLS_ECJPAKE_C
-
-/**
  * \def MBEDTLS_HMAC_DRBG_C
  *
  * Enable the HMAC_DRBG random generator.
  *
- * Module:  library/hmac_drbg.c
+ * Module:  drivers/builtin/src/hmac_drbg.c
  * Caller:
  *
  * Requires: MBEDTLS_MD_C

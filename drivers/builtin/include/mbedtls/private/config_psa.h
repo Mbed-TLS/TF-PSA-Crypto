@@ -24,8 +24,6 @@
 
 #include "psa/crypto_adjust_config_dependencies.h"
 
-#include "mbedtls/private/config_adjust_psa_superset_legacy.h"
-
 /* Require built-in implementations based on PSA requirements */
 
 /* We need this to have a complete list of requirements

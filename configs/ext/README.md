@@ -15,7 +15,7 @@ The file crypto_config_profile_medium.h was derived from the two files crypto_co
 
 https://git.trustedfirmware.org/TF-M/trusted-firmware-m.git/tree/lib/ext/mbedcrypto/mbedcrypto_config
 
-It was derived according to the Mbed TLS configuration file split that occurred as part of the Mbed TLS repository split, see  https://github.com/Mbed-TLS/mbedtls/blob/development/docs/proposed/config-split.md.
+Initially, it was derived according to the Mbed TLS configuration file split that occurred as part of the Mbed TLS repository split, see https://github.com/Mbed-TLS/mbedtls/blob/development/docs/proposed/config-split.md. It then evolved further during the rework of the cryptographic options for version 1.0 of the library, see https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/architecture/0e-plans.md.
 
 In TF-M, the two original files are distributed under a 3-Clause BSD license, as noted at the top of the files.
 
