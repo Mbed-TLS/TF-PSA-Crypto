@@ -29,18 +29,6 @@
 /* Needed for the definition of opaque pk_info. */
 #include "pk_wrap.h"
 
-/* MBEDTLS_ECP_DP_SECP224R1 is removed from tf-psa-crypto, but test_keys.h
- * is still referencing it. Unfortunately it's not possible to fix test_keys.h
- * without first removing secp224r1 from tf-psa-crypto repo so here's the plan:
- * - create an ad-hoc value for MBEDTLS_ECP_DP_SECP224R1
- * - merge https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/408
- * - merge https://github.com/Mbed-TLS/mbedtls-framework/pull/198
- * - remove this fix in another PR
- *
- * For the value of MBEDTLS_ECP_DP_SECP224R1 let's put it after the last item
- * found in enum mbedtls_ecp_group_id. */
-#define MBEDTLS_ECP_DP_SECP224R1    (MBEDTLS_ECP_DP_CURVE448 + 1)
-
 /* MBEDTLS_TEST_PK_PSA_SIGN is enabled when:
  * - The build has PK_[PARSE/WRITE]_C for RSA or ECDSA signature.
  * - The build has built-in ECC and ECDSA signature.
