@@ -60,6 +60,9 @@ persistent_slot_lifecycle:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(2, PSA_
 Persistent slot, check after purging and restarting, persistence=2
 persistent_slot_lifecycle:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(2, PSA_KEY_LOCATION_LOCAL_STORAGE):201:PSA_KEY_ID_USER_MIN:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_PURGING_WITH_SHUTDOWN
 
+Persistent slot, check after restart with live handle, persistence=2
+persistent_slot_lifecycle:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(2, PSA_KEY_LOCATION_LOCAL_STORAGE):128:PSA_KEY_ID_USER_MIN:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_SHUTDOWN
+
 Attempt to overwrite: close before
 create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x1736:1:PURGE_BEFORE
 
