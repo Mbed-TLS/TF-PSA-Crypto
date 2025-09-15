@@ -94,15 +94,7 @@
 /**< The amount of entropy used per seed by default, in bytes. */
 
 #if !defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
-#  if MBEDTLS_ENTROPY_TRUE_SOURCES == 0
-/* If there is no true entropy source, effectively disable re-seeding by setting
- * a very large re-seed interval. There is no security benefit to re-seeding
- * without a true entropy source.
- */
-#    define MBEDTLS_PSA_RNG_RESEED_INTERVAL    INT_MAX
-#  else
-#    define MBEDTLS_PSA_RNG_RESEED_INTERVAL    10000
-#  endif
+#define MBEDTLS_PSA_RNG_RESEED_INTERVAL    10000
 /**< The interval before reseed is performed by default. */
 #endif
 

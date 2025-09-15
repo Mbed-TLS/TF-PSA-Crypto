@@ -203,11 +203,6 @@
         * MBEDTLS_ENTROPY_NO_SOURCES_OK. */
 #      error "Entropy module enabled, but no true sources"
 #    endif
-#    if defined(MBEDTLS_PSA_RNG_RESEED_INTERVAL)
-       /* Periodic re-seeding does not improve security in the absence of a
-        * true entropy source. */
-#      error "Setting a low reseed interval does not improve security without a true entropy source."
-#    endif
 #  endif
 #endif
 
