@@ -14,6 +14,7 @@ Basic usage, to read the TF PSA Crypto configuration:
 import re
 import os
 import sys
+from typing import FrozenSet
 
 import framework_scripts_path # pylint: disable=unused-import
 from mbedtls_framework import config_common
@@ -27,7 +28,7 @@ PSA_UNSUPPORTED_FEATURE = frozenset([
 ])
 
 PSA_DEPRECATED_FEATURE = frozenset([
-])
+]) #type: FrozenSet[str]
 
 # The goal of the full configuration is to have everything that can be tested
 # together. This includes deprecated or insecure options. It excludes:
