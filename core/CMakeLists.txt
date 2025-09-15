@@ -28,23 +28,11 @@ if(GEN_FILES)
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
-            --list ""
+            --list-for-cmake "${CMAKE_CURRENT_BINARY_DIR}"
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}/..
         OUTPUT_VARIABLE
             TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS)
-    # Turn newline-terminated non-empty list into semicolon-separated list.
-    string(REPLACE "\n" ";"
-           TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS "${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
-    string(REGEX REPLACE ";\$" ""
-           TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS "${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
-    # Prepend the binary dir to all element of TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS,
-    # using features that exist in CMake 3.5.1.
-    string(REPLACE ";" ";${CMAKE_CURRENT_BINARY_DIR}/"
-           TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS
-           "${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
-    set(TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS
-        "${CMAKE_CURRENT_BINARY_DIR}/${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}")
 
     add_custom_command(
         OUTPUT ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
