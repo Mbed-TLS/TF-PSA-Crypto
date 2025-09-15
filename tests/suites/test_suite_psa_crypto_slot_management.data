@@ -4,6 +4,10 @@ transient_slot_lifecycle:0x135:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef012345
 Transient slot, check after destroying and restarting
 transient_slot_lifecycle:0x1357:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_DESTROYING_WITH_SHUTDOWN
 
+Transient slot, check after restart with live handles
+transient_slot_lifecycle:0x13579:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_SHUTDOWN
+
+
 Persistent slot, check after destroying, id=min
 persistent_slot_lifecycle:PSA_KEY_LIFETIME_PERSISTENT:126:PSA_KEY_ID_USER_MIN:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_DESTROYING
 
@@ -15,6 +19,9 @@ persistent_slot_lifecycle:PSA_KEY_LIFETIME_PERSISTENT:200:PSA_KEY_ID_USER_MIN:0:
 
 Persistent slot, check after purging and restarting, id=min
 persistent_slot_lifecycle:PSA_KEY_LIFETIME_PERSISTENT:201:PSA_KEY_ID_USER_MIN:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_PURGING_WITH_SHUTDOWN
+
+Persistent slot, check after restart with live handle, id=min
+persistent_slot_lifecycle:PSA_KEY_LIFETIME_PERSISTENT:128:PSA_KEY_ID_USER_MIN:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_SHUTDOWN
 
 Persistent slot, check after destroying, id=max
 persistent_slot_lifecycle:PSA_KEY_LIFETIME_PERSISTENT:130:PSA_KEY_ID_USER_MAX:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_DESTROYING
