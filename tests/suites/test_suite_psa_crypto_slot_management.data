@@ -61,13 +61,13 @@ Persistent slot, check after purging and restarting, persistence=2
 persistent_slot_lifecycle:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(2, PSA_KEY_LOCATION_LOCAL_STORAGE):201:PSA_KEY_ID_USER_MIN:0:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_PURGING_WITH_SHUTDOWN
 
 Attempt to overwrite: close before
-create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x1736:1
+create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x1736:1:PURGE_BEFORE
 
 Attempt to overwrite: close after
-create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x7361:1
+create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x7361:1:PURGE_AFTER
 
 Attempt to overwrite: keep open
-create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x3617:1
+create_existent:PSA_KEY_LIFETIME_PERSISTENT:0x3617:1:KEEP_OPEN
 
 Create failure: read-only key
 depends_on:MBEDTLS_PSA_CRYPTO_STORAGE_C

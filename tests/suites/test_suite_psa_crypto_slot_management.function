@@ -23,9 +23,9 @@ typedef enum {
 
 typedef enum {
     KEEP_OPEN,
-    CLOSE_BEFORE,
-    CLOSE_AFTER,
-} reopen_policy_t;
+    PURGE_BEFORE,
+    PURGE_AFTER,
+} purge_policy_t;
 
 /** Apply \p invalidate_method to invalidate the specified key:
  * close it, destroy it, or do nothing;
@@ -317,7 +317,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_STORAGE_C */
-void create_existent(int lifetime_arg, int owner_id_arg, int id_arg)
+void create_existent(int lifetime_arg, int owner_id_arg, int id_arg,
+                     int purge_policy_arg)
 {
     psa_key_lifetime_t lifetime = lifetime_arg;
     mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(owner_id_arg, id_arg);
@@ -330,6 +331,7 @@ void create_existent(int lifetime_arg, int owner_id_arg, int id_arg)
     size_t bits1 = PSA_BYTES_TO_BITS(sizeof(material1));
     uint8_t reexported[sizeof(material1)];
     size_t reexported_length;
+    purge_policy_t purge_policy = purge_policy_arg;
 
     TEST_USES_KEY_ID(id);
 
@@ -345,11 +347,19 @@ void create_existent(int lifetime_arg, int owner_id_arg, int id_arg)
                               &returned_id));
     TEST_ASSERT(mbedtls_svc_key_id_equal(id, returned_id));
 
+    if (purge_policy == PURGE_BEFORE) {
+        PSA_ASSERT(psa_purge_key(id));
+    }
+
     /* Attempt to create a new key in the same slot. */
     TEST_EQUAL(psa_import_key(&attributes, material2, sizeof(material2),
                               &returned_id),
                PSA_ERROR_ALREADY_EXISTS);
     TEST_ASSERT(mbedtls_svc_key_id_is_null(returned_id));
+
+    if (purge_policy == PURGE_AFTER) {
+        PSA_ASSERT(psa_purge_key(id));
+    }
 
     /* Check that the original key hasn't changed. */
     psa_reset_key_attributes(&attributes);
