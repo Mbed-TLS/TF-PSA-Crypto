@@ -839,8 +839,8 @@
  * \def MBEDTLS_PK_PARSE_EC_COMPRESSED
  *
  * Enable the support for parsing public keys of type Short Weierstrass
- * (MBEDTLS_ECP_DP_SECP_XXX and MBEDTLS_ECP_DP_BP_XXX) which are using the
- * compressed point format. This parsing is done through ECP module's functions.
+ * (PSA_ECC_FAMILY_SECP_XXX and PSA_ECC_FAMILY_BRAINPOOL_XXX) which are using the
+ * compressed point format.
  */
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
@@ -1006,10 +1006,6 @@
  *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
  *           random generator, then either PSA_WANT_ALG_SHA_256 or
  *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
- *
- * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
- *               is enabled in PSA (unless it's fully accelerated, see
- *               docs/driver-only-builds.md about that).
  *
  * \note The PSA crypto subsystem prioritizes DRBG mechanisms as follows:
  *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG, if enabled
@@ -1559,7 +1555,7 @@
  * (currently only Curve25519). This feature changes the layout of ECDH
  * contexts and therefore is a compatibility break for applications that access
  * fields of a mbedtls_ecdh_context structure directly. See also
- * MBEDTLS_ECDH_LEGACY_CONTEXT in include/mbedtls/ecdh.h.
+ * MBEDTLS_ECDH_LEGACY_CONTEXT in drivers/builtin/include/mbedtls/private/ecdh.h.
  *
  * The Everest code is provided under the Apache 2.0 license only; therefore enabling this
  * option is not compatible with taking the library under the GPL v2.0-or-later license.
@@ -1616,7 +1612,7 @@
  *        https://github.com/Mbed-TLS/mbedtls/issues/9784 and
  *        https://github.com/Mbed-TLS/mbedtls/issues/9817)
  *
- * Requires: MBEDTLS_ECP_C
+ * Requires: Builtin support of Elliptic Curves.
  *
  * Uncomment this macro to enable restartable ECC computations.
  */
