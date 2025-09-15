@@ -5,19 +5,19 @@
 #include "psa_crypto_storage.h"
 
 typedef enum {
-    /**< Destroy key(s) */
+    /** Destroy key(s) */
     INVALIDATE_BY_DESTROYING,
 
-    /**< Purge key(s) */
+    /** Purge key(s) */
     INVALIDATE_BY_PURGING,
 
-    /**< Terminate and reinitialize without closing/destroying keys */
+    /** Terminate and reinitialize without closing/destroying keys */
     INVALIDATE_BY_SHUTDOWN,
 
-    /**< Destroy key(s) then terminate and re-initialize */
+    /** Destroy key(s) then terminate and re-initialize */
     INVALIDATE_BY_DESTROYING_WITH_SHUTDOWN,
 
-    /**< Purge key(s) then terminate and re-initialize */
+    /** Purge key(s) then terminate and re-initialize */
     INVALIDATE_BY_PURGING_WITH_SHUTDOWN,
 } invalidate_method_t;
 
