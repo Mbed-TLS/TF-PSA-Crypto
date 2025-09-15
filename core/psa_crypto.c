@@ -8641,7 +8641,7 @@ static psa_status_t mbedtls_psa_crypto_init_subsystem(mbedtls_psa_crypto_subsyst
 
             /* Initialize and seed the random generator. */
             if (global_data.rng_state == RNG_NOT_INITIALIZED && driver_wrappers_initialized) {
-#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) && !defined(MBEDTLS_STATIC_ASSERT_SUPPORT)
                 if (MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_256 &&
                     MBEDTLS_PSA_CRYPTO_RNG_HASH != PSA_ALG_SHA_512) {
                     status = PSA_ERROR_INSUFFICIENT_ENTROPY;

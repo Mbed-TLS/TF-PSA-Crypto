@@ -31,5 +31,38 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
         self.good_case('',
                        '#error "mbedtls_config.h was read"')
 
+    def test_crypto_nv_seed_only_with_entropy_no_sources_ok(self) -> None:
+        """NV-seed-only configuration with MBEDTLS_ENTROPY_NO_SOURCES_OK defined
+        to acknowledge that there is no true entropy source and that the
+        loss of security is acceptable.
+        """
+        self.good_case('''
+                       #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+                       #define MBEDTLS_ENTROPY_NV_SEED
+                       #define MBEDTLS_ENTROPY_NO_SOURCES_OK
+                       ''')
+
+    def test_crypto_nv_seed_only_without_entropy_no_sources_ok(self) -> None:
+        """NV-seed-only configuration without MBEDTLS_ENTROPY_NO_SOURCES_OK defined
+        An error expected from tf_psa_crypto_check_config.h.
+        """
+        self.bad_case('''
+                      #undef MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+                      #define MBEDTLS_ENTROPY_NV_SEED
+                      ''',
+                      error=(r'Entropy module enabled, but no true sources'))
+
+    def test_crypto_external_rng_with_nv_seed(self) -> None:
+        """External RNG and NV seed
+        An error expected from tf_psa_crypto_check_config.h.
+        """
+        self.bad_case('''
+                      #define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+                      #define MBEDTLS_ENTROPY_NV_SEED
+                      ''',
+                      error=(
+                          r'MBEDTLS_ENTROPY_NV_SEED has no effect when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled' # pylint: disable=line-too-long
+                      ))
+
 if __name__ == '__main__':
     unittest.main()

@@ -193,19 +193,16 @@
       * or #MBEDTLS_ENTROPY_NV_SEED.
       *
       * If your platform has a cryptographic-quality random generator,
-      * disable #MBEDTLS_ENTROPY_C and use #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
-      * instead.
+      * enable #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
       */
-/* Error suppressed until we fix up our test scripts.
- * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/370 */
-//#    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no sources"
-#  elif MBEDTLS_ENTROPY_TRUE_SOURCES == 0 && !defined(MBEDTLS_ENTROPY_NO_SOURCES_OK)
-     /* Having only the NV seed as an entropy source weakens security.
-      * To indicate that this is acceptable, define
-      * MBEDTLS_ENTROPY_NO_SOURCES_OK. */
-/* Error suppressed until we fix up our test scripts.
- * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/370 */
-//#    error "Entropy module enabled (MBEDTLS_ENTROPY_C), but no true sources"
+#    error "Entropy module enabled, but no sources"
+#  elif MBEDTLS_ENTROPY_TRUE_SOURCES == 0
+#    if !defined(MBEDTLS_ENTROPY_NO_SOURCES_OK)
+       /* Having only the NV seed as an entropy source weakens security.
+        * To indicate that this is acceptable, define
+        * MBEDTLS_ENTROPY_NO_SOURCES_OK. */
+#      error "Entropy module enabled, but no true sources"
+#    endif
 #  endif
 #endif
 
@@ -515,8 +512,12 @@
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED) &&\
-    !defined(MBEDTLS_PLATFORM_C)
+    (!defined(MBEDTLS_PSA_CRYPTO_C) || !defined(MBEDTLS_PLATFORM_C))
 #error "MBEDTLS_ENTROPY_NV_SEED defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ENTROPY_NV_SEED) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#error "MBEDTLS_ENTROPY_NV_SEED has no effect when MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_NV_SEED_ALT) &&\
