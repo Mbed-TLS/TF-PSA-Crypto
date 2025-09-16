@@ -166,8 +166,9 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx);
  * \brief           This function selects the message digest algorithm to use,
  *                  and allocates internal structures.
  *
- *                  It should be called after mbedtls_md_setup(). Makes it necessary
- *                  to call mbedtls_md_free() later.
+ *                  It should be called after mbedtls_md_init() or
+ *                  mbedtls_md_free(). Makes it necessary to call
+ *                  mbedtls_md_free() later.
  *
  * \param ctx       The context to set up.
  * \param md_info   The information structure of the message-digest algorithm
@@ -333,9 +334,8 @@ int mbedtls_md(const mbedtls_md_info_t *md_info, const unsigned char *input, siz
  * \brief           This function allocates internal structures for HMAC
  *                  operations.
  *
- *                  It should be called after mbedtls_md_init() or
- *                  mbedtls_md_free(). Makes it necessary to call
- *                  mbedtls_md_free() later.
+ *                  It should be called after mbedtls_md_setup(). Makes it necessary
+ *                  to call mbedtls_md_free() later.
  *
  * \param ctx       The context to set up.
  * \param md_info   The information structure of the message-digest algorithm
