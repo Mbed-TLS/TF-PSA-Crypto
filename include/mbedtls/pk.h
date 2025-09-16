@@ -670,7 +670,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /**
  * \brief           Make signature given a signature type.
  *
- * \param pk_type   Signature type.
+ * \param sig_type  Signature type.
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
  * \param md_alg    Hash algorithm used (see notes)
@@ -687,11 +687,11 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \return          0 on success, or a specific error code.
  *
- * \note            When \p pk_type is #MBEDTLS_PK_SIGALG_RSA_PSS,
+ * \note            When \p sig_type is #MBEDTLS_PK_SIGALG_RSA_PSS,
  *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
  *
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sig_type,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
