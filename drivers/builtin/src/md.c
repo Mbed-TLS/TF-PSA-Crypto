@@ -530,21 +530,6 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
 }
 #undef ALLOC
 
-int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info)
-{
-#if defined(MBEDTLS_MD_C)
-    ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
-    if (ctx->hmac_ctx == NULL) {
-        mbedtls_md_free(ctx);
-        return MBEDTLS_ERR_MD_ALLOC_FAILED;
-    }
-#else
-    (void) ctx;
-    (void) md_info;
-#endif
-    return 0;
-}
-
 int mbedtls_md_starts(mbedtls_md_context_t *ctx)
 {
 #if defined(MBEDTLS_MD_C)
@@ -946,6 +931,16 @@ static const md_name_entry md_names[] = {
 #endif
     { NULL, MBEDTLS_MD_NONE },
 };
+
+int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info)
+{
+    ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
+    if (ctx->hmac_ctx == NULL) {
+        mbedtls_md_free(ctx);
+        return MBEDTLS_ERR_MD_ALLOC_FAILED;
+    }
+    return 0;
+}
 
 const mbedtls_md_info_t *mbedtls_md_info_from_string(const char *md_name)
 {
