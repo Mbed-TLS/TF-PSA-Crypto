@@ -96,30 +96,6 @@
 #error "PSA_WANT_KEY_TYPE_DH_KEY_PAIR_xxx defined, but not all prerequisites"
 #endif
 
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR)
-#if defined(MBEDTLS_DEPRECATED_REMOVED)
-#error "PSA_WANT_KEY_TYPE_ECC_KEY_PAIR is deprecated and will be removed in a \
-    future version of Mbed TLS. Please switch to new PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_xxx \
-    symbols, where xxx can be: USE, IMPORT, EXPORT, GENERATE, DERIVE"
-#elif defined(MBEDTLS_DEPRECATED_WARNING)
-#warning "PSA_WANT_KEY_TYPE_ECC_KEY_PAIR is deprecated and will be removed in a \
-    future version of Mbed TLS. Please switch to new PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_xxx \
-    symbols, where xxx can be: USE, IMPORT, EXPORT, GENERATE, DERIVE"
-#endif /* MBEDTLS_DEPRECATED_WARNING */
-#endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR */
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR)
-#if defined(MBEDTLS_DEPRECATED_REMOVED)
-#error "PSA_WANT_KEY_TYPE_RSA_KEY_PAIR is deprecated and will be removed in a \
-    future version of Mbed TLS. Please switch to new PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_xxx \
-    symbols, where xxx can be: USE, IMPORT, EXPORT, GENERATE, DERIVE"
-#elif defined(MBEDTLS_DEPRECATED_WARNING)
-#warning "PSA_WANT_KEY_TYPE_RSA_KEY_PAIR is deprecated and will be removed in a \
-    future version of Mbed TLS. Please switch to new PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_xxx \
-    symbols, where xxx can be: USE, IMPORT, EXPORT, GENERATE, DERIVE"
-#endif /* MBEDTLS_DEPRECATED_WARNING */
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR */
-
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_DERIVE)
 #error "PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_DERIVE defined, but feature is not supported"
 #endif
