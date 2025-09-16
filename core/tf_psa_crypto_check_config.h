@@ -132,20 +132,17 @@
 #error "MBEDTLS_ECDH_C defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_ECDSA_C) &&            \
-    ( !defined(MBEDTLS_ECP_C) ||           \
-      !( defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) ||   \
-         defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) ||   \
-         defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) ) || \
-      !defined(MBEDTLS_ASN1_PARSE_C) ||    \
-      !defined(MBEDTLS_ASN1_WRITE_C) )
-#error "MBEDTLS_ECDSA_C defined, but not all prerequisites"
+#if defined(MBEDTLS_ECDSA_C) && \
+    !( defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) ||   \
+       defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) ||   \
+       defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) )
+#error "Built-in ECDSA implementation enabled but no suitable curve"
 #endif
 
 #if defined(MBEDTLS_PK_C)
