@@ -1,0 +1,8 @@
+Removals
+   * Deprecated PSA key handle related functions and macros are removed:
+     psa_open_key() and psa_close_key() functions, PSA_KEY_HANDLE_INIT
+     macro and psa_key_handle_t type.
+   * Deprecated PSA custom Diffie-Hellman group support functions and macros
+     are removed: psa_get_key_domain_parameters() and
+     psa_set_key_domain_parameters() functions, PSA_DH_FAMILY_CUSTOM and
+     PSA_KEY_DOMAIN_PARAMETERS_SIZE macros.
