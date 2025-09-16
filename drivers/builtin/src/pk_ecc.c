@@ -8,8 +8,11 @@
 #include "tf_psa_crypto_common.h"
 
 #include "mbedtls/pk.h"
-#include "mbedtls/error_common.h"
-#include "mbedtls/ecp.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/ecp.h"
 #include "pk_internal.h"
 
 #if defined(MBEDTLS_PK_C) && defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
@@ -47,7 +50,7 @@ int mbedtls_pk_ecc_set_key(mbedtls_pk_context *pk, unsigned char *key, size_t ke
         flags = PSA_KEY_USAGE_EXPORT;
     } else {
         psa_set_key_algorithm(&attributes,
-                              MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET(PSA_ALG_ANY_HASH));
+                              MBEDTLS_PK_ALG_ECDSA(PSA_ALG_ANY_HASH));
         flags = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE |
                 PSA_KEY_USAGE_EXPORT;
     }

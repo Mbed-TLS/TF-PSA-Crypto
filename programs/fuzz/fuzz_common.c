@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/ctr_drbg.h"
 
 #if defined(MBEDTLS_PLATFORM_TIME_ALT)
 mbedtls_time_t dummy_constant_time(mbedtls_time_t *time)

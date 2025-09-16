@@ -18,9 +18,9 @@
 
 #if defined(MBEDTLS_CCM_C)
 
-#include "mbedtls/ccm.h"
+#include "mbedtls/private/ccm.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/constant_time.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)

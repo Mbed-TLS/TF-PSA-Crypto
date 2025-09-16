@@ -25,7 +25,7 @@
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/threading.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <stddef.h>
 
@@ -275,7 +275,7 @@ mbedtls_ms_time_t mbedtls_ms_time(void)
     "mbedtls_platform_get_entropy()."
 #endif
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/private/entropy.h"
 
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
 

@@ -11,20 +11,18 @@
 
 #include "mbedtls/pem.h"
 #include "mbedtls/base64.h"
-#include "mbedtls/des.h"
-#include "mbedtls/aes.h"
+#include "mbedtls/private/des.h"
+#include "mbedtls/private/aes.h"
 #include "mbedtls/md.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 
 #include "mbedtls/platform.h"
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#endif
 
 #if defined(PSA_WANT_ALG_MD5) &&  \
     defined(MBEDTLS_CIPHER_MODE_CBC) &&                             \

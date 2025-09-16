@@ -18,12 +18,13 @@
 #include "psa_crypto_hash.h"
 #include "mbedtls/psa_util.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/platform.h"
 
-#include <mbedtls/rsa.h>
-#include <mbedtls/error_common.h>
+#include <mbedtls/private/rsa.h>
+#include <mbedtls/private/error_common.h>
 #include "rsa_internal.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT) || \

@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/ecdh.h"
+#include "mbedtls/private/ecdh.h"
 
 static int load_public_key(int grp_id, data_t *point,
                            mbedtls_ecp_keypair *ecp)

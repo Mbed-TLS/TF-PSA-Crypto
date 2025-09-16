@@ -640,13 +640,12 @@ psa_status_t mbedtls_test_wrap_psa_pake_abort(
     mbedtls_test_wrap_psa_pake_abort(arg0_operation)
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
-#if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_get_implicit_key(
+psa_status_t mbedtls_test_wrap_psa_pake_get_shared_key(
     psa_pake_operation_t *arg0_operation,
-    psa_key_derivation_operation_t *arg1_output);
-#define psa_pake_get_implicit_key(arg0_operation, arg1_output) \
-    mbedtls_test_wrap_psa_pake_get_implicit_key(arg0_operation, arg1_output)
-#endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
+    const psa_key_attributes_t *arg1_attributes,
+    mbedtls_svc_key_id_t *arg2_key);
+#define psa_pake_get_shared_key(arg0_operation, arg1_attributes, arg2_key) \
+    mbedtls_test_wrap_psa_pake_get_shared_key(arg0_operation, arg1_attributes, arg2_key)
 
 #if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t mbedtls_test_wrap_psa_pake_input(
@@ -667,14 +666,6 @@ psa_status_t mbedtls_test_wrap_psa_pake_output(
     size_t *arg4_output_length);
 #define psa_pake_output(arg0_operation, arg1_step, arg2_output, arg3_output_size, arg4_output_length) \
     mbedtls_test_wrap_psa_pake_output(arg0_operation, arg1_step, arg2_output, arg3_output_size, arg4_output_length)
-#endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
-
-#if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_set_password_key(
-    psa_pake_operation_t *arg0_operation,
-    mbedtls_svc_key_id_t arg1_password);
-#define psa_pake_set_password_key(arg0_operation, arg1_password) \
-    mbedtls_test_wrap_psa_pake_set_password_key(arg0_operation, arg1_password)
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
 #if defined(PSA_WANT_ALG_SOME_PAKE)
@@ -706,9 +697,10 @@ psa_status_t mbedtls_test_wrap_psa_pake_set_user(
 #if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t mbedtls_test_wrap_psa_pake_setup(
     psa_pake_operation_t *arg0_operation,
-    const psa_pake_cipher_suite_t *arg1_cipher_suite);
-#define psa_pake_setup(arg0_operation, arg1_cipher_suite) \
-    mbedtls_test_wrap_psa_pake_setup(arg0_operation, arg1_cipher_suite)
+    mbedtls_svc_key_id_t arg1_password_key,
+    const psa_pake_cipher_suite_t *arg2_cipher_suite);
+#define psa_pake_setup(arg0_operation, arg1_password_key, arg2_cipher_suite) \
+    mbedtls_test_wrap_psa_pake_setup(arg0_operation, arg1_password_key, arg2_cipher_suite)
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
 psa_status_t mbedtls_test_wrap_psa_purge_key(

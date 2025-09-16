@@ -1,0 +1,4 @@
+API changes
+   * The configuration option MBEDTLS_ENTROPY_FORCE_SHA256 has been removed.
+     MBEDTLS_PSA_CRYPTO_RNG_HASH can now be used to select the entropy
+     module's hashing algorithm.

@@ -1138,16 +1138,15 @@ psa_status_t mbedtls_test_wrap_psa_pake_abort(
 }
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
-/* Wrapper for psa_pake_get_implicit_key */
-#if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_get_implicit_key(
+/* Wrapper for psa_pake_get_shared_key */
+psa_status_t mbedtls_test_wrap_psa_pake_get_shared_key(
     psa_pake_operation_t *arg0_operation,
-    psa_key_derivation_operation_t *arg1_output)
+    const psa_key_attributes_t *arg1_attributes,
+    mbedtls_svc_key_id_t *arg2_key)
 {
-    psa_status_t status = (psa_pake_get_implicit_key)(arg0_operation, arg1_output);
+    psa_status_t status = (psa_pake_get_shared_key)(arg0_operation, arg1_attributes, arg2_key);
     return status;
 }
-#endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
 
 /* Wrapper for psa_pake_input */
 #if defined(PSA_WANT_ALG_SOME_PAKE)
@@ -1184,17 +1183,6 @@ psa_status_t mbedtls_test_wrap_psa_pake_output(
 #if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
     MBEDTLS_TEST_MEMORY_UNPOISON(arg2_output, arg3_output_size);
 #endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
-    return status;
-}
-#endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
-
-/* Wrapper for psa_pake_set_password_key */
-#if defined(PSA_WANT_ALG_SOME_PAKE)
-psa_status_t mbedtls_test_wrap_psa_pake_set_password_key(
-    psa_pake_operation_t *arg0_operation,
-    mbedtls_svc_key_id_t arg1_password)
-{
-    psa_status_t status = (psa_pake_set_password_key)(arg0_operation, arg1_password);
     return status;
 }
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */
@@ -1250,9 +1238,10 @@ psa_status_t mbedtls_test_wrap_psa_pake_set_user(
 #if defined(PSA_WANT_ALG_SOME_PAKE)
 psa_status_t mbedtls_test_wrap_psa_pake_setup(
     psa_pake_operation_t *arg0_operation,
-    const psa_pake_cipher_suite_t *arg1_cipher_suite)
+    mbedtls_svc_key_id_t arg1_password_key,
+    const psa_pake_cipher_suite_t *arg2_cipher_suite)
 {
-    psa_status_t status = (psa_pake_setup)(arg0_operation, arg1_cipher_suite);
+    psa_status_t status = (psa_pake_setup)(arg0_operation, arg1_password_key, arg2_cipher_suite);
     return status;
 }
 #endif /* defined(PSA_WANT_ALG_SOME_PAKE) */

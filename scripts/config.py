@@ -14,6 +14,7 @@ Basic usage, to read the TF PSA Crypto configuration:
 import re
 import os
 import sys
+from typing import FrozenSet
 
 import framework_scripts_path # pylint: disable=unused-import
 from mbedtls_framework import config_common
@@ -27,9 +28,7 @@ PSA_UNSUPPORTED_FEATURE = frozenset([
 ])
 
 PSA_DEPRECATED_FEATURE = frozenset([
-    'PSA_WANT_KEY_TYPE_ECC_KEY_PAIR',
-    'PSA_WANT_KEY_TYPE_RSA_KEY_PAIR'
-])
+]) #type: FrozenSet[str]
 
 # The goal of the full configuration is to have everything that can be tested
 # together. This includes deprecated or insecure options. It excludes:
@@ -49,7 +48,6 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_DEPRECATED_WARNING', # conflicts with deprecated options
     'MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED', # influences the use of ECDH in TLS
     'MBEDTLS_ECP_WITH_MPI_UINT', # disables the default ECP and is experimental
-    'MBEDTLS_ENTROPY_FORCE_SHA256', # interacts with CTR_DRBG_128_BIT_KEY
     'MBEDTLS_ENTROPY_NO_SOURCES_OK', # security control
     'MBEDTLS_HAVE_SSE2', # hardware dependency
     'MBEDTLS_MEMORY_BACKTRACE', # depends on MEMORY_BUFFER_ALLOC_C
@@ -65,10 +63,8 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER', # interface and behavior change
     'MBEDTLS_PSA_CRYPTO_SPM', # platform dependency (PSA SPM)
     'MBEDTLS_RSA_NO_CRT', # influences the use of RSA in X.509 and TLS
-    'MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY', # interacts with *_USE_A64_CRYPTO_IF_PRESENT
     'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY', # interacts with *_USE_ARMV8_A_CRYPTO_IF_PRESENT
     'MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY', # interacts with *_USE_A64_CRYPTO_IF_PRESENT
-    'MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT', # setting *_USE_ARMV8_A_CRYPTO is sufficient
     'MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN', # build dependency (clang+memsan)
     'MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND', # build dependency (valgrind headers)
     'MBEDTLS_PSA_STATIC_KEY_SLOTS', # only relevant for embedded devices
@@ -170,8 +166,10 @@ class TFPSACryptoConfig(config_common.Config):
         super().__init__()
         configfile = TFPSACryptoConfigFile(filename)
         self.configfiles.append(configfile)
-        self.settings.update({name: config_common.Setting(configfile, active, name, value, section)
-                             for (active, name, value, section) in configfile.parse_file()})
+        self.settings.update({
+            name: config_common.Setting(configfile, active, name, value, section)
+            for (active, name, value, section) in configfile.parse_file()
+        })
 
     def set(self, name, value=None):
         """Set name to the given value and make it active."""

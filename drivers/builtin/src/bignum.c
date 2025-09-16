@@ -25,12 +25,12 @@
 
 #if defined(MBEDTLS_BIGNUM_C)
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 #include "bignum_core.h"
 #include "bignum_internal.h"
 #include "bn_mul.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "constant_time_internal.h"
 
 #include <limits.h>

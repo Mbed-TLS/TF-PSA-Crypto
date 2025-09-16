@@ -15,9 +15,9 @@
 
 #if defined(MBEDTLS_HMAC_DRBG_C)
 
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/private/hmac_drbg.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 
@@ -34,7 +34,7 @@ void mbedtls_hmac_drbg_init(mbedtls_hmac_drbg_context *ctx)
 {
     memset(ctx, 0, sizeof(mbedtls_hmac_drbg_context));
 
-    ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
+    ctx->reseed_interval = MBEDTLS_PSA_RNG_RESEED_INTERVAL;
 }
 
 /*
@@ -419,7 +419,7 @@ void mbedtls_hmac_drbg_free(mbedtls_hmac_drbg_context *ctx)
 #endif
     mbedtls_md_free(&ctx->md_ctx);
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_hmac_drbg_context));
-    ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
+    ctx->reseed_interval = MBEDTLS_PSA_RNG_RESEED_INTERVAL;
 }
 
 #if defined(MBEDTLS_FS_IO)

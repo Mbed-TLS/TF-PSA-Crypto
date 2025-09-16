@@ -83,15 +83,17 @@
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_512         1
 #define PSA_WANT_ECC_MONTGOMERY_255             1
 #define PSA_WANT_ECC_MONTGOMERY_448             1
-#define PSA_WANT_ECC_SECP_K1_192                1
 #define PSA_WANT_ECC_SECP_K1_256                1
-#define PSA_WANT_ECC_SECP_R1_192                1
-#define PSA_WANT_ECC_SECP_R1_224                1
 /* For secp256r1, consider enabling #MBEDTLS_PSA_P256M_DRIVER_ENABLED
- * (see the description in mbedtls/mbedtls_config.h for details). */
+ * (see the description in psa/crypto_config.h for details). */
 #define PSA_WANT_ECC_SECP_R1_256                1
 #define PSA_WANT_ECC_SECP_R1_384                1
 #define PSA_WANT_ECC_SECP_R1_521                1
+/* These 2 curves are not part of the public API. They are kept for internal
+ * testing only, but they might be removed in a future version of the
+ * library. */
+//#define PSA_WANT_ECC_SECP_K1_192                1
+//#define PSA_WANT_ECC_SECP_R1_192                1
 
 #define PSA_WANT_DH_RFC7919_2048                1
 #define PSA_WANT_DH_RFC7919_3072                1
@@ -108,11 +110,9 @@
 #define PSA_WANT_KEY_TYPE_CAMELLIA              1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_DES                   1
-//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
-//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
 
 /*
@@ -155,7 +155,7 @@
  * based buffer to 'allocate' dynamic memory. (replaces calloc() and free()
  * calls)
  *
- * Module:  library/memory_buffer_alloc.c
+ * Module:  drivers/builtin/src/memory_buffer_alloc.c
  *
  * Requires: MBEDTLS_PLATFORM_C
  *           MBEDTLS_PLATFORM_MEMORY (to use it within Mbed TLS)
@@ -245,7 +245,7 @@
  * \note This abstraction layer must be enabled on Windows (including MSYS2)
  * as other modules rely on it for a fixed snprintf implementation.
  *
- * Module:  library/platform.c
+ * Module:  drivers/builtin/src/platform.c
  * Caller:  Most other .c files
  *
  * This module enables abstraction of common (libc) functions.
@@ -406,7 +406,21 @@
 /**
  * \def MBEDTLS_THREADING_ALT
  *
- * Provide your own alternate threading implementation.
+ * Provide your own alternate implementation of threading primitives:
+ * mutexes and condition variables. If you enable this option:
+ *
+ * - Provide a header file `"threading_alt.h"`, defining the following
+ *  elements:
+ *     - The type `mbedtls_platform_mutex_t` of mutex objects.
+ *     - The type `mbedtls_platform_condition_variable_t` of
+ *       condition variable objects.
+ *
+ * - Call the function mbedtls_threading_set_alt() in your application
+ *   before calling any other library function (in particular before
+ *   calling psa_crypto_init()).
+ *
+ * See mbedtls/threading.h for more details, especially the documentation
+ * of mbedtls_threading_set_alt().
  *
  * Requires: MBEDTLS_THREADING_C
  *
@@ -436,13 +450,13 @@
  * PSA crypto functions are ever called from a single thread. Note that
  * this includes indirect calls, for example through PK.
  *
- * Module:  library/threading.c
+ * Module:  drivers/builtin/src/threading.c
  *
- * This allows different threading implementations (self-implemented or
- * provided).
+ * This allows different threading implementations (built-in or
+ * provided externally).
  *
- * You will have to enable either MBEDTLS_THREADING_ALT or
- * MBEDTLS_THREADING_PTHREAD.
+ * You will have to enable either #MBEDTLS_THREADING_ALT or
+ * #MBEDTLS_THREADING_PTHREAD.
  *
  * Enable this layer to allow use of mutexes within Mbed TLS
  */
@@ -710,7 +724,7 @@
  *
  * Enable the LMS stateful-hash asymmetric signature algorithm.
  *
- * Module:  library/lms.c
+ * Module:  drivers/builtin/src/lms.c
  * Caller:
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C
@@ -737,25 +751,16 @@
  * Enable the generic layer for message digest (hashing).
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C with at least one hash.
- * Module:  library/md.c
- * Caller:  library/constant_time.c
- *          library/ecdsa.c
- *          library/ecjpake.c
- *          library/hkdf.c
- *          library/hmac_drbg.c
- *          library/pk.c
- *          library/pkcs5.c
- *          library/pkcs12.c
- *          library/psa_crypto_ecp.c
- *          library/psa_crypto_rsa.c
- *          library/rsa.c
- *          library/ssl_cookie.c
- *          library/ssl_msg.c
- *          library/ssl_tls.c
- *          library/x509.c
- *          library/x509_crt.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
+ * Module:  drivers/builtin/src/md.c
+ * Caller:  drivers/builtin/src/constant_time.c
+ *          drivers/builtin/src/ecdsa.c
+ *          drivers/builtin/src/ecjpake.c
+ *          drivers/builtin/src/hmac_drbg.c
+ *          drivers/builtin/src/pk.c
+ *          drivers/builtin/src/pkcs5.c
+ *          drivers/builtin/src/psa_crypto_ecp.c
+ *          drivers/builtin/src/psa_crypto_rsa.c
+ *          drivers/builtin/src/rsa.c
  *
  * Uncomment to enable generic message digest wrappers.
  */
@@ -768,7 +773,7 @@
  * KW (also known as RFC 3394) and KWP (RFC 5649).
  * Currently these modes are only supported with AES.
  *
- * Module:  library/nist_kw.c
+ * Module:  drivers/builtin/src/nist_kw.c
  *
  * Auto enables: PSA_WANT_ALG_ECB_NO_PADDING
  */
@@ -779,14 +784,10 @@
  *
  * Enable the generic public (asymmetric) key layer.
  *
- * Module:  library/pk.c
- * Caller:  library/psa_crypto_rsa.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *          library/x509.c
+ * Module:  drivers/builtin/src/pk.c
+ * Caller:  drivers/builtin/src/psa_crypto_rsa.c
  *
- * Requires: MBEDTLS_MD_C, MBEDTLS_RSA_C or MBEDTLS_ECP_C
+ * Requires: MBEDTLS_MD_C, the built-in RSA or ECP implementation
  *
  * Uncomment to enable generic public key wrappers.
  */
@@ -797,44 +798,20 @@
  *
  * Enable PKCS#5 functions.
  *
- * Module:  library/pkcs5.c
+ * Module:  drivers/builtin/src/pkcs5.c
  *
  * Auto-enables: MBEDTLS_MD_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any PKCS5 operations.
  *
  * This module adds support for the PKCS#5 functions.
  */
 #define MBEDTLS_PKCS5_C
 
 /**
- * \def MBEDTLS_PKCS12_C
- *
- * Enable PKCS#12 PBE functions.
- * Adds algorithms for parsing PKCS#8 encrypted private keys
- *
- * Module:  library/pkcs12.c
- * Caller:  library/pkparse.c
- *
- * Requires: MBEDTLS_ASN1_PARSE_C and either MBEDTLS_MD_C or
- *           MBEDTLS_PSA_CRYPTO_C.
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any PKCS12 operations.
- *
- * This module enables PKCS#12 functions.
- */
-#define MBEDTLS_PKCS12_C
-
-/**
  * \def MBEDTLS_PK_PARSE_C
  *
  * Enable the generic public (asymmetric) key parser.
  *
- * Module:  library/pkparse.c
- * Caller:  library/x509_crt.c
- *          library/x509_csr.c
+ * Module:  drivers/builtin/src/pkparse.c
  *
  * Requires: MBEDTLS_ASN1_PARSE_C, MBEDTLS_PK_C
  *
@@ -860,12 +837,8 @@
  * \def MBEDTLS_PK_PARSE_EC_COMPRESSED
  *
  * Enable the support for parsing public keys of type Short Weierstrass
- * (MBEDTLS_ECP_DP_SECP_XXX and MBEDTLS_ECP_DP_BP_XXX) which are using the
- * compressed point format. This parsing is done through ECP module's functions.
- *
- * \note As explained in the description of MBEDTLS_ECP_PF_COMPRESSED (in ecp.h)
- *       the only unsupported curves are MBEDTLS_ECP_DP_SECP224R1 and
- *       MBEDTLS_ECP_DP_SECP224K1.
+ * (PSA_ECC_FAMILY_SECP_XXX and PSA_ECC_FAMILY_BRAINPOOL_XXX) which are using the
+ * compressed point format.
  */
 #define MBEDTLS_PK_PARSE_EC_COMPRESSED
 
@@ -874,46 +847,13 @@
  *
  * Enable the generic public (asymmetric) key writer.
  *
- * Module:  library/pkwrite.c
- * Caller:  library/x509write.c
+ * Module:  drivers/builtin/src/pkwrite.c
  *
  * Requires: MBEDTLS_ASN1_WRITE_C, MBEDTLS_PK_C
  *
  * Uncomment to enable generic public key write functions.
  */
 #define MBEDTLS_PK_WRITE_C
-
-/* CTR_DRBG options */
-//#define MBEDTLS_CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
-//#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
-//#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
-//#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
-//#define MBEDTLS_CTR_DRBG_RESEED_INTERVAL        10000 /**< Interval before reseed is performed by default */
-
-/* HMAC_DRBG options */
-//#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
-//#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
-//#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
-//#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000 /**< Interval before reseed is performed by default */
-
-/* PSA options */
-/**
- * Use HMAC_DRBG with the specified hash algorithm for HMAC_DRBG for the
- * PSA crypto subsystem.
- *
- * If this option is unset, the library chooses a hash (currently between
- * SHA512 and SHA256) based on availability and unspecified heuristics.
- *
- * \note The PSA crypto subsystem uses the first available mechanism amongst
- *       the following:
- *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG if enabled;
- *       - Entropy from #MBEDTLS_ENTROPY_C plus CTR_DRBG with AES
- *         if #MBEDTLS_CTR_DRBG_C is enabled;
- *       - Entropy from #MBEDTLS_ENTROPY_C plus HMAC_DRBG.
- *
- *       A future version may reevaluate the prioritization of DRBG mechanisms.
- */
-//#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
 
 /** \} name SECTION: Cryptographic mechanism selection (extended API) */
 
@@ -929,11 +869,9 @@
  *
  * Enable the generic ASN1 parser.
  *
- * Module:  library/asn1.c
- * Caller:  library/x509.c
- *          library/pkcs12.c
- *          library/pkcs5.c
- *          library/pkparse.c
+ * Module:  drivers/builtin/src/asn1.c
+ * Caller:  drivers/builtin/src/pkcs5.c
+ *          drivers/builtin/src/pkparse.c
  */
 #define MBEDTLS_ASN1_PARSE_C
 
@@ -942,12 +880,9 @@
  *
  * Enable the generic ASN1 writer.
  *
- * Module:  library/asn1write.c
- * Caller:  library/ecdsa.c
- *          library/pkwrite.c
- *          library/x509_create.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
+ * Module:  drivers/builtin/src/asn1write.c
+ * Caller:  drivers/builtin/src/ecdsa.c
+ *          drivers/builtin/src/pkwrite.c
  */
 #define MBEDTLS_ASN1_WRITE_C
 
@@ -956,8 +891,8 @@
  *
  * Enable the Base64 module.
  *
- * Module:  library/base64.c
- * Caller:  library/pem.c
+ * Module:  drivers/builtin/src/base64.c
+ * Caller:  drivers/builtin/src/pem.c
  *
  * This module is required for PEM support (required by X.509).
  */
@@ -968,17 +903,11 @@
  *
  * Enable PEM decoding / parsing.
  *
- * Module:  library/pem.c
- * Caller:  library/pkparse.c
- *          library/x509_crl.c
- *          library/x509_crt.c
- *          library/x509_csr.c
+ * Module:  drivers/builtin/src/pem.c
+ * Caller:  drivers/builtin/src/pkparse.c
  *
  * Requires: MBEDTLS_BASE64_C
- *           optionally MBEDTLS_MD5_C, or PSA Crypto with MD5 (see below)
- *
- * \warning When parsing password-protected files, if MD5 is provided only by
- * a PSA driver, you must call psa_crypto_init() before the first file.
+ *           optionally PSA_WANT_ALG_MD5
  *
  * This modules adds support for decoding / parsing PEM files.
  */
@@ -989,10 +918,8 @@
  *
  * Enable PEM encoding / writing.
  *
- * Module:  library/pem.c
- * Caller:  library/pkwrite.c
- *          library/x509write_crt.c
- *          library/x509write_csr.c
+ * Module:  drivers/builtin/src/pem.c
+ * Caller:  drivers/builtin/src/pkwrite.c
  *
  * Requires: MBEDTLS_BASE64_C
  *
@@ -1008,43 +935,6 @@
  * This section sets PSA specific settings.
  * \{
  */
-
-/**
- * \def MBEDTLS_ENTROPY_C
- *
- * Enable the generic entropy code.
- *
- * Module:  library/entropy.c
- * Caller:
- *
- * Requires: MBEDTLS_SHA512_C or MBEDTLS_SHA256_C
- *
- * This module provides a generic entropy pool
- */
-#define MBEDTLS_ENTROPY_C
-
-/* Temporary alias of MBEDTLS_PSA_DRIVER_GET_ENTROPY with incompatible
- * behavior. We only keep this until the Mbed TLS scripts are updated.
- * https://github.com/Mbed-TLS/mbedtls/issues/10300
- */
-//#define MBEDTLS_PLATFORM_GET_ENTROPY_ALT
-
-/**
- * \def MBEDTLS_ENTROPY_FORCE_SHA256
- *
- * Force the entropy accumulator to use a SHA-256 accumulator instead of the
- * default SHA-512 based one (if both are available).
- *
- * Requires: MBEDTLS_SHA256_C
- *
- * On 32-bit systems SHA-256 can be much faster than SHA-512. Use this option
- * if you have performance concerns.
- *
- * This option is only useful if both MBEDTLS_SHA256_C and
- * MBEDTLS_SHA512_C are defined. Otherwise the available hash module is used.
- */
-//#define MBEDTLS_ENTROPY_FORCE_SHA256
-
 /**
  * \def MBEDTLS_ENTROPY_NO_SOURCES_OK
  *
@@ -1071,7 +961,9 @@
  * This is crucial (if not required) on systems that do not have a
  * cryptographic entropy source (in hardware or kernel) available.
  *
- * Requires: MBEDTLS_ENTROPY_C, MBEDTLS_PLATFORM_C
+ * Requires: MBEDTLS_PSA_CRYPTO_C,
+ *           !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           MBEDTLS_PLATFORM_C
  *
  * \note The read/write functions that are used by the entropy source are
  *       determined in the platform layer, and can be modified at runtime and/or
@@ -1095,14 +987,25 @@
  *
  * Enable the Platform Security Architecture cryptography API.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  *
- * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
- * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
- *               is enabled in PSA (unless it's fully accelerated, see
- *               docs/driver-only-builds.md about that).
+ * Requires: one of the following:
+ *           - MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           - MBEDTLS_CTR_DRBG_C
+ *           - MBEDTLS_HMAC_DRBG_C
+ *
+ *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
+ *           random generator, then either PSA_WANT_ALG_SHA_256 or
+ *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
+ *
+ * \note The PSA crypto subsystem prioritizes DRBG mechanisms as follows:
+ *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG, if enabled
+ *       - CTR_DRBG (AES), seeded by the entropy module, if
+ *         #MBEDTLS_CTR_DRBG_C is enabled
+ *       - HMAC_DRBG, seeded by the entropy module, if
+ *         #MBEDTLS_HMAC_DRBG_C is enabled
+ *
+ *       A future version may reevaluate the prioritization of DRBG mechanisms.
  */
 #define MBEDTLS_PSA_CRYPTO_C
 
@@ -1130,8 +1033,10 @@
  * \def MBEDTLS_PSA_BUILTIN_GET_ENTROPY
  *
  * Enable entropy sources for which the library has a built-in driver.
- * These are:
  *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *
+ * These are:
  * - getrandom() on Linux (if syscall() is available at compile time);
  * - getrandom() on FreeBSD and DragonFlyBSD (if available at compile time);
  * - `sysctl(KERN_ARND)` on FreeBSD and NetBSD;
@@ -1253,7 +1158,7 @@
  * `psa/crypto_platform.h`, in which case it can skip or replace the
  * inclusion of `"crypto_spe.h"`.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  *
  */
@@ -1264,7 +1169,7 @@
  *
  * Enable the Platform Security Architecture persistent key storage.
  *
- * Module:  library/psa_crypto_storage.c
+ * Module:  core/psa_crypto_storage.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C,
  *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
@@ -1274,6 +1179,8 @@
 
 /**
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
+ *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  *
  * Enable the custom entropy callback mbedtls_platform_get_entropy()
  * (declared in mbedtls/platform.h). You need to provide this callback
@@ -1304,7 +1211,7 @@
  * Enable the emulation of the Platform Security Architecture
  * Internal Trusted Storage (PSA ITS) over files.
  *
- * Module:  library/psa_its_file.c
+ * Module:  core/psa_its_file.c
  *
  * Requires: MBEDTLS_FS_IO
  */
@@ -1322,7 +1229,7 @@
  *
  * This option has no effect when #MBEDTLS_PSA_CRYPTO_C is disabled.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  */
 #define MBEDTLS_PSA_KEY_STORE_DYNAMIC
@@ -1348,8 +1255,6 @@
 //#define MBEDTLS_PSA_STATIC_KEY_SLOTS
 
 /* Entropy options */
-//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
-//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_PLATFORM_FILE
@@ -1431,6 +1336,46 @@
  */
 //#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE       256
 
+/**
+ * \def MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *
+ * Minimum security strength (in bits) of the PSA RNG.
+ *
+ * \note Valid values: 128 or default of 256.
+ */
+//#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH               256
+
+/**
+ * \def MBEDTLS_PSA_CRYPTO_RNG_HASH
+ *
+ * \brief Hash algorithm to use for the entropy module and for HMAC_DRBG if configured.
+ *
+ * The hash size (in bits) must be at least #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
+ *
+ * In addition, if the entropy module is enabled (#MBEDTLS_PSA_CRYPTO_C is enabled
+ * and #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is disabled):
+ * - The hash size must be at least 32 bytes (i.e., 256 bits).
+ * - Only two values are currently allowed: PSA_ALG_SHA_256 and PSA_ALG_SHA_512.
+ *   A future version may lift this limitation.
+ *
+ * If #MBEDTLS_PSA_CRYPTO_RNG_HASH is not explicitly set in the configuration,
+ * a default hash that satisfies the above constraints is selected automatically.
+ * If no suitable default can be selected, this will result in a build error.
+ */
+//#define MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_256
+
+/**
+ * \def MBEDTLS_PSA_RNG_RESEED_INTERVAL
+ *
+ * In CTR_DRBG and HMAC_DRBG, the interval before the DRBG is reseeded from entropy.
+ * The interval is the number of requests to the random generator, for any purpose.
+ *
+ * \note Requests have a maximum size (which depends on the library configuration
+ * and is currently unspecified), so the maximum number of bytes before a reseed
+ * is the interval multiplied by the maximum request size.
+ */
+//#define MBEDTLS_PSA_RNG_RESEED_INTERVAL 1000
+
 /** \} name SECTION: PSA core */
 
 /**
@@ -1453,9 +1398,9 @@
  *   not supported.
  * - GCC, x86-64 or x86-32, target supporting AESNI: supported.
  *   For this assembly-less implementation, you must currently compile
- *   `library/aesni.c` and `library/aes.c` with machine options to enable
- *   SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul` or
- *   `clang -maes -mpclmul`.
+ *   `drivers/builtin/src/aesni.c` and `drivers/builtin/src/aes.c` with machine
+ *   options to enable SSE2 and AESNI instructions: `gcc -msse2 -maes -mpclmul`
+ *   or `clang -maes -mpclmul`.
  * - Non-x86 targets: this option is silently ignored.
  * - Other compilers: this option is silently ignored.
  *
@@ -1463,8 +1408,8 @@
  * Above, "GCC" includes compatible compilers such as Clang.
  * The limitations on target support are likely to be relaxed in the future.
  *
- * Module:  library/aesni.c
- * Caller:  library/aes.c
+ * Module:  drivers/builtin/src/aesni.c
+ * Caller:  drivers/builtin/src/aes.c
  *
  * Requires: MBEDTLS_HAVE_ASM (on some platforms, see note)
  *
@@ -1477,10 +1422,10 @@
  *
  * Enable AES cryptographic extension support on Armv8.
  *
- * Module:  library/aesce.c
- * Caller:  library/aes.c
+ * Module:  drivers/builtin/src/aesce.c
+ * Caller:  drivers/builtin/src/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  *
  * \warning Runtime detection only works on Linux. For non-Linux operating
  *          system, Armv8-A Cryptographic Extensions must be supported by
@@ -1549,9 +1494,9 @@
  * Uncommenting this macro reduces the size of AES code by ~300 bytes
  * on v8-M/Thumb2.
  *
- * Module:  library/aes.c
+ * Module:  drivers/builtin/src/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  */
 //#define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 
@@ -1574,20 +1519,16 @@
  *
  * Remove decryption operation for AES, ARIA and Camellia block cipher.
  *
- * \note  This feature is incompatible with insecure block cipher,
- *        MBEDTLS_DES_C, and cipher modes which always require decryption
- *        operation, MBEDTLS_CIPHER_MODE_CBC, MBEDTLS_CIPHER_MODE_XTS and
- *        MBEDTLS_NIST_KW_C. This feature is incompatible with following
- *        supported PSA equivalence PSA_WANT_ALG_ECB_NO_PADDING,
- *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7 and
- *        PSA_WANT_KEY_TYPE_DES.
+ * \note  This feature is incompatible with PSA_WANT_ALG_ECB_NO_PADDING,
+ *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7,
+ *        PSA_WANT_KEY_TYPE_DES and MBEDTLS_NIST_KW_C.
  *
- * Module:  library/aes.c
- *          library/aesce.c
- *          library/aesni.c
- *          library/aria.c
- *          library/camellia.c
- *          library/cipher.c
+ * Module:  drivers/builtin/src/aes.c
+ *          drivers/builtin/src/aesce.c
+ *          drivers/builtin/src/aesni.c
+ *          drivers/builtin/src/aria.c
+ *          drivers/builtin/src/camellia.c
+ *          drivers/builtin/src/cipher.c
  */
 //#define MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
 
@@ -1605,7 +1546,7 @@
  * (currently only Curve25519). This feature changes the layout of ECDH
  * contexts and therefore is a compatibility break for applications that access
  * fields of a mbedtls_ecdh_context structure directly. See also
- * MBEDTLS_ECDH_LEGACY_CONTEXT in include/mbedtls/ecdh.h.
+ * MBEDTLS_ECDH_LEGACY_CONTEXT in drivers/builtin/include/mbedtls/private/ecdh.h.
  *
  * The Everest code is provided under the Apache 2.0 license only; therefore enabling this
  * option is not compatible with taking the library under the GPL v2.0-or-later license.
@@ -1662,7 +1603,7 @@
  *        https://github.com/Mbed-TLS/mbedtls/issues/9784 and
  *        https://github.com/Mbed-TLS/mbedtls/issues/9817)
  *
- * Requires: MBEDTLS_ECP_C
+ * Requires: Builtin support of Elliptic Curves.
  *
  * Uncomment this macro to enable restartable ECC computations.
  */
@@ -1686,9 +1627,9 @@
  * The mbedtls_gcm_context size will increase by 3840 bytes.
  * The code size will increase by roughly 344 bytes.
  *
- * Module:  library/gcm.c
+ * Module:  drivers/builtin/src/gcm.c
  *
- * Requires: MBEDTLS_GCM_C
+ * Requires: The GCM built-in implementation
  */
 //#define MBEDTLS_GCM_LARGE_TABLE
 
@@ -1700,10 +1641,10 @@
  * Requires support for asm() in compiler.
  *
  * Used in:
- *      library/aesni.h
- *      library/aria.c
- *      library/bn_mul.h
- *      library/constant_time.c
+ *      drivers/builtin/src/aesni.h
+ *      drivers/builtin/src/aria.c
+ *      drivers/builtin/src/bn_mul.h
+ *      drivers/builtin/src/constant_time.c
  *
  * Required by:
  *      MBEDTLS_AESCE_C
@@ -1730,7 +1671,7 @@
  *
  * Used in:
  *      include/mbedtls/bignum.h
- *      library/bignum.c
+ *      drivers/builtin/src/bignum.c
  *
  * The bignum code uses double-width division to speed up some operations.
  * Double-width division is often implemented in software that needs to
@@ -1756,7 +1697,7 @@
  * The platform lacks support for 32x32 -> 64-bit multiplication.
  *
  * Used in:
- *      library/poly1305.c
+ *      drivers/builtin/src/poly1305.c
  *
  * Some parts of the library may use multiplication of two unsigned 32-bit
  * operands with a 64-bit result in order to speed up computations. On some
@@ -1859,14 +1800,10 @@
  * \note \c CFLAGS must be set to a minimum of \c -march=armv8-a+crypto for
  * armclang <= 6.9
  *
- * \note This was previously known as MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT.
- * That name is deprecated, but may still be used as an alternative form for this
- * option.
- *
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
  *
- * Requires: The SHA-256 builtin implementation
+ * Requires: The SHA-256 built-in implementation
  *
  * Module:  drivers/builtin/src/sha256.c
  *
@@ -1875,14 +1812,6 @@
  */
 //#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
 
-/**
- * \def MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT
- *
- * \deprecated This is now known as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
- * This name is now deprecated, but may still be used as an alternative form for
- * this option.
- */
-//#define MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT
 
 /**
  * \def MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
@@ -1906,14 +1835,10 @@
  * \note \c CFLAGS must be set to a minimum of \c -march=armv8-a+crypto for
  * armclang <= 6.9
  *
- * \note This was previously known as MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY.
- * That name is deprecated, but may still be used as an alternative form for this
- * option.
- *
  * \warning MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT.
  *
- * Requires: The SHA-256 builtin implementation
+ * Requires: The SHA-256 built-in implementation
  *
  * Module:  drivers/builtin/src/sha256.c
  *
@@ -1921,15 +1846,6 @@
  * unconditionally.
  */
 //#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
-
-/**
- * \def MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY
- *
- * \deprecated This is now known as MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY.
- * This name is now deprecated, but may still be used as an alternative form for
- * this option.
- */
-//#define MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY
 
 /**
  * \def MBEDTLS_SHA512_SMALLER
@@ -1966,7 +1882,7 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT cannot be defined at the
  * same time as MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY.
  *
- * Requires: The SHA-512 builtin implementation
+ * Requires: The SHA-512 built-in implementation
  *
  * Module:  drivers/builtin/src/sha512.c
  *
@@ -2000,7 +1916,7 @@
  * \warning MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY cannot be defined at the same
  * time as MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT.
  *
- * Requires: The SHA-512 builtin implementation
+ * Requires: The SHA-512 built-in implementation
  *
  * Module:  drivers/builtin/src/sha512.c
  *
@@ -2030,25 +1946,6 @@
  */
 
 /**
- * \def MBEDTLS_BIGNUM_C
- *
- * Enable the multi-precision integer library.
- *
- * Module:  library/bignum.c
- *          library/bignum_core.c
- *          library/bignum_mod.c
- *          library/bignum_mod_raw.c
- * Caller:  library/ecp.c
- *          library/ecdsa.c
- *          library/rsa.c
- *          library/rsa_alt_helpers.c
- *          library/ssl_tls.c
- *
- * This module is required for RSA and ECC (ECDH, ECDSA) support.
- */
-#define MBEDTLS_BIGNUM_C
-
-/**
  * \def MBEDTLS_CIPHER_NULL_CIPHER
  *
  * Enable NULL cipher.
@@ -2064,155 +1961,26 @@
  *
  * Enable the CTR_DRBG AES-based random generator.
  * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
+ * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
  *
- * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
- * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
- * is used.
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
  *
- * \warning When using PSA, the user should call `psa_crypto_init()` before
- *          using any CTR_DRBG operation (except `mbedtls_ctr_drbg_init()`).
+ * Module:  drivers/builtin/src/ctr_drbg.c
  *
- * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- *
- * \note To achieve a 256-bit security strength with CTR_DRBG,
- *       you must use AES-256 *and* use sufficient entropy.
- *       See ctr_drbg.h for more details.
- *
- * Module:  library/ctr_drbg.c
- * Caller:
- *
- * Requires: MBEDTLS_AES_C or
- *           (PSA_WANT_KEY_TYPE_AES and PSA_WANT_ALG_ECB_NO_PADDING and
- *            MBEDTLS_PSA_CRYPTO_C)
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
  *
  * This module provides the CTR_DRBG AES random number generator.
  */
 #define MBEDTLS_CTR_DRBG_C
-
-/** \def MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
- *
- * Uncomment this macro to use a 128-bit key in the CTR_DRBG module.
- * Without this, CTR_DRBG uses a 256-bit key
- * unless \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- */
-//#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-
-/**
- * \def MBEDTLS_ECDH_C
- *
- * Enable the elliptic curve Diffie-Hellman library.
- *
- * Module:  library/ecdh.c
- * Caller:  library/psa_crypto.c
- *          library/ssl_tls.c
- *          library/ssl*_client.c
- *          library/ssl*_server.c
- *
- * This module is used by the following key exchanges:
- *      ECDHE-ECDSA, ECDHE-RSA
- *
- * Requires: MBEDTLS_ECP_C
- */
-#define MBEDTLS_ECDH_C
-
-/**
- * \def MBEDTLS_ECP_C
- *
- * Enable the elliptic curve over GF(p) library.
- *
- * Module:  library/ecp.c
- * Caller:  library/ecdh.c
- *          library/ecdsa.c
- *          library/ecjpake.c
- *
- * Requires: MBEDTLS_BIGNUM_C and at least one MBEDTLS_ECP_DP_XXX_ENABLED
- */
-#define MBEDTLS_ECP_C
-
-/**
- * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
- *
- * MBEDTLS_ECP_XXXX_ENABLED: Enables specific curves within the Elliptic Curve
- * module.  By default all supported curves are enabled.
- *
- * Comment macros to disable the curve and functions for it
- */
-/* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
-#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224K1_ENABLED
-#define MBEDTLS_ECP_DP_SECP256K1_ENABLED
-#define MBEDTLS_ECP_DP_BP256R1_ENABLED
-#define MBEDTLS_ECP_DP_BP384R1_ENABLED
-#define MBEDTLS_ECP_DP_BP512R1_ENABLED
-/* Montgomery curves (supporting ECP) */
-#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-#define MBEDTLS_ECP_DP_CURVE448_ENABLED
-
-/**
- * \def MBEDTLS_ECDSA_C
- *
- * Enable the elliptic curve DSA library.
- *
- * Module:  library/ecdsa.c
- * Caller:
- *
- * This module is used by the following key exchanges:
- *      ECDHE-ECDSA
- *
- * Requires: MBEDTLS_ECP_C, MBEDTLS_ASN1_WRITE_C, MBEDTLS_ASN1_PARSE_C,
- *           and at least one MBEDTLS_ECP_DP_XXX_ENABLED for a
- *           short Weierstrass curve.
- */
-#define MBEDTLS_ECDSA_C
-
-/**
- * \def MBEDTLS_ECDSA_DETERMINISTIC
- *
- * Enable deterministic ECDSA (RFC 6979).
- * Standard ECDSA is "fragile" in the sense that lack of entropy when signing
- * may result in a compromise of the long-term signing key. This is avoided by
- * the deterministic variant.
- *
- * Requires: MBEDTLS_HMAC_DRBG_C, MBEDTLS_ECDSA_C
- *
- * Comment this macro to disable deterministic ECDSA.
- */
-#define MBEDTLS_ECDSA_DETERMINISTIC
-
-/**
- * \def MBEDTLS_ECJPAKE_C
- *
- * Enable the elliptic curve J-PAKE library.
- *
- * \note EC J-PAKE support is based on the Thread v1.0.0 specification.
- *       It has not been reviewed for compliance with newer standards such as
- *       Thread v1.1 or RFC 8236.
- *
- * Module:  library/ecjpake.c
- * Caller:
- *
- * This module is used by the following key exchanges:
- *      ECJPAKE
- *
- * Requires: MBEDTLS_ECP_C and either MBEDTLS_MD_C or MBEDTLS_PSA_CRYPTO_C
- *
- * \warning If using a hash that is only provided by PSA drivers, you must
- * call psa_crypto_init() before doing any EC J-PAKE operations.
- */
-#define MBEDTLS_ECJPAKE_C
 
 /**
  * \def MBEDTLS_HMAC_DRBG_C
  *
  * Enable the HMAC_DRBG random generator.
  *
- * Module:  library/hmac_drbg.c
+ * Module:  drivers/builtin/src/hmac_drbg.c
  * Caller:
  *
  * Requires: MBEDTLS_MD_C

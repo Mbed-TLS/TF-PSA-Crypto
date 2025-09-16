@@ -14,9 +14,9 @@
 
 #if defined(MBEDTLS_MD5_C)
 
-#include "mbedtls/md5.h"
+#include "mbedtls/private/md5.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

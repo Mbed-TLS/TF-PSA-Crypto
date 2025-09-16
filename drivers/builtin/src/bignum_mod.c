@@ -12,8 +12,8 @@
 #include <string.h>
 
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/bignum.h"
 
 #include "mbedtls/platform.h"
 

@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/platform_util.h"
 #include "constant_time_internal.h"
 
@@ -655,9 +655,8 @@ int mbedtls_mpi_core_random(mbedtls_mpi_uint *X,
      *
      * When N is just below a power of 2, as is the case when generating
      * a random scalar on most elliptic curves, 1 try is enough with
-     * overwhelming probability. When N is just above a power of 2,
-     * as when generating a random scalar on secp224k1, each try has
-     * a probability of failing that is almost 1/2.
+     * overwhelming probability. When N is just above a power of 2
+     * each try has a probability of failing that is almost 1/2.
      *
      * The probabilities are almost the same if min is nonzero but negligible
      * compared to N. This is always the case when N is crypto-sized, but

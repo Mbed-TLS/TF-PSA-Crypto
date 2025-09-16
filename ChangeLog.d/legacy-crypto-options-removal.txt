@@ -1,0 +1,39 @@
+Removals
+   * The configuration options MBEDTLS_MD5_C, MBEDTLS_RIPEMD160_C,
+     MBEDTLS_SHA1_C, MBEDTLS_SHA224_C, MBEDTLS_SHA256_C, MBEDTLS_SHA384_C and
+     MBEDTLS_SHA512_C have been removed. Support for hash algorithms can now
+     only be enabled through the hash-related `PSA_WANT_XXX` symbols. See
+     psa-transition.md for more information.
+
+   * The configuration options MBEDTLS_AES_C, MBEDTLS_ARIA_C,
+     MBEDTLS_CAMELLIA_C, MBEDTLS_CCM_C, MBEDTLS_CHACHA20_C,
+     MBEDTLS_CHACHAPOLY_C, MBEDTLS_CIPHER_C, MBEDTLS_CIPHER_MODE_CBC,
+     MBEDTLS_CIPHER_MODE_CFB, MBEDTLS_CIPHER_MODE_CTR, MBEDTLS_CIPHER_MODE_OFB,
+     MBEDTLS_CIPHER_MODE_XTS, MBEDTLS_CIPHER_PADDING_PKCS7,
+     MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS, MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN,
+     MBEDTLS_CIPHER_PADDING_ZEROS, MBEDTLS_CMAC_C, MBEDTLS_DES_C MBEDTLS_GCM_C
+     and MBEDTLS_POLY1305_C have been removed. Support for ciphers and AEAD
+     algorithms can now only be enabled through the cipher and AEAD related
+     `PSA_WANT_XXX` symbols. The only padding mode now supported in CBC cipher
+     mode is PKCS7. See psa-transition.md for more information.
+
+   * The configuration options MBEDTLS_GENPRIME, MBEDTLS_PKCS1_V15,
+     MBEDTLS_PKCS1_V21 and MBEDTLS_RSA_C have been removed. Support for
+     RSA algorithms can now only be enabled through the RSA-related
+     `PSA_WANT_XXX` symbols. See psa-transition.md for more information.
+
+   * The configuration options MBEDTLS_ECDH_C, MBEDTLS_ECDSA_C,
+     MBEDTLS_ECDSA_DETERMINISTIC, MBEDTLS_ECJPAKE_C, MBEDTLS_ECP_C,
+     MBEDTLS_ECP_DP_BP256R1_ENABLED, MBEDTLS_ECP_DP_BP384R1_ENABLED,
+     MBEDTLS_ECP_DP_BP512R1_ENABLED, MBEDTLS_ECP_DP_CURVE25519_ENABLED,
+     MBEDTLS_ECP_DP_CURVE448_ENABLED, MBEDTLS_ECP_DP_SECP192K1_ENABLED,
+     MBEDTLS_ECP_DP_SECP192R1_ENABLED, MBEDTLS_ECP_DP_SECP224R1_ENABLED,
+     MBEDTLS_ECP_DP_SECP256K1_ENABLED,  MBEDTLS_ECP_DP_SECP256R1_ENABLED,
+     MBEDTLS_ECP_DP_SECP384R1_ENABLED, MBEDTLS_ECP_DP_SECP521R1_ENABLE have
+     been removed. Support for algorithms based on elliptic curves can now
+     only be enabled through the elliptic-curve-related `PSA_WANT_XXX` symbols.
+     See psa-transition.md for more information.
+
+   * The configuration option MBEDTLS_BIGNUM_C has been removed. Support for
+     big number calculations is now enabled internally only when required by
+     enabled asymmetric cryptographic algorithms.

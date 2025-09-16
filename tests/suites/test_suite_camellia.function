@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/camellia.h"
+#include "mbedtls/private/camellia.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

@@ -15,7 +15,7 @@
 #include "psa_crypto_ffdh.h"
 #include "psa_crypto_random_impl.h"
 #include "mbedtls/platform.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 
 /**

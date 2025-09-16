@@ -5,7 +5,7 @@
 /* Some tests in this module configure entropy sources. */
 #include "psa_crypto_invasive.h"
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/private/entropy.h"
 #include "entropy_poll.h"
 
 static int check_stats(void)
@@ -40,7 +40,7 @@ exit:
 /* PSA crypto uses the CTR_DRBG module. In some configurations, it needs
  * to read from the entropy source twice: once for the initial entropy
  * and once for a nonce. */
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/ctr_drbg.h"
 #define ENTROPY_NONCE_LEN MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN
 #endif
 

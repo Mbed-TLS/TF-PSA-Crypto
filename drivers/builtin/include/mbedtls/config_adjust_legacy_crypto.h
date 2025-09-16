@@ -53,6 +53,11 @@
  */
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 #define MBEDTLS_PSA_CRYPTO_CLIENT
+/* Enable  MBEDTLS_ENTROPY_C in not client-only builds without an
+ * external entropy source. */
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#define MBEDTLS_ENTROPY_C
+#endif
 #endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /**
@@ -97,7 +102,6 @@
     defined(MBEDTLS_PEM_PARSE_C) || \
     defined(MBEDTLS_ENTROPY_C) || \
     defined(MBEDTLS_PK_C) || \
-    defined(MBEDTLS_PKCS12_C) || \
     defined(MBEDTLS_RSA_C)
 #define MBEDTLS_MD_LIGHT
 #endif
@@ -348,8 +352,7 @@
 
 /* Helper symbol to state that there is support for ECDH, either through
  * library implementation (ECDH_C) or through PSA. */
-#if (defined(MBEDTLS_USE_PSA_CRYPTO) && defined(PSA_WANT_ALG_ECDH)) || \
-    (!defined(MBEDTLS_USE_PSA_CRYPTO) && defined(MBEDTLS_ECDH_C))
+#if defined(PSA_WANT_ALG_ECDH)
 #define MBEDTLS_CAN_ECDH
 #endif
 
@@ -359,16 +362,6 @@
  * enable it, so we enable it here. */
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_CIPHER_MODE_CBC)
 #define MBEDTLS_CIPHER_PADDING_PKCS7
-#endif
-
-/* Backwards compatibility for some macros which were renamed to reflect that
- * they are related to Armv8, not aarch64. */
-#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT) && \
-    !defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT)
-#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
-#endif
-#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY) && !defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY)
-#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
 #endif
 
 /* Some internal helpers to determine which operation modes are available. */

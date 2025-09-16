@@ -15,11 +15,14 @@
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 
 #include <stddef.h>
 
 #if defined(MBEDTLS_CIPHER_C)
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 #endif
 
 #include "mbedtls/md.h"
@@ -197,7 +200,6 @@
 #define MBEDTLS_OID_PKCS5               MBEDTLS_OID_PKCS "\x05" /**< pkcs-5 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 5 } */
 #define MBEDTLS_OID_PKCS7               MBEDTLS_OID_PKCS "\x07" /**< pkcs-7 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 7 } */
 #define MBEDTLS_OID_PKCS9               MBEDTLS_OID_PKCS "\x09" /**< pkcs-9 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 9 } */
-#define MBEDTLS_OID_PKCS12              MBEDTLS_OID_PKCS "\x0c" /**< pkcs-12 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 12 } */
 
 /*
  * PKCS#1 OIDs
@@ -318,16 +320,6 @@
 #define MBEDTLS_OID_PKCS9_CSR_EXT_REQ           MBEDTLS_OID_PKCS9 "\x0e" /**< extensionRequest OBJECT IDENTIFIER ::= {pkcs-9 14} */
 
 /*
- * PKCS#12 PBE OIDs
- */
-#define MBEDTLS_OID_PKCS12_PBE                      MBEDTLS_OID_PKCS12 "\x01" /**< pkcs-12PbeIds OBJECT IDENTIFIER ::= {pkcs-12 1} */
-
-#define MBEDTLS_OID_PKCS12_PBE_SHA1_DES3_EDE_CBC    MBEDTLS_OID_PKCS12_PBE "\x03" /**< pbeWithSHAAnd3-KeyTripleDES-CBC OBJECT IDENTIFIER ::= {pkcs-12PbeIds 3} */
-#define MBEDTLS_OID_PKCS12_PBE_SHA1_DES2_EDE_CBC    MBEDTLS_OID_PKCS12_PBE "\x04" /**< pbeWithSHAAnd2-KeyTripleDES-CBC OBJECT IDENTIFIER ::= {pkcs-12PbeIds 4} */
-#define MBEDTLS_OID_PKCS12_PBE_SHA1_RC2_128_CBC     MBEDTLS_OID_PKCS12_PBE "\x05" /**< pbeWithSHAAnd128BitRC2-CBC OBJECT IDENTIFIER ::= {pkcs-12PbeIds 5} */
-#define MBEDTLS_OID_PKCS12_PBE_SHA1_RC2_40_CBC      MBEDTLS_OID_PKCS12_PBE "\x06" /**< pbeWithSHAAnd40BitRC2-CBC OBJECT IDENTIFIER ::= {pkcs-12PbeIds 6} */
-
-/*
  * EC key algorithms from RFC 5480
  */
 
@@ -348,10 +340,6 @@
  *   iso(1) member-body(2) us(840) ansi-X9-62(10045) curves(3) prime(1) 1 } */
 #define MBEDTLS_OID_EC_GRP_SECP192R1        MBEDTLS_OID_ANSI_X9_62 "\x03\x01\x01"
 
-/* secp224r1 OBJECT IDENTIFIER ::= {
- *   iso(1) identified-organization(3) certicom(132) curve(0) 33 } */
-#define MBEDTLS_OID_EC_GRP_SECP224R1        MBEDTLS_OID_CERTICOM "\x00\x21"
-
 /* secp256r1 OBJECT IDENTIFIER ::= {
  *   iso(1) member-body(2) us(840) ansi-X9-62(10045) curves(3) prime(1) 7 } */
 #define MBEDTLS_OID_EC_GRP_SECP256R1        MBEDTLS_OID_ANSI_X9_62 "\x03\x01\x07"
@@ -367,10 +355,6 @@
 /* secp192k1 OBJECT IDENTIFIER ::= {
  *   iso(1) identified-organization(3) certicom(132) curve(0) 31 } */
 #define MBEDTLS_OID_EC_GRP_SECP192K1        MBEDTLS_OID_CERTICOM "\x00\x1f"
-
-/* secp224k1 OBJECT IDENTIFIER ::= {
- *   iso(1) identified-organization(3) certicom(132) curve(0) 32 } */
-#define MBEDTLS_OID_EC_GRP_SECP224K1        MBEDTLS_OID_CERTICOM "\x00\x20"
 
 /* secp256k1 OBJECT IDENTIFIER ::= {
  *   iso(1) identified-organization(3) certicom(132) curve(0) 10 } */
@@ -548,23 +532,6 @@ int mbedtls_oid_get_md_hmac(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_h
 int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_t *cipher_alg);
 #endif /* MBEDTLS_CIPHER_C */
 #endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
-
-#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
-    defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
-/**
- * \brief          Translate PKCS#12 PBE algorithm OID into md_type and
- *                 cipher_type
- *
- * \param oid           OID to use
- * \param md_alg        place to store message digest algorithm
- * \param cipher_alg    place to store cipher algorithm
- *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
- */
-int mbedtls_oid_get_pkcs12_pbe_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg,
-                                   mbedtls_cipher_type_t *cipher_alg);
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C &&
-          MBEDTLS_CIPHER_PADDING_PKCS7 && MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
 /**

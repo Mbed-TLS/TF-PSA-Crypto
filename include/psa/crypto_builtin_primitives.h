@@ -30,12 +30,12 @@
  * Hash multi-part operation definitions.
  */
 
-#include "mbedtls/md5.h"
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
-#include "mbedtls/sha3.h"
+#include "mbedtls/private/md5.h"
+#include "mbedtls/private/ripemd160.h"
+#include "mbedtls/private/sha1.h"
+#include "mbedtls/private/sha256.h"
+#include "mbedtls/private/sha512.h"
+#include "mbedtls/private/sha3.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_RIPEMD160) || \
@@ -87,7 +87,7 @@ typedef struct {
  * Cipher multi-part operation definitions.
  */
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/cipher.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_STREAM_CIPHER) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_CTR) || \

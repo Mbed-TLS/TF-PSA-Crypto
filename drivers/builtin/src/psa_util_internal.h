@@ -18,7 +18,7 @@
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 

@@ -1,0 +1,3 @@
+Features
+   * Function mbedtls_pk_can_do_psa() is added to allow testing PK context
+     capabilities against a specified algorithm and usage.

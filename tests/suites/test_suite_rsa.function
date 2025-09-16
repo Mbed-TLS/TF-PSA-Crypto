@@ -1,6 +1,6 @@
 /* BEGIN_HEADER */
-#include "mbedtls/error_common.h"
-#include "mbedtls/rsa.h"
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/rsa.h"
 #include "bignum_core.h"
 #include "rsa_alt_helpers.h"
 #include "rsa_internal.h"

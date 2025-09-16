@@ -33,10 +33,10 @@
 
 #if defined(MBEDTLS_ECP_LIGHT)
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #include "mbedtls/threading.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include "bn_mul.h"
 #include "bignum_internal.h"
@@ -331,12 +331,6 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 #endif
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
     { MBEDTLS_ECP_DP_BP256R1,      26,     256,    "brainpoolP256r1"   },
-#endif
-#if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP224R1,    21,     224,    "secp224r1"         },
-#endif
-#if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP224K1,    20,     224,    "secp224k1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
     { MBEDTLS_ECP_DP_SECP192R1,    19,     192,    "secp192r1"         },

@@ -12,9 +12,12 @@
 #define MBEDTLS_PK_INTERNAL_H
 
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include "mbedtls/ecp.h"
+#include "mbedtls/private/ecp.h"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
@@ -134,13 +137,6 @@ int mbedtls_pk_ecc_set_pubkey_from_prv(mbedtls_pk_context *pk,
                                        const unsigned char *prv, size_t prv_len);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
-/* Helper for (deterministic) ECDSA */
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#define MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET  PSA_ALG_DETERMINISTIC_ECDSA
-#else
-#define MBEDTLS_PK_PSA_ALG_ECDSA_MAYBE_DET  PSA_ALG_ECDSA
-#endif
-
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
 /*
  * Parse a private RSA key.
@@ -183,11 +179,20 @@ static inline int mbedtls_pk_set_rsa_hash_alg(mbedtls_pk_context *pk, psa_algori
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
 #if defined(MBEDTLS_TEST_HOOKS)
+
 MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
     mbedtls_pk_context *pk,
     unsigned char *key, size_t keylen,
     const unsigned char *pwd, size_t pwdlen);
-#endif
+
+#if defined(MBEDTLS_PK_PARSE_C)
+MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_unencrypted_der(
+    mbedtls_pk_context *pk,
+    const unsigned char *key,
+    size_t keylen);
+#endif /* MBEDTLS_PK_PARSE_C */
+
+#endif /* MBEDTLS_TEST_HOOKS */
 
 #if defined(MBEDTLS_FS_IO)
 int mbedtls_pk_load_file(const char *path, unsigned char **buf, size_t *n);

@@ -17,7 +17,7 @@
 #include <stddef.h>
 
 #if defined(MBEDTLS_BIGNUM_C)
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 #endif
 
 /**

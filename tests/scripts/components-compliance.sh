@@ -11,7 +11,10 @@
 
 component_tf_psa_crypto_test_psa_compliance () {
     msg "unit test: test_psa_compliance.py"
-    CC=gcc $FRAMEWORK/scripts/test_psa_compliance.py
+
+    # Following tests use secp224r1 EC curve which is removed in tf-psa-crypto
+    # therefore they are disabled temporarly.
+    CC=gcc $FRAMEWORK/scripts/test_psa_compliance.py --expected-failures 202 203 204 205 216 232 233 244
 }
 
 support_tf_psa_crypto_test_psa_compliance () {
@@ -25,4 +28,3 @@ support_tf_psa_crypto_test_psa_compliance () {
 
     [ "$ver_major" -eq 3 ] && [ "$ver_minor" -ge 10 ]
 }
-
