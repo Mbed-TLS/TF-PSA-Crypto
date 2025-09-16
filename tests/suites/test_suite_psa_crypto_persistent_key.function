@@ -167,7 +167,7 @@ void persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
                               &returned_key_id));
 
     if (restart) {
-        psa_close_key(key_id);
+        psa_purge_key(key_id);
         PSA_DONE();
         PSA_ASSERT(psa_crypto_init());
     }

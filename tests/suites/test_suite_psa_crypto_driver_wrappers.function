@@ -895,8 +895,8 @@ void export_key(int force_status_arg,
 {
     psa_status_t force_status = force_status_arg;
     psa_status_t expected_status = expected_status_arg;
-    psa_key_handle_t handle = 0;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t input_key_type = key_in_type_arg;
     psa_key_type_t output_key_type = key_out_type_arg;
     const uint8_t *expected_output_ptr = NULL;
@@ -912,7 +912,7 @@ void export_key(int force_status_arg,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
 
     PSA_ASSERT(psa_crypto_init());
-    PSA_ASSERT(psa_import_key(&attributes, key_in->x, key_in->len, &handle));
+    PSA_ASSERT(psa_import_key(&attributes, key_in->x, key_in->len, &key));
 
     if (fake_output->len > 0) {
         expected_output_ptr =
@@ -932,12 +932,12 @@ void export_key(int force_status_arg,
     mbedtls_test_driver_key_management_hooks.forced_status = force_status;
 
     if (PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(output_key_type)) {
-        actual_status = psa_export_public_key(handle,
+        actual_status = psa_export_public_key(key,
                                               actual_output,
                                               sizeof(actual_output),
                                               &actual_output_length);
     } else {
-        actual_status = psa_export_key(handle,
+        actual_status = psa_export_key(key,
                                        actual_output,
                                        sizeof(actual_output),
                                        &actual_output_length);
@@ -955,7 +955,7 @@ void export_key(int force_status_arg,
     }
 exit:
     psa_reset_key_attributes(&attributes);
-    psa_destroy_key(handle);
+    psa_destroy_key(key);
     PSA_DONE();
     mbedtls_test_driver_key_management_hooks =
         mbedtls_test_driver_key_management_hooks_init();
