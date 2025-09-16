@@ -197,7 +197,7 @@ typedef struct mbedtls_pk_context {
     mbedtls_pk_rsa_padding_t MBEDTLS_PRIVATE(rsa_padding);
 
     /* Hash algorithm to be used with RSA public key. */
-    psa_algorithm_t rsa_hash_alg;
+    psa_algorithm_t MBEDTLS_PRIVATE(rsa_hash_alg);
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 } mbedtls_pk_context;
 
