@@ -111,25 +111,9 @@
 #if defined(PSA_WANT_KEY_TYPE_DES)
 #error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and PSA_WANT_KEY_TYPE_DES cannot be defined simultaneously"
 #endif
-#endif
-
-#if defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_CIPHER_MODE_CBC cannot be defined simultaneously"
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_CIPHER_MODE_XTS cannot be defined simultaneously"
-#endif
-#if defined(MBEDTLS_DES_C)
-#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_DES_C cannot be defined simultaneously"
-#endif
 #if defined(MBEDTLS_NIST_KW_C)
 #error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_NIST_KW_C cannot be defined simultaneously"
 #endif
-#endif
-
-#if defined(MBEDTLS_ECDH_C) && !defined(MBEDTLS_ECP_C)
-#error "MBEDTLS_ECDH_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ECDSA_C) && \
@@ -154,18 +138,9 @@
 #endif
 #endif /* MBEDTLS_PK_C */
 
-#if defined(MBEDTLS_ECJPAKE_C) && \
-    !defined(MBEDTLS_ECP_C)
-#error "MBEDTLS_ECJPAKE_C defined, but not all prerequisites"
-#endif
-
 #if defined(MBEDTLS_ECP_RESTARTABLE)           && \
     !defined(MBEDTLS_ECP_C)
 #error "MBEDTLS_ECP_RESTARTABLE defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC) && !defined(MBEDTLS_HMAC_DRBG_C)
-#error "MBEDTLS_ECDSA_DETERMINISTIC defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ECP_LIGHT) && ( !defined(MBEDTLS_BIGNUM_C) || (    \
@@ -236,14 +211,6 @@
     !(defined(MBEDTLS_CCM_GCM_CAN_AES) || defined(MBEDTLS_CCM_GCM_CAN_ARIA) || \
     defined(MBEDTLS_CCM_GCM_CAN_CAMELLIA))
 #error "MBEDTLS_GCM_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_CHACHA20_C)
-#error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_POLY1305_C)
-#error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_HMAC_DRBG_C) && !defined(MBEDTLS_MD_C)
@@ -572,15 +539,6 @@
 #if defined(MBEDTLS_PSA_ITS_FILE_C) && \
     !defined(MBEDTLS_FS_IO)
 #error "MBEDTLS_PSA_ITS_FILE_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_RSA_C) && !defined(MBEDTLS_BIGNUM_C)
-#error "MBEDTLS_RSA_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_RSA_C) && ( !defined(MBEDTLS_PKCS1_V21) &&         \
-    !defined(MBEDTLS_PKCS1_V15) )
-#error "MBEDTLS_RSA_C defined, but none of the PKCS1 versions enabled"
 #endif
 
 #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) && \
