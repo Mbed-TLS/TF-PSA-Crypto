@@ -95,7 +95,7 @@
 
 #if defined(MBEDTLS_CMAC_C) && \
     ( !defined(MBEDTLS_CIPHER_C ) || ( !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_DES_C) ) )
-#error "MBEDTLS_CMAC_C defined, but not all prerequisites"
+#error "Built-in CMAC implementation enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
@@ -155,7 +155,7 @@
     !defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) &&                 \
     !defined(MBEDTLS_ECP_DP_CURVE448_ENABLED) ) )
-#error "MBEDTLS_ECP_C defined (or a subset enabled), but not all prerequisites"
+#error "Generic elliptic curve module or a subset enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ENTROPY_C)
@@ -204,13 +204,13 @@
 #if defined(MBEDTLS_CCM_C) && \
     !(defined(MBEDTLS_CCM_GCM_CAN_AES) || defined(MBEDTLS_CCM_GCM_CAN_ARIA) || \
     defined(MBEDTLS_CCM_GCM_CAN_CAMELLIA))
-#error "MBEDTLS_CCM_C defined, but not all prerequisites"
+#error "Built-in CCM implementation enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_GCM_C) && \
     !(defined(MBEDTLS_CCM_GCM_CAN_AES) || defined(MBEDTLS_CCM_GCM_CAN_ARIA) || \
     defined(MBEDTLS_CCM_GCM_CAN_CAMELLIA))
-#error "MBEDTLS_GCM_C defined, but not all prerequisites"
+#error "Built-in GCM implementation enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_HMAC_DRBG_C) && !defined(MBEDTLS_MD_C)
@@ -549,7 +549,7 @@
 #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
 #if !defined(MBEDTLS_SHA512_C)
-#error "MBEDTLS_SHA512_USE_A64_CRYPTO_* defined without MBEDTLS_SHA512_C"
+#error "MBEDTLS_SHA512_USE_A64_CRYPTO_* defined without the SHA-512 built-in implementation"
 #endif
 
 #endif /* MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT || MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY */
@@ -566,7 +566,7 @@
 #if defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY)
 #if !defined(MBEDTLS_SHA256_C)
-#error "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_* defined without MBEDTLS_SHA256_C"
+#error "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_* defined without the SHA-256 built-in implementation"
 #endif
 
 #endif
