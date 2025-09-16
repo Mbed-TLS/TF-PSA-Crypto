@@ -186,26 +186,6 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx);
 MBEDTLS_CHECK_RETURN_TYPICAL
 int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info, int hmac);
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
-/**
- * \brief           This function allocates internal structures for HMAC
- *                  operations.
- *
- *                  It should be called after mbedtls_md_init() or
- *                  mbedtls_md_free(). Makes it necessary to call
- *                  mbedtls_md_free() later.
- *
- * \param ctx       The context to set up.
- * \param md_info   The information structure of the message-digest algorithm
- *                  to use.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_ALLOC_FAILED on memory-allocation failure.
- */
-MBEDTLS_CHECK_RETURN_TYPICAL
-int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info);
-#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
-
 /**
  * \brief           This function clones the state of a message-digest
  *                  context.
@@ -348,6 +328,24 @@ int mbedtls_md(const mbedtls_md_info_t *md_info, const unsigned char *input, siz
                unsigned char *output);
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+
+/**
+ * \brief           This function allocates internal structures for HMAC
+ *                  operations.
+ *
+ *                  It should be called after mbedtls_md_init() or
+ *                  mbedtls_md_free(). Makes it necessary to call
+ *                  mbedtls_md_free() later.
+ *
+ * \param ctx       The context to set up.
+ * \param md_info   The information structure of the message-digest algorithm
+ *                  to use.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_MD_ALLOC_FAILED on memory-allocation failure.
+ */
+MBEDTLS_CHECK_RETURN_TYPICAL
+int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info);
 
 /**
  * \brief           This function returns the list of digests supported by the
