@@ -268,6 +268,25 @@
  * \{
  */
 /**
+ * \def MBEDTLS_CTR_DRBG_C
+ *
+ * Enable the CTR_DRBG AES-based random generator.
+ * The CTR_DRBG generator uses AES-256 by default.
+ * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
+ *
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
+ *
+ * Module:  drivers/builtin/src/ctr_drbg.c
+ *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
+ *
+ * This module provides the CTR_DRBG AES random number generator.
+ */
+#define MBEDTLS_CTR_DRBG_C
+
+/**
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
@@ -544,40 +563,6 @@
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM        0 /**< Disable fixed-point speed-up */
 
 /** \} name SECTION: Builtin drivers */
-
-/**
- * \name SECTION: Legacy cryptography
- *
- * This section sets legacy settings.
- * \{
- */
-
-/**
- * \def MBEDTLS_CTR_DRBG_C
- *
- * Enable the CTR_DRBG AES-based random generator.
- * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
- *
- * AES support can either be achieved through built-in AES or PSA. Built-in is
- * the default option when present otherwise PSA is used.
- *
- * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- *
- * \note To achieve a 256-bit security strength with CTR_DRBG,
- *       you must use AES-256 *and* use sufficient entropy.
- *       See ctr_drbg.h for more details.
- *
- * Module:  drivers/builtin/src/ctr_drbg.c
- * Caller:
- *
- * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
- *           PSA_WANT_ALG_ECB_NO_PADDING
- *
- * This module provides the CTR_DRBG AES random number generator.
- */
-#define MBEDTLS_CTR_DRBG_C
-/** \} name SECTION: Legacy cryptography */
 
 /***********************************************************/
 /* Tweak the configuration to remove dependencies on TF-M. */

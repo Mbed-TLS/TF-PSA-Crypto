@@ -935,6 +935,26 @@
  * This section sets PSA specific settings.
  * \{
  */
+
+/**
+ * \def MBEDTLS_CTR_DRBG_C
+ *
+ * Enable the CTR_DRBG AES-based random generator.
+ * The CTR_DRBG generator uses AES-256 by default.
+ * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
+ *
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
+ *
+ * Module:  drivers/builtin/src/ctr_drbg.c
+ *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
+ *
+ * This module provides the CTR_DRBG AES random number generator.
+ */
+#define MBEDTLS_CTR_DRBG_C
+
 /**
  * \def MBEDTLS_ENTROPY_NO_SOURCES_OK
  *
@@ -981,6 +1001,20 @@
  *       given to an external source, to update it.
  */
 //#define MBEDTLS_ENTROPY_NV_SEED
+
+/**
+ * \def MBEDTLS_HMAC_DRBG_C
+ *
+ * Enable the HMAC_DRBG random generator.
+ *
+ * Module:  drivers/builtin/src/hmac_drbg.c
+ * Caller:
+ *
+ * Requires: MBEDTLS_MD_C
+ *
+ * Uncomment to enable the HMAC_DRBG random number generator.
+ */
+#define MBEDTLS_HMAC_DRBG_C
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_C
@@ -1937,47 +1971,4 @@
 //#define MBEDTLS_RSA_GEN_KEY_MIN_BITS            1024 /**<  Minimum RSA key size that can be generated in bits (Minimum possible value is 128 bits) */
 
 /** \} name SECTION: Builtin drivers */
-
-/**
- * \name SECTION: Legacy cryptography
- *
- * This section sets legacy settings.
- * \{
- */
-
-/**
- * \def MBEDTLS_CTR_DRBG_C
- *
- * Enable the CTR_DRBG AES-based random generator.
- * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
- *
- * AES support can either be achieved through built-in AES or PSA. Built-in is
- * the default option when present otherwise PSA is used.
- *
- * Module:  drivers/builtin/src/ctr_drbg.c
- *
- * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
- *           PSA_WANT_ALG_ECB_NO_PADDING
- *
- * This module provides the CTR_DRBG AES random number generator.
- */
-#define MBEDTLS_CTR_DRBG_C
-
-/**
- * \def MBEDTLS_HMAC_DRBG_C
- *
- * Enable the HMAC_DRBG random generator.
- *
- * Module:  drivers/builtin/src/hmac_drbg.c
- * Caller:
- *
- * Requires: MBEDTLS_MD_C
- *
- * Uncomment to enable the HMAC_DRBG random number generator.
- */
-#define MBEDTLS_HMAC_DRBG_C
-
-/** \} name SECTION: Legacy cryptography */
-
 #endif /* PSA_CRYPTO_CONFIG_H */
