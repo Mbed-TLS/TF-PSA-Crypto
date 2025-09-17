@@ -448,15 +448,15 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
         return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
 
-    ctx->md_info = md_info;
-    ctx->md_ctx = NULL;
 #if defined(MBEDTLS_MD_C)
     ctx->hmac_ctx = NULL;
-#else
+#endif
+
+    ctx->md_info = md_info;
+    ctx->md_ctx = NULL;
     if (hmac != 0) {
         return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
-#endif
 
 #if defined(MBEDTLS_MD_SOME_PSA)
     if (md_can_use_psa(ctx->md_info)) {
@@ -525,16 +525,6 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
-
-#if defined(MBEDTLS_MD_C)
-    if (hmac != 0) {
-        ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
-        if (ctx->hmac_ctx == NULL) {
-            mbedtls_md_free(ctx);
-            return MBEDTLS_ERR_MD_ALLOC_FAILED;
-        }
-    }
-#endif
 
     return 0;
 }
@@ -942,6 +932,16 @@ static const md_name_entry md_names[] = {
     { NULL, MBEDTLS_MD_NONE },
 };
 
+int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info)
+{
+    ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
+    if (ctx->hmac_ctx == NULL) {
+        mbedtls_md_free(ctx);
+        return MBEDTLS_ERR_MD_ALLOC_FAILED;
+    }
+    return 0;
+}
+
 const mbedtls_md_info_t *mbedtls_md_info_from_string(const char *md_name)
 {
     if (NULL == md_name) {
@@ -1150,7 +1150,10 @@ int mbedtls_md_hmac(const mbedtls_md_info_t *md_info,
 
     mbedtls_md_init(&ctx);
 
-    if ((ret = mbedtls_md_setup(&ctx, md_info, 1)) != 0) {
+    if ((ret = mbedtls_md_setup(&ctx, md_info, 0)) != 0) {
+        goto cleanup;
+    }
+    if ((ret = mbedtls_md_hmac_setup(&ctx, md_info)) != 0) {
         goto cleanup;
     }
 
