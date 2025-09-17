@@ -126,14 +126,6 @@
  */
 #define TF_PSA_CRYPTO_CONFIG_FILES_READ
 
-/* Auto-enable MBEDTLS_CTR_DRBG_USE_128_BIT_KEY if
- * MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH and MBEDTLS_CTR_DRBG_C defined
- * to ensure a 128-bit key size in CTR_DRBG.
- */
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH) && defined(MBEDTLS_CTR_DRBG_C)
-#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-#endif
-
 /* Auto-enable MBEDTLS_MD_C if needed by a module that didn't require it
  * in a previous release, to ensure backwards compatibility.
  */
@@ -148,7 +140,7 @@
  *   this symbol should be consulted after its inclusion.
  *   (e.g. MBEDTLS_MD_LIGHT)
  */
-#include "mbedtls/config_psa.h"
+#include "mbedtls/private/config_psa.h"
 
 #include "mbedtls/config_adjust_legacy_crypto.h"
 
@@ -159,6 +151,18 @@
  */
 #define TF_PSA_CRYPTO_CONFIG_IS_FINALIZED
 
-#include "tf-psa-crypto/check_config.h"
+/* Up to Mbed TLS 3.6, build_info.h included check_config.h which included
+ * <limits.h>. Keep including it until it's explicitly included everywhere
+ * that uses definitions from <limits.h>.
+ * https://github.com/Mbed-TLS/mbedtls/issues/10305
+ */
+#include <limits.h>
+
+/*
+ * Avoid warning from -pedantic. This is a convenient place for this
+ * workaround since this is included by every single file before the
+ * #if defined(MBEDTLS_xxx_C) that results in empty translation units.
+ */
+typedef int mbedtls_iso_c_forbids_empty_translation_units;
 
 #endif /* TF_PSA_CRYPTO_BUILD_INFO_H */

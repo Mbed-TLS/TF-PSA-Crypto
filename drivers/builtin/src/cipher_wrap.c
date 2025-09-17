@@ -14,38 +14,38 @@
 #if defined(MBEDTLS_CIPHER_C)
 
 #include "cipher_wrap.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-#include "mbedtls/chachapoly.h"
+#include "mbedtls/private/chachapoly.h"
 #endif
 
 #if defined(MBEDTLS_AES_C)
-#include "mbedtls/aes.h"
+#include "mbedtls/private/aes.h"
 #endif
 
 #if defined(MBEDTLS_CAMELLIA_C)
-#include "mbedtls/camellia.h"
+#include "mbedtls/private/camellia.h"
 #endif
 
 #if defined(MBEDTLS_ARIA_C)
-#include "mbedtls/aria.h"
+#include "mbedtls/private/aria.h"
 #endif
 
 #if defined(MBEDTLS_DES_C)
-#include "mbedtls/des.h"
+#include "mbedtls/private/des.h"
 #endif
 
 #if defined(MBEDTLS_CHACHA20_C)
-#include "mbedtls/chacha20.h"
+#include "mbedtls/private/chacha20.h"
 #endif
 
 #if defined(MBEDTLS_GCM_C)
-#include "mbedtls/gcm.h"
+#include "mbedtls/private/gcm.h"
 #endif
 
 #if defined(MBEDTLS_CCM_C)
-#include "mbedtls/ccm.h"
+#include "mbedtls/private/ccm.h"
 #endif
 
 #if defined(MBEDTLS_CIPHER_NULL_CIPHER)

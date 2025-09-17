@@ -70,7 +70,7 @@
 
 #include "tf_psa_crypto_common.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/private/bignum.h"
 
 #include "constant_time_internal.h"
 

@@ -15,7 +15,7 @@
 
 #if defined(MBEDTLS_ARIA_C)
 
-#include "mbedtls/aria.h"
+#include "mbedtls/private/aria.h"
 
 #include <string.h>
 

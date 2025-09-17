@@ -9,7 +9,7 @@
 #include "tf_psa_crypto_common.h"
 
 /* This is needed for MBEDTLS_ERR_XXX macros */
-#include <mbedtls/error_common.h>
+#include <mbedtls/private/error_common.h>
 
 #if defined(MBEDTLS_ASN1_WRITE_C)
 #include <mbedtls/asn1write.h>
@@ -30,18 +30,21 @@
 #endif
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) ||    \
     defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-#include <mbedtls/rsa.h>
+#include <mbedtls/private/rsa.h>
 #endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include <mbedtls/ecp.h>
+#include <mbedtls/private/ecp.h>
 #endif
 #if defined(MBEDTLS_PK_C)
 #include <mbedtls/pk.h>
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 #endif
 #if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
-#include <mbedtls/cipher.h>
+#include <mbedtls/private/cipher.h>
 #endif
-#include <mbedtls/entropy.h>
+#include <mbedtls/private/entropy.h>
 
 /* PSA_SUCCESS is kept at the top of each error table since
  * it's the most common status when everything functions properly. */
@@ -175,11 +178,6 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
             *bits = 192;
             return PSA_ECC_FAMILY_SECP_R1;
 #endif
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-        case MBEDTLS_ECP_DP_SECP224R1:
-            *bits = 224;
-            return PSA_ECC_FAMILY_SECP_R1;
-#endif
 #if defined(PSA_WANT_ECC_SECP_R1_256)
         case MBEDTLS_ECP_DP_SECP256R1:
             *bits = 256;
@@ -220,7 +218,6 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
             *bits = 192;
             return PSA_ECC_FAMILY_SECP_K1;
 #endif
-    /* secp224k1 is not and will not be supported in PSA (#3541). */
 #if defined(PSA_WANT_ECC_SECP_K1_256)
         case MBEDTLS_ECP_DP_SECP256K1:
             *bits = 256;
@@ -246,10 +243,6 @@ mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
 #if defined(PSA_WANT_ECC_SECP_R1_192)
                 case 192:
                     return MBEDTLS_ECP_DP_SECP192R1;
-#endif
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-                case 224:
-                    return MBEDTLS_ECP_DP_SECP224R1;
 #endif
 #if defined(PSA_WANT_ECC_SECP_R1_256)
                 case 256:
@@ -302,7 +295,6 @@ mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
                 case 192:
                     return MBEDTLS_ECP_DP_SECP192K1;
 #endif
-            /* secp224k1 is not and will not be supported in PSA (#3541). */
 #if defined(PSA_WANT_ECC_SECP_K1_256)
                 case 256:
                     return MBEDTLS_ECP_DP_SECP256K1;

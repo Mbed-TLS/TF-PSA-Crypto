@@ -22,32 +22,32 @@ int main(void)
 #include <string.h>
 #include <stdlib.h>
 
-#include "mbedtls/md5.h"
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
-#include "mbedtls/sha3.h"
+#include "mbedtls/private/md5.h"
+#include "mbedtls/private/ripemd160.h"
+#include "mbedtls/private/sha1.h"
+#include "mbedtls/private/sha256.h"
+#include "mbedtls/private/sha512.h"
+#include "mbedtls/private/sha3.h"
 
-#include "mbedtls/des.h"
-#include "mbedtls/aes.h"
-#include "mbedtls/aria.h"
-#include "mbedtls/camellia.h"
-#include "mbedtls/chacha20.h"
-#include "mbedtls/gcm.h"
-#include "mbedtls/ccm.h"
-#include "mbedtls/chachapoly.h"
-#include "mbedtls/cmac.h"
-#include "mbedtls/poly1305.h"
+#include "mbedtls/private/des.h"
+#include "mbedtls/private/aes.h"
+#include "mbedtls/private/aria.h"
+#include "mbedtls/private/camellia.h"
+#include "mbedtls/private/chacha20.h"
+#include "mbedtls/private/gcm.h"
+#include "mbedtls/private/ccm.h"
+#include "mbedtls/private/chachapoly.h"
+#include "mbedtls/private/cmac.h"
+#include "mbedtls/private/poly1305.h"
 
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/private/ctr_drbg.h"
+#include "mbedtls/private/hmac_drbg.h"
 
-#include "mbedtls/rsa.h"
-#include "mbedtls/ecdsa.h"
-#include "mbedtls/ecdh.h"
+#include "mbedtls/private/rsa.h"
+#include "mbedtls/private/ecdsa.h"
+#include "mbedtls/private/ecdh.h"
 
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 /* *INDENT-OFF* */
 #ifndef asm

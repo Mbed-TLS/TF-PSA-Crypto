@@ -10,9 +10,12 @@
 #include "tf_psa_crypto_common.h"
 
 #include "crypto_oid.h"
-#include "mbedtls/rsa.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/rsa.h"
+#include "mbedtls/private/error_common.h"
 #include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
 
 #include <stdio.h>
 #include <string.h>
@@ -160,12 +163,6 @@ static const oid_ecp_grp_t oid_ecp_grp[] =
         MBEDTLS_ECP_DP_SECP192R1,
     },
 #endif /* PSA_WANT_ECC_SECP_R1_192 */
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_EC_GRP_SECP224R1, "secp224r1",    "secp224r1"),
-        MBEDTLS_ECP_DP_SECP224R1,
-    },
-#endif /* PSA_WANT_ECC_SECP_R1_224 */
 #if defined(PSA_WANT_ECC_SECP_R1_256)
     {
         OID_DESCRIPTOR(MBEDTLS_OID_EC_GRP_SECP256R1, "secp256r1",    "secp256r1"),
@@ -400,48 +397,6 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_cipher_alg,
                  cipher_alg)
 #endif /* MBEDTLS_CIPHER_C */
 #endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
-
-#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS12_C) && \
-    defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
-/*
- * For PKCS#12 PBEs
- */
-typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_md_type_t           md_alg;
-    mbedtls_cipher_type_t       cipher_alg;
-} oid_pkcs12_pbe_alg_t;
-
-static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] =
-{
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_PKCS12_PBE_SHA1_DES3_EDE_CBC,
-                       "pbeWithSHAAnd3-KeyTripleDES-CBC",
-                       "PBE with SHA1 and 3-Key 3DES"),
-        MBEDTLS_MD_SHA1,      MBEDTLS_CIPHER_DES_EDE3_CBC,
-    },
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_PKCS12_PBE_SHA1_DES2_EDE_CBC,
-                       "pbeWithSHAAnd2-KeyTripleDES-CBC",
-                       "PBE with SHA1 and 2-Key 3DES"),
-        MBEDTLS_MD_SHA1,      MBEDTLS_CIPHER_DES_EDE_CBC,
-    },
-    {
-        NULL_OID_DESCRIPTOR,
-        MBEDTLS_MD_NONE, MBEDTLS_CIPHER_NONE,
-    },
-};
-
-FN_OID_TYPED_FROM_ASN1(oid_pkcs12_pbe_alg_t, pkcs12_pbe_alg, oid_pkcs12_pbe_alg)
-FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg,
-                 oid_pkcs12_pbe_alg_t,
-                 pkcs12_pbe_alg,
-                 mbedtls_md_type_t,
-                 md_alg,
-                 mbedtls_cipher_type_t,
-                 cipher_alg)
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PKCS12_C &&
-          MBEDTLS_CIPHER_PADDING_PKCS7 && MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
 /*

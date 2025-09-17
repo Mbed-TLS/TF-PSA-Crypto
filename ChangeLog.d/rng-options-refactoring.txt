@@ -1,0 +1,14 @@
+API changes
+   * The Random Number Generator configuration options have been refactored.
+     The following options have been removed:
+     MBEDTLS_ENTROPY_C, MBEDTLS_ENTROPY_FORCE_SHA256,
+     MBEDTLS_ENTROPY_MAX_GATHER, MBEDTLS_ENTROPY_MAX_SOURCES,
+     MBEDTLS_CTR_DRBG_ENTROPY_LEN, MBEDTLS_CTR_DRBG_MAX_INPUT,
+     MBEDTLS_CTR_DRBG_MAX_REQUEST, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT,
+     MBEDTLS_CTR_DRBG_USE_128_BIT_KEY, MBEDTLS_HMAC_DRBG_MAX_INPUT,
+     MBEDTLS_HMAC_DRBG_MAX_REQUEST, MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT and
+     MBEDTLS_PSA_HMAC_DRBG_MD_TYPE.
+     The following options have been introduced:
+     MBEDTLS_PSA_CRYPTO_RNG_HASH and MBEDTLS_PSA_CRYPTO_RNG_STRENGTH.
+     See "Random number generation configuration" in the migration guide for
+     more information.

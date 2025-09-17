@@ -37,8 +37,8 @@
  * mpi_mod_random_values and mpi_legacy_random_values.
  */
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/entropy.h"
+#include "mbedtls/private/bignum.h"
+#include "mbedtls/private/entropy.h"
 #include "bignum_core.h"
 #include "bignum_mod_raw.h"
 #include "constant_time_internal.h"

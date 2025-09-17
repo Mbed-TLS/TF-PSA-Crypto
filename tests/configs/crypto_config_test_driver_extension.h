@@ -21,8 +21,6 @@
  *   the main library, since they determine the ABI between the two.)
  */
 
-#include "psa/crypto_legacy.h"
-
 #if defined(PSA_WANT_ALG_CBC_NO_PADDING)
 #if defined(MBEDTLS_PSA_ACCEL_ALG_CBC_NO_PADDING)
 #undef MBEDTLS_PSA_ACCEL_ALG_CBC_NO_PADDING
@@ -140,14 +138,6 @@
 #undef MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192
 #else
 #define MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192 1
-#endif
-#endif
-
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-#if defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224)
-#undef MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224
-#else
-#define MBEDTLS_PSA_ACCEL_ECC_SECP_R1_224 1
 #endif
 #endif
 

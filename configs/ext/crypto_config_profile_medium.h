@@ -14,6 +14,121 @@
 #define PROFILE_M_PSA_CRYPTO_CONFIG_H
 
 /**
+ * \name SECTION: SECTION Cryptographic mechanism selection (PSA API)
+ *
+ * This section sets PSA API settings.
+ * \{
+ */
+/*
+ * CBC-MAC is not yet supported via the PSA API in Mbed TLS.
+ */
+//#define PSA_WANT_ALG_CBC_MAC                    1
+//#define PSA_WANT_ALG_CBC_NO_PADDING             1
+//#define PSA_WANT_ALG_CBC_PKCS7                  1
+#define PSA_WANT_ALG_CCM                        1
+//#define PSA_WANT_ALG_CCM_STAR_NO_TAG            1
+//#define PSA_WANT_ALG_CMAC                       1
+//#define PSA_WANT_ALG_CFB                        1
+//#define PSA_WANT_ALG_CHACHA20_POLY1305          1
+//#define PSA_WANT_ALG_CTR                        1
+//#define PSA_WANT_ALG_DETERMINISTIC_ECDSA        1
+//#define PSA_WANT_ALG_ECB_NO_PADDING             1
+#define PSA_WANT_ALG_ECDH                       1
+//#define PSA_WANT_ALG_FFDH                       1
+#define PSA_WANT_ALG_ECDSA                      1
+//#define PSA_WANT_ALG_JPAKE                      1
+//#define PSA_WANT_ALG_GCM                        1
+#define PSA_WANT_ALG_HKDF                       1
+//#define PSA_WANT_ALG_HKDF_EXTRACT               1
+//#define PSA_WANT_ALG_HKDF_EXPAND                1
+#define PSA_WANT_ALG_HMAC                       1
+//#define PSA_WANT_ALG_MD5                        1
+//#define PSA_WANT_ALG_OFB                        1
+//#define PSA_WANT_ALG_PBKDF2_HMAC                1
+//#define PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128    1
+//#define PSA_WANT_ALG_RIPEMD160                  1
+//#define PSA_WANT_ALG_RSA_OAEP                   1
+//#define PSA_WANT_ALG_RSA_PKCS1V15_CRYPT         1
+//#define PSA_WANT_ALG_RSA_PKCS1V15_SIGN          1
+//#define PSA_WANT_ALG_RSA_PSS                    1
+//#define PSA_WANT_ALG_SHA_1                      1
+#define PSA_WANT_ALG_SHA_224                    1
+#define PSA_WANT_ALG_SHA_256                    1
+//#define PSA_WANT_ALG_SHA_384                    1
+//#define PSA_WANT_ALG_SHA_512                    1
+//#define PSA_WANT_ALG_SHA3_224                   1
+//#define PSA_WANT_ALG_SHA3_256                   1
+//#define PSA_WANT_ALG_SHA3_384                   1
+//#define PSA_WANT_ALG_SHA3_512                   1
+//#define PSA_WANT_ALG_STREAM_CIPHER              1
+#define PSA_WANT_ALG_TLS12_PRF                  1
+#define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
+//#define PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS       1
+
+//#define PSA_WANT_ECC_BRAINPOOL_P_R1_256         1
+//#define PSA_WANT_ECC_BRAINPOOL_P_R1_384         1
+//#define PSA_WANT_ECC_BRAINPOOL_P_R1_512         1
+//#define PSA_WANT_ECC_MONTGOMERY_255             1
+//#define PSA_WANT_ECC_MONTGOMERY_448             1
+//#define PSA_WANT_ECC_SECP_K1_256                1
+/* For secp256r1, consider enabling #MBEDTLS_PSA_P256M_DRIVER_ENABLED
+ * (see the description in psa/cypto_config.h for details). */
+#define PSA_WANT_ECC_SECP_R1_256                1
+//#define PSA_WANT_ECC_SECP_R1_384                1
+//#define PSA_WANT_ECC_SECP_R1_521                1
+/* These 2 curves are not part of the public API. They are kept for internal
+ * testing only, but they might be removed in a future version of the
+ * library. */
+//#define PSA_WANT_ECC_SECP_K1_192                1
+//#define PSA_WANT_ECC_SECP_R1_192                1
+
+//#define PSA_WANT_DH_RFC7919_2048                1
+//#define PSA_WANT_DH_RFC7919_3072                1
+//#define PSA_WANT_DH_RFC7919_4096                1
+//#define PSA_WANT_DH_RFC7919_6144                1
+//#define PSA_WANT_DH_RFC7919_8192                1
+
+#define PSA_WANT_KEY_TYPE_DERIVE                1
+//#define PSA_WANT_KEY_TYPE_PASSWORD              1
+//#define PSA_WANT_KEY_TYPE_PASSWORD_HASH         1
+#define PSA_WANT_KEY_TYPE_HMAC                  1
+#define PSA_WANT_KEY_TYPE_AES                   1
+//#define PSA_WANT_KEY_TYPE_ARIA                  1
+//#define PSA_WANT_KEY_TYPE_CAMELLIA              1
+//#define PSA_WANT_KEY_TYPE_CHACHA20              1
+//#define PSA_WANT_KEY_TYPE_DES                   1
+#define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
+//#define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
+#define PSA_WANT_KEY_TYPE_RAW_DATA              1
+//#define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
+
+/*
+ * The following symbols extend and deprecate the legacy
+ * PSA_WANT_KEY_TYPE_xxx_KEY_PAIR ones. They include the usage of that key in
+ * the name's suffix. "_USE" is the most generic and it can be used to describe
+ * a generic suport, whereas other ones add more features on top of that and
+ * they are more specific.
+ */
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC      1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
+//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE   1
+
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC      1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT   1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT   1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE 1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_DERIVE   1 /* Not supported */
+
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC       1
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT    1
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT    1
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE  1
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_DERIVE    1 /* Not supported */
+/** \} name SECTION Cryptographic mechanism selection (PSA API) */
+
+/**
  * \name SECTION: Platform abstraction layer
  *
  * This section sets platform specific settings.
@@ -27,7 +142,7 @@
  * based buffer to 'allocate' dynamic memory. (replaces calloc() and free()
  * calls)
  *
- * Module:  library/memory_buffer_alloc.c
+ * Module:  drivers/builtin/src/memory_buffer_alloc.c
  *
  * Requires: MBEDTLS_PLATFORM_C
  *           MBEDTLS_PLATFORM_MEMORY (to use it within Mbed TLS)
@@ -49,7 +164,7 @@
  * \note This abstraction layer must be enabled on Windows (including MSYS2)
  * as other modules rely on it for a fixed snprintf implementation.
  *
- * Module:  library/platform.c
+ * Module:  drivers/builtin/src/platform.c
  * Caller:  Most other .c files
  *
  * This module enables abstraction of common (libc) functions.
@@ -147,115 +262,15 @@
 /** \} name SECTION: Platform abstraction layer */
 
 /**
- * \name SECTION: SECTION Cryptographic mechanism selection (PSA API)
- *
- * This section sets PSA API settings.
- * \{
- */
-/*
- * CBC-MAC is not yet supported via the PSA API in Mbed TLS.
- */
-//#define PSA_WANT_ALG_CBC_MAC                    1
-//#define PSA_WANT_ALG_CBC_NO_PADDING             1
-//#define PSA_WANT_ALG_CBC_PKCS7                  1
-#define PSA_WANT_ALG_CCM                        1
-//#define PSA_WANT_ALG_CMAC                       1
-//#define PSA_WANT_ALG_CFB                        1
-//#define PSA_WANT_ALG_CHACHA20_POLY1305          1
-//#define PSA_WANT_ALG_CTR                        1
-//#define PSA_WANT_ALG_DETERMINISTIC_ECDSA        1
-//#define PSA_WANT_ALG_ECB_NO_PADDING             1
-#define PSA_WANT_ALG_ECDH                       1
-#define PSA_WANT_ALG_ECDSA                      1
-//#define PSA_WANT_ALG_GCM                        1
-#define PSA_WANT_ALG_HKDF                       1
-#define PSA_WANT_ALG_HMAC                       1
-//#define PSA_WANT_ALG_MD5                        1
-//#define PSA_WANT_ALG_OFB                        1
-/* PBKDF2-HMAC is not yet supported via the PSA API in Mbed TLS.
- * Note: when adding support, also adjust include/mbedtls/config_psa.h */
-//#define PSA_WANT_ALG_PBKDF2_HMAC                1
-//#define PSA_WANT_ALG_RIPEMD160                  1
-//#define PSA_WANT_ALG_RSA_OAEP                   1
-//#define PSA_WANT_ALG_RSA_PKCS1V15_CRYPT         1
-//#define PSA_WANT_ALG_RSA_PKCS1V15_SIGN          1
-//#define PSA_WANT_ALG_RSA_PSS                    1
-//#define PSA_WANT_ALG_SHA_1                      1
-#define PSA_WANT_ALG_SHA_224                    1
-#define PSA_WANT_ALG_SHA_256                    1
-//#define PSA_WANT_ALG_SHA_384                    1
-//#define PSA_WANT_ALG_SHA_512                    1
-//#define PSA_WANT_ALG_STREAM_CIPHER              1
-#define PSA_WANT_ALG_TLS12_PRF                  1
-#define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
-/* PBKDF2-HMAC is not yet supported via the PSA API in Mbed TLS.
- * Note: when adding support, also adjust include/mbedtls/config_psa.h */
-//#define PSA_WANT_ALG_XTS                        1
-
-//#define PSA_WANT_ECC_BRAINPOOL_P_R1_256         1
-//#define PSA_WANT_ECC_BRAINPOOL_P_R1_384         1
-//#define PSA_WANT_ECC_BRAINPOOL_P_R1_512         1
-//#define PSA_WANT_ECC_MONTGOMERY_255             1
-//#define PSA_WANT_ECC_MONTGOMERY_448             1
-//#define PSA_WANT_ECC_SECP_K1_192                1
-//#define PSA_WANT_ECC_SECP_K1_256                1
-//#define PSA_WANT_ECC_SECP_R1_192                1
-//#define PSA_WANT_ECC_SECP_R1_224                1
-#define PSA_WANT_ECC_SECP_R1_256                1
-//#define PSA_WANT_ECC_SECP_R1_384                1
-//#define PSA_WANT_ECC_SECP_R1_521                1
-
-#define PSA_WANT_KEY_TYPE_DERIVE                1
-#define PSA_WANT_KEY_TYPE_HMAC                  1
-#define PSA_WANT_KEY_TYPE_AES                   1
-//#define PSA_WANT_KEY_TYPE_ARIA                  1
-//#define PSA_WANT_KEY_TYPE_CAMELLIA              1
-//#define PSA_WANT_KEY_TYPE_CHACHA20              1
-//#define PSA_WANT_KEY_TYPE_DES                   1
-//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
-#define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
-#define PSA_WANT_KEY_TYPE_RAW_DATA              1
-//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
-//#define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
-
-/*
- * The following symbols extend and deprecate the legacy
- * PSA_WANT_KEY_TYPE_xxx_KEY_PAIR ones. They include the usage of that key in
- * the name's suffix. "_USE" is the most generic and it can be used to describe
- * a generic suport, whereas other ones add more features on top of that and
- * they are more specific.
- */
-#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC      1
-#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1
-#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT   1
-#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
-//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE   1
-
-/** \} name SECTION Cryptographic mechanism selection (PSA API) */
-
-/**
  * \name SECTION: PSA core
  *
  * This section sets PSA specific settings.
  * \{
  */
-
-/**
- * \def MBEDTLS_ENTROPY_C
- *
- * Enable the generic entropy code.
- *
- * Module:  library/entropy.c
- * Caller:
- *
- * Requires: MBEDTLS_SHA512_C or MBEDTLS_SHA256_C
- *
- * This module provides a generic entropy pool
- */
-#define MBEDTLS_ENTROPY_C
-
 /**
  * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
+ *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  *
  * Enable the custom entropy callback mbedtls_platform_get_entropy()
  * (declared in mbedtls/platform.h). You need to provide this callback
@@ -289,7 +304,9 @@
  * This is crucial (if not required) on systems that do not have a
  * cryptographic entropy source (in hardware or kernel) available.
  *
- * Requires: MBEDTLS_ENTROPY_C, MBEDTLS_PLATFORM_C
+ * Requires: MBEDTLS_PSA_CRYPTO_C,
+ *           !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           MBEDTLS_PLATFORM_C
  *
  * \note The read/write functions that are used by the entropy source are
  *       determined in the platform layer, and can be modified at runtime and/or
@@ -313,11 +330,15 @@
  *
  * Enable the Platform Security Architecture cryptography API.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  *
- * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_ENTROPY_C,
- *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
+ * Requires: either MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
+ *           or MBEDTLS_CTR_DRBG_C,
+ *           or MBEDTLS_HMAC_DRBG_C.
+ *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
+ *           random generator, then either PSA_WANT_ALG_SHA_256 or
+ *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
+ *
  * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
  *               is enabled in PSA (unless it's fully accelerated, see
  *               docs/driver-only-builds.md about that).
@@ -339,7 +360,7 @@
  * `psa/crypto_platform.h`, in which case it can skip or replace the
  * inclusion of `"crypto_spe.h"`.
  *
- * Module:  library/psa_crypto.c
+ * Module:  core/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  *
  */
@@ -350,13 +371,22 @@
  *
  * Enable the Platform Security Architecture persistent key storage.
  *
- * Module:  library/psa_crypto_storage.c
+ * Module:  core/psa_crypto_storage.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C,
  *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
  *           the PSA ITS interface
  */
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
+
+/**
+ * \def MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
+ *
+ * Minimum security strength (in bits) of the PSA RNG.
+ *
+ * \note Valid values: 128 or default of 256.
+ */
+#define MBEDTLS_PSA_CRYPTO_RNG_STRENGTH               128
 
 /** \} name SECTION: PSA core */
 
@@ -418,9 +448,9 @@
  * Uncommenting this macro reduces the size of AES code by ~300 bytes
  * on v8-M/Thumb2.
  *
- * Module:  library/aes.c
+ * Module:  drivers/builtin/src/aes.c
  *
- * Requires: MBEDTLS_AES_C
+ * Requires: The AES built-in implementation
  */
 #define MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 
@@ -443,10 +473,10 @@
  * Requires support for asm() in compiler.
  *
  * Used in:
- *      library/aesni.h
- *      library/aria.c
- *      library/bn_mul.h
- *      library/constant_time.c
+ *      drivers/builtin/src/aesni.h
+ *      drivers/builtin/src/aria.c
+ *      drivers/builtin/src/bn_mul.h
+ *      drivers/builtin/src/constant_time.c
  *
  * Required by:
  *      MBEDTLS_AESCE_C
@@ -523,55 +553,14 @@
  */
 
 /**
- * \def MBEDTLS_AES_C
- *
- * Enable the AES block cipher.
- *
- * Module:  library/aes.c
- * Caller:  library/cipher.c
- *          library/pem.c
- *          library/ctr_drbg.c
- *
- * PEM_PARSE uses AES for decrypting encrypted keys.
- */
-#define MBEDTLS_AES_C
-
-/**
- * \def MBEDTLS_CIPHER_C
- *
- * Enable the generic cipher layer.
- *
- * Module:  library/cipher.c
- * Caller:  library/ccm.c
- *          library/cmac.c
- *          library/gcm.c
- *          library/nist_kw.c
- *          library/pkcs12.c
- *          library/pkcs5.c
- *          library/psa_crypto_aead.c
- *          library/psa_crypto_mac.c
- *          library/ssl_ciphersuites.c
- *          library/ssl_msg.c
- * Auto-enabled by: MBEDTLS_PSA_CRYPTO_C depending on which ciphers are enabled
- *                  (see the documentation of that option for details).
- *
- * Uncomment to enable generic cipher wrappers.
- */
-#define MBEDTLS_CIPHER_C
-
-/**
  * \def MBEDTLS_CTR_DRBG_C
  *
  * Enable the CTR_DRBG AES-based random generator.
  * The CTR_DRBG generator uses AES-256 by default.
  * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
  *
- * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
- * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
- * is used.
- *
- * \warning When using PSA, the user should call `psa_crypto_init()` before
- *          using any CTR_DRBG operation (except `mbedtls_ctr_drbg_init()`).
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
  *
  * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
  *
@@ -579,12 +568,11 @@
  *       you must use AES-256 *and* use sufficient entropy.
  *       See ctr_drbg.h for more details.
  *
- * Module:  library/ctr_drbg.c
+ * Module:  drivers/builtin/src/ctr_drbg.c
  * Caller:
  *
- * Requires: MBEDTLS_AES_C or
- *           (PSA_WANT_KEY_TYPE_AES and PSA_WANT_ALG_ECB_NO_PADDING and
- *            MBEDTLS_PSA_CRYPTO_C)
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
  *
  * This module provides the CTR_DRBG AES random number generator.
  */

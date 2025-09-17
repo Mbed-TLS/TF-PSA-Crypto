@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/pk.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/private/pk_private.h"
+#include "mbedtls/private/entropy.h"
+#include "mbedtls/private/ctr_drbg.h"
 #include "fuzz_common.h"
 
 //4 Kb should be enough for every bug ;-)
@@ -32,12 +33,10 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     mbedtls_entropy_init(&entropy);
     mbedtls_pk_init(&pk);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_status_t status = psa_crypto_init();
     if (status != PSA_SUCCESS) {
         goto exit;
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     if (mbedtls_ctr_drbg_seed(&ctr_drbg, dummy_entropy, &entropy,
                               (const unsigned char *) pers, strlen(pers)) != 0) {
@@ -93,10 +92,8 @@ exit:
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_pk_free(&pk);
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_psa_crypto_free();
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-#else
+#else // MBEDTLS_PK_PARSE_C && MBEDTLS_CTR_DRBG_C && MBEDTLS_ENTROPY_C
     (void) Data;
     (void) Size;
 #endif // MBEDTLS_PK_PARSE_C && MBEDTLS_CTR_DRBG_C && MBEDTLS_ENTROPY_C

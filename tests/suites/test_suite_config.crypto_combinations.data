@@ -23,3 +23,11 @@ pass:
 Config: ECC: Montgomery curves only
 depends_on:!MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED:MBEDTLS_ECP_MONTGOMERY_ENABLED
 pass:
+
+Config: built-in RNG and support for static assertions
+depends_on:MBEDTLS_PSA_CRYPTO_C:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:MBEDTLS_STATIC_ASSERT_SUPPORT
+pass:
+
+Config: built-in RNG and no support for static assertions
+depends_on:MBEDTLS_PSA_CRYPTO_C:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:!MBEDTLS_STATIC_ASSERT_SUPPORT
+pass:

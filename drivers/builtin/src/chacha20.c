@@ -13,9 +13,9 @@
 
 #if defined(MBEDTLS_CHACHA20_C)
 
-#include "mbedtls/chacha20.h"
+#include "mbedtls/private/chacha20.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <stddef.h>
 #include <string.h>

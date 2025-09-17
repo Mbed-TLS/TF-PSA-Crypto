@@ -52,9 +52,9 @@
 
 #if defined(MBEDTLS_SHA256_C) || defined(MBEDTLS_SHA224_C)
 
-#include "mbedtls/sha256.h"
+#include "mbedtls/private/sha256.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

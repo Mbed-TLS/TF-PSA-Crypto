@@ -14,9 +14,9 @@
 
 #if defined(MBEDTLS_SHA1_C)
 
-#include "mbedtls/sha1.h"
+#include "mbedtls/private/sha1.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <mbedtls/bignum.h>
+#include <mbedtls/private/bignum.h>
 #include <mbedtls/constant_time.h>
 #include <constant_time_internal.h>
 

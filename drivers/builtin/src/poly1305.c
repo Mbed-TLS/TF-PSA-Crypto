@@ -10,9 +10,9 @@
 
 #if defined(MBEDTLS_POLY1305_C)
 
-#include "mbedtls/poly1305.h"
+#include "mbedtls/private/poly1305.h"
 #include "mbedtls/platform_util.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
 
 #include <string.h>
 

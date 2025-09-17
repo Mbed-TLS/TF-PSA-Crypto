@@ -15,7 +15,7 @@
 
 #if defined(MBEDTLS_CAMELLIA_C)
 
-#include "mbedtls/camellia.h"
+#include "mbedtls/private/camellia.h"
 #include "mbedtls/platform_util.h"
 
 #include <string.h>

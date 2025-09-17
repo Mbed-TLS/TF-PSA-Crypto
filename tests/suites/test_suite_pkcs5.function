@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
-#include "mbedtls/error_common.h"
-#include "mbedtls/pkcs5.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/pkcs5.h"
+#include "mbedtls/private/cipher.h"
 
 #if defined(MBEDTLS_TEST_DEPRECATED) || defined(MBEDTLS_CIPHER_PADDING_PKCS7)
 #define MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7

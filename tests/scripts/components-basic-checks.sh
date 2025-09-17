@@ -26,7 +26,7 @@ component_tf_psa_crypto_check_files () {
     $FRAMEWORK/scripts/check_files.py
 }
 
-components_tf_psa_crypto_check_python_files () {
+component_tf_psa_crypto_check_python_files () {
     msg "Lint: Python scripts"
     $FRAMEWORK/scripts/check-python-files.sh
 }
@@ -138,6 +138,9 @@ component_tf_psa_crypto_check_test_helpers () {
 
     msg "unit test: translate_ciphers.py"
     python3 -m unittest framework/scripts/translate_ciphers.py 2>&1
+
+    msg "unit test: generate_config_checks.py"
+    tests/scripts/test_config_checks.py 2>&1
 }
 
 component_tf_psa_crypto_check_names () {

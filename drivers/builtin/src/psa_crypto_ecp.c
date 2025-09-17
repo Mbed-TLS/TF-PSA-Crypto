@@ -20,10 +20,10 @@
 #include <string.h>
 #include "mbedtls/platform.h"
 
-#include <mbedtls/ecdsa.h>
-#include <mbedtls/ecdh.h>
-#include <mbedtls/ecp.h>
-#include <mbedtls/error_common.h>
+#include <mbedtls/private/ecdsa.h>
+#include <mbedtls/private/ecdh.h>
+#include <mbedtls/private/ecp.h>
+#include <mbedtls/private/error_common.h>
 
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_BASIC) || \
     defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
@@ -77,7 +77,6 @@ static int check_ecc_parameters(psa_ecc_family_t family, size_t *bits)
         case PSA_ECC_FAMILY_SECP_K1:
             switch (*bits) {
                 case 192:
-                /* secp224k1 is not and will not be supported in PSA (#3541). */
                 case 256:
                     return PSA_SUCCESS;
             }

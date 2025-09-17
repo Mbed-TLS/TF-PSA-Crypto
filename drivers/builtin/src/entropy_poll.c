@@ -12,9 +12,10 @@
 #if defined(MBEDTLS_ENTROPY_C)
 
 #include "mbedtls/platform.h"
-#include "mbedtls/entropy.h"
+#include "mbedtls/private/entropy.h"
 #include "entropy_poll.h"
-#include "mbedtls/error_common.h"
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/error_common.h"
 #include <psa/crypto_driver_random.h>
 
 /* In principle, we could support both a built-in source and a custom

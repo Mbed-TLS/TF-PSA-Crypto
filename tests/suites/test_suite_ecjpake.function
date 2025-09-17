@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/ecjpake.h"
+#include "mbedtls/private/ecjpake.h"
 
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) && defined(PSA_WANT_ALG_SHA_256)
 static const unsigned char ecjpake_test_x1[] = {
