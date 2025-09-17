@@ -126,6 +126,13 @@
  */
 #define TF_PSA_CRYPTO_CONFIG_FILES_READ
 
+#if defined(TF_PSA_CRYPTO_CONFIG_VERSION)
+#if (TF_PSA_CRYPTO_CONFIG_VERSION < 0x01000000) ||                      \
+    (TF_PSA_CRYPTO_CONFIG_VERSION > TF_PSA_CRYPTO_VERSION_NUMBER)
+#error "Invalid config version, defined value of TF_PSA_CRYPTO_CONFIG_VERSION is unsupported"
+#endif
+#endif
+
 /* Auto-enable MBEDTLS_MD_C if needed by a module that didn't require it
  * in a previous release, to ensure backwards compatibility.
  */

@@ -30,6 +30,15 @@
 #define PSA_CRYPTO_CONFIG_H
 
 /**
+ * This is an optional version symbol that enables compatibility handling of
+ * config files.
+ *
+ * It is equal to the #TF_PSA_CRYPTO_VERSION_NUMBER of the TF-PSA-Crypto
+ * version introduced the config format we want to be compatible with.
+ */
+#define TF_PSA_CRYPTO_CONFIG_VERSION 0x01000000
+
+/**
  * \name SECTION: SECTION Cryptographic mechanism selection (PSA API)
  *
  * This section sets PSA API settings.
