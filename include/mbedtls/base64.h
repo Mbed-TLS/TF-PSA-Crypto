@@ -11,7 +11,7 @@
 #define MBEDTLS_BASE64_H
 
 #include "tf-psa-crypto/build_info.h"
-#include "psa/crypto_unified_errors.h"
+#include "mbedtls/compat-3.h"
 
 #include <stddef.h>
 

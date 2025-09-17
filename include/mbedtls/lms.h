@@ -20,7 +20,7 @@
 
 #include "mbedtls/private_access.h"
 #include "tf-psa-crypto/build_info.h"
-#include "psa/crypto_unified_errors.h"
+#include "mbedtls/compat-3.h"
 
 #define MBEDTLS_ERR_LMS_OUT_OF_PRIVATE_KEYS -0x0013 /**< Specified LMS key has utilised all of its private keys */
 #define MBEDTLS_ERR_LMS_VERIFY_FAILED    -0x0015 /**< LMS signature verification failed */
