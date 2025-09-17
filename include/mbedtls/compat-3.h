@@ -23,12 +23,6 @@
 #define MBEDTLS_ERR_LMS_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
 /** The output buffer is too small. */
 #define MBEDTLS_ERR_PK_BUFFER_TOO_SMALL                   PSA_ERROR_BUFFER_TOO_SMALL
-/** Buffer is too small to hold the data. */
-#define MBEDTLS_ERR_NET_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
-/** A buffer is too small to receive or write a message */
-#define MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
-/** Destination buffer is too small. */
-#define MBEDTLS_ERR_X509_BUFFER_TOO_SMALL                 PSA_ERROR_BUFFER_TOO_SMALL
 
 /** Memory allocation failed. */
 #define MBEDTLS_ERR_PK_ALLOC_FAILED                       PSA_ERROR_INSUFFICIENT_MEMORY
@@ -38,12 +32,6 @@
 #define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     PSA_ERROR_INSUFFICIENT_MEMORY
 /** LMS failed to allocate space for a private key */
 #define MBEDTLS_ERR_LMS_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
-/** Allocation of memory failed. */
-#define MBEDTLS_ERR_PKCS7_ALLOC_FAILED                    PSA_ERROR_INSUFFICIENT_MEMORY
-/** Memory allocation failed */
-#define MBEDTLS_ERR_SSL_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
-/** Allocation of memory failed. */
-#define MBEDTLS_ERR_X509_ALLOC_FAILED                     PSA_ERROR_INSUFFICIENT_MEMORY
 
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_PK_BAD_INPUT_DATA                     PSA_ERROR_INVALID_ARGUMENT
@@ -51,10 +39,6 @@
 #define MBEDTLS_ERR_PEM_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** Bad data has been input to an LMS function */
 #define MBEDTLS_ERR_LMS_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
-/** Input invalid. */
-#define MBEDTLS_ERR_PKCS7_BAD_INPUT_DATA                  PSA_ERROR_INVALID_ARGUMENT
-/** Bad input parameters to function. */
-#define MBEDTLS_ERR_SSL_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 
 /** Verification Failed */
 #define MBEDTLS_ERR_PKCS7_VERIFY_FAIL                     PSA_ERROR_INVALID_SIGNATURE
