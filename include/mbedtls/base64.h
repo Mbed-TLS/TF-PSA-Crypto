@@ -31,7 +31,7 @@ extern "C" {
  * \param src      source buffer
  * \param slen     amount of data to be encoded
  *
- * \return         0 if successful, or PSA_ERROR_BUFFER_TOO_SMALL.
+ * \return         0 if successful, or #PSA_ERROR_BUFFER_TOO_SMALL.
  *                 *olen is always updated to reflect the amount
  *                 of data that has (or would have) been written.
  *                 If that length cannot be represented, then no data is
@@ -53,7 +53,7 @@ int mbedtls_base64_encode(unsigned char *dst, size_t dlen, size_t *olen,
  * \param src      source buffer
  * \param slen     amount of data to be decoded
  *
- * \return         0 if successful, PSA_ERROR_BUFFER_TOO_SMALL, or
+ * \return         0 if successful, #PSA_ERROR_BUFFER_TOO_SMALL, or
  *                 MBEDTLS_ERR_BASE64_INVALID_CHARACTER if the input data is
  *                 not correct. *olen is always updated to reflect the amount
  *                 of data that has (or would have) been written.
