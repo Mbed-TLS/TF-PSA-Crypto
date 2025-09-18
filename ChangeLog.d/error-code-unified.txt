@@ -7,3 +7,5 @@ API changes
      MBEDTLS_ERR_xxx_BUFFER_TOO_SMALL     -> PSA_ERROR_BUFFER_TOO_SMALL
      MBEDTLS_ERR_xxx_OUTPUT_TOO_LARGE     -> PSA_ERROR_BUFFER_TOO_SMALL
      MBEDTLS_ERR_xxx_INVALID_PADDING      -> PSA_ERROR_INVALID_PADDING
+   * PAKE returns PSA_ERROR_INVALID_SIGNATURE instead of PSA_ERROR_DATA_INVALID
+     in case of errors when parsing the Schnorr NIZKP proof or its public key.
