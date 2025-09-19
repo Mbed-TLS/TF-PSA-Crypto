@@ -1,0 +1,7 @@
+Features
+   * Users can set the macro TF_PSA_CRYPTO_CONFIG_VERSION in the TF-PSA-Crypto
+     config file to maximize backward compatibility in case of future changes
+     to how the config file is interpreted. TF-PSA-Crypto will maintain
+     backward compatibility on functional matters (except at major version
+     changes, e.g. from 1.x.y to 2.0), but the config version may influence
+     other aspect such as optimisations, or experimental options.
