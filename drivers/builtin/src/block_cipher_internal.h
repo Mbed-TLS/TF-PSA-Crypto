@@ -8,8 +8,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_BLOCK_CIPHER_INTERNAL_H
-#define MBEDTLS_BLOCK_CIPHER_INTERNAL_H
+#ifndef TF_PSA_CRYPTO_BLOCK_CIPHER_INTERNAL_H
+#define TF_PSA_CRYPTO_BLOCK_CIPHER_INTERNAL_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -96,4 +96,4 @@ void mbedtls_block_cipher_free(mbedtls_block_cipher_context_t *ctx);
 }
 #endif
 
-#endif /* MBEDTLS_BLOCK_CIPHER_INTERNAL_H */
+#endif /* TF_PSA_CRYPTO_BLOCK_CIPHER_INTERNAL_H */

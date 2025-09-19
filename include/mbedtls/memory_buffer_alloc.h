@@ -139,4 +139,4 @@ int mbedtls_memory_buffer_alloc_self_test(int verbose);
 }
 #endif
 
-#endif /* memory_buffer_alloc.h */
+#endif /* MBEDTLS_MEMORY_BUFFER_ALLOC_H */

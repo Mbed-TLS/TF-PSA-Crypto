@@ -409,4 +409,4 @@ extern mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex;
 }
 #endif
 
-#endif /* threading.h */
+#endif /* MBEDTLS_THREADING_H */

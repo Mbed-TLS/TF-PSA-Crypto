@@ -44,8 +44,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_RSA_ALT_HELPERS_H
-#define MBEDTLS_RSA_ALT_HELPERS_H
+#ifndef TF_PSA_CRYPTO_RSA_ALT_HELPERS_H
+#define TF_PSA_CRYPTO_RSA_ALT_HELPERS_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -209,4 +209,4 @@ int mbedtls_rsa_validate_crt(const mbedtls_mpi *P,  const mbedtls_mpi *Q,
 }
 #endif
 
-#endif /* rsa_alt_helpers.h */
+#endif /* TF_PSA_CRYPTO_RSA_ALT_HELPERS_H */

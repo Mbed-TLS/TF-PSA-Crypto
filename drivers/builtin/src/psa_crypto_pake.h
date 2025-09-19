@@ -6,8 +6,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_PAKE_H
-#define PSA_CRYPTO_PAKE_H
+#ifndef TF_PSA_CRYPTO_PSA_CRYPTO_PAKE_H
+#define TF_PSA_CRYPTO_PSA_CRYPTO_PAKE_H
 
 #include <psa/crypto.h>
 
@@ -156,4 +156,4 @@ psa_status_t mbedtls_psa_pake_get_implicit_key(
  */
 psa_status_t mbedtls_psa_pake_abort(mbedtls_psa_pake_operation_t *operation);
 
-#endif /* PSA_CRYPTO_PAKE_H */
+#endif /* TF_PSA_CRYPTO_PSA_CRYPTO_PAKE_H */

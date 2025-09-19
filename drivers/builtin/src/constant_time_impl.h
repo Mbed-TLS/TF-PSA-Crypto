@@ -5,8 +5,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CONSTANT_TIME_IMPL_H
-#define MBEDTLS_CONSTANT_TIME_IMPL_H
+#ifndef TF_PSA_CRYPTO_CONSTANT_TIME_IMPL_H
+#define TF_PSA_CRYPTO_CONSTANT_TIME_IMPL_H
 
 #include <stddef.h>
 
@@ -538,4 +538,4 @@ static inline mbedtls_ct_condition_t mbedtls_ct_bool_not(mbedtls_ct_condition_t 
     #pragma GCC diagnostic pop
 #endif
 
-#endif /* MBEDTLS_CONSTANT_TIME_IMPL_H */
+#endif /* TF_PSA_CRYPTO_CONSTANT_TIME_IMPL_H */

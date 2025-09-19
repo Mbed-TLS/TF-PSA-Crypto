@@ -11,8 +11,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_CIPHER_INVASIVE_H
-#define MBEDTLS_CIPHER_INVASIVE_H
+#ifndef TF_PSA_CRYPTO_CIPHER_INVASIVE_H
+#define TF_PSA_CRYPTO_CIPHER_INVASIVE_H
 
 #include "tf_psa_crypto_common.h"
 
@@ -24,4 +24,4 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_get_pkcs_padding(unsigned char *input,
 
 #endif
 
-#endif /* MBEDTLS_CIPHER_INVASIVE_H */
+#endif /* TF_PSA_CRYPTO_CIPHER_INVASIVE_H */

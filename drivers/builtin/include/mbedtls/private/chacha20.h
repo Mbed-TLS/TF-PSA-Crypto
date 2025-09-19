@@ -17,8 +17,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CHACHA20_H
-#define MBEDTLS_CHACHA20_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CHACHA20_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CHACHA20_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -196,4 +196,4 @@ int mbedtls_chacha20_self_test(int verbose);
 }
 #endif
 
-#endif /* MBEDTLS_CHACHA20_H */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CHACHA20_H */

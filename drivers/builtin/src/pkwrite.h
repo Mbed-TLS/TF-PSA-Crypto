@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_PK_WRITE_H
-#define MBEDTLS_PK_WRITE_H
+#ifndef TF_PSA_CRYPTO_PKWRITE_H
+#define TF_PSA_CRYPTO_PKWRITE_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -118,4 +118,4 @@
 #define MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE    MBEDTLS_PK_ECP_PUB_DER_MAX_BYTES
 #endif
 
-#endif /* MBEDTLS_PK_WRITE_H */
+#endif /* TF_PSA_CRYPTO_PKWRITE_H */

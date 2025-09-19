@@ -12,8 +12,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_SHA3_H
-#define MBEDTLS_SHA3_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_SHA3_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_SHA3_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -174,4 +174,4 @@ int mbedtls_sha3_self_test(int verbose);
 }
 #endif
 
-#endif /* mbedtls_sha3.h */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_SHA3_H */

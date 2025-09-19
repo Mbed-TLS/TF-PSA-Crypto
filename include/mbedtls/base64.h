@@ -78,4 +78,4 @@ int mbedtls_base64_self_test(int verbose);
 }
 #endif
 
-#endif /* base64.h */
+#endif /* MBEDTLS_BASE64_H */

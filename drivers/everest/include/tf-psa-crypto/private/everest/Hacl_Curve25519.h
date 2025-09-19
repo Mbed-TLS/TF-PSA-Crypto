@@ -9,8 +9,8 @@
 
 
 
-#ifndef __Hacl_Curve25519_H
-#define __Hacl_Curve25519_H
+#ifndef TF_PSA_CRYPTO_HACL_CURVE25519_H
+#define TF_PSA_CRYPTO_HACL_CURVE25519_H
 
 
 #include "kremlib.h"
@@ -19,7 +19,7 @@
 
 void Hacl_Curve25519_crypto_scalarmult(uint8_t *mypublic, uint8_t *secret, uint8_t *basepoint);
 
-#endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
+#endif /* TF_PSA_CRYPTO_HACL_CURVE25519_H */
 
 #define __Hacl_Curve25519_H_DEFINED
 #endif

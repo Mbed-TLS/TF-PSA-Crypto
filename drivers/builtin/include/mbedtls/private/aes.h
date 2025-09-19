@@ -25,8 +25,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_AES_H
-#define MBEDTLS_AES_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_AES_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_AES_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -604,4 +604,4 @@ int mbedtls_aes_self_test(int verbose);
 }
 #endif
 
-#endif /* aes.h */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_AES_H */
