@@ -12,7 +12,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
-#include "mbedtls/compat-3.h"
+#include "mbedtls/compat-3-crypto.h"
 
 #include <stddef.h>
 

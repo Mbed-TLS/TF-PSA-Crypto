@@ -1,5 +1,5 @@
 /**
- * \file compat-3.h
+ * \file compat-3-crypto.h
  *
  * \brief Compatibility definitions for MbedTLS 3.x code built with
  *        MbedTLS 4.x or TF-PSA-Crypto 1.x
