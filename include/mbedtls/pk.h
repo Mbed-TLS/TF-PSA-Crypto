@@ -117,13 +117,7 @@ typedef enum {
  * at the same time as MBEDTLS_PK_USE_PSA_EC_DATA. */
 #define MBEDTLS_PK_USE_PSA_RSA_DATA
 
-/**
- * \brief           Public key information and operations
- *
- * \note        The library does not support custom pk info structures,
- *              only built-in structures returned by
- *              mbedtls_cipher_info_from_type().
- */
+/* Opaque internal type */
 typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
@@ -194,8 +188,8 @@ typedef struct mbedtls_pk_context {
  * \brief           Context for resuming operations
  */
 typedef struct {
-    const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
-    void *MBEDTLS_PRIVATE(rs_ctx);                        /**< Underlying restart context     */
+    const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /* Public key information         */
+    void *MBEDTLS_PRIVATE(rs_ctx);                        /* Underlying restart context     */
 } mbedtls_pk_restart_ctx;
 
 #else /* MBEDTLS_ECP_RESTARTABLE */
@@ -916,11 +910,6 @@ int mbedtls_pk_write_pubkey_pem(const mbedtls_pk_context *ctx, unsigned char *bu
 int mbedtls_pk_write_key_pem(const mbedtls_pk_context *ctx, unsigned char *buf, size_t size);
 #endif /* MBEDTLS_PEM_WRITE_C */
 #endif /* MBEDTLS_PK_WRITE_C */
-
-/*
- * WARNING: Low-level functions. You probably do not want to use these unless
- *          you are certain you do ;)
- */
 
 #ifdef __cplusplus
 }
