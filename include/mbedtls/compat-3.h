@@ -40,7 +40,4 @@
 /** Bad data has been input to an LMS function */
 #define MBEDTLS_ERR_LMS_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 
-/** Verification Failed */
-#define MBEDTLS_ERR_PKCS7_VERIFY_FAIL                     PSA_ERROR_INVALID_SIGNATURE
-
 #endif /* MBEDTLS_COMPAT3_H */
