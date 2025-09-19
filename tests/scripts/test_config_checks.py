@@ -65,6 +65,14 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
         self.bad_case('#define MBEDTLS_PADLOCK_C',
                       error=('MBEDTLS_PADLOCK_C was removed'))
 
+    def test_crypto_define_MBEDTLS_PSA_CRYPTO_CONFIG(self) -> None:
+        """It's ok to set MBEDTLS_PSA_CRYPTO_CONFIG (now effectively always on)."""
+        self.good_case('#define MBEDTLS_PSA_CRYPTO_CONFIG')
+
+    def test_crypto_define_MBEDTLS_USE_PSA_CRYPTO(self) -> None:
+        """It's ok to set MBEDTLS_USE_PSA_CRYPTO (now effectively always on)."""
+        self.good_case('#define MBEDTLS_USE_PSA_CRYPTO')
+
 
 class CryptoTestRNGConfigChecks(unittest_config_checks.TestConfigChecks):
     """TF-PSA-Crypto unit tests for random generator config checks."""
@@ -183,7 +191,7 @@ class CryptoTestRNGConfigChecks(unittest_config_checks.TestConfigChecks):
                        #define MBEDTLS_ENTROPY_NO_SOURCES_OK
                        ''')
 
-    def test_crypto_external_rng_with_nv_seed(self) -> None:
+    def test_rng_external_rng_with_nv_seed(self) -> None:
         """Activated the external RNG and the NV seed.
 
         Currently should result in an error, because the NV seed would not

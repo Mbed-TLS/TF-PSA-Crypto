@@ -10,6 +10,11 @@ from mbedtls_framework.config_checks_generator import * \
     #pylint: disable=wildcard-import,unused-wildcard-import
 from mbedtls_framework import config_history
 
+ALWAYS_ENABLED_SINCE_1_0 = frozenset([
+    'MBEDTLS_PSA_CRYPTO_CONFIG',
+    'MBEDTLS_USE_PSA_CRYPTO',
+])
+
 def checkers_for_removed_options() -> Iterator[Checker]:
     """Discover removed options. Yield corresponding checkers."""
     history = config_history.ConfigHistory()
@@ -18,6 +23,8 @@ def checkers_for_removed_options() -> Iterator[Checker]:
                   history.options('mbedtls', '4.0'))
     internal = history.internal('tfpsacrypto', '1.0')
     for option in sorted(old_public - new_public):
+        if option in ALWAYS_ENABLED_SINCE_1_0:
+            continue
         if option in internal:
             yield Internal(option)
         else:
