@@ -183,7 +183,7 @@ string(REGEX REPLACE "[ ,;]" "|" SKIP_TEST_SUITES_REGEX "${SKIP_TEST_SUITES}")
 string(REPLACE "." "\\." SKIP_TEST_SUITES_REGEX "${SKIP_TEST_SUITES_REGEX}")
 set(SKIP_TEST_SUITES_REGEX "^(${SKIP_TEST_SUITES_REGEX})(\$|\\.)")
 
-function(add_test_suite suite_name)
+function(tf_psa_crypto_add_test_suite suite_name)
     if(ARGV1)
         set(data_name ${ARGV1})
     else()
@@ -311,7 +311,7 @@ function(add_test_suite suite_name)
     else()
         add_test(${data_name}-suite test_suite_${data_name} --verbose)
     endif()
-endfunction(add_test_suite)
+endfunction(tf_psa_crypto_add_test_suite)
 
 # Enable definition of various functions used throughout the testsuite
 # (gethostname, strdup, fileno...) even when compiling with -std=c99. Harmless
@@ -338,7 +338,7 @@ foreach(test_suite ${test_suites})
     string(REGEX REPLACE "\\.data\$" "" data_name "${data_name}")
     string(REPLACE "test_suite_" "" data_name "${data_name}")
     string(REGEX MATCH "[^.]*" function_name "${data_name}")
-    add_test_suite(${function_name} ${data_name})
+    tf_psa_crypto_add_test_suite(${function_name} ${data_name})
 endforeach(test_suite)
 
 # Make scripts and data files needed for testing available in an
