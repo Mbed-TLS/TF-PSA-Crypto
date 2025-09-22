@@ -30,7 +30,7 @@
  */
 
 psa_status_t mbedtls_cipher_values_from_psa(psa_algorithm_t alg, psa_key_type_t key_type,
-                                            size_t *key_bits, mbedtls_cipher_mode_t *mode,
+                                            mbedtls_cipher_mode_t *mode,
                                             mbedtls_cipher_id_t *cipher_id);
 
 #if defined(MBEDTLS_CIPHER_C)

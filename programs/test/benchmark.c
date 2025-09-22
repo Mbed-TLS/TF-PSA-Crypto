@@ -29,7 +29,6 @@ int main(void)
 #include "mbedtls/private/sha512.h"
 #include "mbedtls/private/sha3.h"
 
-#include "mbedtls/private/des.h"
 #include "mbedtls/private/aes.h"
 #include "mbedtls/private/aria.h"
 #include "mbedtls/private/camellia.h"
@@ -110,9 +109,9 @@ static unsigned long mbedtls_timing_hardclock(void);
 #define OPTIONS                                                              \
     "md5, ripemd160, sha1, sha256, sha512,\n"                                \
     "sha3_224, sha3_256, sha3_384, sha3_512,\n"                              \
-    "des3, des, camellia, chacha20,\n"                                       \
+    "camellia, chacha20,\n"                                       \
     "aes_cbc, aes_cfb128, aes_cfb8, aes_gcm, aes_ccm, aes_xts, chachapoly\n" \
-    "aes_cmac, des3_cmac, poly1305\n"                                        \
+    "aes_cmac, poly1305\n"                                        \
     "ctr_drbg, hmac_drbg\n"                                                  \
     "rsa, ecdsa, ecdh.\n"
 
@@ -506,9 +505,8 @@ unsigned char buf[BUFSIZE];
 typedef struct {
     char md5, ripemd160, sha1, sha256, sha512,
          sha3_224, sha3_256, sha3_384, sha3_512,
-         des3, des,
          aes_cbc, aes_cfb128, aes_cfb8, aes_ctr, aes_gcm, aes_ccm, aes_xts, chachapoly,
-         aes_cmac, des3_cmac,
+         aes_cmac,
          aria, camellia, chacha20,
          poly1305,
          ctr_drbg, hmac_drbg,
@@ -561,10 +559,6 @@ int main(int argc, char *argv[])
                 todo.sha3_384 = 1;
             } else if (strcmp(argv[i], "sha3_512") == 0) {
                 todo.sha3_512 = 1;
-            } else if (strcmp(argv[i], "des3") == 0) {
-                todo.des3 = 1;
-            } else if (strcmp(argv[i], "des") == 0) {
-                todo.des = 1;
             } else if (strcmp(argv[i], "aes_cbc") == 0) {
                 todo.aes_cbc = 1;
             } else if (strcmp(argv[i], "aes_cfb128") == 0) {
@@ -583,8 +577,6 @@ int main(int argc, char *argv[])
                 todo.chachapoly = 1;
             } else if (strcmp(argv[i], "aes_cmac") == 0) {
                 todo.aes_cmac = 1;
-            } else if (strcmp(argv[i], "des3_cmac") == 0) {
-                todo.des3_cmac = 1;
             } else if (strcmp(argv[i], "aria") == 0) {
                 todo.aria = 1;
             } else if (strcmp(argv[i], "camellia") == 0) {
@@ -678,49 +670,6 @@ int main(int argc, char *argv[])
     }
 #endif
 
-#if defined(MBEDTLS_DES_C)
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-    if (todo.des3) {
-        mbedtls_des3_context des3;
-
-        mbedtls_des3_init(&des3);
-        if (mbedtls_des3_set3key_enc(&des3, tmp) != 0) {
-            mbedtls_exit(1);
-        }
-        TIME_AND_TSC("3DES",
-                     mbedtls_des3_crypt_cbc(&des3, MBEDTLS_DES_ENCRYPT, BUFSIZE, tmp, buf, buf));
-        mbedtls_des3_free(&des3);
-    }
-
-    if (todo.des) {
-        mbedtls_des_context des;
-
-        mbedtls_des_init(&des);
-        if (mbedtls_des_setkey_enc(&des, tmp) != 0) {
-            mbedtls_exit(1);
-        }
-        TIME_AND_TSC("DES",
-                     mbedtls_des_crypt_cbc(&des, MBEDTLS_DES_ENCRYPT, BUFSIZE, tmp, buf, buf));
-        mbedtls_des_free(&des);
-    }
-
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
-#if defined(MBEDTLS_CMAC_C)
-    if (todo.des3_cmac) {
-        unsigned char output[8];
-        const mbedtls_cipher_info_t *cipher_info;
-
-        memset(buf, 0, sizeof(buf));
-        memset(tmp, 0, sizeof(tmp));
-
-        cipher_info = mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_DES_EDE3_ECB);
-
-        TIME_AND_TSC("3DES-CMAC",
-                     mbedtls_cipher_cmac(cipher_info, tmp, 192, buf,
-                                         BUFSIZE, output));
-    }
-#endif /* MBEDTLS_CMAC_C */
-#endif /* MBEDTLS_DES_C */
 
 #if defined(MBEDTLS_AES_C)
 #if defined(MBEDTLS_CIPHER_MODE_CBC)

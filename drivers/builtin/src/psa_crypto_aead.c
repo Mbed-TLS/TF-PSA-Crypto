@@ -37,7 +37,7 @@ static psa_status_t psa_aead_setup(
     (void) key_buffer_size;
 
     status = mbedtls_cipher_values_from_psa(alg, attributes->type,
-                                            &key_bits, &mode, &cipher_id);
+                                            &mode, &cipher_id);
     if (status != PSA_SUCCESS) {
         return status;
     }

@@ -3683,14 +3683,6 @@ psa_status_t psa_key_derivation_output_bytes(
  *   for the output produced by psa_export_key().
  *   The following key types defined in this specification follow this scheme:
  *
- *     - #PSA_KEY_TYPE_DES.
- *       Force-set the parity bits, but discard forbidden weak keys.
- *       For 2-key and 3-key triple-DES, the three keys are generated
- *       successively (for example, for 3-key triple-DES,
- *       if the first 8 bytes specify a weak key and the next 8 bytes do not,
- *       discard the first 8 bytes, use the next 8 bytes as the first key,
- *       and continue reading output from the operation to derive the other
- *       two keys).
  *     - Finite-field Diffie-Hellman keys (#PSA_KEY_TYPE_DH_KEY_PAIR(\c group)
  *       where \c group designates any Diffie-Hellman group) and
  *       ECC keys on a Weierstrass elliptic curve
