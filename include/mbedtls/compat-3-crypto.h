@@ -10,8 +10,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_COMPAT3_H
-#define MBEDTLS_COMPAT3_H
+#ifndef MBEDTLS_COMPAT_3_CRYPTO_H
+#define MBEDTLS_COMPAT_3_CRYPTO_H
 
 #include "psa/crypto_values.h"
 
@@ -40,4 +40,4 @@
 /** Bad data has been input to an LMS function */
 #define MBEDTLS_ERR_LMS_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 
-#endif /* MBEDTLS_COMPAT3_H */
+#endif /* MBEDTLS_COMPAT_3_CRYPTO_H */
