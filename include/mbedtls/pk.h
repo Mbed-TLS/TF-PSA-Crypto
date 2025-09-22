@@ -240,32 +240,23 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
 /**
- * \brief Initialize a PK context to wrap a PSA key.
+ * \brief Set up a PK context to wrap a PSA key pair.
  *
- * This function creates a PK context which wraps a PSA key. The PSA wrapped
- * key must be an EC or RSA key pair (DH is not suported in the PK module).
+ * The PSA key must be an EC or RSA key pair (FFDH is not suported in PK).
  *
- * Under the hood PSA functions will be used to perform the required
- * operations and, based on the key type, used algorithms will be:
- * * EC:
- *     * verify, verify_ext, sign, sign_ext: ECDSA.
- * * RSA:
- *     * sign: use the primary algorithm in the wrapped PSA key;
- *     * sign_ext: RSA PSS if the pk_type is #MBEDTLS_PK_SIGALG_RSA_PSS, otherwise
- *       it falls back to the sign() case;
- *     * verify, verify_ext: not supported.
- *
- * In order for the above operations to succeed, the policy of the wrapped PSA
- * key must allow the specified algorithm.
- *
- * PK contexts wrapping an EC keys also support \c mbedtls_pk_check_pair(),
- * whereas RSA ones do not.
+ * The resulting context can only perform operations that are allowed by the
+ * key's policy. Additionally, it currently has the following limitations:
+ * module).
+ * - restartable operations can't be used;
+ * - for RSA keys, signature verification is not supported, and neither is use
+ *   of \c mbedtls_pk_check_pair().
  *
  * \warning The PSA wrapped key must remain valid as long as the wrapping PK
  *          context is in use, that is at least between the point this function
  *          is called and the point mbedtls_pk_free() is called on this context.
  *
- * \param ctx The context to initialize. It must be empty (type NONE).
+ * \param ctx The context to set up. It must have been freshly initialized
+ *            but not set up yet.
  * \param key The PSA key to wrap, which must hold an ECC or RSA key pair.
  *
  * \return    \c 0 on success.
