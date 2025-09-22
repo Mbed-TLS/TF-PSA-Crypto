@@ -159,7 +159,7 @@ set(TF_PSA_CRYPTO_USER_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto user config 
 # Create a symbolic link from ${base_name} in the binary directory
 # to the corresponding path in the source directory.
 # Note: Copies the file(s) on Windows.
-function(link_to_source base_name)
+function(tf_psa_crypto_link_to_source base_name)
     set(link "${CMAKE_CURRENT_BINARY_DIR}/${base_name}")
     set(target "${CMAKE_CURRENT_SOURCE_DIR}/${base_name}")
 
@@ -186,7 +186,7 @@ function(link_to_source base_name)
             endif()
         endif()
     endif()
-endfunction(link_to_source)
+endfunction(tf_psa_crypto_link_to_source)
 
 # Get the filename without the final extension (i.e. convert "a.b.c" to "a.b")
 function(get_name_without_last_ext dest_var full_name)
@@ -457,7 +457,7 @@ if(ENABLE_TESTING)
 
     # Make scripts needed for testing available in an out-of-source build.
     if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-        link_to_source(scripts)
+        tf_psa_crypto_link_to_source(scripts)
         # Copy (don't link) DartConfiguration.tcl, needed for memcheck, to
         # keep things simple with the sed commands in the memcheck target.
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/DartConfiguration.tcl

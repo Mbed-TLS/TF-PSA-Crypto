@@ -24,7 +24,7 @@ if(GEN_FILES)
             ${CMAKE_CURRENT_SOURCE_DIR}/../../include/psa/crypto_extra.h
     )
 else()
-    link_to_source(psa_constant_names_generated.c)
+    tf_psa_crypto_link_to_source(psa_constant_names_generated.c)
 endif()
 
 foreach(exe IN LISTS executables)
