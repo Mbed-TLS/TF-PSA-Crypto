@@ -189,7 +189,7 @@ function(tf_psa_crypto_link_to_source base_name)
 endfunction(tf_psa_crypto_link_to_source)
 
 # Get the filename without the final extension (i.e. convert "a.b.c" to "a.b")
-function(get_name_without_last_ext dest_var full_name)
+function(tf_psa_crypto_get_name_without_last_ext dest_var full_name)
     # Split into a list on '.' (but a cmake list is just a ';'-separated string)
     string(REPLACE "." ";" ext_parts "${full_name}")
     # Remove the last item if there are more than one
@@ -202,7 +202,7 @@ function(get_name_without_last_ext dest_var full_name)
     string(REPLACE ";" "." no_ext_name "${ext_parts}")
     # Copy into the desired variable
     set(${dest_var} ${no_ext_name} PARENT_SCOPE)
-endfunction(get_name_without_last_ext)
+endfunction(tf_psa_crypto_get_name_without_last_ext)
 
 include(CheckCCompilerFlag)
 

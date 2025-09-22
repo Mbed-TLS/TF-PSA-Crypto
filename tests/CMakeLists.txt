@@ -200,7 +200,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND bignum_generated_data_names ${generated_data_name})
@@ -209,7 +209,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND config_generated_data_names ${generated_data_name})
@@ -218,7 +218,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND ecp_generated_data_names ${generated_data_name})
@@ -227,7 +227,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND psa_generated_data_names ${generated_data_name})
