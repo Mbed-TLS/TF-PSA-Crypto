@@ -13,7 +13,7 @@ foreach (target IN LISTS target_libraries)
         p256-m_driver_entrypoints.c
         p256-m/p256-m.c)
 
-    set_base_compile_options(${target})
+    tf_psa_crypto_set_base_compile_options(${target})
 
     target_include_directories(${target}
       PRIVATE p256-m

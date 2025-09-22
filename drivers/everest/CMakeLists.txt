@@ -14,7 +14,7 @@ foreach (target IN LISTS target_libraries)
       library/x25519.c
       library/Hacl_Curve25519_joined.c)
 
-    set_base_compile_options(${target})
+    tf_psa_crypto_set_base_compile_options(${target})
     target_include_directories(${target}
       PRIVATE include
               ${TF_PSA_CRYPTO_DIR}/include

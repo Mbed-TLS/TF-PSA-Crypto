@@ -129,7 +129,7 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
         $<TARGET_OBJECTS:${builtin_static_target}>
         $<TARGET_OBJECTS:${everest_static_target}>
         $<TARGET_OBJECTS:${p256m_static_target}>)
-    set_base_compile_options(${tfpsacrypto_static_target})
+    tf_psa_crypto_set_base_compile_options(${tfpsacrypto_static_target})
     target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${libs})
@@ -146,7 +146,7 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
         ${src_crypto} $<TARGET_OBJECTS:${builtin_target}>
         ${src_crypto} $<TARGET_OBJECTS:${everest_target}>
         ${src_crypto} $<TARGET_OBJECTS:${p256m_target}>)
-    set_base_compile_options(${tfpsacrypto_target})
+    tf_psa_crypto_set_base_compile_options(${tfpsacrypto_target})
     target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION ${TF_PSA_CRYPTO_VERSION} SOVERSION ${TF_PSA_CRYPTO_SOVERSION})
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
