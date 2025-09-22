@@ -46,7 +46,7 @@ if(GEN_FILES)
     )
 
     add_custom_target(
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target
         DEPENDS
             "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
             "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
@@ -136,7 +136,7 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
     if(GEN_FILES)
         add_dependencies(${tfpsacrypto_static_target}
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target)
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
     endif()
 endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
@@ -153,7 +153,7 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
     if(GEN_FILES)
         add_dependencies(${tfpsacrypto_target}
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target)
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
     endif()
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
