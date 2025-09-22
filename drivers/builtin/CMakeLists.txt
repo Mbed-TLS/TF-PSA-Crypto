@@ -50,7 +50,7 @@ foreach (target IN LISTS target_libraries)
               ${TF_PSA_CRYPTO_DIR}/include
               ${TF_PSA_CRYPTO_DIR}/core
               ${TF_PSA_CRYPTO_DIR}/drivers/everest/include)
-    set_config_files_compile_definitions(${target})
+    tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)

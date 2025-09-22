@@ -325,7 +325,7 @@ function(set_msvc_base_compile_options target)
     endif(MBEDTLS_FATAL_WARNINGS)
 endfunction(set_msvc_base_compile_options)
 
-function(set_config_files_compile_definitions target)
+function(tf_psa_crypto_set_config_files_compile_definitions target)
     # Pass-through MBEDTLS_CONFIG_FILE, MBEDTLS_USER_CONFIG_FILE,
     # TF_PSA_CRYPTO_CONFIG_FILE and TF_PSA_CRYPTO_USER_CONFIG_FILE
     if(MBEDTLS_CONFIG_FILE)
@@ -344,7 +344,7 @@ function(set_config_files_compile_definitions target)
         target_compile_definitions(${target}
             PUBLIC TF_PSA_CRYPTO_USER_CONFIG_FILE="${TF_PSA_CRYPTO_USER_CONFIG_FILE}")
     endif()
-endfunction(set_config_files_compile_definitions)
+endfunction(tf_psa_crypto_set_config_files_compile_definitions)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Check" AND TEST_CPP)
     set(CMAKE_CXX_STANDARD 11)
@@ -421,7 +421,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE drivers/builtin/src)
     # Request C11, needed for memory poisoning tests
     set_target_properties(tf_psa_crypto_test PROPERTIES C_STANDARD 11)
-    set_config_files_compile_definitions(tf_psa_crypto_test)
+    tf_psa_crypto_set_config_files_compile_definitions(tf_psa_crypto_test)
 endif()
 
 if(ENABLE_PROGRAMS)

@@ -22,7 +22,7 @@ foreach (target IN LISTS target_libraries)
               include/tf-psa-crypto/private/everest
               include/tf-psa-crypto/private/everest/kremlib
               ${TF_PSA_CRYPTO_DIR}/core)
-    set_config_files_compile_definitions(${target})
+    tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)

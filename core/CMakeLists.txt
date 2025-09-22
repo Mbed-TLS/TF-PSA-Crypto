@@ -172,7 +172,7 @@ foreach(target IN LISTS target_libraries)
                 ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
                 # Needed to include psa_crypto_driver_wrappers.h
                 ${CMAKE_CURRENT_BINARY_DIR})
-    set_config_files_compile_definitions(${target})
+    tf_psa_crypto_set_config_files_compile_definitions(${target})
     install(
         TARGETS ${target}
         EXPORT MbedTLSTargets
