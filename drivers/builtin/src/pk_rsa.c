@@ -24,7 +24,9 @@ int mbedtls_pk_rsa_set_key(mbedtls_pk_context *pk, const unsigned char *key, siz
                             PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE |
                             PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_COPY);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+#if defined(MBEDTLS_PSA_CRYPTO_C)
     psa_set_key_enrollment_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH));
+#endif
 
     status = psa_import_key(&attr, key, key_len, &pk->priv_id);
     if (status != PSA_SUCCESS) {
