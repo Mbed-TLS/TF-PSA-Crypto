@@ -159,9 +159,6 @@ endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
-    # Include public header files include/, drivers/builtin/include/ and
-    # ${MBEDTLS_DIR}/include/ as we still need it. Include private header files
-    # from core/ and drivers/builtin/src/.
     target_include_directories(${target}
         PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include/>
                $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
