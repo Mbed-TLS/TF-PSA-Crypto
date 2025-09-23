@@ -29,8 +29,7 @@
 #define MBEDTLS_CIPHER_MODE_WITH_PADDING
 #endif
 
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER) || \
-    defined(MBEDTLS_CHACHA20_C)
+#if defined(MBEDTLS_CHACHA20_C)
 #define MBEDTLS_CIPHER_MODE_STREAM
 #endif
 

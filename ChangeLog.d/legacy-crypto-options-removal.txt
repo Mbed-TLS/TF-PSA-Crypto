@@ -9,13 +9,14 @@ Removals
      MBEDTLS_CAMELLIA_C, MBEDTLS_CCM_C, MBEDTLS_CHACHA20_C,
      MBEDTLS_CHACHAPOLY_C, MBEDTLS_CIPHER_C, MBEDTLS_CIPHER_MODE_CBC,
      MBEDTLS_CIPHER_MODE_CFB, MBEDTLS_CIPHER_MODE_CTR, MBEDTLS_CIPHER_MODE_OFB,
-     MBEDTLS_CIPHER_MODE_XTS, MBEDTLS_CIPHER_PADDING_PKCS7,
-     MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS, MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN,
-     MBEDTLS_CIPHER_PADDING_ZEROS, MBEDTLS_CMAC_C, MBEDTLS_DES_C MBEDTLS_GCM_C
-     and MBEDTLS_POLY1305_C have been removed. Support for ciphers and AEAD
-     algorithms can now only be enabled through the cipher and AEAD related
-     `PSA_WANT_XXX` symbols. The only padding mode now supported in CBC cipher
-     mode is PKCS7. See psa-transition.md for more information.
+     MBEDTLS_CIPHER_MODE_XTS, MBEDTLS_CIPHER_NULL_CIPHER,
+     MBEDTLS_CIPHER_PADDING_PKCS7, MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS,
+     MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN, MBEDTLS_CIPHER_PADDING_ZEROS,
+     MBEDTLS_CMAC_C, MBEDTLS_DES_C MBEDTLS_GCM_C and MBEDTLS_POLY1305_C have
+     been removed. Support for ciphers and AEAD algorithms can now only be
+     enabled through the cipher and AEAD related `PSA_WANT_XXX` symbols. The
+     only padding mode now supported in CBC cipher mode is PKCS7. See
+     psa-transition.md for more information.
 
    * The configuration options MBEDTLS_GENPRIME, MBEDTLS_PKCS1_V15,
      MBEDTLS_PKCS1_V21 and MBEDTLS_RSA_C have been removed. Support for

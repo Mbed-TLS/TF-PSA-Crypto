@@ -268,32 +268,23 @@
  * \{
  */
 /**
- * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
+ * \def MBEDTLS_CTR_DRBG_C
  *
- * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ * Enable the CTR_DRBG AES-based random generator.
+ * The CTR_DRBG generator uses AES-256 by default.
+ * To use AES-128 instead, set #MBEDTLS_PSA_CRYPTO_RNG_STRENGTH to 128.
  *
- * Enable the custom entropy callback mbedtls_platform_get_entropy()
- * (declared in mbedtls/platform.h). You need to provide this callback
- * if you need an entropy source and the built-in entropy callback
- * provided by #MBEDTLS_PSA_BUILTIN_GET_ENTROPY does not work on your platform.
+ * AES support can either be achieved through built-in AES or PSA. Built-in is
+ * the default option when present otherwise PSA is used.
  *
- * Enabling both #MBEDTLS_PSA_BUILTIN_GET_ENTROPY and
- * #MBEDTLS_PSA_DRIVER_GET_ENTROPY is currently not supported.
+ * Module:  drivers/builtin/src/ctr_drbg.c
  *
- * You do not need any entropy source in the following circumstances:
+ * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
+ *           PSA_WANT_ALG_ECB_NO_PADDING
  *
- * - If your platform has a fast cryptographic-quality random generator, and
- *   you enable #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG and provide a random generator
- *   callback instead.
- * - If your platform has no source of entropy at all, and you enable
- *   #MBEDTLS_ENTROPY_NV_SEED and provide a seed in nonvolatile memory
- *   during the provisioning of the device.
- * - If you build the library with no random generator.
- *   Builds with no random generator are not officially supported yet, except
- *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
- *   #MBEDTLS_PSA_CRYPTO_C disabled).
+ * This module provides the CTR_DRBG AES random number generator.
  */
-//#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
+#define MBEDTLS_CTR_DRBG_C
 
 /**
  * \def MBEDTLS_ENTROPY_NV_SEED
@@ -332,16 +323,23 @@
  *
  * Module:  core/psa_crypto.c
  *
- * Requires: either MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG,
- *           or MBEDTLS_CTR_DRBG_C,
- *           or MBEDTLS_HMAC_DRBG_C.
+ * Requires: one of the following:
+ *           - MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *           - MBEDTLS_CTR_DRBG_C
+ *           - MBEDTLS_HMAC_DRBG_C
+ *
  *           If MBEDTLS_CTR_DRBG_C or MBEDTLS_HMAC_DRBG_C is used as the PSA
  *           random generator, then either PSA_WANT_ALG_SHA_256 or
  *           PSA_WANT_ALG_SHA_512 must be enabled for the entropy module.
  *
- * Auto-enables: MBEDTLS_CIPHER_C if any unauthenticated (ie, non-AEAD) cipher
- *               is enabled in PSA (unless it's fully accelerated, see
- *               docs/driver-only-builds.md about that).
+ * \note The PSA crypto subsystem prioritizes DRBG mechanisms as follows:
+ *       - #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG, if enabled
+ *       - CTR_DRBG (AES), seeded by the entropy module, if
+ *         #MBEDTLS_CTR_DRBG_C is enabled
+ *       - HMAC_DRBG, seeded by the entropy module, if
+ *         #MBEDTLS_HMAC_DRBG_C is enabled
+ *
+ *       A future version may reevaluate the prioritization of DRBG mechanisms.
  */
 #define MBEDTLS_PSA_CRYPTO_C
 
@@ -378,6 +376,34 @@
  *           the PSA ITS interface
  */
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C
+
+/**
+ * \def MBEDTLS_PSA_DRIVER_GET_ENTROPY
+ *
+ * Requires: MBEDTLS_PSA_CRYPTO_C, !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+ *
+ * Enable the custom entropy callback mbedtls_platform_get_entropy()
+ * (declared in mbedtls/platform.h). You need to provide this callback
+ * if you need an entropy source and the built-in entropy callback
+ * provided by #MBEDTLS_PSA_BUILTIN_GET_ENTROPY does not work on your platform.
+ *
+ * Enabling both #MBEDTLS_PSA_BUILTIN_GET_ENTROPY and
+ * #MBEDTLS_PSA_DRIVER_GET_ENTROPY is currently not supported.
+ *
+ * You do not need any entropy source in the following circumstances:
+ *
+ * - If your platform has a fast cryptographic-quality random generator, and
+ *   you enable #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG and provide a random generator
+ *   callback instead.
+ * - If your platform has no source of entropy at all, and you enable
+ *   #MBEDTLS_ENTROPY_NV_SEED and provide a seed in nonvolatile memory
+ *   during the provisioning of the device.
+ * - If you build the library with no random generator.
+ *   Builds with no random generator are not officially supported yet, except
+ *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
+ *   #MBEDTLS_PSA_CRYPTO_C disabled).
+ */
+//#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_RNG_STRENGTH
@@ -545,40 +571,6 @@
 
 /** \} name SECTION: Builtin drivers */
 
-/**
- * \name SECTION: Legacy cryptography
- *
- * This section sets legacy settings.
- * \{
- */
-
-/**
- * \def MBEDTLS_CTR_DRBG_C
- *
- * Enable the CTR_DRBG AES-based random generator.
- * The CTR_DRBG generator uses AES-256 by default.
- * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
- *
- * AES support can either be achieved through built-in AES or PSA. Built-in is
- * the default option when present otherwise PSA is used.
- *
- * \note AES-128 will be used if \c MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is set.
- *
- * \note To achieve a 256-bit security strength with CTR_DRBG,
- *       you must use AES-256 *and* use sufficient entropy.
- *       See ctr_drbg.h for more details.
- *
- * Module:  drivers/builtin/src/ctr_drbg.c
- * Caller:
- *
- * Requires: MBEDTLS_PSA_CRYPTO_C, PSA_WANT_KEY_TYPE_AES and
- *           PSA_WANT_ALG_ECB_NO_PADDING
- *
- * This module provides the CTR_DRBG AES random number generator.
- */
-#define MBEDTLS_CTR_DRBG_C
-/** \} name SECTION: Legacy cryptography */
-
 /***********************************************************/
 /* Tweak the configuration to remove dependencies on TF-M. */
 /***********************************************************/
@@ -618,11 +610,6 @@
 
 // We expect TF-M to pick this up soon
 #define MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
-
-/* CCM is the only cipher/AEAD enabled in TF-M configuration files, but it
- * does not need CIPHER_C to be enabled, so we can disable it in order
- * to reduce code size further. */
-#undef MBEDTLS_CIPHER_C
 
 #if CRYPTO_NV_SEED
 #include "tfm_mbedcrypto_config_extra_nv_seed.h"

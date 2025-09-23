@@ -95,7 +95,7 @@
 
 #if defined(MBEDTLS_CMAC_C) && \
     ( !defined(MBEDTLS_CIPHER_C ) || ( !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_DES_C) ) )
-#error "MBEDTLS_CMAC_C defined, but not all prerequisites"
+#error "Built-in CMAC implementation enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
@@ -111,41 +111,22 @@
 #if defined(PSA_WANT_KEY_TYPE_DES)
 #error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and PSA_WANT_KEY_TYPE_DES cannot be defined simultaneously"
 #endif
-#endif
-
-#if defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_CIPHER_MODE_CBC cannot be defined simultaneously"
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_CIPHER_MODE_XTS cannot be defined simultaneously"
-#endif
-#if defined(MBEDTLS_DES_C)
-#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_DES_C cannot be defined simultaneously"
-#endif
 #if defined(MBEDTLS_NIST_KW_C)
 #error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_NIST_KW_C cannot be defined simultaneously"
 #endif
 #endif
 
-#if defined(MBEDTLS_ECDH_C) && !defined(MBEDTLS_ECP_C)
-#error "MBEDTLS_ECDH_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_ECDSA_C) &&            \
-    ( !defined(MBEDTLS_ECP_C) ||           \
-      !( defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) || \
-         defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) ||   \
-         defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) ||   \
-         defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) ) || \
-      !defined(MBEDTLS_ASN1_PARSE_C) ||    \
-      !defined(MBEDTLS_ASN1_WRITE_C) )
-#error "MBEDTLS_ECDSA_C defined, but not all prerequisites"
+#if defined(MBEDTLS_ECDSA_C) && \
+    !( defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) || \
+       defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) ||   \
+       defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) ||   \
+       defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) )
+#error "Built-in ECDSA implementation enabled but no suitable curve"
 #endif
 
 #if defined(MBEDTLS_PK_C)
@@ -157,18 +138,9 @@
 #endif
 #endif /* MBEDTLS_PK_C */
 
-#if defined(MBEDTLS_ECJPAKE_C) && \
-    !defined(MBEDTLS_ECP_C)
-#error "MBEDTLS_ECJPAKE_C defined, but not all prerequisites"
-#endif
-
 #if defined(MBEDTLS_ECP_RESTARTABLE)           && \
     !defined(MBEDTLS_ECP_C)
 #error "MBEDTLS_ECP_RESTARTABLE defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC) && !defined(MBEDTLS_HMAC_DRBG_C)
-#error "MBEDTLS_ECDSA_DETERMINISTIC defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ECP_LIGHT) && ( !defined(MBEDTLS_BIGNUM_C) || (    \
@@ -183,7 +155,7 @@
     !defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) &&                 \
     !defined(MBEDTLS_ECP_DP_CURVE448_ENABLED) ) )
-#error "MBEDTLS_ECP_C defined (or a subset enabled), but not all prerequisites"
+#error "Generic elliptic curve module or a subset enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ENTROPY_C)
@@ -232,21 +204,13 @@
 #if defined(MBEDTLS_CCM_C) && \
     !(defined(MBEDTLS_CCM_GCM_CAN_AES) || defined(MBEDTLS_CCM_GCM_CAN_ARIA) || \
     defined(MBEDTLS_CCM_GCM_CAN_CAMELLIA))
-#error "MBEDTLS_CCM_C defined, but not all prerequisites"
+#error "Built-in CCM implementation enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_GCM_C) && \
     !(defined(MBEDTLS_CCM_GCM_CAN_AES) || defined(MBEDTLS_CCM_GCM_CAN_ARIA) || \
     defined(MBEDTLS_CCM_GCM_CAN_CAMELLIA))
-#error "MBEDTLS_GCM_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_CHACHA20_C)
-#error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_POLY1305_C)
-#error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
+#error "Built-in GCM implementation enabled, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_HMAC_DRBG_C) && !defined(MBEDTLS_MD_C)
@@ -577,15 +541,6 @@
 #error "MBEDTLS_PSA_ITS_FILE_C defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_RSA_C) && !defined(MBEDTLS_BIGNUM_C)
-#error "MBEDTLS_RSA_C defined, but not all prerequisites"
-#endif
-
-#if defined(MBEDTLS_RSA_C) && ( !defined(MBEDTLS_PKCS1_V21) &&         \
-    !defined(MBEDTLS_PKCS1_V15) )
-#error "MBEDTLS_RSA_C defined, but none of the PKCS1 versions enabled"
-#endif
-
 #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) && \
     defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
 #error "Must only define one of MBEDTLS_SHA512_USE_A64_CRYPTO_*"
@@ -594,7 +549,7 @@
 #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
 #if !defined(MBEDTLS_SHA512_C)
-#error "MBEDTLS_SHA512_USE_A64_CRYPTO_* defined without MBEDTLS_SHA512_C"
+#error "MBEDTLS_SHA512_USE_A64_CRYPTO_* defined without the SHA-512 built-in implementation"
 #endif
 
 #endif /* MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT || MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY */
@@ -611,7 +566,7 @@
 #if defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT) || \
     defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY)
 #if !defined(MBEDTLS_SHA256_C)
-#error "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_* defined without MBEDTLS_SHA256_C"
+#error "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_* defined without the SHA-256 built-in implementation"
 #endif
 
 #endif
