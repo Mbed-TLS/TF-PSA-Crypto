@@ -1,6 +1,3 @@
-PSA can_do_hash
-psa_can_do_hash:
-
 PSA compile-time sanity checks
 static_checks:
 

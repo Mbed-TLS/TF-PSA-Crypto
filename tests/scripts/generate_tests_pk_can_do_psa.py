@@ -44,7 +44,7 @@ PK_CONTEXTS = {
             'PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_ANY_HASH)': [
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
-            # Skip context with PSA_ALG_SHA_256 because psa_can_do_psa() cannot verify which alg + hash_alg
+            # Skip context with PSA_ALG_SHA_256 because pk_can_do_psa() cannot verify which alg + hash_alg
             # is associated with public key.
         },
     },
@@ -78,7 +78,7 @@ PK_CONTEXTS = {
             'PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_ANY_HASH)': [
                 'PSA_KEY_USAGE_VERIFY_HASH',
             ],
-            # Skip context with PSA_ALG_SHA_256 because psa_can_do_psa() cannot verify which alg + hash_alg
+            # Skip context with PSA_ALG_SHA_256 because pk_can_do_psa() cannot verify which alg + hash_alg
             # is associated with public key.
 
             'PSA_ALG_ECDH': [
@@ -371,7 +371,7 @@ def get_expected_result(pk_type, key_type_bits, alg, alg2, usage, test_usage, te
     """
 
     # Transparent contexts with public keys have limited validation capabilities in
-    # mbedtls_psa_can_do_psa() so we need a special handling here:
+    # mbedtls_pk_can_do_psa() so we need a special handling here:
     if ('PUBLIC' in key_type_bits) and (pk_type != 'MBEDTLS_PK_OPAQUE'):
         if (pk_type == 'MBEDTLS_PK_ECDSA') and \
             ('ECDSA' in test_alg and 'VERIFY_HASH' in test_usage):

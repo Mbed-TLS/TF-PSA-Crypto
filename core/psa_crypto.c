@@ -279,12 +279,6 @@ static uint8_t psa_get_drivers_initialized(void)
 #endif /* !MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS */
 
 
-int psa_can_do_hash(psa_algorithm_t hash_alg)
-{
-    (void) hash_alg;
-    return psa_get_drivers_initialized();
-}
-
 int psa_can_do_cipher(psa_key_type_t key_type, psa_algorithm_t cipher_alg)
 {
     (void) key_type;
