@@ -2156,13 +2156,8 @@ void pk_copy_from_psa_success(data_t *priv_key_data, int key_type_arg,
         TEST_EQUAL(mbedtls_pk_get_type(&pk_priv), MBEDTLS_PK_RSA);
         TEST_EQUAL(mbedtls_pk_get_type(&pk_pub), MBEDTLS_PK_RSA);
 #if defined(MBEDTLS_RSA_C)
-        if (PSA_ALG_IS_RSA_OAEP(key_alg) || PSA_ALG_IS_RSA_PSS(key_alg)) {
-            TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V21);
-            TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V21);
-        } else {
-            TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
-            TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
-        }
+        TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
+        TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
 #endif /* MBEDTLS_RSA_C */
     }
 

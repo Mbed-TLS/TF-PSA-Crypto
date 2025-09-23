@@ -976,18 +976,6 @@ static int copy_from_psa(mbedtls_svc_key_id_t key_id,
         if (ret != 0) {
             goto exit;
         }
-
-        psa_algorithm_t alg_type = psa_get_key_algorithm(&key_attr);
-
-        if (PSA_ALG_IS_RSA_OAEP(alg_type) || PSA_ALG_IS_RSA_PSS(alg_type)) {
-            ret = mbedtls_pk_set_rsa_padding(pk, MBEDTLS_PK_RSA_PKCS_V21);
-        } else if (PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg_type) ||
-                   alg_type == PSA_ALG_RSA_PKCS1V15_CRYPT) {
-            ret = mbedtls_pk_set_rsa_padding(pk, MBEDTLS_PK_RSA_PKCS_V15);
-        }
-        if (ret != 0) {
-            goto exit;
-        }
     } else
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
