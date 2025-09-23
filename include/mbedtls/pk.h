@@ -470,24 +470,17 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
                                mbedtls_svc_key_id_t *key_id);
 
 /**
- * \brief           Create a PK context starting from a key stored in PSA.
+ * \brief           Set up a PK context with the key material from a PSA key
+ *                  pair.
+ *
  *                  This key:
  *                  - must be exportable and
- *                  - must be an RSA or EC key pair or public key (FFDH is not supported in PK).
+ *                  - must be an RSA or EC key pair or public key
+ *                    (FFDH is not supported in PK).
  *
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_sign() or mbedtls_pk_verify(), on the
- *                  resulting PK context will perform the corresponding
- *                  algorithm for that PK context type.
- *                  * For ECDSA, the choice of deterministic vs randomized will
- *                    be based on #MBEDTLS_PK_ALG_ECDSA.
- *                  * For an RSA key, the output PK context will allow
- *                    sign/verify regardless of the original key's policy.
- *                    The original key's policy determines the output key's padding
- *                    mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
- *                    otherwise PKCS1 v1.5 is set.
  *
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
@@ -500,7 +493,8 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
 int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk);
 
 /**
- * \brief           Create a PK context for the public key of a PSA key.
+ * \brief           Set up a PK context with the public key material of a PSA
+ *                  key.
  *
  *                  The key must be an RSA or ECC key. It can be either a
  *                  public key or a key pair, and only the public key is copied.
@@ -508,15 +502,7 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  Once this functions returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
- *                  Calling mbedtls_pk_verify() on the resulting
- *                  PK context will perform the corresponding algorithm for that
- *                  PK context type.
- *
- *                  For an RSA key,
- *                  the original key's policy determines the output key's padding
- *                  mode: PCKS1 v2.1 is set if the PSA key policy is OAEP or PSS,
- *                  otherwise PKCS1 v1.5 is set.
- *
+
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
  *                  but not set up.
