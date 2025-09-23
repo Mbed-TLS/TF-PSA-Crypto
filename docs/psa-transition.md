@@ -910,6 +910,20 @@ exit:
 }
 ```
 
+#### Restartable public key export
+
+Code that uses restartable ECC (see “[Restartable ECDSA signature](#restartable-ecdsa-signature)) may require an interruptible way to calculate the public key from an object containing only the private key. The legacy API did not provide an explicit way to do it, but this could be done by invoking `mbedtls_ecp_mul_restart()` to do the computation manually.
+
+As of TF-PSA-Crypto 1.0, PSA ECC key pair objects in fact only contain the private key, and  `psa_export_public_key()` calculates the public key on each call. If needed, you can use the interruptible variant of this function, first released in TF-PSA-Crypto 1.0.
+
+1. Call [`psa_export_public_key_iop_setup()`](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/include/psa/crypto.h) to start the interruptible key agreement operation.
+2. Call [`psa_export_public_key_iop_complete()`](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/include/psa/crypto.h) repeatedly until it returns a status other than `PSA_OPERATION_INCOMPLETE`.
+
+If you need to cancel the operation after calling the start function without waiting for the loop calling the complete function to finish, call `psa_export_public_key_iop_abort()`.
+
+Call [`psa_interruptible_set_max_ops`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__interruptible__hash/#group__interruptible__hash_1ga6d86790b31657c13705214f373af869e) to set the number of basic operations per call. This is the same unit as `mbedtls_ecp_set_max_ops`. You can retrieve the current value with [`psa_interruptible_get_max_ops`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__interruptible__hash/#group__interruptible__hash_1ga73e66a6d93f2690b626fcea20ada62b2). The value is [`PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__interruptible/#group__interruptible_1gad19c1da7f6b7d59d5873d5b68eb943d4) if operations are not restartable, which corresponds to `mbedtls_ecp_restart_is_enabled()` being false.
+
+
 ### Signature operations
 
 The equivalent of `mbedtls_pk_sign` or `mbedtls_pk_sign_ext` to sign an already calculated hash is [`psa_sign_hash`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__asymmetric/#group__asymmetric_1ga785e746a31a7b2a35ae5175c5ace3c5c).
@@ -954,7 +968,7 @@ Since TF-PSA-Crypto 1.0, the PK module provides the macro `MBEDTLS_PK_ALG_ECDSA(
 
 #### Restartable ECDSA signature
 
-The legacy API includes an API for “restartable” ECC operations: the operation returns after doing partial computation, and can be resumed. This is intended for highly constrained devices where long cryptographic calculations need to be broken up to poll some inputs, where interrupt-based scheduling is not desired. The legacy API consists of the functions `mbedtls_pk_sign_restartable`, `mbedtls_pk_verify_restartable`, `mbedtls_ecdsa_sign_restartable`, `mbedtls_ecdsa_verify_restartable`, `mbedtls_ecdsa_write_signature_restartable`, `mbedtls_ecdsa_read_signature_restartable`, as well as several configuration and data manipulation functions.
+The legacy API includes an API for “restartable” ECC operations: the operation returns after doing partial computation, and can be resumed. This is intended for highly constrained devices where long cryptographic calculations need to be broken up to poll some inputs, where interrupt-based scheduling is not desired. The legacy API for signature consists of the functions `mbedtls_pk_sign_restartable`, `mbedtls_pk_verify_restartable`, `mbedtls_ecdsa_sign_restartable`, `mbedtls_ecdsa_verify_restartable`, `mbedtls_ecdsa_write_signature_restartable`, `mbedtls_ecdsa_read_signature_restartable`, as well as several configuration and data manipulation functions.
 
 The PSA API offers similar functionality via “interruptible” public-key operations. As of TF-PSA-Crypto 1.0, it is only implemented for ECDSA and ECDH (see “[Restartable key agreement](#restartable-key-agreement)”), for the same curves as the legacy API. (Mbed TLS 3.6 only has interruptible ECDSA signature, not ECDH key agrement.) At the time of writing, no extension is planned to other curves or other algorithms.
 
@@ -1198,7 +1212,14 @@ The PSA API for finite-field Diffie-Hellman only supports predefined groups. The
 
 #### Restartable key agreement
 
-TODO
+The legacy API includes an API for “restartable” ECC operations: the operation returns after doing partial computation, and can be resumed. This is intended for highly constrained devices where long cryptographic calculations need to be broken up to poll some inputs, where interrupt-based scheduling is not desired. The legacy API for ECDH is the same as the ordinary ECDH API, with an extra call to `mbedtls_ecdh_enable_restart()` on the ECDH context. The PSA API uses a different set of functions, available since TF-PSA-Crypto 1.0.
+
+1. Call [`psa_key_agreement_iop_setup()`](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/include/psa/crypto.h) to start the interruptible key agreement operation.
+2. Call [`psa_key_agreement_iop_complete()`](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/include/psa/crypto.h) repeatedly until it returns a status other than `PSA_OPERATION_INCOMPLETE`.
+
+If you need to cancel the operation after calling the start function without waiting for the loop calling the complete function to finish, call `psa_key_agreement_iop_abort()`.
+
+Call [`psa_interruptible_set_max_ops`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__interruptible__hash/#group__interruptible__hash_1ga6d86790b31657c13705214f373af869e) to set the number of basic operations per call. This is the same unit as `mbedtls_ecp_set_max_ops`. You can retrieve the current value with [`psa_interruptible_get_max_ops`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__interruptible__hash/#group__interruptible__hash_1ga73e66a6d93f2690b626fcea20ada62b2). The value is [`PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__interruptible/#group__interruptible_1gad19c1da7f6b7d59d5873d5b68eb943d4) if operations are not restartable, which corresponds to `mbedtls_ecp_restart_is_enabled()` being false.
 
 ### Additional information about Elliptic-curve cryptography
 
