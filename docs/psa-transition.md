@@ -51,16 +51,22 @@ Most of the new APIs suggested in this document are already present in Mbed TLS 
 
 ### Configuration of the PSA subsystem
 
-To make the PSA API available, make sure that the configuration option [`MBEDTLS_PSA_CRYPTO_C`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#c.MBEDTLS_PSA_CRYPTO_C) is enabled. (It is enabled in the default configuration.)
+To make the PSA cryptography API available, make sure that the configuration option [`MBEDTLS_PSA_CRYPTO_C`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#c.MBEDTLS_PSA_CRYPTO_C) is enabled. (It is enabled in the default configuration.)
 
-By default, the PSA crypto API offers a similar set of cryptographic mechanisms as those offered by the legacy API (configured by `MBEDTLS_XXX` macros). The PSA crypto API also has its own configuration mechanism; see “[Cryptographic mechanism availability](#cryptographic-mechanism-availability)”.
+PSA uses a different set of configuration symbols to express which cryptographic mechanisms are enabled in the build. See the section “[Cryptographic mechanism availability](#cryptographic-mechanism-availability)”. If you are migrating from a configuration where `MBEDTLS_PSA_CRYPTO_CONFIG` is enabled, or if you are mostly relying on the default configuration for cryptography, there will be few or no changes between Mbed TLS 3.6 and TF-PSA-Crypto 1.0. But if you were explicitly specifying a set of cryptographic mechanisms using `MBEDTLS_xxx` options, you will need to migrate your configuration to the new mechanism.
+
+Note that in Mbed TLS 3.x, the whole library configuration could be in `mbedtls/mbedtls_config.h` (or `MBEDTLS_CONFIG_FILE`) plus optionally `MBEDTLS_USER_CONFIG_FILE`. In TF-PSA-Crypto, the configuration must be in `psa/crypto_config.h` (or `TF_PSA_CRYPTO_CONFIG_FILE`) plus optionally `TF_PSA_CRYPTO_USER_CONFIG_FILE`.
+
+The Mbed TLS configuration file should not try to modify any option consumed by TF-PSA-Crypto: this would make Mbed TLS's use of cryptography inconsistent with what the crypto library provides. As an exception, it's safe to use the same content in the TF-PSA-Crypto configuration and in the Mbed TLS configuration..
 
 ### Header files
 
-Applications only need to include a single header file:
+Applications only need to include a single header file for all cryptographic mechanisms:
 ```
 #include <psa/crypto.h>
 ```
+
+Note that you may want to keep other crypto header files for functionality that is not provided by the PSA API, such as `<mbedtls/nist_kw.h>` for NIST KW/KWP (not yet exposed through PSA), `<mbedtls/pk.h>` for key pair and public key parsing and formatting, `<mbedtls/asn1.h>` for ASN.1 parsing, etc.
 
 ### General application layout
 
@@ -72,7 +78,7 @@ The PSA subsystem has an internal random generator. As a consequence, you do not
 
 ### Error codes
 
-Mbed TLS functions return a status of type `int`: 0 for success (or occasionally a positive value which is the output length), or a negative value `MBEDTLS_ERR_xxx` indicating an error.
+Mbed TLS functions return a status of type `int`: 0 for success (or occasionally a positive value which is the output length), or a negative value, traditionally `MBEDTLS_ERR_xxx`, indicating an error.
 
 PSA functions return a status of type [`psa_status_t`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__error/#group__error_1ga05676e70ba5c6a7565aff3c36677c1f9): `PSA_SUCCESS == 0` for success, or a negative value [`PSA_ERROR_xxx`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__error/) indicating an error.
 
@@ -166,7 +172,13 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 
 ### Cryptographic mechanism availability
 
-The cryptographic mechanisms available through the PSA API are determined by the contents of the header file `"psa/crypto_config.h"`. You can override the file location with the macro [`MBEDTLS_PSA_CRYPTO_CONFIG_FILE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#mbedtls__config_8h_1a25f7e358caa101570cb9519705c2b873), and you can set [`MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#mbedtls__config_8h_1abd1870cc0d2681183a3018a7247cb137) to the path of an additional file (similar to `MBEDTLS_CONFIG_FILE` and `MBEDTLS_USER_CONFIG_FILE` for legacy configuration symbols).
+#### Crypto configuration file
+
+The cryptographic mechanisms available through the PSA API are determined by the contents of the header file `"psa/crypto_config.h"`. You can override the file location with the macro [`TF_PSA_CRYPTO_CONFIG_FILE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#mbedtls__config_8h_1a25f7e358caa101570cb9519705c2b873), and you can set [`TF_PSA_CRYPTO_USER_CONFIG_FILE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#mbedtls__config_8h_1abd1870cc0d2681183a3018a7247cb137) to the path of an additional file (similar to `MBEDTLS_CONFIG_FILE` and `MBEDTLS_USER_CONFIG_FILE` for legacy configuration symbols).
+
+3.6 note: `TF_PSA_CRYPTO_CONFIG_FILE` and `TF_PSA_CRYPTO_USER_CONFIG_FILE` were called `MBEDTLS_PSA_CRYPTO_CONFIG_FILE` and `MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE` respectively in Mbed TLS 3.x.
+
+#### General rules for `PSA_WANT_xxx`
 
 The availability of cryptographic mechanisms in the PSA API is based on a systematic pattern:
 
@@ -188,6 +200,8 @@ The availability of cryptographic mechanisms in the PSA API is based on a system
 
 Note that all `PSA_WANT_xxx` symbols must be set to a non-zero value. In particular, setting `PSA_WANT_xxx` to an empty value may not be handled consistently.
 
+#### A small `PSA_WANT` configuration example
+
 For example, the following configuration enables hashing with SHA-256, AEAD with AES-GCM, signature with deterministic ECDSA using SHA-256 on the curve secp256r1 using a randomly generated key as well as the corresponding verification, and ECDH key exchange on secp256r1 and Curve25519.
 
 ```
@@ -197,7 +211,6 @@ For example, the following configuration enables hashing with SHA-256, AEAD with
 #define PSA_WANT_ALG_GCM 1
 
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
-// ^^ In Mbed TLS <= 3.4, enable PSA_WANT_KEY_TYPE_ECC_KEY_PAIR instead
 // ^^ implicitly enables PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC, PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
 #define PSA_WANT_ECC_SECP_R1_256 1 // secp256r1 (suitable for ECDSA and ECDH)
 #define PSA_WANT_ECC_MONTGOMERY_255 1 // Curve25519 (suitable for ECDH)
@@ -205,9 +218,29 @@ For example, the following configuration enables hashing with SHA-256, AEAD with
 #define PSA_WANT_ALG_ECDH
 ```
 
+#### Automatically translating legacy configurations
+
+If you have a working configuration file with legacy configuration options, build **Mbed TLS 3.6** and run the program
+
+```
+programs/test/query_compile_time_config -l
+```
+
+(Note that you cannot use TF-PSA-Crypto for this: it would not recognize the legacy configuration options.)
+
+The lines with `PSA_WANT_...=1` should constitute a PSA configuration that is similar to your legacy configuration. You can translate this into `#define` line with the following bash/Linux/macOS shell snippet:
+
+```
+programs/test/query_compile_time_config -l | sed -n 's/^\(PSA_WANT_.*\)=1/#define \1/p'
+```
+
+Please review the result as the configuration may not be fully equivalent in all cases. It will generally provide at least the same features, but sometimes this translation results in more than desired.
+
+#### Implicit activation of crypto features
+
 If a mechanism is not enabled by `PSA_WANT_xxx`, TF-PSA-Crypto will normally not include it. This allows builds that use few features to have a small code size. However, this is not guaranteed: a mechanism that is not explicitly requested can be enabled because it is a dependency of another configuration option, because it is used internally, or because the granularity is not fine enough to distinguish between it and another mechanism that is requested.
 
-Under the hood, `PSA_WANT_xxx` enables the necessary legacy modules. Note that if a mechanism has a PSA accelerator driver, the corresponding legacy module is typically not needed. Thus applications that use a cryptographic mechanism both through the legacy API and through the PSA API need to explicitly enable both the `PSA_WANT_xxx` symbols and the `MBEDTLS_xxx` symbols.
+These automatic enablement rules may change in future versions of TF-PSA-Crypto, so you should not rely on them. Declare what you use.
 
 ### Optimization options
 
@@ -217,9 +250,9 @@ The PSA Crypto API may use accelerator drivers. In this case any options control
 
 ### Alternative implementations (`MBEDTLS_xxx_ALT` options)
 
-In the Mbed TLS legacy interface, you can replace some cryptographic primitives and modes by an alternative implementation, by enabling configuration options of the form `MBEDTLS_xxx_ALT` and linking with your own implementation of the affected function or module. Alternative implementations remain supported in Mbed TLS 3.x even if the application code uses the PSA API. However, they will be removed from the next version of the library.
+In the Mbed TLS legacy interface, you can replace some cryptographic primitives and modes by an alternative implementation, by enabling configuration options of the form `MBEDTLS_xxx_ALT` and linking with your own implementation of the affected function or module. This feature does not exist in TF-PSA-Crypto.
 
-The corresponding PSA feature is accelerator drivers. To implement an accelerator driver, see the [PSA cryptoprocessor driver example and guide](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md). In an application that uses both the legacy interface and the PSA interface for the same mechanism, only some algorithms support calling a PSA driver from the legacy interface. See the [Guide to driver-only builds](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/driver-only-builds.md) for more information.
+The corresponding PSA feature is accelerator drivers. To implement an accelerator driver, see the [PSA cryptoprocessor driver example and guide](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md). See the [Guide to driver-only builds](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/driver-only-builds.md) for more information.
 
 ### Self-tests
 
@@ -229,7 +262,7 @@ There is currently [no PSA equivalent to the self-tests](https://github.com/Mbed
 
 ### Error messages
 
-At the time of writing, there is no equivalent to the error messages provided by `mbedtls_strerror`. However, you can use the companion program `programs/psa/psa_constant_names` to convert various numbers (`psa_status_t`, `psa_algorithm_t`, `psa_key_type_t`, `psa_ecc_family_t`, `psa_dh_family_t`, `psa_key_usage_t`) to a programmer-friendly representation. The conversion doesn't depend on the library configuration or the target platform, so you can use a native build of this program even if you cross-compile your application.
+As of TF-PSA-Crypto 1.0, there is no equivalent to the error messages provided by `mbedtls_strerror`. However, you can use the companion program `programs/psa/psa_constant_names` to convert various numbers (`psa_status_t`, `psa_algorithm_t`, `psa_key_type_t`, `psa_ecc_family_t`, `psa_dh_family_t`, `psa_key_usage_t`) to a programmer-friendly representation. The conversion doesn't depend on the library configuration or the target platform, so you can use a native build of this program even if you cross-compile your application.
 
 ```
 $ programs/psa/psa_constant_names error -138
@@ -412,6 +445,8 @@ There is no equivalent for the `mbedtls_cipher_get_xxx` functions to extract inf
 
 The PSA API groups functions by purpose rather than by underlying primitive: there is a MAC API (equivalent to `md.h` for HMAC, and `cmac.h` for CMAC) and a hash API (equivalent to `md.h` for hashing). There is no special API for a particular hash algorithm (`md5.h`, `sha1.h`, `sha256.h`, `sha512.h`, `sha3.h`). To migrate code using those low-level modules, please follow the recommendations in the following section, using the same principles as the corresponding `md.h` API.
 
+Note that `<mbedtls/md.h>` is still available in TF-PSA-Crypto 1.x, for hash operations only. It is a thin wrapper over the corresponding PSA function. In TF-PSA-Crypto, `<mbedtls/md.h>` does not support HMAC, so applications using HMAC will need to migrate to PSA.
+
 The PSA API does not have a direct interface for the AES-CMAC-PRF-128 algorithm from RFC 4615 calculated by `mbedtls_aes_cmac_prf_128` at the time of writing. You can implement it using the MAC interface with an AES key and the CMAC algorithm.
 
 ### Hash mechanism selection
@@ -432,7 +467,8 @@ The equivalent to `mbedtls_md_type_t` and `MBEDTLS_MD_XXX` constants is the type
 | `MBEDTLS_MD_SHA3_384`  | `PSA_ALG_SHA3_384`  |
 | `MBEDTLS_MD_SHA3_512`  | `PSA_ALG_SHA3_512`  |
 
-The following helper functions can be used to convert between the 2 types:
+The following helper functions from `<mbedtls/psa_util.h>` can be used to convert between the two types:
+
 - `mbedtls_md_psa_alg_from_type()` converts from legacy `mbedtls_md_type_t` to PSA's `psa_algorithm_t`.
 - `mbedtls_md_type_from_psa_alg()` converts from PSA's `psa_algorithm_t` to legacy `mbedtls_md_type_t`.
 
@@ -489,6 +525,8 @@ The following features have no PSA equivalent:
 * `mbedtls_cipher_info_from_string`, `mbedtls_md_get_name`: there is no equivalent of Mbed TLS's lookup based on a (nonstandard) name.
 
 ### Hash calculation
+
+TF-PSA-Crypto will still support the `<mbedtls/md.h>` interface for hash calculations throughout the 1.x version range, so migrating to PSA for this use case is optional.
 
 The equivalent of `mbedtls_md` for a one-shot hash calculation is [`psa_hash_compute`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__hash/#group__hash_1gac69f7f19d96a56c28cf3799d11b12156). In addition, to compare the hash of a message with an expected value, you can call [`psa_hash_compare`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__hash/#group__hash_1ga0c08f4797bec96b886c8c8d7acc2a553) instead of `mbedtls_md` followed by `memcmp` or a constant-time equivalent.
 
@@ -610,11 +648,11 @@ Applications currently using `mbedtls_pkcs5_pbkdf2_hmac` or `mbedtls_pkcs5_pbkdf
   If you want to verify the output against an expected value (for authentication, rather than to derive key material), call [`psa_key_derivation_verify_bytes`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/#group__key__derivation_1gaf01520beb7ba932143ffe733b0795b08) or [`psa_key_derivation_verify_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/#group__key__derivation_1gac041714e34a94742e8ee006ac7dfea5a) instead of `psa_key_derivation_output_bytes`. (Available since Mbed TLS 3.6.0.)
 6. Call [`psa_key_derivation_abort`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/#group__key__derivation_1ga90fdd2716124d0bd258826184824675f) to free the resources associated with the key derivation object.
 
-The function `mbedtls_pkcs5_pbes2` is only intended as a support function to parse encrypted private keys in the PK module. It has no PSA equivalent.
+The function `mbedtls_pkcs5_pbes2` was only intended as a support function to parse encrypted private keys in the PK module. It has no PSA equivalent.
 
 ### PKCS#12 module
 
-The functions `mbedtls_pkcs12_derivation` and `mbedtls_pkcs12_pbe` are only intended as support functions to parse encrypted private keys in the PK module. They have no PSA equivalent.
+The functions `mbedtls_pkcs12_derivation` and `mbedtls_pkcs12_pbe` were only intended as support functions to parse encrypted private keys in the PK module. They have no PSA equivalent.
 
 ## Random generation
 
@@ -622,20 +660,24 @@ The functions `mbedtls_pkcs12_derivation` and `mbedtls_pkcs12_pbe` are only inte
 
 The PSA subsystem has an internal random generator. As a consequence, you do not need to instantiate one manually, so most applications using PSA crypto do not need the interfaces from `entropy.h`, `ctr_drbg.h` and `hmac_drbg.h`. See the next sections for remaining use cases for [entropy](#entropy-sources) and [DRBG](#deterministic-pseudorandom-generation).
 
-The PSA API uses its internal random generator to generate keys (`psa_generate_key`), nonces for encryption (`psa_cipher_generate_iv`, `psa_cipher_encrypt`, `psa_aead_generate_nonce`, `psa_aead_encrypt`, `psa_asymmetric_encrypt`), and other random material as needed. If you need random data for some other purposes, call [`psa_generate_random`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#group__random_1ga1985eae417dfbccedf50d5fff54ea8c5).
+The PSA API uses its internal random generator to generate keys (`psa_generate_key`), nonces for encryption (`psa_cipher_generate_iv`, `psa_cipher_encrypt`, `psa_aead_generate_nonce`, `psa_aead_encrypt`, `psa_asymmetric_encrypt`), and other random material as needed. If you need random data for some other purposes, call [`psa_generate_random`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#group__random_1ga1985eae417dfbccedf50d5fff54ea8c5) instead of `mbedtls_ctr_drbg_random` or `mbedtls_hmac_drbg_random`.
 
-If your application mixes uses of the PSA crypto API and the mbedtls API and you need to pass an RNG argument to a legacy or X.509/TLS function, include the header file `<mbedtls/psa_util.h>` and use:
+You will need to remove the Mbed TLS RNG boilerplate (`mbedtls_entropy_init`, `mbedtls_ctr_drbg_init`, `mbedtls_ctr_drbg_seed`, `mbedtls_ctr_drbg_random`, `mbedtls_ctr_drbg_free`, `mbedtls_entropy_free` — or `hmac_drbg` equivalents of the `ctr_drbg` functions).
+
+TF-PSA-Crypto 1.x and Mbed TLS 4.x functions do not take RNG callbacks. If your code includes calls to internal functions or third-party functions that take RNG callbacks as parameters, include the header file `<mbedtls/psa_util.h>` and use:
 
 * [`mbedtls_psa_get_random`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/psa__util_8h/#_CPPv422mbedtls_psa_get_randomPvPh6size_t) as the `f_rng` argument;
 * [`MBEDTLS_PSA_RANDOM_STATE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/psa__util_8h/#c.MBEDTLS_PSA_RANDOM_STATE) as the `p_rng` argument.
 
-You can remove the Mbed TLS RNG boilerplate (`mbedtls_entropy_init`, `mbedtls_ctr_drbg_init`, `mbedtls_ctr_drbg_seed`, `mbedtls_ctr_drbg_random`, `mbedtls_ctr_drbg_free`, `mbedtls_entropy_free` — or `hmac_drbg` equivalents of the `ctr_drbg` functions) once you have finished replacing the references to `mbedtls_ctr_drbg_random` (or `mbedtls_hmac_drbg_random`) by `mbedtls_psa_get_random`.
-
 ### Entropy sources
 
-Unless explicitly configured otherwise, the PSA random generator uses the default entropy sources configured through the legacy interface (`MBEDTLS_ENTROPY_xxx` symbols). Its set of sources is equivalent to an entropy object configured with `mbedtls_entropy_init`.
+The PSA random generator always uses the entropy source(s) configured at compile time. The configuration is different in Mbed TLS 3.x, and in TF-PSA-Crypto 1.0 onwards. In TF-PSA-Crypto 1.0.0, PSA uses exactly one of three possible entropy sources, depending on which compilation option is enabled:
 
-A future version of TF-PSA-Crypto will include a PSA interface for configuring entropy sources.
+* `MBEDTLS_PSA_BUILTIN_GET_ENTROPY` (default): built-in platform entropy sources (Linux, other Unix-like systems, Windows).
+* `#MBEDTLS_PSA_DRIVER_GET_ENTROPY`: the user-provided callback `mbedtls_platform_get_entropy()`, querying a low-rate entropy source.
+* `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`: the user-provided callback `mbedtls_psa_external_get_random()`, a high-rate cryptographic-quality random source.
+
+For more details, see the [1.0/4.0 transition guide](1.0-migration-guide.md#entropy-configuration) and the documentation of these options.
 
 ### Deterministic pseudorandom generation
 
