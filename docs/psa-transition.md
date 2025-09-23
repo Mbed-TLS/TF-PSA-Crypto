@@ -148,7 +148,7 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 | `md.h` | `mbedtls_md_` | [Hashes and MAC](#hashes-and-mac) |
 | `md5.h` | `mbedtls_md5_` | [Hashes and MAC](#hashes-and-mac) |
 | `memory_buffer_alloc.h` | `mbedtls_memory_buffer_alloc_` | No change (not a crypto API) |
-| `nist_kw.h` | `mbedtls_nist_kw_` | TODO |
+| `nist_kw.h` | `mbedtls_nist_kw_` | [NIST KW and KWP](#nist-kw-and-kwp) |
 | `oid.h` | `mbedtls_oid_` | [PK format support interfaces](#pk-format-support-interfaces) |
 | `pem.h` | `mbedtls_pem_` | No change ([PK format support interfaces](#pk-format-support-interfaces)) |
 | `pk.h` | `mbedtls_pk_` | [Asymmetric cryptography](#asymmetric-cryptography) |
@@ -440,6 +440,10 @@ If you need to interrupt the operation after calling the setup function without 
 The equivalent of `mbedtls_cipher_reset` is to call [`psa_cipher_abort`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__cipher/#group__cipher_1gaad482cdca2098bca0620596aaa02eaa4) or [`psa_aead_abort`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__aead/#group__aead_1gae8a5f93d92318c8f592ee9fbb9d36ba0). Note that you must set the key again with a setup function: the PSA API does not have a special way to reuse an operation object with the same key.
 
 There is no equivalent for the `mbedtls_cipher_get_xxx` functions to extract information from an ongoing PSA cipher or AEAD operation. Applications that need this information will need to save it from the key and operation parameters.
+
+### NIST KW and KWP
+
+TF-PSA-Crypto 1.0 does not yet have a PSA API for key wrapping. We plan to implement the upcoming PSA API in a future minor version. In the meantime, you can continue using the legacy module `<mbedtls/nist_kw.h>`. The API of this module was tweaked in TF-PSA-Crypto 1.0, compared to Mbed TLS 3.6, to take the wrapping key as a PSA key identifier as input instead of a custom context. See the [1.0/4.0 transition guide](1.0-migration-guide.md#changes-to-nist_kw) for more information.
 
 ## Hashes and MAC
 
