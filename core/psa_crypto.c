@@ -163,6 +163,11 @@ static uint8_t psa_get_drivers_initialized(void)
     return initialized;
 }
 
+int psa_is_ready_for_cipher(void)
+{
+    return psa_get_drivers_initialized();
+}
+
 #define GUARD_MODULE_INITIALIZED        \
     if (psa_get_initialized() == 0)     \
     return PSA_ERROR_BAD_STATE;
@@ -277,14 +282,6 @@ static uint8_t psa_get_drivers_initialized(void)
 #define LOCAL_OUTPUT_FREE(output, output_copy) \
     output_copy = NULL;
 #endif /* !MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS */
-
-
-int psa_can_do_cipher(psa_key_type_t key_type, psa_algorithm_t cipher_alg)
-{
-    (void) key_type;
-    (void) cipher_alg;
-    return psa_get_drivers_initialized();
-}
 
 
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_IMPORT) ||       \

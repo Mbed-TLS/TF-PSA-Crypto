@@ -400,21 +400,6 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * @{
  */
 
-/**
- * Tell if PSA is ready for this cipher.
- *
- * \note When using the built-in version of the PSA core (i.e.
- *       #MBEDTLS_PSA_CRYPTO_C is set), for now, this function only checks
- *       the state of the driver subsystem, not the key type and algorithm.
- *       This might be improved in the future.
- *
- * \param key_type    The key type.
- * \param cipher_alg  The cipher algorithm.
- *
- * \return 1 if the PSA can handle \p cipher_alg, 0 otherwise.
- */
-int psa_can_do_cipher(psa_key_type_t key_type, psa_algorithm_t cipher_alg);
-
 /**@}*/
 
 /** \addtogroup crypto_types
