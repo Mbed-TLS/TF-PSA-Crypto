@@ -395,30 +395,22 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
  *                    \p usage, exporting and copying the key, and
  *                    possibly other permissions as documented for the
  *                    \p usage parameter.
- *                    The permitted algorithm policy is determined as follows
- *                    based on the #mbedtls_pk_sigalg_t type of \p pk,
- *                    the chosen \p usage and other factors:
- *                      - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 whose underlying
- *                        context uses the PKCS#1 v1.5 padding mode:
+ *                    For keys created with \c mbedtls_pk_wrap_psa(), the
+ *                    permitted algorithm is the same as the original PSA key.
+ *                    Otherwise, it is determined as follows:
+ *                      - For RSA keys:
  *                        #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH)
  *                        if \p usage is SIGN/VERIFY, and
  *                        #PSA_ALG_RSA_PKCS1V15_CRYPT
  *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_SIGALG_RSA_PKCS1V15 whose underlying
- *                        context uses the PKCS#1 v2.1 padding mode
- *                        and the digest type corresponding to the PSA
- *                        algorithm \c hash:
- *                        #PSA_ALG_RSA_PSS_ANY_SALT(#PSA_ALG_ANY_HASH)
+ *                      - For ECC keys:
+ *                        #MBEDTLS_PK_ALG_ECDSA(#PSA_ALG_ANY_HASH)
  *                        if \p usage is SIGN/VERIFY, and
- *                        #PSA_ALG_RSA_OAEP(\c hash)
- *                        if \p usage is ENCRYPT/DECRYPT.
- *                      - #MBEDTLS_PK_SIGALG_ECDSA
- *                        if \p usage is SIGN/VERIFY:
- *                        #MBEDTLS_PK_ALG_ECDSA.
+ *                        #PSA_ALG_ECDH if \p usage is DERIVE.
  *
  * \return          0 on success.
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if \p pk does not contain
- *                  a key of the type identified in \p attributes.
+ *                  a key compatible with the desired \p usage.
  *                  Another error code on other failures.
  */
 int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
