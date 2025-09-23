@@ -103,15 +103,15 @@
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
 static psa_status_t mbedtls_ecjpake_to_psa_error(int ret)
 {
+    /* Only legacy error codes need to be translated.
+     * Those are either a low-level error code (-127..-2)
+     * or a high-level error code (<= -0x1000). */
+    if (ret > -0x1000 && ret <= -0x80) {
+        return (psa_status_t) ret;
+    }
     switch (ret) {
-        case MBEDTLS_ERR_MPI_BAD_INPUT_DATA:
-        case MBEDTLS_ERR_ECP_BAD_INPUT_DATA:
         case MBEDTLS_ERR_ECP_INVALID_KEY:
-        case MBEDTLS_ERR_ECP_VERIFY_FAILED:
             return PSA_ERROR_DATA_INVALID;
-        case MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:
-        case MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL:
-            return PSA_ERROR_BUFFER_TOO_SMALL;
         case MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED:

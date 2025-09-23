@@ -36,11 +36,11 @@
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Authenticated decryption failed. */
-#define MBEDTLS_ERR_GCM_AUTH_FAILED                       -0x0012
+#define MBEDTLS_ERR_GCM_AUTH_FAILED                       PSA_ERROR_INVALID_SIGNATURE
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_GCM_BAD_INPUT                         -0x0014
+#define MBEDTLS_ERR_GCM_BAD_INPUT                         PSA_ERROR_INVALID_ARGUMENT
 /** An output buffer is too small. */
-#define MBEDTLS_ERR_GCM_BUFFER_TOO_SMALL                  -0x0016
+#define MBEDTLS_ERR_GCM_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
 
 #ifdef __cplusplus
 extern "C" {

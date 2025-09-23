@@ -30,9 +30,9 @@
  * RSA Error codes
  */
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_RSA_BAD_INPUT_DATA                    -0x4080
+#define MBEDTLS_ERR_RSA_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** Input data contains invalid padding and is rejected. */
-#define MBEDTLS_ERR_RSA_INVALID_PADDING                   -0x4100
+#define MBEDTLS_ERR_RSA_INVALID_PADDING                   PSA_ERROR_INVALID_PADDING
 /** Something failed during generation of a key. */
 #define MBEDTLS_ERR_RSA_KEY_GEN_FAILED                    -0x4180
 /** Key failed to pass the validity check of the library. */
@@ -44,7 +44,7 @@
 /** The PKCS#1 verification failed. */
 #define MBEDTLS_ERR_RSA_VERIFY_FAILED                     PSA_ERROR_INVALID_SIGNATURE
 /** The output buffer for decryption is not large enough. */
-#define MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE                  -0x4400
+#define MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE                  PSA_ERROR_BUFFER_TOO_SMALL
 /** The random generator failed to generate non-zeros. */
 #define MBEDTLS_ERR_RSA_RNG_FAILED                        -0x4480
 

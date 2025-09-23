@@ -32,15 +32,15 @@
  * ECP error codes
  */
 /** Bad input parameters to function. */
-#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80
+#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    PSA_ERROR_INVALID_ARGUMENT
 /** The buffer is too small to write to. */
-#define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  -0x4F00
+#define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  PSA_ERROR_BUFFER_TOO_SMALL
 /** The requested feature is not available, for example, the requested curve is not supported. */
 #define MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE               -0x4E80
 /** The signature is not valid. */
-#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00
+#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     PSA_ERROR_INVALID_SIGNATURE
 /** Memory allocation failed. */
-#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      -0x4D80
+#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      PSA_ERROR_INSUFFICIENT_MEMORY
 /** Generation of random value, such as ephemeral key, failed. */
 #define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00
 /** Invalid private or public key. */

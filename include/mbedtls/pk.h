@@ -15,6 +15,7 @@
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
+#include "mbedtls/compat-3-crypto.h"
 
 #include "mbedtls/md.h"
 
@@ -34,12 +35,8 @@
 #include "psa/crypto.h"
 #endif
 
-/** Memory allocation failed. */
-#define MBEDTLS_ERR_PK_ALLOC_FAILED        -0x3F80
 /** Type mismatch, eg attempt to encrypt with an ECDSA key */
 #define MBEDTLS_ERR_PK_TYPE_MISMATCH       -0x3F00
-/** Bad input parameters to function. */
-#define MBEDTLS_ERR_PK_BAD_INPUT_DATA      -0x3E80
 /** Read/write of file failed. */
 #define MBEDTLS_ERR_PK_FILE_IO_ERROR       -0x3E00
 /** Unsupported key version */
@@ -60,8 +57,6 @@
 #define MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE -0x3A00
 /** Unavailable feature, e.g. RSA disabled for RSA key. */
 #define MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE -0x3980
-/** The output buffer is too small. */
-#define MBEDTLS_ERR_PK_BUFFER_TOO_SMALL    -0x3880
 
 #ifdef __cplusplus
 extern "C" {
@@ -312,11 +307,11 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  * \param key The PSA key to wrap, which must hold an ECC or RSA key pair.
  *
  * \return    \c 0 on success.
- * \return    #MBEDTLS_ERR_PK_BAD_INPUT_DATA on invalid input (context already
+ * \return    #PSA_ERROR_INVALID_ARGUMENT on invalid input (context already
  *            used, invalid key identifier).
  * \return    #MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE if the key is not an ECC or
  *            RSA key pair.
- * \return    #MBEDTLS_ERR_PK_ALLOC_FAILED on allocation failure.
+ * \return    #PSA_ERROR_INSUFFICIENT_MEMORY on allocation failure.
  */
 int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
                         const mbedtls_svc_key_id_t key);
@@ -546,7 +541,7 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  but not set up.
  *
  * \return          0 on success.
- * \return          #MBEDTLS_ERR_PK_BAD_INPUT_DATA in case the provided input
+ * \return          #PSA_ERROR_INVALID_ARGUMENT in case the provided input
  *                  parameters are not correct.
  */
 int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk);
@@ -574,7 +569,7 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  but not set up.
  *
  * \return          0 on success.
- * \return          MBEDTLS_ERR_PK_BAD_INPUT_DATA in case the provided input
+ * \return          #PSA_ERROR_INVALID_ARGUMENT in case the provided input
  *                  parameters are not correct.
  */
 int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk);
@@ -767,7 +762,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
  * \return          \c 0 on success (keys were checked and match each other).
  * \return          #MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE if the keys could not
  *                  be checked - in that case they may or may not match.
- * \return          #MBEDTLS_ERR_PK_BAD_INPUT_DATA if a context is invalid.
+ * \return          #PSA_ERROR_INVALID_ARGUMENT if a context is invalid.
  * \return          Another non-zero value if the keys do not match.
  */
 int mbedtls_pk_check_pair(const mbedtls_pk_context *pub,

@@ -52,9 +52,9 @@
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
 /** Bad input parameters to the function. */
-#define MBEDTLS_ERR_CCM_BAD_INPUT       -0x000D
+#define MBEDTLS_ERR_CCM_BAD_INPUT       PSA_ERROR_INVALID_ARGUMENT
 /** Authenticated decryption failed. */
-#define MBEDTLS_ERR_CCM_AUTH_FAILED     -0x000F
+#define MBEDTLS_ERR_CCM_AUTH_FAILED     PSA_ERROR_INVALID_SIGNATURE
 
 #ifdef __cplusplus
 extern "C" {

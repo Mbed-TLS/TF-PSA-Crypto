@@ -158,7 +158,7 @@ static inline mbedtls_md_type_t mbedtls_md_type_from_psa_alg(psa_algorithm_t psa
  *                          even if \p der_size is 0.
  *
  * \return                  0 if successful.
- * \return                  #MBEDTLS_ERR_ASN1_BUF_TOO_SMALL if \p der_size
+ * \return                  #PSA_ERROR_BUFFER_TOO_SMALL if \p der_size
  *                          is too small or if \p bits is larger than the
  *                          largest supported curve.
  * \return                  #MBEDTLS_ERR_ASN1_INVALID_DATA if one of the
@@ -181,7 +181,7 @@ int mbedtls_ecdsa_raw_to_der(size_t bits, const unsigned char *raw, size_t raw_l
  *                          in case of failure.
  *
  * \return                  0 if successful.
- * \return                  #MBEDTLS_ERR_ASN1_BUF_TOO_SMALL if \p raw_size
+ * \return                  #PSA_ERROR_BUFFER_TOO_SMALL if \p raw_size
  *                          is too small or if \p bits is larger than the
  *                          largest supported curve.
  * \return                  #MBEDTLS_ERR_ASN1_INVALID_DATA if the data in
