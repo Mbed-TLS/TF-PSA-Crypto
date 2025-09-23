@@ -539,26 +539,6 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
 }
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-static psa_algorithm_t psa_algorithm_for_rsa(const mbedtls_pk_context *pk,
-                                             int want_crypt)
-{
-    if (pk->rsa_padding == MBEDTLS_PK_RSA_PKCS_V21) {
-        if (want_crypt) {
-            return PSA_ALG_RSA_OAEP(pk->rsa_hash_alg);
-        } else {
-            return PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH);
-        }
-    } else {
-        if (want_crypt) {
-            return PSA_ALG_RSA_PKCS1V15_CRYPT;
-        } else {
-            return PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
-        }
-    }
-}
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-
 int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                                   psa_key_usage_t usage,
                                   psa_key_attributes_t *attributes)
@@ -583,17 +563,17 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
         case MBEDTLS_PK_RSA:
         {
-            int want_crypt = 0; /* 0: sign/verify; 1: encrypt/decrypt */
+            psa_algorithm_t alg = 0;
             switch (usage) {
                 case PSA_KEY_USAGE_SIGN_MESSAGE:
                 case PSA_KEY_USAGE_SIGN_HASH:
                 case PSA_KEY_USAGE_VERIFY_MESSAGE:
                 case PSA_KEY_USAGE_VERIFY_HASH:
-                    /* Nothing to do. */
+                    alg = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
                     break;
                 case PSA_KEY_USAGE_DECRYPT:
                 case PSA_KEY_USAGE_ENCRYPT:
-                    want_crypt = 1;
+                    alg = PSA_ALG_RSA_PKCS1V15_CRYPT;
                     break;
                 default:
                     return MBEDTLS_ERR_PK_TYPE_MISMATCH;
@@ -606,8 +586,7 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                                           PSA_KEY_TYPE_RSA_KEY_PAIR :
                                           PSA_KEY_TYPE_RSA_PUBLIC_KEY));
             psa_set_key_bits(attributes, mbedtls_pk_get_bitlen(pk));
-            psa_set_key_algorithm(attributes,
-                                  psa_algorithm_for_rsa(pk, want_crypt));
+            psa_set_key_algorithm(attributes, alg);
             break;
         }
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
