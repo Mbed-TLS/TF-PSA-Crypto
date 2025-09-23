@@ -691,7 +691,7 @@ We expect to add PSA APIs to DRBG mechanisms in a future version of TF-PSA-Crypt
 
 ## Asymmetric cryptography
 
-The PSA API supports RSA (see “[RSA mechanism selection](#rsa-mechanism-selection)”), elliptic curve cryptography (see “[ECC mechanism selection](#elliptic-curve-mechanism-selection)” and “[EC-JPAKE](#ec-jpake)”) and finite-field Diffie-Hellman (see “[Diffie-Hellman mechanism selection](#diffie-hellman-mechanism-selection)”).
+The PSA API supports the same algorithm families for asymmetric cryptography as the legacy API: RSA (see “[RSA mechanism selection](#rsa-mechanism-selection)”), elliptic curve cryptography (see “[ECC mechanism selection](#elliptic-curve-mechanism-selection)” and “[EC-JPAKE](#ec-jpake)”) and finite-field Diffie-Hellman (see “[Diffie-Hellman mechanism selection](#diffie-hellman-mechanism-selection)”).
 
 ### Key lifecycle for asymmetric cryptography
 
@@ -740,7 +740,7 @@ The sections “[RSA mechanism selection](#rsa-mechanism-selection)”, “[Elli
 
 #### RSA mechanism selection
 
-The PK types `MBEDTLS_PK_RSA`, `MBEDTLS_PK_RSASSA_PSS` and `MBEDTLS_PK_RSA_ALT` correspond to RSA key types in the PSA API. In the PSA API, key pairs and public keys are separate object types.
+The former PK types `MBEDTLS_PK_RSA`, `MBEDTLS_PK_RSASSA_PSS` and `MBEDTLS_PK_RSA_ALT` correspond to RSA key types in the PSA API. In the PSA API, key pairs and public keys are separate object types.
 See “[RSA-ALT interface](#rsa-alt-interface)” for more information about `MBEDTLS_PK_RSA_ALT`.
 
 The PSA API uses policies and algorithm parameters rather than key types to distinguish between RSA-based mechanisms. The PSA algorithm selection corresponds to the `mbedtls_pk_type_t` value passed to `mbedtls_pk_{sign,verify}_ext`. It also replaces the use of `mbedtls_rsa_set_padding` on an `mbedtls_rsa_context` object. See the list of algorithms below and the signature and encryption sections for more information.
@@ -759,23 +759,19 @@ The following cryptographic algorithms work with RSA keys:
 
 #### Elliptic curve mechanism selection
 
-The PK types `MBEDTLS_PK_ECKEY`, `MBEDTLS_PK_ECKEY_DH` and `MBEDTLS_PK_ECDSA` correspond to elliptic-curve key types in the PSA API. In the PSA API, key pairs and public keys are separate object types. The PSA API uses policies and algorithm parameters rather than key types to distinguish between the PK EC types.
+The former PK types `MBEDTLS_PK_ECKEY`, `MBEDTLS_PK_ECKEY_DH` and `MBEDTLS_PK_ECDSA` correspond to elliptic-curve key types in the PSA API. In the PSA API, key pairs and public keys are separate object types. The PSA API uses policies and algorithm parameters rather than key types to distinguish between the PK EC types.
 
 An ECC public key has the type [`PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve)`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1gad54c03d3b47020e571a72cd01d978cf2) where `curve` is a curve family identifier.
 
 An ECC key pair has the type [`PSA_KEY_TYPE_ECC_KEY_PAIR(curve)`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga0b6f5d4d5037c54ffa850d8059c32df0) where `curve` is a curve family identifier. A key with this type can be used both for private-key and public-key operations (there is no separate key type for a private key without the corresponding public key).
 You can always use a private key for operations on the corresponding public key (as long as the policy permits it).
 
-A curve is fully determined by a curve family identifier and the private key size in bits. You can use the following functions to convert between the PSA and legacy elliptic curve designations:
-- [`mbedtls_ecc_group_to_psa()`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__psa__tls__helpers/#group__psa__tls__helpers_1ga9c83c095adfec7da99401cf81e164f99) converts from the legacy curve type identifier to PSA curve family and bit-size.
-- [`mbedtls_ecc_group_from_psa()`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__psa__tls__helpers/#group__psa__tls__helpers_1ga6243eb619d5b2f5fe4667811adeb8a12) converts from PSA curve family and bit-size to the legacy identifier.
-
-The following table gives the correspondence between legacy and PSA elliptic curve designations.
+A curve is fully determined by a curve family identifier and the private key size in bits. The following table gives the correspondence between legacy and PSA elliptic curve designations (when TF-PSA-Crypto 1.0 implements the given curve).
 
 | Mbed TLS legacy curve identifier | PSA curve family | Curve bit-size |
 | -------------------------------- | ---------------- | -------------- |
-| `MBEDTLS_ECP_DP_SECP192R1` | [`PSA_ECC_FAMILY_SECP_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 192 |
-| `MBEDTLS_ECP_DP_SECP224R1` | [`PSA_ECC_FAMILY_SECP_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 224 |
+| `MBEDTLS_ECP_DP_SECP192R1` | not supported | N/A |
+| `MBEDTLS_ECP_DP_SECP224R1` | not supported | N/A |
 | `MBEDTLS_ECP_DP_SECP256R1` | [`PSA_ECC_FAMILY_SECP_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 256 |
 | `MBEDTLS_ECP_DP_SECP384R1` | [`PSA_ECC_FAMILY_SECP_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 384 |
 | `MBEDTLS_ECP_DP_SECP521R1` | [`PSA_ECC_FAMILY_SECP_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 521 |
@@ -783,7 +779,7 @@ The following table gives the correspondence between legacy and PSA elliptic cur
 | `MBEDTLS_ECP_DP_BP384R1` | [`PSA_ECC_FAMILY_BRAINPOOL_P_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1gac1643f1baf38b30d07c20a6eac697f15) | 384 |
 | `MBEDTLS_ECP_DP_BP512R1` | [`PSA_ECC_FAMILY_BRAINPOOL_P_R1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1gac1643f1baf38b30d07c20a6eac697f15) | 512 |
 | `MBEDTLS_ECP_DP_CURVE25519` | [`PSA_ECC_FAMILY_MONTGOMERY`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga1f624c5cdaf25b21287af33024e1aff8) | 255 |
-| `MBEDTLS_ECP_DP_SECP192K1` | [`PSA_ECC_FAMILY_SECP_K1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 192 |
+| `MBEDTLS_ECP_DP_SECP192K1` | not supported | N/A |
 | `MBEDTLS_ECP_DP_SECP224K1` | not supported | N/A |
 | `MBEDTLS_ECP_DP_SECP256K1` | [`PSA_ECC_FAMILY_SECP_K1`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga48bb340b5544ba617b0f5b89542665a7) | 256 |
 | `MBEDTLS_ECP_DP_CURVE448` | [`PSA_ECC_FAMILY_MONTGOMERY`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga1f624c5cdaf25b21287af33024e1aff8) | 448 |
@@ -814,9 +810,9 @@ A finite-field Diffie-Hellman key can be used for key agreement with the algorit
 
 ### Creating keys for asymmetric cryptography
 
-The easiest way to create a key pair object is by randomly generating it with [`psa_generate_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#group__random_1ga1985eae417dfbccedf50d5fff54ea8c5). Compared with the low-level functions from the legacy API (`mbedtls_rsa_gen_key`, `mbedtls_ecp_gen_privkey`, `mbedtls_ecp_gen_keypair`, `mbedtls_ecp_gen_keypair_base`, `mbedtls_ecdsa_genkey`), this directly creates an object that can be used with high-level APIs, but removes some of the flexibility. Note that if you want to export the generated private key, you must pass the flag [`PSA_KEY_USAGE_EXPORT`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__policy/#group__policy_1ga7dddccdd1303176e87a4d20c87b589ed) to [`psa_set_key_usage_flags`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1ga42a65b3c4522ce9b67ea5ea7720e17de); exporting the public key with [`psa_export_public_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1gaf22ae73312217aaede2ea02cdebb6062) is always permitted.
+To generate a random key pair, call [`psa_generate_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#group__random_1ga1985eae417dfbccedf50d5fff54ea8c5). Compared with the low-level functions from the legacy API (`mbedtls_rsa_gen_key`, `mbedtls_ecp_gen_privkey`, `mbedtls_ecp_gen_keypair`, `mbedtls_ecp_gen_keypair_base`, `mbedtls_ecdsa_genkey`), this directly creates an object that can be used with high-level APIs, but removes some of the flexibility. Note that if you want to export the generated private key, you must pass the flag [`PSA_KEY_USAGE_EXPORT`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__policy/#group__policy_1ga7dddccdd1303176e87a4d20c87b589ed) to [`psa_set_key_usage_flags`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1ga42a65b3c4522ce9b67ea5ea7720e17de). Exporting the public key with [`psa_export_public_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1gaf22ae73312217aaede2ea02cdebb6062) is always permitted.
 
-For RSA keys, `psa_generate_key` uses 65537 as the public exponent. You can use [`psa_generate_key_custom`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#ga0415617443afe42a712027bbb8ad89f0) to select a different public exponent. As of Mbed TLS 3.6.1, selecting a different public exponent is only supported with the built-in RSA implementation, not with PSA drivers.
+For RSA keys, `psa_generate_key` uses 65537 as the public exponent. You can use [`psa_generate_key_custom`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#ga0415617443afe42a712027bbb8ad89f0) to select a different public exponent. As of TF-PSA-Crypto 1.0.0, selecting a different public exponent is only supported with the built-in RSA implementation, not with PSA drivers.
 
 To create a key object from existing material, use [`psa_import_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1ga0336ea76bf30587ab204a8296462327b). This function has the same basic goal as the PK parse functions (`mbedtls_pk_parse_key`, `mbedtls_pk_parse_public_key`, `mbedtls_pk_parse_subpubkey`), but only supports a single format that just contains the number(s) that make up the key, with very little metadata. The table below summarizes the PSA import/export format for key pairs and public keys; see the documentation of [`psa_export_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1ga668e35be8d2852ad3feeef74ac6f75bf) and [`psa_export_public_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1gaf22ae73312217aaede2ea02cdebb6062) for more details.
 
@@ -836,16 +832,11 @@ A future extension of the PSA API will support other import formats. Until those
 
 ### Creating a PSA key via PK
 
-You can use the PK module as an intermediate step to create an RSA or ECC key for use with PSA. This is useful for use cases that the PSA API does not currently cover, such as:
+You can use the PK module as an intermediate step to create an RSA or ECC key for use with PSA. This is useful for parsing a key in a format that the PK module supports, but `psa_import_key` doesn't. An advantage of the formats supported by PK is that they contain enough metadata to determine the key type, thus PK's parsing functions do not take a key type as input.
 
-* Parsing a key in a format with metadata without knowing its type ahead of time.
-* Parsing a key in a format that the PK module supports, but `psa_import_key` doesn't.
-* Importing a key which you have in the form of a list of numbers, rather than the binary encoding required by `psa_import_key`.
-* Importing a key with less information than what the PSA API needs, for example an ECC public key in a compressed format, an RSA private key without the private exponent, or an RSA private key without the CRT parameters.
+To construct a PSA key by parsing it with a PK function:
 
-For such use cases:
-
-1. First create a PK object with the desired key material.
+1. First create a PK object with the desired key material, using `mbedtls_pk_parse_key()` or `mbedtls_pk_parse_keyfile()`, `mbedtls_pk_parse_public_key()` or `mbedtls_pk_parse_public_keyfile()`.
 2. Call [`mbedtls_pk_get_psa_attributes`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a7aa7b33cffb6981d95d1632631de9244) to fill PSA attributes corresponding to the PK key. Pass one of the following values as the `usage` parameter:
     * `PSA_KEY_USAGE_SIGN_HASH` or `PSA_KEY_USAGE_SIGN_MESSAGE` for a key pair used for signing.
     * `PSA_KEY_USAGE_DECRYPT` for a key pair used for decryption.
@@ -854,7 +845,7 @@ For such use cases:
     * `PSA_KEY_USAGE_ENCRYPT` for a key pair used for encryption.
 3. Optionally, tweak the attributes (this is rarely necessary). For example:
     * Call [`psa_set_key_usage_flags`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1ga42a65b3c4522ce9b67ea5ea7720e17de), [`psa_set_key_algorithm`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gaeb8341ca52baa0279475ea3fd3bcdc98) and/or [`psa_set_key_enrollment_algorithm`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/crypto__extra_8h/#group__attributes_1gaffa134b74aa52aa3ed9397fcab4005aa) to change the key's policy (by default, it allows what can be done through the PK module).
-    · Call [`psa_set_key_id`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gae48fcfdc72a23e7499957d7f54ff5a64) and perhaps [`psa_set_key_lifetime`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gac03ccf09ca6d36cc3d5b43f8303db6f7) to create a PSA persistent key.
+    · Call [`psa_set_key_id`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gae48fcfdc72a23e7499957d7f54ff5a64) and perhaps [`psa_set_key_lifetime`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gac03ccf09ca6d36cc3d5b43f8303db6f7) if you wish to create a PSA persistent key.
 4. Call [`mbedtls_pk_import_into_psa`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1ad59835d14832daf0f4b4bd0a4555abb9) to import the key into the PSA key store.
 5. You can now free the PK object with `mbedtls_pk_free`.
 
@@ -873,54 +864,6 @@ mbedtls_pk_free(&pk);
 psa_sign_hash(key_id, ...);
 ```
 
-#### Importing an elliptic curve key from ECP
-
-This section explains how to use the `ecp.h` API to create an elliptic curve key in a format suitable for `psa_import_key`.
-
-You can use this, for example, to import an ECC key in the form of a compressed point by calling `mbedtls_ecp_point_read_binary` then following the process below.
-
-The following code snippet illustrates how to import a private key which is initially in an `mbedtls_ecp_keypair` object. (This includes `mbedtls_ecdsa_keypair` objects since that is just a type alias.) Error checks are omitted for simplicity. A future version of Mbed TLS [will provide a function to calculate the curve family](https://github.com/Mbed-TLS/mbedtls/issues/7764).
-
-```
-mbedtls_ecp_keypair ec;
-mbedtls_ecp_keypair_init(&ec);
-// Omitted: fill ec with key material
-// (the public key will not be used and does not need to be set)
-unsigned char buf[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
-size_t length;
-mbedtls_ecp_write_key_ext(&ec, &length, buf, sizeof(buf));
-psa_ecc_curve_t curve = ...; // need to determine the curve family manually
-psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-psa_set_key_attributes(&attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(curve));
-psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_... | ...);
-psa_set_key_algorithm(&attributes, PSA_ALGORITHM_...);
-psa_key_id_t key_id = 0;
-psa_import_key(&attributes, buf, length, &key_id);
-mbedtls_ecp_keypair_free(&ec);
-```
-The following code snippet illustrates how to import a private key which is initially in an `mbedtls_ecp_keypair` object. Error checks are omitted for simplicity.
-
-```
-mbedtls_ecp_group grp;
-mbedtls_ecp_group_init(&grp);
-mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_...);
-mbedtls_ecp_point pt;
-mbedtls_ecp_point_init(&pt);
-// Omitted: fill pt with key material
-unsigned char buf[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_PUBLIC_KEY_MAX_SIZE)];
-size_t length;
-mbedtls_ecp_point_write_binary(&grp, &pt, &length, buf, sizeof(buf));
-psa_ecc_curve_t curve = ...; // need to determine the curve family manually
-psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-psa_set_key_attributes(&attributes, PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve));
-psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_... | ...);
-psa_set_key_algorithm(&attributes, PSA_ALGORITHM_...);
-psa_key_id_t key_id = 0;
-psa_import_key(&attributes, buf, length, &key_id);
-mbedtls_ecp_point_free(&pt);
-mbedtls_ecp_group_free(&grp);
-```
-
 ### Key pair and public key metadata
 
 There is no equivalent to the type `mbedtls_pk_info_t` and the functions `mbedtls_pk_info_from_type` in the PSA API because it is unnecessary. All macros and functions operate directly on key type values (`psa_key_type_t`, `PSA_KEY_TYPE_xxx` constants) and algorithm values (`psa_algorithm_t`, `PSA_ALG_xxx` constants).
@@ -929,7 +872,7 @@ You can call [`psa_get_key_attributes`](https://mbed-tls.readthedocs.io/projects
 
 The bit-size from `psa_get_key_bits` is the same as the one from `mbedtls_pk_get_bitlen`. To convert to bytes as `mbedtls_pk_get_len` or `mbedtls_rsa_get_len` do, you can use the macro `PSA_BITS_TO_BYTES`. However, note that the PSA API has generic macros for each related buffer size (export, signature size, etc.), so you should generally use those instead. The present document lists those macros where it explains the usage of the corresponding function.
 
-Most code that calls `mbedtls_pk_get_type` or `mbedtls_pk_can_do` only requires the key's type as reported by [`psa_get_key_type`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gae4fb812af4f57aa1ad85e335a865b918). For code that uses both `mbedtls_pk_context` objects and PSA metadata encoding, [`mbedtls_pk_can_do_ext`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a256d3e8d4323a45aafa7d2b6c59a36f6) checks the compatibility between a key object and a mechanism. If needed, you can also access a key's policy from its attributes with [`psa_get_key_usage_flags`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gaa1af20f142ca722222c6d98678a0c448), [`psa_get_key_algorithm`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gac255da850a00bbed925390044f016b34) and [`psa_get_key_enrollment_algorithm`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1ga39803b62a97198cf630854db9b53c588). The algorithm policy also conveys the padding and hash information provided by `mbedtls_rsa_get_padding_mode` and `mbedtls_rsa_get_md_alg`.
+Most code that calls `mbedtls_pk_get_type` or `mbedtls_pk_can_do` only requires the key's type as reported by [`psa_get_key_type`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gae4fb812af4f57aa1ad85e335a865b918). If you need more information, you can call `mbedtls_pk_can_do_psa()`, which checks the compatibility between a key object and a mechanism. This function is new in TF-PSA-Crypto 1.0, and generalizes the function [`mbedtls_pk_can_do_ext`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a256d3e8d4323a45aafa7d2b6c59a36f6) from Mbed TLS 3.x. If needed, you can also access a key's policy from its attributes with [`psa_get_key_usage_flags`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gaa1af20f142ca722222c6d98678a0c448), [`psa_get_key_algorithm`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gac255da850a00bbed925390044f016b34) and [`psa_get_key_enrollment_algorithm`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1ga39803b62a97198cf630854db9b53c588). The algorithm policy also conveys the padding and hash information provided by the legacy functions `mbedtls_rsa_get_padding_mode` and `mbedtls_rsa_get_md_alg`.
 
 ### Exporting a public key or a key pair
 
@@ -947,7 +890,7 @@ This section discusses how to use a PSA key in a context that requires a PK obje
 
 * [`mbedtls_pk_copy_from_psa`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1ab8e88836fd9ee344ffe630c40447bd08) copies a PSA key into a PK object. The PSA key must be exportable. The PK object remains valid even if the PSA key is destroyed.
 * [`mbedtls_pk_copy_public_from_psa`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a2a50247a528889c12ea0ddddb8b15a4e) copies the public part of a PSA key into a PK object. The PK object remains valid even if the PSA key is destroyed.
-* [`mbedtls_pk_setup_opaque`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a4c04ac22ab9c1ae09cc29438c308bf05) sets up a PK object that wraps the PSA key. The PK object has the type `MBEDTLS_PK_OPAQUE` regardless of whether the key is an RSA or ECC key. The PK object can only be used as permitted by the PSA key's policy. The PK object contains a reference to the PSA key identifier, therefore PSA key must not be destroyed as long as the PK object remains alive.
+* `mbedtls_pk_wrap_psa` (new under this name in TF-PSA-Crypto 1.0, corresponding to [`mbedtls_pk_setup_opaque`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/pk_8h/#pk_8h_1a4c04ac22ab9c1ae09cc29438c308bf05) in Mbed TLS 3.x) sets up a PK object that wraps the PSA key. This PK object can only be used as permitted by the PSA key's policy. The PK object contains a reference to the PSA key identifier, therefore the PSA key must not be destroyed as long as the PK object remains alive.
 
 Here is some sample code illustrating how to use the PK module to format a PSA public key or the public key of a PSA key pair.
 ```
@@ -992,7 +935,7 @@ The following subsections describe the PSA signature mechanisms that correspond 
 
 #### ECDSA signature
 
-**Note: in the PSA API, the format of an ECDSA signature is the raw fixed-size format. This is different from the legacy API** which uses the ASN.1 DER format for ECDSA signatures. To convert between the two formats, use [`mbedtls_ecdsa_raw_to_der`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/psa__util_8h/#group__psa__tls__helpers_1ga9295799b5437bdff8ce8abd524c5ef2e) or [`mbedtls_ecdsa_der_to_raw`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/psa__util_8h/#group__psa__tls__helpers_1ga33b3cf65d5992ccc724b7ee00186ae61).
+**Note: in the PSA API, the format of an ECDSA signature is the raw fixed-size format. This is different from the legacy API** which uses the ASN.1 DER format for ECDSA signatures. To convert between the two formats, use [`mbedtls_ecdsa_raw_to_der`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/psa__util_8h/#group__psa__tls__helpers_1ga9295799b5437bdff8ce8abd524c5ef2e) or [`mbedtls_ecdsa_der_to_raw`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/psa__util_8h/#group__psa__tls__helpers_1ga33b3cf65d5992ccc724b7ee00186ae61) from `<mbedtls/psa_util.h>`.
 
 <!-- The following are specific to the DER format and therefore have no PSA equivalent: MBEDTLS_ECDSA_MAX_SIG_LEN, MBEDTLS_ECDSA_MAX_LEN -->
 
@@ -1007,11 +950,13 @@ The PSA API offers three algorithm constructors for ECDSA. They differ only for 
 
 Unlike the legacy API, where `mbedtls_pk_sign` and `mbedtls_ecdsa_write_signature` automatically select deterministic ECDSA if both are available, the PSA API requires the application to select the preferred variant. ECDSA verification cannot distinguish between randomized and deterministic ECDSA (except in so far as if the same message is signed twice and the signatures are different, then at least one of the signatures is not the determinstic variant), so in most cases switching between the two is a compatible change.
 
+Since TF-PSA-Crypto 1.0, the PK module provides the macro `MBEDTLS_PK_ALG_ECDSA(hash)`, which is equivalent to either `PSA_ALG_ECDSA(hash)` or `PSA_ALG_DETERMINISTIC_ECDSA(hash)`. This macro indicates which ECDSA variant the function `mbedtls_pk_sign()` uses (except when constrained by the key's policy).
+
 #### Restartable ECDSA signature
 
 The legacy API includes an API for “restartable” ECC operations: the operation returns after doing partial computation, and can be resumed. This is intended for highly constrained devices where long cryptographic calculations need to be broken up to poll some inputs, where interrupt-based scheduling is not desired. The legacy API consists of the functions `mbedtls_pk_sign_restartable`, `mbedtls_pk_verify_restartable`, `mbedtls_ecdsa_sign_restartable`, `mbedtls_ecdsa_verify_restartable`, `mbedtls_ecdsa_write_signature_restartable`, `mbedtls_ecdsa_read_signature_restartable`, as well as several configuration and data manipulation functions.
 
-The PSA API offers similar functionality via “interruptible” public-key operations. As of TF-PSA-Crypto 1.0, it is only implemented for ECDSA and ECDH, for the same curves as the legacy API. (Mbed TLS 3.6 only has interruptible ECDSA signature, not ECDH key agrement.) At the time of writing, no extension is planned to other curves or other algorithms.
+The PSA API offers similar functionality via “interruptible” public-key operations. As of TF-PSA-Crypto 1.0, it is only implemented for ECDSA and ECDH (see “[Restartable key agreement](#restartable-key-agreement)”), for the same curves as the legacy API. (Mbed TLS 3.6 only has interruptible ECDSA signature, not ECDH key agrement.) At the time of writing, no extension is planned to other curves or other algorithms.
 
 The flow of operations for an interruptible signature operation is as follows:
 
@@ -1084,7 +1029,7 @@ As with the PK API, the mask generation is MGF1, the label is empty, and the sam
 
 There is no direct equivalent of the functions `mbedtls_rsa_check_privkey`, `mbedtls_rsa_check_pubkey`,`mbedtls_ecp_check_privkey`, `mbedtls_ecp_check_pubkey`. The PSA API performs some basic checks when it imports a key, and may perform additional checks before performing an operation if needed, so it will never perform an operation on a key that does not satisfy these checks, but the details of when the check is performed may change between versions of the library.
 
-The legacy API provides functions `mbedtls_pk_check_pair`, `mbedtls_rsa_check_pub_priv` and `mbedtls_ecp_check_pub_priv`, which can be used to check the consistency between a private key and a public key. To perform such a check with the PSA API, you can export the public keys; this works because the PSA representation of public keys is canonical.
+The legacy API provides the function `mbedtls_pk_check_pair`, which can be used to check the consistency between a private key and a public key. To perform such a check with the PSA API, you can export the public keys; this works because the PSA representation of public keys is canonical.
 
 * Prepare a key object containing the private key, for example with [`psa_import_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1ga0336ea76bf30587ab204a8296462327b).
 * Prepare a key object containing the public key, for example with [`psa_import_key`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__import__export/#group__import__export_1ga0336ea76bf30587ab204a8296462327b).
@@ -1253,7 +1198,7 @@ The PSA API for finite-field Diffie-Hellman only supports predefined groups. The
 
 #### Restartable key agreement
 
-Restartable key agreement (enabled by `mbedtls_ecdh_enable_restart`) is not yet available through the PSA API. It will be added under the name “interruptible key agreement” in a future version of the library, with an interface that's similar to the interruptible signature interface described in “[Restartable ECDSA signature](#restartable-ecdsa-signature)”.
+TODO
 
 ### Additional information about Elliptic-curve cryptography
 
@@ -1267,7 +1212,6 @@ The bit-size used by the PSA API is the size of the private key. For most curves
 
 | Curve | `grp->nbits` | `grp->pbits` | `curve_info->bit_size` | PSA bit-size |
 | ----- | ------------ | ------------ | ---------------------- | ------------ |
-| secp224k1 | 225 | 224 | 224 | not supported |
 | Curve25519 | 253 | 255 | 256 | 255 |
 | Curve448 | 446 | 448 | 448 | 448 |
 
@@ -1317,7 +1261,7 @@ The PSA API is a cryptography API, not an arithmetic API. As a consequence, ther
 
 #### RSA-ALT interface
 
-Implementers of the RSA-ALT interface (`MBEDTLS_PK_RSA_ALT` pk type, `mbedtls_pk_setup_rsa_alt` setup function) should migrate to the [PSA cryptoprocessor driver interface](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md).
+Implementers of the RSA-ALT interface (`MBEDTLS_PK_RSA_ALT` pk type, `mbedtls_pk_setup_rsa_alt` setup function) must migrate to the [PSA cryptoprocessor driver interface](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md).
 
 * If the purpose of the ALT interface is acceleration only: use the accelerator driver interface. This is fully transparent to application code.
 * If the purpose of the ALT interface is to isolate the private key in a high-security environment: use the opaque driver interface. This is mostly transparent to user code. Code that uses a key via its key identifier does not need to know whether the key is transparent (equivalent of `MBEDTLS_PK_RSA`) or opaque (equivalent of `MBEDTLS_PK_RSA_ALT`). When creating a key, it will be transparent by default; to create an opaque key, call [`psa_set_key_lifetime`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__attributes/#group__attributes_1gac03ccf09ca6d36cc3d5b43f8303db6f7) to set the key's location to the chosen location value for the driver, e.g.
@@ -1332,7 +1276,7 @@ The PSA subsystem uses its internal random generator both for randomized algorit
 
 The PSA API does not provide direct access to the exponentiation primitive as with `mbedtls_rsa_public` and `mbedtls_rsa_private`. If you need an RSA-based mechanism that is not supported by the PSA API, please [submit an issue on GitHub](https://github.com/ARM-software/psa-api/issues) so that we can extend the API to support it.
 
-The PSA API does not support constructing RSA keys progressively from numbers with `mbedtls_rsa_import` or `mbedtls_rsa_import_raw` followed by `mbedtls_rsa_complete`. See “[Importing a PK key by wrapping](#importing-a-pk-key-by-wrapping)”.
+The PSA API does not support constructing RSA keys progressively from numbers with `mbedtls_rsa_import` or `mbedtls_rsa_import_raw` followed by `mbedtls_rsa_complete`. You will need to construct the standard ASN.1 representation and call `psa_import_key()` (see “[Creating keys for asymmetric cryptography](#creating-keys-for-asymmetric-cryptography)”).
 
 There is no direct equivalent of `mbedtls_rsa_export`, `mbedtls_rsa_export_raw` and `mbedtls_rsa_export_crt` to export some of the numbers in a key. You can export the whole key with `psa_export_key`, or with `psa_export_public_key` to export the public key from a key pair object. See also “[Exporting a public key or a key pair](#exporting-a-public-key-or-a-key-pair)”.
 
