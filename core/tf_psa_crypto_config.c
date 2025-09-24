@@ -22,6 +22,7 @@
 #if LIBTESTDRIVER1_TF_PSA_CRYPTO_MARKER == TF_PSA_CRYPTO_MARKER
 #define TF_PSA_CRYPTO_WE_ARE_IN_LIBTESTDRIVER1
 #endif
+#undef TF_PSA_CRYPTO_MARKER
 
 /* Completely byass generated config checks in libtestdriver1, where
  * they aren't useful (when building test drivers, we can bypass
