@@ -520,8 +520,8 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
  *                  usage of #PSA_KEY_USAGE_VERIFY_HASH - see that function's
  *                  documentation for details.
- *                  If you want to control which signature algorithm is used,
- *                  see \c mbedtls_pk_verify_ext().
+ *                  If you want to request a specific signature algorithm, see
+ *                  \c mbedtls_pk_verify_ext().
  *
  * \return          0 on success (signature is valid),
  *                  #PSA_ERROR_INVALID_SIGNATURE if the signature is invalid,
@@ -609,8 +609,8 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
  *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
  *                  usage of #PSA_KEY_USAGE_SIGN_HASH - see that function's
  *                  documentation for details.
- *                  If you want to control which signature algorithm is used,
- *                  see \c mbedtls_pk_sign_ext().
+ *                  If you want to request a specific signature algorithm, see
+ *                  \c mbedtls_pk_sign_ext().
  *
  * \return          0 on success, or a specific error code.
  *
@@ -618,36 +618,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
 int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                     const unsigned char *hash, size_t hash_len,
                     unsigned char *sig, size_t sig_size, size_t *sig_len);
-
-/**
- * \brief           Make signature given a signature type.
- *
- * \param sig_type  Signature type.
- * \param ctx       The PK context to use. It must have been set up
- *                  with a private key.
- * \param md_alg    Hash algorithm used
- * \param hash      Hash of the message to sign
- * \param hash_len  Hash length
- * \param sig       Place to write the signature.
- *                  It must have enough room for the signature.
- *                  #MBEDTLS_PK_SIGNATURE_MAX_SIZE is always enough.
- *                  You may use a smaller buffer if it is large enough
- *                  given the key type.
- * \param sig_size  The size of the \p sig buffer in bytes.
- * \param sig_len   On successful return,
- *                  the number of bytes written to \p sig.
- *
- * \return          0 on success, or a specific error code.
- *
- * \note            When \p sig_type is #MBEDTLS_PK_SIGALG_RSA_PSS,
- *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
- *
- */
-int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sig_type,
-                        mbedtls_pk_context *ctx,
-                        mbedtls_md_type_t md_alg,
-                        const unsigned char *hash, size_t hash_len,
-                        unsigned char *sig, size_t sig_size, size_t *sig_len);
 
 /**
  * \brief           Restartable version of \c mbedtls_pk_sign()
@@ -681,6 +651,36 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 const unsigned char *hash, size_t hash_len,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len,
                                 mbedtls_pk_restart_ctx *rs_ctx);
+
+/**
+ * \brief           Make signature given a signature type.
+ *
+ * \param sig_type  Signature type.
+ * \param ctx       The PK context to use. It must have been set up
+ *                  with a private key.
+ * \param md_alg    Hash algorithm used
+ * \param hash      Hash of the message to sign
+ * \param hash_len  Hash length
+ * \param sig       Place to write the signature.
+ *                  It must have enough room for the signature.
+ *                  #MBEDTLS_PK_SIGNATURE_MAX_SIZE is always enough.
+ *                  You may use a smaller buffer if it is large enough
+ *                  given the key type.
+ * \param sig_size  The size of the \p sig buffer in bytes.
+ * \param sig_len   On successful return,
+ *                  the number of bytes written to \p sig.
+ *
+ * \return          0 on success, or a specific error code.
+ *
+ * \note            When \p sig_type is #MBEDTLS_PK_SIGALG_RSA_PSS,
+ *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
+ *
+ */
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sig_type,
+                        mbedtls_pk_context *ctx,
+                        mbedtls_md_type_t md_alg,
+                        const unsigned char *hash, size_t hash_len,
+                        unsigned char *sig, size_t sig_size, size_t *sig_len);
 
 /**
  * \brief           Check if a public-private pair of keys matches.
