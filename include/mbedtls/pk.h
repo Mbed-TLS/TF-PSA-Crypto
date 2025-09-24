@@ -509,19 +509,19 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
 /**
  * \brief           Verify signature (including padding if relevant).
  *
- * \param ctx       The PK context to use. It must have been set up.
- * \param md_alg    Hash algorithm used.
- * \param hash      Hash of the message to sign
- * \param hash_len  Hash length
- * \param sig       Signature to verify
- * \param sig_len   Signature length
- *
  * \note            The signature algorithm used will be the one that would be
  *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
  *                  usage of #PSA_KEY_USAGE_VERIFY_HASH - see that function's
  *                  documentation for details.
  *                  If you want to request a specific signature algorithm, see
  *                  \c mbedtls_pk_verify_ext().
+ *
+ * \param ctx       The PK context to use. It must have been set up.
+ * \param md_alg    Hash algorithm used.
+ * \param hash      Hash of the message to sign
+ * \param hash_len  Hash length
+ * \param sig       Signature to verify
+ * \param sig_len   Signature length
  *
  * \return          0 on success (signature is valid),
  *                  #PSA_ERROR_INVALID_SIGNATURE if the signature is invalid,
@@ -598,6 +598,13 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
 /**
  * \brief           Make signature (including padding if relevant).
  *
+ * \note            The signature algorithm used will be the one that would be
+ *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
+ *                  usage of #PSA_KEY_USAGE_SIGN_HASH - see that function's
+ *                  documentation for details.
+ *                  If you want to request a specific signature algorithm, see
+ *                  \c mbedtls_pk_sign_ext().
+ *
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
  * \param md_alg    Hash algorithm used
@@ -611,13 +618,6 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
  * \param sig_size  The size of the \p sig buffer in bytes.
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
- *
- * \note            The signature algorithm used will be the one that would be
- *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
- *                  usage of #PSA_KEY_USAGE_SIGN_HASH - see that function's
- *                  documentation for details.
- *                  If you want to request a specific signature algorithm, see
- *                  \c mbedtls_pk_sign_ext().
  *
  * \return          0 on success, or a specific error code.
  *
