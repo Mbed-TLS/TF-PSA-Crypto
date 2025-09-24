@@ -216,7 +216,7 @@ void cipher_invalid_param_unconditional()
 
     /* mbedtls_cipher_get_key_bitlen() */
     TEST_ASSERT(mbedtls_cipher_get_key_bitlen(&invalid_ctx) ==
-                MBEDTLS_KEY_LENGTH_NONE);
+                0);
 
     /* mbedtls_cipher_get_operation() */
     TEST_ASSERT(mbedtls_cipher_get_operation(&invalid_ctx) ==

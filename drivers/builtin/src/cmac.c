@@ -164,7 +164,6 @@ int mbedtls_cipher_cmac_starts(mbedtls_cipher_context_t *ctx,
         case MBEDTLS_CIPHER_AES_128_ECB:
         case MBEDTLS_CIPHER_AES_192_ECB:
         case MBEDTLS_CIPHER_AES_256_ECB:
-        case MBEDTLS_CIPHER_DES_EDE3_ECB:
             break;
         default:
             return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
@@ -753,8 +752,7 @@ static int cmac_test_wth_cipher(int verbose,
              * the selftest function to fail. */
             if ((ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED ||
                  ret == MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE) &&
-                (cipher_type == MBEDTLS_CIPHER_AES_192_ECB ||
-                 cipher_type == MBEDTLS_CIPHER_DES_EDE3_ECB)) {
+                (cipher_type == MBEDTLS_CIPHER_AES_192_ECB)) {
                 if (verbose != 0) {
                     mbedtls_printf("skipped\n");
                 }

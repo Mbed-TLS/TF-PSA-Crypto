@@ -680,10 +680,6 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
  *
  * - For symmetric keys (including MAC keys), the format is the
  *   raw bytes of the key.
- * - For DES, the key data consists of 8 bytes. The parity bits must be
- *   correct.
- * - For Triple-DES, the format is the concatenation of the
- *   two or three DES keys.
  * - For RSA key pairs (#PSA_KEY_TYPE_RSA_KEY_PAIR), the format
  *   is the non-encrypted DER encoding of the representation defined by
  *   PKCS\#1 (RFC 8017) as `RSAPrivateKey`, version 0.
