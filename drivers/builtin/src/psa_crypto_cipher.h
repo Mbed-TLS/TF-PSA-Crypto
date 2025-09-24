@@ -18,8 +18,6 @@
  *
  * \param[in]      alg          PSA cipher algorithm identifier
  * \param[in]      key_type     PSA key type
- * \param[in,out]  key_bits     Size of the key in bits. The value provided in input
- *                              might be updated if necessary.
  * \param[out]     mode         Mbed TLS cipher mode
  * \param[out]     cipher_id    Mbed TLS cipher algorithm identifier
  *
