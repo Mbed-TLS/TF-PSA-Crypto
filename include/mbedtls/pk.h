@@ -568,27 +568,20 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  * \brief           Verify signature, with explicit selection of the signature algorithm.
  *                  (Includes verification of the padding depending on type.)
  *
- * \param type      Signature type (inc. possible padding type) to verify
+ * \param type      Signature type to verify
  * \param ctx       The PK context to use. It must have been set up.
- * \param md_alg    Hash algorithm used (see notes)
+ * \param md_alg    Hash algorithm used.
  * \param hash      Hash of the message to sign
- * \param hash_len  Hash length or 0 (see notes)
+ * \param hash_len  Hash length
  * \param sig       Signature to verify
  * \param sig_len   Signature length
  *
  * \return          0 on success (signature is valid),
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
- *                  used for this type of signatures,
- *                  #PSA_ERROR_INVALID_SIGNATURE if there is a valid
- *                  signature in \p sig but its length is less than \p sig_len,
+ *                  used for this type of signature,
+ *                  #PSA_ERROR_INVALID_SIGNATURE if the signature is invalid,
  *                  or a specific error code.
  *
- * \note            If hash_len is 0, then the length associated with md_alg
- *                  is used instead, or an error returned if it is invalid.
- *
- * \note            \p options parameter is kept for backward compatibility.
- *                  If key type is different from MBEDTLS_PK_SIGALG_RSA_PSS it must
- *                  be NULL, otherwise it's just ignored.
  */
 int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
@@ -669,8 +662,9 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
 /**
  * \brief           Make signature given a signature type.
+ *                  (Including padding depending on type.)
  *
- * \param sig_type  Signature type.
+ * \param sig_type  Signature type to generate.
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
  * \param md_alg    Hash algorithm used
@@ -685,11 +679,10 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
  *
- * \return          0 on success, or a specific error code.
- *
- * \note            When \p sig_type is #MBEDTLS_PK_SIGALG_RSA_PSS,
- *                  see #PSA_ALG_RSA_PSS for a description of PSS options used.
- *
+ * \return          0 on success,
+ *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
+ *                  used for this type of signature,
+ *                  or a specific error code.
  */
 int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sig_type,
                         mbedtls_pk_context *ctx,
