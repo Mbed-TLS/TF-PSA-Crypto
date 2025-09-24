@@ -536,20 +536,27 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \note            Performs the same job as \c mbedtls_pk_verify(), but can
  *                  return early and restart according to the limit set with
- *                  \c mbedtls_ecp_set_max_ops() to reduce blocking for ECC
+ *                  \c psa_interruptible_set_max_ops() to reduce blocking for ECC
  *                  operations. For RSA, same as \c mbedtls_pk_verify().
  *
+ * \note            See the note on \c mbedtls_pk_verify() for which algorithm is
+ *                  used. If you want to request a specific signature algorithm
+ *                  since the is no restartable equivalent of \c
+ *                  mbedtls_pk_verify_ext(), you'll want to import the key into
+ *                  PSA using \c mbedtls_pk_import_into_psa() and then call PSA
+ *                  interruptible functions directly.
+ *
  * \param ctx       The PK context to use. It must have been set up.
- * \param md_alg    Hash algorithm used (see notes)
+ * \param md_alg    Hash algorithm used
  * \param hash      Hash of the message to sign
- * \param hash_len  Hash length or 0 (see notes)
+ * \param hash_len  Hash length
  * \param sig       Signature to verify
  * \param sig_len   Signature length
  * \param rs_ctx    Restart context (NULL to disable restart)
  *
  * \return          See \c mbedtls_pk_verify(), or
  * \return          #PSA_OPERATION_INCOMPLETE if maximum number of
- *                  operations was reached: see \c mbedtls_ecp_set_max_ops().
+ *                  operations was reached: see \c psa_interruptible_set_max_ops().
  */
 int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
                                   mbedtls_md_type_t md_alg,
@@ -623,13 +630,20 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  * \brief           Restartable version of \c mbedtls_pk_sign()
  *
  * \note            Performs the same job as \c mbedtls_pk_sign(), but can
- *                  return early and restart according to the limit set with
- *                  \c mbedtls_ecp_set_max_ops() to reduce blocking for ECC
+ *                  return early and restart according to the limit set with \c
+ *                  psa_interruptible_set_max_ops() to reduce blocking for ECC
  *                  operations. For RSA, same as \c mbedtls_pk_sign().
+ *
+ * \note            See the note on \c mbedtls_pk_sign() for which algorithm is
+ *                  used. If you want to request a specific signature algorithm
+ *                  since the is no restartable equivalent of \c
+ *                  mbedtls_pk_sign_ext(), you'll want to import the key into
+ *                  PSA using \c mbedtls_pk_import_into_psa() and then call PSA
+ *                  interruptible functions directly.
  *
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
- * \param md_alg    Hash algorithm used (see notes for mbedtls_pk_sign())
+ * \param md_alg    Hash algorithm used.
  * \param hash      Hash of the message to sign
  * \param hash_len  Hash length
  * \param sig       Place to write the signature.
@@ -643,8 +657,9 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  * \param rs_ctx    Restart context (NULL to disable restart)
  *
  * \return          See \c mbedtls_pk_sign().
- * \return          #PSA_OPERATION_INCOMPLETE if maximum number of
- *                  operations was reached: see \c mbedtls_ecp_set_max_ops().
+ * \return          #PSA_OPERATION_INCOMPLETE if the maximum number of
+ *                  operations was reached: see \c
+ *                  psa_interruptible_set_max_ops().
  */
 int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 mbedtls_md_type_t md_alg,
