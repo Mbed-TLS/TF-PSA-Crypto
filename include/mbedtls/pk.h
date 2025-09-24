@@ -516,17 +516,16 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  * \param sig       Signature to verify
  * \param sig_len   Signature length
  *
- * \note            For keys of type #MBEDTLS_PK_SIGALG_RSA_PKCS1V15, the signature algorithm is
- *                  either PKCS#1 v1.5 or PSS (accepting any salt length),
- *                  depending on the padding mode in the underlying RSA context.
- *                  For a pk object constructed by parsing, this is PKCS#1 v1.5
- *                  by default. Use mbedtls_pk_verify_ext() to explicitly select
- *                  a different algorithm.
+ * \note            The signature algorithm used will be the one that would be
+ *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
+ *                  usage of #PSA_KEY_USAGE_VERIFY_HASH - see that function's
+ *                  documentation for details.
+ *                  If you want to control which signature algorithm is used,
+ *                  see \c mbedtls_pk_verify_ext().
  *
  * \return          0 on success (signature is valid),
- *                  #PSA_ERROR_INVALID_SIGNATURE if there is a valid
- *                  signature in \p sig but its length is less than \p sig_len,
- *                  or a specific error code.
+ *                  #PSA_ERROR_INVALID_SIGNATURE if the signature is invalid,
+ *                  or another specific error code.
  */
 int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                       const unsigned char *hash, size_t hash_len,
@@ -590,11 +589,11 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
                           const unsigned char *sig, size_t sig_len);
 
 /**
- * \brief           Make signature, including padding if relevant.
+ * \brief           Make signature (including padding if relevant).
  *
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
- * \param md_alg    Hash algorithm used (see notes)
+ * \param md_alg    Hash algorithm used
  * \param hash      Hash of the message to sign
  * \param hash_len  Hash length
  * \param sig       Place to write the signature.
@@ -606,13 +605,12 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
  * \param sig_len   On successful return,
  *                  the number of bytes written to \p sig.
  *
- * \note            For keys of type #MBEDTLS_PK_SIGALG_RSA_PKCS1V15, the signature algorithm is
- *                  either PKCS#1 v1.5 or PSS (using the largest possible salt
- *                  length up to the hash length), depending on the padding mode
- *                  in the underlying RSA context. For a pk object constructed
- *                  by parsing, this is PKCS#1 v1.5 by default. Use
- *                  mbedtls_pk_verify_ext() to explicitly select a different
- *                  algorithm.
+ * \note            The signature algorithm used will be the one that would be
+ *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
+ *                  usage of #PSA_KEY_USAGE_SIGN_HASH - see that function's
+ *                  documentation for details.
+ *                  If you want to control which signature algorithm is used,
+ *                  see \c mbedtls_pk_sign_ext().
  *
  * \return          0 on success, or a specific error code.
  *
@@ -627,7 +625,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  * \param sig_type  Signature type.
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
- * \param md_alg    Hash algorithm used (see notes)
+ * \param md_alg    Hash algorithm used
  * \param hash      Hash of the message to sign
  * \param hash_len  Hash length
  * \param sig       Place to write the signature.
