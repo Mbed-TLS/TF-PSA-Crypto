@@ -4,7 +4,7 @@
 
 ## Introduction
 
-TF-PSA-Crypto, the successor of Mbed TLS 3.x for cryptography, has replaced most `mbedtls_xxx` cryptography APIs to newer `psa_xxx` APIs. This guide is intended to help migrate existing applications that used Mbed TLS for cryptography. It aims to cover common use cases, but cannot cover all possible scenarios.
+TF-PSA-Crypto, the successor of Mbed TLS 3.x for cryptography, replaces most `mbedtls_xxx` cryptography APIs with newer `psa_xxx` APIs. This guide is intended to help migrate existing applications that used Mbed TLS for cryptography. It aims to cover common use cases, but cannot cover all possible scenarios.
 
 ### Suggested reading
 
@@ -23,7 +23,7 @@ Then use the [summary of API modules](#summary-of-api-modules), the table of con
 
 ### Additional resources
 
-* [TF-PSA-Crypto open issues](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues) (some [Mbed TLS issues]([TF-PSA-Crypto open issues](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues)) may also still be relevant)
+* [TF-PSA-Crypto open issues](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues) (some [Mbed TLS issues](https://github.com/Mbed-TLS/mbedtls/issues) may also still be relevant)
 * [PSA API open issues](https://github.com/ARM-software/psa-api/issues) (not just cryptography APIs)
 * [Mbed TLS mailing list](https://lists.trustedfirmware.org/mailman3/lists/mbed-tls.lists.trustedfirmware.org/) (also covers TF-PSA-Crypto)
 
@@ -39,7 +39,7 @@ Then use the [summary of API modules](#summary-of-api-modules), the table of con
 * Mbed TLS 2.15.0 (Nov 2018): first release with a draft implementation of the PSA API.
 * Mbed TLS 2.18.0 (Jun 2019): The PSA API is available in the default build.
 * Mbed TLS 3.1.0 (Dec 2021): TLS 1.3 support is the first major feature that requires the PSA API.
-* TF-PSA-Crypto 1.0.0 (Sep 2025): Removal of most legacy crypto APIs. Drop support for builds without the PSA subsystem and for legacy configuration of cryptographic mechanisms.
+* TF-PSA-Crypto 1.0.0 (Oct 2025): Removal of most legacy crypto APIs. Drop support for builds without the PSA subsystem and for legacy configuration of cryptographic mechanisms.
   The corresponding release Mbed TLS 4.0.0 drops support for cryptography calls that bypass PSA.
 * TF-PSA-Crypto 2.0.0 (??): Removal of the remaining non-PSA crypto APIs.
 
@@ -443,7 +443,7 @@ There is no equivalent for the `mbedtls_cipher_get_xxx` functions to extract inf
 
 ### NIST KW and KWP
 
-TF-PSA-Crypto 1.0 does not yet have a PSA API for key wrapping. We plan to implement the upcoming PSA API in a future minor version. In the meantime, you can continue using the legacy module `<mbedtls/nist_kw.h>`. The API of this module was tweaked in TF-PSA-Crypto 1.0, compared to Mbed TLS 3.6, to take the wrapping key as a PSA key identifier as input instead of a custom context. See the [1.0/4.0 transition guide](1.0-migration-guide.md#changes-to-nist_kw) for more information.
+TF-PSA-Crypto 1.0 does not yet have a PSA API for key wrapping. We plan to implement the upcoming PSA API in a future minor version. In the meantime, you can continue using the legacy module `<mbedtls/nist_kw.h>`. The API of this module was tweaked in TF-PSA-Crypto 1.0, compared to Mbed TLS 3.6, to take the wrapping key as a PSA key identifier as input instead of a custom context. See the [1.0/4.0 migration guide](1.0-migration-guide.md#changes-to-nist_kw) for more information.
 
 ## Hashes and MAC
 
@@ -681,7 +681,7 @@ The PSA random generator always uses the entropy source(s) configured at compile
 * `#MBEDTLS_PSA_DRIVER_GET_ENTROPY`: the user-provided callback `mbedtls_platform_get_entropy()`, querying a low-rate entropy source.
 * `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`: the user-provided callback `mbedtls_psa_external_get_random()`, a high-rate cryptographic-quality random source.
 
-For more details, see the [1.0/4.0 transition guide](1.0-migration-guide.md#entropy-configuration) and the documentation of these options.
+For more details, see the [1.0/4.0 migration guide](1.0-migration-guide.md#entropy-configuration) and the documentation of these options.
 
 ### Deterministic pseudorandom generation
 
@@ -1313,7 +1313,7 @@ The interfaces in `base64.h`, `asn1.h`, `asn1write.h` and `pem.h` are intended t
 
 TF-PSA-Crypto 1.0 removes direct access to OID values and functions formerly in `mbedtls/oid.h`. OID lookup is only used internally to parse and write keys and other objects.
 
-In the ASN.1 modules, the functions `mbedtls_asn1_get_mpi` and `mbedtls_asn1_write_mpi` have been replaced by `mbedtls_asn1_get_integer` and `mbedtls_asn1_write_integer`. See the [TF-PSA-Crypto 1.0 transition guide](1.0-migration-guide.md#changes-to-asn-1-functions) for more information.
+In the ASN.1 modules, the functions `mbedtls_asn1_get_mpi` and `mbedtls_asn1_write_mpi` have been replaced by `mbedtls_asn1_get_integer` and `mbedtls_asn1_write_integer`. See the [TF-PSA-Crypto 1.0 migration guide](1.0-migration-guide.md#changes-to-asn-1-functions) for more information.
 
 ## EC-JPAKE
 
