@@ -61,8 +61,7 @@ static int cmac_multiply_by_u(unsigned char *output,
 
     if (blocksize == MBEDTLS_AES_BLOCK_SIZE) {
         R_n = R_128;
-    }
-    else {
+    } else {
         return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
     }
 

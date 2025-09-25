@@ -1562,7 +1562,7 @@
  * Remove decryption operation for AES, ARIA and Camellia block cipher.
  *
  * \note  This feature is incompatible with PSA_WANT_ALG_ECB_NO_PADDING,
- *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7 and 
+ *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7 and
  *        MBEDTLS_NIST_KW_C.
  *
  * Module:  drivers/builtin/src/aes.c

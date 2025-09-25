@@ -32,8 +32,8 @@ exit:
 }
 /* END_CASE */
 
-//params_tag 
-// params hex 
+//params_tag
+// params hex
 /* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_DEPRECATED_OR_CIPHER_PADDING_PKCS7 */
 void pbes2_encrypt(int params_tag, data_t *params_hex, data_t *pw,
                    data_t *data, int outsize, int ref_ret,
