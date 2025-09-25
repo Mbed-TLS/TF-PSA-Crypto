@@ -258,6 +258,17 @@ psa_status_t psa_copy_key_material_into_slot(psa_key_slot_t *slot,
  */
 psa_status_t mbedtls_to_psa_error(int ret);
 
+/** Whether PSA is ready for a cipher operation.
+ *
+ * This is a legacy concept inherited from "driver-only" work in Mbed TLS 3.x.
+ * The block_cipher module uses this to determine whether to call a legacy
+ * module directly. This is necessary in some builds involving drivers, where
+ * the PSA RNG is powered by CTR_DRBG, but AES is not accelerated. This is
+ * an implementation kludge that should be fixed.
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/469
+ */
+int psa_is_ready_for_cipher(void);
+
 /** Import a key in binary format.
  *
  * \note The signature of this function is that of a PSA driver

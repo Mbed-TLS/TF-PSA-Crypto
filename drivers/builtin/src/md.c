@@ -189,6 +189,14 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 }
 
 #if defined(MBEDTLS_MD_SOME_PSA)
+/* This function decides whether to dispatch directly to legacy, or via PSA.
+ * For historical reasons, we dispatch to legacy unless there is a PSA driver.
+ * This was preferable in Mbed TLS 3.x to maximize backward compatibility.
+ * Going forward, in TF-PSA-Crypto, we should use PSA unconditionally.
+ * This would entail removing changing this function to be basically
+ * `return PSA_ALG_CATEGORY_HASH | info->type`
+ * and changing other functions accordingly.
+ */
 static psa_algorithm_t psa_alg_of_md(const mbedtls_md_info_t *info)
 {
     switch (info->type) {
@@ -244,11 +252,7 @@ static psa_algorithm_t psa_alg_of_md(const mbedtls_md_info_t *info)
 static int md_can_use_psa(const mbedtls_md_info_t *info)
 {
     psa_algorithm_t alg = psa_alg_of_md(info);
-    if (alg == PSA_ALG_NONE) {
-        return 0;
-    }
-
-    return psa_can_do_hash(alg);
+    return alg != PSA_ALG_NONE;
 }
 #endif /* MBEDTLS_MD_SOME_PSA */
 

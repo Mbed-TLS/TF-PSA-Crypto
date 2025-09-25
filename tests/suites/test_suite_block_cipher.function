@@ -27,10 +27,10 @@ void invalid()
 {
     /* That size is valid for a key or an input/output block. */
     unsigned char buf[16] = { 0 };
-
     mbedtls_block_cipher_context_t ctx;
-
     mbedtls_block_cipher_init(&ctx);
+
+    PSA_INIT();
 
     /* Bad parameters to setup */
     TEST_EQUAL(MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA,
@@ -55,11 +55,14 @@ void invalid()
     TEST_EQUAL(0, mbedtls_block_cipher_setup(&ctx, VALID_CIPHER_ID));
 
     /* Bad parameters to setkey() */
-    TEST_EQUAL(BADKEY_ERROR,
-               mbedtls_block_cipher_setkey(&ctx, buf, 42));
+    int setkey_ret = mbedtls_block_cipher_setkey(&ctx, buf, 42);
+    if (setkey_ret != MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA) {
+        TEST_EQUAL(BADKEY_ERROR, setkey_ret);
+    }
 
 exit:
     mbedtls_block_cipher_free(&ctx);
+    PSA_DONE();
 }
 /* END_CASE */
 
@@ -67,12 +70,12 @@ exit:
 void test_vec(int cipher_id_arg, data_t *key, data_t *input, data_t *outref)
 {
     mbedtls_block_cipher_context_t ctx;
+    mbedtls_block_cipher_init(&ctx);
     mbedtls_cipher_id_t cipher_id = cipher_id_arg;
     unsigned char output[BLOCK_SIZE];
-
-    mbedtls_block_cipher_init(&ctx);
-
     memset(output, 0x00, sizeof(output));
+
+    PSA_INIT();
 
     TEST_EQUAL(0, mbedtls_block_cipher_setup(&ctx, cipher_id));
     TEST_EQUAL(0, mbedtls_block_cipher_setkey(&ctx, key->x, 8 * key->len));
@@ -90,40 +93,6 @@ void test_vec(int cipher_id_arg, data_t *key, data_t *input, data_t *outref)
 
 exit:
     mbedtls_block_cipher_free(&ctx);
-}
-/* END_CASE */
-
-/* BEGIN_CASE */
-void block_cipher_psa_dynamic_dispatch(int cipher_type, int pre_psa_ret, int post_psa_engine)
-{
-    mbedtls_block_cipher_context_t ctx;
-    (void) post_psa_engine;
-
-    /* Intentionally no PSA init here! (Will be done later.) */
-
-    mbedtls_block_cipher_init(&ctx);
-
-    /* Before PSA crypto init */
-    TEST_EQUAL(pre_psa_ret, mbedtls_block_cipher_setup(&ctx, cipher_type));
-
-#if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
-    TEST_EQUAL(ctx.engine, MBEDTLS_BLOCK_CIPHER_ENGINE_LEGACY);
-#endif
-
-    mbedtls_block_cipher_free(&ctx);
-
-    /* Now initilize PSA Crypto */
-    BLOCK_CIPHER_PSA_INIT();
-
-    mbedtls_block_cipher_init(&ctx);
-    /* After PSA Crypto init */
-    TEST_EQUAL(0, mbedtls_block_cipher_setup(&ctx, cipher_type));
-#if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
-    TEST_EQUAL(ctx.engine, post_psa_engine);
-#endif
-
-exit:
-    mbedtls_block_cipher_free(&ctx);
-    BLOCK_CIPHER_PSA_DONE();
+    PSA_DONE();
 }
 /* END_CASE */

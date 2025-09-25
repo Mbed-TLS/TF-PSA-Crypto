@@ -163,6 +163,27 @@ static uint8_t psa_get_drivers_initialized(void)
     return initialized;
 }
 
+int psa_is_ready_for_cipher(void)
+{
+    return psa_get_drivers_initialized();
+}
+
+/* Dummy version of a function removed in
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/466
+ *
+ * The function needs to remain available during a transition period
+ * for the sake of the PSA simulator, which lives in Mbed TLS.
+ * Once TF-PSA-Crypto no longer needs the function,
+ * `tests/psa-client-server/psasim/src/psa_sim_crypto_server.c` will
+ * need to be updated to no longer need the function, and it will be
+ * possible to remove the corresponding RPC call altogether.
+ */
+int psa_can_do_hash(psa_algorithm_t hash_alg)
+{
+    (void) hash_alg;
+    return 1;
+}
+
 #define GUARD_MODULE_INITIALIZED        \
     if (psa_get_initialized() == 0)     \
     return PSA_ERROR_BAD_STATE;
@@ -277,20 +298,6 @@ static uint8_t psa_get_drivers_initialized(void)
 #define LOCAL_OUTPUT_FREE(output, output_copy) \
     output_copy = NULL;
 #endif /* !MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS */
-
-
-int psa_can_do_hash(psa_algorithm_t hash_alg)
-{
-    (void) hash_alg;
-    return psa_get_drivers_initialized();
-}
-
-int psa_can_do_cipher(psa_key_type_t key_type, psa_algorithm_t cipher_alg)
-{
-    (void) key_type;
-    (void) cipher_alg;
-    return psa_get_drivers_initialized();
-}
 
 
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_IMPORT) ||       \

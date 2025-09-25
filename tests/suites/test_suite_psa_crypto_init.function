@@ -143,13 +143,6 @@ static void *thread_psa_init_function(void *ctx)
      * without checking the return codes as they may show up race conditions on
      * the flags they check under TSAN.*/
 
-    /* Test getting if drivers are initialised. */
-    int can_do = psa_can_do_hash(PSA_ALG_NONE);
-
-    if (init_context->do_init) {
-        TEST_ASSERT(can_do == 1);
-    }
-
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 
     /* Test getting global_data.rng_state. */

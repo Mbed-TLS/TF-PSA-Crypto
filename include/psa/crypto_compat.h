@@ -22,6 +22,20 @@
 extern "C" {
 #endif
 
+/* This function is not a TF-PSA-Crypto API and may be removed without notice.
+ *
+ * Dummy version of a function removed in
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/466
+ *
+ * The function needs to remain available during a transition period
+ * for the sake of the PSA simulator, which lives in Mbed TLS.
+ * Once TF-PSA-Crypto no longer needs the function,
+ * `tests/psa-client-server/psasim/src/psa_sim_crypto_server.c` will
+ * need to be updated to no longer need the function, and it will be
+ * possible to remove the corresponding RPC call altogether.
+ */
+int psa_can_do_hash(psa_algorithm_t hash_alg);
+
 #ifdef __cplusplus
 }
 #endif
