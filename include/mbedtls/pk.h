@@ -544,6 +544,9 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  *                  If you want to select a specific signature algorithm, see
  *                  \c mbedtls_pk_verify_ext().
  *
+ * \note            This function currently does not work on ECC keys created
+ *                  with \c mbedtls_pk_wrap_psa().
+ *
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used.
  * \param hash      Hash of the message to sign
@@ -647,12 +650,11 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *                  psa_interruptible_set_max_ops() to reduce blocking for ECC
  *                  operations. For RSA, same as \c mbedtls_pk_sign().
  *
- * \note            See the note on \c mbedtls_pk_sign() for which algorithm is
- *                  used. If you want to select a specific signature algorithm
- *                  since the is no restartable equivalent of \c
- *                  mbedtls_pk_sign_ext(), you'll want to import the key into
- *                  PSA using \c mbedtls_pk_import_into_psa() and then call PSA
- *                  interruptible functions directly.
+ * \note            For ECC keys, always uses #MBEDTLS_PK_ALG_ECDSA(hash), where
+ *                  hash is the PSA alg identifier corresponding to \p hash.
+ *
+ * \note            This function currently does not work on ECC keys created
+ *                  with \c mbedtls_pk_wrap_psa().
  *
  * \param ctx       The PK context to use. It must have been set up
  *                  with a private key.
@@ -711,6 +713,9 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sig_type,
 
 /**
  * \brief           Check if a public-private pair of keys matches.
+ *
+ * \note            This function currently does not work on keys created with
+ *                  \c mbedtls_pk_wrap_psa().
  *
  * \param pub       Context holding a public key.
  * \param prv       Context holding a private (and public) key.
