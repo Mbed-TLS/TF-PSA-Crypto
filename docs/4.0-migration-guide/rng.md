@@ -1,4 +1,5 @@
 ## Random number generation configuration
+
 TF-PSA-Crypto no longer exposes the internals of the PSA random number generator. The entropy, CTR_DRBG, and HMAC_DRBG modules from Mbed TLS 3.6 are now for internal use only. As a result, their configuration has been updated, both to simplify them and to prepare for PSA entropy and random number generation drivers, which will be introduced in a future minor release.
 
 The overall structure of the random number generator in TF-PSA-Crypto remains the same as in Mbed TLS 3.x. It consists of either:
@@ -157,7 +158,11 @@ The configuration option `MBEDTLS_PSA_INJECT_ENTROPY` has been removed. TF-PSA-C
 
 ### Configuration of the DRBG
 
-The built-in random number generator is now configured through three options:
+As in previous versions of Mbed TLS, the PSA random generator in TF-PSA-Crypto uses CTR_DRBG with AES if `MBEDTLS_CTR_DRBG_C` is enabled, and HMAC_DRBG otherwise (requiring `MBEDTLS_HMAC_DRBG_C` to be enabled).
+
+The DRBG modules are not exposed directly, they are only used internally.
+
+The built-in random number generator is now configured through only three options:
 * `MBEDTLS_PSA_CRYPTO_RNG_HASH`: Selects the hash algorithm used by the entropy and HMAC_DRBG modules. This option replaces both `MBEDTLS_PSA_HMAC_DRBG_MD_TYPE` and `MBEDTLS_ENTROPY_FORCE_SHA256`.
 * `MBEDTLS_PSA_RNG_RESEED_INTERVAL`: Sets the reseed interval for both CTR_DRBG and HMAC_DRBG. It replaces `MBEDTLS_CTR_DRBG_RESEED_INTERVAL` and `MBEDTLS_HMAC_DRBG_RESEED_INTERVAL`.
 * `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`: Specifies the security strength in bits. The default is 256 bits. If you previously enabled `MBEDTLS_CTR_DRBG_USE_128_BIT_KEY` in Mbed TLS 3.6, you should now set `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` to 128, although this is not recommended.
