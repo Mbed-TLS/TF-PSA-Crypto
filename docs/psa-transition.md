@@ -743,7 +743,7 @@ The sections “[RSA mechanism selection](#rsa-mechanism-selection)”, “[Elli
 The former PK types `MBEDTLS_PK_RSA`, `MBEDTLS_PK_RSASSA_PSS` and `MBEDTLS_PK_RSA_ALT` correspond to RSA key types in the PSA API. In the PSA API, key pairs and public keys are separate object types.
 See “[RSA-ALT interface](#rsa-alt-interface)” for more information about `MBEDTLS_PK_RSA_ALT`.
 
-The PSA API uses policies and algorithm parameters rather than key types to distinguish between RSA-based mechanisms. The PSA algorithm selection corresponds to the `mbedtls_pk_type_t` value passed to `mbedtls_pk_{sign,verify}_ext`. It also replaces the use of `mbedtls_rsa_set_padding` on an `mbedtls_rsa_context` object. See the list of algorithms below and the signature and encryption sections for more information.
+The PSA API uses policies and algorithm parameters rather than key types to distinguish between RSA-based mechanisms. The PSA algorithm selection corresponds to the `mbedtls_pk_sigalg_type_t` (formerly `mbedtls_pk_type_t`) value passed to `mbedtls_pk_{sign,verify}_ext`. It also replaces the use of `mbedtls_rsa_set_padding` on an `mbedtls_rsa_context` object. See the list of algorithms below and the signature and encryption sections for more information.
 
 An RSA public key has the type [`PSA_KEY_TYPE_RSA_PUBLIC_KEY`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__crypto__types/#group__crypto__types_1ga9ba0878f56c8bcd1995ac017a74f513b).
 
