@@ -36,6 +36,8 @@ extern "C" {
  */
 int psa_can_do_hash(psa_algorithm_t hash_alg);
 
+#define PSA_KEY_TYPE_DES ((psa_key_type_t) 0x2301)
+
 #ifdef __cplusplus
 }
 #endif
