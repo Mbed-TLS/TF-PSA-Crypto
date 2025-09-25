@@ -159,7 +159,7 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 | `platform_util.h` | `mbedtls_platform_` | No change (not a crypto API) |
 | `poly1305.h` | `mbedtls_poly1305_` | None (but there is Chacha20-Poly1305 [AEAD](#symmetric-encryption)) |
 | `private_access.h` | N/A | No public APIs (internal support header) |
-| `psa_util.h` | various | TODO |
+| `psa_util.h` | various | No change (functions specific to removed legacy APIs have been removed in TF-PSA-Crypto 1.0) |
 | `ripemd160.h` | `mbedtls_ripemd160_` | [Hashes and MAC](#hashes-and-mac) |
 | `rsa.h` | `mbedtls_rsa_` | [Asymmetric cryptography](#asymmetric-cryptography) |
 | `sha1.h` | `mbedtls_sha1_` | [Hashes and MAC](#hashes-and-mac) |
