@@ -482,6 +482,16 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
  *                  independent from the original PSA key that it was generated
  *                  from.
  *
+ * \note            This function only copies the key material but discards
+ *                  policy information entirely. See \c
+ *                  mbedtls_pk_get_psa_attributes() for details on which
+ *                  algorithm is going to be used by PK for contexts set up with
+ *                  this function.
+ *
+ *                  If you want to retain the PSA policy, see \c
+ *                  mbedtls_pk_wrap_psa() - but then the PSA key needs to live
+ *                  at least as long as the PK context.
+ *
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
  *                  but not set up.
@@ -502,6 +512,16 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  Once this function returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
+ *
+ * \note            This function only copies the key material but discards
+ *                  policy information entirely. See \c
+ *                  mbedtls_pk_get_psa_attributes() for details on which
+ *                  algorithm is going to be used by PK for contexts set up with
+ *                  this function.
+ *
+ *                  If you want to retain the PSA policy, see \c
+ *                  mbedtls_pk_wrap_psa() - but then the PSA key needs to live
+ *                  at least as long as the PK context.
  *
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
