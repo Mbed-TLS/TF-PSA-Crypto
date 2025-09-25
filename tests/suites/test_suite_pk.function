@@ -1633,7 +1633,6 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     /* Turn PK context into an opaque one. */
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
     if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        // TEST_ASSERT(mbedtls_pk_set_rsa_padding(&pk, MBEDTLS_PK_RSA_PKCS_V21) == 0);
         psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
     }
     TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id), 0);
