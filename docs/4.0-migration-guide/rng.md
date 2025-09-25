@@ -151,6 +151,10 @@ The option `MBEDTLS_ENTROPY_MIN_HARDWARE` has been removed. The entropy module r
 
 The option `MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES` has removed since it is no longer meaningful, now that the entropy module is private. TF-PSA-Crypto 1.0 does not support platforms without an entropy source. This ability will be reintroduced in a future minor release.
 
+#### PSA entropy injection
+
+The configuration option `MBEDTLS_PSA_INJECT_ENTROPY` has been removed. TF-PSA-Crypto 1.0 does not provide a way to store an entropy seed in the key store. This will be reimplemented in a future minor version.
+
 ### Configuration of the DRBG
 
 The built-in random number generator is now configured through three options:
