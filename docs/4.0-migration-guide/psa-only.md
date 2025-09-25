@@ -62,6 +62,7 @@ mbedtls/cipher.h
 mbedtls/cmac.h
 mbedtls/ctr_drbg.h
 mbedtls/des.h
+mbedtls/dhm.h
 mbedtls/ecdh.h
 mbedtls/ecdsa.h
 mbedtls/ecjpake.h
