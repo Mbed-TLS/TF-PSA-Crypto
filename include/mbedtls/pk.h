@@ -131,11 +131,6 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
     (MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN > MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN) ? \
     MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN : MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN
 
-typedef enum {
-    MBEDTLS_PK_RSA_PKCS_V15 = 0,
-    MBEDTLS_PK_RSA_PKCS_V21,
-} mbedtls_pk_rsa_padding_t;
-
 /**
  * \brief           Public key container
  */
@@ -172,16 +167,6 @@ typedef struct mbedtls_pk_context {
     /* EC family. Only applies to EC keys. */
     psa_ecc_family_t MBEDTLS_PRIVATE(ec_family);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    /* Padding associated to the RSA key. It only affects RSA public key since
-     * the private one is imported into PSA with v1.5 as main algorithm and
-     * v2.1 as enrollment algorithm. */
-    mbedtls_pk_rsa_padding_t MBEDTLS_PRIVATE(rsa_padding);
-
-    /* Hash algorithm to be used with RSA public key. */
-    psa_algorithm_t MBEDTLS_PRIVATE(rsa_hash_alg);
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 } mbedtls_pk_context;
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)

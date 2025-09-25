@@ -70,16 +70,11 @@ static int rsa_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
     }
 #endif
 
-    if (pk->rsa_padding == MBEDTLS_PK_RSA_PKCS_V21) {
-        psa_alg_md = PSA_ALG_RSA_PSS(mbedtls_md_psa_alg_from_type(md_alg));
-    } else {
-        psa_alg_md = PSA_ALG_RSA_PKCS1V15_SIGN(mbedtls_md_psa_alg_from_type(md_alg));
-    }
-
     if (sig_len < rsa_len) {
         return MBEDTLS_ERR_RSA_VERIFY_FAILED;
     }
 
+    psa_alg_md = PSA_ALG_RSA_PKCS1V15_SIGN(mbedtls_md_psa_alg_from_type(md_alg));
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
     psa_set_key_algorithm(&attributes, psa_alg_md);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
@@ -129,19 +124,13 @@ static int rsa_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
                          const unsigned char *hash, size_t hash_len,
                          unsigned char *sig, size_t sig_size, size_t *sig_len)
 {
-    psa_algorithm_t psa_md_alg;
-    psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+    psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
     if (psa_md_alg == 0) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
-    psa_algorithm_t psa_alg;
-    if (pk->rsa_padding == MBEDTLS_PK_RSA_PKCS_V21) {
-        psa_alg = PSA_ALG_RSA_PSS(psa_md_alg);
-    } else {
-        psa_alg = PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg);
-    }
 
-    return mbedtls_pk_psa_rsa_sign_ext(psa_alg, pk, hash, hash_len,
+    return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
+                                       pk, hash, hash_len,
                                        sig, sig_size, sig_len);
 }
 
