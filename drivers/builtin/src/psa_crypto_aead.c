@@ -33,7 +33,9 @@ static psa_status_t psa_aead_setup(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     mbedtls_cipher_id_t cipher_id;
     mbedtls_cipher_mode_t mode;
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
     size_t key_bits = attributes->bits;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_CCM */
     (void) key_buffer_size;
 
     status = mbedtls_cipher_values_from_psa(alg, attributes->type,
