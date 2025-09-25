@@ -405,7 +405,7 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
  *                    possibly other permissions as documented for the
  *                    \p usage parameter.
  *                    For keys created with \c mbedtls_pk_wrap_psa(), the
- *                    permitted algorithm is the same as the original PSA key.
+ *                    primary algorithm is the same as the original PSA key.
  *                    Otherwise, it is determined as follows:
  *                      - For RSA keys:
  *                        #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH)
@@ -471,8 +471,7 @@ int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
                                mbedtls_svc_key_id_t *key_id);
 
 /**
- * \brief           Set up a PK context with the key material from a PSA key
- *                  pair.
+ * \brief           Set up a PK context with the key material from a PSA key.
  *
  *                  This key:
  *                  - must be exportable and
@@ -503,7 +502,7 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  Once this function returns the PK object will be completely
  *                  independent from the original PSA key that it was generated
  *                  from.
-
+ *
  * \param key_id    The key identifier of the key stored in PSA.
  * \param pk        The PK context that will be filled. It must be initialized,
  *                  but not set up.
@@ -516,7 +515,7 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
 #endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
 
 /**
- * \brief           Verify signature (including padding if relevant).
+ * \brief           Verify signature.
  *
  * \note            The signature algorithm used will be the one that would be
  *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
@@ -575,7 +574,6 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
 
 /**
  * \brief           Verify signature, selecting a specific algorithm.
- *                  (Includes verification of the padding if applicable.)
  *
  * \param type      Signature type to verify
  * \param ctx       The PK context to use. It must have been set up.
@@ -598,7 +596,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
                           const unsigned char *sig, size_t sig_len);
 
 /**
- * \brief           Make signature (including padding if relevant).
+ * \brief           Make signature.
  *
  * \note            The signature algorithm used will be the one that would be
  *                  selected by \c mbedtls_pk_get_psa_attributes() called with a
@@ -671,7 +669,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
 /**
  * \brief           Generate a signature, selecting a specific algorithm.
- *                  (Include padding if applicable.)
  *
  * \param sig_type  Signature type to generate.
  * \param ctx       The PK context to use. It must have been set up
