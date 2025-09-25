@@ -567,13 +567,6 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *                  \c psa_interruptible_set_max_ops() to reduce blocking for ECC
  *                  operations. For RSA, same as \c mbedtls_pk_verify().
  *
- * \note            See the note on \c mbedtls_pk_verify() for which algorithm is
- *                  used. If you want to select a specific signature algorithm
- *                  since the is no restartable equivalent of \c
- *                  mbedtls_pk_verify_ext(), you'll want to import the key into
- *                  PSA using \c mbedtls_pk_import_into_psa() and then call PSA
- *                  interruptible functions directly.
- *
  * \param ctx       The PK context to use. It must have been set up.
  * \param md_alg    Hash algorithm used
  * \param hash      Hash of the message to sign
