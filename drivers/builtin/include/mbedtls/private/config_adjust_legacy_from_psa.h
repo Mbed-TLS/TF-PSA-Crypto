@@ -722,7 +722,6 @@
  * situations. */
 #if defined(PSA_HAVE_SOFT_KEY_TYPE_AES) || \
     defined(PSA_HAVE_SOFT_KEY_TYPE_ARIA) || \
-    defined(PSA_HAVE_SOFT_KEY_TYPE_DES) || \
     defined(PSA_HAVE_SOFT_KEY_TYPE_CAMELLIA)
 #define PSA_HAVE_SOFT_BLOCK_CIPHER 1
 #endif

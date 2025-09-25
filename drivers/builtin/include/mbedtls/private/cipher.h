@@ -742,7 +742,7 @@ static inline const char *mbedtls_cipher_get_name(
  * \param ctx           The context of the cipher. This must be initialized.
  *
  * \return              The key length of the cipher in bits.
- * \return              #MBEDTLS_KEY_LENGTH_NONE if \p ctx has not been
+ * \return              0 if \p ctx has not been
  *                      initialized.
  */
 static inline int mbedtls_cipher_get_key_bitlen(
