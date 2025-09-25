@@ -130,6 +130,9 @@ component_tf_psa_crypto_check_test_dependencies () {
 }
 
 component_tf_psa_crypto_check_test_helpers () {
+    # test_config_checks needs the generated headers in place.
+    $FRAMEWORK/scripts/make_generated_files.py
+
     msg "unit test: generate_test_code.py"
     # unittest writes out mundane stuff like number or tests run on stderr.
     # Our convention is to reserve stderr for actual errors, and write

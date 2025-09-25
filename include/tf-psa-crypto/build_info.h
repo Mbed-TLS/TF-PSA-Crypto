@@ -120,6 +120,11 @@
 #include TF_PSA_CRYPTO_USER_CONFIG_FILE
 #endif
 
+/* For the sake of consistency checks in tf_psa_crypto_config.c */
+#if defined(TF_PSA_CRYPTO_INCLUDE_AFTER_RAW_CONFIG)
+#include TF_PSA_CRYPTO_INCLUDE_AFTER_RAW_CONFIG
+#endif
+
 /* Indicate that all configuration files have been read.
  * It is now time to adjust the configuration (follow through on dependencies,
  * make PSA and legacy crypto consistent, etc.).
