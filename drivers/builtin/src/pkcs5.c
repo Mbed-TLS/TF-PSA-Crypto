@@ -144,7 +144,6 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
     unsigned int padlen = 0;
 
     p = pbe_params->p;
-
     end = p + pbe_params->len;
 
     /*
@@ -179,7 +178,6 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
                                     &enc_scheme_params)) != 0) {
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PKCS5_INVALID_FORMAT, ret);
     }
-
 
     if (mbedtls_oid_get_cipher_alg(&enc_scheme_oid, &cipher_alg) != 0) {
         return MBEDTLS_ERR_PKCS5_FEATURE_UNAVAILABLE;
@@ -262,6 +260,7 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
 
 exit:
     mbedtls_cipher_free(&cipher_ctx);
+
     return ret;
 }
 #endif /* MBEDTLS_ASN1_PARSE_C && MBEDTLS_CIPHER_C */
