@@ -190,6 +190,22 @@ struct tm *mbedtls_platform_gmtime_r(const mbedtls_time_t *tt,
                                      struct tm *tm_buf);
 #endif /* MBEDTLS_HAVE_TIME_DATE */
 
+/* C23 adds empty intializers which provide an explicit way of initializing
+ * structs and unions in the same way as objects of static storage duration,
+ * and that ensure that the entire object is initialized, not just some portion.
+ *
+ * GCC 15 (and some builds of clang 18) start leaving portions of
+ * structs uninitialized unless we use empty initializers. Fortunately
+ * they also support empty initializers even when not compiling
+ * in c23 mode.
+ */
+#if __STDC__VERSION__ >= 202311L || __GNUC__ >= 15 || __clang_major__ >= 18
+#define MBEDTLS_EMPTY_INITIALIZER(...) {}
+#else
+#warning not using empty initializers
+#define MBEDTLS_EMPTY_INITIALIZER(...) __VA_ARGS__
+#endif
+
 #ifdef __cplusplus
 }
 #endif
