@@ -220,7 +220,7 @@ For example, the following configuration enables hashing with SHA-256, AEAD with
 
 #### Automatically translating legacy configurations
 
-If you have a working configuration file with legacy configuration options, build **Mbed TLS 3.6** and run the program
+If you have a working configuration file with legacy configuration options (i.e. an Mbed TLS 3.x configuration that did not enable `MBEDTLS_PSA_CRYPTO_CONFIG`), build **Mbed TLS 3.6** and run the program
 
 ```
 programs/test/query_compile_time_config -l
@@ -228,13 +228,15 @@ programs/test/query_compile_time_config -l
 
 (Note that you cannot use TF-PSA-Crypto for this: it would not recognize the legacy configuration options.)
 
-The lines with `PSA_WANT_...=1` should constitute a PSA configuration that is similar to your legacy configuration. You can translate this into `#define` line with the following bash/Linux/macOS shell snippet:
+The lines with `PSA_WANT_...=1` should constitute a PSA configuration that is similar to your legacy configuration. That is, for every line `PSA_WANT_XXX=1` in the output of `query_compile_time_config -l`, make sure the line `#define PSA_WANT_XXX 1` is enabled in `include/psa/crypto_config.h` (or alternate `TF_PSA_CRYPTO_CONFIG_FILE`). You use the following bash/Linux/macOS shell snippet to automate this translation:
 
 ```
 programs/test/query_compile_time_config -l | sed -n 's/^\(PSA_WANT_.*\)=1/#define \1/p'
 ```
 
 Please review the result as the configuration may not be fully equivalent in all cases. It will generally provide at least the same features, but sometimes this translation results in more than desired.
+
+Note that this only generates the new selection of cryptographic mechanisms. You will also need to remove config lines that set legacy crypto options. Note also that TF-PSA-Crypto 1.0 has changed a few other options; see the [1.0 migration guide](1.0-migration-guide.md#configuration-of-tf-psa-crypto) for more information.
 
 #### Implicit activation of crypto features
 
