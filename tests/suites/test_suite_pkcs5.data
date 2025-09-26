@@ -106,6 +106,28 @@ PBKDF2 Python hashlib Test Vector #6 (SHA512)
 depends_on:PSA_WANT_ALG_SHA_512
 pbkdf2_hmac:MBEDTLS_MD_SHA512:"7061737300776f7264":"7361006c74":4096:16:"9d9e9c4cd21fe4be24d5b8244c759665"
 
+# The pbes2_encrypt and pbes2_decrypt functions 
+# take a asn1 frame as the second argument. 
+# These frames can be interpreted using the 
+# following openssl command:
+#
+# echo "<frame>" | xxd -r -p | openssl asn1parse -inform DER -i
+#
+# So the breakdown of the below frame is as follows:
+#
+#    0:d=0  hl=2 l=  39 cons: SEQUENCE          
+#    2:d=1  hl=2 l=   9 prim:  OBJECT            :PBKDF2 //Frame Identifier
+#    13:d=1  hl=2 l=  26 cons:  SEQUENCE          
+#    15:d=2  hl=2 l=   8 prim:   OCTET STRING      [HEX DUMP]:0102030405060708 //Salt
+#    25:d=2  hl=2 l=   2 prim:   INTEGER           :2710 // Iteration count
+#    29:d=2  hl=2 l=  10 cons:   SEQUENCE          
+#    31:d=3  hl=2 l=   8 prim:    OBJECT            :hmacWithSHA256 //Hash algorithm
+#    41:d=0  hl=2 l=  29 cons: SEQUENCE          
+#    43:d=1  hl=2 l=   9 prim:  OBJECT            :aes-256-cbc // Encryption algorithm
+#    54:d=1  hl=2 l=  16 prim:  OCTET STRING      [HEX DUMP]:2F904F75B47B48A618068D79BD9A826C // Initialisation vector
+#
+# Full details of the packet structure can be found at https://datatracker.ietf.org/doc/html/rfc8018#appendix-C
+
 PBES2 Encrypt, AES-256-CBC (Invalid output size)
 depends_on:PSA_WANT_ALG_SHA_1:MBEDTLS_AES_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH:PSA_WANT_ALG_SHA_256
 pbes2_encrypt:MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE:"302706092A864886F70D01050C301a0408010203040506070802022710300a06082A864886F70D0209301D060960864801650304012A04102F904F75B47B48A618068D79BD9A826C":"50617373776F726450617373776F726450617373776F7264":"5468697320697320612066696c6520746f20626520656e6372797074656420776974682050424553322c20776974682061206b65792067656e657261746564207573696e67206120707266202853484132353629":90:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL:"0c953c3a9be1502f4d1df1b82df9d99a61ebd2f60ed570d16b241f70b9e61f329174747d052efe5c39bec9d0f7404f84af242914e2ecb74e6e36e8b4147bd0a092a82df789aa3351e0de9f75b285ccb742806526771c8353ffb66176188b556e"
