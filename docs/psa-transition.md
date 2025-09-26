@@ -176,7 +176,7 @@ Note that a key consumes a key store entry, which is distinct from heap memory, 
 
 The cryptographic mechanisms available through the PSA API are determined by the contents of the header file `"psa/crypto_config.h"`. You can override the file location with the macro [`TF_PSA_CRYPTO_CONFIG_FILE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#mbedtls__config_8h_1a25f7e358caa101570cb9519705c2b873), and you can set [`TF_PSA_CRYPTO_USER_CONFIG_FILE`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#mbedtls__config_8h_1abd1870cc0d2681183a3018a7247cb137) to the path of an additional file (similar to `MBEDTLS_CONFIG_FILE` and `MBEDTLS_USER_CONFIG_FILE` for legacy configuration symbols).
 
-3.6 note: `TF_PSA_CRYPTO_CONFIG_FILE` and `TF_PSA_CRYPTO_USER_CONFIG_FILE` were called `MBEDTLS_PSA_CRYPTO_CONFIG_FILE` and `MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE` respectively in Mbed TLS 3.x.
+3.x note: `TF_PSA_CRYPTO_CONFIG_FILE` and `TF_PSA_CRYPTO_USER_CONFIG_FILE` were called `MBEDTLS_PSA_CRYPTO_CONFIG_FILE` and `MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE` respectively in Mbed TLS 3.x.
 
 #### General rules for `PSA_WANT_xxx`
 
@@ -666,7 +666,7 @@ The PSA subsystem has an internal random generator. As a consequence, you do not
 
 The PSA API uses its internal random generator to generate keys (`psa_generate_key`), nonces for encryption (`psa_cipher_generate_iv`, `psa_cipher_encrypt`, `psa_aead_generate_nonce`, `psa_aead_encrypt`, `psa_asymmetric_encrypt`), and other random material as needed. If you need random data for some other purposes, call [`psa_generate_random`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__random/#group__random_1ga1985eae417dfbccedf50d5fff54ea8c5) instead of `mbedtls_ctr_drbg_random` or `mbedtls_hmac_drbg_random`.
 
-You will need to remove the Mbed TLS RNG boilerplate (`mbedtls_entropy_init`, `mbedtls_ctr_drbg_init`, `mbedtls_ctr_drbg_seed`, `mbedtls_ctr_drbg_random`, `mbedtls_ctr_drbg_free`, `mbedtls_entropy_free` — or `hmac_drbg` equivalents of the `ctr_drbg` functions).
+You will need to remove the Mbed TLS RNG boilerplate: calls to `mbedtls_entropy_init`, `mbedtls_ctr_drbg_init`, `mbedtls_ctr_drbg_seed`, `mbedtls_ctr_drbg_random`, `mbedtls_ctr_drbg_free` and `mbedtls_entropy_free` (or `hmac_drbg` equivalents of the `ctr_drbg` functions).
 
 TF-PSA-Crypto 1.x and Mbed TLS 4.x functions do not take RNG callbacks. If your code includes calls to internal functions or third-party functions that take RNG callbacks as parameters, include the header file `<mbedtls/psa_util.h>` and use:
 
@@ -675,7 +675,7 @@ TF-PSA-Crypto 1.x and Mbed TLS 4.x functions do not take RNG callbacks. If your 
 
 ### Entropy sources
 
-The PSA random generator always uses the entropy source(s) configured at compile time. The configuration is different in Mbed TLS 3.x, and in TF-PSA-Crypto 1.0 onwards. In TF-PSA-Crypto 1.0.0, PSA uses exactly one of three possible entropy sources, depending on which compilation option is enabled:
+The PSA random generator always uses the entropy source(s) configured at compile time. TF-PSA-Crypto 1.0.0 made major changes to how entropy sources are configured, compared with Mbed TLS 3.x. In TF-PSA-Crypto 1.0.0, PSA uses exactly one of three possible entropy sources, depending on which compilation option is enabled:
 
 * `MBEDTLS_PSA_BUILTIN_GET_ENTROPY` (default): built-in platform entropy sources (Linux, other Unix-like systems, Windows).
 * `#MBEDTLS_PSA_DRIVER_GET_ENTROPY`: the user-provided callback `mbedtls_platform_get_entropy()`, querying a low-rate entropy source.
@@ -685,7 +685,7 @@ For more details, see the [1.0/4.0 migration guide](1.0-migration-guide.md#entro
 
 ### Deterministic pseudorandom generation
 
-The PSA API does not have a dedicated interface for pseudorandom generation. The [key derivation interface](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/) can serve a similar purpose in some applications, but it does not offer CTR\_DRBG or HMAC\_DRBG.
+The PSA API does not currently have a dedicated interface for pseudorandom generation. The [key derivation interface](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__key__derivation/) can serve a similar purpose in some applications, but it does not offer CTR\_DRBG or HMAC\_DRBG.
 
 We expect to add PSA APIs to DRBG mechanisms in a future version of TF-PSA-Crypto.
 
@@ -1297,7 +1297,7 @@ The PSA subsystem uses its internal random generator both for randomized algorit
 
 The PSA API does not provide direct access to the exponentiation primitive as with `mbedtls_rsa_public` and `mbedtls_rsa_private`. If you need an RSA-based mechanism that is not supported by the PSA API, please [submit an issue on GitHub](https://github.com/ARM-software/psa-api/issues) so that we can extend the API to support it.
 
-The PSA API does not support constructing RSA keys progressively from numbers with `mbedtls_rsa_import` or `mbedtls_rsa_import_raw` followed by `mbedtls_rsa_complete`. You will need to construct the standard ASN.1 representation and call `psa_import_key()` (see “[Creating keys for asymmetric cryptography](#creating-keys-for-asymmetric-cryptography)”).
+The PSA API does not support constructing RSA keys progressively from numbers, like the legacy functions `mbedtls_rsa_import`, `mbedtls_rsa_import_raw` and `mbedtls_rsa_complete`. You will need to construct the standard ASN.1 representation and call `psa_import_key()` (see “[Creating keys for asymmetric cryptography](#creating-keys-for-asymmetric-cryptography)”).
 
 There is no direct equivalent of `mbedtls_rsa_export`, `mbedtls_rsa_export_raw` and `mbedtls_rsa_export_crt` to export some of the numbers in a key. You can export the whole key with `psa_export_key`, or with `psa_export_public_key` to export the public key from a key pair object. See also “[Exporting a public key or a key pair](#exporting-a-public-key-or-a-key-pair)”.
 
