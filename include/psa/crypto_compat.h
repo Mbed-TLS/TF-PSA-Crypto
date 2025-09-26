@@ -36,7 +36,7 @@ extern "C" {
  */
 int psa_can_do_hash(psa_algorithm_t hash_alg);
 
-/* This defition is required to provide compatibility with the PSA arch 
+/* This defition is required to provide compatibility with the PSA arch
  * tests. Without it building the tests will fail. To remove it we would
  * need to change the tests to remove all references to this symbol.
  */
