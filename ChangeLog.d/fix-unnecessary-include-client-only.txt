@@ -1,0 +1,3 @@
+Bugfix
+   * Fix an unnecesary include of PSA driver context definitions when
+     in crypto-client-only mode (i.e. MBEDTLS_PSA_CRYPTO_C disabled).
