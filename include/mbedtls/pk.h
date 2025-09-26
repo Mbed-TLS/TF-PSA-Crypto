@@ -555,7 +555,7 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_cont
  *                  If you want to select a specific signature algorithm, see
  *                  \c mbedtls_pk_verify_ext().
  *
- * \note            This function currently does not work on ECC keys created
+ * \note            This function currently does not work on RSA keys created
  *                  with \c mbedtls_pk_wrap_psa().
  *
  * \param ctx       The PK context to use. It must have been set up.
