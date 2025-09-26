@@ -25,7 +25,7 @@ The type `mbedtls_pk_type_t` has been removed from the API. This type could conv
 
 As a consequence, the functions `mbedtls_pk_get_type()`, `mbedtls_pk_get_name()` and `mbedtls_pk_info_from_type()` and have been removed. The type `mbedtls_pk_info_t` is no longer part of the API.
 
-The function `mbedtls_pk_get_len()` has also been removed. It was not very meaningful since it did not convey the length of the key representation, but the size in bytes of the representation of one number associated with the key. As before, you can use `mbedtls_pk_get_bitlen()` to get the key size in the usual cryptographic sense. The size of a formatted key representation depends on the format, and there is no API function to determine it. (For the short export formats of PSA, you can use macros such as `PSA_EXPORT_KEY_OUTPUT_SIZE`, `PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE`, `PSA_EXPORT_KEY_PAIR_MAX_SIZE`, `PSA_EXPORT_PUBLIC_KEY_MAX_SIZE`.)
+The function `mbedtls_pk_get_len()` has also been removed. It was not very meaningful since it did not convey the length of the key representation, but the size in bytes of the representation of one number associated with the key. As before, you can use `mbedtls_pk_get_bitlen()` to get the key size in the usual cryptographic sense. The size of a formatted key representation depends on the format, and there is no API function to determine it. (For the short export formats of PSA, you can use macros such as `PSA_EXPORT_KEY_OUTPUT_SIZE()`, `PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE()`, `PSA_EXPORT_KEY_PAIR_MAX_SIZE`, `PSA_EXPORT_PUBLIC_KEY_MAX_SIZE`.)
 
 ### Checking the capabilities of a PK context
 
@@ -33,9 +33,9 @@ The function `mbedtls_pk_can_do()`, based on the polysemic `mbedtls_pk_type_t`, 
 
 ### Loss of policy information for RSA keys
 
-The PK module no longer partially keeps track of whether an RSA key is inteded for use with PKCS#1v1.5 or PKCS#1v2.1 (PSS or OAEP) algorithms. Functions that consume a PK object (`mbedtls_pk_get_psa_attributes()`, `mbedtls_pk_sign()`, `mbedtls_pk_verify()`) now always default to PKCS#1v1.5, except for wrapped PSA keys where they use the primary algorithm in the key's policy.
+The PK module no longer partially keeps track of whether an RSA key is intended for use with PKCS#1v1.5 or PKCS#1v2.1 (PSS or OAEP) algorithms. Functions that consume a PK object (`mbedtls_pk_get_psa_attributes()`, `mbedtls_pk_sign()`, `mbedtls_pk_verify()`) now always default to PKCS#1v1.5, except for PK contexts populated with `mbedtls_pk_wrap_psa()` where they use the primary algorithm in the key's policy.
 
-Note in particular that the functions `mbedtls_pk_copy_from_psa()` and `mbedtls_pk_copy_public_from_psa()` are now equivalent to exporting and re-importing the key, losing all policy information. For example, calling `mbedtls_pk_copy_from_psa()` on a key whose policy specifies PSS as the single allowed algorithm, then calling `mbedtls_pk_sign()`, results in a PKCS#1v1.5 signature. Call `mbedtls_pk_sign_ext()` or `mbedtls_pk_verify_ext()` to specify the signature algorithm explicitly.
+Note in particular that the functions `mbedtls_pk_copy_from_psa()` and `mbedtls_pk_copy_public_from_psa()` are now equivalent to exporting and re-importing the key, losing all policy information. For example, calling `mbedtls_pk_copy_from_psa()` on a key whose policy specifies PSS as the single allowed algorithm, then calling `mbedtls_pk_sign()`, results in a PKCS#1v1.5 signature. Call `mbedtls_pk_sign_ext()` or `mbedtls_pk_verify_ext()` if you want to specify the signature algorithm explicitly.
 
 ### Removal of transparent PK contexts
 
@@ -80,6 +80,6 @@ This may change in future minor versions of TF-PSA-Crypto.
 
 Since PSA has a built-in random generator, all `(f_rng, p_rng)` arguments to PK functions have been removed.
 
-`mbedtls_pk_debug()` and the associated types has been removed. This was intended solely for internal consumption by the debug module, and tied to legacy representations of keys. If you need equivalent functionality in TF-PSA-Crypto, export the key.
+`mbedtls_pk_debug()` and the associated types have been removed. This was intended solely for internal consumption by the debug module, and tied to internal details of the legacy representation of keys. If you need equivalent functionality in TF-PSA-Crypto, export the key.
 
 The auxiliary functions `mbedtls_pk_parse_subpubkey()` and `mbedtls_pk_write_pubkey()` are no longer exposed. Use `mbedtls_pk_parse_public_key()` and `mbedtls_pk_write_pubkey_der()` instead.
