@@ -142,8 +142,8 @@ typedef enum {
 typedef struct mbedtls_pk_context {
     /* Public key information. */
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);
-    /* Underlying public key context. This is only used in case of RSA keys and
-     * it's NULL in case of EC ones. */
+    /* Previously: underlying public key context.
+     * Now unused (by public functions at least). */
     void *MBEDTLS_PRIVATE(pk_ctx);
 
     /* The following field is used to store the ID of a private key for:
