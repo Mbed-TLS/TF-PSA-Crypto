@@ -1,11 +1,9 @@
 Changes
    * Cryptography and platform configuration options have been migrated
      from the Mbed TLS library configuration file mbedtls_config.h to
-     crypto_config.h is the TF-PSA-Crypto configuration file,
-     see Mbed-TLS/mbedtls/docs/proposed/config-split.md
-     for more information. The reference and test custom
-     configuration files respectively in configs/ and tests/configs/ have
-     been updated accordingly.
+     crypto_config.h that is now the TF-PSA-Crypto configuration file.
+     The reference and test custom configuration files respectively in
+     configs/ and tests/configs/ have been updated accordingly.
      To migrate custom Mbed TLS configurations where
      MBEDTLS_PSA_CRYPTO_CONFIG is disabled, you should first adapt them
      to the PSA configuration scheme based on PSA_WANT_XXX symbols
