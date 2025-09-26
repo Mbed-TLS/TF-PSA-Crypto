@@ -20,7 +20,7 @@ See also [the removal of ALT interfaces](#removal-of-alternative-cryptographic-m
 
 Some obsolescent cryptographic mechanisms have been removed:
 
-* The library no longer supports DES (including 3DES). All supported block ciphers now have 128-bit blocks.
+* The library no longer supports DES (including 3DES). All supported block ciphers now have 128-bit blocks. As a consequence, the PKCS12 module, which provided the obsolete PBE mode for private key encryption that does not support stronger ciphers, has been removed.
 * The library no longer supports elliptic curves whose size is 224 bits or less. The following curves are no longer supported: secp192r1, secp192k1, secp224k1, secp224r1. Use larger curves such as secp256r1.
 
 ### Removed obsolete PSA functions
