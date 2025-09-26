@@ -1,9 +1,7 @@
 API changes
-   * When a PK context for an RSA key is created by means of
-     mbedtls_pk_copy_from_psa() or mbedtls_pk_copy_public_from_psa() the
-     associated padding mode will be PKCS v1.5.
-   * If mbedtls_pk_get_psa_attributes() is called on a PK context containing
-     an RSA key the returned algorithms is
-     PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH) for a sign/verify usage and
-     PSA_ALG_RSA_PKCS1V15_CRYPT when usage is encrypt/decrypt,
-     unless the key was created with mbedtls_pk_psa_wrap().
+   * A PK context no longer associates specific algorithms with the key, except
+     when wrapping a PSA key. In particular, after mbedtls_pk_copy_from_psa() or
+     mbedtls_pk_copy_public_from_psa() on an RSA key, the functions
+     mbedtls_pk_get_psa_attributes(), mbedtls_pk_sign() and mbedtls_pk_verify()
+     will use PKCS#1v1.5 signature or encryption, regardless of the original
+     key's policy.
