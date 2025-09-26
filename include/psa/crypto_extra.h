@@ -842,10 +842,11 @@ typedef uint32_t psa_pake_primitive_t;
  * psa_pake_operation_t.
  */
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_PAKE_OPERATION_INIT { 0 }
+#define PSA_PAKE_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_PAKE_OPERATION_INIT { 0, PSA_ALG_NONE, 0, PSA_PAKE_OPERATION_STAGE_SETUP, \
-                                  { 0 }, { { 0 } } }
+#define PSA_PAKE_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER(		\
+		{ 0, PSA_ALG_NONE, 0, PSA_PAKE_OPERATION_STAGE_SETUP,	\
+		{ 0 }, { { 0 } } })
 #endif
 
 /**

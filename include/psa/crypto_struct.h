@@ -49,6 +49,7 @@
 #ifndef PSA_CRYPTO_STRUCT_H
 #define PSA_CRYPTO_STRUCT_H
 #include "mbedtls/private_access.h"
+#include "mbedtls/platform_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,9 +76,9 @@ struct psa_hash_operation_s {
 #endif
 };
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_HASH_OPERATION_INIT { 0 }
+#define PSA_HASH_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_HASH_OPERATION_INIT { 0, { 0 } }
+#define PSA_HASH_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, { 0 } })
 #endif
 static inline struct psa_hash_operation_s psa_hash_operation_init(void)
 {
@@ -107,9 +108,9 @@ struct psa_cipher_operation_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_CIPHER_OPERATION_INIT { 0 }
+#define PSA_CIPHER_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_CIPHER_OPERATION_INIT { 0, 0, 0, 0, { 0 } }
+#define PSA_CIPHER_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, 0, 0, 0, { 0 } })
 #endif
 static inline struct psa_cipher_operation_s psa_cipher_operation_init(void)
 {
@@ -139,9 +140,9 @@ struct psa_mac_operation_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_MAC_OPERATION_INIT { 0 }
+#define PSA_MAC_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_MAC_OPERATION_INIT { 0, 0, 0, { 0 } }
+#define PSA_MAC_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, 0, 0, { 0 } })
 #endif
 static inline struct psa_mac_operation_s psa_mac_operation_init(void)
 {
@@ -178,9 +179,9 @@ struct psa_aead_operation_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_AEAD_OPERATION_INIT { 0 }
+#define PSA_AEAD_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
+#define PSA_AEAD_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } })
 #endif
 static inline struct psa_aead_operation_s psa_aead_operation_init(void)
 {
@@ -204,10 +205,10 @@ struct psa_key_derivation_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_KEY_DERIVATION_OPERATION_INIT { 0 }
+#define PSA_KEY_DERIVATION_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
 /* This only zeroes out the first byte in the union, the rest is unspecified. */
-#define PSA_KEY_DERIVATION_OPERATION_INIT { 0, 0, 0, { 0 } }
+#define PSA_KEY_DERIVATION_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, 0, 0, { 0 } })
 #endif
 static inline struct psa_key_derivation_s psa_key_derivation_operation_init(
     void)
@@ -423,9 +424,9 @@ struct psa_sign_hash_interruptible_operation_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
+#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
+#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, { 0 }, 0, 0 })
 #endif
 
 static inline struct psa_sign_hash_interruptible_operation_s
@@ -461,9 +462,9 @@ struct psa_verify_hash_interruptible_operation_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
+#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
+#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, { 0 }, 0, 0 })
 #endif
 
 static inline struct psa_verify_hash_interruptible_operation_s
@@ -499,10 +500,11 @@ struct psa_key_agreement_iop_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_KEY_AGREEMENT_IOP_INIT { 0 }
+#define PSA_KEY_AGREEMENT_IOP_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_KEY_AGREEMENT_IOP_INIT { 0, MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT, 0, \
-                                     PSA_KEY_ATTRIBUTES_INIT, 0 }
+#define PSA_KEY_AGREEMENT_IOP_INIT MBEDTLS_EMPTY_INITIALIZER(		\
+	{ 0, MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT, 0,			\
+		  PSA_KEY_ATTRIBUTES_INIT, 0 })
 #endif
 
 static inline struct psa_key_agreement_iop_s
@@ -537,10 +539,11 @@ struct psa_generate_key_iop_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_GENERATE_KEY_IOP_INIT { 0 }
+#define PSA_GENERATE_KEY_IOP_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_GENERATE_KEY_IOP_INIT { 0, MBEDTLS_PSA_GENERATE_KEY_IOP_INIT, PSA_KEY_ATTRIBUTES_INIT, \
-                                    0, 0 }
+#define PSA_GENERATE_KEY_IOP_INIT MBEDTLS_EMPTY_INITIALIZER(		\
+		{ 0, MBEDTLS_PSA_GENERATE_KEY_IOP_INIT, PSA_KEY_ATTRIBUTES_INIT, \
+		  0, 0 })
 #endif
 
 static inline struct psa_generate_key_iop_s
@@ -574,9 +577,9 @@ struct psa_export_public_key_iop_s {
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_EXPORT_PUBLIC_KEY_IOP_INIT { 0 }
+#define PSA_EXPORT_PUBLIC_KEY_IOP_INIT MBEDTLS_EMPTY_INITIALIZER({ 0 })
 #else
-#define PSA_EXPORT_PUBLIC_KEY_IOP_INIT { 0, MBEDTLS_PSA_EXPORT_PUBLIC_KEY_IOP_INIT, 0, 0 }
+#define PSA_EXPORT_PUBLIC_KEY_IOP_INIT MBEDTLS_EMPTY_INITIALIZER({ 0, MBEDTLS_PSA_EXPORT_PUBLIC_KEY_IOP_INIT, 0, 0 })
 #endif
 
 static inline struct psa_export_public_key_iop_s
