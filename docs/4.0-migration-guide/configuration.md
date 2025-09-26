@@ -1,4 +1,4 @@
-## Configuration of TF-PSA-Crypto
+## Compile-time configuration
 
 ### Configuration file split
 
@@ -20,6 +20,8 @@ Generally speaking, the options that must be configured in TF-PSA-Crypto are:
 See `include/psa/crypto_config.h` in TF-PSA-Crypto and `include/mbedtls/mbedtls_config.h` in Mbed TLS for details.
 
 Notably, `<psa/crypto_config.h>` is no longer limited to `PSA_WANT_xxx` options.
+
+Note that many options related to cryptography have changed; this is covered in other sections of this document.
 
 ### Split of `build_info.h` and `version.h`
 
