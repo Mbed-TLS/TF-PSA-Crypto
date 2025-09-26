@@ -57,7 +57,7 @@ PSA uses a different set of configuration symbols to express which cryptographic
 
 Note that in Mbed TLS 3.x, the whole library configuration could be in `mbedtls/mbedtls_config.h` (or `MBEDTLS_CONFIG_FILE`) plus optionally `MBEDTLS_USER_CONFIG_FILE`. In TF-PSA-Crypto, the configuration must be in `psa/crypto_config.h` (or `TF_PSA_CRYPTO_CONFIG_FILE`) plus optionally `TF_PSA_CRYPTO_USER_CONFIG_FILE`.
 
-The Mbed TLS configuration file should not try to modify any option consumed by TF-PSA-Crypto: this would make Mbed TLS's use of cryptography inconsistent with what the crypto library provides. As an exception, it's safe to use the same content in the TF-PSA-Crypto configuration and in the Mbed TLS configuration..
+The Mbed TLS 4.x configuration file should not try to modify any option consumed by TF-PSA-Crypto: this would make Mbed TLS's use of cryptography inconsistent with what the crypto library provides. However, it is ok to redundantly set a TF-PSA-Crypto option in the Mbed TLS configuration if it was already set to the same value in the TF-PSA-Crypto configuration; this allows using the same file as `TF_PSA_CRYPTO_CONFIG_FILE` and `MBEDTLS_CONFIG_FILE`.
 
 ### Header files
 
@@ -82,7 +82,7 @@ Mbed TLS functions return a status of type `int`: 0 for success (or occasionally
 
 PSA functions return a status of type [`psa_status_t`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__error/#group__error_1ga05676e70ba5c6a7565aff3c36677c1f9): `PSA_SUCCESS == 0` for success, or a negative value [`PSA_ERROR_xxx`](https://mbed-tls.readthedocs.io/projects/api/en/development/api/group/group__error/) indicating an error.
 
-In Mbed TLS 3.x, there is no overlap between `MBEDTLS_ERR_xxx` values and `PSA_ERROR_xxx` values, so applications consuming error codes do not need to observe this distinction fully.
+In Mbed TLS 3.x, there is no overlap between `MBEDTLS_ERR_xxx` values and `PSA_ERROR_xxx` values. Thus applications that propagate error codes do not need to keep track of whether a value was initially reported as `psa_status_t` (`PSA_ERROR_xxx`) or `int` (Mbed TLS error codes).
 
 Since TF-PSA-Crypto 1.0, the error sets have been fully merged. Many former `MBEDTLS_ERR_xxx` error codes have been merged with `PSA_ERROR_xxx` error codes with similar semantics. Functions returning `int` can return `PSA_ERROR_xxx` values, and some `MBEDTLS_ERR_xxx` constants are now aliases to a `PSA_ERROR_xxx` value. This also applies to Mbed TLS 4.0 onwards.
 
