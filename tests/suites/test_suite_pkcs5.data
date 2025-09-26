@@ -106,23 +106,23 @@ PBKDF2 Python hashlib Test Vector #6 (SHA512)
 depends_on:PSA_WANT_ALG_SHA_512
 pbkdf2_hmac:MBEDTLS_MD_SHA512:"7061737300776f7264":"7361006c74":4096:16:"9d9e9c4cd21fe4be24d5b8244c759665"
 
-# The pbes2_encrypt and pbes2_decrypt functions 
-# take a asn1 frame as the second argument. 
-# These frames can be interpreted using the 
+# The pbes2_encrypt and pbes2_decrypt functions
+# take a asn1 frame as the second argument.
+# These frames can be interpreted using the
 # following openssl command:
 #
 # echo "<frame>" | xxd -r -p | openssl asn1parse -inform DER -i
 #
 # So the breakdown of the below frame is as follows:
 #
-#    0:d=0  hl=2 l=  39 cons: SEQUENCE          
+#    0:d=0  hl=2 l=  39 cons: SEQUENCE
 #    2:d=1  hl=2 l=   9 prim:  OBJECT            :PBKDF2 //Frame Identifier
-#    13:d=1  hl=2 l=  26 cons:  SEQUENCE          
+#    13:d=1  hl=2 l=  26 cons:  SEQUENCE
 #    15:d=2  hl=2 l=   8 prim:   OCTET STRING      [HEX DUMP]:0102030405060708 //Salt
 #    25:d=2  hl=2 l=   2 prim:   INTEGER           :2710 // Iteration count
-#    29:d=2  hl=2 l=  10 cons:   SEQUENCE          
+#    29:d=2  hl=2 l=  10 cons:   SEQUENCE
 #    31:d=3  hl=2 l=   8 prim:    OBJECT            :hmacWithSHA256 //Hash algorithm
-#    41:d=0  hl=2 l=  29 cons: SEQUENCE          
+#    41:d=0  hl=2 l=  29 cons: SEQUENCE
 #    43:d=1  hl=2 l=   9 prim:  OBJECT            :aes-256-cbc // Encryption algorithm
 #    54:d=1  hl=2 l=  16 prim:  OCTET STRING      [HEX DUMP]:2F904F75B47B48A618068D79BD9A826C // Initialisation vector
 #
