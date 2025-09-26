@@ -19,7 +19,7 @@ Then use the [summary of API modules](#summary-of-api-modules), the table of con
 
 **Tutorial**: See the [getting started guide](https://mbed-tls.readthedocs.io/en/latest/getting_started/psa/).
 
-**Reference**: The [PSA Crypto API specification](https://arm-software.github.io/psa-api/crypto/) is available online. Mbed TLS implements a large subset of the specification which is documented in the [`psa/crypto*.h` headers](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/crypto_8h/).
+**Reference**: The [PSA Crypto API specification](https://arm-software.github.io/psa-api/crypto/) is available online. TF-PSA-Crypto implements a large subset of the specification which is documented in the [`psa/crypto*.h` headers](https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/crypto_8h/).
 
 ### Additional resources
 
