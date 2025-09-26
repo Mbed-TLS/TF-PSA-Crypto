@@ -1,0 +1,7 @@
+Features
+   * The new function mbedtls_asn1_get_integer() parses an integer into a byte
+     array. It replaces mbedtls_asn1_get_mpi().
+
+Removals
+   * Remove the function mbedtls_asn1_get_mpi() from the public interface.
+     It is replaced by mbedtls_asn1_get_integer().

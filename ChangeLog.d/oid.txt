@@ -1,0 +1,4 @@
+Removals
+   * TF-PSA-Crypto does not provide an OID API. A subset of the OID
+     interfaces of Mbed TLS 3.x are now in the X.509 library in
+     Mbed TLS 4.x.
