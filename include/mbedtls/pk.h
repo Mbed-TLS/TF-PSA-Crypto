@@ -52,9 +52,9 @@ extern "C" {
 
 typedef enum {
     MBEDTLS_PK_SIGALG_NONE = 0,
-    MBEDTLS_PK_SIGALG_RSA_PKCS1V15,
-    MBEDTLS_PK_SIGALG_RSA_PSS,
-    MBEDTLS_PK_SIGALG_ECDSA,
+    MBEDTLS_PK_SIGALG_RSA_PKCS1V15, // PSA_ALG_RSA_PKCS1V15_SIGN
+    MBEDTLS_PK_SIGALG_RSA_PSS,      // PSA_ALG_RSA_PSS_ANY_SALT
+    MBEDTLS_PK_SIGALG_ECDSA,        // MBEDTLS_PK_ALG_ECDSA
 } mbedtls_pk_sigalg_t;
 
 /**
@@ -609,6 +609,9 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
  * \param hash_len  Hash length
  * \param sig       Signature to verify
  * \param sig_len   Signature length
+ *
+ * \note            If \p type is #MBEDTLS_PK_SIGALG_RSA_PSS, then any salt
+ *                  length is accepted: #PSA_ALG_RSA_PSS_ANY_SALT is used.
  *
  * \return          0 on success (signature is valid),
  *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
