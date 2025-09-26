@@ -413,6 +413,8 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
  *                    \p usage, exporting and copying the key, and
  *                    possibly other permissions as documented for the
  *                    \p usage parameter.
+ *                    The enrolment algorithm (if available in this build) is
+ *                    left unchanged.
  *                    For keys created with \c mbedtls_pk_wrap_psa(), the
  *                    primary algorithm is the same as the original PSA key.
  *                    Otherwise, it is determined as follows:
