@@ -46,6 +46,7 @@
 void mbedtls_pk_init(mbedtls_pk_context *ctx)
 {
     ctx->pk_info = NULL;
+    ctx->pk_ctx = NULL;
     ctx->priv_id = MBEDTLS_SVC_KEY_ID_INIT;
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     memset(ctx->pub_raw, 0, sizeof(ctx->pub_raw));
@@ -68,6 +69,10 @@ void mbedtls_pk_free(mbedtls_pk_context *ctx)
 {
     if (ctx == NULL) {
         return;
+    }
+
+    if ((ctx->pk_info != NULL) && (ctx->pk_info->ctx_free_func != NULL)) {
+        ctx->pk_info->ctx_free_func(ctx->pk_ctx);
     }
 
     /* The ownership of the priv_id key for opaque keys is external of the PK
@@ -138,6 +143,11 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info)
 {
     if (info == NULL || ctx->pk_info != NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+
+    if ((info->ctx_alloc_func != NULL) &&
+        ((ctx->pk_ctx = info->ctx_alloc_func()) == NULL)) {
+        return MBEDTLS_ERR_PK_ALLOC_FAILED;
     }
 
     ctx->pk_info = info;
