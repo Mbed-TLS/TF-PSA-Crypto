@@ -8,6 +8,8 @@ Whether you are using TF-PSA-Crypto as a standalone project or as part of Mbed T
 * otherwise `<psa/crypto_config.h>`;
 * additionally `TF_PSA_CRYPTO_USER_CONFIG_FILE`, if set.
 
+The macros `MBEDTLS_PSA_CRYPTO_CONFIG_FILE` and `MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE` are no longer recognized. Use `TF_PSA_CRYPTO_CONFIG_FILE` and `TF_PSA_CRYPTO_USER_CONFIG_FILE` instead
+
 Configuration options that are relevant to X.509 or TLS should still be set in the Mbed TLS configuration file (`MBEDTLS_CONFIG_FILE` or `<mbedtls/mbedtls_config.h>`, and `MBEDTLS_USER_CONFIG_FILE` is set). However, you can define all options in the crypto configuration, and Mbed TLS will pick them up.
 
 Generally speaking, the options that must be configured in TF-PSA-Crypto are:
