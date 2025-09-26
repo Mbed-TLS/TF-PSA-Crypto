@@ -45,6 +45,10 @@
  */
 void mbedtls_pk_init(mbedtls_pk_context *ctx)
 {
+    /*
+     * Note: if any of the fields needs to be initialized to non-zero,
+     * we need to add a call to this as the end of mbedtls_pk_free()!
+     */
     ctx->pk_info = NULL;
     ctx->pk_ctx = NULL;
     ctx->priv_id = MBEDTLS_SVC_KEY_ID_INIT;
@@ -81,6 +85,7 @@ void mbedtls_pk_free(mbedtls_pk_context *ctx)
         psa_destroy_key(ctx->priv_id);
     }
 
+    /* Leaves the context in the same state as mbedtls_pk_init(). */
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_pk_context));
 }
 
