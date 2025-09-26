@@ -23,7 +23,7 @@ The type `mbedtls_pk_type_t` has been removed from the API. This type could conv
 * Policy information after parsing a key (only relevant for ECC keys marked as ECDH-only). This is now tracked internally and reflected in rejecting the key for signature or verification in `mbedtls_pk_get_psa_attributes()` and in operation functions.
   <!-- Untested, see https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/206 -->
 
-As a consequence, the functions ``mbedtls_pk_get_type()`, `mbedtls_pk_get_name()` and `mbedtls_pk_info_from_type()` and have been removed. The type `mbedtls_pk_info_t` is no longer part of the API.
+As a consequence, the functions `mbedtls_pk_get_type()`, `mbedtls_pk_get_name()` and `mbedtls_pk_info_from_type()` and have been removed. The type `mbedtls_pk_info_t` is no longer part of the API.
 
 The function `mbedtls_pk_get_len()` has also been removed. It was not very meaningful since it did not convey the length of the key representation, but the size in bytes of the representation of one number associated with the key. As before, you can use `mbedtls_pk_get_bitlen()` to get the key size in the usual cryptographic sense. The size of a formatted key representation depends on the format, and there is no API function to determine it. (For the short export formats of PSA, you can use macros such as `PSA_EXPORT_KEY_OUTPUT_SIZE`, `PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE`, `PSA_EXPORT_KEY_PAIR_MAX_SIZE`, `PSA_EXPORT_PUBLIC_KEY_MAX_SIZE`.)
 
