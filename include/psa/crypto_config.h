@@ -98,9 +98,8 @@
 #define PSA_WANT_ECC_SECP_R1_256                1
 #define PSA_WANT_ECC_SECP_R1_384                1
 #define PSA_WANT_ECC_SECP_R1_521                1
-/* These 2 curves are not part of the public API. They are kept for internal
- * testing only, but they might be removed in a future version of the
- * library. */
+/* These 2 curves are not part of the public API. They are kept temporarily for
+ * internal testing only and will removed in a future minor version. */
 //#define PSA_WANT_ECC_SECP_K1_192                1
 //#define PSA_WANT_ECC_SECP_R1_192                1
 
@@ -1980,4 +1979,8 @@
 //#define MBEDTLS_RSA_GEN_KEY_MIN_BITS            1024 /**<  Minimum RSA key size that can be generated in bits (Minimum possible value is 128 bits) */
 
 /** \} name SECTION: Builtin drivers */
+
+/* Do not enable except for testing. Will be removed in a future minor version.
+ */
+//#define TF_PSA_CRYPTO_ALLOW_REMOVED_MECHANISMS
 #endif /* PSA_CRYPTO_CONFIG_H */
