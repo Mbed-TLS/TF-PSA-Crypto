@@ -34,7 +34,7 @@ TF-PSA-Crypto 1.0 supports the same entropy sources as Mbed TLS 3.6, but the way
 
 * The negative option `MBEDTLS_NO_PLATFORM_ENTROPY` to disable the default entropy collector for Unix-like and Windows platforms no longer exists. It has been replaced by the positive option `MBEDTLS_PSA_BUILTIN_GET_ENTROPY`, which is enabled by default.
 * The option `MBEDTLS_ENTROPY_HARDWARE_ALT`, which allows you to provide a custom entropy collector, has been renamed to `MBEDTLS_PSA_DRIVER_GET_ENTROPY`. This replaces `MBEDTLS_ENTROPY_HARDWARE_ALT`. The callback has a different name and prototype as described in “[Custom hardware collector](#custom-entropy-collector)”.
-* The option `MBEDTLS_ENTROPY_NV_SEED` to enable a nonvolatile seed is unchanged. However, if this is your only entropy source, you must now enable the new option `MBEDTLS_ENTROPY_NO_SOURCES_OK`.
+* The option `MBEDTLS_ENTROPY_NV_SEED` to enable a non-volatile seed is unchanged. However, if this is your only entropy source, you must now enable the new option `MBEDTLS_ENTROPY_NO_SOURCES_OK`.
 
 The following table describes common configurations.
 

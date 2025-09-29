@@ -2,7 +2,7 @@
 
 ### Configuration file split
 
-Whether you are using TF-PSA-Crypto as a standalone project or as part of Mbed TLS, all configuration options that are relevant to TF-PSA-Crypto must be configured in one of its configuration files, namely:
+Whether you are using TF-PSA-Crypto as a standalone project or as part of Mbed TLS, all the configuration options that are relevant to TF-PSA-Crypto must be configured in one of its configuration files, namely:
 
 * `TF_PSA_CRYPTO_CONFIG_FILE`, if set on the preprocessor command line;
 * otherwise `<psa/crypto_config.h>`;
@@ -10,7 +10,7 @@ Whether you are using TF-PSA-Crypto as a standalone project or as part of Mbed T
 
 The macros `MBEDTLS_PSA_CRYPTO_CONFIG_FILE` and `MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE` are no longer recognized. Use `TF_PSA_CRYPTO_CONFIG_FILE` and `TF_PSA_CRYPTO_USER_CONFIG_FILE` instead
 
-Configuration options that are relevant to X.509 or TLS should still be set in the Mbed TLS configuration file (`MBEDTLS_CONFIG_FILE` or `<mbedtls/mbedtls_config.h>`, and `MBEDTLS_USER_CONFIG_FILE` is set). However, you can define all options in the crypto configuration, and Mbed TLS will pick them up.
+Configuration options that are relevant to X.509 or TLS should still be set in the Mbed TLS configuration file (`MBEDTLS_CONFIG_FILE` or `<mbedtls/mbedtls_config.h>`, plus `MBEDTLS_USER_CONFIG_FILE` if it is set). However, you can define all options in the crypto configuration, and Mbed TLS will pick them up.
 
 Generally speaking, the options that must be configured in TF-PSA-Crypto are:
 
@@ -33,4 +33,4 @@ TF-PSA-Crypto exposes its version through `<tf-psa-crypto/version.h>`, similar t
 
 ### Removal of `check_config.h`
 
-The header `mbedtls/check_config.h` is no longer present. Including it from user configuration files was already obsolete in Mbed TLS 3.x, since it enforces properties the configuration as adjusted by `mbedtls/build_info.h`, not properties that the user configuration is expected to meet.
+The header `mbedtls/check_config.h` is no longer present. Including it from user configuration files was already obsolete in Mbed TLS 3.x, since it enforces properties of the configuration as adjusted by `mbedtls/build_info.h`, not properties that the user configuration is expected to meet.
