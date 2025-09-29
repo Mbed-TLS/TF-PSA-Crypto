@@ -301,9 +301,9 @@ function(tf_psa_crypto_set_clang_base_compile_options target)
     set_target_properties(${target} PROPERTIES LINK_FLAGS_TSANDBG "-fsanitize=thread")
     target_compile_options(${target} PRIVATE $<$<CONFIG:Check>:-Os>)
 
-    if(MBEDTLS_FATAL_WARNINGS)
+    if(TF_PSA_CRYPTO_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE -Werror)
-    endif(MBEDTLS_FATAL_WARNINGS)
+    endif(TF_PSA_CRYPTO_FATAL_WARNINGS)
 endfunction(tf_psa_crypto_set_clang_base_compile_options)
 
 function(tf_psa_crypto_set_iar_base_compile_options target)
@@ -311,18 +311,18 @@ function(tf_psa_crypto_set_iar_base_compile_options target)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:-Ohz>)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:--debug -On>)
 
-    if(MBEDTLS_FATAL_WARNINGS)
+    if(TF_PSA_CRYPTO_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE --warnings_are_errors)
-    endif(MBEDTLS_FATAL_WARNINGS)
+    endif(TF_PSA_CRYPTO_FATAL_WARNINGS)
 endfunction(tf_psa_crypto_set_iar_base_compile_options)
 
 function(tf_psa_crypto_set_msvc_base_compile_options target)
     # Strictest warnings, UTF-8 source and execution charset
     target_compile_options(${target} PRIVATE /W3 /utf-8)
 
-    if(MBEDTLS_FATAL_WARNINGS)
+    if(TF_PSA_CRYPTO_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE /WX)
-    endif(MBEDTLS_FATAL_WARNINGS)
+    endif(TF_PSA_CRYPTO_FATAL_WARNINGS)
 endfunction(tf_psa_crypto_set_msvc_base_compile_options)
 
 function(tf_psa_crypto_set_config_files_compile_definitions target)
