@@ -598,5 +598,11 @@
 #error "MBEDTLS_HAVE_INT32/MBEDTLS_HAVE_INT64 and MBEDTLS_HAVE_ASM cannot be defined simultaneously"
 #endif /* (MBEDTLS_HAVE_INT32 || MBEDTLS_HAVE_INT64) && MBEDTLS_HAVE_ASM */
 
+#if (defined(PSA_WANT_ECC_SECP_K1_192) || defined(PSA_WANT_ECC_SECP_K1_192)) \
+    && !defined(TF_PSA_CRYPTO_ALLOW_REMOVED_MECHANISMS) \
+    && !defined(TF_PSA_CRYPTO_WE_ARE_IN_LIBTESTDRIVER1)
+#error "PSA_WANT_ECC_SECP_K1_192 and PSA_WANT_ECC_SECP_K1_192 are no longer supported"
+#endif
+
 /* *INDENT-ON* */
 #endif /* TF_PSA_CRYPTO_CHECK_CONFIG_H */
