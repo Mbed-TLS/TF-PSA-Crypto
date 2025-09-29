@@ -184,8 +184,8 @@ int psa_can_do_hash(psa_algorithm_t hash_alg)
 }
 
 #define GUARD_MODULE_INITIALIZED        \
-    if (psa_get_initialized() == 0)     \
-    return PSA_ERROR_BAD_STATE;
+    if (psa_get_initialized() == 0) {     \
+        return PSA_ERROR_BAD_STATE; }
 
 #if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
 
@@ -733,6 +733,18 @@ psa_status_t psa_import_key_into_slot(
 #endif /* (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT) &&
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
+
+#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
+        defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+        if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
+            return psa_spake2p_import_key(attributes,
+                                          data, data_length,
+                                          key_buffer, key_buffer_size,
+                                          key_buffer_length,
+                                          bits);
+        }
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) ||
+        * defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
     }
 
     return PSA_ERROR_NOT_SUPPORTED;
@@ -1346,7 +1358,8 @@ psa_status_t psa_export_key_internal(
     if (key_type_is_raw_bytes(type) ||
         PSA_KEY_TYPE_IS_RSA(type)   ||
         PSA_KEY_TYPE_IS_ECC(type)   ||
-        PSA_KEY_TYPE_IS_DH(type)) {
+        PSA_KEY_TYPE_IS_DH(type)    ||
+        PSA_KEY_TYPE_IS_SPAKE2P(type)) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
@@ -1418,7 +1431,7 @@ psa_status_t psa_export_public_key_internal(
 
     if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) &&
         (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type) ||
-         PSA_KEY_TYPE_IS_DH(type))) {
+         PSA_KEY_TYPE_IS_DH(type) || PSA_KEY_TYPE_IS_SPAKE2P(type))) {
         /* Exporting public -> public */
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
@@ -8406,8 +8419,8 @@ psa_status_t psa_generate_key_iop_abort(
 
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
-    void (* entropy_init)(mbedtls_entropy_context *ctx),
-    void (* entropy_free)(mbedtls_entropy_context *ctx))
+    void (*entropy_init)(mbedtls_entropy_context *ctx),
+    void (*entropy_free)(mbedtls_entropy_context *ctx))
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
@@ -9345,6 +9358,150 @@ psa_status_t psa_pake_abort(
 
     return status;
 }
+
+typedef struct {
+    psa_ecc_family_t family;
+    size_t w0_len;
+    size_t L_len;
+    mbedtls_ecp_group_id grp_id;
+} psa_spake2p_curve_info_t;
+
+static const psa_spake2p_curve_info_t spake2p_supported_curves[] =
+{
+    { PSA_ECC_FAMILY_SECP_R1, 24, 49, MBEDTLS_ECP_DP_SECP192R1 },
+    { PSA_ECC_FAMILY_SECP_R1, 32, 65, MBEDTLS_ECP_DP_SECP256R1 },
+    { PSA_ECC_FAMILY_SECP_R1, 48, 97, MBEDTLS_ECP_DP_SECP384R1 },
+    { PSA_ECC_FAMILY_SECP_R1, 66, 133, MBEDTLS_ECP_DP_SECP521R1 },
+
+    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 32, 32, MBEDTLS_ECP_DP_CURVE25519 },
+    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 56, 56, MBEDTLS_ECP_DP_CURVE448 },
+
+};
+
+static const psa_spake2p_curve_info_t *psa_spake2p_get_curve_from_data_length(
+    const size_t data_length,
+    const psa_ecc_family_t family)
+{
+    if (family == PSA_ECC_FAMILY_SECP_R1) {
+        switch (data_length) {
+            case (24 + 49):
+                return &spake2p_supported_curves[0];
+            case (32 + 65):
+                return &spake2p_supported_curves[1];
+            case (48 + 97):
+                return &spake2p_supported_curves[2];
+            case (66 + 133):
+                return &spake2p_supported_curves[3];
+            default:
+                break;
+        }
+    } else if (family == PSA_ECC_FAMILY_TWISTED_EDWARDS) {
+        switch (data_length) {
+            case (32 + 32):
+                return &spake2p_supported_curves[4];
+            case (56 + 56):
+                return &spake2p_supported_curves[5];
+            default:
+                break;
+        }
+    }
+    return NULL;
+}
+
+
+psa_status_t psa_spake2p_import_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *data,
+    size_t data_length,
+    uint8_t *key_buffer,
+    size_t key_buffer_size,
+    size_t *key_buffer_length,
+    size_t *bits)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_type_t key_type = psa_get_key_type(attributes);
+
+    if (!PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (key_buffer_size < data_length) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    psa_algorithm_t alg = psa_get_key_algorithm(attributes);
+
+    if (!PSA_ALG_IS_SPAKE2P(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (!PSA_ALG_IS_SPAKE2P_HMAC(alg)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    psa_ecc_family_t family = PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(key_type);
+
+
+    const psa_spake2p_curve_info_t *spake2_curve_info = psa_spake2p_get_curve_from_data_length(
+        data_length,
+        family);
+
+    if (spake2_curve_info == NULL) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    switch (family) {
+        case PSA_ECC_FAMILY_SECP_R1:
+        // Fallthrough intended
+        case PSA_ECC_FAMILY_TWISTED_EDWARDS:
+            mbedtls_ecp_group grp;
+            mbedtls_ecp_point pt;
+
+            mbedtls_ecp_group_init(&grp);
+            mbedtls_ecp_point_init(&pt);
+
+            // Load the ecp group
+            status = mbedtls_to_psa_error(mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+            if (status != PSA_SUCCESS) {
+                goto exit;
+            }
+
+            // Load the point
+            status =
+                mbedtls_to_psa_error(mbedtls_ecp_point_read_binary(&grp, &pt,
+                                                                   data + spake2_curve_info->w0_len,
+                                                                   spake2_curve_info->L_len));
+            if (status != PSA_SUCCESS) {
+                goto exit;
+            }
+
+            /* Check that the point is on the curve. */
+            status = mbedtls_to_psa_error(
+                mbedtls_ecp_check_pubkey(&grp, &pt));
+            if (status != PSA_SUCCESS) {
+                goto exit;
+            }
+exit:
+            mbedtls_ecp_point_free(&pt);
+            mbedtls_ecp_group_free(&grp);
+            break;
+        default:
+            return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (status != PSA_SUCCESS) {
+        *key_buffer_length = 0;
+        *bits = 0;
+        return status;
+    }
+
+    memcpy(key_buffer, data, data_length);
+    *key_buffer_length = data_length;
+    *bits = data_length * 8;
+
+    return PSA_SUCCESS;
+}
+
 #endif /* PSA_WANT_ALG_SOME_PAKE */
 
 /* Memory copying test hooks. These are called before input copy, after input

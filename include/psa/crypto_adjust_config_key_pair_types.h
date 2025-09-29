@@ -54,6 +54,13 @@
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC 1
 #endif
 
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_GENERATE) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE)
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC 1
+#endif
+
 /*****************************************************************
  * BASIC -> corresponding PUBLIC
  ****************************************************************/
@@ -70,6 +77,9 @@
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY 1
 #endif
 
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC)
+#define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY 1
+#endif
 /*****************************************************************
  * BASIC -> IMPORT+EXPORT
  *
@@ -96,6 +106,11 @@
 #if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT 1
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT 1
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC)
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT 1
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT 1
 #endif
 
 #endif /* PSA_CRYPTO_ADJUST_KEYPAIR_TYPES_H */
