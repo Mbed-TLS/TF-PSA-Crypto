@@ -13,7 +13,7 @@ if(GEN_FILES)
         OUTPUT
             ${CMAKE_CURRENT_BINARY_DIR}/psa_constant_names_generated.c
         COMMAND
-            ${MBEDTLS_PYTHON_EXECUTABLE}
+            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/generate_psa_constants.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY
@@ -24,12 +24,12 @@ if(GEN_FILES)
             ${CMAKE_CURRENT_SOURCE_DIR}/../../include/psa/crypto_extra.h
     )
 else()
-    link_to_source(psa_constant_names_generated.c)
+    tf_psa_crypto_link_to_source(psa_constant_names_generated.c)
 endif()
 
 foreach(exe IN LISTS executables)
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
-    set_base_compile_options(${exe})
+    tf_psa_crypto_set_base_compile_options(${exe})
     target_link_libraries(${exe} ${tfpsacrypto_target} ${CMAKE_THREAD_LIBS_INIT})
     target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include)
 endforeach()

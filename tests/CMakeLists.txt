@@ -160,7 +160,7 @@ if(GEN_FILES)
 
 else()
     foreach(file ${all_generated_data_files})
-        link_to_source(${file})
+        tf_psa_crypto_link_to_source(${file})
     endforeach()
 endif()
 # CMake generates sub-makefiles for each target and calls them in subprocesses.
@@ -183,7 +183,7 @@ string(REGEX REPLACE "[ ,;]" "|" SKIP_TEST_SUITES_REGEX "${SKIP_TEST_SUITES}")
 string(REPLACE "." "\\." SKIP_TEST_SUITES_REGEX "${SKIP_TEST_SUITES_REGEX}")
 set(SKIP_TEST_SUITES_REGEX "^(${SKIP_TEST_SUITES_REGEX})(\$|\\.)")
 
-function(add_test_suite suite_name)
+function(tf_psa_crypto_add_test_suite suite_name)
     if(ARGV1)
         set(data_name ${ARGV1})
     else()
@@ -200,7 +200,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND bignum_generated_data_names ${generated_data_name})
@@ -209,7 +209,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND config_generated_data_names ${generated_data_name})
@@ -218,7 +218,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND ecp_generated_data_names ${generated_data_name})
@@ -227,7 +227,7 @@ function(add_test_suite suite_name)
         # Get the plain filename
         get_filename_component(generated_data_name ${generated_data_file} NAME)
         # Remove the ".data" extension
-        get_name_without_last_ext(generated_data_name ${generated_data_name})
+        tf_psa_crypto_get_name_without_last_ext(generated_data_name ${generated_data_name})
         # Remove leading "test_suite_"
         string(SUBSTRING ${generated_data_name} 11 -1 generated_data_name)
         list(APPEND psa_generated_data_names ${generated_data_name})
@@ -288,7 +288,7 @@ function(add_test_suite suite_name)
 
     add_executable(test_suite_${data_name} test_suite_${data_name}.c
                    $<TARGET_OBJECTS:tf_psa_crypto_test>)
-    set_base_compile_options(test_suite_${data_name})
+    tf_psa_crypto_set_base_compile_options(test_suite_${data_name})
     target_compile_options(test_suite_${data_name} PRIVATE ${TEST_C_FLAGS})
     add_dependencies(test_suite_${data_name} ${dependency})
     target_link_libraries(test_suite_${data_name} ${libs})
@@ -311,7 +311,7 @@ function(add_test_suite suite_name)
     else()
         add_test(${data_name}-suite test_suite_${data_name} --verbose)
     endif()
-endfunction(add_test_suite)
+endfunction(tf_psa_crypto_add_test_suite)
 
 # Enable definition of various functions used throughout the testsuite
 # (gethostname, strdup, fileno...) even when compiling with -std=c99. Harmless
@@ -338,15 +338,15 @@ foreach(test_suite ${test_suites})
     string(REGEX REPLACE "\\.data\$" "" data_name "${data_name}")
     string(REPLACE "test_suite_" "" data_name "${data_name}")
     string(REGEX MATCH "[^.]*" function_name "${data_name}")
-    add_test_suite(${function_name} ${data_name})
+    tf_psa_crypto_add_test_suite(${function_name} ${data_name})
 endforeach(test_suite)
 
 # Make scripts and data files needed for testing available in an
 # out-of-source build.
 if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/seedfile")
-        link_to_source(seedfile)
+        tf_psa_crypto_link_to_source(seedfile)
     endif()
-    link_to_source(Descriptions.txt)
-    link_to_source(../framework/data_files)
+    tf_psa_crypto_link_to_source(Descriptions.txt)
+    tf_psa_crypto_link_to_source(../framework/data_files)
 endif()

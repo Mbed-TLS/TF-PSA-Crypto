@@ -4,7 +4,7 @@ set(executables)
 
 function(tfpsacrypto_build_program_common   exe)
     add_executable(${exe} ${ARGN})
-    set_base_compile_options(${exe})
+    tf_psa_crypto_set_base_compile_options(${exe})
     add_dependencies(${programs_target} ${exe})
     list(APPEND executables exe)
 endfunction()

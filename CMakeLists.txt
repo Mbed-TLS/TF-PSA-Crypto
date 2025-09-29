@@ -159,7 +159,7 @@ set(TF_PSA_CRYPTO_USER_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto user config 
 # Create a symbolic link from ${base_name} in the binary directory
 # to the corresponding path in the source directory.
 # Note: Copies the file(s) on Windows.
-function(link_to_source base_name)
+function(tf_psa_crypto_link_to_source base_name)
     set(link "${CMAKE_CURRENT_BINARY_DIR}/${base_name}")
     set(target "${CMAKE_CURRENT_SOURCE_DIR}/${base_name}")
 
@@ -186,10 +186,10 @@ function(link_to_source base_name)
             endif()
         endif()
     endif()
-endfunction(link_to_source)
+endfunction(tf_psa_crypto_link_to_source)
 
 # Get the filename without the final extension (i.e. convert "a.b.c" to "a.b")
-function(get_name_without_last_ext dest_var full_name)
+function(tf_psa_crypto_get_name_without_last_ext dest_var full_name)
     # Split into a list on '.' (but a cmake list is just a ';'-separated string)
     string(REPLACE "." ";" ext_parts "${full_name}")
     # Remove the last item if there are more than one
@@ -202,26 +202,26 @@ function(get_name_without_last_ext dest_var full_name)
     string(REPLACE ";" "." no_ext_name "${ext_parts}")
     # Copy into the desired variable
     set(${dest_var} ${no_ext_name} PARENT_SCOPE)
-endfunction(get_name_without_last_ext)
+endfunction(tf_psa_crypto_get_name_without_last_ext)
 
 include(CheckCCompilerFlag)
 
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 99)
 
-function(set_base_compile_options target)
+function(tf_psa_crypto_set_base_compile_options target)
     if(CMAKE_COMPILER_IS_GNU)
-        set_gnu_base_compile_options(${target})
+        tf_psa_crypto_set_gnu_base_compile_options(${target})
     elseif(CMAKE_COMPILER_IS_CLANG)
-        set_clang_base_compile_options(${target})
+        tf_psa_crypto_set_clang_base_compile_options(${target})
     elseif(CMAKE_COMPILER_IS_IAR)
-        set_iar_base_compile_options(${target})
+        tf_psa_crypto_set_iar_base_compile_options(${target})
     elseif(CMAKE_COMPILER_IS_MSVC)
-        set_msvc_base_compile_options(${target})
+        tf_psa_crypto_set_msvc_base_compile_options(${target})
     endif()
-endfunction(set_base_compile_options)
+endfunction(tf_psa_crypto_set_base_compile_options)
 
-function(set_gnu_base_compile_options target)
+function(tf_psa_crypto_set_gnu_base_compile_options target)
     # some warnings we want are not available with old GCC versions
     # note: starting with CMake 2.8 we could use CMAKE_C_COMPILER_VERSION
     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
@@ -279,9 +279,9 @@ function(set_gnu_base_compile_options target)
     if(TF_PSA_CRYPTO_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE -Werror)
     endif(TF_PSA_CRYPTO_FATAL_WARNINGS)
-endfunction(set_gnu_base_compile_options)
+endfunction(tf_psa_crypto_set_gnu_base_compile_options)
 
-function(set_clang_base_compile_options target)
+function(tf_psa_crypto_set_clang_base_compile_options target)
     target_compile_options(${target} PRIVATE -Wall -Wextra -Wwrite-strings -Wmissing-prototypes -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:-O2>)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-O0 -g3>)
@@ -304,9 +304,9 @@ function(set_clang_base_compile_options target)
     if(MBEDTLS_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE -Werror)
     endif(MBEDTLS_FATAL_WARNINGS)
-endfunction(set_clang_base_compile_options)
+endfunction(tf_psa_crypto_set_clang_base_compile_options)
 
-function(set_iar_base_compile_options target)
+function(tf_psa_crypto_set_iar_base_compile_options target)
     target_compile_options(${target} PRIVATE --warn_about_c_style_casts)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:-Ohz>)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:--debug -On>)
@@ -314,28 +314,18 @@ function(set_iar_base_compile_options target)
     if(MBEDTLS_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE --warnings_are_errors)
     endif(MBEDTLS_FATAL_WARNINGS)
-endfunction(set_iar_base_compile_options)
+endfunction(tf_psa_crypto_set_iar_base_compile_options)
 
-function(set_msvc_base_compile_options target)
+function(tf_psa_crypto_set_msvc_base_compile_options target)
     # Strictest warnings, UTF-8 source and execution charset
     target_compile_options(${target} PRIVATE /W3 /utf-8)
 
     if(MBEDTLS_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE /WX)
     endif(MBEDTLS_FATAL_WARNINGS)
-endfunction(set_msvc_base_compile_options)
+endfunction(tf_psa_crypto_set_msvc_base_compile_options)
 
-function(set_config_files_compile_definitions target)
-    # Pass-through MBEDTLS_CONFIG_FILE, MBEDTLS_USER_CONFIG_FILE,
-    # TF_PSA_CRYPTO_CONFIG_FILE and TF_PSA_CRYPTO_USER_CONFIG_FILE
-    if(MBEDTLS_CONFIG_FILE)
-        target_compile_definitions(${target}
-            PUBLIC MBEDTLS_CONFIG_FILE="${MBEDTLS_CONFIG_FILE}")
-    endif()
-    if(MBEDTLS_USER_CONFIG_FILE)
-        target_compile_definitions(${target}
-            PUBLIC MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}")
-    endif()
+function(tf_psa_crypto_set_config_files_compile_definitions target)
     if(TF_PSA_CRYPTO_CONFIG_FILE)
         target_compile_definitions(${target}
             PUBLIC TF_PSA_CRYPTO_CONFIG_FILE="${TF_PSA_CRYPTO_CONFIG_FILE}")
@@ -344,7 +334,7 @@ function(set_config_files_compile_definitions target)
         target_compile_definitions(${target}
             PUBLIC TF_PSA_CRYPTO_USER_CONFIG_FILE="${TF_PSA_CRYPTO_USER_CONFIG_FILE}")
     endif()
-endfunction(set_config_files_compile_definitions)
+endfunction(tf_psa_crypto_set_config_files_compile_definitions)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Check" AND TEST_CPP)
     set(CMAKE_CXX_STANDARD 11)
@@ -385,7 +375,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
          ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/src/drivers/*.c
          tests/src/*.c)
     add_library(tf_psa_crypto_test OBJECT ${TF_PSA_CRYPTO_TEST_FILES})
-    set_base_compile_options(tf_psa_crypto_test)
+    tf_psa_crypto_set_base_compile_options(tf_psa_crypto_test)
     if(GEN_FILES)
         add_custom_command(
             OUTPUT
@@ -421,7 +411,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE drivers/builtin/src)
     # Request C11, needed for memory poisoning tests
     set_target_properties(tf_psa_crypto_test PROPERTIES C_STANDARD 11)
-    set_config_files_compile_definitions(tf_psa_crypto_test)
+    tf_psa_crypto_set_config_files_compile_definitions(tf_psa_crypto_test)
 endif()
 
 if(ENABLE_PROGRAMS)
@@ -457,7 +447,7 @@ if(ENABLE_TESTING)
 
     # Make scripts needed for testing available in an out-of-source build.
     if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-        link_to_source(scripts)
+        tf_psa_crypto_link_to_source(scripts)
         # Copy (don't link) DartConfiguration.tcl, needed for memcheck, to
         # keep things simple with the sed commands in the memcheck target.
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/DartConfiguration.tcl

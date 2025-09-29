@@ -46,7 +46,7 @@ if(GEN_FILES)
     )
 
     add_custom_target(
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target
         DEPENDS
             "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
             "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
@@ -137,14 +137,14 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
         $<TARGET_OBJECTS:${builtin_static_target}>
         $<TARGET_OBJECTS:${everest_static_target}>
         $<TARGET_OBJECTS:${p256m_static_target}>)
-    set_base_compile_options(${tfpsacrypto_static_target})
+    tf_psa_crypto_set_base_compile_options(${tfpsacrypto_static_target})
     target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${libs})
 
     if(GEN_FILES)
         add_dependencies(${tfpsacrypto_static_target}
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target)
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
     endif()
 endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
@@ -154,22 +154,19 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
         ${src_crypto} $<TARGET_OBJECTS:${builtin_target}>
         ${src_crypto} $<TARGET_OBJECTS:${everest_target}>
         ${src_crypto} $<TARGET_OBJECTS:${p256m_target}>)
-    set_base_compile_options(${tfpsacrypto_target})
+    tf_psa_crypto_set_base_compile_options(${tfpsacrypto_target})
     target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION ${TF_PSA_CRYPTO_VERSION} SOVERSION ${TF_PSA_CRYPTO_SOVERSION})
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
 
     if(GEN_FILES)
         add_dependencies(${tfpsacrypto_target}
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto_generated_files_target)
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
     endif()
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
-    # Include public header files include/, drivers/builtin/include/ and
-    # ${MBEDTLS_DIR}/include/ as we still need it. Include private header files
-    # from core/ and drivers/builtin/src/.
     target_include_directories(${target}
         PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include/>
                $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
@@ -180,7 +177,7 @@ foreach(target IN LISTS target_libraries)
                 ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
                 # Needed to include psa_crypto_driver_wrappers.h
                 ${CMAKE_CURRENT_BINARY_DIR})
-    set_config_files_compile_definitions(${target})
+    tf_psa_crypto_set_config_files_compile_definitions(${target})
     install(
         TARGETS ${target}
         EXPORT MbedTLSTargets

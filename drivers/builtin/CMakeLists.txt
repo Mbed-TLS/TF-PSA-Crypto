@@ -43,14 +43,14 @@ endif()
 
 foreach (target IN LISTS target_libraries)
     add_library(${target} OBJECT ${src_builtin})
-    set_base_compile_options(${target})
+    tf_psa_crypto_set_base_compile_options(${target})
     target_compile_options(${target} PRIVATE ${LIBS_C_FLAGS})
     target_include_directories(${target}
       PRIVATE src include
               ${TF_PSA_CRYPTO_DIR}/include
               ${TF_PSA_CRYPTO_DIR}/core
               ${TF_PSA_CRYPTO_DIR}/drivers/everest/include)
-    set_config_files_compile_definitions(${target})
+    tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)

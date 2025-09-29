@@ -33,7 +33,7 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
     endif()
 
     add_executable(${exe} ${exe_sources} $<TARGET_OBJECTS:tf_psa_crypto_test>)
-    set_base_compile_options(${exe})
+    tf_psa_crypto_set_base_compile_options(${exe})
     target_include_directories(${exe} PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include)
 
     if (NOT FUZZINGENGINE_LIB)
