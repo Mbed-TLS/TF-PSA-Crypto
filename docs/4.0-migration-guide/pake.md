@@ -1,6 +1,6 @@
 ## Changes to the PAKE interface
 
-The PAKE interface in TF-PSA-Crypto 1.0 has been updates to match PSA Crypto API [1.2 Final](https://arm-software.github.io/psa-api/crypto/1.2/ext-pake/) PAKE extension, which is the same version that has been integrated into the main specification of PSA Crypto [version 1.3](https://arm-software.github.io/psa-api/crypto/1.3/).
+The PAKE interface in TF-PSA-Crypto 1.0 has been updated to match PSA Crypto API [1.2 Final](https://arm-software.github.io/psa-api/crypto/1.2/ext-pake/) PAKE extension, which is the same version that has been integrated into the main specification of PSA Crypto [version 1.3](https://arm-software.github.io/psa-api/crypto/1.3/).
 
 In Mbed TLS 3.6, the PAKE interface implemented version [1.1 Beta](https://arm-software.github.io/psa-api/crypto/1.1/ext-pake/) of the PAKE extension. There has been a number of [changes between the beta and the final version](https://arm-software.github.io/psa-api/crypto/1.2/ext-pake/appendix/history.html#changes-between-beta-1-and-final) of the API. The changes that require applications to update their code are detailed in the following subsections.
 
@@ -65,6 +65,8 @@ if (status != PSA_SUCCESS) // error handling ommited for brevity
 Now:
 
 ```
+psa_algorithm_t alg = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256);
+                      // or other key derivation algorithm
 psa_key_id_t shared_key_id = (psa_key_id_t) 0;
 
 psa_key_attributes_t shared_key_attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -85,3 +87,25 @@ if (status != PSA_SUCCESS) // error handling ommited for brevity
 psa_reset_key_attributes(&shared_key_attributes);
 psa_destroy_key(shared_key_id);
 ```
+
+Note that the new function is more flexible: instead of using the shared secret
+only for key derivation, you can also directly use it as an HMAC key by setting
+the appropriate key type and policy, for example:
+
+```
+psa_key_id_t shared_key_id = (psa_key_id_t) 0;
+psa_algorithm_t alg = PSA_ALG_HMAC(PSA_ALG_SHA_256); // or other hash
+
+psa_key_attributes_t shared_key_attributes = PSA_KEY_ATTRIBUTES_INIT;
+psa_set_key_usage_flags(&shared_key_attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+                                                // or VERIFY_MESSAGE
+psa_set_key_algorithm(&shared_key_attributes, alg);
+psa_set_key_type(&shared_key_attributes, PSA_KEY_TYPE_HMAC);
+
+status = psa_pake_get_shared_key(&pake_op,
+                                 &shared_key_attributes,
+                                 &shared_key_id);
+if (status != PSA_SUCCESS) // error handling ommited for brevity
+```
+
+See [the specification](https://arm-software.github.io/psa-api/crypto/1.3/api/ops/pake.html#c.psa_pake_get_shared_key) for details. Note that the J-PAKE shared secret is not uniformly pseudorandom, so it can only be used for key derivation and HMAC.
