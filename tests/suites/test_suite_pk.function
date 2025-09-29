@@ -1497,6 +1497,9 @@ void pk_psa_sign(int psa_type, int bits, int rsa_padding)
 
     /* Turn the PK context into an opaque one. */
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attributes), 0);
+    if (rsa_padding == MBEDTLS_PK_RSA_PKCS_V21) {
+        psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
+    }
     TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &key_id), 0);
     mbedtls_pk_free(&pk);
     mbedtls_pk_init(&pk);
@@ -1623,16 +1626,15 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     /* Create legacy RSA public/private key in PK context. */
     TEST_EQUAL(pk_setup(&pk, pk_type, key_bits), 0);
 
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        TEST_ASSERT(mbedtls_pk_set_rsa_padding(&pk, MBEDTLS_PK_RSA_PKCS_V21) == 0);
-    }
-
     /* Export underlying public key for re-importing in a legacy context. */
     pkey_len = pk.pub_raw_len;
     memcpy(pkey, pk.pub_raw, pk.pub_raw_len);
 
     /* Turn PK context into an opaque one. */
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
+    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
+        psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
+    }
     TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id), 0);
     mbedtls_pk_free(&pk);
     mbedtls_pk_init(&pk);
@@ -2156,13 +2158,8 @@ void pk_copy_from_psa_success(data_t *priv_key_data, int key_type_arg,
         TEST_EQUAL(mbedtls_pk_get_type(&pk_priv), MBEDTLS_PK_RSA);
         TEST_EQUAL(mbedtls_pk_get_type(&pk_pub), MBEDTLS_PK_RSA);
 #if defined(MBEDTLS_RSA_C)
-        if (PSA_ALG_IS_RSA_OAEP(key_alg) || PSA_ALG_IS_RSA_PSS(key_alg)) {
-            TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V21);
-            TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V21);
-        } else {
-            TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
-            TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
-        }
+        TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
+        TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
 #endif /* MBEDTLS_RSA_C */
     }
 
