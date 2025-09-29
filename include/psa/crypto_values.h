@@ -2551,6 +2551,25 @@ static inline int mbedtls_svc_key_id_is_null(mbedtls_svc_key_id_t key)
  */
 #define PSA_KEY_USAGE_COPY                      ((psa_key_usage_t) 0x00000002)
 
+/** Whether the key may be used the public side of a key agreement or PAKE.
+ *
+ * This macro can be used when checking a key's capabilities, for example
+ * with mbedtls_pk_can_do_psa().
+ *
+ * \note Currently, no API function requires this flag.
+ *       Key agreement functions (psa_raw_key_agreement(), psa_key_agreement(),
+ *       psa_key_derivation_key_agreement()) and psa_pake_input() take the
+ *       public key in exported form, not as a key object, so no usage flag
+ *       is involved.
+ *       For PAKE algorithms with a verifier role such as SPAKE2+,
+ *       psa_pake_setup() requires #PSA_KEY_USAGE_DERIVE even when passing
+ *       a public key in the verifier role.
+ *
+ * \note The value of this macro is determined by a draft version of the
+ *       PSA Cryptography API, and may change before this draft is finalized.
+ */
+#define PSA_KEY_USAGE_DERIVE_PUBLIC            ((psa_key_usage_t) 0x00000080)
+
 /** Whether the key may be used to encrypt a message.
  *
  * This flag allows the key to be used for a symmetric encryption operation,

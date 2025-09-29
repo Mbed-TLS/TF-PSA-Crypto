@@ -298,28 +298,22 @@ int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
  */
 size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
 
-/** Whether the key pair or public key can be used as the public side in a
- * key agreement.
- *
- * This is not an usage flag tied to the key, but it's the permisson to call
- * psa_export_public_key() on a key which is always present. The reason is that,
- * in order to use such a key in a public-side key agreement, the public key
- * needs to be exported. That's different from other usages where it's possible
- * to call for an operation directly on the key object.
- * An important consequence of this is that for this usage to be valid a key
- * doesn't need to have PSA_ALG_ECDH as main/enrollment algorithm. It only
- * need to be an ECC key.
- *
- * \warning This is temporary until PSA Crypto API officially supports it.
- */
-#define PSA_KEY_USAGE_DERIVE_PUBLIC         ((psa_key_usage_t) 0x00800000)
-
 /**
  * \brief           Tell if the key wrapped in the PK context is able to perform
- *                  the \p usage operation using the \p alg algorithm. This should
- *                  not necessarily be supported by PK APIs, but more in
- *                  general by importing the key into PSA and then performing
- *                  the operation.
+ *                  the \p usage operation using the \p alg algorithm.
+ *
+ *                  The operation may be a PK function, a PSA operation on
+ *                  the underlying PSA key if the PK object wraps a PSA key,
+ *                  or a PSA operation on a key obtained with
+ *                  mbedtls_pk_import_into_psa().
+ *
+ * \note            As of TF-PSA-Crypto 1.0.0, this function returns \c 0
+ *                  if the key type and policy are suitable for the
+ *                  requested algorithm and usage, even if the key would
+ *                  not work for some other reason, for example an RSA
+ *                  key that is too small for OAEP with the specified hash.
+ *                  This behavior may change without notice in future
+ *                  versions of the library.
  *
  * \param pk        The context to query. It must have been populated.
  * \param alg       PSA algorithm to check against.
