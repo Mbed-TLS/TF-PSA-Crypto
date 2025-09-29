@@ -10,22 +10,25 @@ The overall structure of the random number generator in TF-PSA-Crypto remains th
 
 TF-PSA-Crypto does not expose an entropy interface to applications. The entropy module of Mbed TLS 3.6 is now for internal use only. As a consequence, its configuration has changed, both to simplify it and to prepare for PSA entropy drivers which will be added in a future minor release.
 
-#### Entropy sources and random generation
+#### If you have a fast cryptographic-quality external random generator
 
-Many cryptographic mechanisms require a strong random generator. The overall structure of the random generator in TF-PSA-Crypto is the same as in Mbed TLS 3.x, namely:
+If you have a fast, cryptographic-quality source of random data, enable `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` and provide the callback function `mbedtls_psa_external_get_random()`. This is unchanged since Mbed TLS 2.26.
 
-* If you have a fast, cryptographic-quality source of random data, enable `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`, and do not enable `MBEDTLS_ENTROPY_C`.
-* Otherwise, enable `MBEDTLS_ENTROPY_C`, at least one entropy source and one of the DRBG modules (`MBEDTLS_CTR_DRBG_C` or `MBEDTLS_HMAC_DRBG_C`).
+#### If the built-in entropy source works for you
 
-Note that compared with Mbed TLS 3.6, if you write a configuration from scratch (as opposed to tweaking the default configuration), you now need to explicitly enable the default entropy source with `MBEDTLS_PSA_BUILTIN_GET_ENTROPY`, unless you use an alternative source. Thus, to build with the default random generator configuration, you need the following settings:
+TF-PSA-Crypto, like Mbed TLS, recognizes the system entropy sources on some popular operating systems, and enables them by default. If you are writing your own configuration, you now need to define the option `MBEDTLS_PSA_BUILTIN_GET_ENTROPY`. (This is different from Mbed TLS 2.x and 3.x, where the built-in entropy sources were included unless the option `MBEDTLS_NO_PLATFORM_ENTROPY` was defined.)
 
-```
-#define MBEDTLS_ENTROPY_C
-#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
-#define MBEDTLS_CTR_DRBG_C
-```
+#### If you have a custom entropy source
 
-#### Configuration of entropy sources
+To provide a custom entropy source, disable `MBEDTLS_PSA_BUILTIN_GET_ENTROPY` and enable `MBEDTLS_PSA_DRIVER_GET_ENTROPY`. You will need to provide the callback function `mbedtls_platform_get_entropy()`. See [“Custom entropy collector”](#custom-entropy-collector) below for more details.
+
+#### If you have no entropy source
+
+If your hardware does not have any entropy source, you can use a non-volatile RNG seed which is injected from a trusted external source during device manufacturing or provisioning. Enable the option `MBEDTLS_ENTROPY_NV_SEED`, which is unchanged from previous versions of the library.
+
+In TF-PSA-Crypto, when the non-volatile seed is the only (pseudo) entropy source, you also need to enable the option `MBEDTLS_ENTROPY_NO_SOURCES_OK`.
+
+### Comparison of entropy source configurations
 
 TF-PSA-Crypto 1.0 supports the same entropy sources as Mbed TLS 3.6, but the way to configure them has changed.
 
