@@ -48,7 +48,6 @@
 #include "mbedtls/private/ccm.h"
 #include "mbedtls/private/cmac.h"
 #include "mbedtls/constant_time.h"
-#include "mbedtls/private/des.h"
 #include "mbedtls/private/ecdh.h"
 #include "mbedtls/private/ecp.h"
 #include "mbedtls/private/entropy.h"
@@ -397,11 +396,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
 #endif
 
-#if defined(MBEDTLS_DES_C)
-        case MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH:
-            return PSA_ERROR_NOT_SUPPORTED;
-#endif
-
         case MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED:
         case MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE:
         case MBEDTLS_ERR_ENTROPY_SOURCE_FAILED:
@@ -574,13 +568,6 @@ psa_status_t psa_validate_unstructured_key_bit_size(psa_key_type_t type,
 #if defined(PSA_WANT_KEY_TYPE_CAMELLIA)
         case PSA_KEY_TYPE_CAMELLIA:
             if (bits != 128 && bits != 192 && bits != 256) {
-                return PSA_ERROR_INVALID_ARGUMENT;
-            }
-            break;
-#endif
-#if defined(PSA_WANT_KEY_TYPE_DES)
-        case PSA_KEY_TYPE_DES:
-            if (bits != 64 && bits != 128 && bits != 192) {
                 return PSA_ERROR_INVALID_ARGUMENT;
             }
             break;
@@ -6183,21 +6170,6 @@ exit:
     return status;
 }
 
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DES)
-static void psa_des_set_key_parity(uint8_t *data, size_t data_size)
-{
-    if (data_size >= 8) {
-        mbedtls_des_key_set_parity(data);
-    }
-    if (data_size >= 16) {
-        mbedtls_des_key_set_parity(data + 8);
-    }
-    if (data_size >= 24) {
-        mbedtls_des_key_set_parity(data + 16);
-    }
-}
-#endif /* MBEDTLS_PSA_BUILTIN_KEY_TYPE_DES */
-
 /*
  * ECC keys on a Weierstrass elliptic curve require the generation
  * of a private key which is an integer
@@ -6457,11 +6429,6 @@ static psa_status_t psa_generate_derived_key_internal(
         if (status != PSA_SUCCESS) {
             goto exit;
         }
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DES)
-        if (slot->attr.type == PSA_KEY_TYPE_DES) {
-            psa_des_set_key_parity(data, bytes);
-        }
-#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DES) */
     } else {
         return PSA_ERROR_NOT_SUPPORTED;
     }
@@ -8154,11 +8121,6 @@ psa_status_t psa_generate_key_internal(
             return status;
         }
 
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DES)
-        if (type == PSA_KEY_TYPE_DES) {
-            psa_des_set_key_parity(key_buffer, key_buffer_size);
-        }
-#endif /* MBEDTLS_PSA_BUILTIN_KEY_TYPE_DES */
     } else
 
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_GENERATE)

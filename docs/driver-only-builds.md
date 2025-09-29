@@ -46,7 +46,7 @@ For now, only the following (families of) mechanisms are supported:
   - GCM and CCM with AES, ARIA and Camellia key types
   - ChachaPoly with ChaCha20 Key type
 - Unauthenticated ciphers:
-  - key types: AES, ARIA, Camellia, DES
+  - key types: AES, ARIA, Camellia
   - modes: ECB, CBC, CTR, CFB, OFB, XTS
 
 For each family listed above, all the mentioned alorithms/key types are also
@@ -291,7 +291,6 @@ algorithm/mode you can:
   - `PSA_WANT_KEY_TYPE_ARIA`,
   - `PSA_WANT_KEY_TYPE_CAMELLIA`,
   - `PSA_WANT_KEY_TYPE_CHACHA20`,
-  - `PSA_WANT_KEY_TYPE_DES`.
 - Enable desired PSA algorithm(s):
   - Unauthenticated ciphers modes:
     - `PSA_WANT_ALG_CBC_NO_PADDING`,
@@ -312,7 +311,6 @@ algorithm/mode you can:
   - `MBEDTLS_AES_C`,
   - `MBEDTLS_ARIA_C`,
   - `MBEDTLS_CAMELLIA_C`,
-  - `MBEDTLS_DES_C`,
   - `MBEDTLS_CHACHA20_C`.
   and algorithms/modes:
   - `MBEDTLS_CBC_C`,
@@ -344,10 +342,8 @@ of some ciphers are removed:
 
 - `MBEDTLS_NIST_KW_C` needs built-in AES: it must be disabled when
   `MBEDTLS_AES_C` is disabled.
-- `MBEDTLS_CMAC_C` needs built-in AES/DES: it must be disabled when
-  `MBEDTLS_AES_C` and `MBEDTLS_DES_C` are both disabled. When only one of them
-  is enabled, then only the corresponding cipher will be available at runtime
-  for use with `mbedtls_cipher_cmac_xxx`. (Note: if there is driver support for
+- `MBEDTLS_CMAC_C` needs built-in AES: it must be disabled when
+  `MBEDTLS_AES_C` is disabled. (Note: if there is driver support for
   CMAC and all compatible key types, then `PSA_WANT_ALG_CMAC` can be enabled
   without `MBEDTLS_CMAC_C` and CMAC will be usable with `psa_max_xxx` APIs.)
 - `MBEDTLS_CIPHER_C`: the `mbedtls_cipher_xxx()` APIs will only work with
@@ -368,7 +364,7 @@ Note that the relationship between legacy (i.e. `MBEDTLS_xxx_C`) and PSA
 (i.e. `PSA_WANT_xxx`) symbols is not always 1:1. For example:
 
 - ECB mode is always enabled in the legacy configuration for each key type that
-  allows it (AES, ARIA, Camellia, DES), whereas it must be explicitly enabled
+  allows it (AES, ARIA, Camellia), whereas it must be explicitly enabled
   in PSA with `PSA_WANT_ALG_ECB_NO_PADDING`.
 - In the legacy API, `MBEDTLS_CHACHA20_C` enables the ChaCha20 stream cipher, and
   enabling `MBEDTLS_CHACHAPOLY_C` also enables the ChaCha20-Poly1305 AEAD. In the

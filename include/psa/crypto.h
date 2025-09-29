@@ -680,10 +680,6 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
  *
  * - For symmetric keys (including MAC keys), the format is the
  *   raw bytes of the key.
- * - For DES, the key data consists of 8 bytes. The parity bits must be
- *   correct.
- * - For Triple-DES, the format is the concatenation of the
- *   two or three DES keys.
  * - For RSA key pairs (#PSA_KEY_TYPE_RSA_KEY_PAIR), the format
  *   is the non-encrypted DER encoding of the representation defined by
  *   PKCS\#1 (RFC 8017) as `RSAPrivateKey`, version 0.
@@ -3683,14 +3679,6 @@ psa_status_t psa_key_derivation_output_bytes(
  *   for the output produced by psa_export_key().
  *   The following key types defined in this specification follow this scheme:
  *
- *     - #PSA_KEY_TYPE_DES.
- *       Force-set the parity bits, but discard forbidden weak keys.
- *       For 2-key and 3-key triple-DES, the three keys are generated
- *       successively (for example, for 3-key triple-DES,
- *       if the first 8 bytes specify a weak key and the next 8 bytes do not,
- *       discard the first 8 bytes, use the next 8 bytes as the first key,
- *       and continue reading output from the operation to derive the other
- *       two keys).
  *     - Finite-field Diffie-Hellman keys (#PSA_KEY_TYPE_DH_KEY_PAIR(\c group)
  *       where \c group designates any Diffie-Hellman group) and
  *       ECC keys on a Weierstrass elliptic curve

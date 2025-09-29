@@ -118,7 +118,6 @@
 #define PSA_WANT_KEY_TYPE_ARIA                  1
 #define PSA_WANT_KEY_TYPE_CAMELLIA              1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
-#define PSA_WANT_KEY_TYPE_DES                   1
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
@@ -1563,8 +1562,8 @@
  * Remove decryption operation for AES, ARIA and Camellia block cipher.
  *
  * \note  This feature is incompatible with PSA_WANT_ALG_ECB_NO_PADDING,
- *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7,
- *        PSA_WANT_KEY_TYPE_DES and MBEDTLS_NIST_KW_C.
+ *        PSA_WANT_ALG_CBC_NO_PADDING, PSA_WANT_ALG_CBC_PKCS7 and
+ *        MBEDTLS_NIST_KW_C.
  *
  * Module:  drivers/builtin/src/aes.c
  *          drivers/builtin/src/aesce.c

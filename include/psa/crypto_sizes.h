@@ -1093,8 +1093,6 @@
 #if (defined(PSA_WANT_KEY_TYPE_AES) || defined(PSA_WANT_KEY_TYPE_ARIA) || \
     defined(PSA_WANT_KEY_TYPE_CAMELLIA) || defined(PSA_WANT_KEY_TYPE_CHACHA20))
 #define PSA_CIPHER_MAX_KEY_LENGTH       32u
-#elif defined(PSA_WANT_KEY_TYPE_DES)
-#define PSA_CIPHER_MAX_KEY_LENGTH       24u
 #else
 #define PSA_CIPHER_MAX_KEY_LENGTH       0u
 #endif

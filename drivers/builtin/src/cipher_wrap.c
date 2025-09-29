@@ -32,10 +32,6 @@
 #include "mbedtls/private/aria.h"
 #endif
 
-#if defined(MBEDTLS_DES_C)
-#include "mbedtls/private/des.h"
-#endif
-
 #if defined(MBEDTLS_CHACHA20_C)
 #include "mbedtls/private/chacha20.h"
 #endif
@@ -74,15 +70,6 @@ enum mbedtls_cipher_base_index {
 #endif
 #if defined(MBEDTLS_CHACHAPOLY_C)
     MBEDTLS_CIPHER_BASE_INDEX_CHACHAPOLY_BASE,
-#endif
-#if defined(MBEDTLS_DES_C)
-    MBEDTLS_CIPHER_BASE_INDEX_DES_EDE3,
-#endif
-#if defined(MBEDTLS_DES_C)
-    MBEDTLS_CIPHER_BASE_INDEX_DES_EDE,
-#endif
-#if defined(MBEDTLS_DES_C)
-    MBEDTLS_CIPHER_BASE_INDEX_DES,
 #endif
 #if defined(MBEDTLS_CIPHER_HAVE_GCM_AES_VIA_LEGACY_OR_USE_PSA)
     MBEDTLS_CIPHER_BASE_INDEX_GCM_AES,
@@ -1593,280 +1580,6 @@ static const mbedtls_cipher_info_t aria_256_ccm_star_no_tag_info = {
 
 #endif /* MBEDTLS_ARIA_C */
 
-#if defined(MBEDTLS_DES_C)
-
-static int des_crypt_ecb_wrap(void *ctx, mbedtls_operation_t operation,
-                              const unsigned char *input, unsigned char *output)
-{
-    ((void) operation);
-    return mbedtls_des_crypt_ecb((mbedtls_des_context *) ctx, input, output);
-}
-
-static int des3_crypt_ecb_wrap(void *ctx, mbedtls_operation_t operation,
-                               const unsigned char *input, unsigned char *output)
-{
-    ((void) operation);
-    return mbedtls_des3_crypt_ecb((mbedtls_des3_context *) ctx, input, output);
-}
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-static int des_crypt_cbc_wrap(void *ctx, mbedtls_operation_t operation, size_t length,
-                              unsigned char *iv, const unsigned char *input, unsigned char *output)
-{
-    return mbedtls_des_crypt_cbc((mbedtls_des_context *) ctx, operation, length, iv, input,
-                                 output);
-}
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-static int des3_crypt_cbc_wrap(void *ctx, mbedtls_operation_t operation, size_t length,
-                               unsigned char *iv, const unsigned char *input, unsigned char *output)
-{
-    return mbedtls_des3_crypt_cbc((mbedtls_des3_context *) ctx, operation, length, iv, input,
-                                  output);
-}
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
-
-static int des_setkey_dec_wrap(void *ctx, const unsigned char *key,
-                               unsigned int key_bitlen)
-{
-    ((void) key_bitlen);
-
-    return mbedtls_des_setkey_dec((mbedtls_des_context *) ctx, key);
-}
-
-static int des_setkey_enc_wrap(void *ctx, const unsigned char *key,
-                               unsigned int key_bitlen)
-{
-    ((void) key_bitlen);
-
-    return mbedtls_des_setkey_enc((mbedtls_des_context *) ctx, key);
-}
-
-static int des3_set2key_dec_wrap(void *ctx, const unsigned char *key,
-                                 unsigned int key_bitlen)
-{
-    ((void) key_bitlen);
-
-    return mbedtls_des3_set2key_dec((mbedtls_des3_context *) ctx, key);
-}
-
-static int des3_set2key_enc_wrap(void *ctx, const unsigned char *key,
-                                 unsigned int key_bitlen)
-{
-    ((void) key_bitlen);
-
-    return mbedtls_des3_set2key_enc((mbedtls_des3_context *) ctx, key);
-}
-
-static int des3_set3key_dec_wrap(void *ctx, const unsigned char *key,
-                                 unsigned int key_bitlen)
-{
-    ((void) key_bitlen);
-
-    return mbedtls_des3_set3key_dec((mbedtls_des3_context *) ctx, key);
-}
-
-static int des3_set3key_enc_wrap(void *ctx, const unsigned char *key,
-                                 unsigned int key_bitlen)
-{
-    ((void) key_bitlen);
-
-    return mbedtls_des3_set3key_enc((mbedtls_des3_context *) ctx, key);
-}
-
-static void *des_ctx_alloc(void)
-{
-    mbedtls_des_context *des = mbedtls_calloc(1, sizeof(mbedtls_des_context));
-
-    if (des == NULL) {
-        return NULL;
-    }
-
-    mbedtls_des_init(des);
-
-    return des;
-}
-
-static void des_ctx_free(void *ctx)
-{
-    mbedtls_des_free((mbedtls_des_context *) ctx);
-    mbedtls_free(ctx);
-}
-
-static void *des3_ctx_alloc(void)
-{
-    mbedtls_des3_context *des3;
-    des3 = mbedtls_calloc(1, sizeof(mbedtls_des3_context));
-
-    if (des3 == NULL) {
-        return NULL;
-    }
-
-    mbedtls_des3_init(des3);
-
-    return des3;
-}
-
-static void des3_ctx_free(void *ctx)
-{
-    mbedtls_des3_free((mbedtls_des3_context *) ctx);
-    mbedtls_free(ctx);
-}
-
-static const mbedtls_cipher_base_t des_info = {
-    MBEDTLS_CIPHER_ID_DES,
-    des_crypt_ecb_wrap,
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-    des_crypt_cbc_wrap,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_OFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_STREAM)
-    NULL,
-#endif
-    des_setkey_enc_wrap,
-    des_setkey_dec_wrap,
-    des_ctx_alloc,
-    des_ctx_free
-};
-
-static const mbedtls_cipher_info_t des_ecb_info = {
-    "DES-ECB",
-    8,
-    0 >> MBEDTLS_IV_SIZE_SHIFT,
-    MBEDTLS_KEY_LENGTH_DES >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_ECB,
-    MBEDTLS_CIPHER_DES_ECB,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_DES
-};
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-static const mbedtls_cipher_info_t des_cbc_info = {
-    "DES-CBC",
-    8,
-    8 >> MBEDTLS_IV_SIZE_SHIFT,
-    MBEDTLS_KEY_LENGTH_DES >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_CBC,
-    MBEDTLS_CIPHER_DES_CBC,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_DES
-};
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
-
-static const mbedtls_cipher_base_t des_ede_info = {
-    MBEDTLS_CIPHER_ID_DES,
-    des3_crypt_ecb_wrap,
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-    des3_crypt_cbc_wrap,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_OFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_STREAM)
-    NULL,
-#endif
-    des3_set2key_enc_wrap,
-    des3_set2key_dec_wrap,
-    des3_ctx_alloc,
-    des3_ctx_free
-};
-
-static const mbedtls_cipher_info_t des_ede_ecb_info = {
-    "DES-EDE-ECB",
-    8,
-    0 >> MBEDTLS_IV_SIZE_SHIFT,
-    MBEDTLS_KEY_LENGTH_DES_EDE >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_ECB,
-    MBEDTLS_CIPHER_DES_EDE_ECB,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_DES_EDE
-};
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-static const mbedtls_cipher_info_t des_ede_cbc_info = {
-    "DES-EDE-CBC",
-    8,
-    8 >> MBEDTLS_IV_SIZE_SHIFT,
-    MBEDTLS_KEY_LENGTH_DES_EDE >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_CBC,
-    MBEDTLS_CIPHER_DES_EDE_CBC,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_DES_EDE
-};
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
-
-static const mbedtls_cipher_base_t des_ede3_info = {
-    MBEDTLS_CIPHER_ID_3DES,
-    des3_crypt_ecb_wrap,
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-    des3_crypt_cbc_wrap,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_OFB)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    NULL,
-#endif
-#if defined(MBEDTLS_CIPHER_MODE_STREAM)
-    NULL,
-#endif
-    des3_set3key_enc_wrap,
-    des3_set3key_dec_wrap,
-    des3_ctx_alloc,
-    des3_ctx_free
-};
-
-static const mbedtls_cipher_info_t des_ede3_ecb_info = {
-    "DES-EDE3-ECB",
-    8,
-    0 >> MBEDTLS_IV_SIZE_SHIFT,
-    MBEDTLS_KEY_LENGTH_DES_EDE3 >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_ECB,
-    MBEDTLS_CIPHER_DES_EDE3_ECB,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_DES_EDE3
-};
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-static const mbedtls_cipher_info_t des_ede3_cbc_info = {
-    "DES-EDE3-CBC",
-    8,
-    8 >> MBEDTLS_IV_SIZE_SHIFT,
-    MBEDTLS_KEY_LENGTH_DES_EDE3 >> MBEDTLS_KEY_BITLEN_SHIFT,
-    MBEDTLS_MODE_CBC,
-    MBEDTLS_CIPHER_DES_EDE3_CBC,
-    0,
-    MBEDTLS_CIPHER_BASE_INDEX_DES_EDE3
-};
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
-#endif /* MBEDTLS_DES_C */
-
 #if defined(MBEDTLS_CHACHA20_C)
 
 static int chacha20_setkey_wrap(void *ctx, const unsigned char *key,
@@ -2167,17 +1880,6 @@ const mbedtls_cipher_definition_t mbedtls_cipher_definitions[] =
 #endif
 #endif /* MBEDTLS_ARIA_C */
 
-#if defined(MBEDTLS_DES_C)
-    { MBEDTLS_CIPHER_DES_ECB,              &des_ecb_info },
-    { MBEDTLS_CIPHER_DES_EDE_ECB,          &des_ede_ecb_info },
-    { MBEDTLS_CIPHER_DES_EDE3_ECB,         &des_ede3_ecb_info },
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-    { MBEDTLS_CIPHER_DES_CBC,              &des_cbc_info },
-    { MBEDTLS_CIPHER_DES_EDE_CBC,          &des_ede_cbc_info },
-    { MBEDTLS_CIPHER_DES_EDE3_CBC,         &des_ede3_cbc_info },
-#endif
-#endif /* MBEDTLS_DES_C */
-
 #if defined(MBEDTLS_CHACHA20_C)
     { MBEDTLS_CIPHER_CHACHA20,             &chacha20_info },
 #endif
@@ -2217,15 +1919,6 @@ const mbedtls_cipher_base_t * const mbedtls_cipher_base_lookup_table[] = {
 #endif
 #if defined(MBEDTLS_CHACHAPOLY_C)
     [MBEDTLS_CIPHER_BASE_INDEX_CHACHAPOLY_BASE] = &chachapoly_base_info,
-#endif
-#if defined(MBEDTLS_DES_C)
-    [MBEDTLS_CIPHER_BASE_INDEX_DES_EDE3] = &des_ede3_info,
-#endif
-#if defined(MBEDTLS_DES_C)
-    [MBEDTLS_CIPHER_BASE_INDEX_DES_EDE] = &des_ede_info,
-#endif
-#if defined(MBEDTLS_DES_C)
-    [MBEDTLS_CIPHER_BASE_INDEX_DES] = &des_info,
 #endif
 #if defined(MBEDTLS_CIPHER_HAVE_GCM_AES_VIA_LEGACY_OR_USE_PSA)
     [MBEDTLS_CIPHER_BASE_INDEX_GCM_AES] = &gcm_aes_info,

@@ -46,7 +46,7 @@ void pbes2_encrypt(int params_tag, data_t *params_hex, data_t *pw,
     MD_PSA_INIT();
 
     params.tag = params_tag;
-    params.p = params_hex->x;
+    params.p = params_hex->x;//pointer to asn1 frame
     params.len = params_hex->len;
 
     ASSERT_ALLOC(my_out, outsize);

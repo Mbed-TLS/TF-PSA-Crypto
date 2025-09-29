@@ -35,8 +35,6 @@ void invalid()
     /* Bad parameters to setup */
     TEST_EQUAL(MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA,
                mbedtls_block_cipher_setup(&ctx, MBEDTLS_CIPHER_ID_NONE));
-    TEST_EQUAL(MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA,
-               mbedtls_block_cipher_setup(&ctx, MBEDTLS_CIPHER_ID_DES));
 
     /* setkey() before successful setup() */
     TEST_EQUAL(MBEDTLS_ERR_CIPHER_INVALID_CONTEXT,

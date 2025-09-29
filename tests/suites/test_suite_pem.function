@@ -1,7 +1,6 @@
 /* BEGIN_HEADER */
 #include "mbedtls/base64.h"
 #include "mbedtls/pem.h"
-#include "mbedtls/private/des.h"
 #include "mbedtls/private/aes.h"
 /* END_HEADER */
 

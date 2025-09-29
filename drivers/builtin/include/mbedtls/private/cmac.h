@@ -84,8 +84,7 @@ struct mbedtls_cmac_context_t {
  *
  * \param ctx           The cipher context used for the CMAC operation, initialized
  *                      as one of the following types: MBEDTLS_CIPHER_AES_128_ECB,
- *                      MBEDTLS_CIPHER_AES_192_ECB, MBEDTLS_CIPHER_AES_256_ECB,
- *                      or MBEDTLS_CIPHER_DES_EDE3_ECB.
+ *                      MBEDTLS_CIPHER_AES_192_ECB or MBEDTLS_CIPHER_AES_256_ECB.
  * \param key           The CMAC key.
  * \param keybits       The length of the CMAC key in bits.
  *                      Must be supported by the cipher.
@@ -207,7 +206,7 @@ int mbedtls_aes_cmac_prf_128(const unsigned char *key, size_t key_len,
                              unsigned char output[16]);
 #endif /* MBEDTLS_AES_C */
 
-#if defined(MBEDTLS_SELF_TEST) && (defined(MBEDTLS_AES_C) || defined(MBEDTLS_DES_C))
+#if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
 /**
  * \brief          The CMAC checkup routine.
  *
@@ -216,7 +215,7 @@ int mbedtls_aes_cmac_prf_128(const unsigned char *key, size_t key_len,
  * \return         \c 1 on failure.
  */
 int mbedtls_cmac_self_test(int verbose);
-#endif /* MBEDTLS_SELF_TEST && ( MBEDTLS_AES_C || MBEDTLS_DES_C ) */
+#endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C*/
 
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
