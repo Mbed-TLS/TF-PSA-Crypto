@@ -14,30 +14,53 @@ PSA cryptography API
 
 ### PSA API
 
-Arm's [Platform Security Architecture (PSA)](https://developer.arm.com/architectures/security-architectures/platform-security-architecture) is a holistic set of threat models, security analyses, hardware and firmware architecture specifications, and an open source firmware reference implementation. PSA provides a recipe, based on industry best practice, that allows security to be consistently designed in, at both a hardware and firmware level.
+The [Platform Security Architecture (PSA)](https://developer.arm.com/architectures/security-architectures/platform-security-architecture)
+is a holistic set of threat models, security analyses, hardware and firmware
+architecture specifications, and an open source firmware reference implementation.
+PSA provides a recipe, based on industry best practice, that allows security to
+be consistently designed in, at both a hardware and firmware level.
 
-The [PSA cryptography API](https://arm-software.github.io/psa-api/crypto/) provides access to a set of cryptographic primitives. It has a dual purpose. First, it can be used in a PSA-compliant platform to build services, such as secure boot, secure storage and secure communication. Second, it can also be used independently of other PSA components on any platform.
+The [PSA cryptography API](https://arm-software.github.io/psa-api/crypto/)
+provides access to a set of cryptographic primitives. It has a dual purpose.
+First, it can be used in a PSA-compliant platform to build services, such as
+secure boot, secure storage and secure communication. Second, it can also be
+used independently of other PSA components on any platform.
 
 The design goals of the PSA cryptography API include:
 
-* The API distinguishes caller memory from internal memory, which allows the library to be implemented in an isolated space for additional security. Library calls can be implemented as direct function calls if isolation is not desired, and as remote procedure calls if isolation is desired.
-* The structure of internal data is hidden to the application, which allows substituting alternative implementations at build time or run time, for example, in order to take advantage of hardware accelerators.
-* All access to the keys happens through key identifiers, which allows support for external cryptoprocessors that is transparent to applications.
+* The API distinguishes caller memory from internal memory, which allows the
+  library to be implemented in an isolated space for additional security.
+  Library calls can be implemented as direct function calls if isolation is not
+  desired, and as remote procedure calls if isolation is desired.
+* The structure of internal data is hidden to the application, which allows
+  substituting alternative implementations at build time or run time, for example,
+  in order to take advantage of hardware accelerators.
+* All access to the keys happens through key identifiers, which allows support
+  for external cryptoprocessors that is transparent to applications.
 * The interface to algorithms is generic, favoring algorithm agility.
 * The interface is designed to be easy to use and hard to accidentally misuse.
 
-Arm welcomes feedback on the design of the API. If you think something could be improved, please open an issue on our Github repository. Alternatively, if you prefer to provide your feedback privately, please email us at [`mbed-crypto@arm.com`](mailto:mbed-crypto@arm.com). All feedback received by email is treated confidentially.
+We welcomes feedback on the design of the API. If you think something could be
+improved, please open an issue on our Github repository. Alternatively, if you
+prefer to provide your feedback privately, please email us at
+[`mbed-crypto@arm.com`](mailto:mbed-crypto@arm.com). All feedback received by
+email is treated confidentially.
 
-### PSA implementation in Mbed TLS
+### PSA implementation in TF-PSA-Crypto
 
-Mbed TLS includes a reference implementation of the PSA Cryptography API.
-However, it does not aim to implement the whole specification; in particular it does not implement all the algorithms.
+TF-PSA-Crypto includes an implementation of the PSA Cryptography API. It covers
+most, but not all algorithms.
 
 ### PSA drivers
 
-Mbed TLS supports drivers for cryptographic accelerators, secure elements and random generators. This is work in progress. Please note that the driver interfaces are not fully stable yet and may change without notice. We intend to preserve backward compatibility for application code (using the PSA Crypto API), but the code of the drivers may have to change in future minor releases of Mbed TLS.
+TF-PSA-Crypto supports drivers for cryptographic accelerators, secure elements
+and random generators. This is work in progress. Please note that the driver
+interfaces are not fully stable yet and may change without notice. We intend to
+preserve backward compatibility for application code (using the PSA Crypto API),
+but the code of the drivers may have to change in future minor releases of TF-PSA-Crypto.
 
-Please see the [PSA driver example and guide](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md) for information on writing a driver.
+Please see the [PSA driver example and guide](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md)
+for information on writing a driver.
 
 Configuration
 -------------
@@ -267,11 +290,21 @@ as parameters that will be passed to the test function.
 License
 -------
 
-Unless specifically indicated otherwise in a file, TF-PSA-Crypto files are provided under a dual [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) OR [GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html) license. See the [LICENSE](LICENSE) file for the full text of these licenses.
+Unless specifically indicated otherwise in a file, TF-PSA-Crypto files are provided
+under a dual [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) OR
+[GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html) license.
+See the [LICENSE](LICENSE) file for the full text of these licenses.
 
-### Third-party code included in Mbed TLS
+### Third-party code included in TF-PSA-Crypto
 
-This project contains code from other projects. This code is located within the `tf-psa-crypto/drivers/` directory. The original license text is included within project subdirectories, where it differs from the normal Mbed TLS license, and/or in source files. The projects are listed below:
+This project contains code from other projects. This code is located within the
+`drivers/` directory. The original license text is included within project
+subdirectories, where it differs from the normal Mbed TLS license, and/or in
+source files. The projects are listed below:
 
-* `drivers/everest/`: Files stem from [Project Everest](https://project-everest.github.io/) and are distributed under the Apache 2.0 license.
-* `drivers/p256-m/p256-m/`: Files have been taken from the [p256-m](https://github.com/mpg/p256-m) repository. The code in the original repository is distributed under the Apache 2.0 license. It is distributed in Mbed TLS under a dual Apache-2.0 OR GPL-2.0-or-later license with permission from the author.
+* `drivers/everest/`: Files stem from [Project Everest](https://project-everest.github.io/)
+  and are distributed under the Apache 2.0 license.
+* `drivers/p256-m/p256-m/`: Files have been taken from the [p256-m](https://github.com/mpg/p256-m)
+  repository. The code in the original repository is distributed under the
+  Apache 2.0 license. It is distributed in TF-PSA-Crypto under a dual Apache-2.0
+  OR GPL-2.0-or-later license with permission from the author.
