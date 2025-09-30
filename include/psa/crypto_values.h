@@ -573,9 +573,12 @@
     (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==                         \
      PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE)
 
+#define PSA_KEY_TYPE_HAS_ECC_FAMILY(type)       \
+    (PSA_KEY_TYPE_IS_ECC(type) || PSA_KEY_TYPE_IS_SPAKE2P(type))
+
 /** Extract the curve from an elliptic curve key type. */
 #define PSA_KEY_TYPE_ECC_GET_FAMILY(type)                        \
-    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_ECC(type) ?             \
+    ((psa_ecc_family_t) (PSA_KEY_TYPE_HAS_ECC_FAMILY(type) ?      \
                          ((type) & PSA_KEY_TYPE_ECC_CURVE_MASK) : \
                          0))
 

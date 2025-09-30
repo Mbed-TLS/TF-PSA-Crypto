@@ -420,6 +420,8 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 #define PSA_ALG_IS_PAKE(alg)                                        \
     (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_PAKE)
 
+#define PSA_ALG_JPAKE_BASE                      ((psa_algorithm_t) 0x0a000100)
+
 /** The Password-authenticated key exchange by juggling (J-PAKE) algorithm.
  *
  * This is J-PAKE as defined by RFC 8236, instantiated with the following
@@ -533,13 +535,94 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * of RFC 8236 for two examples.
  *
  */
-#define PSA_ALG_JPAKE_BASE                      ((psa_algorithm_t) 0x0a000100)
-
 #define PSA_ALG_JPAKE(hash_alg) \
     (PSA_ALG_JPAKE_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
 
+/** Whether the specified algorithm is a JPAKE algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is of the form #PSA_ALG_JPAKE(\c hash_alg)
+ *         for some hash algorithm \c hash_alg, 0 otherwise.
+ *         This macro may return either 0 or 1 if \p alg is not a supported
+ *         algorithm identifier.
+ */
 #define PSA_ALG_IS_JPAKE(alg) \
     (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_JPAKE_BASE)
+
+#define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE        ((psa_key_type_t) 0x4400)
+#define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE          ((psa_key_type_t) 0x7400)
+
+/** SPAKE2+ key pair.
+ *
+ * Not implemented yet.
+ */
+#define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(curve)            \
+    (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | (curve))
+
+/** SPAKE2+ public key.
+ *
+ * Not implemented yet.
+ */
+#define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(curve)          \
+    (PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE | (curve))
+
+/** Whether a key type is a SPAKE2+ key pair type. */
+#define PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(type)          \
+    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+     PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE)
+
+/** Whether a key type is a SPAKE2+ public key type. */
+#define PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(type)        \
+    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+     PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+
+/** Whether a key type is a SPAKE2+ key pair or public key type. */
+#define PSA_KEY_TYPE_IS_SPAKE2P(type)                   \
+    ((PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) &       \
+      ~PSA_KEY_TYPE_ECC_CURVE_MASK) == PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+
+#define PSA_ALG_SPAKE2P_HMAC_BASE               ((psa_algorithm_t) 0x0a000400)
+
+/** SPAKE2+ algorithm using HMAC for key confirmation.
+ *
+ * Not implemented yet.
+ */
+#define PSA_ALG_SPAKE2P_HMAC(hash_alg)                                  \
+    (PSA_ALG_SPAKE2P_HMAC_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
+#define PSA_ALG_IS_SPAKE2P_HMAC(alg)                                    \
+    (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_SPAKE2P_HMAC_BASE)
+
+/** SPAKE2+ algorithm using CMAC for key confirmation.
+ *
+ * Not implemented yet.
+ */
+#define PSA_ALG_SPAKE2P_CMAC_BASE               ((psa_algorithm_t) 0x0a000500)
+#define PSA_ALG_SPAKE2P_CMAC(hash_alg)                          \
+    (PSA_ALG_SPAKE2P_CMAC_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
+#define PSA_ALG_IS_SPAKE2P_CMAC(alg)                            \
+    (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_SPAKE2P_CMAC_BASE)
+
+/** SPAKE2+ algorithm variant used by the Matter specification version 1.2.
+ *
+ * Not implemented yet.
+ */
+#define PSA_ALG_SPAKE2P_MATTER                  ((psa_algorithm_t) 0x0a000609)
+
+/** Whether the specified algorithm is any SPAKE2+ algorithm variant.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is of the form #PSA_ALG_SPAKE2P_CMAC(\c hash_alg),
+ *         #PSA_ALG_SPAKE2P_HMAC(\c hash_alg) or #PSA_ALG_SPAKE2P_MATTER
+ *         for some hash algorithm \c hash_alg, 0 otherwise.
+ *         This macro may return either 0 or 1 if \p alg is not a supported
+ *         algorithm identifier.
+ */
+#define PSA_ALG_IS_SPAKE2P(alg)         \
+    (PSA_ALG_IS_SPAKE2P_HMAC(alg) ||    \
+     PSA_ALG_IS_SPAKE2P_CMAC(alg) ||    \
+     (alg) == PSA_ALG_SPAKE2P_MATTER)
 
 /** @} */
 
@@ -745,6 +828,16 @@ typedef uint32_t psa_pake_primitive_t;
  * documentation #PSA_PAKE_PRIMITIVE.
  */
 #define PSA_PAKE_STEP_ZK_PROOF                  ((psa_pake_step_t) 0x03)
+
+/** The key confirmation value.
+ *
+ * This is only used with PAKE algorithms with an explicit key confirmation
+ * phase.
+ *
+ * Refer to the documentation of the PAKE algorithm for information about
+ * the input format.
+ */
+#define PSA_PAKE_STEP_CONFIRM                   ((psa_pake_step_t) 0x04)
 
 /**@}*/
 
@@ -1444,6 +1537,41 @@ psa_status_t psa_pake_set_peer(psa_pake_operation_t *operation,
  */
 psa_status_t psa_pake_set_role(psa_pake_operation_t *operation,
                                psa_pake_role_t role);
+
+/** Set the context data for a password-authenticated key exchange.
+ *
+ * Not all PAKE algorithms use context data. Only call this function
+ * for algorithms that need it.
+ *
+ * \param[in,out] operation     The operation object to specify the
+ *                              application's role for. It must have been set up
+ *                              by psa_pake_setup() and not yet in use (neither
+ *                              psa_pake_output() nor psa_pake_input() has been
+ *                              called yet). It must be an operation for which
+ *                              the context hasn't been specified
+ *                              (psa_pake_set_context() hasn't been called yet).
+ * \param[in] context           The context to set.
+ * \param context_len           The length of \p context in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The algorithm in \p operation does not use a context.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The library configuration does not support PAKE algorithms with
+ *         a context, or this specific context value is not supported for
+ *         the given \p operation.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid, or
+ *         the library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+psa_status_t psa_pake_set_context(psa_pake_operation_t *operation,
+                                  const uint8_t *context,
+                                  size_t context_len);
 
 /** Get output for a step of a password-authenticated key exchange.
  *
