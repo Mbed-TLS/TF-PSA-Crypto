@@ -58,34 +58,49 @@ The function `psa_pake_get_implicit_key()`, which injects the shared secret into
 Before:
 
 ```
-status = psa_pake_get_implicit_key(&pake_op, &derivation_op);
+// ommited: set up pake_op and do the PAKE key exchange
+
+psa_algorithm_t alg = PSA_ALG_TLS12_ECJPAKE_TO_PMS; // for example
+psa_key_derivation_operation_t derivation = PSA_KEY_DERIVATION_OPERATION_INIT;
+status = psa_key_derivation_setup(&derivation, alg);
 if (status != PSA_SUCCESS) // error handling ommited for brevity
+
+status = psa_pake_get_implicit_key(&pake_op, &derivation);
+if (status != PSA_SUCCESS) // error handling ommited for brevity
+
+// ommited: finish key derivation (output/verify, then abort)
 ```
 
 Now:
 
 ```
-psa_algorithm_t alg = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256);
-                      // or other key derivation algorithm
-psa_key_id_t shared_key_id = (psa_key_id_t) 0;
+// ommited: set up pake_op and do the PAKE key exchange
 
+psa_algorithm_t alg = PSA_ALG_TLS12_ECJPAKE_TO_PMS; // for example
+psa_key_derivation_operation_t derivation = PSA_KEY_DERIVATION_OPERATION_INIT;
+status = psa_key_derivation_setup(&derivation, alg);
+if (status != PSA_SUCCESS) // error handling ommited for brevity
+
+psa_key_id_t shared_key_id = (psa_key_id_t) 0;
 psa_key_attributes_t shared_key_attributes = PSA_KEY_ATTRIBUTES_INIT;
 psa_set_key_usage_flags(&shared_key_attributes, PSA_KEY_USAGE_DERIVE);
-psa_set_key_algorithm(&shared_key_attributes, alg);
+psa_set_key_algorithm(&shared_key_attributes, alg); // same as derivation
 psa_set_key_type(&shared_key_attributes, PSA_KEY_TYPE_DERIVE);
 
 status = psa_pake_get_shared_key(&pake_op,
                                  &shared_key_attributes,
                                  &shared_key_id);
 if (status != PSA_SUCCESS) // error handling ommited for brevity
+psa_reset_key_attributes(&shared_key_attributes);
 
 status = psa_key_derivation_input_key(&derivation_op,
                                       PSA_KEY_DERIVATION_INPUT_SECRET,
                                       shared_key_id);
 if (status != PSA_SUCCESS) // error handling ommited for brevity
 
-psa_reset_key_attributes(&shared_key_attributes);
-psa_destroy_key(shared_key_id);
+// ommited: finish key derivation (output/verify, then abort)
+
+psa_destroy_key(shared_key_id); // after key derivation is complete
 ```
 
 Note that the new function is more flexible: instead of using the shared secret
