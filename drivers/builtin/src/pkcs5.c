@@ -337,18 +337,6 @@ cleanup:
     return ret;
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-int mbedtls_pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
-                              const unsigned char *password,
-                              size_t plen, const unsigned char *salt, size_t slen,
-                              unsigned int iteration_count,
-                              uint32_t key_length, unsigned char *output)
-{
-    return pkcs5_pbkdf2_hmac(ctx, password, plen, salt, slen, iteration_count,
-                             key_length, output);
-}
-#endif
-
 int mbedtls_pkcs5_pbkdf2_hmac_ext(mbedtls_md_type_t md_alg,
                                   const unsigned char *password,
                                   size_t plen, const unsigned char *salt, size_t slen,
