@@ -661,6 +661,10 @@ static psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot)
     uint8_t *key_data = NULL;
     size_t key_data_length = 0;
 
+    if (!psa_key_id_is_user(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))) {
+        return PSA_ERROR_DOES_NOT_EXIST;
+    }
+
     status = psa_load_persistent_key(&slot->attr,
                                      &key_data, &key_data_length);
     if (status != PSA_SUCCESS) {
