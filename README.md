@@ -66,27 +66,35 @@ Configuration
 -------------
 
 The TF-PSA-Crypto repository should build out of the box on most systems. Its
-configuration is based on C preprocessor macros gathered in
-`include/psa/crypto_config.h`. The C preprocessor macros or configuration
-options are organized into four groups:
-1. General configuration options, options that are not related to a specific
-   part of the implementation of the PSA Cryptography API.
-2. Configuration, using PSA_WANT_xxx macros as defined in psa-conditional-inclusion-c.md,
-   of which parts of the PSA Cryptography API the user wishes to enable:
-   cryptographic algorithms, key types, elliptic curves ...
-3. Configuration of the PSA cryptography core as defined in psa-driver-interface.md
-   which provides the key management, the generation of random numbers and the
-   dispatch to drivers.
-4. Configuration of the built-in implementation of the PSA driver interface as
-   defined in psa-driver-interface.md: non-functional configuration related to
-   performance/size trade-offs.
+configuration is based on C preprocessor macros defined in
+`include/psa/crypto_config.h`.
+
+These configuration options are organized into seven groups:
+1. Cryptographic mechanism selection (PSA API): PSA_WANT_xxx macros
+   (see psa-conditional-inclusion-c.md) that specify which parts of the PSA
+   Cryptography API the user wants to enable, e.g. cryptographic algorithms,
+   key types, elliptic curves.
+1. Platform abstraction layer: Options to port the library to different platforms.
+1. General and test configuration options: Options that are test-specific or
+   not related to a particular part of the library.
+1. Cryptographic mechanism selection (extended API): Options to enable
+   cryptographic mechanisms beyond the current PSA Cryptography API, such as LMS
+   or key wrapping.
+1. Data format support: Options to enable support for various data formats,
+   such as ASN.1 or PEM.
+1. PSA core: Options to configure the core of the TF-PSA-Crypto PSA cryptography
+   API implementation (see psa-driver-interface.md) which provides key management,
+   random number generation, and driver dispatch.
+1. Built-in drivers: Options to configure the built-in implementation of the PSA
+   driver interface (see psa-driver-interface.md), mainly non-functional
+   configuration related to performance/size trade-offs.
 
 The file `include/psa/crypto_config.h` can be edited manually, or in a more
-programmatic way using the Python 3 script `scripts/config.py` (use `--help`
-for usage instructions).
+programmatic way using the Python script `scripts/config.py` (use `--help` for
+usage instructions).
 
-Compiler options can be set using conventional environment variables such as
-`CC` and `CFLAGS` when using the CMake build system (see below).
+We provide some non-standard configurations focused on specific use cases in the
+`configs/` directory. You can read more about those in `configs/README.txt`.
 
 Documentation
 -------------
@@ -185,6 +193,10 @@ Most of them are available for gcc and clang, though some are compiler-specific:
   traces and origin tracking.
 - `Check`. This activates the compiler warnings that depend on optimization and
   treats all warnings as errors.
+- `TSan`. This instruments the code with ThreadSanitizer to detect data races
+   and other threading-related concurrency issues at runtime.
+- `TSanDbg`. Same as TSan but slower, with debug information, better stack
+  traces and origin tracking.
 
 Switching build modes in CMake is simple. For debug mode, enter at the command
 line:
