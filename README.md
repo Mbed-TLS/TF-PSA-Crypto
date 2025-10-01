@@ -104,9 +104,8 @@ Documentation for the PSA Cryptography API is available [on GitHub](https://arm-
 To generate a local copy of the library documentation in HTML format:
 
 1. Make sure that [Doxygen](http://www.doxygen.nl/) is installed.
-1. Run `mkdir /path/to/build_dir && cd /path/to/build_dir`
-1. Run `cmake /path/to/tf/psa/crypto/source`
-1. Run `make apidoc`
+1. Run `cmake -B /path/to/build_dir /path/to/TF-PSA-Crypto/source`
+1. Run `cmake --build /path/to/build_dir --target tfpsacrypto-apidoc`
 1. Browse `apidoc/index.html` or `apidoc/modules.html`.
 
 Compiling
