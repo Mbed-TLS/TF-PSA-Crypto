@@ -120,14 +120,14 @@ You need the following tools to build the library from the main branch with the
 provided CMake files. TF-PSA-Crypto minimum tool version requirements are set
 based on the versions shipped in the latest or penultimate (depending on the
 release cadence) long-term support releases of major Linux distributions,
-namely at time of writing: Ubuntu 20.04, RHEL 8, SLES 15 ...
+namely at time of writing: Ubuntu 22.04, RHEL 9, and SLES 15 SP4.
 
 * A C99 toolchain (compiler, linker, archiver). We actively test with GCC 5.4,
   Clang 3.8. More recent versions should work. Slightly older versions may work.
-* Python 3.6.5 and later to generate some source files (see below), the test
+* Python 3.8 and later to generate some source files (see below), the test
   code, and to generate sample programs.
 * Perl to run the tests, and to generate some source files in the main branch.
-* CMake 3.16.3 or later.
+* CMake 3.20.4 or later.
 * Microsoft Visual Studio 2019 or later (if using Visual Studio).
 * Doxygen 1.8.14 or later.
 
