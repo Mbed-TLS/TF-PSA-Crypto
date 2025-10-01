@@ -1743,7 +1743,7 @@ static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attr
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     } else {
-        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 0)) {
+        if (!psa_key_id_is_user(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key))) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     }

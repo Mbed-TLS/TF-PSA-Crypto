@@ -324,26 +324,6 @@ static inline psa_key_slot_t *get_key_slot(size_t slice_idx, size_t slot_idx)
 
 #endif /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
 
-
-
-int psa_is_valid_key_id(mbedtls_svc_key_id_t key, int vendor_ok)
-{
-    psa_key_id_t key_id = MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key);
-
-    if ((PSA_KEY_ID_USER_MIN <= key_id) &&
-        (key_id <= PSA_KEY_ID_USER_MAX)) {
-        return 1;
-    }
-
-    if (vendor_ok &&
-        (PSA_KEY_ID_VENDOR_MIN <= key_id) &&
-        (key_id <= PSA_KEY_ID_VENDOR_MAX)) {
-        return 1;
-    }
-
-    return 0;
-}
-
 /** Get the description in memory of a key given its identifier and lock it.
  *
  * The descriptions of volatile keys and loaded persistent keys are
@@ -398,11 +378,7 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(
         } else {
             status = PSA_ERROR_DOES_NOT_EXIST;
         }
-    } else {
-        if (!psa_is_valid_key_id(key, 1)) {
-            return PSA_ERROR_INVALID_HANDLE;
-        }
-
+    } else if (psa_key_id_is_user(key_id) || psa_key_id_is_builtin(key_id)) {
         for (slot_idx = 0; slot_idx < PERSISTENT_KEY_CACHE_COUNT; slot_idx++) {
             slot = get_persistent_key_slot(slot_idx);
             /* Only consider slots which are in a full state. */
@@ -413,6 +389,8 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(
         }
         status = (slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT) ?
                  PSA_SUCCESS : PSA_ERROR_DOES_NOT_EXIST;
+    } else {
+        return PSA_ERROR_INVALID_HANDLE;
     }
 
     if (status == PSA_SUCCESS) {

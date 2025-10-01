@@ -312,15 +312,19 @@ static inline int psa_key_lifetime_is_external(psa_key_lifetime_t lifetime)
  */
 psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime);
 
-/** Validate a key identifier.
+/** Test whether a key identifier belongs to the user key range.
  *
- * \param[in] key           The key identifier.
- * \param[in] vendor_ok     Non-zero to indicate that key identifiers in the
- *                          vendor range are allowed, volatile key identifiers
- *                          excepted \c 0 otherwise.
+ * \param key_id  Key identifier to test.
  *
- * \retval <> 0 if the key identifier is valid, 0 otherwise.
+ * \retval 1
+ *         The key identifier is a user key identifier.
+ * \retval 0
+ *         The key identifier is not a user key identifier.
  */
-int psa_is_valid_key_id(mbedtls_svc_key_id_t key, int vendor_ok);
+static inline int psa_key_id_is_user(psa_key_id_t key_id)
+{
+    return (key_id >= PSA_KEY_ID_USER_MIN) &&
+           (key_id <= PSA_KEY_ID_USER_MAX);
+}
 
 #endif /* PSA_CRYPTO_SLOT_MANAGEMENT_H */
