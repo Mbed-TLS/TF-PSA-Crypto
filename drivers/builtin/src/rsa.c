@@ -2498,7 +2498,7 @@ int mbedtls_rsa_pkcs1_sign(mbedtls_rsa_context *ctx,
 #if defined(MBEDTLS_PKCS1_V21)
         case MBEDTLS_RSA_PKCS_V21:
             return rsa_rsassa_pss_sign(ctx, f_rng, p_rng, md_alg,
-                                               hashlen, hash, MBEDTLS_RSA_SALT_LEN_ANY, sig);
+                                       hashlen, hash, MBEDTLS_RSA_SALT_LEN_ANY, sig);
 #endif
 
         default:
@@ -2720,9 +2720,9 @@ int mbedtls_rsa_pkcs1_verify(mbedtls_rsa_context *ctx,
                                      ? (mbedtls_md_type_t) ctx->hash_id
                                      : md_alg;
             return mbedtls_rsa_rsassa_pss_verify_ext(ctx, md_alg,
-                                                 hashlen, hash, mgf1_hash_id,
-                                                 MBEDTLS_RSA_SALT_LEN_ANY,
-                                                 sig);
+                                                     hashlen, hash, mgf1_hash_id,
+                                                     MBEDTLS_RSA_SALT_LEN_ANY,
+                                                     sig);
 #endif
 
         default:

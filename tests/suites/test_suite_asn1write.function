@@ -255,8 +255,8 @@ exit:
 
 /* BEGIN_CASE */
 void mbedtls_asn1_write_algorithm_identifier_ext(data_t *oid,
-                                             int par_len,
-                                             data_t *expected, int has_par)
+                                                 int par_len,
+                                                 data_t *expected, int has_par)
 {
     generic_write_data_t data = { NULL, NULL, NULL, NULL, 0 };
     int ret;

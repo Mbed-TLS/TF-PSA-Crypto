@@ -386,13 +386,14 @@ psa_status_t mbedtls_psa_rsa_sign_hash(
 
         if (ret == 0) {
             ret = mbedtls_rsa_rsassa_pss_sign_ext(rsa,
-                                              mbedtls_psa_get_random,
-                                              MBEDTLS_PSA_RANDOM_STATE,
-                                              MBEDTLS_MD_NONE,
-                                              (unsigned int) hash_length,
-                                              hash,
-                                              rsa_pss_expected_salt_len(MBEDTLS_MD_NONE, rsa, hash_length),
-                                              signature);
+                                                  mbedtls_psa_get_random,
+                                                  MBEDTLS_PSA_RANDOM_STATE,
+                                                  MBEDTLS_MD_NONE,
+                                                  (unsigned int) hash_length,
+                                                  hash,
+                                                  rsa_pss_expected_salt_len(MBEDTLS_MD_NONE, rsa,
+                                                                            hash_length),
+                                                  signature);
         }
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_RSA_PSS */
