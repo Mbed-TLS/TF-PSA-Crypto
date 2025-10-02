@@ -120,14 +120,16 @@ void rsa_invalid_param()
                                                  buf_len, buf),
                MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
 
-    TEST_EQUAL(mbedtls_rsa_rsassa_pss_verify(&ctx, MBEDTLS_MD_NONE,
-                                             buf_len,
-                                             NULL, buf),
+    TEST_EQUAL(mbedtls_rsa_rsassa_pss_verify_ext(&ctx, MBEDTLS_MD_NONE,
+                                             buf_len, NULL,
+                                             MBEDTLS_MD_NONE,
+                                             buf_len, buf),
                MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
 
-    TEST_EQUAL(mbedtls_rsa_rsassa_pss_verify(&ctx, MBEDTLS_MD_SHA256,
-                                             0,
-                                             NULL, buf),
+    TEST_EQUAL(mbedtls_rsa_rsassa_pss_verify_ext(&ctx, MBEDTLS_MD_SHA256,
+                                             0,NULL,
+                                             MBEDTLS_MD_NONE,
+                                             buf_len, buf),
                MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
 #endif
 
