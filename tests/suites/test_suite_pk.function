@@ -946,10 +946,10 @@ void valid_parameters()
                                             NULL) ==
                 MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
-    TEST_ASSERT(mbedtls_pk_sign(&pk,
+    TEST_ASSERT(mbedtls_pk_sign_restartable(&pk,
                                 MBEDTLS_MD_NONE,
                                 NULL, 0,
-                                buf, sizeof(buf), &len) ==
+                                buf, sizeof(buf), &len, NULL) ==
                 MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
     TEST_ASSERT(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_NONE, &pk,
@@ -1347,8 +1347,8 @@ void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_
         sig[0]--;
     }
 
-    TEST_ASSERT(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, hash_len,
-                                sig, sizeof(sig), &sig_len) == sign_ret);
+    TEST_ASSERT(mbedtls_pk_sign_restartable(&pk, MBEDTLS_MD_SHA256, hash, hash_len,
+                                sig, sizeof(sig), &sig_len, NULL) == sign_ret);
     if (sign_ret == 0) {
         TEST_ASSERT(sig_len <= MBEDTLS_PK_SIGNATURE_MAX_SIZE);
     } else {
@@ -1408,8 +1408,8 @@ void pk_rsa_overflow()
                                    sig, sizeof(sig), &sig_len),
                MBEDTLS_ERR_PK_KEY_INVALID_FORMAT);
 
-    TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_NONE, hash, hash_len,
-                               sig, sizeof(sig), &sig_len),
+    TEST_EQUAL(mbedtls_pk_sign_restartable(&pk, MBEDTLS_MD_NONE, hash, hash_len,
+                               sig, sizeof(sig), &sig_len, NULL),
                MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
 exit:
@@ -1513,8 +1513,8 @@ void pk_psa_sign(int psa_type, int bits, int rsa_padding)
     /* Sign with the opaque context. */
     memset(hash, 0x2a, sizeof(hash));
     memset(sig, 0, sizeof(sig));
-    TEST_ASSERT(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256,
-                                hash, sizeof(hash), sig, sizeof(sig), &sig_len) == 0);
+    TEST_ASSERT(mbedtls_pk_sign_restartable(&pk, MBEDTLS_MD_SHA256,
+                                hash, sizeof(hash), sig, sizeof(sig), &sig_len, NULL) == 0);
     /* Only opaque EC keys support verification. */
     if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
         TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,

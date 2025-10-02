@@ -1276,18 +1276,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 }
 
 /*
- * Make a signature
- */
-int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
-                    const unsigned char *hash, size_t hash_len,
-                    unsigned char *sig, size_t sig_size, size_t *sig_len)
-{
-    return mbedtls_pk_sign_restartable(ctx, md_alg, hash, hash_len,
-                                       sig, sig_size, sig_len,
-                                       NULL);
-}
-
-/*
  * Make a signature given a signature type.
  */
 int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
@@ -1305,8 +1293,8 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
     }
 
     if (pk_type != MBEDTLS_PK_SIGALG_RSA_PSS) {
-        return mbedtls_pk_sign(ctx, md_alg, hash, hash_len,
-                               sig, sig_size, sig_len);
+        return mbedtls_pk_sign_restartable(ctx, md_alg, hash, hash_len,
+                               sig, sig_size, sig_len, NULL);
     }
 
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
