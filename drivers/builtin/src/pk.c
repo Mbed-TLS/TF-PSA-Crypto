@@ -1111,17 +1111,6 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
 }
 
 /*
- * Verify a signature
- */
-int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
-                      const unsigned char *hash, size_t hash_len,
-                      const unsigned char *sig, size_t sig_len)
-{
-    return mbedtls_pk_verify_restartable(ctx, md_alg, hash, hash_len,
-                                         sig, sig_len, NULL);
-}
-
-/*
  * Verify a signature, with explicit selection of the signature algorithm.
  */
 int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
@@ -1142,7 +1131,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
     }
 
     if (type != MBEDTLS_PK_SIGALG_RSA_PSS) {
-        return mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
+        return mbedtls_pk_verify_restartable(ctx, md_alg, hash, hash_len, sig, sig_len, NULL);
     }
 
     /* Ensure the PK context is of the right type otherwise mbedtls_pk_rsa()
