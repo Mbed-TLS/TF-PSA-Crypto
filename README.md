@@ -358,3 +358,17 @@ source files. The projects are listed below:
   repository. The code in the original repository is distributed under the
   Apache 2.0 license. It is distributed in TF-PSA-Crypto under a dual Apache-2.0
   OR GPL-2.0-or-later license with permission from the author.
+
+Contributing
+------------
+
+We gratefully accept bug reports and contributions from the community. Please
+see the [contributing guidelines](CONTRIBUTING.md) for details on how to do this.
+
+Contact
+-------
+
+* To report a security vulnerability in TF-PSA-Crypto, please email <mbed-tls-security@lists.trustedfirmware.org>. For more information, see [`SECURITY.md`](SECURITY.md).
+* To report a bug or request a feature in TF-PSA-Crypto, please [file an issue on GitHub](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/new/choose).
+* Please see [`SUPPORT.md`](SUPPORT.md) for other channels for discussion and
+support about TF-PSA-Crypto.
