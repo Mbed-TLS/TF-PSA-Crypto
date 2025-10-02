@@ -316,6 +316,27 @@ initially requires Python to generate the tests files
 contains the test functions. The `data file` contains the test cases, specified
 as parameters that will be passed to the test function.
 
+Porting TF-PSA-Crypto
+---------------------
+
+TF-PSA-Crypto can be ported to many different architectures, OS's and platforms.
+Before starting a port, you may find the following Knowledge Base articles useful:
+
+-   [Porting Mbed TLS to a new environment or OS](https://mbed-tls.readthedocs.io/en/latest/kb/how-to/how-do-i-port-mbed-tls-to-a-new-environment-OS/)
+-   [What external dependencies does Mbed TLS rely on?](https://mbed-tls.readthedocs.io/en/latest/kb/development/what-external-dependencies-does-mbedtls-rely-on/)
+-   [How do I configure Mbed TLS](https://mbed-tls.readthedocs.io/en/latest/kb/compiling-and-building/how-do-i-configure-mbedtls/)
+
+TF-PSA-Crypto is mostly written in portable C99; however, it has a few platform
+requirements that go beyond the standard, but are met by most modern architectures:
+
+- Bytes must be 8 bits.
+- All-bits-zero must be a valid representation of a null pointer.
+- Signed integers must be represented using two's complement.
+- `int` and `size_t` must be at least 32 bits wide.
+- The types `uint8_t`, `uint16_t`, `uint32_t` and their signed equivalents must be available.
+- Mixed-endian platforms are not supported.
+- SIZE_MAX must be at least as big as INT_MAX and UINT_MAX.
+
 License
 -------
 
