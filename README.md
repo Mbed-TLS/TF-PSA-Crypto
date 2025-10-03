@@ -7,7 +7,7 @@ with the limitation that the implementation of the PAKE 1.2 function set still
 has minor non-compliances, such as returned error codes.
 
 The PSA Cryptography API implementation is organized around the
-[PSA Cryptography driver interface](https://github.com/Mbed-TLS/mbedtls/blob/development/docs/proposed/psa-driver-interface.md)
+[PSA Cryptography driver interface](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md)
 aiming to ease the support of cryptographic accelerators and processors.
 
 PSA cryptography API
@@ -129,6 +129,7 @@ namely at time of writing: Ubuntu 22.04, RHEL 9, and SLES 15 SP4.
   code, and to generate sample programs.
 * Perl to run the tests, and to generate some source files in the main branch.
 * CMake 3.20.4 or later.
+* A build system like Make or Ninja for which CMake can generate build files.
 * Microsoft Visual Studio 2019 or later (if using Visual Studio).
 * Doxygen 1.8.14 or later.
 
@@ -238,10 +239,10 @@ remove the build directory and create it again.
 Note that it is possible to build in-place, use:
 
     cmake .
-    make
+    cmake --build .
 
 Regarding variables, also note that if you set CFLAGS when invoking cmake,
-your value of CFLAGS doesn't override the content provided by cmake (depending
+your value of CFLAGS doesn't override the content provided by CMake (depending
 on the build mode as seen above), it's merely prepended to it.
 
 #### Consuming TF-PSA-Crypto
@@ -310,9 +311,9 @@ Tests
 
 The TF-PSA-Crypto repository includes an elaborate test suite in `tests/` that
 initially requires Python to generate the tests files
-(e.g. `test\_suite\_psa\_crypto.c`). These files are generated from a
-`function file` (e.g. `suites/test\_suite\_psa\_crypto.function`) and a
-`data file` (e.g. `suites/test\_suite\_psa\_crypto.data`). The `function file`
+(e.g. `test_suite_psa_crypto.c`). These files are generated from a
+`function file` (e.g. `suites/test_suite_psa_crypto.function`) and a
+`data file` (e.g. `suites/test_suite_psa_crypto.data`). The `function file`
 contains the test functions. The `data file` contains the test cases, specified
 as parameters that will be passed to the test function.
 
