@@ -199,8 +199,8 @@ In order to run the tests, enter:
 
     ctest
 
-The test suites need Python to be built and Perl to be executed. If you don't
-have one of these installed, you'll want to disable the test suites with:
+The test suites need Python to be built. If you don't have one of these installed,
+you'll want to disable the test suites with:
 
     cmake -DENABLE_TESTING=Off /path/to/tf/psa/crypto/source
 
@@ -249,7 +249,7 @@ for example:
     CC=your_cc cmake /path/to/tf/psa/crypto/source
 
 If you already invoked cmake and want to change those settings, you need to
-remove the build directory and create it again.
+invoke the configuration phase of CMake again with the new settings.
 
 Note that it is possible to build in-place, use:
 
@@ -262,14 +262,20 @@ on the build mode as seen above), it's merely prepended to it.
 
 #### Consuming TF-PSA-Crypto
 
-The TF-PSA-Crypto repository provides a package config file for consumption as
-a dependency in other CMake projects. You can include TF-PSA-Crypto CMake
-targets yourself with:
+TF-PSA-Crypto provides a CMake package configuration file for consumption as a
+dependency in other CMake projects. You can load its CMake library target with:
 
     find_package(TF-PSA-Crypto)
 
-If prompted, set `TF-PSA-Crypto_DIR` to `${YOUR_TF_PSA_CRYPTO_INSTALL_DIR}/cmake`.
-This creates the `TF-PSA-Crypto::tfpsacrypto` target.
+You can help CMake find the package:
+
+- By setting the variable `TF-PSA-Crypto_DIR` to `${YOUR_TF_PSA_CRYPTO_BUILD_DIR}/cmake`,
+  as shown in `programs/test/cmake_package/CMakeLists.txt`, or
+- By adding the TF-PSA-Crypto installation prefix to `CMAKE_PREFIX_PATH`,
+  as shown in `programs/test/cmake_package_install/CMakeLists.txt`.
+
+After a successful `find_package(TF-PSA-Crypto)`, the target `TF-PSA-Crypto::tfpsacrypto`
+is available.
 
 You can then use it directly through `target_link_libraries()`:
 
