@@ -133,6 +133,21 @@ namely at time of writing: Ubuntu 22.04, RHEL 9, and SLES 15 SP4.
 * Microsoft Visual Studio 2019 or later (if using Visual Studio).
 * Doxygen 1.8.14 or later.
 
+### Git usage
+
+The supported branches (see [`BRANCHES.md`](BRANCHES.md)) use [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules#_cloning_submodules),
+[framework](https://github.com/TF-PSA-Crypto/mbedtls-framework).
+Release tags also use Git submodules.
+
+After cloning or checking out a branch or tag, run:
+    ```
+    git submodule update --init --recursive
+    ```
+ to initialize and update the submodules before building.
+
+However, the official source release tarballs (e.g. [tf-psa-crypto-1.0.0-beta.tar.bz2](https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/download/tf-psa-crypto-1.0.0-beta/tf-psa-crypto-1.0.0-beta.tar.bz2))
+include the content of the submodule.
+
 ### Generated source files in the development branch
 
 The source code of TF-PSA-Crypto includes some files that are automatically
