@@ -28,6 +28,9 @@ PSA_ARCH_TESTS_REF = 'v25.02_API1.8_CRYPTO_1.2.1'
 # Test number 2xx corresponds to the files in the folder
 # psa-arch-tests/api-tests/dev_apis/crypto/test_c0xx
 EXPECTED_FAILURES = [
+    # Tests for psa_key_derivation_verify_bytes() and
+    # psa_key_derivation_verify_key(). We don't implement these functions yet.
+    267, 268,
 ] # type: List[int]
 
 if __name__ == '__main__':
