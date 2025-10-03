@@ -137,18 +137,12 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 typedef struct mbedtls_pk_context {
     /* Public key information. */
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);
-    /* Previously: underlying public key context.
-     * Now unused (by public functions at least). */
-    void *MBEDTLS_PRIVATE(pk_ctx);
 
-    /* The following field is used to store the ID of a private key for:
-     * - EC keys (MBEDTLS_PK_ECKEY, MBEDTLS_PK_ECKEY_DH, MBEDTLS_PK_ECDSA)
-     * - Wrapped keys (EC or RSA).
+    /* The following field is used to store the ID of a private key.
      *
      * priv_id = MBEDTLS_SVC_KEY_ID_INIT when PK context wraps only the public
      * key.
-     *
-     * Other keys still use the pk_ctx to store their own context. */
+     */
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);
 
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)

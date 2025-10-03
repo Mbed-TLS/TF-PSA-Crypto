@@ -50,7 +50,6 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx)
      * we need to add a call to this as the end of mbedtls_pk_free()!
      */
     ctx->pk_info = NULL;
-    ctx->pk_ctx = NULL;
     ctx->priv_id = MBEDTLS_SVC_KEY_ID_INIT;
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     memset(ctx->pub_raw, 0, sizeof(ctx->pub_raw));
