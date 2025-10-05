@@ -9,10 +9,12 @@ one of them, you can pick one of the following methods:
 
 1. Replace the default file include/psa/crypto_config.h with the chosen one.
 
-2. Use the TF_PSA_CRYPTO_CONFIG_FILE option of the CMake build system:
+2. Use the TF_PSA_CRYPTO_CONFIG_FILE CMake option. For example, to build
+   out-of-tree with the crypto-config-ccm-aes-sha256.h configuration file:
 
-   cmake -DTF_PSA_CRYPTO_CONFIG_FILE="path-to-your-tf-psa-crypto-config-file" .
-   make
+   cmake -DTF_PSA_CRYPTO_CONFIG_FILE="configs/crypto-config-ccm-aes-sha256.h" \
+         -B build-ccmonly
+   cmake --build build-ccmonly
 
 The second method also works if you want to keep your custom configuration
 file outside the TF-PSA-Crypto tree.
