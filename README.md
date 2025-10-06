@@ -96,7 +96,9 @@ To generate a local copy of the library documentation in HTML format:
 1. Make sure that [Doxygen](http://www.doxygen.nl/) is installed.
 1. Run `cmake -B /path/to/build_dir /path/to/TF-PSA-Crypto/source`
 1. Run `cmake --build /path/to/build_dir --target tfpsacrypto-apidoc`
-1. Browse `apidoc/index.html` or `apidoc/modules.html`.
+1. Open one of the main generated HTML files:
+   * `apidoc/index.html`
+   * `apidoc/modules.html` or `apidoc/topics.html`
 
 Compiling
 ---------
