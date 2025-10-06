@@ -126,15 +126,15 @@ namely at time of writing: Ubuntu 22.04, RHEL 9, and SLES 15 SP4.
 
 ### Git usage
 
-The supported branches (see [`BRANCHES.md`](BRANCHES.md)) use [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules#_cloning_submodules),
+The supported branches (see [`BRANCHES.md`](BRANCHES.md)) use a [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules#_cloning_submodules),
 [framework](https://github.com/TF-PSA-Crypto/mbedtls-framework).
 Release tags also use Git submodules.
 
 After cloning or checking out a branch or tag, run:
     ```
-    git submodule update --init --recursive
+    git submodule update --init
     ```
- to initialize and update the submodules before building.
+ to initialize and update the submodule before building.
 
 However, the official source release tarballs (e.g. [tf-psa-crypto-1.0.0-beta.tar.bz2](https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/download/tf-psa-crypto-1.0.0-beta/tf-psa-crypto-1.0.0-beta.tar.bz2))
 include the content of the submodule.
@@ -191,7 +191,7 @@ In order to run the tests, enter:
 
     ctest
 
-The test suites need Python to be built. If you don't have one of these installed,
+The test suites need Python to be built. If you don't have Python installed,
 you'll want to disable the test suites with:
 
     cmake -DENABLE_TESTING=Off /path/to/tf/psa/crypto/source
@@ -294,22 +294,22 @@ CMake projects in Visual Studio, please refer to its documentation.
 The following instructions have been tested on Microsoft Visual Studio Community
 2019 Version 16.11.26. The TF-PSA-Crypto library and its tests build out of the
 box with:
-. Visual Studio Community installed with the default "Desktop development with C++"
+* Visual Studio Community installed with the default "Desktop development with C++"
 and "Python development" workloads.
-. Python libraries needed for code and test generation installed as defined
+* Python libraries needed for code and test generation installed as defined
 in basic.requirements.txt. Refer to the Visual Studio documentation of Python
 environments.
-. When cloning the TF-PSA-Crypto repository in Visual Studio, a
+* When cloning the TF-PSA-Crypto repository in Visual Studio, a
 CMakeSettings.json is created at the root of the repository. In that file, add
 the line `"environments": [ {"CC" : "cl"} ]` to the configuration. That way
 when building the library and its tests, a CC environment variable is set with
 value "cl". This is needed by Python scripts that generate test cases. The
 CMakeSettings.json file can be edited in Visual Studio by following
 Project > CMake Settings for TF-PSA-Crypto > Edit JSON.
-. If necessary (it may have been done automatically when updating
+* If necessary (it may have been done automatically when updating
 CMakeSettings.json), generate the CMake cache: Project > Generate Cache
-. Build the library: Build > Build All
-. The test suites can then be run: Test > Run CTests for TF-PSA-Crypto
+* Build the library: Build > Build All
+* The test suites can then be run: Test > Run CTests for TF-PSA-Crypto
 
 Example programs
 ----------------
