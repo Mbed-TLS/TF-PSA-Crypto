@@ -69,8 +69,6 @@ Continuous Integration Tests
 ----------------------------
 Once a PR has been made, the Continuous Integration (CI) tests are triggered and run. You should follow the result of the CI tests, and fix failures.
 
-It is advised to enable the [githooks scripts](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development/tests/git-scripts) prior to pushing your changes, for catching some of the issues as early as possible.
-
 Documentation
 -------------
 TF-PSA-Crypto is well documented, but if you think documentation is needed, speak out!
