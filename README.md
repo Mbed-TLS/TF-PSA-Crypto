@@ -63,10 +63,9 @@ configuration is based on C preprocessor macros defined in
 `include/psa/crypto_config.h`.
 
 These configuration options are organized into seven groups:
-1. Cryptographic mechanism selection (PSA API): PSA_WANT_xxx macros
-   (see psa-conditional-inclusion-c.md) that specify which parts of the PSA
-   Cryptography API the user wants to enable, e.g. cryptographic algorithms,
-   key types, elliptic curves.
+1. Cryptographic mechanism selection (PSA API): PSA_WANT_xxx macros that
+   specify which parts of the PSA Cryptography API the user wants to enable,
+   e.g. cryptographic algorithms, key types, elliptic curves.
 1. Platform abstraction layer: Options to port the library to different platforms.
 1. General and test configuration options: Options that are test-specific or
    not related to a particular part of the library.
