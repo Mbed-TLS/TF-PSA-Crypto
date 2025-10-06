@@ -258,9 +258,6 @@ static int pk_setup(mbedtls_pk_context *pk, mbedtls_pk_type_t pk_type, int curve
 
     if ((pk_type == MBEDTLS_PK_RSA) || (pk_type == MBEDTLS_PK_RSASSA_PSS)) {
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-        mbedtls_pk_rsa_padding_t rsa_padding = (pk_type == MBEDTLS_PK_RSASSA_PSS) ?
-                                               MBEDTLS_PK_RSA_PKCS_V21 :
-                                               MBEDTLS_PK_RSA_PKCS_V15;
         TEST_EQUAL(get_predefined_key_data(0, curve_or_keybits, &key_data, &key_data_len,
                                            &pub_key_data, &pub_key_data_len), 0);
         TEST_EQUAL(pk_psa_import_key(key_data, key_data_len,
@@ -275,7 +272,6 @@ static int pk_setup(mbedtls_pk_context *pk, mbedtls_pk_type_t pk_type, int curve
         memcpy(pk->pub_raw, pub_key_data, pub_key_data_len);
         pk->pub_raw_len = pub_key_data_len;
         pk->bits = curve_or_keybits;
-        TEST_EQUAL(mbedtls_pk_set_rsa_padding(pk, rsa_padding), 0);
 #else /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
         TEST_FAIL("RSA keys not supported.");
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
@@ -347,7 +343,6 @@ static int pk_fill_rsa_public_key_fields(mbedtls_pk_context *pk, int mod,
 
     memcpy(pk->pub_raw, p, key_len);
     pk->pub_raw_len = key_len;
-    pk->rsa_padding = MBEDTLS_PK_RSA_PKCS_V15;
     pk->bits = mod;
     pk->pk_info = mbedtls_pk_info_from_type(MBEDTLS_PK_RSA);
 
