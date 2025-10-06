@@ -92,6 +92,14 @@ static inline int psa_key_id_is_volatile(psa_key_id_t key_id)
 psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
                                        psa_key_slot_t **p_slot);
 
+#if defined(MBEDTLS_TEST_HOOKS)
+
+psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot);
+
+psa_status_t psa_load_builtin_key_into_slot(psa_key_slot_t *slot);
+
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /** Initialize the key slot structures.
  *
  * \retval #PSA_SUCCESS
@@ -99,7 +107,12 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
  */
 psa_status_t psa_initialize_key_slots(void);
 
-#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#if defined(MBEDTLS_TEST_HOOKS)
+
+extern void (*mbedtls_test_hook_psa_load_builtin_key_into_slot)(void);
+extern void (*mbedtls_test_hook_psa_load_persistent_key_into_slot)(void);
+
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
 /* Allow test code to customize the key slice length. We use this in tests
  * that exhaust the key store to reach a full key store in reasonable time
  * and memory.
@@ -115,7 +128,8 @@ extern size_t (*mbedtls_test_hook_psa_volatile_key_slice_length)(
 
 /* The number of volatile key slices. */
 size_t psa_key_slot_volatile_slice_count(void);
-#endif
+#endif /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
+#endif /* MBEDTLS_TEST_HOOKS */
 
 /** Delete all data from key slots in memory.
  * This function is not thread safe, it wipes every key slot regardless of

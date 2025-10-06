@@ -1,3 +1,21 @@
+Check key ID range: MBEDTLS_PSA_KEY_ID_BUILTIN_MIN
+check_key_id_value: MBEDTLS_PSA_KEY_ID_BUILTIN_MIN
+
+Check key ID range: MBEDTLS_PSA_KEY_ID_BUILTIN_MAX
+check_key_id_value: MBEDTLS_PSA_KEY_ID_BUILTIN_MAX
+
+Check key ID range: PSA_KEY_ID_USER_MIN
+check_key_id_value: PSA_KEY_ID_USER_MIN
+
+Check key ID range: PSA_KEY_ID_USER_MAX
+check_key_id_value: PSA_KEY_ID_USER_MAX
+
+Check key ID range: PSA_KEY_ID_VOLATILE_MIN
+check_key_id_value: PSA_KEY_ID_VOLATILE_MIN
+
+Check key ID range: PSA_KEY_ID_VOLATILE_MAX
+check_key_id_value: PSA_KEY_ID_VOLATILE_MAX
+
 Transient slot, check after destroying
 transient_slot_lifecycle:0x135:0:0:PSA_KEY_TYPE_RAW_DATA:"0123456789abcdef0123456789abcdef":INVALIDATE_BY_DESTROYING
 

@@ -654,8 +654,13 @@ error:
     return status;
 }
 
+#if defined(MBEDTLS_TEST_HOOKS)
+void (*mbedtls_test_hook_psa_load_builtin_key_into_slot)(void) = NULL;
+void (*mbedtls_test_hook_psa_load_persistent_key_into_slot)(void) = NULL;
+#endif
+
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-static psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot)
+MBEDTLS_STATIC_TESTABLE psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot)
 {
     psa_status_t status = PSA_SUCCESS;
     uint8_t *key_data = NULL;
@@ -664,6 +669,12 @@ static psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot)
     if (!psa_key_id_is_user(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))) {
         return PSA_ERROR_DOES_NOT_EXIST;
     }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_test_hook_psa_load_persistent_key_into_slot != NULL) {
+        mbedtls_test_hook_psa_load_persistent_key_into_slot();
+    }
+#endif /* MBEDTLS_TEST_HOOKS */
 
     status = psa_load_persistent_key(&slot->attr,
                                      &key_data, &key_data_length);
@@ -684,7 +695,7 @@ exit:
 
 #if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
 
-static psa_status_t psa_load_builtin_key_into_slot(psa_key_slot_t *slot)
+MBEDTLS_STATIC_TESTABLE psa_status_t psa_load_builtin_key_into_slot(psa_key_slot_t *slot)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -697,6 +708,12 @@ static psa_status_t psa_load_builtin_key_into_slot(psa_key_slot_t *slot)
             MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))) {
         return PSA_ERROR_DOES_NOT_EXIST;
     }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_test_hook_psa_load_builtin_key_into_slot != NULL) {
+        mbedtls_test_hook_psa_load_builtin_key_into_slot();
+    }
+#endif /* MBEDTLS_TEST_HOOKS */
 
     /* Check the platform function to see whether this key actually exists */
     status = mbedtls_psa_platform_get_builtin_key(
