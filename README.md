@@ -74,12 +74,10 @@ These configuration options are organized into seven groups:
    or key wrapping.
 1. Data format support: Options to enable support for various data formats,
    such as ASN.1 or PEM.
-1. PSA core: Options to configure the core of the TF-PSA-Crypto PSA cryptography
-   API implementation (see psa-driver-interface.md) which provides key management,
-   random number generation, and driver dispatch.
-1. Built-in drivers: Options to configure the built-in implementation of the PSA
-   driver interface (see psa-driver-interface.md), mainly non-functional
-   configuration related to performance/size trade-offs.
+1. PSA core: Options to configure components other than cryptographic mechanisms,
+   such as key management and random number generation.
+1. Built-in drivers: Options to configure non-functional aspects of built-in
+   cryptographic mechanisms such as performance/size trade-offs.
 
 The file `include/psa/crypto_config.h` can be edited manually, or in a more
 programmatic way using the Python script `scripts/config.py` (use `--help` for
