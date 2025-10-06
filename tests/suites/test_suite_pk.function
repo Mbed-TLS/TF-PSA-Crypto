@@ -1082,7 +1082,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
+void pk_rsa_verify_test_vec(data_t *message_str, int digest,
                             int mod, data_t *input_N, data_t *input_E,
                             data_t *result_str, int expected_result)
 {
@@ -1102,9 +1102,6 @@ void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
 
     TEST_ASSERT(pk_fill_rsa_public_key_fields(&pk, mod, input_N->x, input_N->len,
                                               input_E->x, input_E->len) == 0);
-    if (padding >= 0) {
-        TEST_ASSERT(mbedtls_pk_set_rsa_padding(&pk, padding) == 0);
-    }
 
     int actual_result;
     actual_result = mbedtls_pk_verify(&pk, digest, message_str->x, 0,
