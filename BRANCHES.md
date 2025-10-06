@@ -87,9 +87,3 @@ increase code size for a security fix.)
 
 For contributors, see the [Backwards Compatibility section of
 CONTRIBUTING](CONTRIBUTING.md#backwards-compatibility).
-
-## Current Branches
-
-The following branch is currently maintained:
-
-- [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development)
