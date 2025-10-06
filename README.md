@@ -7,7 +7,7 @@ with the limitation that the implementation of the PAKE 1.2 function set still
 has minor non-compliances, such as returned error codes.
 
 The PSA Cryptography API implementation is organized around the
-[PSA Cryptography driver interface](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md)
+[PSA Cryptography driver interface](docs/proposed/psa-driver-interface.md)
 aiming to ease the support of cryptographic accelerators and processors.
 
 PSA Cryptography API
@@ -52,7 +52,7 @@ interfaces are not fully stable yet and may change without notice. We intend to
 preserve backward compatibility for application code (using the PSA Cryptography API),
 but the code of the drivers may have to change in future minor releases of TF-PSA-Crypto.
 
-Please see the [PSA driver example and guide](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md)
+Please see the [PSA driver example and guide](docs/psa-driver-example-and-guide.md)
 for information on writing a driver.
 
 Configuration
