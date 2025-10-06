@@ -156,7 +156,6 @@ typedef struct mbedtls_pk_context {
      * Other keys still use the pk_ctx to store their own context. */
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);
 
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     /* Public EC or RSA key in raw format, where raw here means the format returned
      * by psa_export_public_key(). */
     uint8_t MBEDTLS_PRIVATE(pub_raw)[MBEDTLS_PK_MAX_PUBKEY_RAW_LEN];
@@ -166,7 +165,6 @@ typedef struct mbedtls_pk_context {
 
     /* Bits of the private/public key. */
     size_t MBEDTLS_PRIVATE(bits);
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY || PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     /* EC family. Only applies to EC keys. */
