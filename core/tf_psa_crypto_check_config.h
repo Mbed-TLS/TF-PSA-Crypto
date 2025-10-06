@@ -261,8 +261,12 @@
 #endif
 
 #if defined(MBEDTLS_PK_C) && \
-    !defined(MBEDTLS_RSA_C) && !defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#error "MBEDTLS_PK_C defined, but not all prerequisites"
+    !defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && !defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#error "MBEDTLS_PK_C defined, but neither PSA_WANT_KEY_TYPE_[ECC|RSA]_PUBLIC_KEY are"
+#endif
+
+#if defined(MBEDTLS_PK_C) && !defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+#error "MBEDTLS_PK_C defined, but not MBEDTLS_PSA_CRYPTO_CLIENT"
 #endif
 
 #if defined(MBEDTLS_PK_PARSE_C) && \
