@@ -19,6 +19,12 @@ We will make regular LTS releases on an 18-month cycle, each of which will have
 a 3 year support lifetime. The release date of the first 1.x LTS is yet to be
 determined.
 
+Mbed TLS currently maintains one LTS branch: [`mbedtls-3.6`](https://github.com/Mbed-TLS/mbedtls/tree/mbedtls-3.6).
+This branch contains the implementation of the PSA Cryptography API prior to the
+Mbed TLS repository split. Any relevant bug fixes made in the TF-PSA-Crypto
+development branch should be backported to this branch to ensure proper
+maintenance.
+
 ## Backwards Compatibility for application code
 
 We maintain API compatibility in released versions of TF-PSA-Crypto. If you
