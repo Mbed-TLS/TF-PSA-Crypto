@@ -1274,8 +1274,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256 */
-void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_alg,
-                    int sign_ret, int verify_ret)
+void pk_sign_verify(int type, int curve_or_keybits, int sign_ret, int verify_ret)
 {
     mbedtls_pk_context pk;
     size_t sig_len;
@@ -1301,17 +1300,6 @@ void pk_sign_verify(int type, int curve_or_keybits, int rsa_padding, int rsa_md_
     memset(sig, 0, sizeof(sig));
 
     TEST_ASSERT(pk_setup(&pk, type, curve_or_keybits) == 0);
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    if (type == MBEDTLS_PK_RSA) {
-        psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(rsa_md_alg);
-        TEST_ASSERT(mbedtls_pk_set_rsa_padding(&pk, rsa_padding) == 0);
-        TEST_ASSERT(mbedtls_pk_set_rsa_hash_alg(&pk, hash_alg) == 0);
-    }
-#else
-    (void) rsa_padding;
-    (void) rsa_md_alg;
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 
     TEST_ASSERT(mbedtls_pk_sign_restartable(&pk, MBEDTLS_MD_SHA256,
                                             hash, hash_len,
