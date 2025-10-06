@@ -119,7 +119,7 @@ namely at time of writing: Ubuntu 22.04, RHEL 9, and SLES 15 SP4.
 * Python 3.8 and later to generate some source files (see below), the test
   code, and to generate sample programs.
 * Perl to run the tests, and to generate some source files in the main branch.
-* CMake 3.20.4 or later.
+* CMake 3.20.2 or later.
 * A build system like Make or Ninja for which CMake can generate build files.
 * Microsoft Visual Studio 2019 or later (if using Visual Studio).
 * Doxygen 1.8.14 or later.
