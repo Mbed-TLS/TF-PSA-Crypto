@@ -10,24 +10,16 @@ The PSA Cryptography API implementation is organized around the
 [PSA Cryptography driver interface](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/proposed/psa-driver-interface.md)
 aiming to ease the support of cryptographic accelerators and processors.
 
-PSA cryptography API
+PSA Cryptography API
 ---------------------
 
-### PSA API
-
-The [Platform Security Architecture (PSA)](https://developer.arm.com/architectures/security-architectures/platform-security-architecture)
-is a holistic set of threat models, security analyses, hardware and firmware
-architecture specifications, and an open source firmware reference implementation.
-PSA provides a recipe, based on industry best practice, that allows security to
-be consistently designed in, at both a hardware and firmware level.
-
-The [PSA cryptography API](https://arm-software.github.io/psa-api/crypto/)
+The [PSA Cryptography API](https://arm-software.github.io/psa-api/crypto/)
 provides access to a set of cryptographic primitives. It has a dual purpose.
 First, it can be used in a PSA-compliant platform to build services, such as
 secure boot, secure storage and secure communication. Second, it can also be
 used independently of other PSA components on any platform.
 
-The design goals of the PSA cryptography API include:
+The design goals of the PSA Cryptography API include:
 
 * The API distinguishes caller memory from internal memory, which allows the
   library to be implemented in an isolated space for additional security.
@@ -47,17 +39,17 @@ prefer to provide your feedback privately, please email us at
 [`mbed-crypto@arm.com`](mailto:mbed-crypto@arm.com). All feedback received by
 email is treated confidentially.
 
-### PSA implementation in TF-PSA-Crypto
+### PSA Cryptography API implementation in TF-PSA-Crypto
 
 TF-PSA-Crypto includes an implementation of the PSA Cryptography API. It covers
 most, but not all algorithms.
 
-### PSA drivers
+### PSA Cryptography driver interface
 
 TF-PSA-Crypto supports drivers for cryptographic accelerators, secure elements
 and random generators. This is work in progress. Please note that the driver
 interfaces are not fully stable yet and may change without notice. We intend to
-preserve backward compatibility for application code (using the PSA Crypto API),
+preserve backward compatibility for application code (using the PSA Cryptography API),
 but the code of the drivers may have to change in future minor releases of TF-PSA-Crypto.
 
 Please see the [PSA driver example and guide](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/docs/psa-driver-example-and-guide.md)
