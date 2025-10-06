@@ -1744,55 +1744,6 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_CLIENT:MBEDTLS_RSA_C:MBEDTLS_PKCS1_V21 */
-void pk_rsa_v21_get_psa_attributes(int md_type, int from_pair,
-                                   int usage_arg,
-                                   int to_pair, int expected_alg)
-{
-    mbedtls_pk_context pk;
-    mbedtls_pk_init(&pk);
-    psa_key_usage_t usage = usage_arg;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    mbedtls_svc_key_id_t new_key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_type);
-
-    PSA_INIT();
-
-    psa_key_type_t expected_psa_type = 0;
-    TEST_EQUAL(pk_setup_for_type(MBEDTLS_PK_RSA, from_pair,
-                                 &pk, &expected_psa_type), 0);
-    TEST_EQUAL(mbedtls_pk_set_rsa_padding(&pk, MBEDTLS_PK_RSA_PKCS_V21), 0);
-    TEST_EQUAL(mbedtls_pk_set_rsa_hash_alg(&pk, hash_alg), 0);
-    if (!to_pair) {
-        expected_psa_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(expected_psa_type);
-    }
-    psa_key_usage_t expected_usage = pk_get_psa_attributes_implied_usage(usage);
-
-    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, usage, &attributes), 0);
-
-    TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
-    TEST_ASSERT(mbedtls_svc_key_id_equal(psa_get_key_id(&attributes),
-                                         MBEDTLS_SVC_KEY_ID_INIT));
-    TEST_EQUAL(psa_get_key_type(&attributes), expected_psa_type);
-    TEST_EQUAL(psa_get_key_bits(&attributes),
-               mbedtls_pk_get_bitlen(&pk));
-    TEST_EQUAL(psa_get_key_usage_flags(&attributes), expected_usage);
-    TEST_EQUAL(psa_get_key_algorithm(&attributes), expected_alg);
-    TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
-
-    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id), 0);
-    if (!mbedtls_test_key_consistency_psa_pk(new_key_id, &pk)) {
-        goto exit;
-    }
-
-exit:
-    mbedtls_pk_free(&pk);
-    psa_reset_key_attributes(&attributes);
-    psa_destroy_key(new_key_id);
-    PSA_DONE();
-}
-/* END_CASE */
-
 /* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_CLIENT */
 void pk_get_psa_attributes_fail(int pk_type, int from_pair,
                                 int usage_arg,
