@@ -3,8 +3,8 @@ README for TF-PSA-Crypto
 
 The TF-PSA-Crypto repository provides an implementation of the
 [PSA Cryptography API version 1.2](https://arm-software.github.io/psa-api/crypto/1.2/),
-with the limitation that the implementation of the PAKE 1.2 function set still
-has minor non-compliances, such as returned error codes.
+with the limitation that the implementation of the [PAKE extension](https://arm-software.github.io/psa-api/crypto/1.2/ext-pake/)
+still has minor non-compliances, such as returned error codes.
 
 The PSA Cryptography API implementation is organized around the
 [PSA Cryptography driver interface](docs/proposed/psa-driver-interface.md)
@@ -115,8 +115,9 @@ release cadence) long-term support releases of major Linux distributions,
 namely at time of writing: Ubuntu 22.04, RHEL 9, and SLES 15 SP4.
 
 * A C99 toolchain (compiler, linker, archiver). We actively test with GCC 5.4,
-  Clang 3.8. More recent versions should work. Slightly older versions may work.
-* Python 3.8 and later to generate some source files (see below), the test
+  Clang 3.8 and Arm Compiler 6.21. More recent versions should work. Slightly
+  older versions may work.
+* Python 3.8 or later to generate some source files (see below), the test
   code, and to generate sample programs.
 * Perl to run the tests, and to generate some source files in the main branch.
 * CMake 3.20.2 or later.
@@ -155,7 +156,8 @@ The following tools are required:
   python3 -m pip install --user -r scripts/basic.requirements.txt
   ```
   Depending on your Python installation, you may need to invoke `python` instead
-  of `python3`. To install the packages system-wide, omit the `--user` option.
+  of `python3`. To install the packages system-wide or in a virtual environment,
+  omit the `--user` option.
 * A C compiler for the host platform, for some test data.
 
 The scripts that generate the configuration-independent files will look for a
