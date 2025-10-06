@@ -464,7 +464,6 @@ static int pk_public_same(const mbedtls_pk_context *pk1,
         {
             TEST_MEMORY_COMPARE(pk1->pub_raw, pk1->pub_raw_len,
                                 pk2->pub_raw, pk2->pub_raw_len);
-            TEST_EQUAL(pk1->rsa_padding, pk2->rsa_padding);
             TEST_EQUAL(pk1->bits, pk2->bits);
             break;
         }
@@ -2152,10 +2151,6 @@ void pk_copy_from_psa_success(data_t *priv_key_data, int key_type_arg,
     } else {
         TEST_EQUAL(mbedtls_pk_get_type(&pk_priv), MBEDTLS_PK_RSA);
         TEST_EQUAL(mbedtls_pk_get_type(&pk_pub), MBEDTLS_PK_RSA);
-#if defined(MBEDTLS_RSA_C)
-        TEST_EQUAL(pk_priv.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
-        TEST_EQUAL(pk_pub.rsa_padding, MBEDTLS_PK_RSA_PKCS_V15);
-#endif /* MBEDTLS_RSA_C */
     }
 
     /* Check that generated private/public PK contexts form a valid private/public key pair. */
