@@ -2,7 +2,7 @@ README for TF-PSA-Crypto
 ========================
 
 The TF-PSA-Crypto repository provides an implementation of the
-[PSA Cryptography API](https://arm-software.github.io/psa-api) version 1.2,
+[PSA Cryptography API version 1.2](https://arm-software.github.io/psa-api/crypto/1.2/),
 with the limitation that the implementation of the PAKE 1.2 function set still
 has minor non-compliances, such as returned error codes.
 
