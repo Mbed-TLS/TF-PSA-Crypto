@@ -109,23 +109,6 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
                             size_t *output_len);
 #endif
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-int mbedtls_pkcs5_pbes2(const mbedtls_asn1_buf *pbe_params, int mode,
-                        const unsigned char *pwd,  size_t pwdlen,
-                        const unsigned char *data, size_t datalen,
-                        unsigned char *output)
-{
-    size_t output_len = 0;
-
-    /* We assume caller of the function is providing a big enough output buffer
-     * so we pass output_size as SIZE_MAX to pass checks, However, no guarantees
-     * for the output size actually being correct.
-     */
-    return mbedtls_pkcs5_pbes2_ext(pbe_params, mode, pwd, pwdlen, data,
-                                   datalen, output, SIZE_MAX, &output_len);
-}
-#endif
-
 int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
                             const unsigned char *pwd,  size_t pwdlen,
                             const unsigned char *data, size_t datalen,
@@ -353,18 +336,6 @@ cleanup:
 
     return ret;
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-int mbedtls_pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
-                              const unsigned char *password,
-                              size_t plen, const unsigned char *salt, size_t slen,
-                              unsigned int iteration_count,
-                              uint32_t key_length, unsigned char *output)
-{
-    return pkcs5_pbkdf2_hmac(ctx, password, plen, salt, slen, iteration_count,
-                             key_length, output);
-}
-#endif
 
 int mbedtls_pkcs5_pbkdf2_hmac_ext(mbedtls_md_type_t md_alg,
                                   const unsigned char *password,

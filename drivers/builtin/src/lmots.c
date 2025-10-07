@@ -360,26 +360,6 @@ exit:
     return PSA_TO_MBEDTLS_ERR(status);
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-int mbedtls_lms_error_from_psa(psa_status_t status)
-{
-    switch (status) {
-        case PSA_SUCCESS:
-            return 0;
-        case PSA_ERROR_HARDWARE_FAILURE:
-            return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
-        case PSA_ERROR_NOT_SUPPORTED:
-            return MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED;
-        case PSA_ERROR_BUFFER_TOO_SMALL:
-            return MBEDTLS_ERR_LMS_BUFFER_TOO_SMALL;
-        case PSA_ERROR_INVALID_ARGUMENT:
-            return MBEDTLS_ERR_LMS_BAD_INPUT_DATA;
-        default:
-            return MBEDTLS_ERR_ERROR_GENERIC_ERROR;
-    }
-}
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
-
 void mbedtls_lmots_public_init(mbedtls_lmots_public_t *ctx)
 {
     memset(ctx, 0, sizeof(*ctx));
