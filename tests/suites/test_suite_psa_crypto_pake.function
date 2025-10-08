@@ -17,8 +17,8 @@ typedef enum {
     ERR_INJECT_EMPTY_IO_BUFFER,
     ERR_INJECT_UNKNOWN_STEP,
     ERR_INJECT_INVALID_FIRST_STEP,
-    ERR_INJECT_WRONG_BUFFER_SIZE,
-    ERR_INJECT_WRONG_BUFFER_SIZE_2,
+    ERR_INJECT_LARGE_BUFFER_SIZE,
+    ERR_INJECT_SMALL_BUFFER_SIZE,
     ERR_INJECT_VALID_OPERATION_AFTER_FAILURE,
     ERR_INJECT_ANTICIPATE_KEY_DERIVATION_1,
     ERR_INJECT_ANTICIPATE_KEY_DERIVATION_2,
@@ -603,8 +603,17 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     ecjpake_error_stage_t err_stage = err_stage_arg;
     psa_status_t expected_error = expected_error_arg;
     psa_status_t status;
-    unsigned char *output_buffer = NULL;
+    unsigned char *output_key_share = NULL;
+    size_t output_key_share_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
+                                                        PSA_PAKE_STEP_KEY_SHARE);
+    unsigned char *output_zk_public = NULL;
+    size_t output_zk_public_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
+                                                        PSA_PAKE_STEP_ZK_PUBLIC);
+    unsigned char *output_zk_proof = NULL;
+    size_t output_zk_proof_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
+                                                       PSA_PAKE_STEP_ZK_PROOF);
     size_t output_len = 0;
+    uint8_t large_input[PSA_PAKE_INPUT_MAX_SIZE + 1] = { 0 };
     const uint8_t password[] = "abcd";
     uint8_t *user = (uint8_t *) user_arg;
     uint8_t *peer = (uint8_t *) peer_arg;
@@ -612,12 +621,11 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     size_t peer_len = strlen(peer_arg);
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
-
     PSA_INIT();
 
-    size_t buf_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive_arg,
-                                           PSA_PAKE_STEP_KEY_SHARE);
-    TEST_CALLOC(output_buffer, buf_size);
+    TEST_CALLOC(output_key_share, output_key_share_size);
+    TEST_CALLOC(output_zk_public, output_zk_public_size);
+    TEST_CALLOC(output_zk_proof, output_zk_proof_size);
 
     psa_set_key_usage_flags(&attributes, key_usage_pw);
     psa_set_key_algorithm(&attributes, alg);
@@ -638,10 +646,11 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
         TEST_EQUAL(psa_pake_set_role(&operation, PSA_PAKE_ROLE_SERVER),
                    expected_error);
         TEST_EQUAL(psa_pake_output(&operation, PSA_PAKE_STEP_KEY_SHARE,
-                                   output_buffer, 0, &output_len),
+                                   output_key_share, output_key_share_size,
+                                   &output_len),
                    expected_error);
         TEST_EQUAL(psa_pake_input(&operation, PSA_PAKE_STEP_KEY_SHARE,
-                                  output_buffer, 0),
+                                  output_key_share, 0),
                    expected_error);
 
         TEST_EQUAL(psa_pake_get_shared_key(&operation, &attributes,
@@ -678,92 +687,95 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     SETUP_CONDITIONAL_CHECK_STEP(psa_pake_set_peer(&operation, peer, peer_len),
                                  ERR_DUPLICATE_SET_PEER);
 
-    const size_t size_key_share = PSA_PAKE_INPUT_SIZE(alg, primitive,
-                                                      PSA_PAKE_STEP_KEY_SHARE);
-    const size_t size_zk_public = PSA_PAKE_INPUT_SIZE(alg, primitive,
-                                                      PSA_PAKE_STEP_ZK_PUBLIC);
-    const size_t size_zk_proof = PSA_PAKE_INPUT_SIZE(alg, primitive,
-                                                     PSA_PAKE_STEP_ZK_PROOF);
-
     if (test_input) {
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_input(&operation,
                                                     PSA_PAKE_STEP_ZK_PROOF,
-                                                    output_buffer, 0),
+                                                    output_zk_proof, 0),
                                      ERR_INJECT_EMPTY_IO_BUFFER);
 
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_input(&operation,
                                                     PSA_PAKE_STEP_ZK_PROOF + 10,
-                                                    output_buffer, size_zk_proof),
+                                                    output_zk_proof,
+                                                    output_zk_proof_size),
                                      ERR_INJECT_UNKNOWN_STEP);
 
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_input(&operation,
                                                     PSA_PAKE_STEP_ZK_PROOF,
-                                                    output_buffer, size_zk_proof),
+                                                    output_zk_proof,
+                                                    output_zk_proof_size),
                                      ERR_INJECT_INVALID_FIRST_STEP)
 
         SETUP_ALWAYS_CHECK_STEP(psa_pake_input(&operation,
                                                PSA_PAKE_STEP_KEY_SHARE,
-                                               output_buffer, size_key_share),
+                                               output_key_share,
+                                               output_key_share_size),
                                 ERR_IN_INPUT);
 
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_input(&operation,
                                                     PSA_PAKE_STEP_ZK_PUBLIC,
-                                                    output_buffer, size_zk_public + 1),
-                                     ERR_INJECT_WRONG_BUFFER_SIZE);
-
-        SETUP_CONDITIONAL_CHECK_STEP(psa_pake_input(&operation,
-                                                    PSA_PAKE_STEP_ZK_PROOF,
-                                                    output_buffer, size_zk_proof + 1),
-                                     ERR_INJECT_WRONG_BUFFER_SIZE_2);
+                                                    large_input,
+                                                    sizeof(large_input)),
+                                     ERR_INJECT_LARGE_BUFFER_SIZE);
 
         SETUP_CONDITIONAL_CHECK_STEP(
             (psa_pake_input(&operation, PSA_PAKE_STEP_ZK_PUBLIC,
-                            output_buffer, size_zk_public + 1),
+                            output_zk_public, output_zk_public_size - 1),
              psa_pake_input(&operation, PSA_PAKE_STEP_ZK_PUBLIC,
-                            output_buffer, size_zk_public)),
+                            output_zk_public, output_zk_public_size)),
             ERR_INJECT_VALID_OPERATION_AFTER_FAILURE);
     } else {
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_output(&operation,
                                                      PSA_PAKE_STEP_ZK_PROOF,
-                                                     output_buffer, 0,
+                                                     output_zk_proof, 0,
                                                      &output_len),
                                      ERR_INJECT_EMPTY_IO_BUFFER);
 
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_output(&operation,
                                                      PSA_PAKE_STEP_ZK_PROOF + 10,
-                                                     output_buffer, buf_size, &output_len),
+                                                     output_zk_proof,
+                                                     output_zk_proof_size,
+                                                     &output_len),
                                      ERR_INJECT_UNKNOWN_STEP);
 
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_output(&operation,
                                                      PSA_PAKE_STEP_ZK_PROOF,
-                                                     output_buffer, buf_size, &output_len),
+                                                     output_zk_proof,
+                                                     output_zk_proof_size,
+                                                     &output_len),
                                      ERR_INJECT_INVALID_FIRST_STEP);
 
         SETUP_ALWAYS_CHECK_STEP(psa_pake_output(&operation,
                                                 PSA_PAKE_STEP_KEY_SHARE,
-                                                output_buffer, buf_size, &output_len),
+                                                output_key_share,
+                                                output_key_share_size,
+                                                &output_len),
                                 ERR_IN_OUTPUT);
 
         TEST_ASSERT(output_len > 0);
 
         SETUP_CONDITIONAL_CHECK_STEP(psa_pake_output(&operation,
                                                      PSA_PAKE_STEP_ZK_PUBLIC,
-                                                     output_buffer, size_zk_public - 1,
+                                                     output_zk_public,
+                                                     output_zk_public_size - 1,
                                                      &output_len),
-                                     ERR_INJECT_WRONG_BUFFER_SIZE);
+                                     ERR_INJECT_SMALL_BUFFER_SIZE);
 
         SETUP_CONDITIONAL_CHECK_STEP(
             (psa_pake_output(&operation, PSA_PAKE_STEP_ZK_PUBLIC,
-                             output_buffer, size_zk_public - 1, &output_len),
+                             output_zk_public, output_zk_public_size - 1,
+                             &output_len),
              psa_pake_output(&operation, PSA_PAKE_STEP_ZK_PUBLIC,
-                             output_buffer, buf_size, &output_len)),
+                             output_zk_public, output_zk_public_size,
+                             &output_len)),
             ERR_INJECT_VALID_OPERATION_AFTER_FAILURE);
     }
 
 exit:
     PSA_ASSERT(psa_destroy_key(key));
     PSA_ASSERT(psa_pake_abort(&operation));
-    mbedtls_free(output_buffer);
+    mbedtls_free(output_key_share);
+    mbedtls_free(output_zk_public);
+    mbedtls_free(output_zk_proof);
     psa_destroy_key(key_id);
     PSA_DONE();
 }
