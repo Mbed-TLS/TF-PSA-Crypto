@@ -26,6 +26,14 @@ PSA storage read: PASSWORD-JPAKE(SHA_256) (non-exportable)
 depends_on:PSA_WANT_ALG_JPAKE:PSA_WANT_ALG_SHA_256:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256
 key_storage_read:0x0001:PSA_KEY_TYPE_PASSWORD:8:PSA_KEY_USAGE_DERIVE:PSA_ALG_JPAKE(PSA_ALG_SHA_256):PSA_ALG_NONE:"4c":"505341004b455900000000000100000003120800004000000901000a00000000010000004c":0
 
+# A key with the legacy encoding of JPAKE from Mbed TLS 3.x.
+# Since TF-PSA-Crypto 1.0.0, we no longer officially support creating such keys.
+# However, we do support reading persistent keys that were created under
+# Mbed TLS 3.x.
+PSA storage read: PASSWORD-JPAKE_BETA
+depends_on:PSA_WANT_ALG_JPAKE:PSA_WANT_ALG_SHA_256:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256
+key_storage_read:0x0001:PSA_KEY_TYPE_PASSWORD:8:PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT:PSA_ALG_JPAKE_BETA:PSA_ALG_NONE:"4c":"505341004b455900000000000100000003120800014000000001000a00000000010000004c":0
+
 # Create a persistent key which is larger than MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
 # so that when psa_get_key_attributes() tries to load it from the storage it will fail.
 PSA storage read: key larger than MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
