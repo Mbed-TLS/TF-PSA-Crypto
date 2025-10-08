@@ -588,7 +588,8 @@ exit:
  */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_JPAKE */
-void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
+void ecjpake_setup(int policy_alg_arg, int setup_alg_arg,
+                   int key_type_pw_arg, int key_usage_pw_arg,
                    int primitive_arg, char *user_arg, char *peer_arg,
                    int test_input,
                    int err_stage_arg,
@@ -596,7 +597,8 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t operation = psa_pake_operation_init();
-    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t policy_alg = policy_alg_arg;
+    psa_algorithm_t setup_alg = setup_alg_arg;
     psa_pake_primitive_t primitive = primitive_arg;
     psa_key_type_t key_type_pw = key_type_pw_arg;
     psa_key_usage_t key_usage_pw = key_usage_pw_arg;
@@ -606,13 +608,13 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     psa_status_t expected_error = expected_error_arg;
     psa_status_t status;
     unsigned char *output_key_share = NULL;
-    size_t output_key_share_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
+    size_t output_key_share_size = PSA_PAKE_OUTPUT_SIZE(setup_alg, primitive,
                                                         PSA_PAKE_STEP_KEY_SHARE);
     unsigned char *output_zk_public = NULL;
-    size_t output_zk_public_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
+    size_t output_zk_public_size = PSA_PAKE_OUTPUT_SIZE(setup_alg, primitive,
                                                         PSA_PAKE_STEP_ZK_PUBLIC);
     unsigned char *output_zk_proof = NULL;
-    size_t output_zk_proof_size = PSA_PAKE_OUTPUT_SIZE(alg, primitive,
+    size_t output_zk_proof_size = PSA_PAKE_OUTPUT_SIZE(setup_alg, primitive,
                                                        PSA_PAKE_STEP_ZK_PROOF);
     size_t output_len = 0;
     uint8_t large_input[PSA_PAKE_INPUT_MAX_SIZE + 1] = { 0 };
@@ -630,12 +632,12 @@ void ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     TEST_CALLOC(output_zk_proof, output_zk_proof_size);
 
     psa_set_key_usage_flags(&attributes, key_usage_pw);
-    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_algorithm(&attributes, policy_alg);
     psa_set_key_type(&attributes, key_type_pw);
     PSA_ASSERT(psa_import_key(&attributes, password, sizeof(password),
                               &key));
 
-    psa_pake_cs_set_algorithm(&cipher_suite, alg);
+    psa_pake_cs_set_algorithm(&cipher_suite, setup_alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
 
     PSA_ASSERT(psa_pake_abort(&operation));
