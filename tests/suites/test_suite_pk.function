@@ -1403,9 +1403,9 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
     mbedtls_pk_context pk;
     unsigned char hash[32];
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    unsigned char legacy_pub_key[MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
-    unsigned char opaque_pub_key[MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
-    size_t sig_len, legacy_pub_key_len, opaque_pub_key_len;
+    unsigned char normal_pub_key[MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
+    unsigned char psa_wrapped_pub_key[MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
+    size_t sig_len, normal_pub_key_len, psa_wrapped_pub_key_len;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     int ret;
@@ -1415,11 +1415,12 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
 
     /*
      * Following checks are perfomed:
-     * - create an RSA/EC opaque context;
-     * - sign with opaque context for both EC and RSA keys;
-     * - [EC only] verify with opaque context;
-     * - verify that public keys of opaque and non-opaque contexts match;
-     * - verify with non-opaque context.
+     * - create a normal PK context and export its public key;
+     * - create a PSA-wrapping PK context starting from the previous one;
+     * - sign with PSA-wrapping context for both EC and RSA keys;
+     * - [EC only] verify with PSA-wrapping context;
+     * - verify that public keys of PSA-wrapping and normal PK contexts match;
+     * - verify with normal PK context.
      */
 
     mbedtls_pk_init(&pk);
@@ -1438,38 +1439,38 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
     }
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 
-    /* Export public key from the non-opaque PK context we just created. */
+    /* Export public key from the non-PSA-wrapping PK context we just created. */
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
-    ret = mbedtls_pk_write_pubkey_der(&pk, legacy_pub_key, sizeof(legacy_pub_key));
+    ret = mbedtls_pk_write_pubkey_der(&pk, normal_pub_key, sizeof(normal_pub_key));
     TEST_ASSERT(ret >= 0);
-    legacy_pub_key_len = (size_t) ret;
+    normal_pub_key_len = (size_t) ret;
     /* mbedtls_pk_write_pubkey_der() writes backwards in the data buffer so we
      * shift data back to the beginning of the buffer. */
-    memmove(legacy_pub_key,
-            legacy_pub_key + sizeof(legacy_pub_key) - legacy_pub_key_len,
-            legacy_pub_key_len);
+    memmove(normal_pub_key,
+            normal_pub_key + sizeof(normal_pub_key) - normal_pub_key_len,
+            normal_pub_key_len);
 #else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN)
     if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
-        TEST_ASSERT(sizeof(legacy_pub_key) >= pk.pub_raw_len);
-        memcpy(legacy_pub_key, pk.pub_raw, pk.pub_raw_len);
-        legacy_pub_key_len = pk.pub_raw_len;
+        TEST_ASSERT(sizeof(normal_pub_key) >= pk.pub_raw_len);
+        memcpy(normal_pub_key, pk.pub_raw, pk.pub_raw_len);
+        normal_pub_key_len = pk.pub_raw_len;
     }
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
-        unsigned char *end = legacy_pub_key + sizeof(legacy_pub_key);
-        ret = mbedtls_rsa_write_pubkey(mbedtls_pk_rsa(pk), legacy_pub_key, &end);
-        legacy_pub_key_len = (size_t) ret;
-        TEST_ASSERT(legacy_pub_key_len > 0);
+        unsigned char *end = normal_pub_key + sizeof(normal_pub_key);
+        ret = mbedtls_rsa_write_pubkey(mbedtls_pk_rsa(pk), normal_pub_key, &end);
+        normal_pub_key_len = (size_t) ret;
+        TEST_ASSERT(normal_pub_key_len > 0);
         /* mbedtls_rsa_write_pubkey() writes data backward in the buffer so
          * we shift that to the origin of the buffer instead. */
-        memmove(legacy_pub_key, end, legacy_pub_key_len);
+        memmove(normal_pub_key, end, normal_pub_key_len);
     }
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 
-    /* Turn the PK context into an opaque one. */
+    /* Turn the PK context into an PSA-wrapping one. */
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attributes), 0);
     psa_set_key_algorithm(&attributes, psa_alg);
     TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &key_id), 0);
@@ -1482,7 +1483,7 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
     TEST_EQUAL(psa_get_key_bits(&attributes), (size_t) bits);
     TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
 
-    /* Sign with the opaque context. */
+    /* Sign with the PSA-wrapping context. */
     memset(hash, 0x2a, sizeof(hash));
     memset(sig, 0, sizeof(sig));
     ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, sizeof(hash), sig, sizeof(sig), &sig_len);
@@ -1496,25 +1497,26 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
                                       hash, sizeof(hash), sig, sig_len) == 0);
     }
 
-    /* Export public key from the opaque PK context. */
+    /* Export public key from the PSA-wrapping PK context. */
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
-    ret = mbedtls_pk_write_pubkey_der(&pk, opaque_pub_key, sizeof(opaque_pub_key));
+    ret = mbedtls_pk_write_pubkey_der(&pk, psa_wrapped_pub_key, sizeof(psa_wrapped_pub_key));
     TEST_ASSERT(ret >= 0);
-    opaque_pub_key_len = (size_t) ret;
+    psa_wrapped_pub_key_len = (size_t) ret;
     /* mbedtls_pk_write_pubkey_der() writes backwards in the data buffer. */
-    memmove(opaque_pub_key,
-            opaque_pub_key + sizeof(opaque_pub_key) - opaque_pub_key_len,
-            opaque_pub_key_len);
+    memmove(psa_wrapped_pub_key,
+            psa_wrapped_pub_key + sizeof(psa_wrapped_pub_key) - psa_wrapped_pub_key_len,
+            psa_wrapped_pub_key_len);
 #else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-    TEST_EQUAL(psa_export_public_key(key_id, opaque_pub_key, sizeof(opaque_pub_key),
-                                     &opaque_pub_key_len), PSA_SUCCESS);
+    TEST_EQUAL(psa_export_public_key(key_id, psa_wrapped_pub_key, sizeof(psa_wrapped_pub_key),
+                                     &psa_wrapped_pub_key_len), PSA_SUCCESS);
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 
-    /* Check that the public keys of opaque and non-opaque PK contexts match. */
-    TEST_EQUAL(opaque_pub_key_len, legacy_pub_key_len);
-    TEST_MEMORY_COMPARE(opaque_pub_key, opaque_pub_key_len, legacy_pub_key, legacy_pub_key_len);
+    /* Check that the public keys of PSA-wrapping and normal PK contexts match. */
+    TEST_EQUAL(psa_wrapped_pub_key_len, normal_pub_key_len);
+    TEST_MEMORY_COMPARE(psa_wrapped_pub_key, psa_wrapped_pub_key_len,
+                        normal_pub_key, normal_pub_key_len);
 
-    /* Destroy the opaque PK context and the wrapped PSA key. */
+    /* Destroy the PSA-wrapping PK context and the wrapped PSA key. */
     mbedtls_pk_free(&pk);
     TEST_ASSERT(PSA_SUCCESS == psa_destroy_key(key_id));
 
@@ -1523,23 +1525,23 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
         goto exit;
     }
 
-    /* Create a new non-opaque PK context to verify the signature. */
+    /* Create a new normal PK context to verify the signature. */
     mbedtls_pk_init(&pk);
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
-    TEST_EQUAL(mbedtls_pk_parse_public_key(&pk, legacy_pub_key, legacy_pub_key_len), 0);
+    TEST_EQUAL(mbedtls_pk_parse_public_key(&pk, normal_pub_key, normal_pub_key_len), 0);
 #else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN)
     if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
         TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)), 0);
         TEST_EQUAL(mbedtls_pk_ecc_set_group(&pk, ecp_grp_id), 0);
-        TEST_EQUAL(mbedtls_pk_ecc_set_pubkey(&pk, legacy_pub_key, legacy_pub_key_len), 0);
+        TEST_EQUAL(mbedtls_pk_ecc_set_pubkey(&pk, normal_pub_key, normal_pub_key_len), 0);
     }
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #if defined(MBEDTLS_RSA_C)
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
         TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
-        TEST_EQUAL(mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(pk), legacy_pub_key,
-                                            legacy_pub_key_len), 0);
+        TEST_EQUAL(mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(pk), normal_pub_key,
+                                            normal_pub_key_len), 0);
     }
 #endif /* MBEDTLS_RSA_C */
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
