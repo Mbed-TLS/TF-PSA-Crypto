@@ -22,7 +22,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
 
     psa_status_t status = psa_crypto_init();
     if (status != PSA_SUCCESS) {
-        abort();
+        goto exit;
     }
 
     ret = mbedtls_pk_parse_key(&pk, Data, Size, NULL, 0);
@@ -35,6 +35,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
         abort();
     }
 
+exit:
     mbedtls_pk_free(&pk);
     mbedtls_psa_crypto_free();
 #else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
