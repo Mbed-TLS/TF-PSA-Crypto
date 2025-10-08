@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include "mbedtls/pk.h"
 #include "fuzz_common.h"
@@ -23,28 +22,22 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     mbedtls_pk_init(&pk);
     psa_status_t status = psa_crypto_init();
     if (status != PSA_SUCCESS) {
-        fprintf(stderr, "Error: failed to initialize PSA\n");
         abort();
     }
 
     ret = mbedtls_pk_parse_public_key(&pk, Data, Size);
     if (ret != 0) {
-        fprintf(stderr, "Error: key parsing failed\n");
         abort();
     }
 
     ret = mbedtls_pk_write_pubkey_der(&pk, out_buf, Size);
     if (ret <= 0) {
-        fprintf(stderr, "Error: key writing failed\n");
         abort();
     }
 
     if (memcmp(Data, out_buf, Size) != 0) {
-        fprintf(stderr, "Error: exported key doesn´t match\n");
         abort();
     }
-
-    fprintf(stderr, "OK\n");
 
     mbedtls_psa_crypto_free();
     mbedtls_pk_free(&pk);
