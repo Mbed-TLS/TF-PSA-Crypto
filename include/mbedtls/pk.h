@@ -16,12 +16,8 @@
 
 #include "tf-psa-crypto/build_info.h"
 #include "mbedtls/compat-3-crypto.h"
-
 #include "mbedtls/md.h"
-
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include "psa/crypto.h"
-#endif
 
 /** Type mismatch, eg attempt to do ECDSA with an RSA key */
 #define MBEDTLS_ERR_PK_TYPE_MISMATCH       -0x3F00
@@ -339,8 +335,6 @@ size_t mbedtls_pk_get_bitlen(const mbedtls_pk_context *ctx);
  */
 int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
                           psa_key_usage_t usage);
-
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 /**
  * \brief           Determine valid PSA attributes that can be used to
  *                  import a key into PSA.
@@ -535,7 +529,6 @@ int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk
  *                  parameters are not correct.
  */
 int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk);
-#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
 
 /**
  * \brief           Verify signature.
