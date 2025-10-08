@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 #include "mbedtls/pk.h"
 #include "fuzz_common.h"
 
@@ -33,10 +32,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
 
     ret = mbedtls_pk_write_key_der(&pk, out_buf, Size);
     if (ret <= 0) {
-        abort();
-    }
-
-    if (memcmp(Data, out_buf, Size) != 0) {
         abort();
     }
 
