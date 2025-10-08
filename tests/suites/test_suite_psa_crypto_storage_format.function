@@ -131,6 +131,11 @@ static int can_exercise(const psa_key_attributes_t *attributes)
     }
 #endif /* MBEDTLS_TEST_LIBTESTDRIVER1 */
 
+    if (PSA_ALG_IS_JPAKE(alg)) {
+        /* psa_exercise_key() does not support JPAKE at this time. */
+        return 0;
+    }
+
     (void) key_type;
     (void) alg;
     (void) hash_alg;
@@ -253,20 +258,22 @@ static int test_read_key(const psa_key_attributes_t *expected_attributes,
                             exported_material, length);
     }
 
-    if ((flags & TEST_FLAG_EXERCISE) && can_exercise(&actual_attributes)) {
-        TEST_ASSERT(mbedtls_test_psa_exercise_key(
-                        key_id,
-                        psa_get_key_usage_flags(expected_attributes),
-                        psa_get_key_algorithm(expected_attributes), 0));
-    }
+    if ((flags & TEST_FLAG_EXERCISE) != 0) {
+        if (can_exercise(&actual_attributes)) {
+            TEST_ASSERT(mbedtls_test_psa_exercise_key(
+                            key_id,
+                            psa_get_key_usage_flags(expected_attributes),
+                            psa_get_key_algorithm(expected_attributes), 0));
+        }
 
 #if defined(PSA_WANT_ALG_JPAKE)
-    if (PSA_ALG_IS_JPAKE(psa_get_key_algorithm(expected_attributes))) {
-        TEST_ASSERT(exercise_pake_key(
-                        key_id,
-                        psa_get_key_algorithm(expected_attributes)));
-    }
+        if (PSA_ALG_IS_JPAKE(psa_get_key_algorithm(expected_attributes))) {
+            TEST_ASSERT(exercise_pake_key(
+                            key_id,
+                            psa_get_key_algorithm(expected_attributes)));
+        }
 #endif
+    }
 
     if (flags & TEST_FLAG_READ_ONLY) {
         /* Read-only keys cannot be removed through the API.
