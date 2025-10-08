@@ -124,3 +124,12 @@ if (status != PSA_SUCCESS) // error handling ommited for brevity
 ```
 
 See [the specification](https://arm-software.github.io/psa-api/crypto/1.3/api/ops/pake.html#c.psa_pake_get_shared_key) for details. Note that the J-PAKE shared secret is not uniformly pseudorandom, so it can only be used for key derivation and HMAC.
+
+### Remaining limitations to JPAKE in TF-PSA-Crypto 1.0.0
+
+The following limitations apply to both Mbed TLS 3.x and TF-PSA-Crypto 1.0.0:
+
+- The [only supported primitive](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/503) is ECC on the curve secp256r1, i.e. `PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256)`.
+- The [only supported hash algorithm](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/504) is SHA-256, i.e. `PSA_ALG_SHA_256`.
+- When using the built-in implementation, [the user ID and the peer ID](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/502) must be `"client"` (6-byte string) or `"server"` (6-byte string).
+  Third-party drivers may or may not have this limitation.
