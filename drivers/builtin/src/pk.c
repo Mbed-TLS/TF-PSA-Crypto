@@ -1131,8 +1131,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
         return mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
     }
 
-    /* Ensure the PK context is of the right type otherwise mbedtls_pk_rsa()
-     * below would return a NULL pointer. */
+    /* Ensure the PK context is of the right type. */
     if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) {
         return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
     }
