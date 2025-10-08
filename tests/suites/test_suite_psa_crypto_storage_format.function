@@ -138,6 +138,68 @@ static int can_exercise(const psa_key_attributes_t *attributes)
     return 1;
 }
 
+#if defined(PSA_WANT_ALG_JPAKE)
+/* We currently only support one specific primitive for JPAKE.
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/503
+ */
+#  if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && \
+    defined(PSA_WANT_ECC_SECP_R1_256)
+#    define CAN_EXERCISE_JPAKE
+#  endif
+
+static int exercise_pake_key(mbedtls_svc_key_id_t key_id,
+                             psa_algorithm_t policy_alg)
+{
+    psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
+    const uint8_t client_name[6] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "client";
+    const uint8_t server_name[6] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "server";
+    uint8_t output[PSA_PAKE_OUTPUT_MAX_SIZE];
+    size_t output_size = sizeof(output);
+    size_t output_len;
+    int ok = 0;
+
+    /* At the time of writing, psa_exercise_key() does not yet support JPAKE.
+     * To get things going quickly, perform a basic check here.
+     *
+     * We use one particular cipher suite (picking the
+     * hash algorithm from the key policy), so test cases must depend on
+     * CAN_EXERCISE_JPAKE or else setup will fail.
+     */
+
+    psa_algorithm_t setup_alg = policy_alg;
+    if (policy_alg == PSA_ALG_JPAKE_BASE) {
+        setup_alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
+    }
+    psa_pake_primitive_t primitive =
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                           PSA_ECC_FAMILY_SECP_R1, 256);
+    psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
+    psa_pake_cs_set_algorithm(&cipher_suite, setup_alg);
+    psa_pake_cs_set_primitive(&cipher_suite, primitive);
+
+    PSA_ASSERT(psa_pake_setup(&client, key_id, &cipher_suite));
+    PSA_ASSERT(psa_pake_set_user(&client, client_name, sizeof(client_name)));
+    PSA_ASSERT(psa_pake_set_peer(&client, server_name, sizeof(server_name)));
+
+    /* Output the first public key and the first ZKP. Outputting a public key
+     * guarantees that the primitive set in the cipher suite has been
+     * exercised. Outputting a ZKP guarantees that the hash set in the cipher
+     * suite has been exercised. */
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
+                               output, output_size, &output_len));
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_ZK_PUBLIC,
+                               output, output_size, &output_len));
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_ZK_PROOF,
+                               output, output_size, &output_len));
+
+    ok = 1;
+
+exit:
+    psa_pake_abort(&client);
+    return ok;
+}
+#endif /* PSA_WANT_ALG_JPAKE */
+
 /** Write a key with the given representation to storage, then check
  * that it has the given attributes and (if exportable) key material.
  *
@@ -198,6 +260,13 @@ static int test_read_key(const psa_key_attributes_t *expected_attributes,
                         psa_get_key_algorithm(expected_attributes), 0));
     }
 
+#if defined(PSA_WANT_ALG_JPAKE)
+    if (PSA_ALG_IS_JPAKE(psa_get_key_algorithm(expected_attributes))) {
+        TEST_ASSERT(exercise_pake_key(
+                        key_id,
+                        psa_get_key_algorithm(expected_attributes)));
+    }
+#endif
 
     if (flags & TEST_FLAG_READ_ONLY) {
         /* Read-only keys cannot be removed through the API.
