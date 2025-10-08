@@ -5,12 +5,13 @@
 #include "mbedtls/pk.h"
 #include "fuzz_common.h"
 
+#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
+
 #define MAX_LEN 0x1000
 static uint8_t out_buf[MAX_LEN];
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
 {
-#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
     int ret;
     mbedtls_pk_context pk;
 
@@ -37,10 +38,17 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
 exit:
     mbedtls_psa_crypto_free();
     mbedtls_pk_free(&pk);
-#else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-    (void) Data;
-    (void) Size;
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 
     return 0;
 }
+
+#else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
+
+int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
+{
+    (void) Data;
+    (void) Size;
+    return 0;
+}
+
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
