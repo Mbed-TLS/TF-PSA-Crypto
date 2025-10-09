@@ -1546,8 +1546,20 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
 #endif /* MBEDTLS_RSA_C */
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 
-    TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                  hash, sizeof(hash), sig, sig_len) == 0);
+    /* When psa_alg is RSA PSS the PSA wrapping RSA context will sign using PSS
+     * (PK gets the algorithm from the PSA key). The problem is that mbedtls_pk_verify()
+     * would use PKCS v1.5 padding mode for normal PK context, which would case
+     * verification to fail. Therefore we use mbedtls_pk_verify_ext() in this
+     * case.
+     */
+    if (PSA_ALG_IS_RSA_PSS_ANY_SALT(psa_alg)) {
+        TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, MBEDTLS_MD_SHA256,
+                                          hash, sizeof(hash), sig, sig_len) == 0);
+    } else {
+        TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
+                                      hash, sizeof(hash), sig, sig_len) == 0);
+    }
+
 
 exit:
     psa_reset_key_attributes(&attributes);
