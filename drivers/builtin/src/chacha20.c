@@ -116,11 +116,12 @@ static inline uint32x4_t chacha20_neon_vrotlq_7_u32(uint32x4_t v)
 static inline uint32x4_t chacha20_neon_inc_counter(uint32x4_t v)
 {
     if (MBEDTLS_IS_BIG_ENDIAN) {
-        v[3]++;
+        uint32x4_t counter_increment = { 0, 0, 0, 1 };
+        return vaddq_u32(v, counter_increment);
     } else {
-        v[0]++;
+        uint32x4_t counter_increment = { 1, 0, 0, 0 };
+        return vaddq_u32(v, counter_increment);
     }
-    return v;
 }
 
 typedef struct {
