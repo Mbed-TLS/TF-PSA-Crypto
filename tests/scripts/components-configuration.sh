@@ -162,13 +162,11 @@ component_test_chacha20_neon_variations () {
     scripts/config.py set PSA_WANT_ALG_SHA_256
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DCMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
 
     for x in 0 1 2 3 4 5 6; do
         msg "multiblock = $x"
-
-        make clean
-        make -C tests test_suite_chacha20 CFLAGS="-DMBEDTLS_CHACHA20_NEON_MULTIBLOCK=$x"
+        cmake -DCMAKE_BUILD_TYPE:String=Release -DCMAKE_C_FLAGS="-DMBEDTLS_CHACHA20_NEON_MULTIBLOCK=$x" "$TF_PSA_CRYPTO_ROOT_DIR"
+        make -C tests test_suite_chacha20
         ./tests/test_suite_chacha20
     done
 }
