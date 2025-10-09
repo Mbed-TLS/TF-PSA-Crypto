@@ -147,8 +147,9 @@ component_tf_psa_crypto_test_memory_buffer_allocator () {
     make test
 }
 
-support_test_chacha20_variations () {
+support_test_chacha20_neon_variations () {
     case $(uname -m) in
+        arm64) true;;
         aarch64) true;;
         *) false;;
     esac
