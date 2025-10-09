@@ -125,6 +125,10 @@ if (status != PSA_SUCCESS) // error handling ommited for brevity
 
 See [the specification](https://arm-software.github.io/psa-api/crypto/1.3/api/ops/pake.html#c.psa_pake_get_shared_key) for details. Note that the J-PAKE shared secret is not uniformly pseudorandom, so it can only be used for key derivation and HMAC.
 
+### Persistent keys with a PAKE policy
+
+TF-PSA-Crypto can read persistent keys created with an algorithm policy that specifies the Mbed TLS 3.x encoding of `PSA_ALG_JPAKE`. Such a policy now allows cipher suites with `PSA_ALG_JPAKE(hash_alg)` for any hash algorithm. It appears as `PSA_ALG_JPAKE_BETA` when querying the policy with `psa_get_key_algorithm()`.
+
 ### Remaining limitations to JPAKE in TF-PSA-Crypto 1.0.0
 
 The following limitations apply to both Mbed TLS 3.x and TF-PSA-Crypto 1.0.0:
