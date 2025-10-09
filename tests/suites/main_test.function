@@ -25,6 +25,15 @@
 
 #include "mbedtls/build_info.h"
 
+/* Test code may use deprecated identifiers only if the preprocessor symbol
+ * MBEDTLS_TEST_DEPRECATED is defined. When building tests, set
+ * MBEDTLS_TEST_DEPRECATED explicitly if MBEDTLS_DEPRECATED_WARNING is
+ * enabled but the corresponding warnings are not treated as errors.
+ */
+#if !defined(MBEDTLS_DEPRECATED_REMOVED) && !defined(MBEDTLS_DEPRECATED_WARNING)
+#define MBEDTLS_TEST_DEPRECATED
+#endif
+
 /*----------------------------------------------------------------------------*/
 /* Common helper code */
 
