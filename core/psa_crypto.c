@@ -921,6 +921,18 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
                policy_alg;
     }
 
+    if (policy_alg == PSA_ALG_JPAKE_BETA &&
+        PSA_ALG_IS_JPAKE(requested_alg)) {
+        /* Support the legacy encoding of JPAKE (from Mbed TLS 3.x) in
+         * key policies. This legacy encoding doesn't specify a hash,
+         * so allow any hash algorithm for the operation. We do this
+         * for the sake of persistent keys that were created with
+         * Mbed TLS 3.x. To keep the implementation and the tests simpler,
+         * we also allow this when creating new keys, but we don't make
+         * any promises about that. */
+        return 1;
+    }
+
     /* If it isn't explicitly permitted, it's forbidden. */
     return 0;
 }

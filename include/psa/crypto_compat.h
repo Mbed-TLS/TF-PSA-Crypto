@@ -42,6 +42,23 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  */
 #define PSA_KEY_TYPE_DES ((psa_key_type_t) 0x2301)
 
+/** The beta encoding of JPAKE algorithms, with no hash.
+ *
+ * This came from the beta version of the PSA Crypto PAKE 1.2 extension,
+ * which is what Mbed TLS 3.x implemented.
+ * Since TF-PSA-Crypto 1.0.0, we no longer support the beta version of
+ * specification, so this algorithm encoding is no longer supported in
+ * JPAKE cipher suites. Use #PSA_ALG_JPAKE instead.
+ *
+ * \note It is unspecified whether a key with #PSA_ALG_JPAKE_BETA
+ *       in its policy may be used to perform a JPAKE operation.
+ */
+/* TF-PSA-Crypto 1.x still supports using persistent keys whose policy uses
+ * this legacy encoding. As of TF-PSA-Crypto 1.0.0, we also allow this
+ * algorithm encoding in the policy of newly created keys, because it makes
+ * our implementation simpler. This may change without notice. */
+#define PSA_ALG_JPAKE_BETA PSA_ALG_JPAKE_BASE
+
 #ifdef __cplusplus
 }
 #endif
