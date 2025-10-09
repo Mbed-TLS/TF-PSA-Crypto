@@ -100,13 +100,11 @@ exit:
  * it, and instead start with a fresh context.
  */
 static int cipher_reset_key(mbedtls_cipher_context_t *ctx, int cipher_id,
-                            int use_psa, size_t tag_len, const data_t *key, int direction)
+                            const data_t *key, int direction)
 {
     mbedtls_cipher_free(ctx);
     mbedtls_cipher_init(ctx);
 
-    (void) use_psa;
-    (void) tag_len;
     {
         TEST_ASSERT(0 == mbedtls_cipher_setup(ctx,
                                               mbedtls_cipher_info_from_type(cipher_id)));
@@ -909,7 +907,7 @@ void auth_crypt_tv(int cipher_id, data_t *key, data_t *iv,
     /*
      * Prepare context for decryption
      */
-    if (!cipher_reset_key(&ctx, cipher_id, use_psa, tag->len, key,
+    if (!cipher_reset_key(&ctx, cipher_id, key,
                           MBEDTLS_DECRYPT)) {
         goto exit;
     }
@@ -975,7 +973,7 @@ void auth_crypt_tv(int cipher_id, data_t *key, data_t *iv,
      */
     if (strcmp(result, "FAIL") != 0) {
         /* prepare context for encryption */
-        if (!cipher_reset_key(&ctx, cipher_id, use_psa, tag->len, key,
+        if (!cipher_reset_key(&ctx, cipher_id, key,
                               MBEDTLS_ENCRYPT)) {
             goto exit;
         }
@@ -1081,7 +1079,7 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_WITH_PADDING */
 void test_vec_crypt(int cipher_id, int operation, data_t *key,
                     data_t *iv, data_t *input, data_t *result,
-                    int finish_result, int use_psa)
+                    int finish_result)
 {
     mbedtls_cipher_context_t ctx;
     unsigned char output[32];
@@ -1092,7 +1090,6 @@ void test_vec_crypt(int cipher_id, int operation, data_t *key,
     memset(output, 0x00, sizeof(output));
 
     /* Prepare context */
-    (void) use_psa;
     TEST_ASSERT(0 == mbedtls_cipher_setup(&ctx,
                                           mbedtls_cipher_info_from_type(cipher_id)));
 
