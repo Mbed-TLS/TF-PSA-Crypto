@@ -14,13 +14,13 @@ Public key write check RSA 4096 (DER)
 depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
 pk_write_pubkey_check:"../framework/data_files/rsa4096_pub.der":TEST_DER
 
-Public key write check EC 192 bits
-depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_192
-pk_write_pubkey_check:"../framework/data_files/ec_pub.pem":TEST_PEM
+Public key write check EC 256 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_check:"../framework/data_files/ec_256_pub.pem":TEST_PEM
 
-Public key write check EC 192 bits (DER)
-depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_192
-pk_write_pubkey_check:"../framework/data_files/ec_pub.der":TEST_DER
+Public key write check EC 256 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_check:"../framework/data_files/ec_256_pub.der":TEST_DER
 
 Public key write check EC 521 bits
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_521
@@ -70,13 +70,13 @@ Private key write check RSA 4096 (DER)
 depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
 pk_write_key_check:"../framework/data_files/rsa4096_prv.der":TEST_DER
 
-Private key write check EC 192 bits
-depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_192
-pk_write_key_check:"../framework/data_files/ec_prv.sec1.pem":TEST_PEM
+Private key write check EC 256 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_256
+pk_write_key_check:"../framework/data_files/ec_256_prv.sec1.pem":TEST_PEM
 
-Private key write check EC 192 bits (DER)
-depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_192
-pk_write_key_check:"../framework/data_files/ec_prv.sec1.der":TEST_DER
+Private key write check EC 256 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_key_check:"../framework/data_files/ec_256_prv.sec1.der":TEST_DER
 
 Private key write check EC 256 bits (top bit set)
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_256
@@ -134,9 +134,9 @@ Derive public key RSA 4096
 depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
 pk_write_public_from_private:"../framework/data_files/rsa4096_prv.der":"../framework/data_files/rsa4096_pub.der"
 
-Derive public key EC 192 bits
-depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_192
-pk_write_public_from_private:"../framework/data_files/ec_prv.sec1.der":"../framework/data_files/ec_pub.der"
+Derive public key EC 256 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_public_from_private:"../framework/data_files/ec_256_prv.sec1.der":"../framework/data_files/ec_256_pub.der"
 
 Derive public key EC 521 bits
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
