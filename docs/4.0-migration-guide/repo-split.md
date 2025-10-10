@@ -14,12 +14,12 @@ This section provides a quick reference for translating common `make` commands i
 Run `cmake -S . -B build` once before building to configure the build and generate native build files (e.g., Makefiles) in the `build` directory.
 This sets up an out-of-tree build, which is recommended.
 
-| Make command   | CMake equivalent                               | Description                                                        |
-|----------------|------------------------------------------------|--------------------------------------------------------------------|
-| `make`         | `cmake --build build`                          | Build the libraries, programs, and tests in the `build` directory. |
+| Make command   | CMake equivalent                               | Description                                                      |
+|----------------|------------------------------------------------|------------------------------------------------------------------|
+| `make`         | `cmake --build build`                          | Build the library, programs, and tests in the `build` directory. |
 | `make test`    | `ctest --test-dir build`                       | Run the tests produced by the previous build. |
 | `make clean`   | `cmake --build build --target clean`           | Remove build artifacts produced by the previous build. |
-| `make install` | `cmake --install build --prefix build/install` | Install the built libraries, headers, and tests to `build/install`. |
+| `make install` | `cmake --install build --prefix build/install` | Install the built library, headers, and tests to `build/install`. |
 
 #### Building specific targets
 
@@ -27,9 +27,9 @@ Unless otherwise specified, the CMake command in the table below should be prece
 
 | Make command    | CMake equivalent                                                    | Description               |
 |-----------------|---------------------------------------------------------------------|---------------------------|
-| `make lib`      | `cmake --build build --target lib`                                  | Build only the libraries. |
+| `make lib`      | `cmake --build build --target tfpsacrypto`                          | Build only the library. |
 | `make tests`    | `cmake -S . -B build -DENABLE_PROGRAMS=Off && cmake --build build`  | Build test suites. |
-| `make programs` | `cmake --build build --target programs`                             | Build example programs. |
+| `make programs` | `cmake --build build --target tfpsacrypto-programs`                 | Build example programs. |
 | `make apidoc`   | `cmake --build build --target tfpsacrypto-apidoc`                   | Build documentation. |
 
 Target names may differ slightly; use `cmake --build build --target help` to list all available CMake targets.
@@ -57,9 +57,9 @@ Most CMake examples show only the configuration step, others (like installation)
 ## Repository split
 In Mbed TLS 4.0, the Mbed TLS project was split into two repositories:
 - [Mbed TLS](https://github.com/Mbed-TLS/mbedtls): provides TLS and X.509 functionality.
-- [TF-PSA-Crypto](https://github.com/Mbed-TLS/TF-PSA-Crypto): provides the standalone cryptography library, implementing the PSA Cryptography API.
+- [TF-PSA-Crypto](https://github.com/Mbed-TLS/TF-PSA-Crypto): provides the standalone cryptography library, notably including the PSA Cryptography API.
 
-If you use only the cryptotography part, you should consider migrating to TF-PSA-Crypto 1.0.
+If you use only the cryptography part, you should consider migrating to TF-PSA-Crypto.
 
 ### File and directory relocations
 
@@ -157,13 +157,14 @@ Finally, note the new `include/tf-psa-crypto` directory, which contains the TF-P
 
 ### Developer or package maintainers
 If you build or distribute TF-PSA-Crypto:
-- The build system is CMake, Makefiles and Visual Studio projects are not supported.
+- The build system is CMake. Makefiles and Visual Studio projects are not supported.
 - Review [File and directory relocations](#file-and-directory-relocations) for updated paths.
 - See [Impact on usages of the library](#impact-on-some-usages-of-the-library) for the possible impacts on:
   - Linking against the cryptography library or CMake targets.
   - Using the TF-PSA-Crypto pkg-config file.
   - Using TF-PSA-Crypto as an installed library.
 - The configuration file is `include/psa/crypto_config.h` (see [Configuration file split](#configuration-file-split)).
+- If you want to distribute both the cryptography and the X.509 and/or TLS components, you need to package Mbed TLS together with its bundled TF-PSA-Crypto.
 
 ### Platform Integrators
 If you integrate TF-PSA-Crypto with a platform or hardware drivers:
