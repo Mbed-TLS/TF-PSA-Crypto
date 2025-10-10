@@ -94,7 +94,7 @@ You may also need to update include paths to the public header files, see [File 
 
 #### Using TF-PSA-Crypto as a CMake subproject
 
-The base name of the static and shared cryptography libraries is now `tfpsacrypto`, formely `mbedcrypto`.
+The base name of the static and shared cryptography libraries is now `tfpsacrypto`, formerly `mbedcrypto`.
 As before, this base name is also the base name of CMake targets to build the libraries.
 If your CMake scripts reference a cryptography library target, you need to update its name accordingly.
 
@@ -132,11 +132,11 @@ You can also refer to the following example programs demonstrating how to consum
 
 #### Using the TF-PSA-Crypto pkg-config file
 
-The TF-PSA-Crypto CMake build system provides the pkg-config file `tfpsacrypto.pc`, formely `mbedcrypto.pc`. You will need to update the file name in your scripts.
+The TF-PSA-Crypto CMake build system provides the pkg-config file `tfpsacrypto.pc`, formerly `mbedcrypto.pc`. You will need to update the file name in your scripts.
 
 #### Using TF-PSA-Crypto as an installed library
 
-The TF-PSA-Crypto CMake build system installs the cryptography libraries `libtfpsacrypto.<ext>`, formely `libmbedcrypto.<ext>`.
+The TF-PSA-Crypto CMake build system installs the cryptography libraries `libtfpsacrypto.<ext>`, formerly `libmbedcrypto.<ext>`.
 Thus, you will need to link against `libtfpsacrypto.<ext>` instead of `libmbedcrypto.<ext>`.
 
 Regarding the headers, the main change is the relocation of some headers to subdirectories called `private`.
