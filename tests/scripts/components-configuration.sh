@@ -148,9 +148,18 @@ component_tf_psa_crypto_test_memory_buffer_allocator () {
 }
 
 support_test_chacha20_neon_variations () {
+    if "$CC" --version 2>/dev/null | grep -q "clang"; then
+        # if using clang, ensure version 7 or later to ensure we get support for "+aes",
+        # which seems to be needed due to PSA_WANT_KEY_TYPE_AES
+        clang_major_ver=$("$CC" --version | head -n1 | sed -E 's/.*clang version ([0-9]+)\.[0-9]+.*/\1/')
+        if [ "$clang_major_ver" -lt 7 ]; then
+            false
+            return
+        fi
+    fi
+
     case $(uname -m) in
-        arm64) true;;
-        aarch64) true;;
+        arm64|aarch64) true;;
         *) false;;
     esac
 }
