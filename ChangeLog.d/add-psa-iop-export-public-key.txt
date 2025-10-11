@@ -1,3 +1,0 @@
-Features
-   * Add an interruptible version of export public-key to the PSA interface.
-     See psa_export_public_key_iop_setup() and related functions.

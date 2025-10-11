@@ -1,3 +1,0 @@
-Removals
-   * Support for dynamic secure elements (i.e. MBEDTLS_PSA_CRYPTO_SE_C) was
-     already marked as deprecated and it has been removed.

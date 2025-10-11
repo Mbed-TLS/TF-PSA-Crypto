@@ -1,4 +1,0 @@
-Removals
-   * Remove mbedtls_asn1_free_named_data(). Use
-     mbedtls_asn1_free_named_data_list() or
-     mbedtls_asn1_free_named_data_list_shallow() instead.

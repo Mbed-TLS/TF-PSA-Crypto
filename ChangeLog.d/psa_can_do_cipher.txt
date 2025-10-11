@@ -1,5 +1,0 @@
-Removals
-   * Removed the ability to customize psa_can_do_hash() and
-     psa_can_do_cipher(), which allowed hash or cipher operations to be
-     performed through a legacy implementation when PSA is not yet fully
-     initialized.

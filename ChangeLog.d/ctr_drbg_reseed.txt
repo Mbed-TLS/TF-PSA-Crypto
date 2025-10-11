@@ -1,4 +1,0 @@
-API changes
-   * The configuration options MBEDTLS_CTR_DRBG_RESEED_INTERVAL and
-     MBEDTLS_HMAC_DRBG_RESEED_INTERVAL have been replaced by a unified
-     setting of MBEDTLS_PSA_RNG_RESEED_INTERVAL.
