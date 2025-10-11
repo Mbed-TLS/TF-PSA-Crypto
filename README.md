@@ -136,7 +136,7 @@ After cloning or checking out a branch or tag, run:
     ```
  to initialize and update the submodule before building.
 
-However, the official source release tarballs (e.g. [tf-psa-crypto-1.0.0-beta.tar.bz2](https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/download/tf-psa-crypto-1.0.0-beta/tf-psa-crypto-1.0.0-beta.tar.bz2))
+However, the official source release tarballs (e.g. [tf-psa-crypto-1.0.0.tar.bz2](https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/download/tf-psa-crypto-1.0.0/tf-psa-crypto-1.0.0.tar.bz2))
 include the content of the submodule.
 
 ### Generated source files in the development branch
