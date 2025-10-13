@@ -158,13 +158,6 @@ int mbedtls_asn1_write_oid(unsigned char **p, const unsigned char *start,
     return mbedtls_asn1_write_len_and_tag(p, start, len, MBEDTLS_ASN1_OID);
 }
 
-int mbedtls_asn1_write_algorithm_identifier(unsigned char **p, const unsigned char *start,
-                                            const char *oid, size_t oid_len,
-                                            size_t par_len)
-{
-    return mbedtls_asn1_write_algorithm_identifier_ext(p, start, oid, oid_len, par_len, 1);
-}
-
 int mbedtls_asn1_write_algorithm_identifier_ext(unsigned char **p, const unsigned char *start,
                                                 const char *oid, size_t oid_len,
                                                 size_t par_len, int has_par)

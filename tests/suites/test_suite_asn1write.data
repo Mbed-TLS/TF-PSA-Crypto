@@ -200,34 +200,33 @@ ASN.1 Write OID: length=1
 mbedtls_asn1_write_string:MBEDTLS_ASN1_OID:"41":"060141"
 
 ASN.1 Write AlgorithmIdentifier, null parameters
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0:"300706034f49440500"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0:"300706034f49440500":1
 
 ASN.1 Write AlgorithmIdentifier, parameters (8 bytes)
-mbedtls_asn1_write_algorithm_identifier:"4f4944":8:"300d06034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":8:"300d06034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0x7f
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0x7a:"307f06034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0x7a:"307f06034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0x80
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0x7b:"30818006034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0x7b:"30818006034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0xff
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0xfa:"3081ff06034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfa:"3081ff06034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0x100
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0xfb:"3082010006034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfb:"3082010006034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0xffff
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0xfffa:"3082ffff06034f4944"
-
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffa:"3082ffff06034f4944":1
 ASN.1 Write AlgorithmIdentifier, total length=0x10000
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0xfffb:"308301000006034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffb:"308301000006034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0xffffff
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0xfffffa:"3083ffffff06034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffffa:"3083ffffff06034f4944":1
 
 ASN.1 Write AlgorithmIdentifier, total length=0x1000000
-mbedtls_asn1_write_algorithm_identifier:"4f4944":0xfffffb:"30840100000006034f4944"
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffffb:"30840100000006034f4944":1
 
 ASN.1 Write / Read Length #0 (Len = 0, short form)
 mbedtls_asn1_write_len:0:"00":1:1
