@@ -1303,47 +1303,21 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     }
 #endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC */
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-    if (ctx->pk_info == &mbedtls_rsa_info) {
-        psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-        if (psa_md_alg == 0) {
-            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-        }
-
-        return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
-                                           ctx, hash, hash_len,
-                                           sig, sig_size, sig_len);
-    }
-    if (ctx->pk_info == &mbedtls_rsa_opaque_info) {
+    if (ctx->pk_info == &mbedtls_rsa_info ||
+        ctx->pk_info == &mbedtls_rsa_opaque_info) {
         psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-        psa_algorithm_t alg;
-        psa_key_type_t type;
-        psa_status_t status;
-
-        status = psa_get_key_attributes(ctx->priv_id, &attributes);
+        psa_status_t status = psa_get_key_attributes(ctx->priv_id, &attributes);
         if (status != PSA_SUCCESS) {
             return PSA_PK_TO_MBEDTLS_ERR(status);
         }
 
-        type = psa_get_key_type(&attributes);
-        alg = psa_get_key_algorithm(&attributes);
+        psa_algorithm_t alg = psa_get_key_algorithm(&attributes);
         psa_reset_key_attributes(&attributes);
 
-        if (PSA_KEY_TYPE_IS_RSA(type)) {
-            alg = (alg & ~PSA_ALG_HASH_MASK) | mbedtls_md_psa_alg_from_type(md_alg);
-        } else {
-            return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-        }
+        alg = (alg & ~PSA_ALG_HASH_MASK) | mbedtls_md_psa_alg_from_type(md_alg);
 
         status = psa_sign_hash(ctx->priv_id, alg, hash, hash_len, sig, sig_size, sig_len);
-        if (status != PSA_SUCCESS) {
-            if (PSA_KEY_TYPE_IS_RSA(type)) {
-                return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-            } else {
-                return PSA_PK_TO_MBEDTLS_ERR(status);
-            }
-        }
-
-        return 0;
+        return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
     }
 #endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
