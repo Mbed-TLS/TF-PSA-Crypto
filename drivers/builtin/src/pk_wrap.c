@@ -120,20 +120,6 @@ int  mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t alg,
     return PSA_PK_TO_MBEDTLS_ERR(status);
 }
 
-static int rsa_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
-                         const unsigned char *hash, size_t hash_len,
-                         unsigned char *sig, size_t sig_size, size_t *sig_len)
-{
-    psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-    if (psa_md_alg == 0) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
-                                       pk, hash, hash_len,
-                                       sig, sig_size, sig_len);
-}
-
 static int rsa_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *prv)
 {
     psa_status_t status;
@@ -165,7 +151,7 @@ const mbedtls_pk_info_t mbedtls_rsa_info = {
     .get_bitlen = rsa_get_bitlen,
     .can_do = rsa_can_do,
     .verify_func = rsa_verify_wrap,
-    .sign_func = rsa_sign_wrap,
+    .sign_func = NULL,
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
@@ -304,63 +290,6 @@ static int ecdsa_verify_wrap(mbedtls_pk_context *pk,
                             hash, hash_len, sig, sig_len);
 }
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
-
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-/* Common helper for ECDSA sign using PSA functions.
- * Instead of extracting key's properties in order to check which kind of ECDSA
- * signature it supports, we try both deterministic and non-deterministic.
- */
-static int ecdsa_sign_psa(mbedtls_svc_key_id_t key_id, mbedtls_md_type_t md_alg,
-                          const unsigned char *hash, size_t hash_len,
-                          unsigned char *sig, size_t sig_size, size_t *sig_len)
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    psa_status_t status;
-    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
-    size_t key_bits = 0;
-
-    status = psa_get_key_attributes(key_id, &key_attr);
-    if (status != PSA_SUCCESS) {
-        return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
-    }
-    key_bits = psa_get_key_bits(&key_attr);
-    psa_reset_key_attributes(&key_attr);
-
-    status = psa_sign_hash(key_id,
-                           PSA_ALG_DETERMINISTIC_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
-                           hash, hash_len, sig, sig_size, sig_len);
-    if (status == PSA_SUCCESS) {
-        goto done;
-    } else if (status != PSA_ERROR_NOT_PERMITTED) {
-        return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
-    }
-
-    status = psa_sign_hash(key_id,
-                           PSA_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
-                           hash, hash_len, sig, sig_size, sig_len);
-    if (status != PSA_SUCCESS) {
-        return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
-    }
-
-done:
-    ret = mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
-
-    return ret;
-}
-
-static int ecdsa_opaque_sign_wrap(mbedtls_pk_context *pk,
-                                  mbedtls_md_type_t md_alg,
-                                  const unsigned char *hash, size_t hash_len,
-                                  unsigned char *sig, size_t sig_size,
-                                  size_t *sig_len)
-{
-    return ecdsa_sign_psa(pk->priv_id, md_alg, hash, hash_len, sig, sig_size,
-                          sig_len);
-}
-
-#define ecdsa_sign_wrap     ecdsa_opaque_sign_wrap
-
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 
@@ -574,7 +503,7 @@ const mbedtls_pk_info_t mbedtls_eckey_info = {
     .verify_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    .sign_func = ecdsa_sign_wrap,   /* Compatible key structures */
+    .sign_func = NULL,   /* Compatible key structures */
 #else /* PSA_HAVE_ALG_ECDSA_VERIFY */
     .sign_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
@@ -646,7 +575,7 @@ const mbedtls_pk_info_t mbedtls_ecdsa_info = {
     .verify_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    .sign_func = ecdsa_sign_wrap,   /* Compatible key structures */
+    .sign_func = NULL,   /* Compatible key structures */
 #else /* PSA_HAVE_ALG_ECDSA_SIGN */
     .sign_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
@@ -706,7 +635,7 @@ const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info = {
     .verify_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    .sign_func = ecdsa_opaque_sign_wrap,
+    .sign_func = NULL,
 #else /* PSA_HAVE_ALG_ECDSA_SIGN */
     .sign_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
@@ -729,62 +658,13 @@ static int rsa_opaque_can_do(mbedtls_pk_type_t type)
            type == MBEDTLS_PK_RSASSA_PSS;
 }
 
-static int rsa_opaque_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
-                                const unsigned char *hash, size_t hash_len,
-                                unsigned char *sig, size_t sig_size, size_t *sig_len)
-{
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_algorithm_t alg;
-    psa_key_type_t type;
-    psa_status_t status;
-
-    /* PSA has its own RNG */
-
-    status = psa_get_key_attributes(pk->priv_id, &attributes);
-    if (status != PSA_SUCCESS) {
-        return PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-
-    type = psa_get_key_type(&attributes);
-    alg = psa_get_key_algorithm(&attributes);
-    psa_reset_key_attributes(&attributes);
-
-    if (PSA_KEY_TYPE_IS_RSA(type)) {
-        alg = (alg & ~PSA_ALG_HASH_MASK) | mbedtls_md_psa_alg_from_type(md_alg);
-    } else {
-        return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-    }
-
-    status = psa_sign_hash(pk->priv_id, alg, hash, hash_len, sig, sig_size, sig_len);
-    if (status != PSA_SUCCESS) {
-        if (PSA_KEY_TYPE_IS_RSA(type)) {
-            return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-        } else {
-            return PSA_PK_TO_MBEDTLS_ERR(status);
-        }
-    }
-
-    return 0;
-#else /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
-    ((void) pk);
-    ((void) md_alg);
-    ((void) hash);
-    ((void) hash_len);
-    ((void) sig);
-    ((void) sig_size);
-    ((void) sig_len);
-    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
-}
-
 const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
     .type = MBEDTLS_PK_OPAQUE,
     .name = "Opaque",
     .get_bitlen = opaque_get_bitlen,
     .can_do = rsa_opaque_can_do,
     .verify_func = NULL,
-    .sign_func = rsa_opaque_sign_wrap,
+    .sign_func = NULL,
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
