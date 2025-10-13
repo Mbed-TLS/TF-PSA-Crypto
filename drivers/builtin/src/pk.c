@@ -1262,25 +1262,20 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) rs_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-    /* Temporary alias for copy-pasted code below */
-    mbedtls_pk_context *pk = ctx;
-
     if (ctx->pk_info == &mbedtls_rsa_info) {
-        // rsa_sign_wrap
         psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
         if (psa_md_alg == 0) {
             return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
         }
 
         return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
-                                           pk, hash, hash_len,
+                                           ctx, hash, hash_len,
                                            sig, sig_size, sig_len);
     }
     if (ctx->pk_info == &mbedtls_eckey_info ||
         ctx->pk_info == &mbedtls_ecdsa_info ||
         ctx->pk_info == &mbedtls_ecdsa_opaque_info) {
-        // ecdsa_sign_wrap aka ecdsa_opaque_verify_wrap -> ecdsa_sign_psa
-        mbedtls_svc_key_id_t key_id = pk->priv_id;
+        mbedtls_svc_key_id_t key_id = ctx->priv_id;
 
         int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
         psa_status_t status;
@@ -1316,15 +1311,12 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return ret;
     }
     if (ctx->pk_info == &mbedtls_rsa_opaque_info) {
-        // rsa_opaque_sign_wrap
         psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
         psa_algorithm_t alg;
         psa_key_type_t type;
         psa_status_t status;
 
-        /* PSA has its own RNG */
-
-        status = psa_get_key_attributes(pk->priv_id, &attributes);
+        status = psa_get_key_attributes(ctx->priv_id, &attributes);
         if (status != PSA_SUCCESS) {
             return PSA_PK_TO_MBEDTLS_ERR(status);
         }
@@ -1339,7 +1331,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
             return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
         }
 
-        status = psa_sign_hash(pk->priv_id, alg, hash, hash_len, sig, sig_size, sig_len);
+        status = psa_sign_hash(ctx->priv_id, alg, hash, hash_len, sig, sig_size, sig_len);
         if (status != PSA_SUCCESS) {
             if (PSA_KEY_TYPE_IS_RSA(type)) {
                 return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
