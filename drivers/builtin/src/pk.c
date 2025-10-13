@@ -706,8 +706,15 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
 
 psa_key_type_t mbedtls_pk_get_key_type(mbedtls_pk_context *pk)
 {
-    (void) pk;
-    return PSA_KEY_TYPE_RSA_KEY_PAIR;
+    psa_key_attributes_t attrs;
+    psa_status_t status;
+
+    status = psa_get_key_attributes(pk->priv_id, &attrs);
+    if (status != PSA_SUCCESS) {
+        return PSA_KEY_TYPE_NONE;
+    }
+
+    return psa_get_key_type(&attrs);
 }
 
 static psa_status_t export_import_into_psa(mbedtls_svc_key_id_t old_key_id,
