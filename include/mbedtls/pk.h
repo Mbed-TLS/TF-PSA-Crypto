@@ -432,6 +432,21 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
 int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                                   psa_key_usage_t usage,
                                   psa_key_attributes_t *attributes);
+/**
+ * \brief           Get the PSA key type corresponding to the key represented
+ *                  by the given PK context.
+ *
+ * \param pk        The context to query.
+ *
+ * \return          A PSA key type. Specifically, one of:
+ *                      - PSA_KEY_TYPE_RSA_KEY_PAIR
+ *                      - PSA_KEY_TYPE_RSA_PUBLIC_KEY
+ *                      - PSA_KEY_TYPE_ECC_KEY_PAIR(curve)
+ *                      - PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve)
+ * \return          PSA_KEY_TYPE_NONE, if the context has not been populated.
+ */
+psa_key_type_t mbedtls_pk_get_key_type(mbedtls_pk_context *pk);
+
 
 /**
  * \brief           Import a key into the PSA key store.
