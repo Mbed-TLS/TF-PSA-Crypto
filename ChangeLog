@@ -341,11 +341,13 @@ Security
    * Unlike previously documented, enabling MBEDTLS_PSA_HMAC_DRBG_MD_TYPE does
      not cause the PSA subsystem to use HMAC_DRBG: it uses HMAC_DRBG only when
      MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG and MBEDTLS_CTR_DRBG_C are disabled.
+     CVE-2024-45157
    * Fix a stack buffer overflow in mbedtls_ecdsa_der_to_raw() and
      mbedtls_ecdsa_raw_to_der() when the bits parameter is larger than the
      largest supported curve. In some configurations with PSA disabled,
      all values of bits are affected. This never happens in internal library
      calls, but can affect applications that call these functions directly.
+     CVE-2024-45158
    * Zeroize a temporary heap buffer used in psa_key_derivation_output_key()
      when deriving an ECC key pair.
    * Zeroize temporary heap buffers used in PSA operations.
@@ -366,21 +368,25 @@ Security
      enclave.
      The same vulnerability affects GCM acceleration, which could allow
      a similarly powerful adversary to craft GCM forgeries.
+     CVE-2025-52496
    * Fix a bug in mbedtls_asn1_store_named_data() where it would sometimes leave
      an item in the output list in an inconsistent state with val.p == NULL but
      val.len > 0. Functions using the structure after that, including
      mbedtls_asn1_store_named_data() itself would then dereference a NULL
      pointer. Applications that do not call this function are not affected.
      Found by Linh Le and Ngan Nguyen from Calif.
+     CVE-2025-48965
    * Fix an integer underflow that could occur when parsing malformed PEM
      keys, which could be used by an attacker capable of feeding encrypted
      PEM keys to a user. This could cause a crash or information disclosure.
      Found and reported by Linh Le and Ngan Nguyen from Calif.
+     CVE-2025-52497
    * Fix a timing side channel in the implementation of PKCS#7 padding
      which would allow an attacker who can request decryption of arbitrary
      ciphertexts to recover the plaintext through a timing oracle attack.
      Reported by Ka Lok Wu from Stony Brook University and Doria Tang from
      The Chinese University of Hong Kong.
+     CVE-2025-49087
    * Fix a timing side channel in CBC-PKCS7 decryption that could
      allow an attacker who can submit chosen ciphertexts to recover
      some plaintexts through a timing-based padding oracle attack.
