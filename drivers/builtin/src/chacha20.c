@@ -147,15 +147,14 @@ static inline chacha20_neon_regs_t chacha20_neon_singlepass(chacha20_neon_regs_t
         r.b = veorq_u32(r.b, r.c);                    // r.b ^= c
         r.b = chacha20_neon_vrotlq_7_u32(r.b);        // r.b <<<= 7
 
+        // re-order b, c and d for the diagonal rounds
+        r.c = vextq_u32(r.c, r.c, 2);
         if (i == 0) {
-            // re-order b, c and d for the diagonal rounds
-            r.b = vextq_u32(r.b, r.b, 1);                 // r.b now holds positions 5,6,7,4
-            r.c = vextq_u32(r.c, r.c, 2);                 // 10, 11, 8, 9
-            r.d = vextq_u32(r.d, r.d, 3);                 // 15, 12, 13, 14
+            r.b = vextq_u32(r.b, r.b, 1);
+            r.d = vextq_u32(r.d, r.d, 3);
         } else {
             // restore element order in b, c, d
             r.b = vextq_u32(r.b, r.b, 3);
-            r.c = vextq_u32(r.c, r.c, 2);
             r.d = vextq_u32(r.d, r.d, 1);
         }
     }
@@ -168,18 +167,21 @@ static inline void chacha20_neon_finish_block(chacha20_neon_regs_t r,
                                               uint8_t **output,
                                               const uint8_t **input)
 {
+    const uint8_t *i = *input;
+    uint8_t       *o = *output;
+
     r.a = vaddq_u32(r.a, r_original.a);
     r.b = vaddq_u32(r.b, r_original.b);
     r.c = vaddq_u32(r.c, r_original.c);
     r.d = vaddq_u32(r.d, r_original.d);
 
-    vst1q_u8(*output + 0,  veorq_u8(vld1q_u8(*input + 0),  vreinterpretq_u8_u32(r.a)));
-    vst1q_u8(*output + 16, veorq_u8(vld1q_u8(*input + 16), vreinterpretq_u8_u32(r.b)));
-    vst1q_u8(*output + 32, veorq_u8(vld1q_u8(*input + 32), vreinterpretq_u8_u32(r.c)));
-    vst1q_u8(*output + 48, veorq_u8(vld1q_u8(*input + 48), vreinterpretq_u8_u32(r.d)));
+    vst1q_u8(o + 0,  veorq_u8(vld1q_u8(i + 0),  vreinterpretq_u8_u32(r.a)));
+    vst1q_u8(o + 16, veorq_u8(vld1q_u8(i + 16), vreinterpretq_u8_u32(r.b)));
+    vst1q_u8(o + 32, veorq_u8(vld1q_u8(i + 32), vreinterpretq_u8_u32(r.c)));
+    vst1q_u8(o + 48, veorq_u8(vld1q_u8(i + 48), vreinterpretq_u8_u32(r.d)));
 
-    *input += CHACHA20_BLOCK_SIZE_BYTES;
-    *output += CHACHA20_BLOCK_SIZE_BYTES;
+    *input  = i + CHACHA20_BLOCK_SIZE_BYTES;
+    *output = o + CHACHA20_BLOCK_SIZE_BYTES;
 }
 
 // Prevent gcc from rolling up the (manually unrolled) interleaved block loops
