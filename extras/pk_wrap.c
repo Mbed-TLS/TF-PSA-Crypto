@@ -138,7 +138,6 @@ const mbedtls_pk_info_t mbedtls_rsa_info = {
     .name = "RSA",
     .can_do = rsa_can_do,
     .verify_func = rsa_verify_wrap,
-    .sign_func = NULL,
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
@@ -441,11 +440,6 @@ const mbedtls_pk_info_t mbedtls_eckey_info = {
 #else /* PSA_HAVE_ALG_ECDSA_VERIFY */
     .verify_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    .sign_func = NULL,   /* Compatible key structures */
-#else /* PSA_HAVE_ALG_ECDSA_VERIFY */
-    .sign_func = NULL,
-#endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 #if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
     .verify_rs_func = eckey_verify_rs_wrap,
@@ -481,7 +475,6 @@ const mbedtls_pk_info_t mbedtls_eckeydh_info = {
     .name = "EC_DH",
     .can_do = eckeydh_can_do,
     .verify_func = NULL,
-    .sign_func = NULL,
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
@@ -503,11 +496,6 @@ const mbedtls_pk_info_t mbedtls_ecdsa_info = {
 #else /* PSA_HAVE_ALG_ECDSA_VERIFY */
     .verify_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    .sign_func = NULL,   /* Compatible key structures */
-#else /* PSA_HAVE_ALG_ECDSA_SIGN */
-    .sign_func = NULL,
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 #if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
     .verify_rs_func = eckey_verify_rs_wrap,
@@ -544,11 +532,6 @@ const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info = {
 #else /* PSA_HAVE_ALG_ECDSA_VERIFY */
     .verify_func = NULL,
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    .sign_func = NULL,
-#else /* PSA_HAVE_ALG_ECDSA_SIGN */
-    .sign_func = NULL,
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
@@ -569,7 +552,6 @@ const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
     .name = "Opaque",
     .can_do = rsa_opaque_can_do,
     .verify_func = NULL,
-    .sign_func = NULL,
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     .verify_rs_func = NULL,
     .sign_rs_func = NULL,
