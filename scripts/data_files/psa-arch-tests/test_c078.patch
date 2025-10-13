@@ -1,0 +1,33 @@
+commit 7d7f86a3ac27dff664cc86140dbf69a29da87426
+Author: Gilles Peskine <Gilles.Peskine@arm.com>
+Date:   2025-10-03 22:13:27 +0200
+
+    Fix JPAKE test executed even when JPAKE is disabled
+    
+    Partial backport of 232fb5801273dbc97789cb9079f1168499e34a2a,
+    first released in v25.08_API1.9_ADAC_1.0.2 .
+    
+    Signed-off-by: Gilles Peskine <Gilles.Peskine@arm.com>
+
+diff --git a/api-tests/dev_apis/crypto/test_c078/test_c078.c b/api-tests/dev_apis/crypto/test_c078/test_c078.c
+index 70b956dd8..7f0c99240 100644
+--- a/api-tests/dev_apis/crypto/test_c078/test_c078.c
++++ b/api-tests/dev_apis/crypto/test_c078/test_c078.c
+@@ -101,6 +101,7 @@ int32_t send_message_jpake(psa_pake_operation_t *from, psa_pake_operation_t *to,
+ 
+ int32_t psa_pake_jpake_test(caller_security_t caller __UNUSED)
+ {
++#ifdef ARCH_TEST_JPAKE
+     uint8_t i = 0;
+     int32_t status;
+     psa_pake_operation_t user = PSA_PAKE_OPERATION_INIT;
+@@ -307,4 +308,9 @@ int32_t psa_pake_jpake_test(caller_security_t caller __UNUSED)
+   TEST_ASSERT_EQUAL(status, PSA_SUCCESS, TEST_CHECKPOINT_NUM(60));
+ 
+   return VAL_STATUS_SUCCESS;
++
++#else
++  val->print(PRINT_TEST, "No test available for the selected crypto configuration\n", 0);
++  return RESULT_SKIP(VAL_STATUS_NO_TESTS);
++#endif
+ }
