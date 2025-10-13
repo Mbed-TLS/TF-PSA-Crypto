@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_ASN1_WRITE_H
-#define MBEDTLS_ASN1_WRITE_H
+#ifndef MBEDTLS_ASN1WRITE_H
+#define MBEDTLS_ASN1WRITE_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -394,4 +394,4 @@ int mbedtls_asn1_write_integer(unsigned char **p,
 
 #endif /* MBEDTLS_ASN1_WRITE_C */
 
-#endif /* MBEDTLS_ASN1_WRITE_H */
+#endif /* MBEDTLS_ASN1WRITE_H */

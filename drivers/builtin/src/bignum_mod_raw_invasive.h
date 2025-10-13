@@ -9,8 +9,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_BIGNUM_MOD_RAW_INVASIVE_H
-#define MBEDTLS_BIGNUM_MOD_RAW_INVASIVE_H
+#ifndef TF_PSA_CRYPTO_BIGNUM_MOD_RAW_INVASIVE_H
+#define TF_PSA_CRYPTO_BIGNUM_MOD_RAW_INVASIVE_H
 
 #include "tf_psa_crypto_common.h"
 #include "mbedtls/private/bignum.h"
@@ -31,4 +31,4 @@ void mbedtls_mpi_mod_raw_fix_quasi_reduction(mbedtls_mpi_uint *X,
 
 #endif /* MBEDTLS_TEST_HOOKS */
 
-#endif /* MBEDTLS_BIGNUM_MOD_RAW_INVASIVE_H */
+#endif /* TF_PSA_CRYPTO_BIGNUM_MOD_RAW_INVASIVE_H */

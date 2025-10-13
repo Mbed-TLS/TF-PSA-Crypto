@@ -6,8 +6,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_RSA_H
-#define PSA_CRYPTO_RSA_H
+#ifndef TF_PSA_CRYPTO_PSA_CRYPTO_RSA_H
+#define TF_PSA_CRYPTO_PSA_CRYPTO_RSA_H
 
 #include <psa/crypto.h>
 #include <mbedtls/private/rsa.h>
@@ -318,4 +318,4 @@ psa_status_t mbedtls_psa_asymmetric_decrypt(const psa_key_attributes_t *attribut
                                             size_t output_size,
                                             size_t *output_length);
 
-#endif /* PSA_CRYPTO_RSA_H */
+#endif /* TF_PSA_CRYPTO_PSA_CRYPTO_RSA_H */

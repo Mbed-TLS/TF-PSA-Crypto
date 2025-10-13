@@ -21,8 +21,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H
-#define MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H
+#define TF_PSA_CRYPTO_MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H
 
 #if !defined(TF_PSA_CRYPTO_CONFIG_FILES_READ)
 #error "Do not include mbedtls/config_adjust_*.h manually! This can lead to problems, " \
@@ -371,4 +371,4 @@
 #define MBEDTLS_SSL_HAVE_AEAD
 #endif
 
-#endif /* MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_CONFIG_ADJUST_LEGACY_CRYPTO_H */

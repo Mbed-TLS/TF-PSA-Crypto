@@ -46,4 +46,4 @@ typedef uint32_t psa_driver_get_entropy_flags_t;
 }
 #endif
 
-#endif /* PSA_CRYPTO_DRIVER_COMMON_H */
+#endif /* PSA_CRYPTO_DRIVER_RANDOM_H */

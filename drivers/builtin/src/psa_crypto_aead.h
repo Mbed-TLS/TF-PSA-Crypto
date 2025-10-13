@@ -6,8 +6,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_AEAD_H
-#define PSA_CRYPTO_AEAD_H
+#ifndef TF_PSA_CRYPTO_PSA_CRYPTO_AEAD_H
+#define TF_PSA_CRYPTO_PSA_CRYPTO_AEAD_H
 
 #include <psa/crypto.h>
 
@@ -496,4 +496,4 @@ psa_status_t mbedtls_psa_aead_finish(
 psa_status_t mbedtls_psa_aead_abort(
     mbedtls_psa_aead_operation_t *operation);
 
-#endif /* PSA_CRYPTO_AEAD_H */
+#endif /* TF_PSA_CRYPTO_PSA_CRYPTO_AEAD_H */

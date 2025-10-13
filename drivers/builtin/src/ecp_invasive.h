@@ -11,8 +11,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_ECP_INVASIVE_H
-#define MBEDTLS_ECP_INVASIVE_H
+#ifndef TF_PSA_CRYPTO_ECP_INVASIVE_H
+#define TF_PSA_CRYPTO_ECP_INVASIVE_H
 
 #include "tf_psa_crypto_common.h"
 #include "mbedtls/private/bignum.h"
@@ -276,4 +276,4 @@ int mbedtls_ecp_modulus_setup(mbedtls_mpi_mod_modulus *N,
 
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
 
-#endif /* MBEDTLS_ECP_INVASIVE_H */
+#endif /* TF_PSA_CRYPTO_ECP_INVASIVE_H */

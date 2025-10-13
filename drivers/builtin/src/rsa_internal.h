@@ -11,8 +11,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_RSA_INTERNAL_H
-#define MBEDTLS_RSA_INTERNAL_H
+#ifndef TF_PSA_CRYPTO_RSA_INTERNAL_H
+#define TF_PSA_CRYPTO_RSA_INTERNAL_H
 
 #include "mbedtls/private/rsa.h"
 #include "mbedtls/asn1.h"
@@ -118,4 +118,4 @@ int mbedtls_rsa_rsassa_pss_sign_no_mode_check(mbedtls_rsa_context *ctx,
                                               unsigned char *sig);
 #endif /* MBEDTLS_PKCS1_V21 */
 
-#endif /* rsa_internal.h */
+#endif /* TF_PSA_CRYPTO_RSA_INTERNAL_H */

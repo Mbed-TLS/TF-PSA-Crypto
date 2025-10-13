@@ -18,8 +18,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_ADJUST_KEYPAIR_TYPES_H
-#define PSA_CRYPTO_ADJUST_KEYPAIR_TYPES_H
+#ifndef PSA_CRYPTO_ADJUST_CONFIG_KEY_PAIR_TYPES_H
+#define PSA_CRYPTO_ADJUST_CONFIG_KEY_PAIR_TYPES_H
 
 #if !defined(TF_PSA_CRYPTO_CONFIG_FILES_READ)
 #error "Do not include psa/crypto_adjust_*.h manually! This can lead to problems, " \
@@ -98,4 +98,4 @@
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT 1
 #endif
 
-#endif /* PSA_CRYPTO_ADJUST_KEYPAIR_TYPES_H */
+#endif /* PSA_CRYPTO_ADJUST_CONFIG_KEY_PAIR_TYPES_H */

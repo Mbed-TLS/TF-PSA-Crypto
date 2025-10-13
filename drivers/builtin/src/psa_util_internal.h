@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_PSA_UTIL_INTERNAL_H
-#define MBEDTLS_PSA_UTIL_INTERNAL_H
+#ifndef TF_PSA_CRYPTO_PSA_UTIL_INTERNAL_H
+#define TF_PSA_CRYPTO_PSA_UTIL_INTERNAL_H
 
 /* Include the public header so that users only need one include. */
 #include "mbedtls/psa_util.h"
@@ -129,4 +129,4 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
 mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
                                                 size_t bits);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
-#endif /* MBEDTLS_PSA_UTIL_INTERNAL_H */
+#endif /* TF_PSA_CRYPTO_PSA_UTIL_INTERNAL_H */

@@ -6,8 +6,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_ECP_H
-#define PSA_CRYPTO_ECP_H
+#ifndef TF_PSA_CRYPTO_PSA_CRYPTO_ECP_H
+#define TF_PSA_CRYPTO_PSA_CRYPTO_ECP_H
 
 #include <psa/crypto.h>
 #include <mbedtls/private/ecp.h>
@@ -410,4 +410,4 @@ psa_status_t mbedtls_psa_key_agreement_ecdh(
     psa_algorithm_t alg, const uint8_t *peer_key, size_t peer_key_length,
     uint8_t *shared_secret, size_t shared_secret_size,
     size_t *shared_secret_length);
-#endif /* PSA_CRYPTO_ECP_H */
+#endif /* TF_PSA_CRYPTO_PSA_CRYPTO_ECP_H */

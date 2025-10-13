@@ -9,8 +9,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_THREADING_INTERNAL_H
-#define MBEDTLS_THREADING_INTERNAL_H
+#ifndef TF_PSA_CRYPTO_THREADING_INTERNAL_H
+#define TF_PSA_CRYPTO_THREADING_INTERNAL_H
 
 #include "tf_psa_crypto_common.h"
 
@@ -72,4 +72,4 @@ extern mbedtls_threading_mutex_t mbedtls_threading_psa_rngdata_mutex;
 
 #endif /* MBEDTLS_THREADING_C */
 
-#endif /* MBEDTLS_THREADING_INTERNAL_H */
+#endif /* TF_PSA_CRYPTO_THREADING_INTERNAL_H */

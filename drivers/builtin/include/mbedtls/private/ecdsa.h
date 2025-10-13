@@ -15,8 +15,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_ECDSA_H
-#define MBEDTLS_ECDSA_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_ECDSA_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_ECDSA_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -667,4 +667,4 @@ void mbedtls_ecdsa_restart_free(mbedtls_ecdsa_restart_ctx *ctx);
 }
 #endif
 
-#endif /* ecdsa.h */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_ECDSA_H */

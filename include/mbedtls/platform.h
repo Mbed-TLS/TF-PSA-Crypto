@@ -523,4 +523,4 @@ void mbedtls_platform_teardown(mbedtls_platform_context *ctx);
 }
 #endif
 
-#endif /* platform.h */
+#endif /* MBEDTLS_PLATFORM_H */

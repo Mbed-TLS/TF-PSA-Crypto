@@ -7,8 +7,8 @@
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
-#ifndef MBEDTLS_ENTROPY_POLL_H
-#define MBEDTLS_ENTROPY_POLL_H
+#ifndef TF_PSA_CRYPTO_ENTROPY_POLL_H
+#define TF_PSA_CRYPTO_ENTROPY_POLL_H
 
 #include "tf-psa-crypto/build_info.h"
 
@@ -41,4 +41,4 @@ int mbedtls_nv_seed_poll(void *data,
 }
 #endif
 
-#endif /* entropy_poll.h */
+#endif /* TF_PSA_CRYPTO_ENTROPY_POLL_H */

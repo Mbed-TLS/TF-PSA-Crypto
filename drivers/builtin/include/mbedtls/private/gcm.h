@@ -16,8 +16,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_GCM_H
-#define MBEDTLS_GCM_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_GCM_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_GCM_H
 #include "mbedtls/private_access.h"
 
 #include "tf-psa-crypto/build_info.h"
@@ -379,4 +379,4 @@ int mbedtls_gcm_self_test(int verbose);
 #endif
 
 
-#endif /* gcm.h */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_GCM_H */
