@@ -171,7 +171,6 @@ int mbedtls_cipher_setup(mbedtls_cipher_context_t *ctx,
     return 0;
 }
 
-
 int mbedtls_cipher_setkey(mbedtls_cipher_context_t *ctx,
                           const unsigned char *key,
                           int key_bitlen,

@@ -44,7 +44,6 @@ extern "C" {
 extern int (*mbedtls_lmots_sign_private_key_invalidated_hook)(unsigned char *);
 #endif /* defined(MBEDTLS_TEST_HOOKS) */
 
-
 /**
  * \brief                    This function initializes a public LMOTS context
  *

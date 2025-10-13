@@ -1318,7 +1318,6 @@ int mbedtls_ecp_set_public_key(mbedtls_ecp_group_id grp_id,
 int mbedtls_ecp_read_key(mbedtls_ecp_group_id grp_id, mbedtls_ecp_keypair *key,
                          const unsigned char *buf, size_t buflen);
 
-
 /**
  * \brief           This function exports an elliptic curve private key.
  *

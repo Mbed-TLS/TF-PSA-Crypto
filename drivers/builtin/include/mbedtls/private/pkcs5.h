@@ -40,7 +40,6 @@ extern "C" {
 
 #if defined(MBEDTLS_ASN1_PARSE_C) && defined(MBEDTLS_CIPHER_C)
 
-
 #if defined(MBEDTLS_CIPHER_PADDING_PKCS7)
 
 /**
