@@ -1262,16 +1262,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) rs_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-    if (ctx->pk_info == &mbedtls_rsa_info) {
-        psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-        if (psa_md_alg == 0) {
-            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-        }
-
-        return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
-                                           ctx, hash, hash_len,
-                                           sig, sig_size, sig_len);
-    }
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
     if (ctx->pk_info == &mbedtls_eckey_info ||
         ctx->pk_info == &mbedtls_ecdsa_info ||
         ctx->pk_info == &mbedtls_ecdsa_opaque_info) {
@@ -1310,6 +1301,18 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
         return ret;
     }
+#endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC */
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
+    if (ctx->pk_info == &mbedtls_rsa_info) {
+        psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+        if (psa_md_alg == 0) {
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+        }
+
+        return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
+                                           ctx, hash, hash_len,
+                                           sig, sig_size, sig_len);
+    }
     if (ctx->pk_info == &mbedtls_rsa_opaque_info) {
         psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
         psa_algorithm_t alg;
@@ -1342,6 +1345,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
         return 0;
     }
+#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
     // eckeydh_info
     return MBEDTLS_ERR_PK_TYPE_MISMATCH;
