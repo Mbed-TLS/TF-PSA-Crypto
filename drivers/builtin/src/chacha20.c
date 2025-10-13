@@ -397,7 +397,8 @@ int mbedtls_chacha20_setkey(mbedtls_chacha20_context *ctx,
                             const unsigned char key[32])
 {
     /* ChaCha20 constants - the string "expand 32-byte k" */
-    static const char EXPAND_32_BYTE_K[16] = "expand 32-byte k";
+    static const char EXPAND_32_BYTE_K[16]
+        MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "expand 32-byte k";
     memcpy(ctx->state, EXPAND_32_BYTE_K, 16);
 
     /* Set key */
