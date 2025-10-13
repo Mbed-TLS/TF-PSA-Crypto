@@ -1237,51 +1237,97 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) rs_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-    psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_alg);
+    /* Temporary alias for copy-pasted code below */
+    mbedtls_pk_context *pk = ctx;
 
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_status_t status = psa_get_key_attributes(ctx->priv_id, &attributes);
-    if (status != PSA_SUCCESS) {
-        return PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    if (PSA_KEY_TYPE_IS_ECC(type)) {
-        size_t key_bits = psa_get_key_bits(&attributes);
-        psa_reset_key_attributes(&attributes);
-
-        status = psa_sign_hash(ctx->priv_id, PSA_ALG_DETERMINISTIC_ECDSA(hash_alg),
-                               hash, hash_len, sig, sig_size, sig_len);
-        if (status == PSA_ERROR_NOT_PERMITTED) {
-            status = psa_sign_hash(ctx->priv_id, PSA_ALG_ECDSA(hash_alg),
-                                   hash, hash_len, sig, sig_size, sig_len);
+    if (ctx->pk_info == &mbedtls_rsa_info) {
+        // rsa_sign_wrap
+        psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+        if (psa_md_alg == 0) {
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
         }
+
+        return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
+                                           pk, hash, hash_len,
+                                           sig, sig_size, sig_len);
+    }
+    if (ctx->pk_info == &mbedtls_eckey_info ||
+        ctx->pk_info == &mbedtls_ecdsa_info ||
+        ctx->pk_info == &mbedtls_ecdsa_opaque_info) {
+        // ecdsa_sign_wrap aka ecdsa_opaque_verify_wrap -> ecdsa_sign_psa
+        mbedtls_svc_key_id_t key_id = pk->priv_id;
+
+        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        psa_status_t status;
+        psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+        size_t key_bits = 0;
+
+        status = psa_get_key_attributes(key_id, &key_attr);
+        if (status != PSA_SUCCESS) {
+            return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
+        }
+        key_bits = psa_get_key_bits(&key_attr);
+        psa_reset_key_attributes(&key_attr);
+
+        status = psa_sign_hash(key_id,
+                               PSA_ALG_DETERMINISTIC_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
+                               hash, hash_len, sig, sig_size, sig_len);
+        if (status == PSA_SUCCESS) {
+            goto done;
+        } else if (status != PSA_ERROR_NOT_PERMITTED) {
+            return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
+        }
+
+        status = psa_sign_hash(key_id,
+                               PSA_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
+                               hash, hash_len, sig, sig_size, sig_len);
         if (status != PSA_SUCCESS) {
             return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
         }
 
-        return mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
-    }
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
+    done:
+        ret = mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
 
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-    if (PSA_KEY_TYPE_IS_RSA(type)) {
-        psa_algorithm_t sig_alg = psa_get_key_algorithm(&attributes);
+        return ret;
+    }
+    if (ctx->pk_info == &mbedtls_rsa_opaque_info) {
+        // rsa_opaque_sign_wrap
+        psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+        psa_algorithm_t alg;
+        psa_key_type_t type;
+        psa_status_t status;
+
+        /* PSA has its own RNG */
+
+        status = psa_get_key_attributes(pk->priv_id, &attributes);
+        if (status != PSA_SUCCESS) {
+            return PSA_PK_TO_MBEDTLS_ERR(status);
+        }
+
+        type = psa_get_key_type(&attributes);
+        alg = psa_get_key_algorithm(&attributes);
         psa_reset_key_attributes(&attributes);
 
-        sig_alg = (sig_alg & ~PSA_ALG_HASH_MASK) | hash_alg;
+        if (PSA_KEY_TYPE_IS_RSA(type)) {
+            alg = (alg & ~PSA_ALG_HASH_MASK) | mbedtls_md_psa_alg_from_type(md_alg);
+        } else {
+            return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
+        }
 
-        status = psa_sign_hash(ctx->priv_id, sig_alg,
-                               hash, hash_len, sig, sig_size, sig_len);
-        return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
+        status = psa_sign_hash(pk->priv_id, alg, hash, hash_len, sig, sig_size, sig_len);
+        if (status != PSA_SUCCESS) {
+            if (PSA_KEY_TYPE_IS_RSA(type)) {
+                return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
+            } else {
+                return PSA_PK_TO_MBEDTLS_ERR(status);
+            }
+        }
+
+        return 0;
     }
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
-    /* Can't happen */
-    (void) sig;
-    (void) sig_size;
-    (void) sig_len;
-    return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    // eckeydh_info
+    return MBEDTLS_ERR_PK_TYPE_MISMATCH;
 }
 
 /*
