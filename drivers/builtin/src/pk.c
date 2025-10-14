@@ -1026,6 +1026,15 @@ static inline int pk_hashlen_helper(mbedtls_md_type_t md_alg, size_t *hash_len)
     return 0;
 }
 
+/*
+ * Abstract away the way we store the "DH only" bit,
+ * as this is likely to change soon.
+ */
+static inline int pk_is_dh_only(const mbedtls_pk_context *ctx)
+{
+    return ctx->pk_info == &mbedtls_eckeydh_info;
+}
+
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 /*
  * Helper to set up a restart context if needed
@@ -1234,6 +1243,10 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
+    if (pk_is_dh_only(ctx)) {
+        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+    }
+
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
@@ -1269,11 +1282,10 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     if (status != PSA_SUCCESS) {
         return PSA_PK_TO_MBEDTLS_ERR(status);
     }
+    psa_key_type_t type = psa_get_key_type(&attributes);
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
-    if (ctx->pk_info == &mbedtls_eckey_info ||
-        ctx->pk_info == &mbedtls_ecdsa_info ||
-        ctx->pk_info == &mbedtls_ecdsa_opaque_info) {
+    if (PSA_KEY_TYPE_IS_ECC(type)) {
         size_t key_bits = psa_get_key_bits(&attributes);
         psa_reset_key_attributes(&attributes);
 
@@ -1291,8 +1303,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     }
 #endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC */
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-    if (ctx->pk_info == &mbedtls_rsa_info ||
-        ctx->pk_info == &mbedtls_rsa_opaque_info) {
+    if (PSA_KEY_TYPE_IS_RSA(type)) {
         psa_algorithm_t sig_alg = psa_get_key_algorithm(&attributes);
         psa_reset_key_attributes(&attributes);
 
@@ -1304,8 +1315,8 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     }
 #endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
-    // eckeydh_info
-    return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+    /* Can't happen */
+    return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 }
 
 /*
