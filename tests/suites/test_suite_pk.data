@@ -1570,3 +1570,7 @@ pk_get_key_type_wrap_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256
 PK get type from wrapped PSA key, SECP_K1
 depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC
 pk_get_key_type_wrap_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type from parsed key, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC
+pk_get_key_type_parse_key:"../framework/data_files/server1.key":PSA_KEY_TYPE_RSA_KEY_PAIR

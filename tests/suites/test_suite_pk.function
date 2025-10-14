@@ -2284,3 +2284,25 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_FS_IO */
+void pk_get_key_type_parse_key(char *key_file, int key_type_arg)
+{
+    psa_key_type_t key_type = (psa_key_id_t) key_type_arg;
+    psa_key_type_t returned_key_type;
+
+    mbedtls_pk_context ctx;
+    mbedtls_pk_init(&ctx);
+
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_pk_parse_keyfile(&ctx, key_file, NULL), 0);
+
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+    TEST_EQUAL(returned_key_type, key_type);
+
+exit:
+    mbedtls_pk_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */
