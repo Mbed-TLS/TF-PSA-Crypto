@@ -1262,29 +1262,25 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) rs_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
+    psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_alg);
+
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t status = psa_get_key_attributes(ctx->priv_id, &attributes);
+    if (status != PSA_SUCCESS) {
+        return PSA_PK_TO_MBEDTLS_ERR(status);
+    }
+
 #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
     if (ctx->pk_info == &mbedtls_eckey_info ||
         ctx->pk_info == &mbedtls_ecdsa_info ||
         ctx->pk_info == &mbedtls_ecdsa_opaque_info) {
-        mbedtls_svc_key_id_t key_id = ctx->priv_id;
+        size_t key_bits = psa_get_key_bits(&attributes);
+        psa_reset_key_attributes(&attributes);
 
-        psa_status_t status;
-        psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
-        size_t key_bits = 0;
-
-        status = psa_get_key_attributes(key_id, &key_attr);
-        if (status != PSA_SUCCESS) {
-            return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
-        }
-        key_bits = psa_get_key_bits(&key_attr);
-        psa_reset_key_attributes(&key_attr);
-
-        status = psa_sign_hash(key_id,
-                               PSA_ALG_DETERMINISTIC_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
+        status = psa_sign_hash(ctx->priv_id, PSA_ALG_DETERMINISTIC_ECDSA(hash_alg),
                                hash, hash_len, sig, sig_size, sig_len);
         if (status == PSA_ERROR_NOT_PERMITTED) {
-            status = psa_sign_hash(key_id,
-                                   PSA_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
+            status = psa_sign_hash(ctx->priv_id, PSA_ALG_ECDSA(hash_alg),
                                    hash, hash_len, sig, sig_size, sig_len);
         }
         if (status != PSA_SUCCESS) {
@@ -1297,18 +1293,13 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
     if (ctx->pk_info == &mbedtls_rsa_info ||
         ctx->pk_info == &mbedtls_rsa_opaque_info) {
-        psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-        psa_status_t status = psa_get_key_attributes(ctx->priv_id, &attributes);
-        if (status != PSA_SUCCESS) {
-            return PSA_PK_TO_MBEDTLS_ERR(status);
-        }
-
-        psa_algorithm_t alg = psa_get_key_algorithm(&attributes);
+        psa_algorithm_t sig_alg = psa_get_key_algorithm(&attributes);
         psa_reset_key_attributes(&attributes);
 
-        alg = (alg & ~PSA_ALG_HASH_MASK) | mbedtls_md_psa_alg_from_type(md_alg);
+        sig_alg = (sig_alg & ~PSA_ALG_HASH_MASK) | hash_alg;
 
-        status = psa_sign_hash(ctx->priv_id, alg, hash, hash_len, sig, sig_size, sig_len);
+        status = psa_sign_hash(ctx->priv_id, sig_alg,
+                               hash, hash_len, sig, sig_size, sig_len);
         return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
     }
 #endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
