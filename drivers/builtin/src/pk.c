@@ -1268,7 +1268,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         ctx->pk_info == &mbedtls_ecdsa_opaque_info) {
         mbedtls_svc_key_id_t key_id = ctx->priv_id;
 
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
         psa_status_t status;
         psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
         size_t key_bits = 0;
@@ -1283,23 +1282,16 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         status = psa_sign_hash(key_id,
                                PSA_ALG_DETERMINISTIC_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
                                hash, hash_len, sig, sig_size, sig_len);
-        if (status == PSA_SUCCESS) {
-            goto done;
-        } else if (status != PSA_ERROR_NOT_PERMITTED) {
-            return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
+        if (status == PSA_ERROR_NOT_PERMITTED) {
+            status = psa_sign_hash(key_id,
+                                   PSA_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
+                                   hash, hash_len, sig, sig_size, sig_len);
         }
-
-        status = psa_sign_hash(key_id,
-                               PSA_ALG_ECDSA(mbedtls_md_psa_alg_from_type(md_alg)),
-                               hash, hash_len, sig, sig_size, sig_len);
         if (status != PSA_SUCCESS) {
             return PSA_PK_ECDSA_TO_MBEDTLS_ERR(status);
         }
 
-    done:
-        ret = mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
-
-        return ret;
+        return mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
     }
 #endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC */
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
