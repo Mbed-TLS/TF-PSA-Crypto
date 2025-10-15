@@ -2328,3 +2328,43 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void pk_get_key_type_copy_from_psa_keypair(int key_type_arg, int bits)
+{
+    psa_key_id_t key;
+    psa_key_attributes_t attrs;
+    mbedtls_pk_context ctx;
+    psa_key_type_t key_type = (psa_key_id_t) key_type_arg;
+    psa_key_type_t returned_key_type;
+
+    mbedtls_pk_init(&ctx);
+
+    PSA_INIT();
+
+    /* 1. Generate a PSA key */
+    attrs = psa_key_attributes_init();
+    psa_set_key_type(&attrs, key_type);
+    psa_set_key_bits(&attrs, (size_t) bits);
+    /* We don't need to use the key for anything but it needs to be
+     * exportable. */
+    psa_set_key_usage_flags(&attrs, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attrs, PSA_ALG_NONE);
+
+    PSA_ASSERT(psa_generate_key(&attrs, &key));
+
+    /* 2. Copy PSA key into a PK context */
+    TEST_EQUAL(mbedtls_pk_copy_from_psa(key, &ctx), 0);
+
+    /* 3. Get the key type out of the PK context */
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+
+    /* 4. Check that it matches the expected key type */
+    TEST_EQUAL(returned_key_type, key_type);
+
+exit:
+    psa_destroy_key(key);
+    mbedtls_pk_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */
