@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/** The state manipulated by the Ascon permutation Ascon-p. */
+typedef struct {
+    uint64_t S[5];
+} tf_psa_crypto_ascon_p_state_t;
 
 #ifdef __cplusplus
 }

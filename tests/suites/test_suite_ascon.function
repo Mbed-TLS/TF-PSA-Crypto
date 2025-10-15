@@ -1,0 +1,81 @@
+/* BEGIN_HEADER */
+#include "ascon_internal.h"
+
+#if defined(MBEDTLS_TEST_HOOKS)
+static int permutation_state_from_bytes(
+    const data_t *bytes,
+    tf_psa_crypto_ascon_p_state_t *state)
+{
+    if (bytes->len != 40) {
+        return 0;
+    }
+    state->S[0] = MBEDTLS_GET_UINT64_LE(bytes->x, 0);
+    state->S[1] = MBEDTLS_GET_UINT64_LE(bytes->x, 8);
+    state->S[2] = MBEDTLS_GET_UINT64_LE(bytes->x, 16);
+    state->S[3] = MBEDTLS_GET_UINT64_LE(bytes->x, 24);
+    state->S[4] = MBEDTLS_GET_UINT64_LE(bytes->x, 32);
+    return 1;
+}
+
+static int permutation_state_equals(
+    const tf_psa_crypto_ascon_p_state_t *actual_state,
+    const tf_psa_crypto_ascon_p_state_t *expected_state)
+{
+    TEST_EQUAL(actual_state->S[0], expected_state->S[0]);
+    TEST_EQUAL(actual_state->S[1], expected_state->S[1]);
+    TEST_EQUAL(actual_state->S[2], expected_state->S[2]);
+    TEST_EQUAL(actual_state->S[3], expected_state->S[3]);
+    TEST_EQUAL(actual_state->S[4], expected_state->S[4]);
+    return 1;
+
+exit:
+    return 0;
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_BUILTIN_SOME_ASCON
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void permute_round(int rounds, int i,
+                   const data_t *input_bytes,
+                   const data_t *expected_output_bytes)
+{
+    tf_psa_crypto_ascon_p_state_t state;
+    tf_psa_crypto_ascon_p_state_t expected_output_state;
+
+    TEST_ASSERT(permutation_state_from_bytes(input_bytes, &state));
+    TEST_ASSERT(permutation_state_from_bytes(expected_output_bytes,
+                                             &expected_output_state));
+
+    tf_psa_crypto_ascon_permute_round(&state, rounds, i);
+
+    if (!permutation_state_equals(&state, &expected_output_state)) {
+        goto exit;
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void permute(int rounds,
+             const data_t *input_bytes,
+             const data_t *expected_output_bytes)
+{
+    tf_psa_crypto_ascon_p_state_t state;
+    tf_psa_crypto_ascon_p_state_t expected_output_state;
+
+    TEST_ASSERT(permutation_state_from_bytes(input_bytes, &state));
+    TEST_ASSERT(permutation_state_from_bytes(expected_output_bytes,
+                                             &expected_output_state));
+
+    tf_psa_crypto_ascon_permute(&state, rounds);
+
+    if (!permutation_state_equals(&state, &expected_output_state)) {
+        goto exit;
+    }
+}
+/* END_CASE */
