@@ -1,6 +1,0 @@
-API changes
-   * mbedtls_pk_verify_ext() ignores the options parameter when an
-     MBEDTLS_PK_RSASSA_PSS context type is used. The function assumes that
-     salt length is any and that the hash algorithm used for message, encoding
-     and MGF1 is the same. An error will be returned if any of these assumptions
-     is false.

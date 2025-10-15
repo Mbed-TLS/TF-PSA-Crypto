@@ -1,7 +1,0 @@
-API changes
-   * A PK context no longer associates specific algorithms with the key, except
-     when wrapping a PSA key. In particular, after mbedtls_pk_copy_from_psa() or
-     mbedtls_pk_copy_public_from_psa() on an RSA key, the functions
-     mbedtls_pk_get_psa_attributes(), mbedtls_pk_sign() and mbedtls_pk_verify()
-     will use PKCS#1v1.5 signature or encryption, regardless of the original
-     key's policy.

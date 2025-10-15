@@ -1,4 +1,0 @@
-Features
-   * Add a program (which_aes) that uses an internal function to print out
-     the current implementation of AES, i.e. software, AESCE, AESNI assembly,
-     or AESNI intrinsics.
