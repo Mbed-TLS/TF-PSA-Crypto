@@ -789,7 +789,7 @@ ECP write key ext: secp256r1, mostly-0 key, output_size=32
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_SECP256R1:"0000000000000000000000000000000000000000000000000000000000000001":32:0
 
-ECP write key: secp256r1, mostly-0 key, output_size=31 (too small)
+ECP write key ext: secp256r1, mostly-0 key, output_size=31 (too small)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_SECP256R1:"0000000000000000000000000000000000000000000000000000000000000001":31:MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL
 
@@ -825,7 +825,7 @@ ECP write key ext: Curve25519, output short by 1
 depends_on:MBEDTLS_ECP_DP_CURVE25519_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_CURVE25519:"a046e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449a44":31:MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL
 
-ECP write key: Curve25519, output_size=1
+ECP write key ext: Curve25519, output_size=1
 depends_on:MBEDTLS_ECP_DP_CURVE25519_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_CURVE25519:"a046e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449a44":1:MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL
 
@@ -853,11 +853,11 @@ ECP write key ext: Curve448, output longer by 1
 depends_on:MBEDTLS_ECP_DP_CURVE448_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_CURVE448:"3c262fddf9ec8e88495266fea19a34d28882acef045104d0d1aae121700a779c984c24f8cdd78fbff44943eba368f54b29259a4f1c600ad3":57:0
 
-ECP write key: Curve448, output longer by 32
+ECP write key ext: Curve448, output longer by 32
 depends_on:MBEDTLS_ECP_DP_CURVE448_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_CURVE448:"3c262fddf9ec8e88495266fea19a34d28882acef045104d0d1aae121700a779c984c24f8cdd78fbff44943eba368f54b29259a4f1c600ad3":112:0
 
-ECP write key: Curve448, output longer by 33
+ECP write key ext: Curve448, output longer by 33
 depends_on:MBEDTLS_ECP_DP_CURVE448_ENABLED
 ecp_write_key_ext:MBEDTLS_ECP_DP_CURVE448:"3c262fddf9ec8e88495266fea19a34d28882acef045104d0d1aae121700a779c984c24f8cdd78fbff44943eba368f54b29259a4f1c600ad3":113:0
 
