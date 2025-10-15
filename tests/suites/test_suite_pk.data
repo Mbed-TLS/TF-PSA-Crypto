@@ -1582,3 +1582,7 @@ pk_get_key_type_parse_key:"../framework/data_files/ec_256_prv.pem":PSA_KEY_TYPE_
 PK get type from parsed key, BrainpoolP256r1
 depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_BRAINPOOL_P_R1_256
 pk_get_key_type_parse_key:"../framework/data_files/ec_bp256_prv.pem":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1)
+
+PK get type from parsed public key, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_get_key_type_parse_public_key:"../framework/data_files/server1.pubkey":PSA_KEY_TYPE_RSA_PUBLIC_KEY
