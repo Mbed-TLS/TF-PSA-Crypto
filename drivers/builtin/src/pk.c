@@ -708,13 +708,40 @@ psa_key_type_t mbedtls_pk_get_key_type(mbedtls_pk_context *pk)
 {
     psa_key_attributes_t attrs;
     psa_status_t status;
+    mbedtls_pk_type_t public_key_type;
 
-    status = psa_get_key_attributes(pk->priv_id, &attrs);
-    if (status != PSA_SUCCESS) {
-        return PSA_KEY_TYPE_NONE;
+    if (pk->priv_id == MBEDTLS_SVC_KEY_ID_INIT) {
+        /* This indicates that the PK context only wraps a public key
+         * (see the documentation for mbedtls_pk_context). */
+
+        public_key_type = mbedtls_pk_get_type(pk);
+
+        switch (public_key_type) {
+            case MBEDTLS_PK_RSA:
+            /* Fallthrough */
+            case MBEDTLS_PK_RSASSA_PSS:
+                return PSA_KEY_TYPE_RSA_PUBLIC_KEY;
+
+            case MBEDTLS_PK_ECDSA:
+            /* Fallthrough */
+            case MBEDTLS_PK_ECKEY:
+            /* Fallthrough */
+            case MBEDTLS_PK_ECKEY_DH:
+                return PSA_KEY_TYPE_ECC_PUBLIC_KEY(pk->ec_family);
+
+            default:
+                return PSA_KEY_TYPE_NONE;
+        }
+    } else {
+        /* The PK context wraps a key pair, get the type from the
+         * private key. */
+        status = psa_get_key_attributes(pk->priv_id, &attrs);
+        if (status != PSA_SUCCESS) {
+            return PSA_KEY_TYPE_NONE;
+        }
+
+        return psa_get_key_type(&attrs);
     }
-
-    return psa_get_key_type(&attrs);
 }
 
 static psa_status_t export_import_into_psa(mbedtls_svc_key_id_t old_key_id,
