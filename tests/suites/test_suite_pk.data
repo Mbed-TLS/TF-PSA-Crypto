@@ -1559,6 +1559,14 @@ Copy from PSA: non-exportable -> public, Curve25519
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
 pk_copy_public_from_psa:"a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY)
 
-PK get type from wrapped PSA key
+PK get type from wrapped PSA key, RSA
 depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC
 pk_get_key_type_wrap_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:3072
+
+PK get type from wrapped PSA key, SECP_R1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC
+pk_get_key_type_wrap_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256
+
+PK get type from wrapped PSA key, SECP_K1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC
+pk_get_key_type_wrap_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):256
