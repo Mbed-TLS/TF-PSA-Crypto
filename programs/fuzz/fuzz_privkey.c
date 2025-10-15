@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "mbedtls/pk.h"
+#include "mbedtls/private/pk_private.h"
 #include "fuzz_common.h"
 
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
@@ -17,7 +18,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     mbedtls_pk_context pk;
 
     if (Size > MAX_LEN) {
-        abort();
+        //only work on small inputs
+        Size = MAX_LEN;
     }
 
     mbedtls_pk_init(&pk);
@@ -28,15 +30,20 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     }
 
     ret = mbedtls_pk_parse_key(&pk, Data, Size, NULL, 0);
-    if (ret != 0) {
-        abort();
+    if (ret == 0) {
+        if (mbedtls_pk_get_type(&pk) == MBEDTLS_PK_RSA ||
+            mbedtls_pk_get_type(&pk) == MBEDTLS_PK_ECKEY ||
+            mbedtls_pk_get_type(&pk) == MBEDTLS_PK_ECKEY_DH) {
+            ret = mbedtls_pk_write_key_der(&pk, out_buf, Size);
+            if (ret != 0) {
+                abort();
+            }
+        } else {
+            /* The key is valid but is not of a supported type.
+             * This should not happen. */
+            abort();
+        }
     }
-
-    ret = mbedtls_pk_write_key_der(&pk, out_buf, Size);
-    if (ret <= 0) {
-        abort();
-    }
-
 exit:
     mbedtls_pk_free(&pk);
     mbedtls_psa_crypto_free();
