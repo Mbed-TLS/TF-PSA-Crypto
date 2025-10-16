@@ -128,6 +128,59 @@ def full_adapter(name, value, active):
         return active
     return include_in_full(name)
 
+# The baremetal configuration excludes options that require a library or
+# operating system feature that is typically not present on bare metal
+# systems. Features that are excluded from "full" won't be in "baremetal"
+# either (unless explicitly turned on in baremetal_adapter) so they don't
+# need to be repeated here.
+EXCLUDE_FROM_BAREMETAL = frozenset([
+    #pylint: disable=line-too-long
+    'MBEDTLS_ENTROPY_NV_SEED', # requires a filesystem and FS_IO or alternate NV seed hooks
+    'MBEDTLS_FS_IO', # requires a filesystem
+    'MBEDTLS_HAVE_TIME', # requires a clock
+    'MBEDTLS_HAVE_TIME_DATE', # requires a clock
+    'MBEDTLS_PLATFORM_FPRINTF_ALT', # requires FILE* from stdio.h
+    'MBEDTLS_PLATFORM_NV_SEED_ALT', # requires a filesystem and ENTROPY_NV_SEED
+    'MBEDTLS_PLATFORM_TIME_ALT', # requires a clock and HAVE_TIME
+    'MBEDTLS_PSA_CRYPTO_STORAGE_C', # requires a filesystem
+    'MBEDTLS_PSA_ITS_FILE_C', # requires a filesystem
+    'MBEDTLS_THREADING_C', # requires a threading interface
+    'MBEDTLS_THREADING_PTHREAD', # requires pthread
+    'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT', # requires an OS for runtime-detection
+    'MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT', # requires an OS for runtime-detection
+])
+
+def keep_in_baremetal(name):
+    """Rules for symbols in the "baremetal" configuration."""
+    if name in EXCLUDE_FROM_BAREMETAL:
+        return False
+    return True
+
+def baremetal_adapter(name, value, active):
+    """Config adapter for "baremetal"."""
+    if not is_boolean_setting(name, value):
+        return active
+    if name == 'MBEDTLS_PSA_BUILTIN_GET_ENTROPY':
+        # No OS-provided entropy source
+        return False
+    if name == 'MBEDTLS_PSA_DRIVER_GET_ENTROPY':
+        return True
+    return include_in_full(name) and keep_in_baremetal(name)
+
+# This set contains options that are mostly for debugging or test purposes,
+# and therefore should be excluded when doing code size measurements.
+# Options that are their own module (such as MBEDTLS_ERROR_C) are not listed
+# and therefore will be included when doing code size measurements.
+EXCLUDE_FOR_SIZE = frozenset([
+    'MBEDTLS_SELF_TEST', # increases the size of many modules
+    'MBEDTLS_TEST_HOOKS', # only useful with the hosted test framework, increases code size
+])
+
+def baremetal_size_adapter(name, value, active):
+    if name in EXCLUDE_FOR_SIZE:
+        return False
+    return baremetal_adapter(name, value, active)
+
 def realfull_adapter(_name, _value, _active):
     """Activate all symbols.
 
@@ -197,6 +250,15 @@ class TFPSACryptoConfigTool(config_common.ConfigTool):
     def custom_parser_options(self):
         """Adds TF PSA Crypto specific options for the parser."""
 
+        self.add_adapter(
+            'baremetal', baremetal_adapter,
+            """Like full, but exclude features that require platform features
+            such as file input-output.
+            """)
+        self.add_adapter(
+            'baremetal_size', baremetal_size_adapter,
+            """Like baremetal, but exclude debugging features. Useful for code size measurements.
+            """)
         self.add_adapter(
             'full', full_adapter,
             """Uncomment most features.
