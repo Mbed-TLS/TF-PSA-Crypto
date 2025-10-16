@@ -1618,3 +1618,15 @@ pk_get_key_type_copy_from_psa_public:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_
 PK get type from copied PSA public key, SECP_K1
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
 pk_get_key_type_copy_from_psa_public:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type, public key copied from PSA, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_RSA_PUBLIC_KEY:3072
+
+PK get type, public key copied from PSA, SECP_R1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
+pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1):256
+
+PK get type, public key copied from PSA, SECP_K1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
+pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1):256
