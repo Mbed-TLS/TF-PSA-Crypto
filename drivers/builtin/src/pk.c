@@ -1268,8 +1268,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
         return mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
     }
-#endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC */
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
     if (PSA_KEY_TYPE_IS_RSA(type)) {
         psa_algorithm_t sig_alg = psa_get_key_algorithm(&attributes);
         psa_reset_key_attributes(&attributes);
