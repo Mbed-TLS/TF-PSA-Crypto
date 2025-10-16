@@ -55,6 +55,7 @@
 #include "mbedtls/private/gcm.h"
 #include "mbedtls/private/md5.h"
 #include "mbedtls/pk.h"
+#include "mbedtls/lms.h"
 #if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
 #include <mbedtls/private/pk_private.h>
 #endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
@@ -493,6 +494,19 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_ECP_IN_PROGRESS:
             return PSA_OPERATION_INCOMPLETE;
 #endif
+#endif
+
+#if defined(MBEDTLS_LMS_C)
+        case MBEDTLS_ERR_LMS_BAD_INPUT_DATA:
+            return PSA_ERROR_INVALID_ARGUMENT;
+        case MBEDTLS_ERR_LMS_OUT_OF_PRIVATE_KEYS:
+            return PSA_ERROR_INSUFFICIENT_DATA;
+        case MBEDTLS_ERR_LMS_VERIFY_FAILED:
+            return PSA_ERROR_INVALID_SIGNATURE;
+        case MBEDTLS_ERR_LMS_ALLOC_FAILED:
+            return PSA_ERROR_INSUFFICIENT_MEMORY;
+        case MBEDTLS_ERR_LMS_BUFFER_TOO_SMALL:
+            return PSA_ERROR_BUFFER_TOO_SMALL;
 #endif
 
         case MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED:
