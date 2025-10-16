@@ -173,8 +173,6 @@ const mbedtls_pk_info_t mbedtls_rsa_info = {
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = rsa_check_pair_wrap,
-    .ctx_alloc_func = NULL,
-    .ctx_free_func = NULL,
     .debug_func = rsa_debug,
 };
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
@@ -598,8 +596,6 @@ const mbedtls_pk_info_t mbedtls_eckey_info = {
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN || PSA_HAVE_ALG_ECDSA_VERIFY */
 #endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = eckey_check_pair_wrap,
-    .ctx_alloc_func = NULL,
-    .ctx_free_func = NULL,
     .debug_func = eckey_debug,
 };
 
@@ -624,8 +620,6 @@ const mbedtls_pk_info_t mbedtls_eckeydh_info = {
     .sign_rs_func = NULL,
 #endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = eckey_check_pair_wrap,
-    .ctx_alloc_func = NULL,
-    .ctx_free_func = NULL,
     .debug_func = eckey_debug,            /* Same underlying key structure */
 };
 
@@ -667,8 +661,6 @@ const mbedtls_pk_info_t mbedtls_ecdsa_info = {
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY || PSA_HAVE_ALG_ECDSA_SIGN */
 #endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = eckey_check_pair_wrap,   /* Compatible key structures */
-    .ctx_alloc_func = NULL,
-    .ctx_free_func = NULL,
     .debug_func = eckey_debug,        /* Compatible key structures */
 };
 #endif /* PSA_HAVE_ALG_SOME_ECDSA */
@@ -717,8 +709,6 @@ const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info = {
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = ecdsa_opaque_check_pair_wrap,
-    .ctx_alloc_func = NULL,
-    .ctx_free_func = NULL,
     .debug_func = NULL,
 };
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
@@ -792,8 +782,6 @@ const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECP_RESTARTABLE */
     .check_pair_func = NULL,
-    .ctx_alloc_func = NULL,
-    .ctx_free_func = NULL,
     .debug_func = NULL,
 };
 

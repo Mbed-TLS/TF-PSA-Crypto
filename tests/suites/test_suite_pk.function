@@ -1397,7 +1397,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_SHA_256:MBEDTLS_TEST_PK_PSA_SIGN */
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256:MBEDTLS_TEST_PK_PSA_SIGN */
 void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
 {
     mbedtls_pk_context pk;
@@ -1450,24 +1450,9 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
             normal_pub_key + sizeof(normal_pub_key) - normal_pub_key_len,
             normal_pub_key_len);
 #else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
-        TEST_ASSERT(sizeof(normal_pub_key) >= pk.pub_raw_len);
-        memcpy(normal_pub_key, pk.pub_raw, pk.pub_raw_len);
-        normal_pub_key_len = pk.pub_raw_len;
-    }
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
-        unsigned char *end = normal_pub_key + sizeof(normal_pub_key);
-        ret = mbedtls_rsa_write_pubkey(mbedtls_pk_rsa(pk), normal_pub_key, &end);
-        normal_pub_key_len = (size_t) ret;
-        TEST_ASSERT(normal_pub_key_len > 0);
-        /* mbedtls_rsa_write_pubkey() writes data backward in the buffer so
-         * we shift that to the origin of the buffer instead. */
-        memmove(normal_pub_key, end, normal_pub_key_len);
-    }
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
+    TEST_ASSERT(sizeof(normal_pub_key) >= pk.pub_raw_len);
+    memcpy(normal_pub_key, pk.pub_raw, pk.pub_raw_len);
+    normal_pub_key_len = pk.pub_raw_len;
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 
     /* Turn the PK context into an PSA-wrapping one. */
@@ -1540,8 +1525,7 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
 #if defined(MBEDTLS_RSA_C)
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
         TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
-        TEST_EQUAL(mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(pk), normal_pub_key,
-                                            normal_pub_key_len), 0);
+        TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, normal_pub_key, normal_pub_key_len), 0);
     }
 #endif /* MBEDTLS_RSA_C */
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */

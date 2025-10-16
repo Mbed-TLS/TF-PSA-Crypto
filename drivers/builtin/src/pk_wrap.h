@@ -71,12 +71,6 @@ struct mbedtls_pk_info_t {
     /** Check public-private key pair */
     int (*check_pair_func)(mbedtls_pk_context *pub, mbedtls_pk_context *prv);
 
-    /** Allocate a new context */
-    void * (*ctx_alloc_func)(void);
-
-    /** Free the given context */
-    void (*ctx_free_func)(void *ctx);
-
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     /** Allocate the restart context */
     void *(*rs_alloc_func)(mbedtls_pk_rs_op_t op_type);

@@ -171,53 +171,6 @@ const char *mbedtls_pk_get_name(const mbedtls_pk_context *ctx);
  */
 mbedtls_pk_type_t mbedtls_pk_get_type(const mbedtls_pk_context *ctx);
 
-#if defined(MBEDTLS_RSA_C)
-/**
- * Quick access to an RSA context inside a PK context.
- *
- * \warning This function can only be used when the type of the context, as
- * returned by mbedtls_pk_get_type(), is #MBEDTLS_PK_RSA.
- * Ensuring that is the caller's responsibility.
- * Alternatively, you can check whether this function returns NULL.
- *
- * \return The internal RSA context held by the PK context, or NULL.
- */
-static inline mbedtls_rsa_context *mbedtls_pk_rsa(const mbedtls_pk_context pk)
-{
-    switch (mbedtls_pk_get_type(&pk)) {
-        case MBEDTLS_PK_RSA:
-            return (mbedtls_rsa_context *) (pk).MBEDTLS_PRIVATE(pk_ctx);
-        default:
-            return NULL;
-    }
-}
-#endif /* MBEDTLS_RSA_C */
-
-#if defined(MBEDTLS_ECP_C)
-/**
- * Quick access to an EC context inside a PK context.
- *
- * \warning This function can only be used when the type of the context, as
- * returned by mbedtls_pk_get_type(), is #MBEDTLS_PK_ECKEY,
- * #MBEDTLS_PK_ECKEY_DH, or #MBEDTLS_PK_ECDSA.
- * Ensuring that is the caller's responsibility.
- * Alternatively, you can check whether this function returns NULL.
- *
- * \return The internal EC context held by the PK context, or NULL.
- */
-static inline mbedtls_ecp_keypair *mbedtls_pk_ec(const mbedtls_pk_context pk)
-{
-    switch (mbedtls_pk_get_type(&pk)) {
-        case MBEDTLS_PK_ECKEY:
-        case MBEDTLS_PK_ECKEY_DH:
-        case MBEDTLS_PK_ECDSA:
-            return (mbedtls_ecp_keypair *) (pk).MBEDTLS_PRIVATE(pk_ctx);
-        default:
-            return NULL;
-    }
-}
-#endif /* MBEDTLS_ECP_C */
-
 #if defined(MBEDTLS_PK_PARSE_C)
 /**
  * \brief           Parse a SubjectPublicKeyInfo DER structure
