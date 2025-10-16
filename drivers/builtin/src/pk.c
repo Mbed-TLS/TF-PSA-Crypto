@@ -32,10 +32,8 @@
 #include "mbedtls/private/ecdsa.h"
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include "psa_util_internal.h"
 #include "mbedtls/psa_util.h"
-#endif
 
 #include <limits.h>
 #include <stdint.h>
@@ -52,11 +50,9 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx)
     ctx->pk_info = NULL;
     ctx->pk_ctx = NULL;
     ctx->priv_id = MBEDTLS_SVC_KEY_ID_INIT;
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     memset(ctx->pub_raw, 0, sizeof(ctx->pub_raw));
     ctx->pub_raw_len = 0;
     ctx->bits = 0;
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY || PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     ctx->ec_family = 0;
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
@@ -534,7 +530,6 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
     return 0;
 }
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                                   psa_key_usage_t usage,
                                   psa_key_attributes_t *attributes)
@@ -1006,7 +1001,6 @@ int mbedtls_pk_copy_public_from_psa(mbedtls_svc_key_id_t key_id,
 {
     return copy_from_psa(key_id, pk, 1);
 }
-#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
 
 /*
  * Helper for mbedtls_pk_sign and mbedtls_pk_verify

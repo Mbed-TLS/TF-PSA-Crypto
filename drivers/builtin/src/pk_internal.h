@@ -20,7 +20,6 @@
 #include "mbedtls/private/ecp.h"
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include "psa/crypto.h"
 
 #include "psa_util_internal.h"
@@ -31,7 +30,6 @@
 #define PSA_PK_ECDSA_TO_MBEDTLS_ERR(status) PSA_TO_MBEDTLS_ERR_LIST(status,   \
                                                                     psa_to_pk_ecdsa_errors,        \
                                                                     psa_pk_status_to_mbedtls)
-#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
 
 /* Headers/footers for PEM files */
 #define PEM_BEGIN_PUBLIC_KEY    "-----BEGIN PUBLIC KEY-----"

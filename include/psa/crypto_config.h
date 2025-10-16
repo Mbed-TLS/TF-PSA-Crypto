@@ -794,7 +794,9 @@
  * Module:  drivers/builtin/src/pk.c
  * Caller:  drivers/builtin/src/psa_crypto_rsa.c
  *
- * Requires: MBEDTLS_MD_C, the built-in RSA or ECP implementation
+ * Requires: #MBEDTLS_PSA_CRYPTO_CLIENT and at least one between
+ *           #PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY and
+ *           #PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY.
  *
  * Uncomment to enable generic public key wrappers.
  */
