@@ -49,11 +49,6 @@ struct mbedtls_pk_info_t {
                        const unsigned char *hash, size_t hash_len,
                        const unsigned char *sig, size_t sig_len);
 
-    /** Make signature */
-    int (*sign_func)(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
-                     const unsigned char *hash, size_t hash_len,
-                     unsigned char *sig, size_t sig_size, size_t *sig_len);
-
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     /** Verify signature (restartable) */
     int (*verify_rs_func)(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
