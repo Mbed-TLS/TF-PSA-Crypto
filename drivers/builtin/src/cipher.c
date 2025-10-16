@@ -442,16 +442,23 @@ int mbedtls_cipher_set_iv(mbedtls_cipher_context_t *ctx,
 
 #if defined(MBEDTLS_CHACHA20_C)
     if (((mbedtls_cipher_type_t) ctx->cipher_info->type) == MBEDTLS_CIPHER_CHACHA20) {
-        /* Even though the actual_iv_size is overwritten with a correct value
-         * of 12 from the cipher info, return an error to indicate that
-         * the input iv_len is wrong. */
-        if (iv_len != 12) {
+        if (iv_len != 12 && iv_len != 16) {
             return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
         }
 
+        /* default: 12-byte nonce. */
+        const unsigned char *nonce = iv;
+        uint32_t counter = 0U; /* Initial counter value */
+
+        /* 16 bytes IV: 4-byte little-endian counter + 12-byte nonce */
+        if (iv_len == 16) {
+            counter = MBEDTLS_GET_UINT32_LE(iv, 0);
+            nonce = iv + 4;
+        }
+
         if (0 != mbedtls_chacha20_starts((mbedtls_chacha20_context *) ctx->cipher_ctx,
-                                         iv,
-                                         0U)) {   /* Initial counter value */
+                                         nonce,
+                                         counter)) {
             return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
         }
     }
