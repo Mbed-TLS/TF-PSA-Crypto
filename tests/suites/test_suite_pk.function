@@ -2368,3 +2368,67 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void pk_get_key_type_copy_from_psa_public(int key_type_arg, int bits)
+{
+    psa_key_id_t keypair;
+    psa_key_id_t public_key;
+    psa_key_attributes_t attrs;
+    mbedtls_pk_context ctx;
+    psa_key_type_t key_type = (psa_key_id_t) key_type_arg;
+    psa_key_type_t keypair_type;
+    psa_key_type_t returned_key_type;
+
+    uint8_t *exported = NULL;
+    size_t exported_size;
+    size_t exported_length = SIZE_MAX;
+
+    mbedtls_pk_init(&ctx);
+
+    PSA_INIT();
+
+    TEST_ASSERT(PSA_KEY_TYPE_IS_PUBLIC_KEY(key_type));
+
+    /* 1. Generate a PSA key pair */
+    keypair_type = (key_type & ~PSA_KEY_TYPE_CATEGORY_MASK)
+                   | PSA_KEY_TYPE_CATEGORY_KEY_PAIR;
+
+    attrs = psa_key_attributes_init();
+    psa_set_key_type(&attrs, keypair_type);
+    psa_set_key_bits(&attrs, (size_t) bits);
+    /* We don't need to use the key for anything but it needs to be
+     * exportable. */
+    psa_set_key_usage_flags(&attrs, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attrs, PSA_ALG_NONE);
+
+    PSA_ASSERT(psa_generate_key(&attrs, &keypair));
+
+    /* 2. Export the public key into a buffer */
+    exported_size = PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, bits);
+
+    TEST_CALLOC(exported, exported_size);
+    PSA_ASSERT(psa_export_public_key(keypair,
+                                     exported, exported_size,
+                                     &exported_length));
+
+    /* 3. Reimport public key into PSA */
+    psa_set_key_type(&attrs, key_type);
+    PSA_ASSERT(psa_import_key(&attrs, exported, exported_length, &public_key));
+
+    /* 4. Copy public PSA key into a PK context */
+    TEST_EQUAL(mbedtls_pk_copy_from_psa(public_key, &ctx), 0);
+
+    /* 5. Get the key type out of the PK context */
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+
+    /* 6. Check that it matches the expected key type */
+    TEST_EQUAL(returned_key_type, key_type);
+
+exit:
+    psa_destroy_key(keypair);
+    psa_destroy_key(public_key);
+    mbedtls_pk_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */
