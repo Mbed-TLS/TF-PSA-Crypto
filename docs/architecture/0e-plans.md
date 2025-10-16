@@ -161,7 +161,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `config_psa.h` | N/A | Exposed | [Only for exposed macros ](#headers-that-remain-exposed-for-exposed-macros) |
 | `constant_time.h` | `mbedtls_ct_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
 | `ctr_drbg.h` | `mbedtls_ctr_drbg_` | Private | [Internal eventually](#headers-that-will-become-internal-eventually) |
-| `des.h` | `mbedtls_des_` | Expose | [context types](#headers-with-context-types) |
+| `des.h` | `mbedtls_des_` | Expose or remove | [context types](#headers-with-context-types), [Removal of DES](#removal-of-des) |
 | `dhm.h` | `mbedtls_dhm_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `ecdh.h` | `mbedtls_ecdh_` | Expose | [context types](#headers-with-context-types) |
 | `ecdsa.h` | `mbedtls_ecdsa_` | Expose | [context types](#headers-with-context-types) |
@@ -180,7 +180,7 @@ The following table lists the headers that, as of the repository split, are loca
 | `oid.h` | `mbedtls_oid_` | Private | [OID interface](#oid-interface) |
 | `pem.h` | `mbedtls_pem_` | TBD | [Base64 and PEM](#base64-and-pem) |
 | `pk.h` | `mbedtls_pk_` | Public | [cryptography-adjacent](#cryptography-adjacent-headers) |
-| `pkcs12.h` | `mbedtls_pkcs12_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
+| `pkcs12.h` | `mbedtls_pkcs12_` | Private or Remove | [can be made fully private](#headers-that-can-be-made-fully-private), [Removal of DES](#removal-of-des) |
 | `pkcs5.h` | `mbedtls_pkcs5_` | Private | [can be made fully private](#headers-that-can-be-made-fully-private) |
 | `platform.h` | `mbedtls_platform_` | Public | [Platform headers](#platform-headers) |
 | `platform_time.h` | `mbedtls_*time*` | Public | [Platform headers](#platform-headers) |
@@ -387,6 +387,8 @@ sha3.h
 sha512.h
 ```
 
+(Noting that `des.h` may be [removed altogether alongside DES](#removal-of-des).)
+
 Main loss of functionality:
 
 * Self-test functions. See [PSA self-test interface](#psa-self-test-interface)
@@ -418,6 +420,8 @@ pkcs12.h
 pkcs5.h
 rsa.h
 ```
+
+(Noting that `pkcs12.h` may be [removed altogether alongside DES](#removal-of-des).)
 
 Places where some of these headers are used:
 
@@ -844,7 +848,7 @@ Options that can be set via adjustment, and can currently also be set directly. 
 | `MBEDTLS_CIPHER_MODE_OFB` | `PSA_WANT_ALG_OFB` |  |
 | `MBEDTLS_CIPHER_PADDING_PKCS7` | `PSA_WANT_ALG_CBC_PKCS7` |  |
 | `MBEDTLS_CMAC_C` | `PSA_WANT_ALG_CMAC` |  |
-| `MBEDTLS_DES_C` | `PSA_WANT_KEY_TYPE_DES` | May be removed: [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164) |
+| `MBEDTLS_DES_C` | `PSA_WANT_KEY_TYPE_DES` | [May be removed](#removal-of-des) |
 | `MBEDTLS_ECDH_C` | `PSA_WANT_ALG_ECDH` |  |
 | `MBEDTLS_ECDSA_C` | `PSA_WANT_ALG_ECDSA`, `PSA_WANT_ALG_DETERMINISTIC_ECDSA` |  |
 | `MBEDTLS_ECDSA_DETERMINISTIC` | `PSA_WANT_ALG_DETERMINISTIC_ECDSA` |  |
@@ -942,7 +946,7 @@ Options that can currently be set directly, and cannot be set via adjustment. Su
 | `MBEDTLS_NO_UDBL_DIVISION` | Keep | Tune built-in crypto |
 | `MBEDTLS_PEM_PARSE_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
 | `MBEDTLS_PEM_WRITE_C` | Keep | Crypto-adjacent feature, [remains public](#headers-that-remain-public) |
-| `MBEDTLS_PKCS12_C` | Keep | No longer an exposed API, but functionality accessed through PK. Need doc update. |
+| `MBEDTLS_PKCS12_C` | Remove? | [Only relevant for DES](#removal-of-des). |
 | `MBEDTLS_PKCS5_C` | Keep | No longer an exposed API, but functionality accessed through PK. Need doc update. |
 | `MBEDTLS_PK_C` | Keep | No PSA equivalent yet |
 | `MBEDTLS_PK_PARSE_C` | Keep | No PSA equivalent yet |
@@ -1071,7 +1075,7 @@ This section is about the parameters of the DRBG (including how it communicates 
 
 Many of the [RNG options](#impacted-rng-options) are mostly meaningless now that the DRBG modules and the entropy module are no longer public. In this section, we determine which options are still relevant, either because they are algorithm choices or because they are a security/resources compromise.
 
-For notions of strength, we follow [NIST SP 800-90A r1](https://doi.org/10.6028/NIST.SP.800-90Ar1) (especially table 2 p. 38 for HMAC\_DRBG) and table 3 p. 49 for CTR\_DRBG), and [NIST SP 800-57 part 1 r1](https://doi.org/10.6028/NIST.SP.800-57pt1r5) §5.6.1.
+For notions of strength, we follow [NIST SP 800-90A r1](https://doi.org/10.6028/NIST.SP.800-90Ar1) (especially table 2 p. 38 for HMAC\_DRBG) and table 3 p. 49 for CTR\_DRBG), and [NIST SP 800-57 part 1 r5](https://doi.org/10.6028/NIST.SP.800-57pt1r5) §5.6.1.
 
 The RNG uses the following algorithms:
 
@@ -1088,7 +1092,7 @@ For the choice of DRBG, we preserve the existing behavior: pick CTR\_DRBG if ena
 We can deduce the sizes used in entropy and for DRBG internals from just two settings:
 
 * `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH` indicating the minimum strength of the RNG. Only 128 and 256 are meant to be useful values. Default to 256.
-* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured. Default to SHA-256.
+* `MBEDTLS_PSA_CRYPTO_RNG_HASH` indicating which hash algorithm to use for the entropy module, and for HMAC\_DRBG if configured. This is a `PSA_ALG_xxx` macro. Default to SHA-256.
 
 For CTR\_DRBG, use AES-256 if `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH > 128` and AES-128 otherwise.
 
@@ -1143,6 +1147,8 @@ The new configuration checks ensure that the RNG configuration options achieve t
 * If CTR\_DRBG is used, the AES key size is chosen based on the strength. A strength of more than 256 is an error.
 * If HMAC\_DRBG is used, the size of the hash must be at least `MBEDTLS_PSA_CRYPTO_RNG_STRENGTH`.
 * The size of the hash `MBEDTLS_PSA_CRYPTO_RNG_HASH` must be at least 256 bits (32 bytes). We could in principle support smaller hashes, but we would need more complex strength calculations, and nobody needs this in 2025.
+
+The checks that depend on `MBEDTLS_PSA_CRYPTO_RNG_HASH` can't be done with preprocessor conditions, since the definition of `PSA_ALG_xxx` are compile-time constants but not preprocessor constants (they contain casts). They need to be static asserts. Since `check_config.h` only has preprocessor checks, it seems reasonable to put the static asserts in `psa_crypto_random_impl.h` instead. The existing or new preprocessor checks can also go into `psa_crypto_random_impl.h` for consistency.
 
 #### Builds without entropy
 
@@ -1277,7 +1283,14 @@ Reasons to do this:
 * It is used in a very large number of places, both in Mbed TLS and in third-party code. Keeping it around will both save us work during the lifetime of TF-PSA-Crypto 1.x and Mbed TLS 4.x, and facilitate the transition for our users.
 * If we don't do this, then we'll have to change some code in Mbed TLS. In the `full` configuration, Mbed TLS links to several md functions: `mbedtls_md`, `mbedtls_md_error_from_psa`, `mbedtls_md_get_size`, `mbedtls_md_info_from_type` (in addition to macros, enum constants and static inline functions from `mbedtls/md.h`).
 
-ACTION (https://github.com/Mbed-TLS/mbedtls/issues/8450): Privatize the parts of `md.h` that are not MD-light.
+ACTION (https://github.com/Mbed-TLS/mbedtls/issues/8450): Privatize the parts of `md.h` that are not MD-light. That is:
+
+* Functions that are currently available when `MBEDTLS_MD_LIGHT` is defined and `MBEDTLS_MD_C` is not defined, will be declared unconditionally in `mbedtls/md.h`.
+* Functions that are currently available only when `MBEDTLS_MD_C`, will now be declared in `mbedtls/md.h` only when `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` is defined.
+* `mbedtls_md_engine_t` (not a public interface, but used to define the public type `mbedtls_md_context_t`) should have no Doxygen documentation.
+* `MBEDTLS_ERR_MD_FILE_IO_ERROR` should be guarded by `MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS` since it is only used by functions that are becoming private. (Or we could remove it, together with `mbedtls_md_file()`.)
+* The function `mbedtls_md_setup()` is only partially covered by `MBEDTLS_MD_C`. Specifically, the light configuration omits HMAC support. The whole code needs to stay (it's used by HMAC_DRBG and PKCS5), but the documentation should now state that the `hmac` argument must be 0. (Alternatively, we remove the `hmac` argument and split the function in two.)
+* Nothing changes in `md.c` (unless we go for more extensive work that removes the private features that we already don't need).
 
 ### Shrunk-down `pk.h`
 
@@ -1331,6 +1344,18 @@ MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
 MBEDTLS_CIPHER_PADDING_ZEROS
 MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
 ```
+
+#### Removal of DES
+
+We want to remove DES: [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164).
+
+The PKCS12 module in Mbed TLS is really [PKCS#5 v1.5](https://datatracker.ietf.org/doc/html/rfc2898#section-6.1), which combines PBKDF1 with an old cipher (DES or some cipher that Mbed TLS doesn't support (any longer)). With the removal of DES, the PKCS12 is no longer relevant. It is superseded by the PKCS5 module, which implements PBES2 which uses PBKDF2 and can use more modern ciphers such as AES.
+
+Thus this involves:
+
+* Remove all code guarded by `MBEDTLS_PKCS12_C`. This will be done in [Mbed-TLS/TF-PSA-Crypto#389](https://github.com/Mbed-TLS/TF-PSA-Crypto/pull/389).
+* Remove all code guarded by `MBEDTLS_DES_C` or `PSA_WANT_KEY_TYPE_DES`. This is planned in [Mbed-TLS/mbedtls#9164](https://github.com/Mbed-TLS/mbedtls/issues/9164).
+* Remove all tests guarded by `MBEDTLS_DES_C`. In some cases, this may involve writing an alternative test case using AES, if there wasn't already one. This is planned in [Mbed-TLS/TF-PSA-Crypto#374](https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/374).
 
 ### Loss of asymmetric cryptography
 
