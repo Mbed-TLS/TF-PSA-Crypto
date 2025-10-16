@@ -139,7 +139,6 @@ EXCLUDE_FROM_BAREMETAL = frozenset([
     'MBEDTLS_FS_IO', # requires a filesystem
     'MBEDTLS_HAVE_TIME', # requires a clock
     'MBEDTLS_HAVE_TIME_DATE', # requires a clock
-    'MBEDTLS_NET_C', # requires POSIX-like networking
     'MBEDTLS_PLATFORM_FPRINTF_ALT', # requires FILE* from stdio.h
     'MBEDTLS_PLATFORM_NV_SEED_ALT', # requires a filesystem and ENTROPY_NV_SEED
     'MBEDTLS_PLATFORM_TIME_ALT', # requires a clock and HAVE_TIME
@@ -147,7 +146,6 @@ EXCLUDE_FROM_BAREMETAL = frozenset([
     'MBEDTLS_PSA_ITS_FILE_C', # requires a filesystem
     'MBEDTLS_THREADING_C', # requires a threading interface
     'MBEDTLS_THREADING_PTHREAD', # requires pthread
-    'MBEDTLS_TIMING_C', # requires a clock
     'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT', # requires an OS for runtime-detection
     'MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT', # requires an OS for runtime-detection
 ])
@@ -174,7 +172,6 @@ def baremetal_adapter(name, value, active):
 # Options that are their own module (such as MBEDTLS_ERROR_C) are not listed
 # and therefore will be included when doing code size measurements.
 EXCLUDE_FOR_SIZE = frozenset([
-    'MBEDTLS_DEBUG_C', # large code size increase in TLS
     'MBEDTLS_SELF_TEST', # increases the size of many modules
     'MBEDTLS_TEST_HOOKS', # only useful with the hosted test framework, increases code size
 ])
