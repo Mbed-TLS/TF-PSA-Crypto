@@ -954,13 +954,6 @@ void mbedtls_rsa_init(mbedtls_rsa_context *ctx)
 
     ctx->padding = MBEDTLS_RSA_PKCS_V15;
     ctx->hash_id = MBEDTLS_MD_NONE;
-
-#if defined(MBEDTLS_THREADING_C)
-    /* Set ctx->ver to nonzero to indicate that the mutex has been
-     * initialized and will need to be freed. */
-    ctx->ver = 1;
-    mbedtls_mutex_init(&ctx->mutex);
-#endif
 }
 
 /*
@@ -1233,12 +1226,6 @@ int mbedtls_rsa_public(mbedtls_rsa_context *ctx,
 
     mbedtls_mpi_init(&T);
 
-#if defined(MBEDTLS_THREADING_C)
-    if ((ret = mbedtls_mutex_lock(&ctx->mutex)) != 0) {
-        return ret;
-    }
-#endif
-
     MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&T, input, ctx->len));
 
     if (mbedtls_mpi_cmp_mpi(&T, &ctx->N) >= 0) {
@@ -1251,11 +1238,6 @@ int mbedtls_rsa_public(mbedtls_rsa_context *ctx,
     MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&T, output, olen));
 
 cleanup:
-#if defined(MBEDTLS_THREADING_C)
-    if (mbedtls_mutex_unlock(&ctx->mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-#endif
 
     mbedtls_mpi_free(&T);
 
@@ -1417,12 +1399,6 @@ int mbedtls_rsa_private(mbedtls_rsa_context *ctx,
         return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
     }
 
-#if defined(MBEDTLS_THREADING_C)
-    if ((ret = mbedtls_mutex_lock(&ctx->mutex)) != 0) {
-        return ret;
-    }
-#endif
-
     /* MPI Initialization */
     mbedtls_mpi_init(&T);
 
@@ -1542,11 +1518,6 @@ int mbedtls_rsa_private(mbedtls_rsa_context *ctx,
     MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&T, output, olen));
 
 cleanup:
-#if defined(MBEDTLS_THREADING_C)
-    if (mbedtls_mutex_unlock(&ctx->mutex) != 0) {
-        return MBEDTLS_ERR_THREADING_MUTEX_ERROR;
-    }
-#endif
 
     mbedtls_mpi_free(&P1);
     mbedtls_mpi_free(&Q1);
@@ -2802,14 +2773,6 @@ void mbedtls_rsa_free(mbedtls_rsa_context *ctx)
     mbedtls_mpi_free(&ctx->DQ);
     mbedtls_mpi_free(&ctx->DP);
 #endif /* MBEDTLS_RSA_NO_CRT */
-
-#if defined(MBEDTLS_THREADING_C)
-    /* Free the mutex, but only if it hasn't been freed already. */
-    if (ctx->ver != 0) {
-        mbedtls_mutex_free(&ctx->mutex);
-        ctx->ver = 0;
-    }
-#endif
 }
 
 #if defined(MBEDTLS_SELF_TEST)
