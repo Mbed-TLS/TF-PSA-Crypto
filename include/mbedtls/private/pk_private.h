@@ -247,36 +247,5 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
 int mbedtls_pk_write_pubkey(unsigned char **p, unsigned char *start,
                             const mbedtls_pk_context *key);
 #endif /* MBEDTLS_PK_WRITE_C */
-
-/**
- * \brief           Verify signature, with explicit selection of the signature algorithm.
- *                  (Includes verification of the padding depending on type.)
- *
- * \param type      Signature type (inc. possible padding type) to verify
- * \param ctx       The PK context to use. It must have been set up.
- * \param md_alg    Hash algorithm used (see notes)
- * \param hash      Hash of the message to sign
- * \param hash_len  Hash length or 0 (see notes)
- * \param sig       Signature to verify
- * \param sig_len   Signature length
- *
- * \return          0 on success (signature is valid),
- *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
- *                  used for this type of signatures,
- *                  #PSA_ERROR_INVALID_SIGNATURE if there is a valid
- *                  signature in \p sig but its length is less than \p sig_len,
- *                  or a specific error code.
- *
- * \note            If hash_len is 0, then the length associated with md_alg
- *                  is used instead, or an error returned if it is invalid.
- *
- * \note            \p options parameter is kept for backward compatibility.
- *                  If key type is different from MBEDTLS_PK_RSASSA_PSS it must
- *                  be NULL, otherwise it's just ignored.
- */
-int mbedtls_pk_verify_new(mbedtls_pk_type_t type, mbedtls_pk_context *ctx,
-                          mbedtls_md_type_t md_alg, const unsigned char *hash,
-                          size_t hash_len, const unsigned char *sig, size_t sig_len);
-
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 #endif /* MBEDTLS_PRIVATE_PK_PRIVATE_H */
