@@ -92,6 +92,14 @@ static inline int psa_key_id_is_volatile(psa_key_id_t key_id)
 psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
                                        psa_key_slot_t **p_slot);
 
+#if defined(MBEDTLS_TEST_HOOKS)
+
+psa_status_t psa_load_persistent_key_into_slot(psa_key_slot_t *slot);
+
+psa_status_t psa_load_builtin_key_into_slot(psa_key_slot_t *slot);
+
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /** Initialize the key slot structures.
  *
  * \retval #PSA_SUCCESS
@@ -99,7 +107,12 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
  */
 psa_status_t psa_initialize_key_slots(void);
 
-#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#if defined(MBEDTLS_TEST_HOOKS)
+
+extern void (*mbedtls_test_hook_psa_load_builtin_key_into_slot)(void);
+extern void (*mbedtls_test_hook_psa_load_persistent_key_into_slot)(void);
+
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
 /* Allow test code to customize the key slice length. We use this in tests
  * that exhaust the key store to reach a full key store in reasonable time
  * and memory.
@@ -115,7 +128,8 @@ extern size_t (*mbedtls_test_hook_psa_volatile_key_slice_length)(
 
 /* The number of volatile key slices. */
 size_t psa_key_slot_volatile_slice_count(void);
-#endif
+#endif /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
+#endif /* MBEDTLS_TEST_HOOKS */
 
 /** Delete all data from key slots in memory.
  * This function is not thread safe, it wipes every key slot regardless of
@@ -312,15 +326,19 @@ static inline int psa_key_lifetime_is_external(psa_key_lifetime_t lifetime)
  */
 psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime);
 
-/** Validate a key identifier.
+/** Test whether a key identifier belongs to the user key range.
  *
- * \param[in] key           The key identifier.
- * \param[in] vendor_ok     Non-zero to indicate that key identifiers in the
- *                          vendor range are allowed, volatile key identifiers
- *                          excepted \c 0 otherwise.
+ * \param key_id  Key identifier to test.
  *
- * \retval <> 0 if the key identifier is valid, 0 otherwise.
+ * \retval 1
+ *         The key identifier is a user key identifier.
+ * \retval 0
+ *         The key identifier is not a user key identifier.
  */
-int psa_is_valid_key_id(mbedtls_svc_key_id_t key, int vendor_ok);
+static inline int psa_key_id_is_user(psa_key_id_t key_id)
+{
+    return (key_id >= PSA_KEY_ID_USER_MIN) &&
+           (key_id <= PSA_KEY_ID_USER_MAX);
+}
 
 #endif /* PSA_CRYPTO_SLOT_MANAGEMENT_H */

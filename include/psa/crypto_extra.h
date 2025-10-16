@@ -320,7 +320,6 @@ psa_status_t mbedtls_psa_external_get_random(
  */
 typedef uint64_t psa_drv_slot_number_t;
 
-#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
 /** Test whether a key identifier belongs to the builtin key range.
  *
  * \param key_id  Key identifier to test.
@@ -336,6 +335,7 @@ static inline int psa_key_id_is_builtin(psa_key_id_t key_id)
            (key_id <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX);
 }
 
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
 /** Platform function to obtain the location and slot number of a built-in key.
  *
  * An application-specific implementation of this function must be provided if

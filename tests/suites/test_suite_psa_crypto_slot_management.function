@@ -104,12 +104,77 @@ static size_t tiny_key_slice_length(size_t slice_idx)
 #define MAX_VOLATILE_KEYS MBEDTLS_PSA_KEY_SLOT_COUNT
 #endif
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) && \
+    defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+/* Count how many times psa_load_builtin_key_into_slot() has been called with
+ * an ID that belong to the builtin range. This doesn't mean that the key must
+ * exist, but simply that the initial check on the ID range is passed. */
+static int psa_load_builtin_key_into_slot_attempts = 0;
+static void psa_load_builtin_key_into_slot_cb(void)
+{
+    psa_load_builtin_key_into_slot_attempts++;
+}
+
+/* Count how many times psa_load_persistent_key_into_slot() has been called with
+ * an ID that belong to the persistent range. This doesn't mean that the key must
+ * exist, but simply that the initial check on the ID range is passed. */
+static int psa_load_persistent_key_into_slot_attempts = 0;
+static void psa_load_persistent_key_into_slot_cb(void)
+{
+    psa_load_persistent_key_into_slot_attempts++;
+}
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_CRYPTO_STORAGE_C &&
+          MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
  * depends_on:MBEDTLS_PSA_CRYPTO_C
  * END_DEPENDENCIES
  */
+
+/* BEGIN_CASE depends_on: MBEDTLS_TEST_HOOKS:MBEDTLS_PSA_CRYPTO_STORAGE_C:MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
+void check_key_id_value(int key_id_arg)
+{
+    /* Disposable key slots */
+    psa_key_slot_t slot_persistent = {
+        .attr.id = mbedtls_svc_key_id_make(0, key_id_arg),
+        .attr.lifetime = PSA_KEY_LIFETIME_PERSISTENT,
+    };
+    psa_key_slot_t slot_builtin = {
+        .attr.id = mbedtls_svc_key_id_make(0, key_id_arg),
+        .attr.lifetime = PSA_KEY_LIFETIME_PERSISTENT,
+    };
+
+    /* Expected number of times that functions psa_load_builtin_key_into_slot()
+     * and psa_load_persistent_key_into_slot() are called. */
+    int builtin_attempts = (((unsigned int) key_id_arg >= MBEDTLS_PSA_KEY_ID_BUILTIN_MIN) &&
+                            ((unsigned int) key_id_arg <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX));
+    int persistent_attempts = (((unsigned int) key_id_arg >= PSA_KEY_ID_USER_MIN) &&
+                               ((unsigned int) key_id_arg <= PSA_KEY_ID_USER_MAX));
+
+    PSA_INIT();
+
+    /* Setup callbacks */
+    mbedtls_test_hook_psa_load_builtin_key_into_slot = psa_load_builtin_key_into_slot_cb;
+    mbedtls_test_hook_psa_load_persistent_key_into_slot = psa_load_persistent_key_into_slot_cb;
+
+    psa_load_persistent_key_into_slot(&slot_persistent);
+    TEST_EQUAL(psa_load_persistent_key_into_slot_attempts, persistent_attempts);
+
+    psa_load_builtin_key_into_slot(&slot_builtin);
+    TEST_EQUAL(psa_load_builtin_key_into_slot_attempts, builtin_attempts);
+
+exit:
+    /* Remove callbacks */
+    mbedtls_test_hook_psa_load_builtin_key_into_slot = NULL;
+    mbedtls_test_hook_psa_load_persistent_key_into_slot = NULL;
+    psa_load_builtin_key_into_slot_attempts = 0;
+    psa_load_persistent_key_into_slot_attempts = 0;
+
+    PSA_DONE();
+}
+/* END_CASE */
 
 /* BEGIN_CASE */
 void transient_slot_lifecycle(int owner_id_arg,
