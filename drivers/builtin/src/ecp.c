@@ -46,15 +46,20 @@
 
 #include "mbedtls/platform.h"
 
-#if defined(MBEDTLS_SELF_TEST)
-/*
- * Counts of point addition and doubling, and field multiplications.
- * Used to test resistance of point multiplication to simple timing attacks.
- */
-#if defined(MBEDTLS_ECP_C)
-static unsigned long add_count, dbl_count;
-#endif /* MBEDTLS_ECP_C */
-static unsigned long mul_count;
+/* Traces that can be used to count or check the number of basic operations
+ * (MPI multiply modulo, point addition, point doubling) in an
+ * ECC operation. */
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
+mbedtls_ecp_trace_counts_t *mbedtls_ecp_trace_counts_live = NULL;
+
+#define TRACE_POINT(where)                                              \
+    do {                                                                \
+        if (mbedtls_ecp_trace_counts_live != NULL) {                    \
+            ++mbedtls_ecp_trace_counts_live->where;                     \
+        }                                                               \
+    } while (0)
+#else
+#define TRACE_POINT(where) ((void) 0)
 #endif
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
@@ -1001,17 +1006,12 @@ cleanup:
 /*
  * Reduce a mbedtls_mpi mod p in-place, general case, to use after mbedtls_mpi_mul_mpi
  */
-#if defined(MBEDTLS_SELF_TEST)
-#define INC_MUL_COUNT   mul_count++;
-#else
-#define INC_MUL_COUNT
-#endif
 
 #define MOD_MUL(N)                                                    \
     do                                                                  \
     {                                                                   \
         MBEDTLS_MPI_CHK(ecp_modp(&(N), grp));                       \
-        INC_MUL_COUNT                                                   \
+        TRACE_POINT(mbedtls_mpi_mul_mod);                           \
     } while (0)
 
 static inline int mbedtls_mpi_mul_mod(const mbedtls_ecp_group *grp,
@@ -1429,9 +1429,7 @@ static int ecp_double_jac(const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
                           const mbedtls_ecp_point *P,
                           mbedtls_mpi tmp[4])
 {
-#if defined(MBEDTLS_SELF_TEST)
-    dbl_count++;
-#endif
+    TRACE_POINT(ecp_double_jac);
 
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
@@ -1516,9 +1514,7 @@ static int ecp_add_mixed(const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
                          const mbedtls_ecp_point *P, const mbedtls_ecp_point *Q,
                          mbedtls_mpi tmp[4])
 {
-#if defined(MBEDTLS_SELF_TEST)
-    add_count++;
-#endif
+    TRACE_POINT(ecp_add_mixed);
 
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
@@ -3343,6 +3339,12 @@ cleanup:
     return ret;
 }
 
+#if defined(MBEDTLS_TEST_HOOKS)
+void (*mbedtls_ecp_self_test_trace_counts_compare)(
+    const mbedtls_ecp_trace_counts_t *reference,
+    const mbedtls_ecp_trace_counts_t *live) = NULL;
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /* Calculate R = m.P for each m in exponents. Check that the number of
  * basic operations doesn't depend on the value of m. */
 static int self_test_point(int verbose,
@@ -3355,33 +3357,38 @@ static int self_test_point(int verbose,
 {
     int ret = 0;
     size_t i = 0;
-    unsigned long add_c_prev, dbl_c_prev, mul_c_prev;
-    add_count = 0;
-    dbl_count = 0;
-    mul_count = 0;
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_ecp_trace_counts_reset(mbedtls_ecp_trace_counts_live);
+#endif
 
     MBEDTLS_MPI_CHK(mbedtls_mpi_read_string(m, 16, exponents[0]));
     MBEDTLS_MPI_CHK(self_test_adjust_exponent(grp, m));
     MBEDTLS_MPI_CHK(mbedtls_ecp_mul(grp, R, m, P, self_test_rng, NULL));
 
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_ecp_trace_counts_t reference_trace_counts;
+    if (mbedtls_ecp_trace_counts_live != NULL) {
+        reference_trace_counts = *mbedtls_ecp_trace_counts_live;
+    }
+#endif
+
     for (i = 1; i < n_exponents; i++) {
-        add_c_prev = add_count;
-        dbl_c_prev = dbl_count;
-        mul_c_prev = mul_count;
-        add_count = 0;
-        dbl_count = 0;
-        mul_count = 0;
+#if defined(MBEDTLS_TEST_HOOKS)
+        mbedtls_ecp_trace_counts_reset(mbedtls_ecp_trace_counts_live);
+#endif
 
         MBEDTLS_MPI_CHK(mbedtls_mpi_read_string(m, 16, exponents[i]));
         MBEDTLS_MPI_CHK(self_test_adjust_exponent(grp, m));
         MBEDTLS_MPI_CHK(mbedtls_ecp_mul(grp, R, m, P, self_test_rng, NULL));
 
-        if (add_count != add_c_prev ||
-            dbl_count != dbl_c_prev ||
-            mul_count != mul_c_prev) {
-            ret = 1;
-            break;
+#if defined(MBEDTLS_TEST_HOOKS)
+        if (mbedtls_ecp_trace_counts_live != NULL &&
+            mbedtls_ecp_self_test_trace_counts_compare != NULL) {
+            mbedtls_ecp_self_test_trace_counts_compare(
+                &reference_trace_counts, mbedtls_ecp_trace_counts_live);
         }
+#endif
     }
 
 cleanup:

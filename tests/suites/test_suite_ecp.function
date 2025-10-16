@@ -68,6 +68,24 @@ inline static int mbedtls_ecp_group_cmp(mbedtls_ecp_group *grp1,
     return 0;
 }
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
+static void mbedtls_test_ecp_trace_counts_compare(
+    const mbedtls_ecp_trace_counts_t *reference,
+    const mbedtls_ecp_trace_counts_t *live)
+{
+    TEST_EQUAL(reference->mbedtls_mpi_mul_mod, live->mbedtls_mpi_mul_mod);
+    TEST_EQUAL(reference->ecp_add_mixed, live->ecp_add_mixed);
+    TEST_EQUAL(reference->ecp_double_jac, live->ecp_double_jac);
+
+exit:
+    ;
+}
+#else /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
+#define mbedtls_ecp_trace_counts_reset(unusued) ((void) 0)
+#define mbedtls_test_ecp_trace_counts_compare(unused0, unused1) ((void) 0)
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
+
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -328,6 +346,15 @@ void ecp_test_vect(int id, char *dA_str, char *xA_str, char *yA_str,
     mbedtls_ecp_point R;
     mbedtls_mpi dA, xA, yA, dB, xB, yB, xZ, yZ;
     mbedtls_test_rnd_pseudo_info rnd_info;
+#if defined(MBEDTLS_TEST_HOOKS)
+    /* Multiplication by the base point G uses an optimized path when
+     * MBEDTLS_ECP_FIXED_POINT_OPTIM is enabled, so we track separate
+     * trace counts for multiplication-by-G vs multiplication-by-other. */
+    mbedtls_ecp_trace_counts_t reference_trace_counts_G;
+    mbedtls_ecp_trace_counts_t reference_trace_counts_other;
+    mbedtls_ecp_trace_counts_t live_trace_counts;
+    mbedtls_ecp_trace_counts_live = &live_trace_counts;
+#endif
 
     mbedtls_ecp_group_init(&grp); mbedtls_ecp_point_init(&R);
     mbedtls_mpi_init(&dA); mbedtls_mpi_init(&xA); mbedtls_mpi_init(&yA); mbedtls_mpi_init(&dB);
@@ -347,32 +374,62 @@ void ecp_test_vect(int id, char *dA_str, char *xA_str, char *yA_str,
     TEST_ASSERT(mbedtls_test_read_mpi(&xZ, xZ_str) == 0);
     TEST_ASSERT(mbedtls_test_read_mpi(&yZ, yZ_str) == 0);
 
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dA, &grp.G,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xA) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.Y, &yA) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
+#if defined(MBEDTLS_TEST_HOOKS)
+    reference_trace_counts_G = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_G.mbedtls_mpi_mul_mod);
+    TEST_LE_U(1, reference_trace_counts_G.ecp_add_mixed);
+    TEST_LE_U(1, reference_trace_counts_G.ecp_double_jac);
+#endif
+
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dB, &R,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xZ) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.Y, &yZ) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
+#if defined(MBEDTLS_TEST_HOOKS)
+    reference_trace_counts_other = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_other.mbedtls_mpi_mul_mod);
+    TEST_LE_U(1, reference_trace_counts_other.ecp_add_mixed);
+    TEST_LE_U(1, reference_trace_counts_other.ecp_double_jac);
+#endif
 
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dB, &grp.G,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xB) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.Y, &yB) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
+    mbedtls_test_ecp_trace_counts_compare(&reference_trace_counts_G,
+                                          &live_trace_counts);
+
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dA, &R,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xZ) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.Y, &yZ) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
+    mbedtls_test_ecp_trace_counts_compare(&reference_trace_counts_other,
+                                          &live_trace_counts);
+
+#if !defined(MBEDTLS_ECP_FIXED_POINT_OPTIM)
+    mbedtls_test_ecp_trace_counts_compare(&reference_trace_counts_G,
+                                          &reference_trace_counts_other);
+#endif
 
 exit:
     mbedtls_ecp_group_free(&grp); mbedtls_ecp_point_free(&R);
     mbedtls_mpi_free(&dA); mbedtls_mpi_free(&xA); mbedtls_mpi_free(&yA); mbedtls_mpi_free(&dB);
     mbedtls_mpi_free(&xB); mbedtls_mpi_free(&yB); mbedtls_mpi_free(&xZ); mbedtls_mpi_free(&yZ);
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_ecp_trace_counts_live = NULL;
+#endif
 }
 /* END_CASE */
 
@@ -384,6 +441,15 @@ void ecp_test_vec_x(int id, char *dA_hex, char *xA_hex, char *dB_hex,
     mbedtls_ecp_point R;
     mbedtls_mpi dA, xA, dB, xB, xS;
     mbedtls_test_rnd_pseudo_info rnd_info;
+#if defined(MBEDTLS_TEST_HOOKS)
+    /* Multiplication by the base point G uses an optimized path when
+     * MBEDTLS_ECP_FIXED_POINT_OPTIM is enabled, so we track separate
+     * trace counts for multiplication-by-G vs multiplication-by-other. */
+    mbedtls_ecp_trace_counts_t reference_trace_counts_G;
+    mbedtls_ecp_trace_counts_t reference_trace_counts_other;
+    mbedtls_ecp_trace_counts_t live_trace_counts;
+    mbedtls_ecp_trace_counts_live = &live_trace_counts;
+#endif
 
     mbedtls_ecp_group_init(&grp); mbedtls_ecp_point_init(&R);
     mbedtls_mpi_init(&dA); mbedtls_mpi_init(&xA);
@@ -401,31 +467,59 @@ void ecp_test_vec_x(int id, char *dA_hex, char *xA_hex, char *dB_hex,
     TEST_ASSERT(mbedtls_test_read_mpi(&xB, xB_hex) == 0);
     TEST_ASSERT(mbedtls_test_read_mpi(&xS, xS_hex) == 0);
 
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dA, &grp.G,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xA) == 0);
+#if defined(MBEDTLS_TEST_HOOKS)
+    reference_trace_counts_G = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_G.mbedtls_mpi_mul_mod);
+    TEST_EQUAL(0, reference_trace_counts_G.ecp_add_mixed);
+    TEST_EQUAL(0, reference_trace_counts_G.ecp_double_jac);
+#endif
 
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dB, &R,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xS) == 0);
+#if defined(MBEDTLS_TEST_HOOKS)
+    reference_trace_counts_other = live_trace_counts;
+    TEST_LE_U(1, reference_trace_counts_other.mbedtls_mpi_mul_mod);
+    TEST_EQUAL(0, reference_trace_counts_other.ecp_add_mixed);
+    TEST_EQUAL(0, reference_trace_counts_other.ecp_double_jac);
+#endif
 
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dB, &grp.G,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xB) == 0);
+    mbedtls_test_ecp_trace_counts_compare(&reference_trace_counts_G,
+                                          &live_trace_counts);
 
+    mbedtls_ecp_trace_counts_reset(&live_trace_counts);
     TEST_ASSERT(mbedtls_ecp_mul(&grp, &R, &dA, &R,
                                 &mbedtls_test_rnd_pseudo_rand, &rnd_info) == 0);
     TEST_ASSERT(mbedtls_ecp_check_pubkey(&grp, &R) == 0);
     TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xS) == 0);
+    mbedtls_test_ecp_trace_counts_compare(&reference_trace_counts_other,
+                                          &live_trace_counts);
+
+#if !defined(MBEDTLS_ECP_FIXED_POINT_OPTIM)
+    mbedtls_test_ecp_trace_counts_compare(&reference_trace_counts_G,
+                                          &reference_trace_counts_other);
+#endif
 
 exit:
     mbedtls_ecp_group_free(&grp); mbedtls_ecp_point_free(&R);
     mbedtls_mpi_free(&dA); mbedtls_mpi_free(&xA);
     mbedtls_mpi_free(&dB); mbedtls_mpi_free(&xB);
     mbedtls_mpi_free(&xS);
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_ecp_trace_counts_live = NULL;
+#endif
 }
 /* END_CASE */
 
@@ -1460,7 +1554,20 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
 void ecp_selftest()
 {
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_trace_counts_t live_trace_counts;
+    mbedtls_ecp_trace_counts_live = &live_trace_counts;
+    mbedtls_ecp_self_test_trace_counts_compare = mbedtls_test_ecp_trace_counts_compare;
+#endif
+
     TEST_ASSERT(mbedtls_ecp_self_test(1) == 0);
+
+exit:
+    ;
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_trace_counts_live = NULL;
+    mbedtls_ecp_self_test_trace_counts_compare = NULL;
+#endif
 }
 /* END_CASE */
 
