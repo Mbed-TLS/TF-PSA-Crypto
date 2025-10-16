@@ -110,6 +110,13 @@
     "Something went wrong: TF_PSA_CRYPTO_CONFIG_IS_FINALIZED defined before reading the config files!"
 #endif
 
+#if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#endif
+
 /* PSA crypto configuration */
 #if defined(TF_PSA_CRYPTO_CONFIG_FILE)
 #include TF_PSA_CRYPTO_CONFIG_FILE
