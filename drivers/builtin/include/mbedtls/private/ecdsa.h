@@ -455,10 +455,7 @@ int mbedtls_ecdsa_verify_restartable(mbedtls_ecp_group *grp,
  * \param sig_size  The size of the \p sig buffer in bytes.
  * \param slen      The address at which to store the actual length of
  *                  the signature written. Must not be \c NULL.
- * \param f_rng     The RNG function. This must not be \c NULL if
- *                  #MBEDTLS_ECDSA_DETERMINISTIC is unset. Otherwise,
- *                  it is used only for blinding and may be set to \c NULL, but
- *                  doing so is DEPRECATED.
+ * \param f_rng     The RNG function. This must not be \c NULL.
  * \param p_rng     The RNG context to be passed to \p f_rng. This may be
  *                  \c NULL if \p f_rng is \c NULL or doesn't use a context.
  *

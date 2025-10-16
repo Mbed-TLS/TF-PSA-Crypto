@@ -44,18 +44,6 @@ extern "C" {
 extern int (*mbedtls_lmots_sign_private_key_invalidated_hook)(unsigned char *);
 #endif /* defined(MBEDTLS_TEST_HOOKS) */
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-/**
- * \brief                    This function converts a \ref psa_status_t to a
- *                           low-level LMS error code.
- *
- * \param status             The psa_status_t to convert
- *
- * \return                   The corresponding LMS error code.
- */
-int MBEDTLS_DEPRECATED mbedtls_lms_error_from_psa(psa_status_t status);
-#endif
-
 /**
  * \brief                    This function initializes a public LMOTS context
  *

@@ -3124,42 +3124,6 @@ cleanup:
     return ret;
 }
 
-/*
- * Write a private key.
- */
-#if !defined MBEDTLS_DEPRECATED_REMOVED
-int mbedtls_ecp_write_key(mbedtls_ecp_keypair *key,
-                          unsigned char *buf, size_t buflen)
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
-#if defined(MBEDTLS_ECP_MONTGOMERY_ENABLED)
-    if (mbedtls_ecp_get_type(&key->grp) == MBEDTLS_ECP_TYPE_MONTGOMERY) {
-        if (key->grp.id == MBEDTLS_ECP_DP_CURVE25519) {
-            if (buflen < ECP_CURVE25519_KEY_SIZE) {
-                return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
-            }
-
-        } else if (key->grp.id == MBEDTLS_ECP_DP_CURVE448) {
-            if (buflen < ECP_CURVE448_KEY_SIZE) {
-                return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
-            }
-        }
-        MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary_le(&key->d, buf, buflen));
-    }
-#endif
-#if defined(MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED)
-    if (mbedtls_ecp_get_type(&key->grp) == MBEDTLS_ECP_TYPE_SHORT_WEIERSTRASS) {
-        MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&key->d, buf, buflen));
-    }
-
-#endif
-cleanup:
-
-    return ret;
-}
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
 int mbedtls_ecp_write_key_ext(const mbedtls_ecp_keypair *key,
                               size_t *olen, unsigned char *buf, size_t buflen)
 {
