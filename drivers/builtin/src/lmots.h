@@ -19,6 +19,7 @@
 #include "psa/crypto.h"
 
 #include "mbedtls/lms.h"
+#include "mbedtls/platform_util.h"
 
 #include <stdint.h>
 #include <stddef.h>
