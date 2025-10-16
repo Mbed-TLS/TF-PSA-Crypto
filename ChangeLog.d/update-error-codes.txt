@@ -1,4 +1,0 @@
-API changes
-   * MBEDTLS_ERR_PK_SIG_LEN_MISMATCH is no longer a distinct error code.
-     A valid signature with trailing garbage is now reported as an invalid
-     signature with all algorithms.

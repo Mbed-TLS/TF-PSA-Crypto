@@ -5,6 +5,32 @@
 
 # This file contains test components that are executed by all.sh
 
+## test_with_valgrind tests/suites/SUITE.data [...]
+## Run the specified test suite(s) with Valgrind.
+test_with_valgrind () {
+    for data_file in "$@"; do
+        suite="${data_file##*/}"; suite="${suite%.data}"
+        exe="$OUT_OF_SOURCE_DIR/tests/$suite"
+        log_file="$OUT_OF_SOURCE_DIR/tests/MemoryChecker.$suite.log"
+        make -C "$OUT_OF_SOURCE_DIR" "$suite"
+        valgrind -q --tool=memcheck --track-origins=yes --log-file="$log_file" "$exe"
+        not grep . -- "$log_file"
+    done
+}
+
+## Run a small set of dedicated constant-time tests with Valgrind.
+## Exclude very slow suites.
+## Exclude suites that contain some constant-time tests, but whose focus
+## isn't on constant-time tests.
+test_with_valgrind_constant_time () {
+    # additional valgrind testing on top of non-instrumented testing.
+    if [[ $MBEDTLS_TEST_CONFIGURATION != *valgrind_cf* ]]; then
+        declare MBEDTLS_TEST_CONFIGURATION="${MBEDTLS_TEST_CONFIGURATION}+valgrind_cf"
+    fi
+    declare GLOBIGNORE="tests/suites/test_suite_constant_time_hmac.data"
+    test_with_valgrind tests/suites/*constant_time*.data
+}
+
 ################################################################
 #### Configuration Testing
 ################################################################
@@ -179,4 +205,32 @@ component_test_chacha20_neon_variations () {
         make -C tests test_suite_chacha20
         ./tests/test_suite_chacha20
     done
+}
+
+component_test_default_valgrind_cf () {
+    msg "build: default config, constant flow with Valgrind"
+    scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DCMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    make tfpsacrypto
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    msg "test: default config, constant flow with Valgrind, selected suites"
+    test_with_valgrind_constant_time tests/suites/*constant_time*.data
+}
+
+component_test_psa_assume_exclusive_buffers_valgrind_cf () {
+    msg "build: full config + MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS, constant flow with Valgrind"
+    scripts/config.py full
+    scripts/config.py set MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
+    scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DCMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    make tfpsacrypto
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    msg "test: full config + MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS, constant flow with Valgrind, selected suites"
+    test_with_valgrind_constant_time tests/suites/*constant_time*.data
 }

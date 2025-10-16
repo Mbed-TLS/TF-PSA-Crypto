@@ -94,7 +94,6 @@ int mbedtls_pk_rsa_set_pubkey(mbedtls_pk_context *pk, const unsigned char *key, 
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
     pk->bits = key_bits;
-    pk->rsa_padding = MBEDTLS_PK_RSA_PKCS_V15;
 
     memcpy(pk->pub_raw, key, key_len);
     pk->pub_raw_len = key_len;

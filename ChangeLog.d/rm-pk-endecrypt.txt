@@ -1,4 +1,0 @@
-API changes
-   * Remove mbedtls_pk_encrypt() and mbedtls_pk_decrypt(). Convert the
-     key to PSA and use the PSA functions instead, see the migration guide for
-     details.

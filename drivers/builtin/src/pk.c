@@ -60,10 +60,6 @@ void mbedtls_pk_init(mbedtls_pk_context *ctx)
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     ctx->ec_family = 0;
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    ctx->rsa_padding = MBEDTLS_PK_RSA_PKCS_V15;
-    ctx->rsa_hash_alg = PSA_ALG_ANY_HASH;
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 }
 
 /*

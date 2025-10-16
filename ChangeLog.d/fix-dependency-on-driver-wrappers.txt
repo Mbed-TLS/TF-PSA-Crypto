@@ -1,3 +1,0 @@
-Bugfix
-   * Fix occasional CMake parallel build failure when building both the
-     static and shared tfpsacrypto libraries. Fixes #286.

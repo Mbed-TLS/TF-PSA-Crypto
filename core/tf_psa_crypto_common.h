@@ -99,6 +99,13 @@ extern void (*mbedtls_test_hook_test_fail)(const char *test, int line, const cha
  * fall back to the unsafe implementation. */
 #define ARRAY_LENGTH(array) ARRAY_LENGTH_UNSAFE(array)
 #endif
+
+#if defined(__has_builtin)
+#define MBEDTLS_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#define MBEDTLS_HAS_BUILTIN(x) 0
+#endif
+
 /** Allow library to access its structs' private members.
  *
  * Although structs defined in header files are publicly available,
@@ -208,6 +215,14 @@ static inline void mbedtls_xor(unsigned char *r,
         return;
     }
 #endif
+#if defined(MBEDTLS_COMPILER_IS_GCC) && MBEDTLS_HAS_BUILTIN(__builtin_constant_p)
+    /* Some GCC versions (e.g. 14.3) with compile-time array bounds checking are confused
+     * when the byte-by-byte tail case is unused because the length is a constant multiple
+     * of 16. Eliminate a run-time check by only doing this for constant values. */
+    if (__builtin_constant_p(n) && n % 16 == 0) {
+        return;
+    }
+#endif
 #elif defined(MBEDTLS_ARCH_IS_X64) || defined(MBEDTLS_ARCH_IS_ARM64)
     /* This codepath probably only makes sense on architectures with 64-bit registers */
     for (; (i + 8) <= n; i += 8) {
@@ -219,6 +234,14 @@ static inline void mbedtls_xor(unsigned char *r,
         return;
     }
 #endif
+#if defined(MBEDTLS_COMPILER_IS_GCC) && MBEDTLS_HAS_BUILTIN(__builtin_constant_p)
+    /* Some GCC versions (e.g. 14.3) with compile-time array bounds checking are confused
+     * when the byte-by-byte tail case is unused because the length is a constant multiple
+     * of 8. Eliminate a run-time check by only doing this for constant values. */
+    if (__builtin_constant_p(n) && n % 8 == 0) {
+        return;
+    }
+#endif
 #else
     for (; (i + 4) <= n; i += 4) {
         uint32_t x = mbedtls_get_unaligned_uint32(a + i) ^ mbedtls_get_unaligned_uint32(b + i);
@@ -226,6 +249,14 @@ static inline void mbedtls_xor(unsigned char *r,
     }
 #if defined(__IAR_SYSTEMS_ICC__)
     if (n % 4 == 0) {
+        return;
+    }
+#endif
+#if defined(MBEDTLS_COMPILER_IS_GCC) && MBEDTLS_HAS_BUILTIN(__builtin_constant_p)
+    /* Some GCC versions (e.g. 14.3) with compile-time array bounds checking are confused
+     * when the byte-by-byte tail case is unused because the length is a constant multiple
+     * of 4. Eliminate a run-time check by only doing this for constant values. */
+    if (__builtin_constant_p(n) && n % 4 == 0) {
         return;
     }
 #endif
@@ -375,12 +406,6 @@ static inline void mbedtls_xor_no_simd(unsigned char *r,
  * any number of times and does not need a matching definition. */
 #define MBEDTLS_STATIC_ASSERT(expr, msg)                                \
     struct ISO_C_does_not_allow_extra_semicolon_outside_of_a_function
-#endif
-
-#if defined(__has_builtin)
-#define MBEDTLS_HAS_BUILTIN(x) __has_builtin(x)
-#else
-#define MBEDTLS_HAS_BUILTIN(x) 0
 #endif
 
 /* Define compiler branch hints */
