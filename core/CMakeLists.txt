@@ -168,7 +168,10 @@ endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
-        PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
+        # Add the build-tree include directory before the source-tree one
+        # so that generated headers in the build tree take precedence.
+        PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/>
+               $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/drivers/builtin/include/>
                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/drivers/everest/include/>
                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/drivers/p256-m/>
