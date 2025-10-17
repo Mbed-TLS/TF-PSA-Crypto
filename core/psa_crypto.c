@@ -939,28 +939,51 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
     return 0;
 }
 
-/** Test whether a policy permits an algorithm.
- *
- * The caller must test usage flags separately.
+/** Test whether a policy permits a usage for an algorithm.
  *
  * \note This function requires providing the key type for which the policy is
  *       being validated, since some algorithm policy definitions (e.g. MAC)
  *       have different properties depending on what kind of cipher it is
  *       combined with.
  *
- * \retval PSA_SUCCESS                  When \p alg is a specific algorithm
- *                                      allowed by the \p policy.
- * \retval PSA_ERROR_INVALID_ARGUMENT   When \p alg is not a specific algorithm
- * \retval PSA_ERROR_NOT_PERMITTED      When \p alg is a specific algorithm, but
- *                                      the \p policy does not allow it.
+ * \param[in] policy    The key policy from the key attributes.
+ * \param key_type      The key type from the key attributes.
+ * \param usage         The requested usage. This is normally a single
+ *                      \c PSA_KEY_USAGE_xxx value.
+ * \param alg           The requested algorithm.
+ *                      This can be \c PSA_ALG_NONE if the requested operation
+ *                      does not involve an algorithm (e.g. export).
+ *
+ * \retval PSA_SUCCESS
+ *         The combination of \p usage and \p alg are allowed by
+ *         \p policy.
+ * \retval PSA_ERROR_INVALID_ARGUMENT
+ *         \p alg is not a specific algorithm.
+ * \retval PSA_ERROR_NOT_PERMITTED
+ *         \p usage is not allowed by \p policy, or
+ *         \p alg is not allowed by \p policy.
  */
 static psa_status_t psa_key_policy_permits(const psa_key_policy_t *policy,
                                            psa_key_type_t key_type,
+                                           psa_key_usage_t usage,
                                            psa_algorithm_t alg)
 {
-    /* '0' is not a valid algorithm */
-    if (alg == 0) {
-        return PSA_ERROR_INVALID_ARGUMENT;
+    /* Enforce that usage policy for the key slot contains all the flags
+     * required by the usage parameter. There is one exception: public
+     * keys can always be exported, so we treat public key objects as
+     * if they had the export flag. */
+    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(key_type)) {
+        usage &= ~PSA_KEY_USAGE_EXPORT;
+    }
+
+    if ((policy->usage & usage) != usage) {
+        return PSA_ERROR_NOT_PERMITTED;
+    }
+
+    /* If the requested algorithm is NONE (e.g. export operation),
+     * we just needed to check the usage. */
+    if (alg == PSA_ALG_NONE) {
+        return PSA_SUCCESS;
     }
 
     /* A requested algorithm cannot be a wildcard. */
@@ -1051,27 +1074,12 @@ static psa_status_t psa_get_and_lock_key_slot_with_policy(
     }
     slot = *p_slot;
 
-    /* Enforce that usage policy for the key slot contains all the flags
-     * required by the usage parameter. There is one exception: public
-     * keys can always be exported, so we treat public key objects as
-     * if they had the export flag. */
-    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(slot->attr.type)) {
-        usage &= ~PSA_KEY_USAGE_EXPORT;
-    }
-
-    if ((slot->attr.policy.usage & usage) != usage) {
-        status = PSA_ERROR_NOT_PERMITTED;
+    /* Enforce that the key policy permits the requested usage and algorithm. */
+    status = psa_key_policy_permits(&slot->attr.policy,
+                                    slot->attr.type,
+                                    usage, alg);
+    if (status != PSA_SUCCESS) {
         goto error;
-    }
-
-    /* Enforce that the usage policy permits the requested algorithm. */
-    if (alg != 0) {
-        status = psa_key_policy_permits(&slot->attr.policy,
-                                        slot->attr.type,
-                                        alg);
-        if (status != PSA_SUCCESS) {
-            goto error;
-        }
     }
 
     return PSA_SUCCESS;
