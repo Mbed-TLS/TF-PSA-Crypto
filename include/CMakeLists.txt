@@ -17,8 +17,3 @@ if(INSTALL_TF_PSA_CRYPTO_HEADERS)
         DESTINATION include/mbedtls
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endif(INSTALL_TF_PSA_CRYPTO_HEADERS)
-
-# Make includes available in an out-of-source build. ssl-opt.sh requires it.
-if (ENABLE_TESTING AND NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    tf_psa_crypto_link_to_source(psa)
-endif()
