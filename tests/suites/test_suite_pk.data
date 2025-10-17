@@ -1630,3 +1630,6 @@ pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_
 PK get type, public key copied from PSA, SECP_K1
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
 pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type, empty context
+pk_get_key_type_empty_ctx

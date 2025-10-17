@@ -2478,3 +2478,20 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void pk_get_key_type_empty_ctx(void)
+{
+    mbedtls_pk_context ctx;
+
+    mbedtls_pk_init(&ctx);
+    PSA_INIT();
+
+    /* An empty PK context should return PSA_KEY_TYPE_NONE */
+    TEST_EQUAL(mbedtls_pk_get_key_type(&ctx), PSA_KEY_TYPE_NONE);
+
+exit:
+    mbedtls_pk_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */
