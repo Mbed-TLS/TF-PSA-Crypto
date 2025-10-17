@@ -16,18 +16,18 @@ if(GEN_FILES)
             ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
-                ${TF_PSA_CRYPTO_DIR}/scripts/generate_driver_wrappers.py
+                ${PROJECT_SOURCE_DIR}/scripts/generate_driver_wrappers.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS
-            ${TF_PSA_CRYPTO_DIR}/scripts/generate_driver_wrappers.py
-            ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
-            ${TF_PSA_CRYPTO_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
+            ${PROJECT_SOURCE_DIR}/scripts/generate_driver_wrappers.py
+            ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
+            ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
 
     execute_process(
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
-            ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
+            ${PROJECT_SOURCE_DIR}/scripts/generate_config_checks.py
             --list-for-cmake "${CMAKE_CURRENT_BINARY_DIR}"
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -38,10 +38,10 @@ if(GEN_FILES)
         OUTPUT ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
-                ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
+                ${PROJECT_SOURCE_DIR}/scripts/generate_config_checks.py
                 ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS
-            ${TF_PSA_CRYPTO_DIR}/scripts/generate_config_checks.py
+            ${PROJECT_SOURCE_DIR}/scripts/generate_config_checks.py
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/mbedtls_framework/config_checks_generator.py
     )
 
@@ -168,13 +168,13 @@ endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
-        PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include/>
-               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
-               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/>
-               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/p256-m/>
+        PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
+               $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/drivers/builtin/include/>
+               $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/drivers/everest/include/>
+               $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/drivers/p256-m/>
                $<INSTALL_INTERFACE:include/>
-        PRIVATE ${TF_PSA_CRYPTO_DIR}/core
-                ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
+        PRIVATE ${PROJECT_SOURCE_DIR}/core
+                ${PROJECT_SOURCE_DIR}/drivers/builtin/src
                 # Needed to include psa_crypto_driver_wrappers.h
                 ${CMAKE_CURRENT_BINARY_DIR})
     tf_psa_crypto_set_config_files_compile_definitions(${target})
