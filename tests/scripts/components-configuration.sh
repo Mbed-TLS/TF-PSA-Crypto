@@ -193,9 +193,7 @@ support_test_chacha20_neon_variations () {
 component_test_chacha20_neon_variations () {
     msg "ChaCha20 Neon scalar and multiblock variations"
 
-    scripts/config.py set PSA_WANT_KEY_TYPE_AES
     scripts/config.py set PSA_WANT_KEY_TYPE_CHACHA20
-    scripts/config.py set PSA_WANT_ALG_SHA_256
 
     cd $OUT_OF_SOURCE_DIR
 
