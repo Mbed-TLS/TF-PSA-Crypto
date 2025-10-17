@@ -2533,27 +2533,22 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
                                      data_t *key_data,
                                      int exercise_alg,
                                      int payload_length_arg,
-                                     int expected_usage_arg)
+                                     int valid_usage_arg)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_usage_t policy_usage = policy_usage_arg;
-    psa_key_usage_t expected_usage = expected_usage_arg;
+    psa_key_usage_t valid_usage = valid_usage_arg;
     psa_status_t status;
     unsigned char payload[PSA_HASH_MAX_SIZE] = { 1 };
-    /* If `payload_length_arg > 0`, `exercise_alg` is supposed to be
-     * compatible with the policy and `payload_length_arg` is supposed to be
-     * a valid input length to sign. If `payload_length_arg <= 0`,
-     * `exercise_alg` is supposed to be forbidden by the policy. */
-    int compatible_alg = payload_length_arg > 0;
-    size_t payload_length = compatible_alg ? payload_length_arg : 0;
+    size_t payload_length = payload_length_arg;
     unsigned char signature[PSA_SIGNATURE_MAX_SIZE] = { 0 };
     size_t signature_length;
 
     /* Check if all implicit usage flags are deployed
        in the expected usage flags. */
-    TEST_EQUAL(expected_usage,
-               mbedtls_test_update_key_usage_flags(policy_usage));
+    psa_key_usage_t expected_usage =
+        mbedtls_test_update_key_usage_flags(policy_usage);
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -2570,7 +2565,7 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
                            payload, payload_length,
                            signature, sizeof(signature),
                            &signature_length);
-    if (compatible_alg && (expected_usage & PSA_KEY_USAGE_SIGN_HASH) != 0) {
+    if ((valid_usage & PSA_KEY_USAGE_SIGN_HASH) != 0) {
         PSA_ASSERT(status);
     } else {
         TEST_EQUAL(status, PSA_ERROR_NOT_PERMITTED);
@@ -2580,7 +2575,7 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
     status = psa_verify_hash(key, exercise_alg,
                              payload, payload_length,
                              signature, sizeof(signature));
-    if (compatible_alg && (expected_usage & PSA_KEY_USAGE_VERIFY_HASH) != 0) {
+    if ((valid_usage & PSA_KEY_USAGE_VERIFY_HASH) != 0) {
         TEST_EQUAL(status, PSA_ERROR_INVALID_SIGNATURE);
     } else {
         TEST_EQUAL(status, PSA_ERROR_NOT_PERMITTED);
@@ -2592,7 +2587,7 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
                                   payload, payload_length,
                                   signature, sizeof(signature),
                                   &signature_length);
-        if (compatible_alg && (expected_usage & PSA_KEY_USAGE_SIGN_MESSAGE) != 0) {
+        if ((valid_usage & PSA_KEY_USAGE_SIGN_MESSAGE) != 0) {
             PSA_ASSERT(status);
         } else {
             TEST_EQUAL(status, PSA_ERROR_NOT_PERMITTED);
@@ -2602,7 +2597,7 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
         status = psa_verify_message(key, exercise_alg,
                                     payload, payload_length,
                                     signature, sizeof(signature));
-        if (compatible_alg && (expected_usage & PSA_KEY_USAGE_VERIFY_MESSAGE) != 0) {
+        if ((valid_usage & PSA_KEY_USAGE_VERIFY_MESSAGE) != 0) {
             TEST_EQUAL(status, PSA_ERROR_INVALID_SIGNATURE);
         } else {
             TEST_EQUAL(status, PSA_ERROR_NOT_PERMITTED);

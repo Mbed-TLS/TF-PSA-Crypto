@@ -961,6 +961,12 @@
  *   psa_sign_hash(key, PSA_xxx_SIGNATURE(PSA_ALG_SHA3_256), ...);
  *   ```
  *
+ * Note some edge cases:
+ * - #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH) in a policy allows
+ *   signing or verifying with #PSA_ALG_RSA_PKCS1V15_SIGN_RAW.
+ * - #PSA_ALG_ECDSA(#PSA_ALG_ANY_HASH) in a policy does not allow
+ *   #PSA_ALG_ECDSA_ANY.
+ *
  * This value may not be used to build other algorithms that are
  * parametrized over a hash. For any valid use of this macro to build
  * an algorithm \c alg, #PSA_ALG_IS_HASH_AND_SIGN(\c alg) is true.
@@ -1510,6 +1516,9 @@
  * of the base point of the curve in octets. Each value is represented
  * in big-endian order (most significant octet first).
  *
+ * \note See also #PSA_ALG_DETERMINISTIC_ECDSA, which is identical
+ *       to this algorithm when verifying a signature.
+ *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
  *                      This includes #PSA_ALG_ANY_HASH
@@ -1543,6 +1552,12 @@
  * same private key are accepted. In other words,
  * #PSA_ALG_DETERMINISTIC_ECDSA(\p hash_alg) differs from
  * #PSA_ALG_ECDSA(\p hash_alg) only for signature, not for verification.
+ * This is reflected in the enforcement of key policies: a policy
+ * of #PSA_ALG_DETERMINISTIC_ECDSA(\p hash_alg) or
+ * #PSA_ALG_DETERMINISTIC_ECDSA(\c PSA_ALG_ANY_HASH) allows
+ * #PSA_ALG_ECDSA(\p hash_alg) for verification, but not for signing.
+ * The same applies with #PSA_ALG_DETERMINISTIC_ECDSA and #PSA_ALG_ECDSA
+ * swapped.
  *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
