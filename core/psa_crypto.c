@@ -855,6 +855,7 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
      * and requested_alg is the same hash-and-sign family with any hash,
      * then requested_alg is compliant with policy_alg. */
     if (PSA_ALG_IS_SIGN_HASH(requested_alg) &&
+        requested_alg != PSA_ALG_ECDSA_ANY &&
         PSA_ALG_SIGN_GET_HASH(policy_alg) == PSA_ALG_ANY_HASH) {
         return (policy_alg & ~PSA_ALG_HASH_MASK) ==
                (requested_alg & ~PSA_ALG_HASH_MASK);

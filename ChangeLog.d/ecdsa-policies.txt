@@ -1,0 +1,5 @@
+Bugfix
+   * The algorithm policy PSA_ALG_ECDSA(PSA_ALG_ANY_HASH) no longer
+     allows the usage PSA_ALG_ECDSA_ANY. This brings us into compliance
+     with the PSA Crypto API (explicit requirement since version 1.1.0).
+     Fixes #533.

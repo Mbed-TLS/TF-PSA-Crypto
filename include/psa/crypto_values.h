@@ -961,6 +961,12 @@
  *   psa_sign_hash(key, PSA_xxx_SIGNATURE(PSA_ALG_SHA3_256), ...);
  *   ```
  *
+ * Note some edge cases:
+ * - #PSA_ALG_RSA_PKCS1V15_SIGN(#PSA_ALG_ANY_HASH) in a policy allows
+ *   signing or verifying with #PSA_ALG_RSA_PKCS1V15_SIGN_RAW.
+ * - #PSA_ALG_ECDSA(#PSA_ALG_ANY_HASH) in a policy does not allow
+ *   #PSA_ALG_ECDSA_ANY.
+ *
  * This value may not be used to build other algorithms that are
  * parametrized over a hash. For any valid use of this macro to build
  * an algorithm \c alg, #PSA_ALG_IS_HASH_AND_SIGN(\c alg) is true.
