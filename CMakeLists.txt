@@ -403,6 +403,9 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
         PRIVATE tests/include
         PRIVATE tests/include/test
+        # Add the build-tree include directory before the source-tree one
+        # so that generated headers in the build tree take precedence.
+        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
         PRIVATE include
         PRIVATE drivers/builtin/include
         PRIVATE drivers/everest/include

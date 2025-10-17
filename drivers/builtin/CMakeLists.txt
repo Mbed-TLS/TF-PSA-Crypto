@@ -47,6 +47,9 @@ foreach (target IN LISTS target_libraries)
     target_compile_options(${target} PRIVATE ${LIBS_C_FLAGS})
     target_include_directories(${target}
       PRIVATE src include
+              # Add the build-tree include directory before the source-tree one
+              # so that generated headers in the build tree take precedence.
+              ${PROJECT_BINARY_DIR}/include
               ${PROJECT_SOURCE_DIR}/include
               ${PROJECT_SOURCE_DIR}/core
               ${PROJECT_SOURCE_DIR}/drivers/everest/include)
