@@ -1516,6 +1516,9 @@
  * of the base point of the curve in octets. Each value is represented
  * in big-endian order (most significant octet first).
  *
+ * \note See also #PSA_ALG_DETERMINISTIC_ECDSA, which is identical
+ *       to this algorithm when verifying a signature.
+ *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
  *                      This includes #PSA_ALG_ANY_HASH
@@ -1549,6 +1552,12 @@
  * same private key are accepted. In other words,
  * #PSA_ALG_DETERMINISTIC_ECDSA(\p hash_alg) differs from
  * #PSA_ALG_ECDSA(\p hash_alg) only for signature, not for verification.
+ * This is reflected in the enforcement of key policies: a policy
+ * of #PSA_ALG_DETERMINISTIC_ECDSA(\p hash_alg) or
+ * #PSA_ALG_DETERMINISTIC_ECDSA(\c PSA_ALG_ANY_HASH) allows
+ * #PSA_ALG_ECDSA(\p hash_alg) for verification, but not for signing.
+ * The same applies with #PSA_ALG_DETERMINISTIC_ECDSA and #PSA_ALG_ECDSA
+ * swapped.
  *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).

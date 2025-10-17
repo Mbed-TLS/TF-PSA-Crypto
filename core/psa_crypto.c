@@ -843,14 +843,51 @@ static psa_algorithm_t psa_key_policy_algorithm_intersection(
     return 0;
 }
 
+static int psa_key_usage_is_verify(psa_key_usage_t usage)
+{
+    psa_key_usage_t mask = (PSA_KEY_USAGE_VERIFY_HASH |
+                            PSA_KEY_USAGE_VERIFY_MESSAGE);
+    return (usage & ~mask) == 0;
+}
+
 static int psa_key_algorithm_permits(psa_key_type_t key_type,
                                      psa_algorithm_t policy_alg,
+                                     psa_key_usage_t usage,
                                      psa_algorithm_t requested_alg)
 {
     /* Common case: the policy only allows requested_alg. */
     if (requested_alg == policy_alg) {
         return 1;
     }
+
+    /* ECDSA has two variants: randomized and deterministic.
+     * When doing a signature operation, the two variants are
+     * functionally different But for verification, the variants
+     * are strictly identical, despite having different encodings.
+     * Originally, applications had to use the algorithm encoding
+     * registered in the key policy. But with PSA Crypto API
+     * version 1.4 onwards, the two variants are considered equivalent
+     * when verifying.
+     */
+    if (psa_key_usage_is_verify(usage)) {
+        if (PSA_ALG_IS_ECDSA(policy_alg) && PSA_ALG_IS_ECDSA(requested_alg)) {
+            /* Either variant with a wildcard for the hash works
+             * for either variant with any hash, except that
+             * PSA_ALG_ECDSA_ANY is its own thing.
+             * If the policy does not have a hash wildcard, the
+             * algorithms must match apart from the variant selection
+             * bit. */
+            if (PSA_ALG_SIGN_GET_HASH(policy_alg) == PSA_ALG_ANY_HASH) {
+                return requested_alg != PSA_ALG_ECDSA_ANY;
+            } else {
+                policy_alg &= ~PSA_ALG_ECDSA_DETERMINISTIC_FLAG;
+                requested_alg &= ~PSA_ALG_ECDSA_DETERMINISTIC_FLAG;
+                return (policy_alg | PSA_ALG_ECDSA_DETERMINISTIC_FLAG) ==
+                       (requested_alg | PSA_ALG_ECDSA_DETERMINISTIC_FLAG);
+            }
+        }
+    }
+
     /* If policy_alg is a hash-and-sign with a wildcard for the hash,
      * and requested_alg is the same hash-and-sign family with any hash,
      * then requested_alg is compliant with policy_alg. */
@@ -860,6 +897,7 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
         return (policy_alg & ~PSA_ALG_HASH_MASK) ==
                (requested_alg & ~PSA_ALG_HASH_MASK);
     }
+
     /* If policy_alg is a wildcard AEAD algorithm of the same base as
      * the requested algorithm, check the requested tag length to be
      * equal-length or longer than the wildcard-specified length. */
@@ -871,6 +909,7 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
         return PSA_ALG_AEAD_GET_TAG_LENGTH(policy_alg) <=
                PSA_ALG_AEAD_GET_TAG_LENGTH(requested_alg);
     }
+
     /* If policy_alg is a MAC algorithm of the same base as the requested
      * algorithm, check whether their MAC lengths are compatible. */
     if (PSA_ALG_IS_MAC(policy_alg) &&
@@ -915,6 +954,7 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
                    requested_output_length;
         }
     }
+
     /* If policy_alg is a generic key agreement operation, then using it for
      * a key derivation with that key agreement should also be allowed. This
      * behaviour is expected to be defined in a future specification version. */
@@ -992,8 +1032,8 @@ static psa_status_t psa_key_policy_permits(const psa_key_policy_t *policy,
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    if (psa_key_algorithm_permits(key_type, policy->alg, alg) ||
-        psa_key_algorithm_permits(key_type, policy->alg2, alg)) {
+    if (psa_key_algorithm_permits(key_type, policy->alg, usage, alg) ||
+        psa_key_algorithm_permits(key_type, policy->alg2, usage, alg)) {
         return PSA_SUCCESS;
     } else {
         return PSA_ERROR_NOT_PERMITTED;
