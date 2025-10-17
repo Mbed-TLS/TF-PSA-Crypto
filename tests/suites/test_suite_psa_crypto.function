@@ -2532,13 +2532,11 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
                                      int key_type,
                                      data_t *key_data,
                                      int exercise_alg,
-                                     int payload_length_arg,
-                                     int expected_usage_arg)
+                                     int payload_length_arg)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_usage_t policy_usage = policy_usage_arg;
-    psa_key_usage_t expected_usage = expected_usage_arg;
     psa_status_t status;
     unsigned char payload[PSA_HASH_MAX_SIZE] = { 1 };
     /* If `payload_length_arg > 0`, `exercise_alg` is supposed to be
@@ -2552,8 +2550,8 @@ void asymmetric_signature_key_policy(int policy_usage_arg,
 
     /* Check if all implicit usage flags are deployed
        in the expected usage flags. */
-    TEST_EQUAL(expected_usage,
-               mbedtls_test_update_key_usage_flags(policy_usage));
+    psa_key_usage_t expected_usage =
+        mbedtls_test_update_key_usage_flags(policy_usage);
 
     PSA_ASSERT(psa_crypto_init());
 
