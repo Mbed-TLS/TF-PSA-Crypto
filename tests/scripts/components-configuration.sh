@@ -173,6 +173,38 @@ component_tf_psa_crypto_test_memory_buffer_allocator () {
     make test
 }
 
+support_test_chacha20_neon_variations () {
+    if "$CC" --version 2>/dev/null | grep -q "clang"; then
+        # if using clang, ensure version 7 or later to ensure we get support for "+aes",
+        # which seems to be needed due to PSA_WANT_KEY_TYPE_AES
+        clang_major_ver=$("$CC" --version | head -n1 | sed -E 's/.*clang version ([0-9]+)\.[0-9]+.*/\1/')
+        if [ "$clang_major_ver" -lt 7 ]; then
+            false
+            return
+        fi
+    fi
+
+    case $(uname -m) in
+        arm64|aarch64) true;;
+        *) false;;
+    esac
+}
+
+component_test_chacha20_neon_variations () {
+    msg "ChaCha20 Neon scalar and multiblock variations"
+
+    scripts/config.py set PSA_WANT_KEY_TYPE_CHACHA20
+
+    cd $OUT_OF_SOURCE_DIR
+
+    for x in 0 1 2 3 4 5 6; do
+        msg "multiblock = $x"
+        cmake -DCMAKE_BUILD_TYPE:String=Release -DCMAKE_C_FLAGS="-DMBEDTLS_CHACHA20_NEON_MULTIBLOCK=$x" "$TF_PSA_CRYPTO_ROOT_DIR"
+        make -C tests test_suite_chacha20
+        ./tests/test_suite_chacha20
+    done
+}
+
 component_test_default_valgrind_cf () {
     msg "build: default config, constant flow with Valgrind"
     scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND
