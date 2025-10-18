@@ -401,7 +401,14 @@ int mbedtls_chacha20_setkey(mbedtls_chacha20_context *ctx,
     /* ChaCha20 constants - the string "expand 32-byte k" */
     static const char EXPAND_32_BYTE_K[16]
     MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "expand 32-byte k";
-    memcpy(ctx->state, EXPAND_32_BYTE_K, 16);
+    if (MBEDTLS_IS_BIG_ENDIAN) {
+        ctx->state[0] = MBEDTLS_GET_UINT32_LE(EXPAND_32_BYTE_K, 0);
+        ctx->state[1] = MBEDTLS_GET_UINT32_LE(EXPAND_32_BYTE_K, 4);
+        ctx->state[2] = MBEDTLS_GET_UINT32_LE(EXPAND_32_BYTE_K, 8);
+        ctx->state[3] = MBEDTLS_GET_UINT32_LE(EXPAND_32_BYTE_K, 12);
+    } else {
+        memcpy(ctx->state, EXPAND_32_BYTE_K, 16);
+    }
 
     /* Set key */
     if (MBEDTLS_IS_BIG_ENDIAN) {
