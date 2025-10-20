@@ -1202,6 +1202,12 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len,
                                 mbedtls_pk_restart_ctx *rs_ctx)
 {
+#if !defined(MBEDTLS_ECP_RESTARTABLE) && !defined(PSA_HAVE_ALG_ECDSA_SIGN)
+    (void) sig;
+    (void) sig_size;
+    (void) sig_len;
+#endif /* !MBEDTLS_ECP_RESTARTABLE && !PSA_HAVE_ALG_ECDSA_SIGN */
+
     if ((md_alg != MBEDTLS_MD_NONE || hash_len != 0) && hash == NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
@@ -1242,6 +1248,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) rs_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
+#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
     psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_alg);
 
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -1251,7 +1258,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     }
     psa_key_type_t type = psa_get_key_type(&attributes);
 
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
     if (PSA_KEY_TYPE_IS_ECC(type)) {
         size_t key_bits = psa_get_key_bits(&attributes);
         psa_reset_key_attributes(&attributes);
@@ -1278,7 +1284,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                hash, hash_len, sig, sig_size, sig_len);
         return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
     }
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
+#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 
     /* Can't happen */
     return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
