@@ -137,6 +137,33 @@ component_tf_psa_crypto_build_custom_config_file () {
     rm -f crypto_config_custom.h crypto_config_user.h
 }
 
+component_tf_psa_crypto_build_config_name () {
+    cp "$CRYPTO_CONFIG_H" include/psa/crypto_config_default.h
+    scripts/config.py full
+    cp "$CRYPTO_CONFIG_H" include/psa/crypto_config_full.h
+    cp include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
+
+    msg "build: cmake out-of-source with full config"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DCMAKE_INSTALL_PREFIX="$OUT_OF_SOURCE_DIR/install_full" -DTF_PSA_CRYPTO_CONFIG_NAME=full "$TF_PSA_CRYPTO_ROOT_DIR"
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    echo '#error "cmake -DTF_PSA_CRYPTO_CONFIG_NAME=full does not work"' > "$CRYPTO_CONFIG_H"
+    cmake --build "$OUT_OF_SOURCE_DIR" --target tfpsacrypto
+
+    # Restore the default config file in the source tree as we need a sane
+    # one to build the tests.
+    cp include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
+    cmake --build "$OUT_OF_SOURCE_DIR"
+    cmake --build "$OUT_OF_SOURCE_DIR" --target install
+
+    cmp -s $OUT_OF_SOURCE_DIR/include/psa/crypto_config.h include/psa/crypto_config_full.h
+    cmp -s $OUT_OF_SOURCE_DIR/install_full/include/psa/crypto_config.h include/psa/crypto_config_full.h
+
+    rm -rf "$OUT_OF_SOURCE_DIR"
+    mv include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
+    rm -f include/psa/crypto_config_full.h
+}
+
 component_tf_psa_crypto_build_programs_no_testing () {
     # Verify that the type of builds performed by oss-fuzz don't get accidentally broken
     msg "build: cmake with -DENABLE_PROGRAMS=ON and -DENABLE_TESTING=OFF"
