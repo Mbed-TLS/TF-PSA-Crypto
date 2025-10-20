@@ -344,9 +344,6 @@ endforeach(test_suite)
 # Make scripts and data files needed for testing available in an
 # out-of-source build.
 if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/seedfile")
-        tf_psa_crypto_link_to_source(seedfile)
-    endif()
     tf_psa_crypto_link_to_source(Descriptions.txt)
     tf_psa_crypto_link_to_source(../framework/data_files)
 endif()
