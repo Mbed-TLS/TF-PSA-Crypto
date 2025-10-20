@@ -30,7 +30,7 @@ if(GEN_FILES)
             ${PROJECT_SOURCE_DIR}/scripts/generate_config_checks.py
             --list-for-cmake "${CMAKE_CURRENT_BINARY_DIR}"
         WORKING_DIRECTORY
-            ${CMAKE_CURRENT_SOURCE_DIR}/..
+            ${PROJECT_SOURCE_DIR}
         OUTPUT_VARIABLE
             TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS)
 
