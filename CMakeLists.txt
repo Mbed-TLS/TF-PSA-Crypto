@@ -156,12 +156,10 @@ set(TF_PSA_CRYPTO_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto config file (over
 set(TF_PSA_CRYPTO_USER_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto user config file (appended to default).")
 set(TF_PSA_CRYPTO_CONFIG_NAME "" CACHE STRING "Name of the configuration to use (see config.py documentation)")
 
-set(TF_PSA_CRYPTO_crypto_config_path ${PROJECT_SOURCE_DIR}/include/psa/crypto_config.h)
 if(NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "")
     if(NOT "${TF_PSA_CRYPTO_CONFIG_FILE}" STREQUAL "")
         message(FATAL_ERROR "TF_PSA_CRYPTO_CONFIG_NAME and TF_PSA_CRYPTO_CONFIG_FILE are incompatible.")
     endif()
-    set(TF_PSA_CRYPTO_crypto_config_path ${PROJECT_BINARY_DIR}/include/psa/crypto_config.h)
 endif(NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "")
 
 # Create a symbolic link from ${base_name} in the binary directory
