@@ -151,7 +151,7 @@ component_tf_psa_crypto_build_config_name () {
     cmake --build "$OUT_OF_SOURCE_DIR" --target tfpsacrypto
 
     # Restore the default config file in the source tree as we need a sane
-    # one to build the tests.
+    # one to build some PSA test data.
     cp include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
     cmake --build "$OUT_OF_SOURCE_DIR"
     cmake --build "$OUT_OF_SOURCE_DIR" --target install
