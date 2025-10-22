@@ -5,8 +5,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef MBEDTLS_MLDSA87_H
-#define MBEDTLS_MLDSA87_H
+#ifndef TF_PSA_CRYPTO_MLDSA87_H
+#define TF_PSA_CRYPTO_MLDSA87_H
 #include "mbedtls/private_access.h"
 
 #include "mbedtls/build_info.h"
@@ -46,4 +46,4 @@ int mldsa87_verify(const uint8_t encoded_public_key[MLDSA87_PUBLIC_KEY_BYTES],
 }
 #endif
 
-#endif /* mbedtls_mldsa87.h */
+#endif /* mldsa87.h */

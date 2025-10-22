@@ -10,7 +10,7 @@
 #if defined(MBEDTLS_MLDSA_C)
 
 #include "constant_time_internal.h"
-#include "mbedtls/mldsa87.h"
+#include "mldsa87.h"
 #include "mbedtls/sha3.h"
 
 /* Arithmetic parameters. */
