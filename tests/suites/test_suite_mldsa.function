@@ -69,5 +69,9 @@ void sign_verify(const data_t *seed,
                                                 message->x, message->len - 1),
                    0);
     }
+
+exit:
+    mbedtls_free(public_key);
+    mbedtls_free(signature);
 }
 /* END_CASE */
