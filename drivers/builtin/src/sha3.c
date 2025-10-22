@@ -402,7 +402,14 @@ int mbedtls_sha3_finish(mbedtls_sha3_context *ctx,
         }
     }
 
-    ret = 0;
+    /* If there is a fixed output length (SHA3), we only accept a single call
+     * to finish(), and have it clean up the context. If the output length is
+     * variable (SHAKE), leave the context ready for further finish() calls. */
+    if (ctx->olen > 0) {
+        goto exit;
+    }
+
+    return 0;
 
 exit:
     mbedtls_sha3_free(ctx);
