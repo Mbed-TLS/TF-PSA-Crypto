@@ -5,13 +5,13 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_MLDSA_C)
 
 #include "constant_time_internal.h"
 #include "mldsa87.h"
-#include "mbedtls/sha3.h"
+#include "mbedtls/private/sha3.h"
 
 /* Arithmetic parameters. */
 
