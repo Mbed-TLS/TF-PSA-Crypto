@@ -1,0 +1,73 @@
+/* BEGIN_HEADER */
+#include "mldsa87.h"
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_MLDSA_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void sign_verify(const data_t *seed,
+                 const data_t *expected_private_key,
+                 const data_t *expected_public_key,
+                 const data_t *randomizer, /* empty for deterministic */
+                 const data_t *message,
+                 const data_t *expected_signature)
+{
+    uint8_t *public_key = NULL;
+    const size_t public_key_size = MLDSA87_PUBLIC_KEY_BYTES;
+    uint8_t *signature = NULL;
+    const size_t signature_size = MLDSA87_SIGNATURE_BYTES;
+
+    TEST_CALLOC(public_key, public_key_size);
+    TEST_CALLOC(signature, signature_size);
+
+    /* Expanded private keys are not supported */
+    (void) expected_private_key;
+
+    /* Test public key calculation */
+    TEST_EQUAL(seed->len, MLDSA87_PRIVATE_SEED_BYTES);
+    tf_psa_crypto_mldsa87_pub_from_seed(public_key, seed->x);
+    TEST_MEMORY_COMPARE(public_key, public_key_size,
+                        expected_public_key->x, expected_public_key->len);
+
+    /* Test signature */
+    if (randomizer->len == 0) {
+        tf_psa_crypto_mldsa87_sign_deterministic(signature, seed->x,
+                                                 message->x, message->len);
+    } else {
+        TEST_EQUAL(randomizer->len, MLDSA87_RANDOMIZER_BYTES);
+        tf_psa_crypto_mldsa87_sign(signature, seed->x,
+                                   randomizer->x,
+                                   message->x, message->len);
+    }
+    TEST_MEMORY_COMPARE(signature, signature_size,
+                        expected_signature->x, expected_signature->len);
+
+    /* Test verification with good signature */
+    TEST_EQUAL(tf_psa_crypto_mldsa87_verify(public_key, signature,
+                                            message->x, message->len),
+               1);
+
+    /* Test verification with wrong signatures */
+    ++signature[0];
+    TEST_EQUAL(tf_psa_crypto_mldsa87_verify(public_key, signature,
+                                            message->x, message->len),
+               0);
+    --signature[0];
+    ++signature[signature_size - 1];
+    TEST_EQUAL(tf_psa_crypto_mldsa87_verify(public_key, signature,
+                                            message->x, message->len),
+               0);
+    --signature[signature_size - 1];
+
+    /* Test verification with corrupted message */
+    if (message->len > 0) {
+        TEST_EQUAL(tf_psa_crypto_mldsa87_verify(public_key, signature,
+                                                message->x, message->len - 1),
+                   0);
+    }
+}
+/* END_CASE */
