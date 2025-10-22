@@ -222,6 +222,46 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_TEST_SHA3_ENABLED */
+void shake_finish(int family, data_t *in, data_t *hash)
+{
+    unsigned char *output1 = NULL;
+    unsigned char *output2 = NULL;
+    unsigned char *output3 = NULL;
+    mbedtls_sha3_context ctx;
+    mbedtls_sha3_init(&ctx);
+
+    for (size_t n1 = 0; n1 <= hash->len; n1++) {
+        for (size_t n2 = 0; n2 <= hash->len - n1; n2++) {
+            mbedtls_test_set_step(n1 * 1000 + n2);
+            size_t n3 = hash->len - n1 - n2;
+            TEST_CALLOC(output1, n1);
+            TEST_CALLOC(output2, n2);
+            TEST_CALLOC(output3, n3);
+            mbedtls_sha3_starts(&ctx, family);
+            TEST_EQUAL(mbedtls_sha3_update(&ctx, in->x, in->len), 0);
+            TEST_EQUAL(mbedtls_sha3_finish(&ctx, output1, n1), 0);
+            TEST_EQUAL(mbedtls_sha3_finish(&ctx, output2, n2), 0);
+            TEST_EQUAL(mbedtls_sha3_finish(&ctx, output3, n3), 0);
+            TEST_MEMORY_COMPARE(output1, n1, hash->x, n1);
+            TEST_MEMORY_COMPARE(output2, n2, hash->x + n1, n2);
+            TEST_MEMORY_COMPARE(output3, n3, hash->x + n1 + n2, n3);
+            mbedtls_free(output1);
+            output1 = NULL;
+            mbedtls_free(output2);
+            output2 = NULL;
+            mbedtls_free(output3);
+            output3 = NULL;
+        }
+    }
+
+exit:
+    mbedtls_free(output1);
+    mbedtls_free(output2);
+    mbedtls_free(output3);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_SHA3_ENABLED */
 void sha3_streaming(int type, data_t *input)
 {
     mbedtls_sha3_context ctx;
