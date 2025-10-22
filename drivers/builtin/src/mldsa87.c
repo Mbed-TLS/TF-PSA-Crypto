@@ -196,10 +196,10 @@ static void scalar_ntt(scalar_t *s)
 {
   // Step: 1, 2, 4, 8, ..., 128
   // Offset: 128, 64, 32, 16, ..., 1
-  int offset = K_DEGREE;
+  size_t offset = K_DEGREE;
   for (size_t step = 1; step < K_DEGREE; step <<= 1) {
     offset >>= 1;
-    int k = 0;
+    size_t k = 0;
     for (size_t i = 0; i < step; i++) {
       const uint32_t step_root = kNTTRootsMontgomery[step + i];
       for (size_t j = k; j < k + offset; j++) {
@@ -223,10 +223,10 @@ static void scalar_inverse_ntt(scalar_t *s)
 {
   // Step: 128, 64, 32, 16, ..., 1
   // Offset: 1, 2, 4, 8, ..., 128
-  int step = K_DEGREE;
+  size_t step = K_DEGREE;
   for (size_t offset = 1; offset < K_DEGREE; offset <<= 1) {
     step >>= 1;
-    int k = 0;
+    size_t k = 0;
     for (size_t i = 0; i < step; i++) {
       const uint32_t step_root =
           K_PRIME - kNTTRootsMontgomery[step + (step - 1 - i)];
