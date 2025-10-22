@@ -23,22 +23,22 @@ extern "C" {
 #define MLDSA87_PUBLIC_KEY_BYTES 2592
 #define MLDSA87_SIGNATURE_BYTES 4627
 
-void mldsa87_pub_from_seed(
+void tf_psa_crypto_mldsa87_pub_from_seed(
   uint8_t out_encoded_public_key[MLDSA87_PUBLIC_KEY_BYTES],
   const uint8_t private_key_seed[MLDSA87_PRIVATE_SEED_BYTES]);
 
-void mldsa87_sign(
+void tf_psa_crypto_mldsa87_sign(
   uint8_t out_encoded_signature[MLDSA87_SIGNATURE_BYTES],
   const uint8_t private_key_seed[MLDSA87_PRIVATE_SEED_BYTES],
   const uint8_t randomizer[MLDSA87_RANDOMIZER_BYTES],
   const uint8_t *msg, size_t msg_len);
 
-void mldsa87_sign_deterministic(
+void tf_psa_crypto_mldsa87_sign_deterministic(
   uint8_t out_encoded_signature[MLDSA87_SIGNATURE_BYTES],
   const uint8_t private_key_seed[MLDSA87_PRIVATE_SEED_BYTES],
   const uint8_t *msg, size_t msg_len);
 
-int mldsa87_verify(const uint8_t encoded_public_key[MLDSA87_PUBLIC_KEY_BYTES],
+int tf_psa_crypto_mldsa87_verify(const uint8_t encoded_public_key[MLDSA87_PUBLIC_KEY_BYTES],
   const uint8_t encoded_signature[MLDSA87_SIGNATURE_BYTES], const uint8_t *msg,
   size_t msg_len);
 
