@@ -13,6 +13,7 @@
 
 #include "tf_psa_crypto_common.h"
 
+#include "mbedtls/platform.h"
 #if defined(MBEDTLS_PK_C)
 #include "mbedtls/pk.h"
 #if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
@@ -1202,12 +1203,6 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 unsigned char *sig, size_t sig_size, size_t *sig_len,
                                 mbedtls_pk_restart_ctx *rs_ctx)
 {
-#if !defined(MBEDTLS_ECP_RESTARTABLE) && !defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    (void) sig;
-    (void) sig_size;
-    (void) sig_len;
-#endif /* !MBEDTLS_ECP_RESTARTABLE && !PSA_HAVE_ALG_ECDSA_SIGN */
-
     if ((md_alg != MBEDTLS_MD_NONE || hash_len != 0) && hash == NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
@@ -1274,6 +1269,9 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 
         return mbedtls_ecdsa_raw_to_der(key_bits, sig, *sig_len, sig, sig_size, sig_len);
     }
+#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
+
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
     if (PSA_KEY_TYPE_IS_RSA(type)) {
         psa_algorithm_t sig_alg = psa_get_key_algorithm(&attributes);
         psa_reset_key_attributes(&attributes);
@@ -1284,7 +1282,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                hash, hash_len, sig, sig_size, sig_len);
         return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
     }
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
+#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
     /* Can't happen */
     return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
