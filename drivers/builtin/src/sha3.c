@@ -406,6 +406,7 @@ int mbedtls_sha3_finish(mbedtls_sha3_context *ctx,
      * to finish(), and have it clean up the context. If the output length is
      * variable (SHAKE), leave the context ready for further finish() calls. */
     if (ctx->olen > 0) {
+        ret = 0;
         goto exit;
     }
 
