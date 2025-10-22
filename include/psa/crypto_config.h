@@ -774,6 +774,24 @@
 #define MBEDTLS_MD_C
 
 /**
+ * \def MBEDTLS_MLDSA_C
+ *
+ * Enable the built-in implementation of ML-DSA for evaluation purposes.
+ *
+ * Module:  drivers/builtin/src/lms.c
+ * Caller:
+ *
+ * Requires: PSA_WANT_ALG_SHAKE128, PSA_WANT_ALG_SHAKE256
+ *
+ * \warning This implementation is partial (only ML-DSA-87 so far),
+ *          not exposed through any public API, and experimental.
+ *          It may change or be removed without notice.
+ *          It has not been fully reviewed or tested.
+ *          It is for evaluation purposes only.
+ */
+//#define MBEDTLS_MLDSA_C
+
+/**
  * \def MBEDTLS_NIST_KW_C
  *
  * Enable the 128-bit key wrapping modes from NIST SP 800-38F:
