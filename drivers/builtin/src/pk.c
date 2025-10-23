@@ -1285,6 +1285,9 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 #endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC */
 
     /* Can't happen */
+    (void) sig;
+    (void) sig_size;
+    (void) sig_len; 
     return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 }
 
