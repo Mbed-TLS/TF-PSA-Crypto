@@ -1287,7 +1287,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     /* Can't happen */
     (void) sig;
     (void) sig_size;
-    (void) sig_len; 
+    (void) sig_len;
     return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 }
 
