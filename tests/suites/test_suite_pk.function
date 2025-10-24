@@ -1200,7 +1200,7 @@ void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
 
     slen = sizeof(sig);
     cnt_restart = 0;
-    if(pub_key_test) {
+    if (pub_key_test) {
         ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
                                           sig, sizeof(sig), &slen,
                                           &rs_ctx);
