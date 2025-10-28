@@ -1580,7 +1580,11 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg)
+void pk_psa_wrap_sign_ext(int pk_type,
+                          int key_bits,
+                          int key_pk_type,
+                          int md_alg,
+                          int no_sign_usage_test)
 {
     mbedtls_pk_context pk;
     size_t sig_len, pkey_len;
@@ -1607,6 +1611,9 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
         psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
     }
+    if (no_sign_usage_test) {
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_ENCRYPT);
+    }
     TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id), 0);
     mbedtls_pk_free(&pk);
     mbedtls_pk_init(&pk);
@@ -1625,8 +1632,15 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     }
 
     /* Perform sign_ext() with the correct pk_type. */
-    TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                   sig, sizeof(sig), &sig_len), 0);
+    if (no_sign_usage_test) {
+        TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
+                                       sig, sizeof(sig), &sig_len), MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+        TEST_EQUAL(PSA_SUCCESS, psa_destroy_key(key_id));
+        goto exit;
+    } else {
+        TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
+                                       sig, sizeof(sig), &sig_len), 0);
+    }
 
     /* verify_ext() is not supported when using an opaque context. */
     if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
