@@ -1160,7 +1160,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:PSA_ALG_DETERMINISTIC_ECDSA */
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:PSA_WANT_ALG_DETERMINISTIC_ECDSA */
 void pk_sign_verify_restart(int pk_type,
                             int grp_id,
                             data_t *d_str,
