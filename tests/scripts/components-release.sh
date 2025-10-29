@@ -51,7 +51,11 @@ component_test_prepare_release () {
     source_dir=$PWD
     preparation_dir=$OUT_OF_SOURCE_DIR/prep
     artifacts_dir=$OUT_OF_SOURCE_DIR/artifacts
+    extract_dir=$OUT_OF_SOURCE_DIR/extract
+    build_dir=$OUT_OF_SOURCE_DIR/build
+    minimal_bin_dir=$OUT_OF_SOURCE_DIR/bin.minimal
     mkdir "$preparation_dir" "$artifacts_dir"
+    mkdir "$extract_dir" "$build_dir"
 
     new_version=$(next_product_version)
     echo "Simulating the next minor release: $new_version"
@@ -106,4 +110,34 @@ component_test_prepare_release () {
     # until the next git gc.
     git fetch --no-write-fetch-head "$preparation_dir" "$preparation_sha"
     echo ">>>> Release candidate sha: $preparation_sha <<<<"
+
+    msg "Prepare release: Test the release archive"
+    shasum_file=$artifacts_dir/tf-psa-crypto-$new_version.txt
+    archive_file=$artifacts_dir/tf-psa-crypto-$new_version.tar.bz2
+    archive_top_dir=tf-psa-crypto-$new_version
+    cd "$artifacts_dir"
+    echo "Checking checksums in $shasum_file"
+    shasum -c "$shasum_file"
+    ls -l "$artifacts_dir"
+    cd "$extract_dir"
+    echo "Extracting ${archive_file##*/}"
+    tar -xjf "$archive_file"
+    if ! [ -d "$archive_top_dir" ]; then
+        echo >&2 "$archive_top_dir not found"
+        ls -l
+        # Repeat the failed test so that this is logged as a failure.
+        [ -d "$archive_top_dir" ]
+    fi
+    if ! [ "$(ls)" = "$archive_top_dir" ]; then
+        echo >&2 "There is content in ${archive_file##*/} outside $archive_top_dir"
+        ls -l
+        # Repeat the failed test so that this is logged as a failure.
+        [ "$(ls)" = "$archive_top_dir" ]
+    fi
+    cd "$build_dir"
+    echo
+    echo "Building $extract_dir/$archive_top_dir in minimal environment"
+    unset CC CFLAGS LDFLAGS
+    PATH="$minimal_bin_dir" cmake "$extract_dir/$archive_top_dir"
+    PATH="$minimal_bin_dir" make tfpsacrypto
 }
