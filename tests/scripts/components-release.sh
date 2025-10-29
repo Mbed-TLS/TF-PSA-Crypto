@@ -111,6 +111,18 @@ component_test_prepare_release () {
     git fetch --no-write-fetch-head "$preparation_dir" "$preparation_sha"
     echo ">>>> Release candidate sha: $preparation_sha <<<<"
 
+    msg "Prepare release: checking archive reproducibility"
+    mkdir "${preparation_dir}2" "${artifacts_dir}2"
+    cd "${preparation_dir}2"
+    git_clone_recursively "$preparation_dir"
+    # Starting from the release candidate commit, prepare_release.py should
+    # not make any extra commit.
+    # Starting from the same commit, prepare_relase.py should create
+    # identical archives.
+    framework/scripts/prepare_release.py --artifact-directory "${artifacts_dir}2" -r "$new_version"
+    ls -l "${artifacts_dir}2"
+    diff "$shasum_file" "${artifacts_dir}2/${shasum_file##*/}"
+
     msg "Prepare release: Test the release archive"
     shasum_file=$artifacts_dir/tf-psa-crypto-$new_version.txt
     archive_file=$artifacts_dir/tf-psa-crypto-$new_version.tar.bz2
