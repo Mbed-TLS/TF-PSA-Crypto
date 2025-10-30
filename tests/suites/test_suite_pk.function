@@ -1173,20 +1173,22 @@ void pk_sign_verify_restart(int pk_type,
                             int min_restart,
                             int max_restart,
                             int pub_key_test,
-                            int sign_ret)
+                            int sign_ret,
+                            int sig_length)
 {
     int ret, cnt_restart;
     mbedtls_pk_restart_ctx rs_ctx;
     mbedtls_pk_context prv, pub;
     size_t slen;
-    unsigned char sig[MBEDTLS_ECDSA_MAX_LEN];
+    unsigned char* sig;
+    sig = mbedtls_calloc(sizeof(char), sig_length);
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
     mbedtls_pk_init(&pub);
     PSA_INIT();
 
-    memset(sig, 0, sizeof(sig));
+    memset(sig, 0, sizeof(char)*sig_length);
 
     TEST_ASSERT(mbedtls_pk_setup(&prv, mbedtls_pk_info_from_type(pk_type)) == 0);
     TEST_ASSERT(mbedtls_pk_setup(&pub, mbedtls_pk_info_from_type(pk_type)) == 0);
@@ -1207,16 +1209,16 @@ void pk_sign_verify_restart(int pk_type,
 
     psa_interruptible_set_max_ops(max_ops);
 
-    slen = sizeof(sig);
+    slen = sizeof(char)*sig_length;
     cnt_restart = 0;
     if (pub_key_test) {
         ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
-                                          sig, sizeof(sig), &slen,
+                                          sig, sizeof(char)*sig_length, &slen,
                                           &rs_ctx);
     } else {
         do {
             ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                              sig, sizeof(sig), &slen,
+                                              sig, sizeof(char)*sig_length, &slen,
                                               &rs_ctx);
         } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
     }
@@ -1259,7 +1261,7 @@ void pk_sign_verify_restart(int pk_type,
 
         slen = sizeof(sig);
         ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                          sig, sizeof(sig), &slen,
+                                          sig, sizeof(char)*sig_length, &slen,
                                           &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
     }
@@ -1268,6 +1270,7 @@ exit:
     mbedtls_pk_restart_free(&rs_ctx);
     mbedtls_pk_free(&prv);
     mbedtls_pk_free(&pub);
+    mbedtls_free(sig);
     PSA_DONE();
 }
 /* END_CASE */
