@@ -50,15 +50,15 @@
 #define PSA_CRYPTO_STRUCT_H
 #include "mbedtls/private_access.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "tf-psa-crypto/build_info.h"
 
 /* Include the context definition for the compiled-in drivers for the primitive
  * algorithms. */
 #include "psa/crypto_driver_contexts_primitives.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct psa_hash_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
@@ -117,9 +117,15 @@ static inline struct psa_cipher_operation_s psa_cipher_operation_init(void)
     return v;
 }
 
+#ifdef __cplusplus
+}
+#endif
 /* Include the context definition for the compiled-in drivers for the composite
  * algorithms. */
 #include "psa/crypto_driver_contexts_composites.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct psa_mac_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
@@ -188,9 +194,15 @@ static inline struct psa_aead_operation_s psa_aead_operation_init(void)
     return v;
 }
 
+#ifdef __cplusplus
+}
+#endif
 /* Include the context definition for the compiled-in drivers for the key
  * derivation algorithms. */
 #include "psa/crypto_driver_contexts_key_derivation.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct psa_key_derivation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)

@@ -16,8 +16,13 @@
 
 #include <stdlib.h>
 
-#ifdef __cplusplus
-extern "C" {
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#include <pthread.h>
+#endif
+
+#if defined(MBEDTLS_THREADING_ALT)
+/* You should define the mbedtls_threading_mutex_t type in your header */
+#include "threading_alt.h"
 #endif
 
 /** Detected error in mutex or condition variable usage.
@@ -32,19 +37,18 @@ extern "C" {
 /** A historical alias for #MBEDTLS_ERR_THREADING_USAGE_ERROR. */
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR MBEDTLS_ERR_THREADING_USAGE_ERROR
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(MBEDTLS_THREADING_C)
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
-#include <pthread.h>
 typedef pthread_mutex_t mbedtls_platform_mutex_t;
 typedef pthread_cond_t mbedtls_platform_condition_variable_t;
 #endif
 
 #if defined(MBEDTLS_THREADING_ALT)
-/* You should define the types mbedtls_platform_mutex_t and
- * mbedtls_platform_condition_variable_t in your header. */
-#include "threading_alt.h"
-
 /**
  * \brief           Set your alternate threading implementation function
  *                  pointers and initialize global mutexes. If used, this

@@ -31,10 +31,6 @@
 /** Authenticated decryption failed: data was not authentic. */
 #define MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED          PSA_ERROR_INVALID_SIGNATURE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum {
     MBEDTLS_CHACHAPOLY_ENCRYPT,     /**< The mode value for performing encryption. */
     MBEDTLS_CHACHAPOLY_DECRYPT      /**< The mode value for performing decryption. */
@@ -42,6 +38,10 @@ typedef enum {
 mbedtls_chachapoly_mode_t;
 
 #include "mbedtls/private/chacha20.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct mbedtls_chachapoly_context {
     mbedtls_chacha20_context MBEDTLS_PRIVATE(chacha20_ctx);  /**< The ChaCha20 context. */
