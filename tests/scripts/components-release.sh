@@ -39,6 +39,12 @@ git_clone_recursively () {
     fi
 }
 
+support_test_prepare_release () {
+    # `prepare_release.py` uses `git archive --mtime` which was added
+    # in Git 2.40.0.
+    git archive --help | grep -q -e --mtime
+}
+
 component_test_prepare_release () {
     msg "Prepare release: Set up testing environment"
 
