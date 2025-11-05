@@ -39,7 +39,7 @@ git_clone_recursively () {
     fi
 }
 
-support_test_prepare_release () {
+support_tf_psa_crypto_test_prepare_release () {
     # `prepare_release.py` uses `git archive --mtime` which was added
     # in Git 2.40.0. Check the version, not `git archive --help`, because
     # the help is not available when man pages is installed, which is
@@ -49,7 +49,7 @@ support_test_prepare_release () {
        (${BASH_REMATCH[1]} -eq 2 && ${BASH_REMATCH[2]} -ge 40) ]]
 }
 
-component_test_prepare_release () {
+component_tf_psa_crypto_test_prepare_release () {
     msg "Prepare release: Set up testing environment"
 
     # Release preparation needs a clean worktree and can make commits.
