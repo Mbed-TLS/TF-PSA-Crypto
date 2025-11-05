@@ -60,12 +60,11 @@ component_tf_psa_crypto_test_prepare_release () {
     # So we use clones.
     source_dir=$PWD
     preparation_dir=$OUT_OF_SOURCE_DIR/prep
-    artifacts_dir=$OUT_OF_SOURCE_DIR/artifacts
+    artifacts_dir=$PWD/release-artifacts
     extract_dir=$OUT_OF_SOURCE_DIR/extract
     build_dir=$OUT_OF_SOURCE_DIR/build
     minimal_bin_dir=$OUT_OF_SOURCE_DIR/bin.minimal
-    mkdir "$preparation_dir" "$artifacts_dir"
-    mkdir "$extract_dir" "$build_dir"
+    mkdir "$preparation_dir" "$extract_dir" "$build_dir"
 
     new_version=$(next_product_version)
     echo "Simulating the next minor release: $new_version"
@@ -119,23 +118,26 @@ component_tf_psa_crypto_test_prepare_release () {
     # Make the release candidate sha available in the original git worktree
     # until the next git gc.
     git fetch --no-write-fetch-head "$preparation_dir" "$preparation_sha"
-    echo ">>>> Release candidate sha: $preparation_sha <<<<"
 
     shasum_file=$artifacts_dir/tf-psa-crypto-$new_version.txt
     archive_file=$artifacts_dir/tf-psa-crypto-$new_version.tar.bz2
     archive_top_dir=tf-psa-crypto-$new_version
 
     msg "Prepare release: checking archive reproducibility"
-    mkdir "${preparation_dir}2" "${artifacts_dir}2"
-    cd "${preparation_dir}2"
+    preparation_replay=$OUT_OF_SOURCE_DIR/replay
+    artifacts_replay=$preparation_replay/release-artifacts
+    shasum_replay=$artifacts_replay/${shasum_file##*/}
+    mkdir "$preparation_replay"
+    cd "$preparation_replay"
     git_clone_recursively "$preparation_dir"
+    mkdir -p "$artifacts_replay"
     # Starting from the release candidate commit, prepare_release.py should
     # not make any extra commit.
     # Starting from the same commit, prepare_relase.py should create
     # identical archives.
-    framework/scripts/prepare_release.py --artifact-directory "${artifacts_dir}2" -r "$new_version"
-    ls -l "${artifacts_dir}2"
-    diff "$shasum_file" "${artifacts_dir}2/${shasum_file##*/}"
+    framework/scripts/prepare_release.py --artifact-directory "$artifacts_replay" -r "$new_version"
+    ls -l "$artifacts_replay"
+    diff "$shasum_file" "$shasum_replay"
 
     msg "Prepare release: Test the release archive"
     cd "$artifacts_dir"
@@ -163,4 +165,9 @@ component_tf_psa_crypto_test_prepare_release () {
     unset CC CFLAGS LDFLAGS
     PATH="$minimal_bin_dir" cmake "$extract_dir/$archive_top_dir"
     PATH="$minimal_bin_dir" make tfpsacrypto
+
+    msg "Prepare release: List artifacts"
+    echo ">>>> Artifacts deposited in $artifacts_dir <<<<"
+    ls -l "$artifacts_dir"
+    echo ">>>> Release candidate sha: $preparation_sha <<<<"
 }
