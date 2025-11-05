@@ -121,6 +121,10 @@ component_test_prepare_release () {
     git fetch --no-write-fetch-head "$preparation_dir" "$preparation_sha"
     echo ">>>> Release candidate sha: $preparation_sha <<<<"
 
+    shasum_file=$artifacts_dir/tf-psa-crypto-$new_version.txt
+    archive_file=$artifacts_dir/tf-psa-crypto-$new_version.tar.bz2
+    archive_top_dir=tf-psa-crypto-$new_version
+
     msg "Prepare release: checking archive reproducibility"
     mkdir "${preparation_dir}2" "${artifacts_dir}2"
     cd "${preparation_dir}2"
@@ -134,9 +138,6 @@ component_test_prepare_release () {
     diff "$shasum_file" "${artifacts_dir}2/${shasum_file##*/}"
 
     msg "Prepare release: Test the release archive"
-    shasum_file=$artifacts_dir/tf-psa-crypto-$new_version.txt
-    archive_file=$artifacts_dir/tf-psa-crypto-$new_version.tar.bz2
-    archive_top_dir=tf-psa-crypto-$new_version
     cd "$artifacts_dir"
     echo "Checking checksums in $shasum_file"
     shasum -c "$shasum_file"
