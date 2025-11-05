@@ -41,8 +41,12 @@ git_clone_recursively () {
 
 support_test_prepare_release () {
     # `prepare_release.py` uses `git archive --mtime` which was added
-    # in Git 2.40.0.
-    git archive --help | grep -q -e --mtime
+    # in Git 2.40.0. Check the version, not `git archive --help`, because
+    # the help is not available when man pages is installed, which is
+    # to be expected in a CI environment.
+    [[ $(git version 2>/dev/null) =~ \ ([0-9]+)\.([0-9]+) ]] &&
+    [[ ${BASH_REMATCH[1]} -ge 3 ||
+       (${BASH_REMATCH[1]} -eq 2 && ${BASH_REMATCH[2]} -ge 40) ]]
 }
 
 component_test_prepare_release () {
