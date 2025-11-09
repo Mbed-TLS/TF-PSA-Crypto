@@ -28,7 +28,7 @@
 
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
 
-#define BLOCKS 1
+#define BLOCKS MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK
 
 #define ROTL32(value, amount) \
     ((uint32_t) ((value) << (amount)) | ((value) >> (32 - (amount))))
@@ -129,19 +129,40 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
     }
 }
 
-static void chacha20_block(uint32_t initial_state[16],
+static void chacha20_blocks(uint32_t initial_state[16],
                            uint8_t *output,
-                           const uint8_t *input)
+                           const uint8_t *input,
+                           size_t blocks_remaining)
 {
     chacha20_block_t blocks[BLOCKS];
 
-    chacha20_scalar_prepare_blocks(blocks, initial_state);
+    for (;;) {
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK == 0
+        // Reducing the scope of this variable helps size and perf for GCC,
+        // but only possible if we don't need to zeroize it (i.e., not using
+        // scalar code).
+        chacha20_block_t blocks[BLOCKS];
+#endif
+        const size_t block_count = BLOCKS < blocks_remaining ? BLOCKS : blocks_remaining;
 
-    for (unsigned i = 0; i < 10; i++) {
-        chacha20_scalar_inner_block(blocks[0].s32);
+        chacha20_scalar_prepare_blocks(blocks, initial_state);
+
+        for (unsigned i = 0; i < 10; i++) {
+            for (unsigned j = 0; j < BLOCKS; j++) {
+                chacha20_scalar_inner_block(blocks[j].s32);
+            }
+        }
+
+        chacha20_scalar_finish_blocks(blocks, initial_state, block_count, input, output);
+
+        blocks_remaining -= block_count;
+        if (blocks_remaining == 0) {
+            break;
+        }
+
+        input  += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
+        output += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
     }
-
-    chacha20_scalar_finish_blocks(blocks, initial_state, 1, input, output);
 
     mbedtls_platform_zeroize(blocks, sizeof(blocks));
 }
@@ -239,19 +260,19 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
     }
 
     /* Process full blocks */
-    while (size >= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
-        /* Generate new keystream block and increment counter */
-        chacha20_block(ctx->state, output + offset, input + offset);
+    if (size >= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
+        size_t block_count = size / MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
+        chacha20_blocks(ctx->state, output + offset, input + offset, block_count);
 
-        offset += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
-        size   -= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
+        offset += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
+        size   -= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
     }
 
     /* Last (partial) block */
     if (size > 0U) {
         /* Generate new keystream block and increment counter */
         memset(ctx->keystream8, 0, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
-        chacha20_block(ctx->state, ctx->keystream8, ctx->keystream8);
+        chacha20_blocks(ctx->state, ctx->keystream8, ctx->keystream8, 1);
 
         mbedtls_xor(output + offset, input + offset, ctx->keystream8, size);
 
