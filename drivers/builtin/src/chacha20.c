@@ -73,6 +73,11 @@ static inline void chacha20_quarter_round(uint32_t state[16],
     state[b] = ROTL32(state[b], 7);
 }
 
+static inline void chacha20_scalar_prepare_block(chacha20_block_t *block, const uint32_t *state)
+{
+    memcpy(block->s32, state, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
+}
+
 /**
  * \brief           Perform the ChaCha20 inner block operation.
  *
@@ -94,50 +99,33 @@ static void chacha20_inner_block(uint32_t state[16])
     chacha20_quarter_round(state, 3, 4, 9,  14);
 }
 
-/**
- * \brief               Generates a keystream block.
- *
- * \param initial_state The initial ChaCha20 state (key, nonce, counter).
- * \param keystream     Generated keystream bytes are written to this buffer.
- */
-static void chacha20_block(const uint32_t initial_state[16],
-                           unsigned char keystream[64])
+static inline void chacha20_scalar_finish_block(const chacha20_block_t *block, uint32_t state[16],
+                        const uint8_t *input, uint8_t *output)
 {
-    uint32_t working_state[16];
-    size_t i;
+    const uint32_t *p = block->s32;
+    for (unsigned i = 0; i < 16; i++) {
+        size_t o = i * 4;
+        uint32_t x = (p[i] + state[i]) ^ mbedtls_get_unaligned_uint32(&input[o]);
+        mbedtls_put_unaligned_uint32(&output[o], x);
+    }
+    state[CHACHA20_CTR_INDEX] += 1;
+}
 
-    memcpy(working_state,
-           initial_state,
-           MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
+static void chacha20_block(uint32_t initial_state[16],
+                           uint8_t *output,
+                           const uint8_t *input)
+{
+    chacha20_block_t block;
 
-    for (i = 0U; i < 10U; i++) {
-        chacha20_inner_block(working_state);
+    chacha20_scalar_prepare_block(&block, initial_state);
+
+    for (unsigned i = 0; i < 10; i++) {
+        chacha20_inner_block(block.s32);
     }
 
-    working_state[0] += initial_state[0];
-    working_state[1] += initial_state[1];
-    working_state[2] += initial_state[2];
-    working_state[3] += initial_state[3];
-    working_state[4] += initial_state[4];
-    working_state[5] += initial_state[5];
-    working_state[6] += initial_state[6];
-    working_state[7] += initial_state[7];
-    working_state[8] += initial_state[8];
-    working_state[9] += initial_state[9];
-    working_state[10] += initial_state[10];
-    working_state[11] += initial_state[11];
-    working_state[12] += initial_state[12];
-    working_state[13] += initial_state[13];
-    working_state[14] += initial_state[14];
-    working_state[15] += initial_state[15];
+    chacha20_scalar_finish_block(&block, initial_state, input, output);
 
-    for (i = 0U; i < 16; i++) {
-        size_t offset = i * 4U;
-
-        MBEDTLS_PUT_UINT32_LE(working_state[i], keystream, offset);
-    }
-
-    mbedtls_platform_zeroize(working_state, sizeof(working_state));
+    mbedtls_platform_zeroize(&block, sizeof(block));
 }
 
 #endif /* MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0 */
@@ -235,10 +223,7 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
     /* Process full blocks */
     while (size >= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
         /* Generate new keystream block and increment counter */
-        chacha20_block(ctx->state, ctx->keystream8);
-        ctx->state[CHACHA20_CTR_INDEX]++;
-
-        mbedtls_xor(output + offset, input + offset, ctx->keystream8, 64U);
+        chacha20_block(ctx->state, output + offset, input + offset);
 
         offset += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
         size   -= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
@@ -247,8 +232,8 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
     /* Last (partial) block */
     if (size > 0U) {
         /* Generate new keystream block and increment counter */
-        chacha20_block(ctx->state, ctx->keystream8);
-        ctx->state[CHACHA20_CTR_INDEX]++;
+        memset(ctx->keystream8, 0, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
+        chacha20_block(ctx->state, ctx->keystream8, ctx->keystream8);
 
         mbedtls_xor(output + offset, input + offset, ctx->keystream8, size);
 
