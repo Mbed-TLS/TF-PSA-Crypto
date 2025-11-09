@@ -133,6 +133,43 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
 }
 #endif
 
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+static inline void chacha20_zeroize_scalar_blocks(chacha20_block_t *scalar_blocks)
+{
+#if defined(MBEDTLS_COMPILER_IS_GCC) && defined(__aarch64__) \
+    && defined(MBEDTLS_EFFICIENT_UNALIGNED_ACCESS)
+    // for GCC, this gains ~7% perf (for 6,2) and slight code-size saving
+    // slightly worse for size with clang
+    // as per tf_psa_crypto_common.h, use uintptr_t to update a pointer from asm
+    uintptr_t ptr = (uintptr_t) scalar_blocks[0].s32;
+    for (unsigned i = 0; i < MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK; i++) {
+        if (sizeof(scalar_blocks[0]) != 64) {
+            // ptr is incremented by 64 bytes in this loop, so this is only
+            // needed if sizeof(chacha20_block_t) != 64 (which is possible
+            // but unlikely).
+            // In practice this if block is optimised away.
+            ptr = (uintptr_t) scalar_blocks[i].s32;
+        }
+        asm volatile (
+            "stp xzr, xzr, [%x[p]], #16        \n\t"
+            "stp xzr, xzr, [%x[p]], #16        \n\t"
+            "stp xzr, xzr, [%x[p]], #16        \n\t"
+            "stp xzr, xzr, [%x[p]], #16        \n\t"
+            :
+            // 64 bytes pointed to by ptr are written to
+            "=m" ((*(char (*)[64]) ptr)),
+            // ptr is read and modified (i.e., increased by 64 bytes)
+            [p] "+r" (ptr)
+            ::
+            );
+    }
+#else
+    mbedtls_platform_zeroize(scalar_blocks,
+                             sizeof(scalar_blocks[0]) * MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK);
+#endif
+}
+#endif // MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+
 static void chacha20_blocks(uint32_t state[16],
                            uint8_t *output,
                            const uint8_t *input,
@@ -194,9 +231,8 @@ static void chacha20_blocks(uint32_t state[16],
 #endif
 
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
-    // Neon blocks will be in Neon registers which we don't need to zeroise
-    mbedtls_platform_zeroize(&blocks[MBEDTLS_CHACHA20_NEON_MULTIBLOCK],
-                             sizeof(blocks[0]) * MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK);
+    // Neon blocks will be in registers, so only zeroise the scalar blocks
+    chacha20_zeroize_scalar_blocks(&blocks[MBEDTLS_CHACHA20_NEON_MULTIBLOCK]);
 #endif
 }
 
