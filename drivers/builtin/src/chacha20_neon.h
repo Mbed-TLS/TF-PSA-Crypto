@@ -78,4 +78,18 @@ typedef union {
 #endif
 } chacha20_block_t;
 
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
+
+void chacha20_load_neon_state(chacha20_block_t *neon_state, const uint32_t *state);
+void chacha20_neon_prepare_blocks(chacha20_block_t *r, const chacha20_block_t *neon_state);
+void chacha20_neon_inner_block(chacha20_block_t *r);
+void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
+                                chacha20_block_t *neon_state,
+                                const unsigned int block_count,
+                                const uint8_t *input,
+                                uint8_t *output);
+void chacha20_update_counter_from_neon(uint32_t *p, const chacha20_block_t *neon_state);
+
+#endif
+
 #endif /* TF_PSA_CRYPTO_CHACHA20_NEON_H */
