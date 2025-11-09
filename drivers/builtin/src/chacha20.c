@@ -24,9 +24,7 @@
 
 #include "mbedtls/platform.h"
 
-#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
-
-#define BLOCKS MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK
+#define BLOCKS (MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK + MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
 
 #define ROTL32(value, amount) \
     ((uint32_t) ((value) << (amount)) | ((value) >> (32 - (amount))))
@@ -73,6 +71,7 @@ static inline void chacha20_quarter_round(uint32_t state[16],
     state[b] = ROTL32(state[b], 7);
 }
 
+MBEDTLS_MAYBE_UNUSED
 static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
                                                   const uint32_t *state)
 {
@@ -95,6 +94,7 @@ static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
  *
  * \param state     The ChaCha20 state to update.
  */
+MBEDTLS_MAYBE_UNUSED
 static void chacha20_scalar_inner_block(uint32_t state[16])
 {
     chacha20_quarter_round(state, 0, 4, 8,  12);
@@ -108,6 +108,7 @@ static void chacha20_scalar_inner_block(uint32_t state[16])
     chacha20_quarter_round(state, 3, 4, 9,  14);
 }
 
+MBEDTLS_MAYBE_UNUSED
 static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
                                                  uint32_t state[16],
                                                  unsigned block_count,
@@ -127,12 +128,18 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
     }
 }
 
-static void chacha20_blocks(uint32_t initial_state[16],
+static void chacha20_blocks(uint32_t state[16],
                            uint8_t *output,
                            const uint8_t *input,
                            size_t blocks_remaining)
 {
     chacha20_block_t blocks[BLOCKS];
+
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
+    /* Load original state into NEON registers */
+    chacha20_block_t neon_state;
+    chacha20_load_neon_state(&neon_state, state);
+#endif
 
     for (;;) {
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK == 0
@@ -143,15 +150,30 @@ static void chacha20_blocks(uint32_t initial_state[16],
 #endif
         const size_t block_count = BLOCKS < blocks_remaining ? BLOCKS : blocks_remaining;
 
-        chacha20_scalar_prepare_blocks(blocks, initial_state);
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
+        chacha20_scalar_prepare_blocks(blocks, state);
+#else
+        chacha20_neon_prepare_blocks(blocks, &neon_state);
+#endif
 
         for (unsigned i = 0; i < 10; i++) {
-            for (unsigned j = 0; j < BLOCKS; j++) {
-                chacha20_scalar_inner_block(blocks[j].s32);
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+            for (unsigned j = 0; j < MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK; j++) {
+                chacha20_scalar_inner_block(blocks[j + MBEDTLS_CHACHA20_NEON_MULTIBLOCK].s32);
             }
+#endif
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
+            for (unsigned j = 0; j < MBEDTLS_CHACHA20_NEON_MULTIBLOCK; j++) {
+                chacha20_neon_inner_block(&blocks[j]);
+            }
+#endif
         }
 
-        chacha20_scalar_finish_blocks(blocks, initial_state, block_count, input, output);
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
+        chacha20_scalar_finish_blocks(blocks, state,     block_count, input, output);
+#else
+        chacha20_neon_finish_blocks(blocks, &neon_state, block_count, input, output);
+#endif
 
         blocks_remaining -= block_count;
         if (blocks_remaining == 0) {
@@ -162,10 +184,16 @@ static void chacha20_blocks(uint32_t initial_state[16],
         output += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
     }
 
-    mbedtls_platform_zeroize(blocks, sizeof(blocks));
-}
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
+    chacha20_update_counter_from_neon(&state[CHACHA20_CTR_INDEX], &neon_state);
+#endif
 
-#endif /* MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0 */
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+    // Neon blocks will be in Neon registers which we don't need to zeroise
+    mbedtls_platform_zeroize(&blocks[MBEDTLS_CHACHA20_NEON_MULTIBLOCK],
+                             sizeof(blocks[0]) * MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK);
+#endif
+}
 
 void mbedtls_chacha20_init(mbedtls_chacha20_context *ctx)
 {
@@ -238,8 +266,6 @@ int mbedtls_chacha20_starts(mbedtls_chacha20_context *ctx,
     return 0;
 }
 
-#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
-
 int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
                             size_t size,
                             const unsigned char *input,
@@ -280,8 +306,6 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
 
     return 0;
 }
-
-#endif /* MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0 */
 
 int mbedtls_chacha20_crypt(const unsigned char key[32],
                            const unsigned char nonce[12],

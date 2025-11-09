@@ -24,7 +24,7 @@
 // Tested on all combinations of Armv7 arm/thumb2; Armv8 arm/thumb2/aarch64; Armv8 aarch64_be on
 // clang 14, gcc 11, and some more recent versions.
 
-#define BLOCKS MBEDTLS_CHACHA20_NEON_MULTIBLOCK
+#define BLOCKS (MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK + MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
 
 // Define rotate-left operations that rotate within each 32-bit element in a 128-bit vector.
 static inline uint32x4_t chacha20_neon_vrotlq_16_u32(uint32x4_t v)
@@ -85,6 +85,18 @@ void chacha20_neon_prepare_blocks(chacha20_block_t *r, const chacha20_block_t *n
         r[i].c = neon_state->c;
         r[i].d = ctr;
         ctr = chacha20_neon_inc_counter(ctr);
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+        // In principle this is needed to ensure that it is safe to read the
+        // inactive member of the chacha20_block_t union, i.e., to guarantee
+        // the scalar and Neon elements of the union are defined & consistent.
+        // (In practice clang and GCC will do the right thing without this).
+        if (i >= MBEDTLS_CHACHA20_NEON_MULTIBLOCK) {
+            vst1q_u32(&r[i].s32[0],  r[i].a);
+            vst1q_u32(&r[i].s32[4],  r[i].b);
+            vst1q_u32(&r[i].s32[8],  r[i].c);
+            vst1q_u32(&r[i].s32[12], r[i].d);
+        }
+#endif
     }
 }
 
@@ -128,6 +140,18 @@ void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
                                                uint8_t *output)
 {
     for (unsigned i = 0; i < block_count; i++) {
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+        // In principle this is needed to ensure that it is safe to read the
+        // inactive member of the chacha20_block_t union, i.e., to guarantee
+        // the scalar and Neon elements of the union are defined & consistent.
+        // (In practice clang and GCC will do the right thing without this).
+        if (i >= MBEDTLS_CHACHA20_NEON_MULTIBLOCK) {
+            blocks[i].a = vld1q_u32(&blocks[i].s32[0]);
+            blocks[i].b = vld1q_u32(&blocks[i].s32[4]);
+            blocks[i].c = vld1q_u32(&blocks[i].s32[8]);
+            blocks[i].d = vld1q_u32(&blocks[i].s32[12]);
+        }
+#endif
         blocks[i].a = vaddq_u32(blocks[i].a, neon_state->a);
         blocks[i].b = vaddq_u32(blocks[i].b, neon_state->b);
         blocks[i].c = vaddq_u32(blocks[i].c, neon_state->c);
@@ -148,93 +172,6 @@ void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
 void chacha20_update_counter_from_neon(uint32_t *p, const chacha20_block_t *neon_state)
 {
     vst1q_u32(p, neon_state->d);
-}
-
-// Prevent gcc from rolling up the (manually unrolled) interleaved block loops
-MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
-static inline void chacha20_neon_blocks(uint32_t *state,
-                                        uint8_t *output,
-                                        const uint8_t *input,
-                                        size_t blocks_remaining)
-{
-    // Assuming 32 regs, with 4 for original values plus 4 for scratch, with 4 regs per block,
-    // we should be able to process up to 24/4 = 6 blocks simultaneously.
-    // Testing confirms that perf indeed increases with more blocks, and then falls off after 6.
-
-    /* Load original state into NEON registers */
-    chacha20_block_t neon_state;
-    chacha20_load_neon_state(&neon_state, state);
-
-    for (;;) {
-        chacha20_block_t r[6];
-        const unsigned block_count = BLOCKS < blocks_remaining ? BLOCKS : blocks_remaining;
-
-        // It's essential to unroll these loops to benefit from interleaving multiple blocks.
-        // If MBEDTLS_CHACHA20_NEON_MULTIBLOCK < 6, gcc and clang will optimise away the unused bits
-
-        chacha20_neon_prepare_blocks(r, &neon_state);
-
-        for (unsigned i = 0; i < 10; i++) {
-            chacha20_neon_inner_block(&r[0]);
-            chacha20_neon_inner_block(&r[1]);
-            chacha20_neon_inner_block(&r[2]);
-            chacha20_neon_inner_block(&r[3]);
-            chacha20_neon_inner_block(&r[4]);
-            chacha20_neon_inner_block(&r[5]);
-        }
-
-        chacha20_neon_finish_blocks(r, &neon_state, block_count, input, output);
-
-        blocks_remaining -= block_count;
-        if (blocks_remaining == 0) {
-            break;
-        }
-
-        input  += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
-        output += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * block_count;
-    }
-
-    chacha20_update_counter_from_neon(&state[CHACHA20_CTR_INDEX], &neon_state);
-}
-
-int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
-                            size_t size,
-                            const unsigned char *input,
-                            unsigned char *output)
-{
-    size_t offset = 0U;
-
-    /* Use leftover keystream bytes, if available */
-    while (ctx->keystream_bytes_used < MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES && size > 0) {
-        output[offset] = input[offset]
-                         ^ ctx->keystream8[ctx->keystream_bytes_used];
-
-        ctx->keystream_bytes_used++;
-        offset++;
-        size--;
-    }
-
-    /* Process full blocks */
-    if (size >= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
-        size_t blocks = size / MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
-        chacha20_neon_blocks(ctx->state, output + offset, input + offset, blocks);
-
-        offset += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * blocks;
-        size   -= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * blocks;
-    }
-
-    /* Last (partial) block */
-    if (size > 0U) {
-        /* Generate new keystream block and increment counter */
-        memset(ctx->keystream8, 0, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
-        chacha20_neon_blocks(ctx->state, ctx->keystream8, ctx->keystream8, 1);
-
-        mbedtls_xor_no_simd(output + offset, input + offset, ctx->keystream8, size);
-
-        ctx->keystream_bytes_used = size;
-    }
-
-    return 0;
 }
 
 #endif /* defined(MBEDTLS_CHACHA20_C) && (MBEDTLS_CHACHA20_NEON_MULTIBLOCK != 0) */
