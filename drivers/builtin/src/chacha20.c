@@ -24,8 +24,6 @@
 
 #include "mbedtls/platform.h"
 
-#define BLOCKS (MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK + MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
-
 #define ROTL32(value, amount) \
     ((uint32_t) ((value) << (amount)) | ((value) >> (32 - (amount))))
 
