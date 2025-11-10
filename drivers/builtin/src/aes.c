@@ -1013,14 +1013,21 @@ MBEDTLS_MAYBE_UNUSED static void aes_maybe_realign(mbedtls_aes_context *ctx)
 /*
  * AES-ECB block encryption/decryption
  */
-int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
-                          int mode,
-                          const unsigned char input[16],
-                          unsigned char output[16])
+static int mbedtls_aes_crypt_ecb_multiblock(mbedtls_aes_context *ctx,
+                                            int mode,
+                                            const unsigned char *input,
+                                            unsigned char *output,
+                                            size_t length)
 {
-    if (mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT) {
+    if ((mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT) || length % 16 != 0) {
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
     }
+
+    if (length == 0) {
+        return 0;
+    }
+
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
 #if defined(MAY_NEED_TO_ALIGN)
     aes_maybe_realign(ctx);
@@ -1028,26 +1035,68 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
-        return mbedtls_aesni_crypt_ecb(ctx, mode, input, output);
+        size_t pos = 0;
+        while (length - pos >= 4 * 16) {
+            ret = mbedtls_aesni_crypt_ecb_4blocks(ctx, mode, &input[pos], &output[pos]);
+            if (ret != 0) {
+                goto exit;
+            }
+            pos += 4 * 16;
+        }
+        size_t remaining_blocks = (length - pos) / 16;
+        if (remaining_blocks == 3) {
+            ret = mbedtls_aesni_crypt_ecb_3blocks(ctx, mode, &input[pos], &output[pos]);
+        } else if (remaining_blocks == 2) {
+            ret = mbedtls_aesni_crypt_ecb_2blocks(ctx, mode, &input[pos], &output[pos]);
+        } else if (remaining_blocks == 1) {
+            ret = mbedtls_aesni_crypt_ecb(ctx, mode, &input[pos], &output[pos]);
+        }
+        goto exit;
     }
 #endif
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
     if (MBEDTLS_AESCE_HAS_SUPPORT()) {
-        return mbedtls_aesce_crypt_ecb(ctx, mode, input, output);
+        for (size_t pos = 0; pos < length; pos += 16) {
+            ret = mbedtls_aesce_crypt_ecb(ctx, mode, input, output);
+            if (ret != 0) {
+                goto exit;
+            }
+        }
     }
 #endif
 
 #if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
     if (mode == MBEDTLS_AES_DECRYPT) {
-        return mbedtls_internal_aes_decrypt(ctx, input, output);
+        for (size_t pos = 0; pos < length; pos += 16) {
+            ret = mbedtls_internal_aes_decrypt(ctx, input, output);
+            if (ret != 0) {
+                goto exit;
+            }
+        }
     } else
 #endif
     {
-        return mbedtls_internal_aes_encrypt(ctx, input, output);
+        for (size_t pos = 0; pos < length; pos += 16) {
+            ret = mbedtls_internal_aes_encrypt(ctx, input, output);
+            if (ret != 0) {
+                goto exit;
+            }
+        }
     }
 #endif /* !MBEDTLS_AES_USE_HARDWARE_ONLY */
+
+exit:
+    return ret;
+}
+
+int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
+                          int mode,
+                          const unsigned char input[16],
+                          unsigned char output[16])
+{
+    return mbedtls_aes_crypt_ecb_multiblock(ctx, mode, input, output, 16);
 }
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
@@ -1405,6 +1454,22 @@ exit:
 #endif /* MBEDTLS_CIPHER_MODE_OFB */
 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
+static inline int aes_ctr_generate_keystream(mbedtls_aes_context *ctx,
+                                             unsigned char nonce_counter[16],
+                                             unsigned char *keystream,
+                                             size_t num_blocks)
+{
+    for (size_t i = 0; i < num_blocks; i++) {
+        memcpy(&keystream[i * 16], nonce_counter, 16);
+        mbedtls_ctr_increment_counter(nonce_counter);
+    }
+    return mbedtls_aes_crypt_ecb_multiblock(ctx,
+                                            MBEDTLS_AES_ENCRYPT,
+                                            keystream,
+                                            keystream,
+                                            num_blocks * 16);
+}
+
 /*
  * AES-CTR buffer encryption/decryption
  */
@@ -1424,29 +1489,39 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
     }
 
-    for (size_t i = 0; i < length;) {
-        size_t n = 16;
-        if (offset == 0) {
-            ret = mbedtls_aes_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
-            if (ret != 0) {
-                goto exit;
-            }
-            mbedtls_ctr_increment_counter(nonce_counter);
-        } else {
-            n -= offset;
-        }
+    size_t pos = 0;
 
-        if (n > (length - i)) {
-            n = (length - i);
+    if (offset > 0) {
+        size_t n = 16 - offset;
+        if (n > length) {
+            n = length;
         }
-        mbedtls_xor(&output[i], &input[i], &stream_block[offset], n);
-        // offset might be non-zero for the last block, but in that case, we don't use it again
-        offset = 0;
-        i += n;
+        mbedtls_xor(output, input, &stream_block[offset], n);
+        pos += n;
     }
 
-    // capture offset for future resumption
+    unsigned char keystream[4 * 16];
+    unsigned char *last_keystream_block = NULL;
+    while (pos < length) {
+        size_t n = 4 * 16;
+        if (n > length - pos) {
+            n = length - pos;
+        }
+        size_t keystream_blocks_needed = (n + 15) / 16;
+        ret = aes_ctr_generate_keystream(ctx, nonce_counter, keystream, keystream_blocks_needed);
+        if (ret != 0) {
+            goto exit;
+        }
+        mbedtls_xor(&output[pos], &input[pos], keystream, n);
+        last_keystream_block = &keystream[(keystream_blocks_needed - 1) * 16];
+        pos += n;
+    }
+
+    // Capture the offset and last keystream block for resumption.
     *nc_off = (*nc_off + length) % 16;
+    if (last_keystream_block != NULL) {
+        memcpy(stream_block, last_keystream_block, 16);
+    }
 
     ret = 0;
 

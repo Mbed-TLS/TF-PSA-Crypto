@@ -88,6 +88,62 @@ int mbedtls_aesni_has_support(unsigned int what)
 #if MBEDTLS_AESNI_HAVE_CODE == 2
 
 /*
+ * Encrypt or decrypt multiple blocks using AES-NI. This allows making use of
+ * instruction-level parallelism to speed up AES operations when processing
+ * multiple blocks. The input and output buffers need to have a size of
+ * num_blocks * 16 bytes, while state must have num_blocks items.
+ */
+static inline void aesni_crypt_ecb_multiple_blocks(mbedtls_aes_context *ctx,
+                                                   int mode,
+                                                   const unsigned char *input,
+                                                   unsigned char *output,
+                                                   __m128i *state,
+                                                   size_t num_blocks)
+{
+    const __m128i *rk = (const __m128i *) (ctx->buf + ctx->rk_offset);
+    unsigned nr = ctx->nr; // Number of remaining rounds
+
+    // Load round key 0
+    memcpy(state, input, num_blocks * 16);
+    for (size_t i = 0; i < num_blocks; i++) {
+        state[i] = _mm_xor_si128(state[i], rk[0]);  // state ^= *rk;
+    }
+    ++rk;
+    --nr;
+
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+    if (mode == MBEDTLS_AES_DECRYPT) {
+        while (nr != 0) {
+            for (size_t i = 0; i < num_blocks; i++) {
+                state[i] = _mm_aesdec_si128(state[i], *rk);
+            }
+            ++rk;
+            --nr;
+        }
+        for (size_t i = 0; i < num_blocks; i++) {
+            state[i] = _mm_aesdeclast_si128(state[i], *rk);
+        }
+    } else
+#else
+    (void) mode;
+#endif
+    {
+        while (nr != 0) {
+            for (size_t i = 0; i < num_blocks; i++) {
+                state[i] = _mm_aesenc_si128(state[i], *rk);
+            }
+            ++rk;
+            --nr;
+        }
+        for (size_t i = 0; i < num_blocks; i++) {
+            state[i] = _mm_aesenclast_si128(state[i], *rk);
+        }
+    }
+
+    memcpy(output, state, num_blocks * 16);
+}
+
+/*
  * AES-NI AES-ECB block en(de)cryption
  */
 int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
@@ -95,38 +151,38 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
                             const unsigned char input[16],
                             unsigned char output[16])
 {
-    const __m128i *rk = (const __m128i *) (ctx->buf + ctx->rk_offset);
-    unsigned nr = ctx->nr; // Number of remaining rounds
-
-    // Load round key 0
     __m128i state;
-    memcpy(&state, input, 16);
-    state = _mm_xor_si128(state, rk[0]);  // state ^= *rk;
-    ++rk;
-    --nr;
+    aesni_crypt_ecb_multiple_blocks(ctx, mode, input, output, &state, 1);
+    return 0;
+}
 
-#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-    if (mode == MBEDTLS_AES_DECRYPT) {
-        while (nr != 0) {
-            state = _mm_aesdec_si128(state, *rk);
-            ++rk;
-            --nr;
-        }
-        state = _mm_aesdeclast_si128(state, *rk);
-    } else
-#else
-    (void) mode;
-#endif
-    {
-        while (nr != 0) {
-            state = _mm_aesenc_si128(state, *rk);
-            ++rk;
-            --nr;
-        }
-        state = _mm_aesenclast_si128(state, *rk);
-    }
+int mbedtls_aesni_crypt_ecb_2blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[2 * 16],
+                                    unsigned char output[2 * 16])
+{
+    __m128i state[2];
+    aesni_crypt_ecb_multiple_blocks(ctx, mode, input, output, state, 2);
+    return 0;
+}
 
-    memcpy(output, &state, 16);
+int mbedtls_aesni_crypt_ecb_3blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[3 * 16],
+                                    unsigned char output[3 * 16])
+{
+    __m128i state[3];
+    aesni_crypt_ecb_multiple_blocks(ctx, mode, input, output, state, 3);
+    return 0;
+}
+
+int mbedtls_aesni_crypt_ecb_4blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[4 * 16],
+                                    unsigned char output[4 * 16])
+{
+    __m128i state[4];
+    aesni_crypt_ecb_multiple_blocks(ctx, mode, input, output, state, 4);
     return 0;
 }
 
@@ -443,10 +499,6 @@ static void aesni_setkey_enc_256(unsigned char *rk_bytes,
  * Operand macros are in gas order (src, dst) as opposed to Intel order
  * (dst, src) in order to blend better into the surrounding assembly code.
  */
-#define AESDEC(regs)      ".byte 0x66,0x0F,0x38,0xDE," regs "\n\t"
-#define AESDECLAST(regs)  ".byte 0x66,0x0F,0x38,0xDF," regs "\n\t"
-#define AESENC(regs)      ".byte 0x66,0x0F,0x38,0xDC," regs "\n\t"
-#define AESENCLAST(regs)  ".byte 0x66,0x0F,0x38,0xDD," regs "\n\t"
 #define AESIMC(regs)      ".byte 0x66,0x0F,0x38,0xDB," regs "\n\t"
 #define AESKEYGENA(regs, imm)  ".byte 0x66,0x0F,0x3A,0xDF," regs "," imm "\n\t"
 #define PCLMULQDQ(regs, imm)   ".byte 0x66,0x0F,0x3A,0x44," regs "," imm "\n\t"
@@ -467,33 +519,33 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
                             const unsigned char input[16],
                             unsigned char output[16])
 {
-    asm ("movdqu    (%3), %%xmm0    \n\t" // load input
-         "movdqu    (%1), %%xmm1    \n\t" // load round key 0
-         "pxor      %%xmm1, %%xmm0  \n\t" // round 0
-         "add       $16, %1         \n\t" // point to next round key
-         "subl      $1, %0          \n\t" // normal rounds = nr - 1
-         "test      %2, %2          \n\t" // mode?
-         "jz        2f              \n\t" // 0 = decrypt
+    asm ("movdqu      (%3), %%xmm0    \n\t" // load input
+         "movdqu      (%1), %%xmm1    \n\t" // load round key 0
+         "pxor        %%xmm1, %%xmm0  \n\t" // round 0
+         "add         $16, %1         \n\t" // point to next round key
+         "subl        $1, %0          \n\t" // normal rounds = nr - 1
+         "test        %2, %2          \n\t" // mode?
+         "jz          2f              \n\t" // 0 = decrypt
 
-         "1:                        \n\t" // encryption loop
-         "movdqu    (%1), %%xmm1    \n\t" // load round key
-         AESENC(xmm1_xmm0)                // do round
-         "add       $16, %1         \n\t" // point to next round key
-         "subl      $1, %0          \n\t" // loop
-         "jnz       1b              \n\t"
-         "movdqu    (%1), %%xmm1    \n\t" // load round key
-         AESENCLAST(xmm1_xmm0)            // last round
+         "1:                          \n\t" // encryption loop
+         "movdqu      (%1), %%xmm1    \n\t" // load round key
+         "aesenc      %%xmm1, %%xmm0  \n\t" // do round
+         "add         $16, %1         \n\t" // point to next round key
+         "subl        $1, %0          \n\t" // loop
+         "jnz         1b              \n\t"
+         "movdqu      (%1), %%xmm1    \n\t" // load round key
+         "aesenclast  %%xmm1, %%xmm0  \n\t" // last round
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-         "jmp       3f              \n\t"
+         "jmp         3f              \n\t"
 
-         "2:                        \n\t" // decryption loop
-         "movdqu    (%1), %%xmm1    \n\t"
-         AESDEC(xmm1_xmm0)                // do round
-         "add       $16, %1         \n\t"
-         "subl      $1, %0          \n\t"
-         "jnz       2b              \n\t"
-         "movdqu    (%1), %%xmm1    \n\t" // load round key
-         AESDECLAST(xmm1_xmm0)            // last round
+         "2:                          \n\t" // decryption loop
+         "movdqu      (%1), %%xmm1    \n\t"
+         "aesdec      %%xmm1, %%xmm0  \n\t" // do round
+         "add         $16, %1         \n\t"
+         "subl        $1, %0          \n\t"
+         "jnz         2b              \n\t"
+         "movdqu      (%1), %%xmm1    \n\t" // load round key
+         "aesdeclast  %%xmm1, %%xmm0  \n\t" // last round
 #endif
 
          "3:                        \n\t"
@@ -501,6 +553,189 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
          :
          : "r" (ctx->nr), "r" (ctx->buf + ctx->rk_offset), "r" (mode), "r" (input), "r" (output)
          : "memory", "cc", "xmm0", "xmm1", "0", "1");
+
+
+    return 0;
+}
+
+/*
+ * AES-NI AES-ECB block en(de)cryption, two at a time.
+ */
+int mbedtls_aesni_crypt_ecb_2blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[2 * 16],
+                                    unsigned char output[2 * 16])
+{
+    asm ("movdqu     (%3), %%xmm0      \n\t" // load input
+         "movdqu     16(%3), %%xmm1    \n\t"
+         "movdqu     (%1), %%xmm2      \n\t" // load round key 0
+         "pxor       %%xmm2, %%xmm0    \n\t" // round 0
+         "pxor       %%xmm2, %%xmm1    \n\t"
+         "add        $16, %1           \n\t" // point to next round key
+         "subl       $1, %0            \n\t" // normal rounds = nr - 1
+         "test       %2, %2            \n\t" // mode?
+         "jz         2f                \n\t" // 0 = decrypt
+
+         "1:                           \n\t" // encryption loop
+         "movdqu     (%1), %%xmm2      \n\t" // load round key
+         "aesenc     %%xmm2, %%xmm0    \n\t" // do round
+         "aesenc     %%xmm2, %%xmm1    \n\t"
+         "add        $16, %1           \n\t" // point to next round key
+         "subl       $1, %0            \n\t" // loop
+         "jnz        1b                \n\t"
+         "movdqu     (%1), %%xmm2      \n\t" // load round key
+         "aesenclast %%xmm2, %%xmm0    \n\t" // last round
+         "aesenclast %%xmm2, %%xmm1    \n\t"
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+         "jmp        3f                 \n\t"
+
+         "2:                            \n\t" // decryption loop
+         "movdqu     (%1), %%xmm2       \n\t"
+         "aesdec     %%xmm2, %%xmm0     \n\t" // do round
+         "aesdec     %%xmm2, %%xmm1     \n\t"
+         "add        $16, %1            \n\t"
+         "subl       $1, %0             \n\t"
+         "jnz        2b                 \n\t"
+         "movdqu     (%1), %%xmm2       \n\t" // load round key
+         "aesdeclast %%xmm2, %%xmm0     \n\t" // last round
+         "aesdeclast %%xmm2, %%xmm1     \n\t"
+#endif
+
+         "3:                            \n\t"
+         "movdqu     %%xmm0, (%4)       \n\t" // export output
+         "movdqu     %%xmm1, 16(%4)     \n\t"
+         :
+         : "r" (ctx->nr), "r" (ctx->buf + ctx->rk_offset), "r" (mode), "r" (input), "r" (output)
+         : "memory", "cc", "xmm0", "xmm1", "xmm2", "0", "1");
+
+
+    return 0;
+}
+
+/*
+ * AES-NI AES-ECB block en(de)cryption, three at a time.
+ */
+int mbedtls_aesni_crypt_ecb_3blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[3 * 16],
+                                    unsigned char output[3 * 16])
+{
+    asm ("movdqu     (%3), %%xmm0      \n\t" // load input
+         "movdqu     16(%3), %%xmm1    \n\t"
+         "movdqu     32(%3), %%xmm2    \n\t"
+         "movdqu     (%1), %%xmm3      \n\t" // load round key 0
+         "pxor       %%xmm3, %%xmm0    \n\t" // round 0
+         "pxor       %%xmm3, %%xmm1    \n\t"
+         "pxor       %%xmm3, %%xmm2    \n\t"
+         "add        $16, %1           \n\t" // point to next round key
+         "subl       $1, %0            \n\t" // normal rounds = nr - 1
+         "test       %2, %2            \n\t" // mode?
+         "jz         2f                \n\t" // 0 = decrypt
+
+         "1:                           \n\t" // encryption loop
+         "movdqu     (%1), %%xmm3      \n\t" // load round key
+         "aesenc     %%xmm3, %%xmm0    \n\t" // do round
+         "aesenc     %%xmm3, %%xmm1    \n\t"
+         "aesenc     %%xmm3, %%xmm2    \n\t"
+         "add        $16, %1           \n\t" // point to next round key
+         "subl       $1, %0            \n\t" // loop
+         "jnz        1b                \n\t"
+         "movdqu     (%1), %%xmm3      \n\t" // load round key
+         "aesenclast %%xmm3, %%xmm0    \n\t" // last round
+         "aesenclast %%xmm3, %%xmm1    \n\t"
+         "aesenclast %%xmm3, %%xmm2    \n\t"
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+         "jmp        3f                 \n\t"
+
+         "2:                            \n\t" // decryption loop
+         "movdqu     (%1), %%xmm3       \n\t"
+         "aesdec     %%xmm3, %%xmm0     \n\t" // do round
+         "aesdec     %%xmm3, %%xmm1     \n\t"
+         "aesdec     %%xmm3, %%xmm2     \n\t"
+         "add        $16, %1            \n\t"
+         "subl       $1, %0             \n\t"
+         "jnz        2b                 \n\t"
+         "movdqu     (%1), %%xmm3       \n\t" // load round key
+         "aesdeclast %%xmm3, %%xmm0     \n\t" // last round
+         "aesdeclast %%xmm3, %%xmm1     \n\t"
+         "aesdeclast %%xmm3, %%xmm2     \n\t"
+#endif
+
+         "3:                            \n\t"
+         "movdqu     %%xmm0, (%4)       \n\t" // export output
+         "movdqu     %%xmm1, 16(%4)     \n\t"
+         "movdqu     %%xmm2, 32(%4)     \n\t"
+         :
+         : "r" (ctx->nr), "r" (ctx->buf + ctx->rk_offset), "r" (mode), "r" (input), "r" (output)
+         : "memory", "cc", "xmm0", "xmm1", "xmm2", "xmm3", "0", "1");
+
+
+    return 0;
+}
+
+/*
+ * AES-NI AES-ECB block en(de)cryption, four at a time.
+ */
+int mbedtls_aesni_crypt_ecb_4blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[4 * 16],
+                                    unsigned char output[4 * 16])
+{
+    asm ("movdqu     (%3), %%xmm0      \n\t" // load input
+         "movdqu     16(%3), %%xmm1    \n\t"
+         "movdqu     32(%3), %%xmm2    \n\t"
+         "movdqu     48(%3), %%xmm3    \n\t"
+         "movdqu     (%1), %%xmm4      \n\t" // load round key 0
+         "pxor       %%xmm4, %%xmm0    \n\t" // round 0
+         "pxor       %%xmm4, %%xmm1    \n\t"
+         "pxor       %%xmm4, %%xmm2    \n\t"
+         "pxor       %%xmm4, %%xmm3    \n\t"
+         "add        $16, %1           \n\t" // point to next round key
+         "subl       $1, %0            \n\t" // normal rounds = nr - 1
+         "test       %2, %2            \n\t" // mode?
+         "jz         2f                \n\t" // 0 = decrypt
+
+         "1:                           \n\t" // encryption loop
+         "movdqu     (%1), %%xmm4      \n\t" // load round key
+         "aesenc     %%xmm4, %%xmm0    \n\t" // do round
+         "aesenc     %%xmm4, %%xmm1    \n\t"
+         "aesenc     %%xmm4, %%xmm2    \n\t"
+         "aesenc     %%xmm4, %%xmm3    \n\t"
+         "add        $16, %1           \n\t" // point to next round key
+         "subl       $1, %0            \n\t" // loop
+         "jnz        1b                \n\t"
+         "movdqu     (%1), %%xmm4      \n\t" // load round key
+         "aesenclast %%xmm4, %%xmm0    \n\t" // last round
+         "aesenclast %%xmm4, %%xmm1    \n\t"
+         "aesenclast %%xmm4, %%xmm2    \n\t"
+         "aesenclast %%xmm4, %%xmm3    \n\t"
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+         "jmp        3f                 \n\t"
+
+         "2:                            \n\t" // decryption loop
+         "movdqu     (%1), %%xmm4       \n\t"
+         "aesdec     %%xmm4, %%xmm0     \n\t" // do round
+         "aesdec     %%xmm4, %%xmm1     \n\t"
+         "aesdec     %%xmm4, %%xmm2     \n\t"
+         "aesdec     %%xmm4, %%xmm3     \n\t"
+         "add        $16, %1            \n\t"
+         "subl       $1, %0             \n\t"
+         "jnz        2b                 \n\t"
+         "movdqu     (%1), %%xmm4       \n\t" // load round key
+         "aesdeclast %%xmm4, %%xmm0     \n\t" // last round
+         "aesdeclast %%xmm4, %%xmm1     \n\t"
+         "aesdeclast %%xmm4, %%xmm2     \n\t"
+         "aesdeclast %%xmm4, %%xmm3     \n\t"
+#endif
+
+         "3:                            \n\t"
+         "movdqu     %%xmm0, (%4)       \n\t" // export output
+         "movdqu     %%xmm1, 16(%4)     \n\t"
+         "movdqu     %%xmm2, 32(%4)     \n\t"
+         "movdqu     %%xmm3, 48(%4)     \n\t"
+         :
+         : "r" (ctx->nr), "r" (ctx->buf + ctx->rk_offset), "r" (mode), "r" (input), "r" (output)
+         : "memory", "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "0", "1");
 
 
     return 0;

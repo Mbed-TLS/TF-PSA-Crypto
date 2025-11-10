@@ -1,0 +1,3 @@
+Features:
+   * Speed up AES-CTR when using AES-NI by using instruction-level
+     parallelism.
