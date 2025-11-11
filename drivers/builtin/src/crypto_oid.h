@@ -312,6 +312,8 @@
 /*
  * PKCS#8 OIDs
  */
+#define MBEDTLS_OID_PKCS9_CONTENT_TYPE          MBEDTLS_OID_PKCS9 "\x03" /**< contentType OBJECT IDENTIFIER ::= {pkcs-9 3} */
+#define MBEDTLS_OID_PKCS9_MESSAGE_DIGEST        MBEDTLS_OID_PKCS9 "\x04" /**< messageDigest OBJECT IDENTIFIER ::= {pkcs-9 4} */
 #define MBEDTLS_OID_PKCS9_CSR_EXT_REQ           MBEDTLS_OID_PKCS9 "\x0e" /**< extensionRequest OBJECT IDENTIFIER ::= {pkcs-9 14} */
 
 /*
