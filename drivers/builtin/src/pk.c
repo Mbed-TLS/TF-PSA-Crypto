@@ -1247,15 +1247,16 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) rs_ctx;
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_alg);
-
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = psa_get_key_attributes(ctx->priv_id, &attributes);
     if (status != PSA_SUCCESS) {
         return PSA_PK_TO_MBEDTLS_ERR(status);
     }
+
+#if defined(PSA_HAVE_ALG_ECDSA_SIGN) || defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
     psa_key_type_t type = psa_get_key_type(&attributes);
+    psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_alg);
+#endif /* defined(PSA_HAVE_ALG_ECDSA_SIGN) || defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC) */
 
     if (PSA_KEY_TYPE_IS_ECC(type)) {
         size_t key_bits = psa_get_key_bits(&attributes);
