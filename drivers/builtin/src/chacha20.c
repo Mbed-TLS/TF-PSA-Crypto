@@ -299,8 +299,6 @@ int mbedtls_chacha20_starts(mbedtls_chacha20_context *ctx,
         memcpy(&ctx->state[13], nonce, 12);
     }
 
-    mbedtls_platform_zeroize(ctx->keystream8, sizeof(ctx->keystream8));
-
     /* Initially, there's no keystream bytes available */
     ctx->keystream_bytes_used = MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
 
