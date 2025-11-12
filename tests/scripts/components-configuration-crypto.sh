@@ -468,6 +468,32 @@ component_test_accel_hash () {
     ctest
 }
 
+component_test_accel_rsa() {
+    msg "build: accelerated RSA"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-rsa.h" ..
+    make
+
+    # Make sure built-in RSA is empty.
+    not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: accelerated RSA"
+    ctest
+}
+
 component_test_psa_crypto_key_id_encodes_owner () {
     msg "build: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
     scripts/config.py full

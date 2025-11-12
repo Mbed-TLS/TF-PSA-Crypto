@@ -469,7 +469,9 @@ psa_status_t mbedtls_to_psa_error(int ret)
         case MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED:
             return PSA_ERROR_NOT_SUPPORTED;
 
-#if defined(MBEDTLS_RSA_C)
+/* Enable RSA error mappings for driver testing, especially with a test driver
+ * generated from the built-in driver. */
+#if defined(MBEDTLS_RSA_C) || defined(PSA_CRYPTO_DRIVER_TEST)
         case MBEDTLS_ERR_RSA_KEY_GEN_FAILED:
             return PSA_ERROR_HARDWARE_FAILURE;
         case MBEDTLS_ERR_RSA_KEY_CHECK_FAILED:
@@ -479,7 +481,7 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_CORRUPTION_DETECTED;
         case MBEDTLS_ERR_RSA_RNG_FAILED:
             return PSA_ERROR_INSUFFICIENT_ENTROPY;
-#endif
+#endif /* MBEDTLS_RSA_C || PSA_CRYPTO_DRIVER_TEST */
 
         case MBEDTLS_ERR_ECP_INVALID_KEY:
             return PSA_ERROR_INVALID_ARGUMENT;
