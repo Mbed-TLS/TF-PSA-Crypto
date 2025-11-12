@@ -1011,6 +1011,7 @@ static inline int pk_hashlen_helper(mbedtls_md_type_t md_alg, size_t *hash_len)
     return 0;
 }
 
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
 /*
  * Abstract away the way we store the "DH only" bit,
  * as this is likely to change soon.
@@ -1019,6 +1020,8 @@ static inline int pk_is_dh_only(const mbedtls_pk_context *ctx)
 {
     return ctx->pk_info == &mbedtls_eckeydh_info;
 }
+
+#endif /* defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) */
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 /*
@@ -1211,9 +1214,11 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
     if (pk_is_dh_only(ctx)) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
+#endif /* defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) */
 
     if (mbedtls_svc_key_id_is_null(ctx->priv_id)) {
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;

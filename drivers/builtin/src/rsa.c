@@ -2645,6 +2645,9 @@ int mbedtls_rsa_pkcs1_verify(mbedtls_rsa_context *ctx,
                              const unsigned char *hash,
                              const unsigned char *sig)
 {
+#if defined(MBEDTLS_PKCS1_V21)
+    mbedtls_md_type_t mgf1_hash_id;
+#endif /* defined(MBEDTLS_PKCS1_V21) */
     if ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL) {
         return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
     }
