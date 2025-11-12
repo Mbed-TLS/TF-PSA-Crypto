@@ -1182,13 +1182,16 @@ void pk_sign_verify_restart(int pk_type,
     size_t slen;
     unsigned char *sig;
     sig = mbedtls_calloc(sizeof(char), sig_length);
+    if( sig != NULL) {
+        memset(sig, 0, sizeof(char)*sig_length);
+    } else {
+        goto exit;
+    }
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
     mbedtls_pk_init(&pub);
     PSA_INIT();
-
-    memset(sig, 0, sizeof(char)*sig_length);
 
     TEST_ASSERT(mbedtls_pk_setup(&prv, mbedtls_pk_info_from_type(pk_type)) == 0);
     TEST_ASSERT(mbedtls_pk_setup(&pub, mbedtls_pk_info_from_type(pk_type)) == 0);
