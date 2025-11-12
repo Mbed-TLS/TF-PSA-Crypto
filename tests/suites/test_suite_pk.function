@@ -1180,7 +1180,7 @@ void pk_sign_verify_restart(int pk_type,
     mbedtls_pk_restart_ctx rs_ctx;
     mbedtls_pk_context prv, pub;
     size_t slen;
-    unsigned char* sig;
+    unsigned char *sig;
     sig = mbedtls_calloc(sizeof(char), sig_length);
 
     mbedtls_pk_restart_init(&rs_ctx);
