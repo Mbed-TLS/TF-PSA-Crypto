@@ -378,7 +378,10 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_cipher_alg,
 #endif /* MBEDTLS_CIPHER_C */
 #endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
 
-#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
+/* Enable this function for driver testing, especially with a test driver
+ * generated from the built-in driver. */
+#if (defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)) || \
+    defined(PSA_CRYPTO_DRIVER_TEST)
 /*
  * For digestAlgorithm
  */
@@ -466,4 +469,4 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_md,
                         oid_md_alg,
                         mbedtls_md_type_t,
                         md_alg)
-#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
+#endif /* (MBEDTLS_PKCS1_V15 && MBEDTLS_RSA_C) || PSA_CRYPTO_DRIVER_TEST */
