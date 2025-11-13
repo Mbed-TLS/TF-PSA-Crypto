@@ -1058,7 +1058,7 @@ static int mbedtls_aes_crypt_ecb_multiblock(mbedtls_aes_context *ctx,
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
     if (MBEDTLS_AESCE_HAS_SUPPORT()) {
         for (size_t pos = 0; pos < length; pos += 16) {
-            ret = mbedtls_aesce_crypt_ecb(ctx, mode, input, output);
+            ret = mbedtls_aesce_crypt_ecb(ctx, mode, &input[pos], &output[pos]);
             if (ret != 0) {
                 goto exit;
             }
@@ -1070,7 +1070,7 @@ static int mbedtls_aes_crypt_ecb_multiblock(mbedtls_aes_context *ctx,
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
     if (mode == MBEDTLS_AES_DECRYPT) {
         for (size_t pos = 0; pos < length; pos += 16) {
-            ret = mbedtls_internal_aes_decrypt(ctx, input, output);
+            ret = mbedtls_internal_aes_decrypt(ctx, &input[pos], &output[pos]);
             if (ret != 0) {
                 goto exit;
             }
@@ -1079,7 +1079,7 @@ static int mbedtls_aes_crypt_ecb_multiblock(mbedtls_aes_context *ctx,
 #endif
     {
         for (size_t pos = 0; pos < length; pos += 16) {
-            ret = mbedtls_internal_aes_encrypt(ctx, input, output);
+            ret = mbedtls_internal_aes_encrypt(ctx, &input[pos], &output[pos]);
             if (ret != 0) {
                 goto exit;
             }
