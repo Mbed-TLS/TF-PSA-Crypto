@@ -2652,10 +2652,6 @@ int mbedtls_rsa_pkcs1_verify(mbedtls_rsa_context *ctx,
         return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
     }
 
-#if defined(MBEDTLS_PKCS1_V21)
-    mbedtls_md_type_t mgf1_hash_id;
-#endif
-
     switch (ctx->padding) {
 #if defined(MBEDTLS_PKCS1_V15)
         case MBEDTLS_RSA_PKCS_V15:
