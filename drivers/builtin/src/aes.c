@@ -1526,6 +1526,7 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
     ret = 0;
 
 exit:
+    mbedtls_platform_zeroize(keystream, sizeof(keystream));
     return ret;
 }
 #endif /* MBEDTLS_CIPHER_MODE_CTR */
