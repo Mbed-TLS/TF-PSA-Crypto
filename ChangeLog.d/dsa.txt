@@ -1,0 +1,3 @@
+API changes
+   * Remove macros related to finite-field DSA in PSA. They were useless since
+     the feature was never implemented.
