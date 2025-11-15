@@ -71,6 +71,19 @@
 
 #define BLOCKS (MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK + MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
 
+#if defined(__clang__) && (__clang_major__ >= 4)
+    #define MBEDTLS_CHACHA20_FORCE_UNROLL      _Pragma("clang loop unroll(full)")
+#elif defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 8)
+    #define MBEDTLS_CHACHA20_FORCE_UNROLL      _Pragma("GCC unroll 16")
+#elif defined(_MSC_VER)
+    #define MBEDTLS_CHACHA20_FORCE_UNROLL      __pragma(loop(unroll))
+#elif defined(__IAR_SYSTEMS_ICC__)
+    #define MBEDTLS_CHACHA20_FORCE_UNROLL      _Pragma("unroll")
+#else
+    #define MBEDTLS_CHACHA20_FORCE_UNROLL
+#endif
+
+
 typedef union {
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
     struct {
