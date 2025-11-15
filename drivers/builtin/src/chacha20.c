@@ -98,8 +98,28 @@ static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
  *
  * \param state     The ChaCha20 state to update.
  */
+MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
 static void chacha20_scalar_inner_block(uint32_t state[16])
 {
+#if MBEDTLS_CHACHA20_MULTIBLOCK == 0
+    uint8_t idx[] = {
+        0, 4, 8,  12,
+        1, 5, 9,  13,
+        2, 6, 10, 14,
+        3, 7, 11, 15,
+        0, 5, 10, 15,
+        1, 6, 11, 12,
+        2, 7, 8,  13,
+        3, 4, 9,  14
+    };
+    for (unsigned i = 0; i < 8 * 4; i += 4) {
+        unsigned a = idx[i];
+        unsigned b = idx[i + 1];
+        unsigned c = idx[i + 2];
+        unsigned d = idx[i + 3];
+        chacha20_quarter_round(state, a, b, c, d);
+    }
+#else
     chacha20_quarter_round(state, 0, 4, 8,  12);
     chacha20_quarter_round(state, 1, 5, 9,  13);
     chacha20_quarter_round(state, 2, 6, 10, 14);
@@ -109,6 +129,7 @@ static void chacha20_scalar_inner_block(uint32_t state[16])
     chacha20_quarter_round(state, 1, 6, 11, 12);
     chacha20_quarter_round(state, 2, 7, 8,  13);
     chacha20_quarter_round(state, 3, 4, 9,  14);
+#endif
 }
 #endif
 
@@ -200,6 +221,9 @@ static void chacha20_blocks(uint32_t state[16],
 
         for (unsigned i = 0; i < 10; i++) {
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+#if defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_CHACHA20_NEON_MULTIBLOCK != 0)
+            MBEDTLS_CHACHA20_FORCE_UNROLL
+#endif
             for (unsigned j = 0; j < MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK; j++) {
                 chacha20_scalar_inner_block(blocks[j + MBEDTLS_CHACHA20_NEON_MULTIBLOCK].s32);
             }
