@@ -156,12 +156,18 @@ static inline void chacha20_neon_prepare_blocks(chacha20_block_t *r,
                                                 const chacha20_block_t *neon_state)
 {
     uint32x4_t ctr = neon_state->d;
+#if defined(MBEDTLS_COMPILER_IS_GCC) && (BLOCKS > 6)
+    // significantly helps GCC perf at higher block count
+    MBEDTLS_CHACHA20_FORCE_UNROLL
+#endif
     for (unsigned i = 0; i < BLOCKS; i++) {
         r[i].a = neon_state->a;
         r[i].b = neon_state->b;
         r[i].c = neon_state->c;
         r[i].d = ctr;
+#if BLOCKS > 1
         ctr = chacha20_neon_inc_counter(ctr);
+#endif
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
         // In principle this is needed to ensure that it is safe to read the
         // inactive member of the chacha20_block_t union, i.e., to guarantee
@@ -198,14 +204,14 @@ static inline void chacha20_neon_inner_block(chacha20_block_t *r)
 
         // re-order b, c and d for the diagonal rounds
         if (i == 0) {
-            r->b = vextq_u32(r->b, r->b, 1);
-            r->c = vextq_u32(r->c, r->c, 2);
             r->d = vextq_u32(r->d, r->d, 3);
+            r->c = vextq_u32(r->c, r->c, 2);
+            r->b = vextq_u32(r->b, r->b, 1);
         } else {
             // restore element order in b, c, d
-            r->b = vextq_u32(r->b, r->b, 3);
-            r->c = vextq_u32(r->c, r->c, 2);
             r->d = vextq_u32(r->d, r->d, 1);
+            r->c = vextq_u32(r->c, r->c, 2);
+            r->b = vextq_u32(r->b, r->b, 3);
         }
     }
 }
@@ -216,30 +222,49 @@ static inline void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
                                                const uint8_t *input,
                                                uint8_t *output)
 {
+    MBEDTLS_ASSUME(block_count > 0 && block_count <= BLOCKS);
+
+#if defined(MBEDTLS_COMPILER_IS_GCC) && (BLOCKS > 6)
+    // for GCC, this gets a little more perf at high block counts
+    MBEDTLS_CHACHA20_FORCE_UNROLL
+#endif
     for (unsigned i = 0; i < block_count; i++) {
+        chacha20_block_t *p = &blocks[i];
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
         // In principle this is needed to ensure that it is safe to read the
         // inactive member of the chacha20_block_t union, i.e., to guarantee
         // the scalar and Neon elements of the union are defined & consistent.
         // (In practice clang and GCC will do the right thing without this).
         if (i >= MBEDTLS_CHACHA20_NEON_MULTIBLOCK) {
-            blocks[i].a = vld1q_u32(&blocks[i].s32[0]);
-            blocks[i].b = vld1q_u32(&blocks[i].s32[4]);
-            blocks[i].c = vld1q_u32(&blocks[i].s32[8]);
-            blocks[i].d = vld1q_u32(&blocks[i].s32[12]);
+            p->a = vld1q_u32(&p->s32[0]);
+            p->b = vld1q_u32(&p->s32[4]);
+            p->c = vld1q_u32(&p->s32[8]);
+            p->d = vld1q_u32(&p->s32[12]);
         }
 #endif
-        blocks[i].a = vaddq_u32(blocks[i].a, neon_state->a);
-        blocks[i].b = vaddq_u32(blocks[i].b, neon_state->b);
-        blocks[i].c = vaddq_u32(blocks[i].c, neon_state->c);
-        blocks[i].d = vaddq_u32(blocks[i].d, neon_state->d);
+        uint8x16_t ia = vld1q_u8(input +  0);
+        uint8x16_t ib = vld1q_u8(input + 16);
+        uint8x16_t ic = vld1q_u8(input + 32);
+        uint8x16_t id = vld1q_u8(input + 48);
+
+        uint8x16_t a = vreinterpretq_u8_u32(vaddq_u32(p->a, neon_state->a));
+        uint8x16_t b = vreinterpretq_u8_u32(vaddq_u32(p->b, neon_state->b));
+        uint8x16_t c = vreinterpretq_u8_u32(vaddq_u32(p->c, neon_state->c));
+        uint8x16_t d = vreinterpretq_u8_u32(vaddq_u32(p->d, neon_state->d));
+
+        a = veorq_u8(ia, a);
+        vst1q_u8(output +  0, a);
+
+        b = veorq_u8(ib, b);
+        vst1q_u8(output + 16, b);
+
+        c = veorq_u8(ic, c);
+        vst1q_u8(output + 32, c);
+
+        d = veorq_u8(id, d);
+        vst1q_u8(output + 48, d);
 
         neon_state->d = chacha20_neon_inc_counter(neon_state->d);
-
-        vst1q_u8(output +  0, veorq_u8(vld1q_u8(input +  0), vreinterpretq_u8_u32(blocks[i].a)));
-        vst1q_u8(output + 16, veorq_u8(vld1q_u8(input + 16), vreinterpretq_u8_u32(blocks[i].b)));
-        vst1q_u8(output + 32, veorq_u8(vld1q_u8(input + 32), vreinterpretq_u8_u32(blocks[i].c)));
-        vst1q_u8(output + 48, veorq_u8(vld1q_u8(input + 48), vreinterpretq_u8_u32(blocks[i].d)));
 
         input  += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
         output += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
