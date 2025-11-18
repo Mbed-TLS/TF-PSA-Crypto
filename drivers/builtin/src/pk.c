@@ -1263,6 +1263,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     psa_algorithm_t hash_alg = mbedtls_md_psa_alg_from_type(md_alg);
 #endif /* defined(PSA_HAVE_ALG_ECDSA_SIGN) || defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC) */
 
+#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
     if (PSA_KEY_TYPE_IS_ECC(type)) {
         size_t key_bits = psa_get_key_bits(&attributes);
         psa_reset_key_attributes(&attributes);
