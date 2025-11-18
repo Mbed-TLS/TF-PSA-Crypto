@@ -1201,6 +1201,14 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
+    if (pk_is_dh_only(ctx)) {
+        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+    }
+
+    if (ctx->priv_id == MBEDTLS_SVC_KEY_ID_INIT) {
+        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+    }
+
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
