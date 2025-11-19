@@ -101,9 +101,9 @@ static inline void aesni_crypt_ecb_multiple_blocks(mbedtls_aes_context *ctx,
                                                    size_t num_blocks)
 {
     const __m128i *rk = (const __m128i *) (ctx->buf + ctx->rk_offset);
+    // Load round key 0
     unsigned nr = ctx->nr; // Number of remaining rounds
 
-    // Load round key 0
     memcpy(state, input, num_blocks * 16);
     for (size_t i = 0; i < num_blocks; i++) {
         state[i] = _mm_xor_si128(state[i], rk[0]);  // state ^= *rk;
@@ -176,13 +176,63 @@ int mbedtls_aesni_crypt_ecb_3blocks(mbedtls_aes_context *ctx,
     return 0;
 }
 
+/*
+ * "Hand-written" version for four blocks, because GCC does not unroll the
+ * loops in aesni_crypt_ecb_multiple_blocks() when num_rounds is 4.
+ */
 int mbedtls_aesni_crypt_ecb_4blocks(mbedtls_aes_context *ctx,
                                     int mode,
                                     const unsigned char input[4 * 16],
                                     unsigned char output[4 * 16])
 {
     __m128i state[4];
-    aesni_crypt_ecb_multiple_blocks(ctx, mode, input, output, state, 4);
+
+    // Load round key 0
+    const __m128i *rk = (const __m128i *) (ctx->buf + ctx->rk_offset);
+    unsigned nr = ctx->nr; // Number of remaining rounds
+
+    memcpy(state, input, 4 * 16);
+    state[0] = _mm_xor_si128(state[0], rk[0]);  // state XOR first round key.
+    state[1] = _mm_xor_si128(state[1], rk[0]);
+    state[2] = _mm_xor_si128(state[2], rk[0]);
+    state[3] = _mm_xor_si128(state[3], rk[0]);
+    ++rk;
+    --nr;
+
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+    if (mode == MBEDTLS_AES_DECRYPT) {
+        while (nr != 0) {
+            state[0] = _mm_aesdec_si128(state[0], *rk);
+            state[1] = _mm_aesdec_si128(state[1], *rk);
+            state[2] = _mm_aesdec_si128(state[2], *rk);
+            state[3] = _mm_aesdec_si128(state[3], *rk);
+            ++rk;
+            --nr;
+        }
+        state[0] = _mm_aesdeclast_si128(state[0], *rk);
+        state[1] = _mm_aesdeclast_si128(state[1], *rk);
+        state[2] = _mm_aesdeclast_si128(state[2], *rk);
+        state[3] = _mm_aesdeclast_si128(state[3], *rk);
+    } else
+#else
+    (void) mode;
+#endif
+    {
+        while (nr != 0) {
+            state[0] = _mm_aesenc_si128(state[0], *rk);
+            state[1] = _mm_aesenc_si128(state[1], *rk);
+            state[2] = _mm_aesenc_si128(state[2], *rk);
+            state[3] = _mm_aesenc_si128(state[3], *rk);
+            ++rk;
+            --nr;
+        }
+        state[0] = _mm_aesenclast_si128(state[0], *rk);
+        state[1] = _mm_aesenclast_si128(state[1], *rk);
+        state[2] = _mm_aesenclast_si128(state[2], *rk);
+        state[3] = _mm_aesenclast_si128(state[3], *rk);
+    }
+
+    memcpy(output, state, 4 * 16);
     return 0;
 }
 
