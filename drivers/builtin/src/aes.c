@@ -1063,6 +1063,7 @@ static int mbedtls_aes_crypt_ecb_multiblock(mbedtls_aes_context *ctx,
                 goto exit;
             }
         }
+        goto exit;
     }
 #endif
 
