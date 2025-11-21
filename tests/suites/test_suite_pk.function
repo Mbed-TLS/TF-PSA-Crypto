@@ -1222,14 +1222,14 @@ void pk_sign_verify_restart(int pk_type,
     if (pub_key_test) {
 
         ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
-                                          sig, sizeof(char)*sig_length, &slen,
+                                          sig, sig_length, &slen,
                                           &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_PK_TYPE_MISMATCH);
         goto exit;
     } else {
         do {
             ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                              sig, sizeof(char)*sig_length, &slen,
+                                              sig, sig_length, &slen,
                                               &rs_ctx);
         } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
     }
