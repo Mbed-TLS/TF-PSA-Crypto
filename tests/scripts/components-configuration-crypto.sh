@@ -42,6 +42,41 @@ component_test_accel_aead () {
     ctest
 }
 
+component_test_accel_cipher_aead_cmac () {
+    msg "build: full config with accelerated cipher inc. AEAD and CMAC"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+    scripts/config.py unset MBEDTLS_NIST_KW_C
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-cipher-aead-cmac.h" ..
+    make
+
+    # Make sure built-in cipher, AEAD and CMAC are empty.
+    not grep mbedtls_cipher ${CMAKE_BUILTIN_BUILD_DIR}/cipher.c.o
+    not grep mbedtls_aes ${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o
+    not grep mbedtls_aria ${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o
+    not grep mbedtls_camellia ${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o
+    not grep mbedtls_ccm ${CMAKE_BUILTIN_BUILD_DIR}/ccm.c.o
+    not grep mbedtls_gcm ${CMAKE_BUILTIN_BUILD_DIR}/gcm.c.o
+    not grep mbedtls_chachapoly ${CMAKE_BUILTIN_BUILD_DIR}/chachapoly.c.o
+    not grep mbedtls_cmac ${CMAKE_BUILTIN_BUILD_DIR}/cmac.c.o
+    not grep mbedtls_poly1305 ${CMAKE_BUILTIN_BUILD_DIR}/poly1305.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: full config with accelerated cipher inc. AEAD and CMAC"
+    ctest
+}
+
 component_test_accel_ecc_all () {
     msg "build: full + all ECC accelerated"
 
