@@ -1323,7 +1323,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 #endif /* defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) */
 
     if (mbedtls_svc_key_id_is_null(ctx->priv_id)) {
-        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
@@ -1401,6 +1401,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) sig;
     (void) sig_size;
     (void) sig_len;
+    psa_reset_key_attributes(&attributes);
     return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 }
 

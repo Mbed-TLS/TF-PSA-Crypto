@@ -107,32 +107,6 @@ int  mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t alg,
     return PSA_PK_TO_MBEDTLS_ERR(status);
 }
 
-static int rsa_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *prv)
-{
-    psa_status_t status;
-    uint8_t exp_pub_key[MBEDTLS_PK_MAX_RSA_PUBKEY_RAW_LEN];
-    size_t exp_pub_key_len;
-
-    status = psa_export_public_key(prv->priv_id, exp_pub_key, sizeof(exp_pub_key),
-                                   &exp_pub_key_len);
-    if (status != PSA_SUCCESS) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-
-    if (memcmp(pub->pub_raw, exp_pub_key, exp_pub_key_len) != 0) {
-        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
-    }
-    return 0;
-}
-
-static void rsa_debug(mbedtls_pk_context *pk, mbedtls_pk_debug_item *items)
-{
-    items->type = MBEDTLS_PK_DEBUG_PSA_RSA;
-    items->name = "rsa";
-    items->value = pk;
-}
-}
-
 const mbedtls_pk_info_t mbedtls_rsa_info = {
     .type = MBEDTLS_PK_RSA,
     .name = "RSA",
