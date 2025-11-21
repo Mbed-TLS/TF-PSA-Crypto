@@ -869,10 +869,18 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
 /*
  * AES-ECB block encryption
  */
+#if defined(MBEDTLS_COMPILER_IS_GCC)
+/* In test_aesni, it is checked whether the software AES implementation is built
+ * by checking if mbedtls_internal_aes_encrypt exists in aes.o. Therefore, avoid
+ * inlining. */
+#define INTERNAL_AES_ENC_ATTRS __attribute__ ((noinline))
+#else
+#define INTERNAL_AES_ENC_ATTRS
+#endif
 MBEDTLS_CHECK_RETURN_TYPICAL
-static int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
-                                        const unsigned char input[16],
-                                        unsigned char output[16])
+static int INTERNAL_AES_ENC_ATTRS mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
+                                                               const unsigned char input[16],
+                                                               unsigned char output[16])
 {
     int i;
     uint32_t *RK = ctx->buf + ctx->rk_offset;
