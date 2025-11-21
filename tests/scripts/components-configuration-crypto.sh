@@ -12,6 +12,36 @@
 CMAKE_BUILTIN_BUILD_DIR="drivers/builtin/CMakeFiles/builtin.dir/src"
 CMAKE_EXTRAS_BUILD_DIR="extras/CMakeFiles/extras.dir"
 
+component_test_accel_aead () {
+    msg "test: accelerated AEAD"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+    # Disable CCM_STAR_NO_TAG because this re-enables CCM_C.
+    scripts/config.py unset PSA_WANT_ALG_CCM_STAR_NO_TAG
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-aead.h" ..
+    make
+
+    # Make sure built-in AEAD alg objects are empty.
+    not grep mbedtls_ccm ${CMAKE_BUILTIN_BUILD_DIR}/ccm.c.o
+    not grep mbedtls_gcm ${CMAKE_BUILTIN_BUILD_DIR}/gcm.c.o
+    not grep mbedtls_chachapoly ${CMAKE_BUILTIN_BUILD_DIR}/chachapoly.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: accelerated AEAD"
+    ctest
+}
+
 component_test_accel_ecc_all () {
     msg "build: full + all ECC accelerated"
 
