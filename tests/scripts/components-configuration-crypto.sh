@@ -472,6 +472,32 @@ component_test_accel_ecjpake() {
     ctest
 }
 
+component_test_accel_ffdh () {
+    msg "build: full with accelerated FFDH"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ffdh.h" ..
+    make
+
+    # Make sure built-in FFDH is empty.
+    not grep mbedtls_psa_ffdh_key_agreement ${CMAKE_BUILTIN_BUILD_DIR}/psa_crypto_ffdh.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: full with accelerated FFDH"
+    ctest
+}
+
 component_test_accel_hash () {
     msg "test: accelerated hash"
 
