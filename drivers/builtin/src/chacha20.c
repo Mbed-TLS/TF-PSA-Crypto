@@ -239,9 +239,6 @@ static void chacha20_blocks(uint32_t state[16],
 void mbedtls_chacha20_init(mbedtls_chacha20_context *ctx)
 {
     mbedtls_platform_zeroize(ctx, sizeof(mbedtls_chacha20_context));
-
-    /* Initially, there's no keystream bytes available */
-    ctx->keystream_bytes_used = MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
 }
 
 void mbedtls_chacha20_free(mbedtls_chacha20_context *ctx)
