@@ -101,7 +101,7 @@ static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
 static void chacha20_scalar_inner_block(uint32_t state[16])
 {
-#if MBEDTLS_CHACHA20_MULTIBLOCK == 0
+#if defined(MBEDTLS_CHACHA20_OPTIMISE_FOR_SIZE)
     uint8_t idx[] = {
         0, 4, 8,  12,
         1, 5, 9,  13,

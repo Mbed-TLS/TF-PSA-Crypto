@@ -14,61 +14,121 @@
 #include "mbedtls/private/chacha20.h"
 
 /*
- * The Neon implementation can be configured to process multiple blocks in parallel; increasing the
- * number of blocks gains a lot of performance, but adds on average around 250 bytes of code size
- * for each additional block.
+ * This implementation can be configured to process multiple blocks in
+ * parallel, using Neon and/or scalar; increasing the number of blocks
+ * gains a lot of performance, but adds code size for each additional
+ * block.
  *
- * This is controlled by setting MBEDTLS_CHACHA20_NEON_MULTIBLOCK in the range [0..6] (0 selects
- * the scalar implementation; 1 selects single-block Neon; 2..6 select multi-block Neon).
+ * MBEDTLS_CHACHA20_NEON_MULTIBLOCK and MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK
+ * may be set to control the number of blocks processed in parallel. The
+ * range for these is unlimited, but going above 6 Neon blocks and 4 scalar
+ * blocks will probably be slower.
  *
- * The default (i.e., if MBEDTLS_CHACHA20_NEON_MULTIBLOCK is not set) selects the fastest variant
- * which has better code size than the scalar implementation (based on testing for Aarch64 on clang
- * and gcc).
- *
- * Size & performance notes for Neon implementation from informal tests on Aarch64
- * (applies to both gcc and clang except as noted):
- *   - When single-block is selected, this saves around 400-550 bytes of code-size c.f. the scalar
- *     implementation
- *   - Multi-block Neon is smaller and faster than scalar (up to 2 blocks for gcc, 3 for clang)
- *   - Code size increases consistently with number of blocks
- *   - Performance increases with number of blocks (except at 5 which is slightly slower than 4)
- *   - Performance is within a few % for gcc vs clang at all settings
- *   - Performance at 4 blocks roughly matches our hardware accelerated AES-GCM impl with
- *     better code size
- *   - Performance is worse at 7 or more blocks, due to running out of Neon registers
+ * The default (i.e., if these are not set) selects the fastest variant
+ * with smaller code size than the v1.0.0 single block scalar
+ * implementation.
  */
 
-#if !defined(MBEDTLS_HAVE_NEON_INTRINSICS)
-// Select scalar implementation if Neon not available
-    #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 0
-#elif !defined(MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
-// By default, select the best performing option that is not a code-size regression (based on
-// measurements from recent gcc and clang).
-#if defined(MBEDTLS_ARCH_IS_THUMB)
-    #if defined(MBEDTLS_COMPILER_IS_GCC)
-        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 1
-    #else
-        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 2
-    #endif
-#elif defined(MBEDTLS_ARCH_IS_ARM64)
-    #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 3
-#else
-    #if defined(MBEDTLS_COMPILER_IS_GCC)
-        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 2
-    #else
-        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 3
-    #endif
-#endif
-#endif
+/*
+ * Size & performance notes
+ *
+ * From informal tests on Aarch64 (applies to both gcc and clang except as
+ * noted), using clang 17.0 and gcc 15.2.
+ *
+ * (n,s) means n Neon blocks and s scalar blocks.
+ *
+ * If prioritising code-size:
+ * (0,0) will select the smallest implementation (which is single-block
+ * Neon, if available). If Neon is not available, this enables additional
+ * code-size optimisations which save around 300b over (0,1), but cost ~50%
+ * perf.
+ *
+ * Default settings:
+ * This is about 500b larger than the minimum setting, and about 2-3x
+ * faster.
+ *
+ * For maximum performance:
+ * Typically (6,2) gives best perf. On clang, (5,3) gives same perf for a
+ * bit less size. This is about 60% faster than the default setting, and
+ * adds ~870b (clang) or 3032b (gcc).
+ *
+ * For gcc, mixed Neon and scalar is only useful at (5,1) and (5,2), which
+ * sit between (6,0) and (6,2).
+ *
+ * For clang, after (4,0): (2,2), (3,3), (4,4), (5,3) give increasing size
+ * & perf. (2,2) roughly matches (6,0) perf at smaller size.
+ */
 
-#if !defined(MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK)
-#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
-#define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 1
-#else
+
+// If only one option defined, set the other to zero
+#if defined(MBEDTLS_CHACHA20_NEON_MULTIBLOCK) && \
+    !defined(MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK)
 #define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 0
 #endif
+#if defined(MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK) && \
+    !defined(MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
+#define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 0
 #endif
 
+
+// If both undefined, select a suitable default
+#if !defined(MBEDTLS_CHACHA20_NEON_MULTIBLOCK) || \
+    !defined(MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK)
+
+    #if !defined(MBEDTLS_HAVE_NEON_INTRINSICS)
+// No Neon support - scalar only
+        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK   0
+
+        #if !defined(MBEDTLS_ARCH_IS_THUMB)
+            #define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 4
+        #else // MBEDTLS_ARCH_IS_THUMB
+            #if defined(__clang__)
+                #define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 4
+            #else
+                #define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 1
+            #endif
+        #endif // MBEDTLS_ARCH_IS_THUMB
+
+    #else // MBEDTLS_HAVE_NEON_INTRINSICS
+// Neon is available - select sensible balance between perf and size
+        #define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 0
+
+        #if defined(MBEDTLS_ARCH_IS_THUMB)
+// thumb needs a smaller default to avoid size regression
+            #if defined(__clang__)
+                #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK   3
+            #else
+                #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK   2
+            #endif
+        #else
+            #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK   4
+        #endif
+
+    #endif // MBEDTLS_HAVE_NEON_INTRINSICS
+
+#endif // !NEON_MULTIBLOCK || !SCALAR_MULTIBLOCK
+
+
+// if both set to zero, select the smallest implementation available
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0 && \
+    MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK == 0
+// enable further size optimisations
+    #define MBEDTLS_CHACHA20_OPTIMISE_FOR_SIZE
+
+    #if defined(MBEDTLS_HAVE_NEON_INTRINSICS)
+// Neon available - smallest option is single-block Neon
+        #undef  MBEDTLS_CHACHA20_NEON_MULTIBLOCK
+        #define MBEDTLS_CHACHA20_NEON_MULTIBLOCK 1
+    #else
+// Neon not available - use single-block scalar
+        #undef  MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK
+        #define MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK 1
+    #endif // MBEDTLS_HAVE_NEON_INTRINSICS
+
+#endif // NEON_MULTIBLOCK == 0 && SCALAR_MULTIBLOCK == 0
+
+
+// total number of blocks to process in parallel
 #define BLOCKS (MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK + MBEDTLS_CHACHA20_NEON_MULTIBLOCK)
 
 #if defined(__clang__) && (__clang_major__ >= 4)
@@ -97,9 +157,6 @@ typedef union {
 
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
-
-// Tested on all combinations of Armv7 arm/thumb2; Armv8 arm/thumb2/aarch64; Armv8 aarch64_be on
-// clang 14, gcc 11, and some more recent versions.
 
 // Define rotate-left operations that rotate within each 32-bit element in a 128-bit vector.
 static inline uint32x4_t chacha20_neon_vrotlq_16_u32(uint32x4_t v)
