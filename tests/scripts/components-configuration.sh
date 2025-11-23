@@ -183,11 +183,6 @@ support_test_chacha20_neon_variations () {
             return
         fi
     fi
-
-    case $(uname -m) in
-        arm64|aarch64) true;;
-        *) false;;
-    esac
 }
 
 component_test_chacha20_neon_variations () {
@@ -197,11 +192,18 @@ component_test_chacha20_neon_variations () {
 
     cd $OUT_OF_SOURCE_DIR
 
-    for x in 0 1 2 3 4 5 6; do
-        msg "multiblock = $x"
-        cmake -DCMAKE_BUILD_TYPE:String=Release -DCMAKE_C_FLAGS="-DMBEDTLS_CHACHA20_NEON_MULTIBLOCK=$x" "$TF_PSA_CRYPTO_ROOT_DIR"
-        make -C tests test_suite_chacha20
-        ./tests/test_suite_chacha20
+    case $(uname -m) in
+        arm64|aarch64) neon_variants="0 1 2 3 4 5 6";;
+        *) neon_variants="0";;
+    esac
+
+    for n in $neon_variants; do
+        for s in 0 1 2 3 4; do
+            msg "multiblock = (neon=$n, scalar=$s)"
+            cmake -DCMAKE_BUILD_TYPE:String=Release -DCMAKE_C_FLAGS="-DMBEDTLS_CHACHA20_NEON_MULTIBLOCK=$n -DMBEDTLS_CHACHA20_SCALAR_MULTIBLOCK=$s " "$TF_PSA_CRYPTO_ROOT_DIR"
+            make -C tests test_suite_chacha20
+            ./tests/test_suite_chacha20
+        done
     done
 }
 
