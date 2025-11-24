@@ -873,7 +873,7 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
 /* In test_aesni, it is checked whether the software AES implementation is built
  * by checking if mbedtls_internal_aes_encrypt exists in aes.o. Therefore, avoid
  * inlining. */
-#define INTERNAL_AES_ENC_ATTRS __attribute__ ((noinline))
+#define INTERNAL_AES_ENC_ATTRS __attribute__((noinline))
 #else
 #define INTERNAL_AES_ENC_ATTRS
 #endif
