@@ -24,6 +24,8 @@
 
 #include "mbedtls/platform.h"
 
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
+
 #define ROTL32(value, amount) \
     ((uint32_t) ((value) << (amount)) | ((value) >> (32 - (amount))))
 
@@ -69,7 +71,9 @@ static inline void chacha20_quarter_round(uint32_t state[16],
     state[b] = ROTL32(state[b], 7);
 }
 
-MBEDTLS_MAYBE_UNUSED
+#endif
+
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
 static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
                                                   const uint32_t *state)
 {
@@ -83,7 +87,9 @@ static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
     }
 #endif
 }
+#endif
 
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
 /**
  * \brief           Perform the ChaCha20 inner block operation.
  *
@@ -92,7 +98,6 @@ static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
  *
  * \param state     The ChaCha20 state to update.
  */
-MBEDTLS_MAYBE_UNUSED
 static void chacha20_scalar_inner_block(uint32_t state[16])
 {
     chacha20_quarter_round(state, 0, 4, 8,  12);
@@ -105,8 +110,9 @@ static void chacha20_scalar_inner_block(uint32_t state[16])
     chacha20_quarter_round(state, 2, 7, 8,  13);
     chacha20_quarter_round(state, 3, 4, 9,  14);
 }
+#endif
 
-MBEDTLS_MAYBE_UNUSED
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
 static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
                                                  uint32_t state[16],
                                                  unsigned block_count,
@@ -125,6 +131,7 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
         state[CHACHA20_CTR_INDEX] = ctr + j + 1;
     }
 }
+#endif
 
 static void chacha20_blocks(uint32_t state[16],
                            uint8_t *output,

@@ -77,7 +77,9 @@ typedef union {
         uint32x4_t a, b, c, d;
     };
 #endif
+#if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
     uint32_t s32[16];
+#endif
 } chacha20_block_t;
 
 
