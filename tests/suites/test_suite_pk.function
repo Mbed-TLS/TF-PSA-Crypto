@@ -1219,7 +1219,7 @@ void pk_sign_verify_restart(int pk_type,
                                               &rs_ctx);
         } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
     }
-    if (ret != PSA_SUCCESS) {
+    if (ret != 0) {
         TEST_ASSERT(ret == sign_ret);
         goto exit;
     }
