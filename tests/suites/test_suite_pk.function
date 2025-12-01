@@ -1212,7 +1212,6 @@ void pk_sign_verify_restart(int pk_type,
 
     psa_interruptible_set_max_ops(max_ops);
 
-    slen = sizeof(char)*sig_length;
     cnt_restart = 0;
     if (pub_key_test) {
         ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
