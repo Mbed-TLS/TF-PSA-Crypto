@@ -1177,7 +1177,6 @@ void pk_sign_verify_restart(int pk_type,
                             int max_ops,
                             int min_restart,
                             int max_restart,
-                            int pub_key_test,
                             int sign_ret,
                             int sig_length)
 {
@@ -1186,12 +1185,7 @@ void pk_sign_verify_restart(int pk_type,
     mbedtls_pk_context prv, pub;
     size_t slen;
     unsigned char *sig;
-    sig = mbedtls_calloc(sizeof(char), sig_length);
-    if (sig != NULL) {
-        memset(sig, 0, sizeof(char)*sig_length);
-    } else {
-        goto exit;
-    }
+    sig = TEST_CALLOC(sizeof(char), sig_length);
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
@@ -1217,23 +1211,13 @@ void pk_sign_verify_restart(int pk_type,
 
     psa_interruptible_set_max_ops(max_ops);
 
-    slen = sizeof(char)*sig_length;
     cnt_restart = 0;
-    if (pub_key_test) {
-
-        ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
+    do {
+        ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
                                           sig, sig_length, &slen,
                                           &rs_ctx);
-        TEST_ASSERT(ret == MBEDTLS_ERR_PK_TYPE_MISMATCH);
-        goto exit;
-    } else {
-        do {
-            ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                              sig, sig_length, &slen,
-                                              &rs_ctx);
-        } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
-    }
-    if (ret != PSA_SUCCESS) {
+    } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
+    if (ret != 0) {
         TEST_ASSERT(ret == sign_ret);
         goto exit;
     }
@@ -1272,7 +1256,7 @@ void pk_sign_verify_restart(int pk_type,
 
         slen = sizeof(sig);
         ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                          sig, sizeof(char)*sig_length, &slen,
+                                          sig, sig_length, &slen,
                                           &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
     }
