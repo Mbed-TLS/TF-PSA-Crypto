@@ -1026,14 +1026,6 @@ void pake_input_getters_password()
 
     PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
 
-    TEST_EQUAL(psa_crypto_driver_pake_get_password(&operation.data.inputs,
-                                                   (uint8_t *) &password_ret,
-                                                   10, &buffer_len_ret),
-               PSA_ERROR_BAD_STATE);
-
-    TEST_EQUAL(psa_crypto_driver_pake_get_password_len(&operation.data.inputs, &password_len_ret),
-               PSA_ERROR_BAD_STATE);
-
     PSA_ASSERT(psa_pake_setup(&operation, key, &cipher_suite));
 
     TEST_EQUAL(psa_crypto_driver_pake_get_password_len(&operation.data.inputs, &password_len_ret),
@@ -1054,6 +1046,17 @@ void pake_input_getters_password()
                PSA_SUCCESS);
 
     TEST_MEMORY_COMPARE(password_ret, buffer_len_ret, password, strlen(password));
+
+
+    PSA_ASSERT(psa_pake_abort(&operation));
+
+    TEST_EQUAL(psa_crypto_driver_pake_get_password(&operation.data.inputs,
+                                                   (uint8_t *) &password_ret,
+                                                   10, &buffer_len_ret),
+               PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_crypto_driver_pake_get_password_len(&operation.data.inputs, &password_len_ret),
+               PSA_ERROR_BAD_STATE);
+
 exit:
     PSA_ASSERT(psa_destroy_key(key));
     PSA_ASSERT(psa_pake_abort(&operation));
@@ -1086,9 +1089,6 @@ void pake_input_getters_cipher_suite()
 
     PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
 
-    TEST_EQUAL(psa_crypto_driver_pake_get_cipher_suite(&operation.data.inputs, &cipher_suite_ret),
-               PSA_ERROR_BAD_STATE);
-
     PSA_ASSERT(psa_pake_setup(&operation, key, &cipher_suite));
 
     TEST_EQUAL(psa_crypto_driver_pake_get_cipher_suite(&operation.data.inputs, &cipher_suite_ret),
@@ -1096,6 +1096,11 @@ void pake_input_getters_cipher_suite()
 
     TEST_MEMORY_COMPARE(&cipher_suite_ret, sizeof(cipher_suite_ret),
                         &cipher_suite, sizeof(cipher_suite));
+
+    PSA_ASSERT(psa_pake_abort(&operation));
+
+    TEST_EQUAL(psa_crypto_driver_pake_get_cipher_suite(&operation.data.inputs, &cipher_suite_ret),
+               PSA_ERROR_BAD_STATE);
 
 exit:
     PSA_ASSERT(psa_pake_abort(&operation));
