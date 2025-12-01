@@ -1181,7 +1181,7 @@ void pk_sign_verify_restart(int pk_type,
     mbedtls_pk_context prv, pub;
     size_t slen;
     unsigned char *sig;
-    sig = mbedtls_calloc(sizeof(char), sig_length);
+    sig = TEST_CALLOC(sizeof(char), sig_length);
     if (sig != NULL) {
         memset(sig, 0, sizeof(char)*sig_length);
     } else {
