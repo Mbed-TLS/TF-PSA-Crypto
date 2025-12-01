@@ -1182,11 +1182,6 @@ void pk_sign_verify_restart(int pk_type,
     size_t slen;
     unsigned char *sig;
     sig = TEST_CALLOC(sizeof(char), sig_length);
-    if (sig != NULL) {
-        memset(sig, 0, sizeof(char)*sig_length);
-    } else {
-        goto exit;
-    }
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
