@@ -13,7 +13,6 @@
 
 #include "tf_psa_crypto_common.h"
 
-#include "mbedtls/platform.h"
 #if defined(MBEDTLS_PK_C)
 #include "mbedtls/pk.h"
 #if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
