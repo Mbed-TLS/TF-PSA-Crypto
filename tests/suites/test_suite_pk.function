@@ -1172,7 +1172,6 @@ void pk_sign_verify_restart(int pk_type,
                             int max_ops,
                             int min_restart,
                             int max_restart,
-                            int pub_key_test,
                             int sign_ret,
                             int sig_length)
 {
@@ -1208,17 +1207,11 @@ void pk_sign_verify_restart(int pk_type,
     psa_interruptible_set_max_ops(max_ops);
 
     cnt_restart = 0;
-    if (pub_key_test) {
-        ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
+    do {
+        ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
                                           sig, sig_length, &slen,
                                           &rs_ctx);
-    } else {
-        do {
-            ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                              sig, sig_length, &slen,
-                                              &rs_ctx);
-        } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
-    }
+    } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
     if (ret != 0) {
         TEST_ASSERT(ret == sign_ret);
         goto exit;
