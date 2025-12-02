@@ -1298,6 +1298,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     (void) sig;
     (void) sig_size;
     (void) sig_len;
+    psa_reset_key_attributes(&attributes);
     return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 }
 
