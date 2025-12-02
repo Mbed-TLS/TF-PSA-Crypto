@@ -80,10 +80,10 @@ static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
 #if BLOCKS == 1
     memcpy(blocks[0].s32, state, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
 #else
-    uint32_t ctr = state[CHACHA20_CTR_INDEX];
+    uint32_t ctr = state[MBEDTLS_CHACHA20_CTR_INDEX];
     for (unsigned j = 0; j < BLOCKS; j++) {
         memcpy(blocks[j].s32, state, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
-        blocks[j].s32[CHACHA20_CTR_INDEX] = ctr + j;
+        blocks[j].s32[MBEDTLS_CHACHA20_CTR_INDEX] = ctr + j;
     }
 #endif
 }
@@ -141,7 +141,7 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
                                                  uint8_t *output)
 {
     MBEDTLS_ASSUME(block_count > 0 && block_count <= BLOCKS);
-    const uint32_t ctr = state[CHACHA20_CTR_INDEX];
+    const uint32_t ctr = state[MBEDTLS_CHACHA20_CTR_INDEX];
     for (unsigned j = 0; j < block_count; j++) {
         const uint32_t *p = blocks[j].s32;
         for (unsigned i = 0; i < 16; i++) {
@@ -149,7 +149,7 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
             uint32_t x = (p[i] + state[i]) ^ mbedtls_get_unaligned_uint32(&input[o]);
             mbedtls_put_unaligned_uint32(&output[o], x);
         }
-        state[CHACHA20_CTR_INDEX] = ctr + j + 1;
+        state[MBEDTLS_CHACHA20_CTR_INDEX] = ctr + j + 1;
     }
 }
 #endif
@@ -256,7 +256,7 @@ static void chacha20_blocks(uint32_t state[16],
     }
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
-    chacha20_update_counter_from_neon(&state[CHACHA20_CTR_INDEX], &neon_state);
+    chacha20_update_counter_from_neon(&state[MBEDTLS_CHACHA20_CTR_INDEX], &neon_state);
 #endif
 
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
