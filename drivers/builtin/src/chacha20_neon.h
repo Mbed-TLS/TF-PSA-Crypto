@@ -153,24 +153,24 @@ typedef union {
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
     uint32_t s32[16];
 #endif
-} chacha20_block_t;
+} mbedtls_chacha20_block_t;
 
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
 
 // Define rotate-left operations that rotate within each 32-bit element in a 128-bit vector.
-static inline uint32x4_t chacha20_neon_vrotlq_16_u32(uint32x4_t v)
+static inline uint32x4_t mbedtls_chacha20_neon_vrotlq_16_u32(uint32x4_t v)
 {
     return vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(v)));
 }
 
-static inline uint32x4_t chacha20_neon_vrotlq_12_u32(uint32x4_t v)
+static inline uint32x4_t mbedtls_chacha20_neon_vrotlq_12_u32(uint32x4_t v)
 {
     uint32x4_t x = vshlq_n_u32(v, 12);
     return vsriq_n_u32(x, v, 20);
 }
 
-static inline uint32x4_t chacha20_neon_vrotlq_8_u32(uint32x4_t v)
+static inline uint32x4_t mbedtls_chacha20_neon_vrotlq_8_u32(uint32x4_t v)
 {
     uint32x4_t result;
 #if defined(MBEDTLS_ARCH_IS_ARM64)
@@ -186,21 +186,21 @@ static inline uint32x4_t chacha20_neon_vrotlq_8_u32(uint32x4_t v)
     return result;
 }
 
-static inline uint32x4_t chacha20_neon_vrotlq_7_u32(uint32x4_t v)
+static inline uint32x4_t mbedtls_chacha20_neon_vrotlq_7_u32(uint32x4_t v)
 {
     uint32x4_t x = vshlq_n_u32(v, 7);
     return vsriq_n_u32(x, v, 25);
 }
 
 // Increment the 32-bit element within v that corresponds to the ChaCha20 counter
-static inline uint32x4_t chacha20_neon_inc_counter(uint32x4_t v)
+static inline uint32x4_t mbedtls_chacha20_neon_inc_counter(uint32x4_t v)
 {
     /* { 1, 0, 0, 0 } */
     uint32x4_t counter_increment = vcombine_u32(vcreate_u32(1), vdup_n_u32(0));
     return vaddq_u32(v, counter_increment);
 }
 
-static inline void chacha20_load_neon_state(chacha20_block_t *neon_state,
+static inline void mbedtls_chacha20_load_neon_state(mbedtls_chacha20_block_t *neon_state,
                                             const uint32_t *state)
 {
     neon_state->a = vld1q_u32(&state[0]);
@@ -209,8 +209,8 @@ static inline void chacha20_load_neon_state(chacha20_block_t *neon_state,
     neon_state->d = vld1q_u32(&state[12]);
 }
 
-static inline void chacha20_neon_prepare_blocks(chacha20_block_t *r,
-                                                const chacha20_block_t *neon_state)
+static inline void mbedtls_chacha20_neon_prepare_blocks(mbedtls_chacha20_block_t *r,
+                                                const mbedtls_chacha20_block_t *neon_state)
 {
     uint32x4_t ctr = neon_state->d;
 #if defined(MBEDTLS_COMPILER_IS_GCC) && (BLOCKS > 6)
@@ -223,11 +223,11 @@ static inline void chacha20_neon_prepare_blocks(chacha20_block_t *r,
         r[i].c = neon_state->c;
         r[i].d = ctr;
 #if BLOCKS > 1
-        ctr = chacha20_neon_inc_counter(ctr);
+        ctr = mbedtls_chacha20_neon_inc_counter(ctr);
 #endif
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
         // In principle this is needed to ensure that it is safe to read the
-        // inactive member of the chacha20_block_t union, i.e., to guarantee
+        // inactive member of the mbedtls_chacha20_block_t union, i.e., to guarantee
         // the scalar and Neon elements of the union are defined & consistent.
         // (In practice clang and GCC will do the right thing without this).
         if (i >= MBEDTLS_CHACHA20_NEON_MULTIBLOCK) {
@@ -240,24 +240,24 @@ static inline void chacha20_neon_prepare_blocks(chacha20_block_t *r,
     }
 }
 
-static inline void chacha20_neon_inner_block(chacha20_block_t *r)
+static inline void mbedtls_chacha20_neon_inner_block(mbedtls_chacha20_block_t *r)
 {
     for (unsigned i = 0; i < 2; i++) {
         r->a = vaddq_u32(r->a, r->b);                    // r->a += b
         r->d = veorq_u32(r->d, r->a);                    // r->d ^= a
-        r->d = chacha20_neon_vrotlq_16_u32(r->d);        // r->d <<<= 16
+        r->d = mbedtls_chacha20_neon_vrotlq_16_u32(r->d);        // r->d <<<= 16
 
         r->c = vaddq_u32(r->c, r->d);                    // r->c += d
         r->b = veorq_u32(r->b, r->c);                    // r->b ^= c
-        r->b = chacha20_neon_vrotlq_12_u32(r->b);        // r->b <<<= 12
+        r->b = mbedtls_chacha20_neon_vrotlq_12_u32(r->b);        // r->b <<<= 12
 
         r->a = vaddq_u32(r->a, r->b);                    // r->a += b
         r->d = veorq_u32(r->d, r->a);                    // r->d ^= a
-        r->d = chacha20_neon_vrotlq_8_u32(r->d);         // r->d <<<= 8
+        r->d = mbedtls_chacha20_neon_vrotlq_8_u32(r->d);         // r->d <<<= 8
 
         r->c = vaddq_u32(r->c, r->d);                    // r->c += d
         r->b = veorq_u32(r->b, r->c);                    // r->b ^= c
-        r->b = chacha20_neon_vrotlq_7_u32(r->b);         // r->b <<<= 7
+        r->b = mbedtls_chacha20_neon_vrotlq_7_u32(r->b);         // r->b <<<= 7
 
         // re-order b, c and d for the diagonal rounds
         if (i == 0) {
@@ -273,8 +273,8 @@ static inline void chacha20_neon_inner_block(chacha20_block_t *r)
     }
 }
 
-static inline void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
-                                               chacha20_block_t *neon_state,
+static inline void mbedtls_chacha20_neon_finish_blocks(mbedtls_chacha20_block_t *blocks,
+                                               mbedtls_chacha20_block_t *neon_state,
                                                const unsigned int block_count,
                                                const uint8_t *input,
                                                uint8_t *output)
@@ -286,10 +286,10 @@ static inline void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
     MBEDTLS_CHACHA20_FORCE_UNROLL
 #endif
     for (unsigned i = 0; i < block_count; i++) {
-        chacha20_block_t *p = &blocks[i];
+        mbedtls_chacha20_block_t *p = &blocks[i];
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
         // In principle this is needed to ensure that it is safe to read the
-        // inactive member of the chacha20_block_t union, i.e., to guarantee
+        // inactive member of the mbedtls_chacha20_block_t union, i.e., to guarantee
         // the scalar and Neon elements of the union are defined & consistent.
         // (In practice clang and GCC will do the right thing without this).
         if (i >= MBEDTLS_CHACHA20_NEON_MULTIBLOCK) {
@@ -321,15 +321,15 @@ static inline void chacha20_neon_finish_blocks(chacha20_block_t *blocks,
         d = veorq_u8(id, d);
         vst1q_u8(output + 48, d);
 
-        neon_state->d = chacha20_neon_inc_counter(neon_state->d);
+        neon_state->d = mbedtls_chacha20_neon_inc_counter(neon_state->d);
 
         input  += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
         output += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
     }
 }
 
-static inline void chacha20_update_counter_from_neon(uint32_t *p,
-                                                     const chacha20_block_t *neon_state)
+static inline void mbedtls_chacha20_update_counter_from_neon(uint32_t *p,
+                                                     const mbedtls_chacha20_block_t *neon_state)
 {
     vst1q_u32(p, neon_state->d);
 }

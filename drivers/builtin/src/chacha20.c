@@ -74,7 +74,7 @@ static inline void chacha20_quarter_round(uint32_t state[16],
 #endif
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
-static inline void chacha20_scalar_prepare_blocks(chacha20_block_t *blocks,
+static inline void chacha20_scalar_prepare_blocks(mbedtls_chacha20_block_t *blocks,
                                                   const uint32_t *state)
 {
 #if BLOCKS == 1
@@ -134,7 +134,7 @@ static void chacha20_scalar_inner_block(uint32_t state[16])
 #endif
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
-static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
+static inline void chacha20_scalar_finish_blocks(const mbedtls_chacha20_block_t *blocks,
                                                  uint32_t state[16],
                                                  unsigned block_count,
                                                  const uint8_t *input,
@@ -155,7 +155,7 @@ static inline void chacha20_scalar_finish_blocks(const chacha20_block_t *blocks,
 #endif
 
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
-static inline void chacha20_zeroize_scalar_blocks(chacha20_block_t *scalar_blocks)
+static inline void chacha20_zeroize_scalar_blocks(mbedtls_chacha20_block_t *scalar_blocks)
 {
 #if defined(MBEDTLS_COMPILER_IS_GCC) && defined(__aarch64__) \
     && defined(MBEDTLS_EFFICIENT_UNALIGNED_ACCESS)
@@ -166,7 +166,7 @@ static inline void chacha20_zeroize_scalar_blocks(chacha20_block_t *scalar_block
     for (unsigned i = 0; i < MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK; i++) {
         if (sizeof(scalar_blocks[0]) != 64) {
             // ptr is incremented by 64 bytes in this loop, so this is only
-            // needed if sizeof(chacha20_block_t) != 64 (which is possible
+            // needed if sizeof(mbedtls_chacha20_block_t) != 64 (which is possible
             // but unlikely).
             // In practice this if block is optimised away.
             ptr = (uintptr_t) scalar_blocks[i].s32;
@@ -198,13 +198,13 @@ static void chacha20_blocks(uint32_t state[16],
                             size_t blocks_remaining)
 {
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
-    chacha20_block_t blocks[BLOCKS];
+    mbedtls_chacha20_block_t blocks[BLOCKS];
 #endif
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
     /* Load original state into NEON registers */
-    chacha20_block_t neon_state;
-    chacha20_load_neon_state(&neon_state, state);
+    mbedtls_chacha20_block_t neon_state;
+    mbedtls_chacha20_load_neon_state(&neon_state, state);
 #endif
 
     for (;;) {
@@ -212,7 +212,7 @@ static void chacha20_blocks(uint32_t state[16],
         // Reducing the scope of this variable helps size and perf for GCC,
         // but only possible if we don't need to zeroize it (i.e., not using
         // scalar code).
-        chacha20_block_t blocks[BLOCKS];
+        mbedtls_chacha20_block_t blocks[BLOCKS];
 #endif
         const unsigned block_count =
             (unsigned) (BLOCKS < blocks_remaining ? BLOCKS : blocks_remaining);
@@ -220,7 +220,7 @@ static void chacha20_blocks(uint32_t state[16],
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
         chacha20_scalar_prepare_blocks(blocks, state);
 #else
-        chacha20_neon_prepare_blocks(blocks, &neon_state);
+        mbedtls_chacha20_neon_prepare_blocks(blocks, &neon_state);
 #endif
 
         for (unsigned i = 0; i < 10; i++) {
@@ -235,7 +235,7 @@ static void chacha20_blocks(uint32_t state[16],
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
             MBEDTLS_CHACHA20_FORCE_UNROLL
             for (unsigned j = 0; j < MBEDTLS_CHACHA20_NEON_MULTIBLOCK; j++) {
-                chacha20_neon_inner_block(&blocks[j]);
+                mbedtls_chacha20_neon_inner_block(&blocks[j]);
             }
 #endif
         }
@@ -243,7 +243,7 @@ static void chacha20_blocks(uint32_t state[16],
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
         chacha20_scalar_finish_blocks(blocks, state, block_count, input, output);
 #else
-        chacha20_neon_finish_blocks(blocks, &neon_state, block_count, input, output);
+        mbedtls_chacha20_neon_finish_blocks(blocks, &neon_state, block_count, input, output);
 #endif
 
         blocks_remaining -= block_count;
@@ -256,7 +256,7 @@ static void chacha20_blocks(uint32_t state[16],
     }
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK > 0
-    chacha20_update_counter_from_neon(&state[MBEDTLS_CHACHA20_CTR_INDEX], &neon_state);
+    mbedtls_chacha20_update_counter_from_neon(&state[MBEDTLS_CHACHA20_CTR_INDEX], &neon_state);
 #endif
 
 #if MBEDTLS_CHACHA20_SCALAR_MULTIBLOCK > 0
