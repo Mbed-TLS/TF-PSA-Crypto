@@ -1628,7 +1628,6 @@ void pk_psa_wrap_sign_ext(int pk_type,
     if (no_sign_usage_test) {
         TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
                                        sig, sizeof(sig), &sig_len), MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
-        TEST_EQUAL(PSA_SUCCESS, psa_destroy_key(key_id));
         goto exit;
     } else {
         TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
@@ -1658,6 +1657,7 @@ void pk_psa_wrap_sign_ext(int pk_type,
 
 exit:
     mbedtls_pk_free(&pk);
+    psa_destroy_key(key_id);
     PSA_DONE();
 }
 /* END_CASE */
