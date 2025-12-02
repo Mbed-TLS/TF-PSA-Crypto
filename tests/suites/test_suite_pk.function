@@ -1177,6 +1177,7 @@ void pk_sign_verify_restart(int pk_type,
                             int max_ops,
                             int min_restart,
                             int max_restart,
+                            int pub_key_test,
                             int sign_ret,
                             int sig_length)
 {
@@ -1184,8 +1185,8 @@ void pk_sign_verify_restart(int pk_type,
     mbedtls_pk_restart_ctx rs_ctx;
     mbedtls_pk_context prv, pub;
     size_t slen;
-    unsigned char *sig;
-    sig = TEST_CALLOC(sizeof(char), sig_length);
+    unsigned char *sig = NULL;
+    TEST_CALLOC(sig, sig_length);
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
@@ -1212,11 +1213,17 @@ void pk_sign_verify_restart(int pk_type,
     psa_interruptible_set_max_ops(max_ops);
 
     cnt_restart = 0;
-    do {
-        ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
+    if (pub_key_test) {
+        ret = mbedtls_pk_sign_restartable(&pub, md_alg, hash->x, hash->len,
                                           sig, sig_length, &slen,
                                           &rs_ctx);
-    } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
+    } else {
+        do {
+            ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
+                                              sig, sig_length, &slen,
+                                              &rs_ctx);
+        } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
+    }
     if (ret != 0) {
         TEST_ASSERT(ret == sign_ret);
         goto exit;
@@ -1551,7 +1558,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
+void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg,
+                 int sig_size, int expected_sign_ret)
 {
     mbedtls_pk_context pk;
     size_t sig_len;
@@ -1567,7 +1575,10 @@ void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
     TEST_EQUAL(pk_setup(&pk, pk_type, curve_or_keybits), 0);
 
     TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                   sig, sizeof(sig), &sig_len), 0);
+                                   sig, sig_size, &sig_len), expected_sign_ret);
+    if (expected_sign_ret != 0) {
+        goto exit;
+    }
 
     TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
@@ -1633,7 +1644,6 @@ void pk_psa_wrap_sign_ext(int pk_type,
     if (no_sign_usage_test) {
         TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
                                        sig, sizeof(sig), &sig_len), MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
-        TEST_EQUAL(PSA_SUCCESS, psa_destroy_key(key_id));
         goto exit;
     } else {
         TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
@@ -1663,6 +1673,7 @@ void pk_psa_wrap_sign_ext(int pk_type,
 
 exit:
     mbedtls_pk_free(&pk);
+    psa_destroy_key(key_id);
     PSA_DONE();
 }
 /* END_CASE */
