@@ -214,7 +214,8 @@ static void chacha20_blocks(uint32_t state[16],
         // scalar code).
         chacha20_block_t blocks[BLOCKS];
 #endif
-        const size_t block_count = BLOCKS < blocks_remaining ? BLOCKS : blocks_remaining;
+        const unsigned block_count =
+            (unsigned) (BLOCKS < blocks_remaining ? BLOCKS : blocks_remaining);
 
 #if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
         chacha20_scalar_prepare_blocks(blocks, state);
