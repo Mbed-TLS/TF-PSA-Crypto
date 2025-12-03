@@ -9024,12 +9024,63 @@ exit:
 
 psa_status_t psa_pake_set_context(
     psa_pake_operation_t *operation,
-    const uint8_t *context, size_t context_len)
+    const uint8_t *context_external, size_t context_len)
 {
-    (void) operation;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    LOCAL_INPUT_DECLARE(context_external, context);
+
+    if (operation->stage != PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+#if defined(PSA_WANT_ALG_JPAKE)
     (void) context;
     (void) context_len;
-    return PSA_ERROR_NOT_SUPPORTED;
+    if(PSA_ALG_IS_JPAKE(operation->alg)) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    } else 
+#endif
+#if defined(PSA_WANT_ALG_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        if (operation->data.inputs.context_len != 0) {
+            status = PSA_ERROR_BAD_STATE;
+            goto exit;
+        }
+
+        if (context == NULL && context_len != 0) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+
+        LOCAL_INPUT_ALLOC(context_external, context_len, context);
+
+        operation->data.inputs.context = mbedtls_calloc(1, context_len);
+        if (operation->data.inputs.context == NULL) {
+            status = PSA_ERROR_INSUFFICIENT_MEMORY;
+            goto exit;
+        }
+
+        memcpy(operation->data.inputs.context, context, context_len);
+        operation->data.inputs.context_len = context_len;
+
+        status = PSA_SUCCESS;
+    } else
+#endif
+    {
+        (void) context;
+        (void) context_len;
+        status = PSA_ERROR_NOT_SUPPORTED;
+    }
+#endif
+exit:
+    LOCAL_INPUT_FREE(context_external, context);
+    if (status != PSA_SUCCESS) {
+        psa_pake_abort(operation);
+    }
+    return status;
 }
 
 /* Auxiliary function to convert core computation stage to single driver step. */
