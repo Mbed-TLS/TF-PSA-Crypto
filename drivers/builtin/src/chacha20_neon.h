@@ -201,7 +201,7 @@ static inline uint32x4_t mbedtls_chacha20_neon_inc_counter(uint32x4_t v)
 }
 
 static inline void mbedtls_chacha20_load_neon_state(mbedtls_chacha20_block_t *neon_state,
-                                            const uint32_t *state)
+                                                    const uint32_t *state)
 {
     neon_state->a = vld1q_u32(&state[0]);
     neon_state->b = vld1q_u32(&state[4]);
@@ -210,7 +210,7 @@ static inline void mbedtls_chacha20_load_neon_state(mbedtls_chacha20_block_t *ne
 }
 
 static inline void mbedtls_chacha20_neon_prepare_blocks(mbedtls_chacha20_block_t *r,
-                                                const mbedtls_chacha20_block_t *neon_state)
+                                                        const mbedtls_chacha20_block_t *neon_state)
 {
     uint32x4_t ctr = neon_state->d;
 #if defined(MBEDTLS_COMPILER_IS_GCC) && (BLOCKS > 6)
@@ -274,10 +274,10 @@ static inline void mbedtls_chacha20_neon_inner_block(mbedtls_chacha20_block_t *r
 }
 
 static inline void mbedtls_chacha20_neon_finish_blocks(mbedtls_chacha20_block_t *blocks,
-                                               mbedtls_chacha20_block_t *neon_state,
-                                               const unsigned int block_count,
-                                               const uint8_t *input,
-                                               uint8_t *output)
+                                                       mbedtls_chacha20_block_t *neon_state,
+                                                       const unsigned int block_count,
+                                                       const uint8_t *input,
+                                                       uint8_t *output)
 {
     MBEDTLS_ASSUME(block_count > 0 && block_count <= BLOCKS);
 
@@ -329,7 +329,7 @@ static inline void mbedtls_chacha20_neon_finish_blocks(mbedtls_chacha20_block_t 
 }
 
 static inline void mbedtls_chacha20_update_counter_from_neon(uint32_t *p,
-                                                     const mbedtls_chacha20_block_t *neon_state)
+                                                             const mbedtls_chacha20_block_t *neon_state)
 {
     vst1q_u32(p, neon_state->d);
 }
