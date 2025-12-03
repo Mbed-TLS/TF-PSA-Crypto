@@ -133,7 +133,7 @@
 
 #if defined(__clang__) && (__clang_major__ >= 4)
     #define MBEDTLS_CHACHA20_FORCE_UNROLL      _Pragma("clang loop unroll(full)")
-#elif defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 8)
+#elif defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 80200)
     #define MBEDTLS_CHACHA20_FORCE_UNROLL      _Pragma("GCC unroll 16")
 #elif defined(_MSC_VER)
     #define MBEDTLS_CHACHA20_FORCE_UNROLL      __pragma(loop(unroll))
