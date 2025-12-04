@@ -91,6 +91,10 @@ else()
     option(GEN_FILES "Generate the auto-generated files as needed" ON)
 endif()
 
+if(NOT CMAKE_SIZE_UTIL)
+    set(CMAKE_SIZE_UTIL size)
+endif()
+
 # Support for package config and install to be added later.
 option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target export and installation" ${TF_PSA_CRYPTO_AS_SUBPROJECT})
 
