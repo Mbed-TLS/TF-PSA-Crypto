@@ -165,6 +165,17 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     endif()
 endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
+# Add code size target for libtfpsacrypto
+add_custom_target(size
+    COMMAND ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
+    ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_code_size_report.py
+    --output-file ${CMAKE_CURRENT_BINARY_DIR}/code_size.json
+    --library-file $<TARGET_FILE_NAME:${tfpsacrypto_target}>
+    --size-cmd ${CMAKE_SIZE_UTIL}
+    COMMAND ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
+    ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/show_code_size.py
+    ${CMAKE_CURRENT_BINARY_DIR}/code_size.json)
+
 foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
