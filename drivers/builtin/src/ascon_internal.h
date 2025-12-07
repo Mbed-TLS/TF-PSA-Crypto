@@ -181,4 +181,74 @@ static inline void tf_psa_crypto_ascon_xof128_reset(
     tf_psa_crypto_ascon_8_reset(state);
 }
 
+/** Set up an Ascon-AEAD128 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param[in] key       The key. It must be exactly 16 bytes long.
+ * \param[in] nonce     The nonce. It must be exactly 16 bytes long.
+ */
+void tf_psa_crypto_ascon_aead128_setup(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t key[16],
+    const uint8_t nonce[16]);
+
+/** Add associated data to an Ascon-AEAD128 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param[in] input     The input to add.
+ * \param input_length  The number of bytes in \p input.
+ */
+void tf_psa_crypto_ascon_aead128_update_ad(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t *input, size_t input_length);
+
+/** Finish associated data on an Ascon-AEAD128 operation.
+ *
+ * \note You must call this function before calling
+ *       tf_psa_crypto_ascon_aead128_update(), even when the
+ *       associated data is empty.
+ *
+ * \param[in,out] state The operation state.
+ */
+void tf_psa_crypto_ascon_aead128_finish_ad(
+    tf_psa_crypto_ascon_16_state_t *state);
+
+/** Add plaintext or ciphertext to an Ascon-AEAD128 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param decrypting    \c 0 to encrypt, or a nonzero value to decrypt.
+ * \param[in] input     The plaintext (when encrypting) or ciphertext
+ *                      (when decrypting) to add.
+ * \param[out] output   Buffer for the resulting ciphertext (when encrypting)
+ *                      or plaintext (when decrypting).
+ * \param length        The size of both \p input and \p output in bytes.
+ */
+void tf_psa_crypto_ascon_aead128_update(
+    tf_psa_crypto_ascon_16_state_t *state,
+    int decrypting,
+    const uint8_t *input, uint8_t *output, size_t length);
+
+/** Add plaintext or ciphertext to an Ascon-AEAD128 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param decrypting    \c 0 to encrypt, or a nonzero value to decrypt.
+ * \param[in] key       The key. It must be exactly 16 bytes long.
+ * \param[out] tag      The 16-byte authentication tag.
+ */
+void tf_psa_crypto_ascon_aead128_finish(
+    tf_psa_crypto_ascon_16_state_t *state,
+    int decrypting,
+    const uint8_t key[16],
+    uint8_t tag[16]);
+
+/** Wipe an Ascon-AEAD128 operation.
+ *
+ * \param[in,out] state The operation state to wipe.
+ */
+static inline void tf_psa_crypto_ascon_aead128_reset(
+    tf_psa_crypto_ascon_16_state_t *state)
+{
+    mbedtls_platform_zeroize(state, sizeof(*state));
+}
+
 #endif /* ascon_internal.h */

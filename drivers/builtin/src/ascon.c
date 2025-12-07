@@ -316,4 +316,205 @@ void tf_psa_crypto_ascon_cxof128_setup(
 
 #endif /* MBEDTLS_PSA_BUILTIN_SOME_ASCON_8 */
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+
+static void tf_psa_crypto_ascon_absorb_block2(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t block[16])
+{
+    state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(block, 0);
+    state->p.S[1] ^= MBEDTLS_GET_UINT64_LE(block, 8);
+    tf_psa_crypto_ascon_permute(&state->p, 8);
+}
+
+static void tf_psa_crypto_ascon_override_block2(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t block[16])
+{
+    state->p.S[0] = MBEDTLS_GET_UINT64_LE(block, 0);
+    state->p.S[1] = MBEDTLS_GET_UINT64_LE(block, 8);
+    tf_psa_crypto_ascon_permute(&state->p, 8);
+}
+
+void tf_psa_crypto_ascon_aead128_setup(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t key[16],
+    const uint8_t nonce[16])
+{
+    memset(state, 0, sizeof(*state));
+    state->p.S[0] = 0x00001000808c0001;
+    state->p.S[1] = MBEDTLS_GET_UINT64_LE(key, 0);
+    state->p.S[2] = MBEDTLS_GET_UINT64_LE(key, 8);
+    state->p.S[3] = MBEDTLS_GET_UINT64_LE(nonce, 0);
+    state->p.S[4] = MBEDTLS_GET_UINT64_LE(nonce, 8);
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+    state->p.S[3] ^= MBEDTLS_GET_UINT64_LE(key, 0);
+    state->p.S[4] ^= MBEDTLS_GET_UINT64_LE(key, 8);
+    state->u.pub.M_length = 16;
+}
+
+void tf_psa_crypto_ascon_aead128_update_ad(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t *input, size_t input_length)
+{
+    if (input_length == 0) {
+        return;
+    }
+    if (state->u.pub.M_length == 16) {
+        state->u.pub.M_length = 0;
+    }
+
+    size_t available = state->u.pub.M_length + input_length;
+    if (available < 16) {
+        memcpy(state->u.pub.M + state->u.pub.M_length, input, input_length);
+        state->u.pub.M_length = available;
+        return;
+    }
+
+    const uint8_t *tail = input;
+    if (state->u.pub.M_length != 0) {
+        size_t missing = 16 - state->u.pub.M_length;
+        memcpy(state->u.block + state->u.pub.M_length, input, missing);
+        tail += missing;
+        available -= 16;
+        tf_psa_crypto_ascon_absorb_block2(state, state->u.block);
+    }
+
+    while (available >= 16) {
+        tf_psa_crypto_ascon_absorb_block2(state, tail);
+        tail += 16;
+        available -= 16;
+    }
+
+    memcpy(state->u.pub.M, tail, available);
+    memset(state->u.pub.M + available, 0, 15 - available);
+    state->u.pub.M_length = available;
+}
+
+void tf_psa_crypto_ascon_aead128_finish_ad(
+    tf_psa_crypto_ascon_16_state_t *state)
+{
+    /* Pad AD to a full block, which involves appending at least one byte.
+     * Empty AD gets special treatment: it is not padded, we just do
+     * nothing except the final bit flip. */
+    if (state->u.pub.M_length == 16) {
+        state->u.pub.M_length = 0;
+    } else {
+        uint8_t n = state->u.pub.M_length;
+        state->u.pub.M_length = 0;
+        state->u.block[n] = 0x01;
+        tf_psa_crypto_ascon_absorb_block2(state, state->u.block);
+        memset(state->u.block, 0, sizeof(state->u.block));
+    }
+    state->p.S[4] ^= 0x8000000000000000;
+}
+
+static inline uint8_t tf_psa_crypto_ascon_get_state_byte(
+    tf_psa_crypto_ascon_p_state_t *state,
+    size_t offset)
+{
+    uint64_t word = state->S[offset / 8];
+    return (uint8_t) (word >> (8 * (offset % 8)));
+}
+
+static void tf_psa_crypto_ascon_mask_with_state(
+    tf_psa_crypto_ascon_16_state_t *state,
+    const uint8_t *input, uint8_t *output,
+    size_t offset, size_t length)
+{
+    for (size_t i = 0; i < length; i++) {
+        uint8_t m = tf_psa_crypto_ascon_get_state_byte(&state->p, offset + i);
+        output[i] = input[i] ^ m;
+    }
+}
+
+void tf_psa_crypto_ascon_aead128_update(
+    tf_psa_crypto_ascon_16_state_t *state,
+    int decrypting,
+    const uint8_t *input, uint8_t *output, size_t length)
+{
+    if (length == 0) {
+        return;
+    }
+
+    size_t available = state->u.pub.M_length + length;
+    if (available < 16) {
+        tf_psa_crypto_ascon_mask_with_state(state, input, output,
+                                            state->u.pub.M_length, length);
+        memcpy(state->u.pub.M + state->u.pub.M_length, input, length);
+        state->u.pub.M_length = available;
+        return;
+    }
+
+    size_t offset = 0;
+    if (state->u.pub.M_length != 0) {
+        size_t missing = 16 - state->u.pub.M_length;
+        tf_psa_crypto_ascon_mask_with_state(state, input, output,
+                                            state->u.pub.M_length, missing);
+        memcpy(state->u.block + state->u.pub.M_length, input, missing);
+        offset += missing;
+        available -= 16;
+        if (decrypting) {
+            tf_psa_crypto_ascon_override_block2(state, state->u.block);
+        } else {
+            tf_psa_crypto_ascon_absorb_block2(state, state->u.block);
+        }
+    }
+
+    while (available >= 16) {
+        tf_psa_crypto_ascon_mask_with_state(state,
+                                            input + offset,
+                                            output + offset,
+                                            0, 16);
+        if (decrypting) {
+            tf_psa_crypto_ascon_override_block2(state, input + offset);
+        } else {
+            tf_psa_crypto_ascon_absorb_block2(state, input + offset);
+        }
+        offset += 16;
+        available -= 16;
+    }
+
+    tf_psa_crypto_ascon_mask_with_state(state,
+                                        input + offset,
+                                        output + offset,
+                                        0, available);
+    memcpy(state->u.pub.M, input + offset, available);
+    memset(state->u.pub.M + available, 0, 15 - available);
+    state->u.pub.M_length = available;
+}
+
+void tf_psa_crypto_ascon_aead128_finish(
+    tf_psa_crypto_ascon_16_state_t *state,
+    int decrypting,
+    const uint8_t key[16],
+    uint8_t tag[16])
+{
+    if (decrypting) {
+        uint8_t n = state->u.pub.M_length;
+        for (size_t i = n; i < 16; i++) {
+            state->u.block[i] = tf_psa_crypto_ascon_get_state_byte(&state->p, i);
+        }
+        state->u.block[n] ^= 0x01;
+        state->p.S[0] = MBEDTLS_GET_UINT64_LE(state->u.block, 0);
+        state->p.S[1] = MBEDTLS_GET_UINT64_LE(state->u.block, 8);
+    } else {
+        uint8_t n = state->u.pub.M_length;
+        state->u.pub.M_length = 0;
+        state->u.block[n] = 0x01;
+        state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(state->u.block, 0);
+        state->p.S[1] ^= MBEDTLS_GET_UINT64_LE(state->u.block, 8);
+    }
+
+    state->p.S[2] ^= MBEDTLS_GET_UINT64_LE(key, 0);
+    state->p.S[3] ^= MBEDTLS_GET_UINT64_LE(key, 8);
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+    state->p.S[3] ^= MBEDTLS_GET_UINT64_LE(key, 0);
+    state->p.S[4] ^= MBEDTLS_GET_UINT64_LE(key, 8);
+    MBEDTLS_PUT_UINT64_LE(state->p.S[3], tag, 0);
+    MBEDTLS_PUT_UINT64_LE(state->p.S[4], tag, 8);
+}
+
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
+
 #endif /* MBEDTLS_PSA_BUILTIN_SOME_ASCON */

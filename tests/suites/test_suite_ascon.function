@@ -240,3 +240,49 @@ exit:
     mbedtls_free(output);
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
+void aead128_simple(const data_t *key,
+                    const data_t *nonce,
+                    const data_t *ad,
+                    const data_t *plaintext,
+                    const data_t *ciphertext,
+                    const data_t *expected_tag)
+{
+    tf_psa_crypto_ascon_16_state_t state;
+    uint8_t *output = NULL;
+    uint8_t actual_tag[16];
+    memset(actual_tag, 'i', sizeof(actual_tag));
+
+    /* The plaintext and ciphertext must be the same length in valid data.
+     * Memory management in the test code depends on it. */
+    TEST_EQUAL(plaintext->len, ciphertext->len);
+
+    TEST_CALLOC(output, ciphertext->len);
+
+    tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+    tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+    tf_psa_crypto_ascon_aead128_finish_ad(&state);
+    tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                       plaintext->x, output, plaintext->len);
+    tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, actual_tag);
+    TEST_MEMORY_COMPARE(output, ciphertext->len,
+                        ciphertext->x, ciphertext->len);
+    TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                        expected_tag->x, expected_tag->len);
+
+    tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+    tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+    tf_psa_crypto_ascon_aead128_finish_ad(&state);
+    tf_psa_crypto_ascon_aead128_update(&state, 1,
+                                       ciphertext->x, output, ciphertext->len);
+    tf_psa_crypto_ascon_aead128_finish(&state, 1, key->x, actual_tag);
+    TEST_MEMORY_COMPARE(output, plaintext->len,
+                        plaintext->x, plaintext->len);
+    TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                        expected_tag->x, expected_tag->len);
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */

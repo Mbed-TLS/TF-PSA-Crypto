@@ -55,6 +55,26 @@ typedef struct {
 #endif /* MBEDTLS_ASCON_SMALLER */
 } tf_psa_crypto_ascon_8_state_t;
 
+/** The state of an Ascon AEAD128 operation.
+ */
+typedef struct {
+    tf_psa_crypto_ascon_p_state_t p;
+    /* M contains a partial block, so it is never full between calls to
+     * functions (update, finish, etc.). However, it is convenient to have
+     * enough space for a full block available inside the functions. */
+    union {
+        struct {
+            /** Accumulated partial block of input (while absorbing)
+             * or output (while squeezing). */
+            uint8_t M[15];
+            /** number of bytes in M (always <= 15),
+             * or 16 if waiting for AD and no AD has been presented yet. */
+            uint8_t M_length;
+        } pub;
+        uint8_t block[16];
+    } u;
+} tf_psa_crypto_ascon_16_state_t;
+
 #ifdef __cplusplus
 }
 #endif
