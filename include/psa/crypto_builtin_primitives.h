@@ -36,6 +36,7 @@
 #include "mbedtls/private/sha256.h"
 #include "mbedtls/private/sha512.h"
 #include "mbedtls/private/sha3.h"
+#include "tf-psa-crypto/private/ascon_types.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_RIPEMD160) || \
@@ -47,7 +48,9 @@
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_224) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_256) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
-    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256) || \
+    0
 #define MBEDTLS_PSA_BUILTIN_HASH
 #endif
 
@@ -77,6 +80,9 @@ typedef struct {
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
         mbedtls_sha3_context sha3;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        tf_psa_crypto_ascon_8_state_t ascon;
 #endif
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_hash_operation_t;

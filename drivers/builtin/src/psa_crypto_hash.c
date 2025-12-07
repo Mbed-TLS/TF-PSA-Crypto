@@ -17,6 +17,8 @@
 #include <mbedtls/private/error_common.h>
 #include <string.h>
 
+#include "ascon_internal.h"
+
 #if defined(MBEDTLS_PSA_BUILTIN_HASH)
 psa_status_t mbedtls_psa_hash_abort(
     mbedtls_psa_hash_operation_t *operation)
@@ -79,6 +81,11 @@ psa_status_t mbedtls_psa_hash_abort(
             defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
             defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
             mbedtls_sha3_free(&operation->ctx.sha3);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case PSA_ALG_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_reset(&operation->ctx.ascon);
             break;
 #endif
         default:
@@ -166,6 +173,12 @@ psa_status_t mbedtls_psa_hash_setup(
             ret = mbedtls_sha3_starts(&operation->ctx.sha3, MBEDTLS_SHA3_512);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case PSA_ALG_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_setup(&operation->ctx.ascon);
+            ret = PSA_SUCCESS;
+            break;
+#endif
         default:
             return PSA_ALG_IS_HASH(alg) ?
                    PSA_ERROR_NOT_SUPPORTED :
@@ -248,6 +261,11 @@ psa_status_t mbedtls_psa_hash_clone(
                                &source_operation->ctx.sha3);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case PSA_ALG_ASCON_HASH256:
+            target_operation->ctx.ascon = source_operation->ctx.ascon;
+            break;
+#endif
         default:
             (void) source_operation;
             (void) target_operation;
@@ -327,6 +345,13 @@ psa_status_t mbedtls_psa_hash_update(
     ret = mbedtls_sha3_update(&operation->ctx.sha3,
                               input, input_length);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case PSA_ALG_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_update(&operation->ctx.ascon,
+                                               input, input_length);
+            ret = PSA_SUCCESS;
+            break;
 #endif
         default:
             (void) input;
@@ -416,6 +441,12 @@ psa_status_t mbedtls_psa_hash_finish(
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
     ret = mbedtls_sha3_finish(&operation->ctx.sha3, hash, hash_size);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case PSA_ALG_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_finish(&operation->ctx.ascon, hash);
+            ret = PSA_SUCCESS;
+            break;
 #endif
         default:
             (void) hash;

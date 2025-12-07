@@ -72,4 +72,14 @@ void tf_psa_crypto_ascon_hash256_finish(
     tf_psa_crypto_ascon_8_state_t *state,
     uint8_t output[32]);
 
+/** Wipe an Ascon-Hash256 operation.
+ *
+ * \param[in,out] state The operation state to wipe.
+ */
+static inline void tf_psa_crypto_ascon_hash256_reset(
+    tf_psa_crypto_ascon_8_state_t *state)
+{
+    mbedtls_platform_zeroize(state, sizeof(*state));
+}
+
 #endif /* ascon_internal.h */
