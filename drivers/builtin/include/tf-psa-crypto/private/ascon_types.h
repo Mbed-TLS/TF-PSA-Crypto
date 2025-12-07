@@ -27,6 +27,26 @@ typedef struct {
     uint64_t S[5];
 } tf_psa_crypto_ascon_p_state_t;
 
+/** The state of an Ascon hash or XOF operation.
+ */
+typedef struct {
+    tf_psa_crypto_ascon_p_state_t p;
+
+    /* M contains a partial block, so it is never full between calls to
+     * functions (update, finish, etc.). However, it is convenient to have
+     * enough space for a full block available inside the functions. */
+    union {
+        struct {
+            /** Accumulated partial block of input (while absorbing)
+             * or output (while squeezing). */
+            uint8_t M[7];
+            /** number of bytes in M (always <= 7) */
+            uint8_t M_length;
+        } pub;
+        uint8_t block[8];
+    } u;
+} tf_psa_crypto_ascon_8_state_t;
+
 #ifdef __cplusplus
 }
 #endif

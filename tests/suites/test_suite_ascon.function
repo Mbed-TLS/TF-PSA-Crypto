@@ -79,3 +79,18 @@ void permute(int rounds,
     }
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
+void hash256_single(const data_t *message,
+                    const data_t *expected_output)
+{
+    tf_psa_crypto_ascon_8_state_t state;
+    uint8_t actual_output[32];
+
+    tf_psa_crypto_ascon_hash256_setup(&state);
+    tf_psa_crypto_ascon_hash256_update(&state, message->x, message->len);
+    tf_psa_crypto_ascon_hash256_finish(&state, actual_output);
+    TEST_MEMORY_COMPARE(actual_output, sizeof(actual_output),
+                        expected_output->x, expected_output->len);
+}
+/* END_CASE */

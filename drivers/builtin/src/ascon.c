@@ -15,6 +15,8 @@
 
 #include "ascon_internal.h"
 
+#include "alignment.h"
+
 static void tf_psa_crypto_ascon_permute_const(
     tf_psa_crypto_ascon_p_state_t *state,
     uint8_t k)
@@ -89,5 +91,76 @@ MBEDTLS_STATIC_TESTABLE void tf_psa_crypto_ascon_permute(
         tf_psa_crypto_ascon_permute_round(state, rounds, i);
     }
 }
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+
+static void tf_psa_crypto_ascon_absorb_block(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t block[8])
+{
+    state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(block, 0);
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+}
+
+void tf_psa_crypto_ascon_hash256_setup(
+    tf_psa_crypto_ascon_8_state_t *state)
+{
+    memset(state, 0, sizeof(*state));
+    state->p.S[0] = 0x0000080100cc0002;
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+}
+
+void tf_psa_crypto_ascon_hash256_update(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t *input, size_t input_length)
+{
+    if (input_length == 0) {
+        return;
+    }
+
+    size_t available = state->u.pub.M_length + input_length;
+    if (available < 8) {
+        memcpy(state->u.pub.M + state->u.pub.M_length, input, input_length);
+        state->u.pub.M_length = available;
+        return;
+    }
+
+    const uint8_t *tail = input;
+    if (state->u.pub.M_length != 0) {
+        size_t missing = 8 - state->u.pub.M_length;
+        memcpy(state->u.block + state->u.pub.M_length, input, missing);
+        tail += missing;
+        available -= 8;
+        tf_psa_crypto_ascon_absorb_block(state, state->u.block);
+    }
+
+    while (available >= 8) {
+        tf_psa_crypto_ascon_absorb_block(state, tail);
+        tail += 8;
+        available -= 8;
+    }
+
+    memcpy(state->u.pub.M, tail, available);
+    memset(state->u.pub.M + available, 0, 7 - available);
+    state->u.pub.M_length = available;
+}
+
+void tf_psa_crypto_ascon_hash256_finish(
+    tf_psa_crypto_ascon_8_state_t *state,
+    uint8_t output[32])
+{
+    uint8_t n = state->u.pub.M_length;
+    state->u.pub.M_length = 0;
+    state->u.block[n] = 0x01;
+    state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(state->u.block, 0);
+    memset(state->u.block, 0, 8);
+
+    for (size_t i = 0; i <= 3; i++) {
+        tf_psa_crypto_ascon_permute(&state->p, 12);
+        MBEDTLS_PUT_UINT64_LE(state->p.S[0], output, i * 8);
+    }
+}
+
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
 
 #endif /* MBEDTLS_PSA_BUILTIN_SOME_ASCON */

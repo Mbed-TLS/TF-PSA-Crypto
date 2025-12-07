@@ -46,4 +46,30 @@ void tf_psa_crypto_ascon_permute(tf_psa_crypto_ascon_p_state_t *state,
                                  uint8_t rounds);
 #endif /* MBEDTLS_TEST_HOOKS */
 
+/** Set up an Ascon-Hash256 operation.
+ *
+ * \param[in,out] state The operation state.
+ */
+void tf_psa_crypto_ascon_hash256_setup(
+    tf_psa_crypto_ascon_8_state_t *state);
+
+/** Add input to an Ascon-Hash256 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param[in] input     The input to add.
+ * \param input_length  The number of bytes in \p input.
+ */
+void tf_psa_crypto_ascon_hash256_update(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t *input, size_t input_length);
+
+/** Finish an Ascon-Hash256 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param[out] output   The hash of the input.
+ */
+void tf_psa_crypto_ascon_hash256_finish(
+    tf_psa_crypto_ascon_8_state_t *state,
+    uint8_t output[32]);
+
 #endif /* ascon_internal.h */
