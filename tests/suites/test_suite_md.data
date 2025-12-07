@@ -52,6 +52,10 @@ Information on SHA3-512
 depends_on:PSA_WANT_ALG_SHA3_512
 md_info:MBEDTLS_MD_SHA3_512:"SHA3-512":64
 
+Information on Ascon-Hash256
+depends_on:PSA_WANT_ALG_ASCON_HASH256
+md_info:MBEDTLS_MD_ASCON_HASH256:"Ascon-Hash256":32
+
 generic mbedtls_md5 Test vector RFC1321 #1
 depends_on:PSA_WANT_ALG_MD5
 md_text:MBEDTLS_MD_MD5:"":"d41d8cd98f00b204e9800998ecf8427e"
@@ -128,6 +132,10 @@ generic mbedtls_sha3 SHA3-512 Test vector from CAVS 19.0 with Len = 8
 depends_on:PSA_WANT_ALG_SHA3_512
 md_hex:MBEDTLS_MD_SHA3_512:"e5":"150240baf95fb36f8ccb87a19a41767e7aed95125075a2b2dbba6e565e1ce8575f2b042b62e29a04e9440314a821c6224182964d8b557b16a492b3806f4c39c1"
 
+generic Ascon-Hash256 Test vector from CAVP 1.1.0.40 with len=16
+depends_on:PSA_WANT_ALG_ASCON_HASH256
+md_hex:MBEDTLS_MD_ASCON_HASH256:"7FDAE5E338E663624D6550FC246EE8B1":"772EC06D8EE009B3B1FF7E9202DD9EFB1E92F35E93EE1409BDA21E30B62BFCE7"
+
 generic HMAC-MD5 Hash File OpenSSL test #1
 depends_on:PSA_WANT_ALG_MD5
 mbedtls_md_hmac:MBEDTLS_MD_MD5:16:"61616161616161616161616161616161":"b91ce5ac77d33c234e61002ed6":"42552882f00bd4633ea81135a184b284"
@@ -199,6 +207,14 @@ mbedtls_md_hmac:MBEDTLS_MD_RIPEMD160:20:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 generic HMAC-RIPEMD160 Test vector RFC 2286 #7
 depends_on:PSA_WANT_ALG_RIPEMD160
 mbedtls_md_hmac:MBEDTLS_MD_RIPEMD160:20:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa":"54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b657920616e64204c6172676572205468616e204f6e6520426c6f636b2d53697a652044617461":"69ea60798d71616cce5fd0871e23754cd75d5a0a"
+
+# At this time, there is no official definition of HMAC over Ascon-Hash256.
+# The definition would need to specify a block size. The natural block
+# size of Ascon-Hash256 is 8 bytes, which is far too small. 32 bytes would
+# be plausible, but it's not official. So in the meantime, reject
+# HMAC-Ascon-Hash256.
+HMAC-Ascon-Hash256 not implemented
+mbedtls_md_hmac_fail:MBEDTLS_MD_ASCON_HASH256:"74686973206973206120706c61757369626c6520484d4143206b6579":"736f6d65206d657373616765":PSA_ERROR_INVALID_ARGUMENT
 
 generic multi step mbedtls_md5 Test vector RFC1321 #1
 depends_on:PSA_WANT_ALG_MD5
@@ -275,6 +291,10 @@ md_hex_multi:MBEDTLS_MD_SHA3_384:"5a6659e9f0e7":"21b1f3f63b907f968821185a7fe30b1
 generic multi step mbedtls_sha3 SHA3-512 Test vector from CAVS 19.0 with Len = 48
 depends_on:PSA_WANT_ALG_SHA3_512
 md_hex_multi:MBEDTLS_MD_SHA3_512:"71a986d2f662":"def6aac2b08c98d56a0501a8cb93f5b47d6322daf99e03255457c303326395f765576930f8571d89c01e727cc79c2d4497f85c45691b554e20da810c2bc865ef"
+
+generic multi step Ascon-Hash256 Test vector from CAVP 1.1.0.40 with len=16
+depends_on:PSA_WANT_ALG_ASCON_HASH256
+md_hex_multi:MBEDTLS_MD_ASCON_HASH256:"7FDAE5E338E663624D6550FC246EE8B1":"772EC06D8EE009B3B1FF7E9202DD9EFB1E92F35E93EE1409BDA21E30B62BFCE7"
 
 generic multi step HMAC-MD5 Hash File OpenSSL test #1
 depends_on:PSA_WANT_ALG_MD5

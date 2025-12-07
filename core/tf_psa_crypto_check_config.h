@@ -225,7 +225,8 @@
     !defined(PSA_WANT_ALG_SHA3_224) && \
     !defined(PSA_WANT_ALG_SHA3_256) && \
     !defined(PSA_WANT_ALG_SHA3_384) && \
-    !defined(PSA_WANT_ALG_SHA3_512)
+    !defined(PSA_WANT_ALG_SHA3_512) && \
+    !defined(PSA_WANT_ALG_ASCON_HASH256)
 #error "MBEDTLS_MD_C defined, but no hash algorithm"
 #endif
 

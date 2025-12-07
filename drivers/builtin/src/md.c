@@ -40,6 +40,7 @@
 #include "mbedtls/private/sha256.h"
 #include "mbedtls/private/sha512.h"
 #include "mbedtls/private/sha3.h"
+#include "ascon_internal.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include <psa/crypto.h>
@@ -136,6 +137,12 @@ static const mbedtls_md_info_t mbedtls_sha3_512_info = {
 };
 #endif
 
+#if defined(PSA_WANT_ALG_ASCON_HASH256)
+static const mbedtls_md_info_t mbedtls_ascon_hash256_info = {
+    MD_INFO(MBEDTLS_MD_ASCON_HASH256, 32, 0)
+};
+#endif
+
 const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 {
     switch (md_type) {
@@ -182,6 +189,10 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 #if defined(PSA_WANT_ALG_SHA3_512) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return &mbedtls_sha3_512_info;
+#endif
+#if defined(PSA_WANT_ALG_ASCON_HASH256) || defined(MBEDTLS_PSA_ACCEL_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+            return &mbedtls_ascon_hash256_info;
 #endif
         default:
             return NULL;
@@ -243,6 +254,10 @@ static psa_algorithm_t psa_alg_of_md(const mbedtls_md_info_t *info)
 #if defined(MBEDTLS_MD_SHA3_512_VIA_PSA)
         case MBEDTLS_MD_SHA3_512:
             return PSA_ALG_SHA3_512;
+#endif
+#if defined(MBEDTLS_MD_ASCON_HASH256_VIA_PSA)
+        case MBEDTLS_MD_ASCON_HASH256:
+            return PSA_ALG_ASCON_HASH256;
 #endif
         default:
             return PSA_ALG_NONE;
@@ -328,6 +343,11 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx)
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
         mbedtls_sha3_free(ctx->md_ctx);
         break;
+#endif
+#if defined(MBEDTLS_RIPEMD160_C)
+            case MBEDTLS_MD_ASCON_HASH256:
+                tf_psa_crypto_ascon_hash256_reset(ctx->md_ctx);
+                break;
 #endif
             default:
                 /* Shouldn't happen */
@@ -425,12 +445,22 @@ int mbedtls_md_clone(mbedtls_md_context_t *dst,
     mbedtls_sha3_clone(dst->md_ctx, src->md_ctx);
     break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+            memcpy(dst->md_ctx, src->md_ctx, sizeof(tf_psa_crypto_ascon_8_state_t));
+            break;
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
 
     return 0;
 }
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+typedef tf_psa_crypto_ascon_8_state_t mbedtls_ascon_hash256_context;
+#define mbedtls_ascon_hash256_init(ctx) (void) 0 /* 0 from calloc is fine */
+#endif
 
 #define ALLOC(type)                                                   \
     do {                                                                \
@@ -526,6 +556,11 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
     ALLOC(sha3);
     break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+            ALLOC(ascon_hash256);
+            break;
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
@@ -596,6 +631,11 @@ int mbedtls_md_starts(mbedtls_md_context_t *ctx)
         case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3_starts(ctx->md_ctx, MBEDTLS_SHA3_512);
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_setup(ctx->md_ctx);
+            return 0;
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
@@ -662,6 +702,11 @@ int mbedtls_md_update(mbedtls_md_context_t *ctx, const unsigned char *input, siz
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
     return mbedtls_sha3_update(ctx->md_ctx, input, ilen);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_update(ctx->md_ctx, input, ilen);
+            return 0;
 #endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
@@ -732,6 +777,11 @@ int mbedtls_md_finish(mbedtls_md_context_t *ctx, unsigned char *output)
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
     return mbedtls_sha3_finish(ctx->md_ctx, output, ctx->md_info->size);
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+            tf_psa_crypto_ascon_hash256_finish(ctx->md_ctx, output);
+            return 0;
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
@@ -798,6 +848,16 @@ int mbedtls_md(const mbedtls_md_info_t *md_info, const unsigned char *input, siz
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3(MBEDTLS_SHA3_512, input, ilen, output, md_info->size);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+        case MBEDTLS_MD_ASCON_HASH256:
+        {
+            tf_psa_crypto_ascon_8_state_t state;
+            tf_psa_crypto_ascon_hash256_setup(&state);
+            tf_psa_crypto_ascon_hash256_update(&state, input, ilen);
+            tf_psa_crypto_ascon_hash256_finish(&state, output);
+            return 0;
+        }
 #endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
@@ -885,6 +945,10 @@ static const int supported_digests[] = {
     MBEDTLS_MD_SHA3_512,
 #endif
 
+#if defined(PSA_WANT_ALG_ASCON_HASH256)
+    MBEDTLS_MD_ASCON_HASH256,
+#endif
+
     MBEDTLS_MD_NONE
 };
 
@@ -933,11 +997,18 @@ static const md_name_entry md_names[] = {
 #if defined(PSA_WANT_ALG_SHA3_512)
     { "SHA3-512", MBEDTLS_MD_SHA3_512 },
 #endif
+#if defined(PSA_WANT_ALG_ASCON_HASH256)
+    { "Ascon-Hash256", MBEDTLS_MD_ASCON_HASH256 },
+#endif
     { NULL, MBEDTLS_MD_NONE },
 };
 
 int mbedtls_md_hmac_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info)
 {
+    if (md_info->block_size == 0) {
+        /* HMAC not supported for this hash */
+        return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
+    }
     ctx->hmac_ctx = mbedtls_calloc(2, md_info->block_size);
     if (ctx->hmac_ctx == NULL) {
         mbedtls_md_free(ctx);

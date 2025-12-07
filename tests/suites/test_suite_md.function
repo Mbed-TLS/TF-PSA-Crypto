@@ -30,8 +30,10 @@ void mbedtls_md_list()
      * Test that mbedtls_md_list() only returns valid MDs.
      */
     for (md_type_ptr = mbedtls_md_list(); *md_type_ptr != 0; md_type_ptr++) {
+        mbedtls_test_set_step(*md_type_ptr);
         info = mbedtls_md_info_from_type(*md_type_ptr);
         TEST_ASSERT(info != NULL);
+
         TEST_EQUAL(0, mbedtls_md_setup(&ctx, info, 0));
         TEST_EQUAL(0, mbedtls_md_starts(&ctx));
         TEST_EQUAL(0, mbedtls_md_finish(&ctx, out));
@@ -46,9 +48,15 @@ void mbedtls_md_list()
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
         mbedtls_asn1_buf asn1;
-        /* Check that we have an OID definition */
+        int expected_oid_ret = 0;
+        if (*md_type_ptr == MBEDTLS_MD_ASCON_HASH256) {
+            /* No OID assigned yet */
+            expected_oid_ret = MBEDTLS_ERR_OID_NOT_FOUND;
+        }
+        /* Check whether we have an OID definition */
         TEST_EQUAL(mbedtls_oid_get_oid_by_md((mbedtls_md_type_t) *md_type_ptr,
-                                             (const char **) &asn1.p, &asn1.len), 0);
+                                             (const char **) &asn1.p, &asn1.len),
+                   expected_oid_ret);
 #endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
     }
 
@@ -346,6 +354,35 @@ void mbedtls_md_hmac(int md_type, int trunc_size,
     TEST_MEMORY_COMPARE(output, trunc_size, hash->x, hash->len);
 
 exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_MD_C */
+void mbedtls_md_hmac_fail(int md_type,
+                          data_t *key_str, data_t *src_str,
+                          int expected_ret)
+{
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+
+    /* one-shot */
+    TEST_EQUAL(expected_ret,
+               mbedtls_md_hmac(md_info, key_str->x, key_str->len,
+                               src_str->x, src_str->len, output));
+
+    /* multi-part */
+    TEST_EQUAL(expected_ret, mbedtls_md_hmac_setup(&ctx, md_info));
+
+exit:
+    mbedtls_md_free(&ctx);
     MD_PSA_DONE();
 }
 /* END_CASE */
