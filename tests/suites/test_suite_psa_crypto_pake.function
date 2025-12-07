@@ -1247,3 +1247,46 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void pake_set_context(int alg_arg, data_t *context_arg,
+                    int out_of_order, int repeated_call, int expected_status)
+{
+    psa_pake_operation_t client = psa_pake_operation_init();
+    psa_algorithm_t alg = alg_arg;
+    const uint8_t *context = context_arg->x;
+    size_t context_len = context_arg->len;
+    client.alg = alg;
+    client.data.inputs.context = NULL;
+    client.data.inputs.context_len = 0;
+    client.data.inputs.password = NULL;
+    client.data.inputs.password_len = 0;
+    client.data.inputs.user = NULL;
+    client.data.inputs.peer = NULL;
+    client.data.inputs.user_len = 0;
+    client.data.inputs.peer_len = 0;
+    client.data.inputs.attributes = psa_key_attributes_init();
+    client.data.inputs.cipher_suite = psa_pake_cipher_suite_init();
+
+    PSA_INIT();
+
+    if (out_of_order == 1) {
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                   expected_status);
+    } else if (repeated_call == 1) {
+        client.stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                    PSA_SUCCESS);
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                    expected_status);
+    } else {
+        client.stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                    expected_status);
+    }
+
+exit:
+    psa_pake_abort(&client);
+    PSA_DONE();
+}
+/* END_CASE */
