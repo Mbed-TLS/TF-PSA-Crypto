@@ -286,3 +286,193 @@ exit:
     mbedtls_free(output);
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
+void aead128_multi_ad(const data_t *key,
+                      const data_t *nonce,
+                      const data_t *ad,
+                      const data_t *plaintext)
+{
+    tf_psa_crypto_ascon_16_state_t state;
+    uint8_t *good_ciphertext = NULL;
+    uint8_t *output = NULL;
+    uint8_t actual_tag[16];
+    uint8_t good_tag[16];
+
+    TEST_CALLOC(good_ciphertext, plaintext->len);
+    TEST_CALLOC(output, plaintext->len);
+
+    /* Encrypt once with a single input chunk. We'll assume that the
+     * output is correct. */
+    tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+    tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+    tf_psa_crypto_ascon_aead128_finish_ad(&state);
+    tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                       plaintext->x, good_ciphertext,
+                                       plaintext->len);
+    tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, good_tag);
+
+    if (ad->len == 0) {
+        /* Just try 0 calls to update_ad() */
+        tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+        tf_psa_crypto_ascon_aead128_finish_ad(&state);
+        tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                           plaintext->x, output, plaintext->len);
+        tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, actual_tag);
+        TEST_MEMORY_COMPARE(output, plaintext->len,
+                            good_ciphertext, plaintext->len);
+        TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                            good_tag, sizeof(good_tag));
+
+        tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+        tf_psa_crypto_ascon_aead128_finish_ad(&state);
+        tf_psa_crypto_ascon_aead128_update(&state, 1,
+                                           good_ciphertext, output, plaintext->len);
+        tf_psa_crypto_ascon_aead128_finish(&state, 1, key->x, actual_tag);
+        TEST_MEMORY_COMPARE(output, plaintext->len,
+                            plaintext->x, plaintext->len);
+        TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                            good_tag, sizeof(good_tag));
+
+        goto exit;
+    }
+
+    for (size_t n1 = 0; n1 < ad->len; n1++) {
+        for (size_t n2 = 0; n1 + n2 < ad->len; n2++) {
+            size_t n3 = ad->len - n1 - n2;
+            mbedtls_test_set_step(n1 * 1000000 + n2 * 1000 + n3);
+            tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, n1);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x + n1, n2);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x + n1 + n2, n3);
+            tf_psa_crypto_ascon_aead128_finish_ad(&state);
+            tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                               plaintext->x, output, plaintext->len);
+            tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, actual_tag);
+            TEST_MEMORY_COMPARE(output, plaintext->len,
+                                good_ciphertext, plaintext->len);
+            TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                                good_tag, sizeof(good_tag));
+
+            tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, n1);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x + n1, n2);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x + n1 + n2, n3);
+            tf_psa_crypto_ascon_aead128_finish_ad(&state);
+            tf_psa_crypto_ascon_aead128_update(&state, 1,
+                                               good_ciphertext, output, plaintext->len);
+            tf_psa_crypto_ascon_aead128_finish(&state, 1, key->x, actual_tag);
+            TEST_MEMORY_COMPARE(output, plaintext->len,
+                                plaintext->x, plaintext->len);
+            TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                                good_tag, sizeof(good_tag));
+        }
+    }
+
+exit:
+    mbedtls_free(good_ciphertext);
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
+void aead128_multi_text(const data_t *key,
+                        const data_t *nonce,
+                        const data_t *ad,
+                        const data_t *plaintext)
+{
+    tf_psa_crypto_ascon_16_state_t state;
+    uint8_t *good_ciphertext = NULL;
+    uint8_t *output = NULL;
+    uint8_t actual_tag[16];
+    uint8_t good_tag[16];
+
+    TEST_CALLOC(good_ciphertext, plaintext->len);
+    TEST_CALLOC(output, plaintext->len);
+
+    /* Encrypt once with a single input chunk. We'll assume that the
+     * output is correct. */
+    tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+    tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+    tf_psa_crypto_ascon_aead128_finish_ad(&state);
+    tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                       plaintext->x, good_ciphertext,
+                                       plaintext->len);
+    tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, good_tag);
+
+    if (plaintext->len == 0) {
+        /* Just try 0 calls to update() */
+        tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+        tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+        tf_psa_crypto_ascon_aead128_finish_ad(&state);
+        tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, actual_tag);
+        TEST_MEMORY_COMPARE(output, plaintext->len,
+                            good_ciphertext, plaintext->len);
+        TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                            good_tag, sizeof(good_tag));
+
+        tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+        tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+        tf_psa_crypto_ascon_aead128_finish_ad(&state);
+        tf_psa_crypto_ascon_aead128_finish(&state, 1, key->x, actual_tag);
+        TEST_MEMORY_COMPARE(output, plaintext->len,
+                            plaintext->x, plaintext->len);
+        TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                            good_tag, sizeof(good_tag));
+
+        goto exit;
+    }
+
+    for (size_t n1 = 0; n1 < plaintext->len; n1++) {
+        for (size_t n2 = 0; n1 + n2 < plaintext->len; n2++) {
+            size_t n3 = plaintext->len - n1 - n2;
+            mbedtls_test_set_step(n1 * 1000000 + n2 * 1000 + n3);
+            tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+            tf_psa_crypto_ascon_aead128_finish_ad(&state);
+            tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                               plaintext->x,
+                                               output,
+                                               n1);
+            tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                               plaintext->x + n1,
+                                               output + n1,
+                                               n2);
+            tf_psa_crypto_ascon_aead128_update(&state, 0,
+                                               plaintext->x + n1 + n2,
+                                               output + n1 + n2,
+                                               n3);
+            tf_psa_crypto_ascon_aead128_finish(&state, 0, key->x, actual_tag);
+            TEST_MEMORY_COMPARE(output, plaintext->len,
+                                good_ciphertext, plaintext->len);
+            TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                                good_tag, sizeof(good_tag));
+
+            tf_psa_crypto_ascon_aead128_setup(&state, key->x, nonce->x);
+            tf_psa_crypto_ascon_aead128_update_ad(&state, ad->x, ad->len);
+            tf_psa_crypto_ascon_aead128_finish_ad(&state);
+            tf_psa_crypto_ascon_aead128_update(&state, 1,
+                                               good_ciphertext,
+                                               output,
+                                               n1);
+            tf_psa_crypto_ascon_aead128_update(&state, 1,
+                                               good_ciphertext + n1,
+                                               output + n1,
+                                               n2);
+            tf_psa_crypto_ascon_aead128_update(&state, 1,
+                                               good_ciphertext + n1 + n2,
+                                               output + n1 + n2,
+                                               n3);
+            tf_psa_crypto_ascon_aead128_finish(&state, 1, key->x, actual_tag);
+            TEST_MEMORY_COMPARE(output, plaintext->len,
+                                plaintext->x, plaintext->len);
+            TEST_MEMORY_COMPARE(actual_tag, sizeof(actual_tag),
+                                good_tag, sizeof(good_tag));
+        }
+    }
+
+exit:
+    mbedtls_free(good_ciphertext);
+    mbedtls_free(output);
+}
+/* END_CASE */
