@@ -934,6 +934,8 @@
  * has the same output size and a (theoretically) higher security strength.
  */
 #define PSA_ALG_SHAKE256_512                    ((psa_algorithm_t) 0x02000015)
+/** Ascon-Hash256 */
+#define PSA_ALG_ASCON_HASH256                   ((psa_algorithm_t) 0x02000019)
 
 /** In a hash-and-sign algorithm policy, allow any hash algorithm.
  *
