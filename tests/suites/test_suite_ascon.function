@@ -94,3 +94,63 @@ void hash256_single(const data_t *message,
                         expected_output->x, expected_output->len);
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
+void hash256_two_parts(const data_t *message,
+                       const data_t *expected_output)
+{
+    tf_psa_crypto_ascon_8_state_t state;
+    uint8_t actual_output[32];
+
+    for (size_t n = 0; n <= message->len; n++) {
+        mbedtls_test_set_step(n);
+        tf_psa_crypto_ascon_hash256_setup(&state);
+        tf_psa_crypto_ascon_hash256_update(&state, message->x, n);
+        tf_psa_crypto_ascon_hash256_update(&state, message->x + n, message->len - n);
+        tf_psa_crypto_ascon_hash256_finish(&state, actual_output);
+        TEST_MEMORY_COMPARE(actual_output, sizeof(actual_output),
+                            expected_output->x, expected_output->len);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
+void hash256_multi(int chunks,
+                   const data_t *chunk1,
+                   const data_t *chunk2,
+                   const data_t *chunk3,
+                   const data_t *chunk4,
+                   const data_t *expected_output)
+{
+    tf_psa_crypto_ascon_8_state_t state;
+
+    tf_psa_crypto_ascon_hash256_setup(&state);
+
+    if (chunks <= 0) {
+        goto input_done;
+    }
+    tf_psa_crypto_ascon_hash256_update(&state, chunk1->x, chunk1->len);
+    if (chunks <= 1) {
+        goto input_done;
+    }
+    tf_psa_crypto_ascon_hash256_update(&state, chunk2->x, chunk2->len);
+    if (chunks <= 2) {
+        goto input_done;
+    }
+    tf_psa_crypto_ascon_hash256_update(&state, chunk3->x, chunk3->len);
+    if (chunks <= 3) {
+        goto input_done;
+    }
+    tf_psa_crypto_ascon_hash256_update(&state, chunk4->x, chunk4->len);
+    if (chunks <= 4) {
+        goto input_done;
+    }
+    TEST_FAIL("Not enough chunks available");
+
+input_done: ;
+    uint8_t actual_output[32];
+    tf_psa_crypto_ascon_hash256_finish(&state, actual_output);
+    TEST_MEMORY_COMPARE(actual_output, sizeof(actual_output),
+                        expected_output->x, expected_output->len);
+}
+/* END_CASE */
