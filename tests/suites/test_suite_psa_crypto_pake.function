@@ -1254,3 +1254,62 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void pake_set_context(int alg_arg, data_t *context_arg,
+                    int out_of_order, int repeated_call, int null_with_len,
+                    int expected_status)
+{
+    psa_pake_operation_t client = psa_pake_operation_init();
+    psa_algorithm_t alg = alg_arg;
+    const uint8_t *context = context_arg->x;
+    size_t context_len = context_arg->len;
+    client.alg = alg;
+    client.data.inputs.context = NULL;
+    client.data.inputs.context_len = 0;
+    client.data.inputs.password = NULL;
+    client.data.inputs.password_len = 0;
+    client.data.inputs.user = NULL;
+    client.data.inputs.peer = NULL;
+    client.data.inputs.user_len = 0;
+    client.data.inputs.peer_len = 0;
+    client.data.inputs.attributes = psa_key_attributes_init();
+    client.data.inputs.cipher_suite = psa_pake_cipher_suite_init();
+
+    PSA_INIT();
+
+    if (null_with_len == 1) {
+        /* A NULL context pointer with a non-zero length must be rejected. */
+        client.stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+        TEST_EQUAL(psa_pake_set_context(&client, NULL, 8),
+                   expected_status);
+    } else if (out_of_order == 1) {
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                   expected_status);
+    } else if (repeated_call == 1) {
+        client.stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                    PSA_SUCCESS);
+        /* The first call must have stored the context verbatim. */
+        TEST_MEMORY_COMPARE(client.data.inputs.context,
+                            client.data.inputs.context_len,
+                            context, context_len);
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                    expected_status);
+    } else {
+        client.stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+        TEST_EQUAL(psa_pake_set_context(&client, context, context_len),
+                    expected_status);
+        /* On success the context must be stored verbatim. */
+        if (expected_status == PSA_SUCCESS) {
+            TEST_MEMORY_COMPARE(client.data.inputs.context,
+                                client.data.inputs.context_len,
+                                context, context_len);
+        }
+    }
+
+exit:
+    psa_pake_abort(&client);
+    PSA_DONE();
+}
+/* END_CASE */
