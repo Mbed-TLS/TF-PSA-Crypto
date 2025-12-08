@@ -41,6 +41,8 @@ typedef enum {
     MBEDTLS_SHA3_256, /*!< SHA3-256 */
     MBEDTLS_SHA3_384, /*!< SHA3-384 */
     MBEDTLS_SHA3_512, /*!< SHA3-512 */
+    MBEDTLS_SHA3_SHAKE128, /*!< SHA3-SHAKE128 */
+    MBEDTLS_SHA3_SHAKE256, /*!< SHA3-SHAKE256 */
 } mbedtls_sha3_id;
 #endif /* MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS */
 
@@ -54,6 +56,7 @@ typedef struct {
     uint32_t MBEDTLS_PRIVATE(index);
     uint16_t MBEDTLS_PRIVATE(olen);
     uint16_t MBEDTLS_PRIVATE(max_block_size);
+    uint8_t MBEDTLS_PRIVATE(finished);
 }
 mbedtls_sha3_context;
 
@@ -123,6 +126,7 @@ int mbedtls_sha3_update(mbedtls_sha3_context *ctx,
  * \param olen     Defines the length of output buffer (in bytes). For SHA-3 224, SHA-3 256,
  *                 SHA-3 384 and SHA-3 512 \c olen must equal to 28, 32, 48 and 64,
  *                 respectively.
+ *                 For SHAKE128 and SHAKE256 it can be an arbitrary number.
  *
  * \return         \c 0 on success.
  * \return         A negative error code on failure.

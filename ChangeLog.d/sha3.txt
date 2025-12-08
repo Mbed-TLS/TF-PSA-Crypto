@@ -1,0 +1,2 @@
+Features
+    * Add SHA3 SHAKE128 and SHA3 SHAKE256.
