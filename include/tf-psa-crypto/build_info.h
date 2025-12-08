@@ -174,6 +174,10 @@
 /* Define additional symbols used by built-in crypto modules. */
 #include "mbedtls/private/crypto_adjust_config_tweak_builtins.h"
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+#include "tf-psa-crypto/private/pqcp-config.h"
+#endif
+
 /* Indicate that all configuration symbols are set,
  * even the ones that are calculated programmatically.
  * It is now safe to query the configuration (to check it, to size buffers,
