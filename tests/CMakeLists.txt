@@ -17,7 +17,7 @@ execute_process(
         ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_bignum_tests.py
         --list-for-cmake
     WORKING_DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE
         base_bignum_generated_data_files)
 string(REGEX REPLACE "[^;]*/" ""
@@ -29,7 +29,7 @@ execute_process(
         ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_config_tests.py
         --list-for-cmake
     WORKING_DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE
         base_config_generated_data_files)
 string(REGEX REPLACE "[^;]*/" ""
@@ -42,7 +42,7 @@ execute_process(
         ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_ecp_tests.py
         --list-for-cmake
     WORKING_DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE
         base_ecp_generated_data_files)
 string(REGEX REPLACE "[^;]*/" ""
@@ -54,7 +54,7 @@ execute_process(
         ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_psa_tests.py
         --list-for-cmake
     WORKING_DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE
         base_psa_generated_data_files)
 string(REGEX REPLACE "[^;]*/" ""
@@ -89,7 +89,7 @@ if(GEN_FILES)
         OUTPUT
             ${bignum_generated_data_files}
         WORKING_DIRECTORY
-            ${CMAKE_CURRENT_SOURCE_DIR}/..
+            ${PROJECT_SOURCE_DIR}
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_bignum_tests.py
@@ -107,7 +107,7 @@ if(GEN_FILES)
         OUTPUT
             ${config_generated_data_files}
         WORKING_DIRECTORY
-            ${CMAKE_CURRENT_SOURCE_DIR}/..
+            ${PROJECT_SOURCE_DIR}
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_config_tests.py
@@ -122,7 +122,7 @@ if(GEN_FILES)
         OUTPUT
             ${ecp_generated_data_files}
         WORKING_DIRECTORY
-            ${CMAKE_CURRENT_SOURCE_DIR}/..
+            ${PROJECT_SOURCE_DIR}
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_ecp_tests.py
@@ -138,7 +138,7 @@ if(GEN_FILES)
         OUTPUT
             ${psa_generated_data_files}
         WORKING_DIRECTORY
-            ${CMAKE_CURRENT_SOURCE_DIR}/..
+            ${PROJECT_SOURCE_DIR}
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/generate_psa_tests.py
@@ -153,11 +153,10 @@ if(GEN_FILES)
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/mbedtls_framework/psa_test_case.py
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/mbedtls_framework/test_case.py
             ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/scripts/mbedtls_framework/test_data_generation.py
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/psa/crypto_config.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/psa/crypto_values.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/psa/crypto_extra.h
+            ${PROJECT_SOURCE_DIR}/include/psa/crypto_config.h
+            ${PROJECT_SOURCE_DIR}/include/psa/crypto_values.h
+            ${PROJECT_SOURCE_DIR}/include/psa/crypto_extra.h
     )
-
 else()
     foreach(file ${all_generated_data_files})
         tf_psa_crypto_link_to_source(${file})
@@ -301,8 +300,8 @@ function(tf_psa_crypto_add_test_suite suite_name)
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/test
         PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../core
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../drivers/builtin/src)
+        PRIVATE ${PROJECT_SOURCE_DIR}/core
+        PRIVATE ${PROJECT_SOURCE_DIR}/drivers/builtin/src)
     # Request C11, which is needed for memory poisoning tests
     set_target_properties(test_suite_${data_name} PROPERTIES C_STANDARD 11)
 
@@ -344,9 +343,6 @@ endforeach(test_suite)
 # Make scripts and data files needed for testing available in an
 # out-of-source build.
 if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/seedfile")
-        tf_psa_crypto_link_to_source(seedfile)
-    endif()
     tf_psa_crypto_link_to_source(Descriptions.txt)
     tf_psa_crypto_link_to_source(../framework/data_files)
 endif()

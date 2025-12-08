@@ -47,11 +47,14 @@ foreach (target IN LISTS target_libraries)
     target_compile_options(${target} PRIVATE ${LIBS_C_FLAGS})
     target_include_directories(${target}
       PRIVATE src include
-              ${TF_PSA_CRYPTO_DIR}/include
-              ${TF_PSA_CRYPTO_DIR}/core
-              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include
-              ${TF_PSA_CRYPTO_DIR}/drivers/pqcp/include
-              ${TF_PSA_CRYPTO_DIR}/drivers/pqcp/mldsa-native/mldsa
+              # Add the build-tree include directory before the source-tree one
+              # so that generated headers in the build tree take precedence.
+              ${PROJECT_BINARY_DIR}/include
+              ${PROJECT_SOURCE_DIR}/include
+              ${PROJECT_SOURCE_DIR}/core
+              ${PROJECT_SOURCE_DIR}/drivers/everest/include
+              ${PROJECT_SOURCE_DIR}/drivers/pqcp/include
+              ${PROJECT_SOURCE_DIR}/drivers/pqcp/mldsa-native/mldsa
           )
     tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)

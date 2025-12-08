@@ -22,9 +22,10 @@ foreach (target IN LISTS target_libraries)
     target_include_directories(${target}
         PRIVATE mldsa-native/mldsa
         PRIVATE include
-        PRIVATE ${TF_PSA_CRYPTO_DIR}/include
-        PRIVATE ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include
-        PRIVATE ${TF_PSA_CRYPTO_DIR}/drivers/everest/include
+        PRIVATE ${PROJECT_BINARY_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/drivers/builtin/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/drivers/everest/include
     )
     tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
