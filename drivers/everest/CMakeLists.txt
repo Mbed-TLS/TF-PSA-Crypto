@@ -21,7 +21,9 @@ foreach (target IN LISTS target_libraries)
               ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include
               include/tf-psa-crypto/private/everest
               include/tf-psa-crypto/private/everest/kremlib
-              ${TF_PSA_CRYPTO_DIR}/core)
+              ${TF_PSA_CRYPTO_DIR}/drivers/pqcp/include
+              ${TF_PSA_CRYPTO_DIR}/core
+          )
     tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
 

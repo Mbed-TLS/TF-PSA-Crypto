@@ -49,7 +49,10 @@ foreach (target IN LISTS target_libraries)
       PRIVATE src include
               ${TF_PSA_CRYPTO_DIR}/include
               ${TF_PSA_CRYPTO_DIR}/core
-              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include)
+              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include
+              ${TF_PSA_CRYPTO_DIR}/drivers/pqcp/include
+              ${TF_PSA_CRYPTO_DIR}/drivers/pqcp/mldsa-native/mldsa
+          )
     tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
 

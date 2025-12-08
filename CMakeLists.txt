@@ -406,6 +406,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
         PRIVATE include
         PRIVATE drivers/builtin/include
         PRIVATE drivers/everest/include
+        PRIVATE drivers/pqcp/include
         PRIVATE core
         PRIVATE drivers/builtin/src)
     # Request C11, needed for memory poisoning tests

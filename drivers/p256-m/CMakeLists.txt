@@ -20,7 +20,9 @@ foreach (target IN LISTS target_libraries)
               ${TF_PSA_CRYPTO_DIR}/include
               ${TF_PSA_CRYPTO_DIR}/core
               ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include
-              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include)
+              ${TF_PSA_CRYPTO_DIR}/drivers/everest/include
+              ${TF_PSA_CRYPTO_DIR}/drivers/pqcp/include
+          )
     tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)
 
