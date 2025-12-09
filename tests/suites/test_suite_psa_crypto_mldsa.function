@@ -136,44 +136,46 @@ void verify_pure(int type_arg, int bits_arg, int alg_arg,
                                                   signature->x, signature->len),
                expected_status);
 
-    if (expected_status == PSA_SUCCESS) {
-        /* Try verifying a signature whose last byte is wrong */
-        signature->x[signature->len - 1] ^= 1;
-        TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
-                       &attributes,
-                       public_key->x, public_key->len,
-                       alg_arg,
-                       message->x, message->len,
-                       signature->x, signature->len - 1),
-                   PSA_ERROR_INVALID_SIGNATURE);
-        signature->x[signature->len - 1] ^= 1;
-
-        /* Try verifying a signature that's too short */
-        TEST_CALLOC(buf, signature->len - 1);
-        memcpy(buf, signature->x, signature->len - 1);
-        TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
-                       &attributes,
-                       public_key->x, public_key->len,
-                       alg_arg,
-                       message->x, message->len,
-                       signature->x, signature->len - 1),
-                   PSA_ERROR_INVALID_SIGNATURE);
-        mbedtls_free(buf);
-        buf  = NULL;
-
-        /* Try verifying a signature that's too long */
-        TEST_CALLOC(buf, signature->len + 1);
-        memcpy(buf, signature->x, signature->len);
-        TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
-                       &attributes,
-                       public_key->x, public_key->len,
-                       alg_arg,
-                       message->x, message->len,
-                       signature->x, signature->len + 1),
-                   PSA_ERROR_INVALID_SIGNATURE);
-        mbedtls_free(buf);
-        buf = NULL;
+    if (expected_status != PSA_SUCCESS) {
+        goto exit;
     }
+
+    /* Try verifying a signature whose last byte is wrong */
+    signature->x[signature->len - 1] ^= 1;
+    TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
+                   &attributes,
+                   public_key->x, public_key->len,
+                   alg_arg,
+                   message->x, message->len,
+                   signature->x, signature->len - 1),
+               PSA_ERROR_INVALID_SIGNATURE);
+    signature->x[signature->len - 1] ^= 1;
+
+    /* Try verifying a signature that's too short */
+    TEST_CALLOC(buf, signature->len - 1);
+    memcpy(buf, signature->x, signature->len - 1);
+    TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
+                   &attributes,
+                   public_key->x, public_key->len,
+                   alg_arg,
+                   message->x, message->len,
+                   signature->x, signature->len - 1),
+               PSA_ERROR_INVALID_SIGNATURE);
+    mbedtls_free(buf);
+    buf  = NULL;
+
+    /* Try verifying a signature that's too long */
+    TEST_CALLOC(buf, signature->len + 1);
+    memcpy(buf, signature->x, signature->len);
+    TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
+                   &attributes,
+                   public_key->x, public_key->len,
+                   alg_arg,
+                   message->x, message->len,
+                   signature->x, signature->len + 1),
+               PSA_ERROR_INVALID_SIGNATURE);
+    mbedtls_free(buf);
+    buf = NULL;
 
 exit:
     PSA_DONE();
