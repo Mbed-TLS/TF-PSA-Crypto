@@ -10,6 +10,12 @@
     defined(PSA_WANT_ALG_SHA3_512)
 #define MBEDTLS_TEST_SHA3_ENABLED
 #endif
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE128) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE256)
+#define MBEDTLS_TEST_SHA3_ENABLED
+#define MBEDTLS_TEST_SHAKE_ENABLED
+#endif
 /* END_HEADER */
 
 /* BEGIN_CASE depends_on:MBEDTLS_SHA1_C */
@@ -221,7 +227,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_TEST_SHA3_ENABLED */
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_SHAKE_ENABLED */
 void shake_finish(int family, data_t *in, data_t *hash)
 {
     unsigned char *output1 = NULL;

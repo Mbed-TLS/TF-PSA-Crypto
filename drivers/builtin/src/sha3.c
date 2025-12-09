@@ -302,13 +302,13 @@ int mbedtls_sha3_starts(mbedtls_sha3_context *ctx, mbedtls_sha3_id id)
             break;
 #endif
 
-#if defined(PSA_WANT_ALG_SHAKE128)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE128)
         case MBEDTLS_SHA3_SHAKE128:
             ctx->max_block_size = 1344 / 8;
             break;
 #endif
 
-#if defined(PSA_WANT_ALG_SHAKE256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE256)
         case MBEDTLS_SHA3_SHAKE256:
             ctx->max_block_size = 1088 / 8;
             break;
@@ -744,7 +744,7 @@ cleanup:
     return result;
 }
 
-#if defined(PSA_WANT_ALG_SHAKE128)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE128)
 static const unsigned char shake128_test_input[2][16] =
 {
     {
@@ -770,7 +770,7 @@ static const unsigned char shake128_test_output[2][16] =
 };
 #endif
 
-#if defined(PSA_WANT_ALG_SHAKE256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE256)
 static const unsigned char shake256_test_input[2][32] =
 {
     {
@@ -804,7 +804,7 @@ static const unsigned char shake256_test_output[2][32] =
 };
 #endif
 
-#if defined(PSA_WANT_ALG_SHAKE128) || defined(PSA_WANT_ALG_SHAKE256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE128) || defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE256)
 static int mbedtls_shake_self_test(int verbose)
 {
     uint8_t output[32];
@@ -812,7 +812,7 @@ static int mbedtls_shake_self_test(int verbose)
     int result;
 
     for (i = 0; i < 2; i++) {
-#if defined(PSA_WANT_ALG_SHAKE128)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE128)
         if (verbose != 0) {
             mbedtls_printf("  SHAKE128 test %d ", i);
         }
@@ -836,7 +836,7 @@ static int mbedtls_shake_self_test(int verbose)
         }
 #endif
 
-#if defined(PSA_WANT_ALG_SHAKE256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE256)
         if (verbose != 0) {
             mbedtls_printf("  SHAKE256 test %d ", i);
         }
@@ -937,7 +937,7 @@ int mbedtls_sha3_self_test(int verbose)
         mbedtls_printf("\n");
     }
 
-#if defined(PSA_WANT_ALG_SHAKE128) || defined(PSA_WANT_ALG_SHAKE256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE128) || defined(MBEDTLS_PSA_BUILTIN_ALG_SHAKE256)
     /* SHAKE tests */
     if (0 != mbedtls_shake_self_test(verbose)) {
         return 1;
