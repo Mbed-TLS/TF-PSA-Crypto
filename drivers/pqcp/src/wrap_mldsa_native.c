@@ -8,6 +8,11 @@
 
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
+#include <mbedtls/platform_util.h>
+
+#define MLD_CONFIG_CUSTOM_ZEROIZE
+#define mld_zeroize_native mbedtls_platform_zeroize
+
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
 #  define MLD_CONFIG_PARAMETER_SET 87
 #  define MLD_CONFIG_NAMESPACE_PREFIX PQCP_MLDSA_NATIVE_MLDSA87
