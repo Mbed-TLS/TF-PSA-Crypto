@@ -26,6 +26,7 @@ foreach (target IN LISTS target_libraries)
         PRIVATE ${PROJECT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/drivers/builtin/include
         PRIVATE ${PROJECT_SOURCE_DIR}/drivers/everest/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
     tf_psa_crypto_set_config_files_compile_definitions(${target})
 endforeach(target)

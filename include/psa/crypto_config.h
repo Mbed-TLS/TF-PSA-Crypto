@@ -2016,6 +2016,26 @@
  */
 //#define TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 
+/**
+ * \def TF_PSA_CRYPTO_PQCP_MLDSA_OWN_SHAKE
+ *
+ * Have mldsa-native use its own SHAKE implementation rather than use the
+ * code from the SHA3 module. This may provide a performance benefit,
+ * at the cost of code size if the built-in SHA3 module is enabled anyway.
+ *
+ * This option has no effect if #TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED is disabled.
+ *
+ * \note A third-party SHAKE accelerator is not yet supported.
+ *
+ * \warning This option is experimental. It may change or be removed without
+ *          notice.
+ *
+ * Module:  drivers/pqca/mldsa-native
+ *
+ * Uncomment to use mldsa-native's own SHAKE implementation in MLDSA.
+ */
+//#define TF_PSA_CRYPTO_PQCP_MLDSA_OWN_SHAKE
+
 /** \} name SECTION: Builtin drivers */
 
 /* Do not enable except for testing. Will be removed in a future minor version.
