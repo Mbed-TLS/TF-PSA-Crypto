@@ -13,6 +13,10 @@
 #define MLD_CONFIG_CUSTOM_ZEROIZE
 #define mld_zeroize_native mbedtls_platform_zeroize
 
+#if !defined(MBEDTLS_HAVE_ASM)
+#  define MLD_CONFIG_NO_ASM
+#endif
+
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
 #  define MLD_CONFIG_PARAMETER_SET 87
 #  define MLD_CONFIG_NAMESPACE_PREFIX PQCP_MLDSA_NATIVE_MLDSA87
