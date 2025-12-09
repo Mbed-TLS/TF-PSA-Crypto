@@ -147,7 +147,7 @@ void verify_pure(int type_arg, int bits_arg, int alg_arg,
                    public_key->x, public_key->len,
                    alg_arg,
                    message->x, message->len,
-                   signature->x, signature->len - 1),
+                   signature->x, signature->len),
                PSA_ERROR_INVALID_SIGNATURE);
     signature->x[signature->len - 1] ^= 1;
 
