@@ -120,6 +120,7 @@ static inline struct psa_cipher_operation_s psa_cipher_operation_init(void)
 /* Include the context definition for the compiled-in drivers for the composite
  * algorithms. */
 #include "psa/crypto_driver_contexts_composites.h"
+#include "tf-psa-crypto/private/crypto_struct_pqcp.h"
 
 struct psa_mac_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)

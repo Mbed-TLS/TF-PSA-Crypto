@@ -69,6 +69,7 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_TEST_CONSTANT_FLOW_VALGRIND', # build dependency (valgrind headers)
     'MBEDTLS_PSA_STATIC_KEY_SLOTS', # only relevant for embedded devices
     'MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE', # only relevant for embedded devices
+    'TF_PSA_CRYPTO_PQCP_MLDSA_OWN_SHAKE', # incompatible with TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART
     *PSA_UNSUPPORTED_FEATURE,
     *PSA_DEPRECATED_FEATURE,
 ])

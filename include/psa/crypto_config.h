@@ -2017,6 +2017,27 @@
 //#define TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 
 /**
+ * \def TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART
+ *
+ * Support multipart sign-message and multipart verify-message in
+ * ML-DSA.
+ *
+ * This option has no effect if #TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED is disabled.
+ *
+ * \note This option is currently only incompatible with
+ *       #TF_PSA_CRYPTO_PQCP_MLDSA_OWN_SHAKE.
+ *
+ * \warning This option is experimental. It may change or be removed without
+ *          notice. Eventually, we intend to provide the multipart interface
+ *          in all configurations.
+ *
+ * Module:  drivers/pqca/mldsa-native
+ *
+ * Uncomment to enable the multipart sign-message and verify-message for ML-DSA.
+ */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART
+
+/**
  * \def TF_PSA_CRYPTO_PQCP_MLDSA_OWN_SHAKE
  *
  * Have mldsa-native use its own SHAKE implementation rather than use the
