@@ -175,4 +175,217 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
     }
 }
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART)
+
+psa_status_t tf_psa_crypto_mldsa_sign_setup(
+    tf_psa_crypto_mldsa_sign_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg)
+{
+    if (!PSA_ALG_IS_ML_DSA(alg)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (psa_get_key_bits(attributes) != 87) {
+        /* Other parameter sets are not supported yet. */
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    operation->parameter_set = 87;
+    size_t public_key_length = MLDSA87_PUBLICKEYBYTES;
+    if (key_buffer_size != MLDSA87_SEEDBYTES) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    uint8_t public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    int ret = PQCP_MLDSA_NATIVE_MLDSA87_keypair_internal(public_key,
+                                                         operation->private_key,
+                                                         key_buffer);
+    if (ret != 0) {
+        /* The only documented error is an internal error which is not
+         * supposed to ever happen (failure of a self-test). */
+        goto error;
+    }
+
+    /* Hash the public key */
+    mbedtls_sha3_init(&operation->shake);
+    mbedtls_sha3_starts(&operation->shake, MBEDTLS_SHA3_SHAKE256);
+    mbedtls_sha3_update(&operation->shake, public_key, public_key_length);
+    uint8_t tr[MLDSA_CRHBYTES];
+    mbedtls_sha3_finish(&operation->shake, tr, sizeof(tr));
+    mbedtls_sha3_starts(&operation->shake, MBEDTLS_SHA3_SHAKE256);
+    mbedtls_sha3_update(&operation->shake, tr, sizeof(tr));
+
+    /* Hash the domain separation prefix */
+    tr[0] = 0;                  /* pure ML-DSA (1 for Hash-ML-DSA) */
+    tr[1] = 0;                  /* context length */
+    mbedtls_sha3_update(&operation->shake, tr, 2);
+
+    return PSA_SUCCESS;
+
+error:
+    mbedtls_sha3_free(&operation->shake);
+    mbedtls_platform_zeroize(&operation, sizeof(operation));
+    return status;
+}
+
+psa_status_t tf_psa_crypto_mldsa_sign_update(
+    tf_psa_crypto_mldsa_sign_operation_t *operation,
+    uint8_t *input, size_t input_length)
+{
+    mbedtls_sha3_update(&operation->shake, input, input_length);
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_sign_finish(
+    tf_psa_crypto_mldsa_sign_operation_t *operation,
+    uint8_t *signature, size_t signature_size, size_t *signature_length)
+{
+    *signature_length = 0;      /* Safe default */
+
+    if (operation->parameter_set != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (signature_size < MLDSA87_BYTES) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+    if (sizeof(operation->private_key) < MLDSA87_SECRETKEYBYTES) {
+        return PSA_ERROR_CORRUPTION_DETECTED;
+    }
+
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    uint8_t mu[MLDSA_CRHBYTES];
+    mbedtls_sha3_finish(&operation->shake, mu, sizeof(mu));
+
+    uint8_t rnd[MLDSA_RNDBYTES];
+    memset(rnd, 0, sizeof(rnd));
+
+    int ret = PQCP_MLDSA_NATIVE_MLDSA87_signature_internal(
+        signature, signature_length,
+        mu, sizeof(mu),
+        NULL, 0, rnd,
+        operation->private_key, 1);
+    if (ret == 0) {
+        status = PSA_SUCCESS;
+    }
+
+    mbedtls_platform_zeroize(&operation, sizeof(operation));
+
+    return status;
+}
+
+psa_status_t tf_psa_crypto_mldsa_sign_abort(
+    tf_psa_crypto_mldsa_sign_operation_t *operation)
+{
+    /* If operation->parameter_set == 0, don't assume that the shake operation
+     * has been initialized. */
+    if (operation->parameter_set != 0) {
+        mbedtls_sha3_free(&operation->shake);
+    }
+    mbedtls_platform_zeroize(&operation, sizeof(operation));
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_verify_setup(
+    tf_psa_crypto_mldsa_verify_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg)
+{
+    if (!PSA_ALG_IS_ML_DSA(alg)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (psa_get_key_bits(attributes) != 87) {
+        /* Other parameter sets are not supported yet. */
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (key_buffer_size != MLDSA87_PUBLICKEYBYTES) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    operation->parameter_set = 87;
+    if (key_buffer_size > sizeof(operation->public_key)) {
+        return PSA_ERROR_CORRUPTION_DETECTED;
+    }
+    memcpy(operation->public_key, key_buffer, key_buffer_size);
+    mbedtls_sha3_init(&operation->shake);
+
+    /* Hash the public key */
+    mbedtls_sha3_starts(&operation->shake, MBEDTLS_SHA3_SHAKE256);
+    mbedtls_sha3_update(&operation->shake, key_buffer, key_buffer_size);
+    uint8_t tr[MLDSA_CRHBYTES];
+    mbedtls_sha3_finish(&operation->shake, tr, sizeof(tr));
+    mbedtls_sha3_starts(&operation->shake, MBEDTLS_SHA3_SHAKE256);
+    mbedtls_sha3_update(&operation->shake, tr, sizeof(tr));
+
+    /* Hash the domain separation prefix */
+    tr[0] = 0;                  /* pure ML-DSA (1 for Hash-ML-DSA) */
+    tr[1] = 0;                  /* context length */
+    mbedtls_sha3_update(&operation->shake, tr, 2);
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_verify_update(
+    tf_psa_crypto_mldsa_verify_operation_t *operation,
+    uint8_t *input, size_t input_length)
+{
+    mbedtls_sha3_update(&operation->shake, input, input_length);
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_verify_finish(
+    tf_psa_crypto_mldsa_verify_operation_t *operation,
+    uint8_t *signature, size_t signature_length)
+{
+    if (operation->parameter_set != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (signature_length != MLDSA87_BYTES) {
+        return PSA_ERROR_INVALID_SIGNATURE;
+    }
+    if (sizeof(operation->public_key) < MLDSA87_PUBLICKEYBYTES) {
+        return PSA_ERROR_CORRUPTION_DETECTED;
+    }
+
+    uint8_t mu[MLDSA_CRHBYTES];
+    mbedtls_sha3_finish(&operation->shake, mu, sizeof(mu));
+
+    int ret = PQCP_MLDSA_NATIVE_MLDSA87_verify_internal(
+        signature, signature_length,
+        mu, sizeof(mu),
+        NULL, 0,
+        operation->public_key, 1);
+    if (ret == 0) {
+        return PSA_SUCCESS;
+    } else {
+        return PSA_ERROR_INVALID_SIGNATURE;
+    }
+}
+
+psa_status_t tf_psa_crypto_mldsa_verify_abort(
+    tf_psa_crypto_mldsa_verify_operation_t *operation)
+{
+    /* If operation->parameter_set == 0, don't assume that the shake operation
+     * has been initialized. */
+    if (operation->parameter_set != 0) {
+        mbedtls_sha3_free(&operation->shake);
+    }
+    operation->parameter_set = 0;
+    memset(operation->public_key, 0, sizeof(operation->public_key));
+    return PSA_SUCCESS;
+}
+
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART */
+
 #endif /* MBEDTLS_PSA_CRYPTO_C && TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */

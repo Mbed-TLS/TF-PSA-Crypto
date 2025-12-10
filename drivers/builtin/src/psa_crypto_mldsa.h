@@ -140,4 +140,153 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
     const uint8_t *message, size_t message_length,
     uint8_t *signature, size_t signature_length);
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART)
+
+/** Set up a multi-part message signature using pure-ML-DSA
+ * (without pre-hashing).
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been initialized, and must
+ *                              not be currently in use.
+ * \param[in] attributes        The key attributes.
+ * \param[in] key_buffer        The key material. This must be a key pair
+ *                              in the standard representation, i.e.
+ *                              just the 32-byte seed.
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ * \param alg                   The algorithm:
+ *                              #PSA_ALG_ML_DSA or
+ *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
+ *
+ * \retval 0
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The key type or size registered in \p attributes is not supported,
+ *         or the algorithm is not supported.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key material is invalid.
+ */
+psa_status_t tf_psa_crypto_mldsa_sign_setup(
+    tf_psa_crypto_mldsa_sign_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg);
+
+/** Pass part of the message to a multi-part pure ML-DSA signature operation.
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been set up and not yet finished
+ *                              or aborted.
+ * \param[in] input             A chunk of message to sign.
+ * \param input_length          The length of \p input in bytes.
+ *
+ * \retval 0
+ *         Success.
+ */
+psa_status_t tf_psa_crypto_mldsa_sign_update(
+    tf_psa_crypto_mldsa_sign_operation_t *operation,
+    uint8_t *input, size_t input_length);
+
+/** Finish a multi-part pure ML-DSA message signature.
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been set up and not yet finished
+ *                              or aborted.
+ * \param[out] signature        On success, the exported key.
+ * \param signature_size        The size of \p signature, in bytes.
+ * \param[out] signature_length On success, the length of the data written
+ *                              to \p signature.
+ *
+ * \retval 0
+ *         Success.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         \p signature_size is too small.
+ */
+psa_status_t tf_psa_crypto_mldsa_sign_finish(
+    tf_psa_crypto_mldsa_sign_operation_t *operation,
+    uint8_t *signature, size_t signature_size, size_t *signature_length);
+
+/** Abort a multi-part pure ML-DSA message signature.
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been initialized.
+ *
+ * \retval 0
+ *         Success.
+ */
+psa_status_t tf_psa_crypto_mldsa_sign_abort(
+    tf_psa_crypto_mldsa_sign_operation_t *operation);
+
+/** Set up a multi-part message verification using pure-ML-DSA
+ * (without pre-hashing).
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been initialized, and must
+ *                              not be currently in use.
+ * \param[in] attributes        The key attributes.
+ * \param[in] key_buffer        The key material. This must be a public key
+ *                              in the standard representation.
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ * \param alg                   The algorithm:
+ *                              #PSA_ALG_ML_DSA or
+ *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
+ *
+ * \retval 0
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The key type or size registered in \p attributes is not supported,
+ *         or the algorithm is not supported.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key material is invalid.
+ */
+psa_status_t tf_psa_crypto_mldsa_verify_setup(
+    tf_psa_crypto_mldsa_verify_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg);
+
+/** Pass part of the message to a multi-part pure ML-DSA message verification.
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been set up and not yet finished
+ *                              or aborted.
+ * \param[in] input             A chunk of message to verify.
+ * \param input_length          The length of \p input in bytes.
+ *
+ * \retval 0
+ *         Success.
+ */
+psa_status_t tf_psa_crypto_mldsa_verify_update(
+    tf_psa_crypto_mldsa_verify_operation_t *operation,
+    uint8_t *input, size_t input_length);
+
+/** Finish a multi-part pure ML-DSA message verification.
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been set up and not yet finished
+ *                              or aborted.
+ * \param[out] signature        The signature to verify.
+ * \param signature_length      The length of \p signature, in bytes.
+ *
+ * \retval 0
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_SIGNATURE
+ *         The signature is not valid for this message.
+ */
+psa_status_t tf_psa_crypto_mldsa_verify_finish(
+    tf_psa_crypto_mldsa_verify_operation_t *operation,
+    uint8_t *signature, size_t signature_length);
+
+/** Abort a multi-part pure ML-DSA message verification.
+ *
+ * \param[in,out] operation     The operation context.
+ *                              It must have been initialized.
+ *
+ * \retval 0
+ *         Success.
+ */
+psa_status_t tf_psa_crypto_mldsa_verify_abort(
+    tf_psa_crypto_mldsa_verify_operation_t *operation);
+
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_MULTIPART */
+
 #endif /* "psa_crypto_mldsa.h" */
