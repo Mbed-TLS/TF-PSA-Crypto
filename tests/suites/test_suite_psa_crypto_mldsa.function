@@ -89,6 +89,9 @@ void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
     TEST_LE_U(signature_length, signature_size);
 
     if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(signature, signature_length,
+                            expected_signature->x, expected_signature->len);
+
         mbedtls_free(signature);
         signature = NULL;
 
