@@ -20,8 +20,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_BUILTIN_KEY_DERIVATION_H
-#define PSA_CRYPTO_BUILTIN_KEY_DERIVATION_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CRYPTO_BUILTIN_KEY_DERIVATION_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CRYPTO_BUILTIN_KEY_DERIVATION_H
 #include "mbedtls/private_access.h"
 
 #include <psa/crypto_driver_common.h>
@@ -117,4 +117,4 @@ typedef struct {
 } psa_pbkdf2_key_derivation_t;
 #endif /* PSA_HAVE_SOFT_PBKDF2 */
 
-#endif /* PSA_CRYPTO_BUILTIN_KEY_DERIVATION_H */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CRYPTO_BUILTIN_KEY_DERIVATION_H */

@@ -10,16 +10,15 @@
  * might be translated to branches by some compilers on some platforms.
  */
 
-#include <stdint.h>
-#include <limits.h>
-
 #include "tf_psa_crypto_common.h"
 #include "constant_time_internal.h"
 #include "mbedtls/constant_time.h"
 #include "mbedtls/private/error_common.h"
 #include "mbedtls/platform_util.h"
 
+#include <limits.h>
 #include <string.h>
+#include <stdint.h>
 
 #if !defined(MBEDTLS_CT_ASM)
 /*

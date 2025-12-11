@@ -134,6 +134,11 @@ typedef struct mbedtls_pk_context {
     /* Public key information. */
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);
 
+    /* The PSA key type of the key represented by the context.
+     *
+     * Note: Valid even for public keys, which are not backed by a PSA key. */
+    psa_key_type_t MBEDTLS_PRIVATE(psa_type);
+
     /* The following field is used to store the ID of a private key.
      *
      * priv_id = MBEDTLS_SVC_KEY_ID_INIT when PK context wraps only the public
@@ -403,6 +408,21 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
 int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
                                   psa_key_usage_t usage,
                                   psa_key_attributes_t *attributes);
+/**
+ * \brief           Get the PSA key type corresponding to the key represented
+ *                  by the given PK context.
+ *
+ * \param pk        The context to query. It must already be initialized.
+ *
+ * \return          A PSA key type. Specifically, one of:
+ *                      - PSA_KEY_TYPE_RSA_KEY_PAIR
+ *                      - PSA_KEY_TYPE_RSA_PUBLIC_KEY
+ *                      - PSA_KEY_TYPE_ECC_KEY_PAIR(curve)
+ *                      - PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve)
+ * \return          PSA_KEY_TYPE_NONE, if the context has not been populated.
+ */
+psa_key_type_t mbedtls_pk_get_key_type(mbedtls_pk_context *pk);
+
 
 /**
  * \brief           Import a key into the PSA key store.

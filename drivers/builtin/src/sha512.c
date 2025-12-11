@@ -10,6 +10,10 @@
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
+#include "tf_psa_crypto_common.h"
+
+#if defined(MBEDTLS_SHA512_C) || defined(MBEDTLS_SHA384_C)
+
 #if defined(__aarch64__) && !defined(__ARM_FEATURE_SHA512) && \
     defined(__clang__) && __clang_major__ >= 7
 /* TODO: Re-consider above after https://reviews.llvm.org/D131064 merged.
@@ -25,10 +29,6 @@
 #define __ARM_FEATURE_SHA512 1
 #define MBEDTLS_ENABLE_ARM_SHA3_EXTENSIONS_COMPILER_FLAG
 #endif
-
-#include "tf_psa_crypto_common.h"
-
-#if defined(MBEDTLS_SHA512_C) || defined(MBEDTLS_SHA384_C)
 
 #include "mbedtls/private/sha512.h"
 #include "mbedtls/platform_util.h"

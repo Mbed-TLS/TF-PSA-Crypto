@@ -117,27 +117,11 @@
 #endif
 #endif
 
-#if defined(PSA_WANT_ECC_SECP_K1_192)
-#if defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_192)
-#undef MBEDTLS_PSA_ACCEL_ECC_SECP_K1_192
-#else
-#define MBEDTLS_PSA_ACCEL_ECC_SECP_K1_192 1
-#endif
-#endif
-
 #if defined(PSA_WANT_ECC_SECP_K1_256)
 #if defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_256)
 #undef MBEDTLS_PSA_ACCEL_ECC_SECP_K1_256
 #else
 #define MBEDTLS_PSA_ACCEL_ECC_SECP_K1_256 1
-#endif
-#endif
-
-#if defined(PSA_WANT_ECC_SECP_R1_192)
-#if defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192)
-#undef MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192
-#else
-#define MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192 1
 #endif
 #endif
 

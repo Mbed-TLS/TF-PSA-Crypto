@@ -1,0 +1,4 @@
+Changes
+   * Add a new function, mbedtls_pk_get_key_type(), which returns the PSA
+     key type corresponding to the type of the key represented by the
+     given PK object.

@@ -51,14 +51,12 @@
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /* Flags indicating whether to include code that is specific to certain
  * types of curves. These flags are for internal library use only. */
-#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
+#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
 #define MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED
 #endif
@@ -99,7 +97,6 @@ extern "C" {
  */
 typedef enum {
     MBEDTLS_ECP_DP_NONE = 0,       /*!< Curve not defined. */
-    MBEDTLS_ECP_DP_SECP192R1,      /*!< Domain parameters for the 192-bit curve defined by FIPS 186-4 and SEC1. */
     MBEDTLS_ECP_DP_SECP256R1,      /*!< Domain parameters for the 256-bit curve defined by FIPS 186-4 and SEC1. */
     MBEDTLS_ECP_DP_SECP384R1,      /*!< Domain parameters for the 384-bit curve defined by FIPS 186-4 and SEC1. */
     MBEDTLS_ECP_DP_SECP521R1,      /*!< Domain parameters for the 521-bit curve defined by FIPS 186-4 and SEC1. */
@@ -107,7 +104,6 @@ typedef enum {
     MBEDTLS_ECP_DP_BP384R1,        /*!< Domain parameters for 384-bit Brainpool curve. */
     MBEDTLS_ECP_DP_BP512R1,        /*!< Domain parameters for 512-bit Brainpool curve. */
     MBEDTLS_ECP_DP_CURVE25519,     /*!< Domain parameters for Curve25519. */
-    MBEDTLS_ECP_DP_SECP192K1,      /*!< Domain parameters for 192-bit "Koblitz" curve. */
     MBEDTLS_ECP_DP_SECP256K1,      /*!< Domain parameters for 256-bit "Koblitz" curve. */
     MBEDTLS_ECP_DP_CURVE448,       /*!< Domain parameters for Curve448. */
 } mbedtls_ecp_group_id;
@@ -330,10 +326,6 @@ mbedtls_ecp_group;
 #define MBEDTLS_ECP_MAX_BITS 256
 #elif defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
 #define MBEDTLS_ECP_MAX_BITS 255
-#elif defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
-#define MBEDTLS_ECP_MAX_BITS 192
-#elif defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
-#define MBEDTLS_ECP_MAX_BITS 192
 #else /* !MBEDTLS_ECP_LIGHT */
 #error "Missing definition of MBEDTLS_ECP_MAX_BITS"
 #endif /* !MBEDTLS_ECP_LIGHT */

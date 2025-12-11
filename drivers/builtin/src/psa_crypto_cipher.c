@@ -20,6 +20,12 @@
 
 #include <string.h>
 
+#if defined(MBEDTLS_PSA_BUILTIN_CIPHER) || \
+    defined(MBEDTLS_PSA_BUILTIN_AEAD) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_AES) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ARIA) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_CAMELLIA) || \
+    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_CHACHA20)
 /* mbedtls_cipher_values_from_psa() below only checks if the proper build symbols
  * are enabled, but it does not provide any compatibility check between them
  * (i.e. if the specified key works with the specified algorithm). This helper
@@ -224,6 +230,43 @@ psa_status_t mbedtls_cipher_values_from_psa(
 
     return mbedtls_cipher_validate_values(alg, key_type);
 }
+#else
+/* When MBEDTLS_PSA_BUILTIN_CIPHER, MBEDTLS_PSA_BUILTIN_AEAD,
+ * MBEDTLS_PSA_BUILTIN_KEY_TYPE_AES, MBEDTLS_PSA_BUILTIN_KEY_TYPE_ARIA,
+ * MBEDTLS_PSA_BUILTIN_KEY_TYPE_CAMELLIA and MBEDTLS_PSA_BUILTIN_CIPHER are
+ * not defined, the function mbedtls_cipher_values_from_psa() can only ever
+ * return PSA_ERROR_NOT_SUPPORTED. In that configuration, the compiler may
+ * report an error such as:
+ *     "code will never be executed [-Werror,-Wunreachable-code]"
+ * on the line:
+ *     if (cipher_id != NULL) {
+ *
+ * Since under these conditions the function can only return
+ * PSA_ERROR_NOT_SUPPORTED and still pulls in a non-trivial amount of code,
+ * provide a reduced version that simply returns PSA_ERROR_NOT_SUPPORTED.
+ *
+ * Note that when all the conditions above are met, this function is used
+ * by mbedtls_cipher_info_from_psa(), if built-in CMAC is additionally enabled.
+ */
+psa_status_t mbedtls_cipher_values_from_psa(
+    psa_algorithm_t alg,
+    psa_key_type_t key_type,
+    mbedtls_cipher_mode_t *mode,
+    mbedtls_cipher_id_t *cipher_id)
+{
+    (void) alg;
+    (void) key_type;
+    (void) mode;
+    (void) cipher_id;
+
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+#endif /* MBEDTLS_PSA_BUILTIN_CIPHER) ||
+          MBEDTLS_PSA_BUILTIN_AEAD ||
+          MBEDTLS_PSA_BUILTIN_KEY_TYPE_AES ||
+          MBEDTLS_PSA_BUILTIN_KEY_TYPE_ARIA ||
+          MBEDTLS_PSA_BUILTIN_KEY_TYPE_CAMELLIA ||
+          MBEDTLS_PSA_BUILTIN_KEY_TYPE_CHACHA20 */
 
 #if defined(MBEDTLS_CIPHER_C)
 const mbedtls_cipher_info_t *mbedtls_cipher_info_from_psa(

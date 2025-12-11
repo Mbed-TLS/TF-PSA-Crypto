@@ -16,9 +16,9 @@ foreach (target IN LISTS target_libraries)
 
     tf_psa_crypto_set_base_compile_options(${target})
     target_include_directories(${target}
-      PRIVATE include
-              ${TF_PSA_CRYPTO_DIR}/include
-              ${TF_PSA_CRYPTO_DIR}/drivers/builtin/include
+      PUBLIC include
+      PRIVATE ${TF_PSA_CRYPTO_DIR}/include
+              ${TF_PSA_CRYPTO_DRIVERS_INCLUDE_DIRS}
               include/tf-psa-crypto/private/everest
               include/tf-psa-crypto/private/everest/kremlib
               ${TF_PSA_CRYPTO_DIR}/core)
@@ -31,10 +31,10 @@ endif(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 if(INSTALL_TF_PSA_CRYPTO_HEADERS)
 
-  install(DIRECTORY include/tf-psa-crypto/private/everest
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tf-psa-crypto/private/everest
-    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-    FILES_MATCHING PATTERN "*.h")
+  install(DIRECTORY "include/"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.h"
+  )
 
 endif(INSTALL_TF_PSA_CRYPTO_HEADERS)

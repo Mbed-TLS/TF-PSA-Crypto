@@ -116,6 +116,7 @@ option(USE_STATIC_TF_PSA_CRYPTO_LIBRARY "Build TF-PSA-Crypto static library." ON
 option(USE_SHARED_TF_PSA_CRYPTO_LIBRARY "Build TF-PSA-Crypto shared library." OFF)
 option(LINK_WITH_PTHREAD "Explicitly link Mbed TLS library to pthread." OFF)
 option(LINK_WITH_TRUSTED_STORAGE "Explicitly link Mbed TLS library to trusted_storage." OFF)
+option(MSVC_STATIC_RUNTIME "Build the libraries with /MT compiler flag" OFF)
 
 set(tfpsacrypto_target "${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto")
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
@@ -348,10 +349,16 @@ if (NOT EXISTS "${TF_PSA_CRYPTO_FRAMEWORK_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "${TF_PSA_CRYPTO_FRAMEWORK_DIR}/CMakeLists.txt not found. Run `git submodule update --init` from the source tree to fetch the submodule contents.")
 endif()
 
+#
+# `drivers` must be added before `core` because the build of the main library
+# set up in `core` depends on the list of available drivers, which is
+# constructed in `drivers/CMakeLists.txt`. This list may include a generated
+# test driver.
+#
 add_subdirectory(framework)
 add_subdirectory(include)
+add_subdirectory(drivers)   # must precede core
 add_subdirectory(core)
-add_subdirectory(drivers)
 add_subdirectory(pkgconfig)
 
 #
@@ -400,14 +407,18 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
 
     target_include_directories(tf_psa_crypto_test
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/tests/include
-        PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
-        PRIVATE tests/include
-        PRIVATE tests/include/test
-        PRIVATE include
-        PRIVATE drivers/builtin/include
-        PRIVATE drivers/everest/include
-        PRIVATE core
-        PRIVATE drivers/builtin/src)
+                ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
+                tests/include
+                tests/include/test
+                include
+                core
+                drivers/builtin/src)
+
+    foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})
+        get_target_property(public_includes ${driver_target} INTERFACE_INCLUDE_DIRECTORIES)
+        target_include_directories(tf_psa_crypto_test PUBLIC ${public_includes})
+    endforeach()
+
     # Request C11, needed for memory poisoning tests
     set_target_properties(tf_psa_crypto_test PROPERTIES C_STANDARD 11)
     tf_psa_crypto_set_config_files_compile_definitions(tf_psa_crypto_test)

@@ -98,10 +98,6 @@
 #define PSA_WANT_ECC_SECP_R1_256                1
 #define PSA_WANT_ECC_SECP_R1_384                1
 #define PSA_WANT_ECC_SECP_R1_521                1
-/* These 2 curves are not part of the public API. They are kept temporarily for
- * internal testing only and will removed in a future minor version. */
-//#define PSA_WANT_ECC_SECP_K1_192                1
-//#define PSA_WANT_ECC_SECP_R1_192                1
 
 #define PSA_WANT_DH_RFC7919_2048                1
 #define PSA_WANT_DH_RFC7919_3072                1

@@ -54,11 +54,9 @@
     !defined(MBEDTLS_PSA_ACCEL_ECC_BRAINPOOL_P_R1_384)) || \
     (defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512) && \
     !defined(MBEDTLS_PSA_ACCEL_ECC_BRAINPOOL_P_R1_512)) || \
-    (defined(PSA_WANT_ECC_SECP_R1_192) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192)) || \
     (defined(PSA_WANT_ECC_SECP_R1_256) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256)) || \
     (defined(PSA_WANT_ECC_SECP_R1_384) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_384)) || \
     (defined(PSA_WANT_ECC_SECP_R1_521) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_521)) || \
-    (defined(PSA_WANT_ECC_SECP_K1_192) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_192)) || \
     (defined(PSA_WANT_ECC_SECP_K1_256) && !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_256))
 #define MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_CURVES
 #define MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_WEIERSTRASS_CURVES
@@ -84,11 +82,6 @@
     (defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && \
     !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_BASIC))
 #define MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES_BASIC
-#endif
-
-/* Special case: we don't support cooked key derivation in drivers yet */
-#if defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
-#undef MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE
 #endif
 
 /* Note: the condition about key derivation is always true as DERIVE can't be
@@ -160,15 +153,6 @@
 #endif /* missing accel */
 #endif /* PSA_WANT_ECC_MONTGOMERY_448 */
 
-#if defined(PSA_WANT_ECC_SECP_R1_192)
-#if !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_192) || \
-    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES) || \
-    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_ALGS)
-#define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_192 1
-#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#endif /* missing accel */
-#endif /* PSA_WANT_ECC_SECP_R1_192 */
-
 #if defined(PSA_WANT_ECC_SECP_R1_256)
 #if !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256) || \
     defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES) || \
@@ -195,15 +179,6 @@
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
 #endif /* missing accel */
 #endif /* PSA_WANT_ECC_SECP_R1_521 */
-
-#if defined(PSA_WANT_ECC_SECP_K1_192)
-#if !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_192) || \
-    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES) || \
-    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_ALGS)
-#define MBEDTLS_PSA_BUILTIN_ECC_SECP_K1_192 1
-#define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-#endif /* missing accel */
-#endif /* PSA_WANT_ECC_SECP_K1_192 */
 
 #if defined(PSA_WANT_ECC_SECP_K1_256)
 #if !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_K1_256) || \

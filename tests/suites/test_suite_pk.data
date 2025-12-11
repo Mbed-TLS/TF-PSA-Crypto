@@ -1491,3 +1491,98 @@ pk_copy_public_from_psa:"587CF7C57EB7C6254CBF80CC59846521B4FBCBA8BC4B362A9B043F0
 Copy from PSA: non-exportable -> public, Curve25519
 depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
 pk_copy_public_from_psa:"a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY)
+
+PK get type from wrapped PSA key, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC
+pk_get_key_type_wrap_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:1024
+
+PK get type from wrapped PSA key, SECP_R1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_R1_256
+pk_get_key_type_wrap_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256
+
+PK get type from wrapped PSA key, SECP_K1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_K1_256
+pk_get_key_type_wrap_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type from parsed key, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC:MBEDTLS_PEM_PARSE_C
+pk_get_key_type_parse_key:"../framework/data_files/server1.key":PSA_KEY_TYPE_RSA_KEY_PAIR
+
+PK get type from parsed key, SECP256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_PEM_PARSE_C
+pk_get_key_type_parse_key:"../framework/data_files/ec_256_prv.pem":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1)
+
+PK get type from parsed key, BrainpoolP256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_BRAINPOOL_P_R1_256:MBEDTLS_PEM_PARSE_C
+pk_get_key_type_parse_key:"../framework/data_files/ec_bp256_prv.pem":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1)
+
+PK get type from parsed key, SECP256r1, pkcs8 unencrypted
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_R1_256
+pk_get_key_type_parse_key:"../framework/data_files/ec_prv.pk8param.der":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1)
+
+PK get type from parsed key, RSA, DER
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC
+pk_get_key_type_parse_key:"../framework/data_files/server1.key.der":PSA_KEY_TYPE_RSA_KEY_PAIR
+
+PK get type from parsed key, SECP521r1, DER
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_R1_521
+pk_get_key_type_parse_key:"../framework/data_files/ec_521_prv.der":PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1)
+
+PK get type from parsed public key, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C
+pk_get_key_type_parse_public_key:"../framework/data_files/server1.pubkey":PSA_KEY_TYPE_RSA_PUBLIC_KEY
+
+PK get type from parsed public key, SECP256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_PEM_PARSE_C
+pk_get_key_type_parse_public_key:"../framework/data_files/ec_256_pub.pem":PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1)
+
+PK get type from parsed public key, BrainpoolP256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_BRAINPOOL_P_R1_256:MBEDTLS_PEM_PARSE_C
+pk_get_key_type_parse_public_key:"../framework/data_files/ec_bp256_pub.pem":PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_BRAINPOOL_P_R1)
+
+PK get type from parsed public key, RSA, DER
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_get_key_type_parse_public_key:"../framework/data_files/server1.pubkey.der":PSA_KEY_TYPE_RSA_PUBLIC_KEY
+
+PK get type from parsed public key, SECP521r1, DER
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
+pk_get_key_type_parse_public_key:"../framework/data_files/ec_521_pub.der":PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1)
+
+PK get type from copied PSA keypair, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC
+pk_get_key_type_copy_from_psa_keypair:PSA_KEY_TYPE_RSA_KEY_PAIR:1024
+
+PK get type from copied PSA keypair, SECP_R1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_R1_256
+pk_get_key_type_copy_from_psa_keypair:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256
+
+PK get type from copied PSA keypair, SECP_K1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_ECC_SECP_K1_256
+pk_get_key_type_copy_from_psa_keypair:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type from copied PSA public key, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_get_key_type_copy_from_psa_public:PSA_KEY_TYPE_RSA_PUBLIC_KEY:1024
+
+PK get type from copied PSA public key, SECP_R1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_get_key_type_copy_from_psa_public:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1):256
+
+PK get type from copied PSA public key, SECP_K1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_K1_256
+pk_get_key_type_copy_from_psa_public:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type, public key copied from PSA, RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_RSA_PUBLIC_KEY:1024
+
+PK get type, public key copied from PSA, SECP_R1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1):256
+
+PK get type, public key copied from PSA, SECP_K1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_K1_256
+pk_get_key_type_copy_public_from_psa:PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1):256
+
+PK get type, empty context
+pk_get_key_type_empty_ctx

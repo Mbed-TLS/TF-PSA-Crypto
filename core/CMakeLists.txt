@@ -71,7 +71,6 @@ if(CMAKE_COMPILER_IS_CLANG)
 endif(CMAKE_COMPILER_IS_CLANG)
 
 if(CMAKE_COMPILER_IS_MSVC)
-    option(MSVC_STATIC_RUNTIME "Build the libraries with /MT compiler flag" OFF)
     if(MSVC_STATIC_RUNTIME)
         foreach(flag_var
             CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
@@ -108,35 +107,24 @@ if (NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRAR
 endif(NOT USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND NOT USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 
 set(tfpsacrypto_target "${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto")
-set(builtin_target "${TF_PSA_CRYPTO_TARGET_PREFIX}builtin")
-set(everest_target "${TF_PSA_CRYPTO_TARGET_PREFIX}everest")
-set(p256m_target "${TF_PSA_CRYPTO_TARGET_PREFIX}p256m")
-
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     set(tfpsacrypto_static_target ${tfpsacrypto_target})
-    set(builtin_static_target ${builtin_target})
-    set(everest_static_target ${everest_target})
-    set(p256m_static_target ${p256m_target})
 endif()
 
 set(target_libraries ${tfpsacrypto_target})
-
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     string(APPEND tfpsacrypto_static_target "_static")
-    string(APPEND builtin_static_target "_static")
-    string(APPEND everest_static_target "_static")
-    string(APPEND p256m_static_target "_static")
-
-    list(APPEND target_libraries
-        ${tfpsacrypto_static_target})
+    list(APPEND target_libraries ${tfpsacrypto_static_target})
 endif()
 
 if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+    set(target_objects "")
+    foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_STATIC_TARGETS})
+        list(APPEND target_objects "$<TARGET_OBJECTS:${driver_target}>")
+    endforeach()
     add_library(${tfpsacrypto_static_target} STATIC
         ${src_crypto}
-        $<TARGET_OBJECTS:${builtin_static_target}>
-        $<TARGET_OBJECTS:${everest_static_target}>
-        $<TARGET_OBJECTS:${p256m_static_target}>)
+        ${target_objects})
     tf_psa_crypto_set_base_compile_options(${tfpsacrypto_static_target})
     target_compile_options(${tfpsacrypto_static_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
@@ -150,10 +138,13 @@ endif(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
 
 if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
     set(CMAKE_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
+    set(target_objects "")
+    foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})
+        list(APPEND target_objects "$<TARGET_OBJECTS:${driver_target}>")
+    endforeach()
     add_library(${tfpsacrypto_target} SHARED
-        ${src_crypto} $<TARGET_OBJECTS:${builtin_target}>
-        ${src_crypto} $<TARGET_OBJECTS:${everest_target}>
-        ${src_crypto} $<TARGET_OBJECTS:${p256m_target}>)
+        ${src_crypto}
+        ${target_objects})
     tf_psa_crypto_set_base_compile_options(${tfpsacrypto_target})
     target_compile_options(${tfpsacrypto_target} PRIVATE ${LIBS_C_FLAGS})
     set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION ${TF_PSA_CRYPTO_VERSION} SOVERSION ${TF_PSA_CRYPTO_SOVERSION})
@@ -169,14 +160,17 @@ foreach(target IN LISTS target_libraries)
     add_library(TF-PSA-Crypto::${target} ALIAS ${target})  # add_subdirectory support
     target_include_directories(${target}
         PUBLIC $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/include/>
-               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/builtin/include/>
-               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/everest/include/>
-               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DIR}/drivers/p256-m/>
                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         PRIVATE ${TF_PSA_CRYPTO_DIR}/core
                 ${TF_PSA_CRYPTO_DIR}/drivers/builtin/src
                 # Needed to include psa_crypto_driver_wrappers.h
                 ${CMAKE_CURRENT_BINARY_DIR})
+    foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})
+        get_target_property(public_includes ${driver_target} INTERFACE_INCLUDE_DIRECTORIES)
+        foreach(dir IN LISTS public_includes)
+            target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${dir}>)
+        endforeach()
+    endforeach()
     tf_psa_crypto_set_config_files_compile_definitions(${target})
     install(
         TARGETS ${target}

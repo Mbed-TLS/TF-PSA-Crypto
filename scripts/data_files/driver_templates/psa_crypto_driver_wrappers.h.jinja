@@ -1564,6 +1564,7 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
             /* Fell through, meaning no accelerator supports this operation */
+#if defined(MBEDTLS_PSA_BUILTIN_AEAD)
             return( mbedtls_psa_aead_encrypt(
                         attributes, key_buffer, key_buffer_size,
                         alg,
@@ -1571,12 +1572,21 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
                         additional_data, additional_data_length,
                         plaintext, plaintext_length,
                         ciphertext, ciphertext_size, ciphertext_length ) );
+#else
+            return( PSA_ERROR_NOT_SUPPORTED );
+#endif
 
         /* Add cases for opaque driver here */
 
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
+            (void) key_buffer; (void) key_buffer_size;
+            (void) alg;
+            (void) nonce; (void) nonce_length;
+            (void) additional_data; (void) additional_data_length;
+            (void) plaintext; (void) plaintext_length;
+            (void) ciphertext; (void) ciphertext_size; (void) ciphertext_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
 }
@@ -1616,6 +1626,7 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
             /* Fell through, meaning no accelerator supports this operation */
+#if defined(MBEDTLS_PSA_BUILTIN_AEAD)
             return( mbedtls_psa_aead_decrypt(
                         attributes, key_buffer, key_buffer_size,
                         alg,
@@ -1623,12 +1634,21 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
                         additional_data, additional_data_length,
                         ciphertext, ciphertext_length,
                         plaintext, plaintext_size, plaintext_length ) );
+#else
+            return( PSA_ERROR_NOT_SUPPORTED );
+#endif
 
         /* Add cases for opaque driver here */
 
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
+            (void) key_buffer; (void) key_buffer_size;
+            (void) alg;
+            (void) nonce; (void) nonce_length;
+            (void) additional_data; (void) additional_data_length;
+            (void) ciphertext; (void) ciphertext_length;
+            (void) plaintext; (void) plaintext_size; (void) plaintext_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
 }
@@ -1664,19 +1684,25 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt_setup(
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
             /* Fell through, meaning no accelerator supports this operation */
+#if defined(MBEDTLS_PSA_BUILTIN_AEAD)
             operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
             status = mbedtls_psa_aead_encrypt_setup(
                         &operation->ctx.mbedtls_ctx, attributes,
                         key_buffer, key_buffer_size,
                         alg );
-
             return( status );
+#else
+            return( PSA_ERROR_NOT_SUPPORTED );
+#endif
 
         /* Add cases for opaque driver here */
 
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
+            (void) operation;
+            (void) key_buffer; (void) key_buffer_size;
+            (void) alg;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
 }
@@ -1713,20 +1739,25 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt_setup(
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
             /* Fell through, meaning no accelerator supports this operation */
+#if defined(MBEDTLS_PSA_BUILTIN_AEAD)
             operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
             status = mbedtls_psa_aead_decrypt_setup(
                         &operation->ctx.mbedtls_ctx,
                         attributes,
                         key_buffer, key_buffer_size,
                         alg );
-
             return( status );
-
+#else
+            return( PSA_ERROR_NOT_SUPPORTED );
+#endif
         /* Add cases for opaque driver here */
 
         default:
             /* Key is declared with a lifetime not known to us */
             (void)status;
+            (void) operation;
+            (void) key_buffer; (void)key_buffer_size;
+            (void) alg;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
 }

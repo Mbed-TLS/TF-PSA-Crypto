@@ -26,7 +26,7 @@
 #include "psa/crypto_driver_common.h"
 
 /* Include the context structure definitions for the Mbed TLS software drivers */
-#include "psa/crypto_builtin_key_derivation.h"
+#include "mbedtls/private/crypto_builtin_key_derivation.h"
 
 /* Include the context structure definitions for those drivers that were
  * declared during the autogeneration process. */

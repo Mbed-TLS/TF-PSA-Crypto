@@ -10,6 +10,15 @@
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
+/* Ensure that SIG_SETMASK is defined when -std=c99 is used. */
+#if !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
+#include "tf_psa_crypto_common.h"
+
+#if defined(MBEDTLS_SHA256_C) || defined(MBEDTLS_SHA224_C)
+
 #if defined(__clang__) &&  (__clang_major__ >= 4)
 
 /* Ideally, we would simply use MBEDTLS_ARCH_IS_ARMV8_A in the following #if,
@@ -42,15 +51,6 @@
 #endif
 
 #endif /* defined(__clang__) &&  (__clang_major__ >= 4) */
-
-/* Ensure that SIG_SETMASK is defined when -std=c99 is used. */
-#if !defined(_GNU_SOURCE)
-#define _GNU_SOURCE
-#endif
-
-#include "tf_psa_crypto_common.h"
-
-#if defined(MBEDTLS_SHA256_C) || defined(MBEDTLS_SHA224_C)
 
 #include "mbedtls/private/sha256.h"
 #include "mbedtls/platform_util.h"

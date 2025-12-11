@@ -1,0 +1,3 @@
+Bugfix
+   * Fix compilation errors in `aesce.c` in some Visual Studio builds.
+     Fixes #548.

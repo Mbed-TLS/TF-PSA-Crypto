@@ -23,6 +23,7 @@
 #include "mbedtls/private/gcm.h"
 #include "mbedtls/private/error_common.h"
 
+#if defined(MBEDTLS_PSA_BUILTIN_AEAD)
 static psa_status_t psa_aead_setup(
     mbedtls_psa_aead_operation_t *operation,
     const psa_key_attributes_t *attributes,
@@ -641,5 +642,7 @@ psa_status_t mbedtls_psa_aead_abort(
 
     return PSA_SUCCESS;
 }
+
+#endif /* MBEDTLS_PSA_BUILTIN_AEAD */
 
 #endif /* MBEDTLS_PSA_CRYPTO_C */

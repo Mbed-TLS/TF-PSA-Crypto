@@ -332,12 +332,6 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
     { MBEDTLS_ECP_DP_BP256R1,      26,     256,    "brainpoolP256r1"   },
 #endif
-#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP192R1,    19,     192,    "secp192r1"         },
-#endif
-#if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP192K1,    18,     192,    "secp192k1"         },
-#endif
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
     { MBEDTLS_ECP_DP_CURVE25519,   29,     256,    "x25519"            },
 #endif
@@ -3372,9 +3366,6 @@ int mbedtls_ecp_self_test(int verbose)
     mbedtls_mpi m;
 
 #if defined(MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED)
-    /* Exponents especially adapted for secp192k1, which has the lowest
-     * order n of all supported curves (secp192r1 is in a slightly larger
-     * field but the order of its base point is slightly smaller). */
     const char *sw_exponents[] =
     {
         "000000000000000000000000000000000000000000000001", /* one */
@@ -3406,9 +3397,9 @@ int mbedtls_ecp_self_test(int verbose)
     mbedtls_mpi_init(&m);
 
 #if defined(MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED)
-    /* Use secp192r1 if available, or any available curve */
-#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
-    MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP192R1));
+    /* Use secp256r1 if available, or any available curve */
+#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+    MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
 #else
     MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, mbedtls_ecp_curve_list()->grp_id));
 #endif

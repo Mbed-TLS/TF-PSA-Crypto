@@ -252,10 +252,6 @@
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 256u
 #elif defined(PSA_WANT_ECC_MONTGOMERY_255)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 255u
-#elif defined(PSA_WANT_ECC_SECP_R1_192)
-#define PSA_VENDOR_ECC_MAX_CURVE_BITS 192u
-#elif defined(PSA_WANT_ECC_SECP_K1_192)
-#define PSA_VENDOR_ECC_MAX_CURVE_BITS 192u
 #else
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 0u
 #endif
@@ -743,11 +739,15 @@
  * number of bits.
  *
  * This definition assumes that bits <= 2^19 - 9 so that the length field
- * is at most 3 bytes. The length of the encoding is the length of the
- * bit string padded to a whole number of bytes plus:
- * - 1 type byte;
- * - 1 to 3 length bytes;
- * - 0 to 1 bytes of leading 0 due to the sign bit.
+ * is at most 3 bytes. The length of the encoding is overestimated as follows:
+ *
+ * - Take int(bits / 8) as the number of full bytes taken by the value.
+ * - Add 1 extra byte, to account for either:
+ *   - A leading-zero byte, needed if the top bit of the value is 1
+ *     and bits % 8 == 0 (encoding in two's complement)
+ *   - Extra bits, when bits % 8 != 0
+ * - Add 1 type byte
+ * - Add 3 length bytes
  */
 #define PSA_KEY_EXPORT_ASN1_INTEGER_MAX_SIZE(bits)      \
     ((bits) / 8u + 5u)
@@ -784,7 +784,7 @@
  *
  * - 4 bytes of SEQUENCE overhead;
  * - 3 bytes of version;
- * - 7 half-size INTEGERs plus 2 full-size INTEGERs,
+ * - 5 half-size INTEGERs plus 2 full-size INTEGERs,
  *   overapproximated as 9 half-size INTEGERS;
  * - 7 bytes for the public exponent.
  */

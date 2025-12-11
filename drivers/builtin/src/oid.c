@@ -157,12 +157,6 @@ typedef struct {
 
 static const oid_ecp_grp_t oid_ecp_grp[] =
 {
-#if defined(PSA_WANT_ECC_SECP_R1_192)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_EC_GRP_SECP192R1, "secp192r1",    "secp192r1"),
-        MBEDTLS_ECP_DP_SECP192R1,
-    },
-#endif /* PSA_WANT_ECC_SECP_R1_192 */
 #if defined(PSA_WANT_ECC_SECP_R1_256)
     {
         OID_DESCRIPTOR(MBEDTLS_OID_EC_GRP_SECP256R1, "secp256r1",    "secp256r1"),
@@ -181,12 +175,6 @@ static const oid_ecp_grp_t oid_ecp_grp[] =
         MBEDTLS_ECP_DP_SECP521R1,
     },
 #endif /* PSA_WANT_ECC_SECP_R1_521 */
-#if defined(PSA_WANT_ECC_SECP_K1_192)
-    {
-        OID_DESCRIPTOR(MBEDTLS_OID_EC_GRP_SECP192K1, "secp192k1",    "secp192k1"),
-        MBEDTLS_ECP_DP_SECP192K1,
-    },
-#endif /* PSA_WANT_ECC_SECP_K1_192 */
 #if defined(PSA_WANT_ECC_SECP_K1_256)
     {
         OID_DESCRIPTOR(MBEDTLS_OID_EC_GRP_SECP256K1, "secp256k1",    "secp256k1"),

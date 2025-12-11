@@ -20,8 +20,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#ifndef PSA_CRYPTO_BUILTIN_COMPOSITES_H
-#define PSA_CRYPTO_BUILTIN_COMPOSITES_H
+#ifndef TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CRYPTO_BUILTIN_COMPOSITES_H
+#define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CRYPTO_BUILTIN_COMPOSITES_H
 #include "mbedtls/private_access.h"
 
 #include <psa/crypto_driver_common.h>
@@ -268,4 +268,4 @@ typedef struct {
 #define MBEDTLS_PSA_EXPORT_PUBLIC_KEY_IOP_INIT { 0 }
 #endif
 
-#endif /* PSA_CRYPTO_BUILTIN_COMPOSITES_H */
+#endif /* TF_PSA_CRYPTO_MBEDTLS_PRIVATE_CRYPTO_BUILTIN_COMPOSITES_H */
