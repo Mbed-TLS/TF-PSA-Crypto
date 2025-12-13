@@ -503,7 +503,7 @@ static int set_ecp_curve(const char *string, mbedtls_ecp_curve_info *curve)
 unsigned char buf[BUFSIZE];
 
 typedef struct {
-    char md5, ripemd160, sha1, sha256, sha512,
+    char ascon_hash256, md5, ripemd160, sha1, sha256, sha512,
          sha3_224, sha3_256, sha3_384, sha3_512,
          aes_cbc, aes_cfb128, aes_cfb8, aes_ctr, aes_gcm, aes_ccm, aes_xts, chachapoly,
          aes_cmac,
@@ -541,7 +541,9 @@ int main(int argc, char *argv[])
         memset(&todo, 0, sizeof(todo));
 
         for (i = 1; i < argc; i++) {
-            if (strcmp(argv[i], "md5") == 0) {
+            if (strcmp(argv[i], "ascon_hash256") == 0) {
+                todo.ascon_hash256 = 1;
+            } else if (strcmp(argv[i], "md5") == 0) {
                 todo.md5 = 1;
             } else if (strcmp(argv[i], "ripemd160") == 0) {
                 todo.ripemd160 = 1;
@@ -619,6 +621,16 @@ int main(int argc, char *argv[])
     /* Avoid "unused static function" warning in configurations without
      * symmetric crypto. */
     (void) mbedtls_timing_hardclock;
+
+#if defined(PSA_WANT_ALG_ASCON_HASH256)
+    if (todo.ascon_hash256) {
+        size_t length;
+        TIME_AND_TSC("Ascon-Hash256",
+                     psa_hash_compute(PSA_ALG_ASCON_HASH256,
+                                      buf, BUFSIZE,
+                                      tmp, sizeof(tmp), &length));
+    }
+#endif
 
 #if defined(MBEDTLS_MD5_C)
     if (todo.md5) {
