@@ -376,15 +376,6 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_BAD_STATE;
 #endif
 
-#if defined(MBEDTLS_CIPHER_C)
-        case MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE:
-            return PSA_ERROR_NOT_SUPPORTED;
-        case MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED:
-            return PSA_ERROR_INVALID_ARGUMENT;
-        case MBEDTLS_ERR_CIPHER_INVALID_CONTEXT:
-            return PSA_ERROR_CORRUPTION_DETECTED;
-#endif
-
 #if !(defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) ||      \
             defined(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE))
         /* Only check CTR_DRBG error codes if underlying mbedtls_xxx

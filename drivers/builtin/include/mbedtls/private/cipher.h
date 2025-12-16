@@ -35,7 +35,7 @@
 #endif
 
 /** The selected feature is not available. */
-#define MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE  -0x6080
+#define MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE  PSA_ERROR_NOT_SUPPORTED
 /** Bad input parameters. */
 #define MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA       PSA_ERROR_INVALID_ARGUMENT
 /** Failed to allocate memory. */
@@ -43,11 +43,11 @@
 /** Input data contains invalid padding and is rejected. */
 #define MBEDTLS_ERR_CIPHER_INVALID_PADDING      PSA_ERROR_INVALID_PADDING
 /** Decryption of block requires a full block. */
-#define MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED  -0x6280
+#define MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED  PSA_ERROR_INVALID_ARGUMENT
 /** Authentication failed (for AEAD modes). */
 #define MBEDTLS_ERR_CIPHER_AUTH_FAILED          PSA_ERROR_INVALID_SIGNATURE
 /** The context is invalid. For example, because it was freed. */
-#define MBEDTLS_ERR_CIPHER_INVALID_CONTEXT      -0x6380
+#define MBEDTLS_ERR_CIPHER_INVALID_CONTEXT      PSA_ERROR_CORRUPTION_DETECTED
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_CIPHER_VARIABLE_IV_LEN     0x01    /**< Cipher accepts IVs of variable length. */
