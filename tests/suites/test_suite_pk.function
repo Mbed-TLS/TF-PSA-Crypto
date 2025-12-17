@@ -1540,8 +1540,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void pk_sign_ext_verify_ext(int key_type, int key_bits, int pk_gen_method,
-                            int key_pk_type, int md_alg)
+void pk_sign_ext_verify_ext(int key_type, int key_bits, int key_alg,
+                            int pk_gen_method, int key_pk_type, int md_alg)
 {
     mbedtls_pk_context pk;
     size_t sig_len;
@@ -1556,7 +1556,9 @@ void pk_sign_ext_verify_ext(int key_type, int key_bits, int pk_gen_method,
     mbedtls_pk_init(&pk);
     PSA_INIT();
 
-    key_id = mbedtls_pk_helpers_make_psa_key_from_predefined(key_type, key_bits);
+    key_id = mbedtls_pk_helpers_make_psa_key_from_predefined(
+        key_type, key_bits, key_alg, PSA_ALG_NONE,
+        PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH);
     TEST_ASSERT(mbedtls_svc_key_id_is_null(key_id) == 0);
     TEST_EQUAL(mbedtls_pk_helpers_populate_context(&pk, key_id, pk_gen_method), 0);
 
