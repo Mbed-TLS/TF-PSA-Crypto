@@ -1541,7 +1541,8 @@ exit:
 
 /* BEGIN_CASE */
 void pk_sign_ext_verify_ext(int key_type, int key_bits, int key_alg,
-                            int pk_gen_method, int key_pk_type, int md_alg)
+                            int pk_gen_method, int key_pk_type, int md_alg,
+                            int sign_exp_ret, int verify_exp_ret)
 {
     mbedtls_pk_context pk;
     size_t sig_len;
@@ -1563,10 +1564,13 @@ void pk_sign_ext_verify_ext(int key_type, int key_bits, int key_alg,
     TEST_EQUAL(mbedtls_pk_helpers_populate_context(&pk, key_id, pk_gen_method), 0);
 
     TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                   sig, sizeof(sig), &sig_len), 0);
+                                   sig, sizeof(sig), &sig_len), sign_exp_ret);
+    if (sign_exp_ret != 0) {
+        goto exit;
+    }
 
     TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                     hash, hash_len, sig, sig_len), 0);
+                                     hash, hash_len, sig, sig_len), verify_exp_ret);
 exit:
     mbedtls_pk_free(&pk);
     psa_destroy_key(key_id);
