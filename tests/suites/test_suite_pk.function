@@ -1540,20 +1540,25 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void pk_sign_ext_verify_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
+void pk_sign_ext_verify_ext(int key_type, int key_bits, int pk_gen_method,
+                            int key_pk_type, int md_alg)
 {
     mbedtls_pk_context pk;
     size_t sig_len;
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     unsigned char hash[MBEDTLS_MD_MAX_SIZE];
     size_t hash_len = mbedtls_md_get_size_from_type(md_alg);
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
     memset(hash, 0x2a, sizeof(hash));
     memset(sig, 0, sizeof(sig));
 
     mbedtls_pk_init(&pk);
     PSA_INIT();
 
-    TEST_EQUAL(pk_setup(&pk, pk_type, curve_or_keybits), 0);
+    key_id = mbedtls_pk_helpers_make_psa_key_from_predefined(key_type, key_bits);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(key_id) == 0);
+    TEST_EQUAL(mbedtls_pk_helpers_populate_context(&pk, key_id, pk_gen_method), 0);
 
     TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
                                    sig, sizeof(sig), &sig_len), 0);
@@ -1562,6 +1567,7 @@ void pk_sign_ext_verify_ext(int pk_type, int curve_or_keybits, int key_pk_type, 
                                      hash, hash_len, sig, sig_len), 0);
 exit:
     mbedtls_pk_free(&pk);
+    psa_destroy_key(key_id);
     PSA_DONE();
 }
 /* END_CASE */
