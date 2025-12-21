@@ -90,6 +90,19 @@ typedef struct {
 #define MBEDTLS_PSA_HASH_OPERATION_INIT { 0, { 0 } }
 
 /*
+ * XOF (extendable-output functions) multi-part operation definitions.
+ */
+
+typedef struct {
+    psa_algorithm_t MBEDTLS_PRIVATE(alg);
+    union {
+        unsigned dummy; /* Make the union non-empty even with no supported algorithms. */
+    } MBEDTLS_PRIVATE(ctx);
+} mbedtls_psa_xof_operation_t;
+
+#define MBEDTLS_PSA_XOF_OPERATION_INIT { 0, { 0 } }
+
+/*
  * Cipher multi-part operation definitions.
  */
 

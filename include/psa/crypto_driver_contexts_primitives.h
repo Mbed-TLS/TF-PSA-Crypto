@@ -69,6 +69,22 @@ typedef mbedtls_psa_hash_operation_t
 #endif /* MBEDTLS_TEST_LIBTESTDRIVER1 &&
           LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_HASH */
 
+#if defined(MBEDTLS_TEST_LIBTESTDRIVER1) && \
+    defined(LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_XOF)
+typedef libtestdriver1_mbedtls_psa_xof_operation_t
+    mbedtls_transparent_test_driver_xof_operation_t;
+
+#define MBEDTLS_TRANSPARENT_TEST_DRIVER_XOF_OPERATION_INIT \
+    LIBTESTDRIVER1_MBEDTLS_PSA_XOF_OPERATION_INIT
+#else
+typedef mbedtls_psa_xof_operation_t
+    mbedtls_transparent_test_driver_xof_operation_t;
+
+#define MBEDTLS_TRANSPARENT_TEST_DRIVER_XOF_OPERATION_INIT \
+    MBEDTLS_PSA_XOF_OPERATION_INIT
+#endif /* MBEDTLS_TEST_LIBTESTDRIVER1 &&
+          LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_XOF */
+
 typedef struct {
     unsigned int initialised : 1;
     mbedtls_transparent_test_driver_cipher_operation_t ctx;
@@ -93,6 +109,14 @@ typedef union {
     mbedtls_transparent_test_driver_hash_operation_t test_driver_ctx;
 #endif
 } psa_driver_hash_context_t;
+
+typedef union {
+    unsigned dummy; /* Make sure this union is always non-empty */
+    mbedtls_psa_xof_operation_t mbedtls_ctx;
+#if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /* not implemented yet */
+    mbedtls_transparent_test_driver_xof_operation_t test_driver_ctx;
+#endif
+} psa_driver_xof_context_t;
 
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */

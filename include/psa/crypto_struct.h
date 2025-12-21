@@ -85,6 +85,31 @@ static inline struct psa_hash_operation_s psa_hash_operation_init(void)
     return v;
 }
 
+struct psa_xof_operation_s {
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+    mbedtls_psa_client_handle_t handle;
+#else
+    /** Unique ID indicating which driver got assigned to do the
+     * operation. Since driver contexts are driver-specific, swapping
+     * drivers halfway through the operation is not supported.
+     * ID values are auto-generated in psa_driver_wrappers.h.
+     * ID value zero means the context is not valid or not assigned to
+     * any driver (i.e. the driver context is not active, in use). */
+    unsigned int MBEDTLS_PRIVATE(id);
+    psa_driver_xof_context_t MBEDTLS_PRIVATE(ctx);
+#endif
+};
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+#define PSA_XOF_OPERATION_INIT { 0 }
+#else
+#define PSA_XOF_OPERATION_INIT { 0, { 0 } }
+#endif
+static inline struct psa_xof_operation_s psa_xof_operation_init(void)
+{
+    const struct psa_xof_operation_s v = PSA_XOF_OPERATION_INIT;
+    return v;
+}
+
 struct psa_cipher_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
     mbedtls_psa_client_handle_t handle;

@@ -778,6 +778,7 @@
 #define PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION  ((psa_algorithm_t) 0x07000000)
 #define PSA_ALG_CATEGORY_KEY_DERIVATION         ((psa_algorithm_t) 0x08000000)
 #define PSA_ALG_CATEGORY_KEY_AGREEMENT          ((psa_algorithm_t) 0x09000000)
+#define PSA_ALG_CATEGORY_XOF                    ((psa_algorithm_t) 0x0d000000)
 
 /** Whether an algorithm is vendor-defined.
  *
@@ -894,6 +895,18 @@
 #define PSA_ALG_IS_KEY_DERIVATION_STRETCHING(alg)                                  \
     (PSA_ALG_IS_KEY_DERIVATION(alg) &&              \
      (alg) & PSA_ALG_KEY_DERIVATION_STRETCHING_FLAG)
+
+/** Whether the specified algorithm is a XOF (extendable-output function)
+ * algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a XOF algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \p alg is not a supported
+ *         algorithm identifier.
+ */
+#define PSA_ALG_IS_XOF(alg)                                            \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_XOF)
 
 /** An invalid algorithm identifier value. */
 /* *INDENT-OFF* (https://github.com/ARM-software/psa-arch-tests/issues/337) */
