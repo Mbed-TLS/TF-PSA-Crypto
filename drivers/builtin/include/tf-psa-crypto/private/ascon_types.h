@@ -31,7 +31,9 @@ typedef struct {
  */
 typedef struct {
     tf_psa_crypto_ascon_p_state_t p;
-
+#if defined(MBEDTLS_ASCON_SMALLER)
+    uint8_t offset;
+#else /* MBEDTLS_ASCON_SMALLER */
     /* M contains a partial block, so it is never full between calls to
      * functions (update, finish, etc.). However, it is convenient to have
      * enough space for a full block available inside the functions. */
@@ -45,6 +47,7 @@ typedef struct {
         } pub;
         uint8_t block[8];
     } u;
+#endif /* MBEDTLS_ASCON_SMALLER */
 } tf_psa_crypto_ascon_8_state_t;
 
 #ifdef __cplusplus

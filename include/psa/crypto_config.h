@@ -1556,6 +1556,17 @@
  */
 //#define MBEDTLS_AES_USE_HARDWARE_ONLY
 
+/*
+ * Reduce the code size in the Ascon implementation (all algorithms),
+ * at the expense of speed.
+ *
+ * This option changes the library ABI, because multipart operation
+ * contexts have a different layout.
+ *
+ * This option has no effect if no Ascon mechanism is enabled.
+ */
+//#define MBEDTLS_ASCON_SMALLER
+
 /**
  * \def MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
  *

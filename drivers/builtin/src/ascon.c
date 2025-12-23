@@ -94,19 +94,75 @@ MBEDTLS_STATIC_TESTABLE void tf_psa_crypto_ascon_permute(
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
 
-static void tf_psa_crypto_ascon_absorb_block(
-    tf_psa_crypto_ascon_8_state_t *state,
-    const uint8_t block[8])
-{
-    state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(block, 0);
-    tf_psa_crypto_ascon_permute(&state->p, 12);
-}
-
 void tf_psa_crypto_ascon_hash256_setup(
     tf_psa_crypto_ascon_8_state_t *state)
 {
     memset(state, 0, sizeof(*state));
     state->p.S[0] = 0x0000080100cc0002;
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+}
+
+#if defined(MBEDTLS_ASCON_SMALLER)
+
+static inline uint8_t* state_byte(
+    tf_psa_crypto_ascon_p_state_t *state,
+    size_t offset)
+{
+    if (MBEDTLS_IS_BIG_ENDIAN) {
+        return ((uint8_t *) state) + (offset & 0x08) + 7 - (offset & 0x07);
+    } else {
+        return ((uint8_t *) state) + offset;
+    }
+}
+
+void tf_psa_crypto_ascon_hash256_update(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t *input, size_t input_length)
+{
+#if 0
+    /* Optimized loop for aligned data. This can measurably increase
+     * performance. */
+    if (state->offset == 0 && (uintptr_t) input % 8 == 0) {
+        uint64_t *input_words = (uint64_t *) input;
+        while (input_length > 8) {
+            state->p.S[0] ^= *input_words;
+            tf_psa_crypto_ascon_permute(&state->p, 12);
+            ++input_words;
+            input_length -= 8;
+        }
+    }
+#endif
+
+    for (size_t i = 0; i < input_length; i++) {
+        *state_byte(&state->p, state->offset) ^= input[i];
+        if (state->offset == 7) {
+            state->offset = 0;
+            tf_psa_crypto_ascon_permute(&state->p, 12);
+        } else {
+            ++state->offset;
+        }
+    }
+}
+
+void tf_psa_crypto_ascon_hash256_finish(
+    tf_psa_crypto_ascon_8_state_t *state,
+    uint8_t output[32])
+{
+    *state_byte(&state->p, state->offset) ^= 0x01;
+
+    for (size_t i = 0; i <= 3; i++) {
+        tf_psa_crypto_ascon_permute(&state->p, 12);
+        MBEDTLS_PUT_UINT64_LE(state->p.S[0], output, i * 8);
+    }
+}
+
+#else /* MBEDTLS_ASCON_SMALLER */
+
+static void tf_psa_crypto_ascon_absorb_block(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t block[8])
+{
+    state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(block, 0);
     tf_psa_crypto_ascon_permute(&state->p, 12);
 }
 
@@ -160,6 +216,8 @@ void tf_psa_crypto_ascon_hash256_finish(
         MBEDTLS_PUT_UINT64_LE(state->p.S[0], output, i * 8);
     }
 }
+
+#endif /* MBEDTLS_ASCON_SMALLER */
 
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
 
