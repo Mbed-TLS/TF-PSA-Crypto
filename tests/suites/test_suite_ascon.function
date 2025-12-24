@@ -154,3 +154,68 @@ input_done: ;
                         expected_output->x, expected_output->len);
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
+void xof128_single(const data_t *message,
+                   const data_t *expected_output)
+{
+    tf_psa_crypto_ascon_8_state_t state;
+    uint8_t *output1 = NULL;
+
+    for (size_t n1 = 0; n1 <= expected_output->len; n1++) {
+        TEST_CALLOC(output1, n1);
+        mbedtls_test_set_step(n1);
+        tf_psa_crypto_ascon_xof128_setup(&state);
+        tf_psa_crypto_ascon_xof128_update(&state, message->x, message->len);
+        tf_psa_crypto_ascon_xof128_finish(&state);
+        tf_psa_crypto_ascon_xof128_output(&state, output1, n1);
+        TEST_MEMORY_COMPARE(output1, n1, expected_output->x, n1);
+        mbedtls_free(output1);
+        output1 = NULL;
+    }
+
+exit:
+    mbedtls_free(output1);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
+void xof128_multi_out(const data_t *message,
+                      const data_t *expected_output)
+{
+    tf_psa_crypto_ascon_8_state_t state;
+    uint8_t *output1 = NULL;
+    uint8_t *output2 = NULL;
+    uint8_t *output3 = NULL;
+
+    for (size_t n1 = 0; n1 <= expected_output->len; n1++) {
+        for (size_t n2 = 0; n2 <= expected_output->len - n1; n2++) {
+            size_t n3 = expected_output->len - n1 - n2;
+            TEST_CALLOC(output1, n1);
+            TEST_CALLOC(output2, n2);
+            TEST_CALLOC(output3, n3);
+            mbedtls_test_set_step(n1 * 1000000 + n2 * 1000 + n3);
+            tf_psa_crypto_ascon_xof128_setup(&state);
+            tf_psa_crypto_ascon_xof128_update(&state, message->x, message->len);
+            tf_psa_crypto_ascon_xof128_finish(&state);
+            tf_psa_crypto_ascon_xof128_output(&state, output1, n1);
+            tf_psa_crypto_ascon_xof128_output(&state, output2, n2);
+            tf_psa_crypto_ascon_xof128_output(&state, output3, n3);
+            TEST_MEMORY_COMPARE(output1, n1, expected_output->x, n1);
+            TEST_MEMORY_COMPARE(output2, n2, expected_output->x + n1, n2);
+            TEST_MEMORY_COMPARE(output3, n3, expected_output->x + n1 + n2, n3);
+            mbedtls_free(output1);
+            output1 = NULL;
+            mbedtls_free(output2);
+            output2 = NULL;
+            mbedtls_free(output3);
+            output3 = NULL;
+        }
+    }
+
+exit:
+    mbedtls_free(output1);
+    mbedtls_free(output2);
+    mbedtls_free(output3);
+}
+/* END_CASE */

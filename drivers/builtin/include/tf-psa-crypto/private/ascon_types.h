@@ -39,12 +39,17 @@ typedef struct {
      * enough space for a full block available inside the functions. */
     union {
         struct {
-            /** Accumulated partial block of input (while absorbing)
-             * or output (while squeezing). */
+            /** Accumulated partial block of input (M[0] to M[M_length-1]) */
             uint8_t M[7];
-            /** number of bytes in M (always <= 7) */
+            /** number of bytes in M (0..7) */
             uint8_t M_length;
         } pub;
+        struct {
+            /** Number of bytes in T that are not yet output (0..7). */
+            uint8_t length;
+            /** Remaining partial block of output (T[7-length] to T[6]) */
+            uint8_t T[7];
+        } output;
         uint8_t block[8];
     } u;
 #endif /* MBEDTLS_ASCON_SMALLER */

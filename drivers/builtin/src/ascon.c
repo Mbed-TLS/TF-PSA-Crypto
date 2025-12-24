@@ -92,13 +92,16 @@ MBEDTLS_STATIC_TESTABLE void tf_psa_crypto_ascon_permute(
     }
 }
 
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+#if defined(MBEDTLS_PSA_BUILTIN_SOME_ASCON_8)
 
-void tf_psa_crypto_ascon_hash256_setup(
-    tf_psa_crypto_ascon_8_state_t *state)
+void tf_psa_crypto_ascon_8_setup(
+    tf_psa_crypto_ascon_8_state_t *state,
+    int xof128)
 {
     memset(state, 0, sizeof(*state));
-    state->p.S[0] = 0x0000080100cc0002;
+    state->p.S[0] = (xof128 ?
+                     0x0000080000cc0003 :
+                     0x0000080100cc0002);
     tf_psa_crypto_ascon_permute(&state->p, 12);
 }
 
@@ -144,6 +147,14 @@ void tf_psa_crypto_ascon_hash256_update(
     }
 }
 
+void tf_psa_crypto_ascon_8_finish(
+    tf_psa_crypto_ascon_8_state_t *state)
+{
+    *state_byte(&state->p, state->offset) ^= 0x01;
+    state->offset = 0;
+}
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
 void tf_psa_crypto_ascon_hash256_finish(
     tf_psa_crypto_ascon_8_state_t *state,
     uint8_t output[32])
@@ -155,6 +166,26 @@ void tf_psa_crypto_ascon_hash256_finish(
         MBEDTLS_PUT_UINT64_LE(state->p.S[0], output, i * 8);
     }
 }
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+void tf_psa_crypto_ascon_xof128_output(
+    tf_psa_crypto_ascon_8_state_t *state,
+    uint8_t* output, size_t output_length)
+{
+    size_t i;
+    for (i = 0; i < output_length; i++) {
+        if (state->offset == 0) {
+            tf_psa_crypto_ascon_permute(&state->p, 12);
+        }
+        output[i] = *state_byte(&state->p, state->offset);
+        ++state->offset;
+        if (state->offset == 8) {
+            state->offset = 0;
+        }
+    }
+}
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
 
 #else /* MBEDTLS_ASCON_SMALLER */
 
@@ -201,24 +232,71 @@ void tf_psa_crypto_ascon_hash256_update(
     state->u.pub.M_length = available;
 }
 
-void tf_psa_crypto_ascon_hash256_finish(
-    tf_psa_crypto_ascon_8_state_t *state,
-    uint8_t output[32])
+void tf_psa_crypto_ascon_8_finish(
+    tf_psa_crypto_ascon_8_state_t *state)
 {
     uint8_t n = state->u.pub.M_length;
     state->u.pub.M_length = 0;
     state->u.block[n] = 0x01;
     state->p.S[0] ^= MBEDTLS_GET_UINT64_LE(state->u.block, 0);
     memset(state->u.block, 0, 8);
+}
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256)
+void tf_psa_crypto_ascon_hash256_finish(
+    tf_psa_crypto_ascon_8_state_t *state,
+    uint8_t output[32])
+{
+    tf_psa_crypto_ascon_8_finish(state);
 
     for (size_t i = 0; i <= 3; i++) {
         tf_psa_crypto_ascon_permute(&state->p, 12);
         MBEDTLS_PUT_UINT64_LE(state->p.S[0], output, i * 8);
     }
 }
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+void tf_psa_crypto_ascon_xof128_output(
+    tf_psa_crypto_ascon_8_state_t *state,
+    uint8_t *output, size_t output_length)
+{
+    if (output_length == 0) {
+        return;
+    }
+
+    if (output_length < state->u.output.length) {
+        memcpy(output, state->u.output.T + 7 - state->u.output.length, output_length);
+        state->u.output.length -= output_length;
+        return;
+    }
+
+    size_t remaining = output_length;
+    uint8_t *tail = output;
+    memcpy(tail, state->u.output.T + 7 - state->u.output.length, state->u.output.length);
+    tail += state->u.output.length;
+    remaining -= state->u.output.length;
+
+    while (remaining >= 8) {
+        tf_psa_crypto_ascon_permute(&state->p, 12);
+        MBEDTLS_PUT_UINT64_LE(state->p.S[0], tail, 0);
+        tail += 8;
+        remaining -= 8;
+    }
+
+    if (remaining == 0) {
+        state->u.output.length = 0;
+    } else {
+        tf_psa_crypto_ascon_permute(&state->p, 12);
+        MBEDTLS_PUT_UINT64_LE(state->p.S[0], state->u.block, 0);
+        memcpy(tail, state->u.block, remaining);
+        state->u.output.length = 8 - remaining;
+    }
+}
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
 
 #endif /* MBEDTLS_ASCON_SMALLER */
 
-#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
+#endif /* MBEDTLS_PSA_BUILTIN_SOME_ASCON_8 */
 
 #endif /* MBEDTLS_PSA_BUILTIN_SOME_ASCON */
