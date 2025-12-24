@@ -96,11 +96,13 @@ MBEDTLS_STATIC_TESTABLE void tf_psa_crypto_ascon_permute(
 
 void tf_psa_crypto_ascon_8_setup(
     tf_psa_crypto_ascon_8_state_t *state,
-    int xof128)
+    uint8_t xof128)
 {
     memset(state, 0, sizeof(*state));
-    state->p.S[0] = (xof128 ?
-                     0x0000080000cc0003 :
+    /* IV for Ascon-Hash128: 0x0000080100cc0002 */
+    /* IV for Ascon-XOF128:  0x0000080000cc0003 */
+    /* IV for Ascon-CXOF128: 0x0000080000cc0004 */
+    state->p.S[0] = (xof128 ? 0x0000080000cc0000 | xof128 :
                      0x0000080100cc0002);
     tf_psa_crypto_ascon_permute(&state->p, 12);
 }
@@ -168,7 +170,8 @@ void tf_psa_crypto_ascon_hash256_finish(
 }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_HASH256 */
 
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
 void tf_psa_crypto_ascon_xof128_output(
     tf_psa_crypto_ascon_8_state_t *state,
     uint8_t* output, size_t output_length)
@@ -185,7 +188,7 @@ void tf_psa_crypto_ascon_xof128_output(
         }
     }
 }
-#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 || MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128 */
 
 #else /* MBEDTLS_ASCON_SMALLER */
 
@@ -296,6 +299,20 @@ void tf_psa_crypto_ascon_xof128_output(
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
 
 #endif /* MBEDTLS_ASCON_SMALLER */
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+void tf_psa_crypto_ascon_cxof128_setup(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t* context, size_t context_length)
+{
+    tf_psa_crypto_ascon_8_setup(state, 4);
+    state->p.S[0] ^= (uint64_t) context_length * 8;
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+    tf_psa_crypto_ascon_hash256_update(state, context, context_length);
+    tf_psa_crypto_ascon_8_finish(state);
+    tf_psa_crypto_ascon_permute(&state->p, 12);
+}
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128 */
 
 #endif /* MBEDTLS_PSA_BUILTIN_SOME_ASCON_8 */
 

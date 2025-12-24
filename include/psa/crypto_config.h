@@ -730,6 +730,7 @@
 /* Temporary option intended for testing only. Useless until there's an API
  * for it, at which point it will be enabled through PSA_WANT_xxx. */
 //#define MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128
+//#define MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128
 
 /**
  * \def MBEDTLS_LMS_C

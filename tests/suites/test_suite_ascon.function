@@ -219,3 +219,24 @@ exit:
     mbedtls_free(output3);
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128 */
+void cxof128_single(const data_t *context,
+                    const data_t *message,
+                    const data_t *expected_output)
+{
+    tf_psa_crypto_ascon_8_state_t state;
+    uint8_t *output = NULL;
+
+    TEST_CALLOC(output, expected_output->len);
+    tf_psa_crypto_ascon_cxof128_setup(&state, context->x, context->len);
+    tf_psa_crypto_ascon_xof128_update(&state, message->x, message->len);
+    tf_psa_crypto_ascon_xof128_finish(&state);
+    tf_psa_crypto_ascon_xof128_output(&state, output, expected_output->len);
+    TEST_MEMORY_COMPARE(output, expected_output->len,
+                        expected_output->x, expected_output->len);
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */

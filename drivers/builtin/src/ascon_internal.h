@@ -49,20 +49,22 @@ void tf_psa_crypto_ascon_permute(tf_psa_crypto_ascon_p_state_t *state,
 /** Set up an Ascon-Hash256 or Ascon-XOF128 operation.
  *
  * \param[in,out] state The operation state.
- * \param xof128        0 for Ascon-Hash256, 1 for Ascon-XOF128.
+ * \param xof128        0 for Ascon-Hash256, 3 for Ascon-XOF128 or
+ *                      4 for Ascon-CXOF128.
  */
 void tf_psa_crypto_ascon_8_setup(
     tf_psa_crypto_ascon_8_state_t *state,
-    int xof128);
+    uint8_t xof128);
 
-/** Finish the input in an Ascon-Hash256 or Ascon-XOF128 operation.
+/** Finish the input in an Ascon-Hash256 or Ascon-XOF128 or Ascon-CXOF128
+ * operation.
  *
  * \param[in,out] state The operation state.
  */
 void tf_psa_crypto_ascon_8_finish(
     tf_psa_crypto_ascon_8_state_t *state);
 
-/** Wipe an Ascon-Hash256 or Ascon-XOF128 operation.
+/** Wipe an Ascon-Hash256 or Ascon-XOF128 or Ascon-CXOF128 operation.
  *
  * \param[in,out] state The operation state to wipe.
  */
@@ -118,10 +120,22 @@ static inline void tf_psa_crypto_ascon_hash256_reset(
 static inline void tf_psa_crypto_ascon_xof128_setup(
     tf_psa_crypto_ascon_8_state_t *state)
 {
-    tf_psa_crypto_ascon_8_setup(state, 1);
+    tf_psa_crypto_ascon_8_setup(state, 3);
 }
 
-/** Add input to an Ascon-XOF128 operation.
+/** Set up an Ascon-CXOF128 operation.
+ *
+ * \param[in,out] state The operation state.
+ * \param[in] context   The customization string (also called context).
+ * \param context_length The length of \p context in bytes.
+ *
+ * \note \p context_length must be at most 2**61-1.
+ */
+void tf_psa_crypto_ascon_cxof128_setup(
+    tf_psa_crypto_ascon_8_state_t *state,
+    const uint8_t *context, size_t context_length);
+
+/** Add input to an Ascon-XOF128 or Ascon-CXOF128 operation.
  *
  * \param[in,out] state The operation state.
  * \param[in] input     The input to add.
@@ -134,7 +148,7 @@ static inline void tf_psa_crypto_ascon_xof128_update(
     return tf_psa_crypto_ascon_hash256_update(state, input, input_length);
 }
 
-/** Finish inputting to an Ascon-XOF128 operation.
+/** Finish inputting to an Ascon-XOF128 or Ascon-CXOF128 operation.
  *
  * \param[in,out] state The operation state.
  */
@@ -144,7 +158,7 @@ static inline void tf_psa_crypto_ascon_xof128_finish(
     tf_psa_crypto_ascon_8_finish(state);
 }
 
-/** Get output from an Ascon-XOF128 operation.
+/** Get output from an Ascon-XOF128 or Ascon-CXOF128 operation.
  *
  * Call tf_psa_crypto_ascon_xof128_finish() once, then call this function
  * as many times as you want.
@@ -157,7 +171,7 @@ void tf_psa_crypto_ascon_xof128_output(
     tf_psa_crypto_ascon_8_state_t *state,
     uint8_t *output, size_t output_length);
 
-/** Wipe an Ascon-XOF128 operation.
+/** Wipe an Ascon-XOF128 or Ascon-CXOF128 operation.
  *
  * \param[in,out] state The operation state to wipe.
  */

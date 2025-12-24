@@ -191,7 +191,7 @@ hash256_multi:3:"48":"617665207477656e74792d746872656520":"6279746573":"":"f4f00
 # Official sample test vectors from NIST.
 #   git clone https://github.com/usnistgov/ACVP-Server -b v1.1.0.40
 #   cd ACVP-Server
-#   <gen-val/json-files/Ascon-XOF128-SP800-232/internalProjection.json jq -r '.testGroups | map(.tests) | flatten | map(select(.len % 8 == 0 and .len < 16384 and .outLen % 8 == 0)) | sort_by(.len) | map("XOF128 ACVP " + (.len / 8 | tostring) + " -> " + (.outLen / 8 | tostring) + "\nxof128_single:\"" + .msg + "\":\"" + .md + "\"\n") | join("\n")'
+#   <gen-val/json-files/Ascon-XOF128-SP800-232/internalProjection.json jq -r '.testGroups | map(.tests) | flatten | map(select(.len % 8 == 0 and .len < 16384 and .outLen % 8 == 0)) | sort_by(.len) | map("XOF128 single ACVP " + (.len / 8 | tostring) + " -> " + (.outLen / 8 | tostring) + "\nxof128_single:\"" + .msg + "\":\"" + .md + "\"\n") | join("\n")'
 # Then manually truncate the output to 2000 bytes at most to fit in the
 # test framework's maximum line length.
 
@@ -203,3 +203,52 @@ xof128_single:"DD":"21F0EA9D11B85DB0350DB0B4C3A637427CFE03C6284889ECD1876B073625
 
 XOF128 multi-output ACVP 1 -> 100
 xof128_multi_out:"DD":"21F0EA9D11B85DB0350DB0B4C3A637427CFE03C6284889ECD1876B0736250EF3C37CBC911A702C786A2556A97B2450505BD37E0E012B0E487E9956A73A32D4DC72865A7D57B8694AC547462B907F6B02C6177B2D4BAA1310B4AEF0AEFDA6E53C6AAF6263"
+
+# Using ascon.py:
+# argv[3] = ascon.ascon_hash(bytes.fromhex(argv[2]), variant="Ascon-CXOF128", customization=bytes.fromhex(argv[1])).hex()
+
+CXOF128 single 0, 0 -> 32
+cxof128_single:"":"":"4f50159ef70bb3dad8807e034eaebd44c4fa2cbbc8cf1f05511ab66cdcc52990"
+
+CXOF128 single 1, 0 -> 32
+cxof128_single:"63":"":"162126b250d8aab7324e98dd6ba942f2a29c16f6dad567c00cf25c2c5b79372c"
+
+CXOF128 single 7, 0 -> 32
+cxof128_single:"637573746f6d69":"":"2d01952acb81f7c33a027748127a3cd52b443a662631eec3a696aee44a56fb6d"
+
+CXOF128 single 8, 0 -> 32
+cxof128_single:"637573746f6d697a":"":"1eebe67ecbf59d2294c0db5c95cd0045d498c790b93c679b9dd3ff045cf28192"
+
+CXOF128 single 13, 0 -> 32
+cxof128_single:"637573746f6d697a6174696f6e":"":"f7373ad31a6b50d8e8001c5829143d895fff0ed87d84bdce0c1b0411dc771d49"
+
+CXOF128 single 16, 0 -> 32
+cxof128_single:"637573746f6d697a6174696f6e207374":"":"d472df22df16dc081dcf56662dd3d25f9e6bd5caec0ca906ef2f12066d0134bc"
+
+CXOF128 single 20, 0 -> 32
+cxof128_single:"6c6f6e67657220637573746f6d697a6174696f6e20737472696e67":"":"84a00edb4b2ed794736b4b2c91178e6004d306ee76af50821f7fe6e0eccea3ca"
+
+CXOF128 single 0, 1 -> 32
+cxof128_single:"":"6d":"19f992f0988d0c86a7b2a76d7445f35a9d32522188d0f718a988bfd532db7feb"
+
+CXOF128 single 0, 14 -> 32
+cxof128_single:"":"6c6f6e676572206d657373616765":"0924578c6ced31929d604b3bee4fd6f8a751c287b3c6d12050d9b3512f458520"
+
+CXOF128 single 13, 1 -> 32
+cxof128_single:"637573746f6d697a6174696f6e":"6d":"b99b719db14b963943c2b2b0e78045c207f7ec6a5c879878ee4bb32e97c392a3"
+
+CXOF128 single 13, 7 -> 32
+cxof128_single:"637573746f6d697a6174696f6e":"6d657373616765":"319521747dc275f2654c37e7a62bc80efb4f01f4bc7439c92e52585a22ffa694"
+
+CXOF128 single 13, 14 -> 32
+cxof128_single:"637573746f6d697a6174696f6e":"6c6f6e676572206d657373616765":"7b45d20a58f620a2dc3e60ec2b8ea9236f88e2076cff32e7ef4374e956c6e634"
+
+# Official sample test vectors from NIST.
+#   git clone https://github.com/usnistgov/ACVP-Server -b v1.1.0.40
+#   cd ACVP-Server
+#   <gen-val/json-files/Ascon-CXOF128-SP800-232/internalProjection.json jq -r '.testGroups | map(.tests) | flatten | map(select(.csLen % 8 == 0 and .len % 8 == 0 and .len < 16384 and .outLen % 8 == 0)) | sort_by(.len) | map("CXOF128 single ACVP " + (.csLen / 8 | tostring) + ", " + (.len / 8 | tostring) + " -> " + (.outLen / 8 | tostring) + "\ncxof128_single:\"" + .cs + "\":\"" + .msg + "\":\"" + .md + "\"\n") | join("\n")'
+# Then manually truncate the output to 2000 bytes at most to fit in the
+# test framework's maximum line length.
+
+CXOF128 single ACVP 16, 16 -> 2
+cxof128_single:"32B022D6C0396C36BD054435A6129244":"9824ADB060D810228F2706F3CC28BB58":"7F15"
