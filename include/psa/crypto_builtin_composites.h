@@ -104,9 +104,16 @@ typedef struct {
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
         struct {
-            uint8_t key_then_tag[16]; /* key before finish(), then tag */
+            uint8_t key[16];
+            uint8_t nonce_mask[16];
+        } MBEDTLS_PRIVATE(ascon_starting); /* before setup */
+        struct {
+            uint8_t key[16];
             tf_psa_crypto_ascon_16_state_t state;
-        } MBEDTLS_PRIVATE(ascon);
+        } MBEDTLS_PRIVATE(ascon_active); /* from setup to finish */
+        struct {
+            uint8_t tag[16];
+        } MBEDTLS_PRIVATE(ascon_finished); /* after finish */
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     } ctx;
 

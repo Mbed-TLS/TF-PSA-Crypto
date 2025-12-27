@@ -26,6 +26,31 @@
 #include "mbedtls/private/error_common.h"
 #include "mbedtls/constant_time.h"
 
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+/** Ascon-AEAD128 setup helper: set the key and nonce.
+ *
+ * \param[in,out] operation     The operation object.
+ *                              On input, `operation->ctx.ascon_starting`
+ *                              must contain the primary key and the nonce mask.
+ *                              On output, `operation->ctx.ascon_active`
+ *                              contains the primary key and the operation
+ *                              state after setting the key and nonce.
+ * \param[in] nonce             A 16-byte buffer containing the nonce.
+ */
+static void ascon_aead128_setup(mbedtls_psa_aead_operation_t *operation,
+                                const uint8_t *nonce)
+{
+    uint8_t masked_nonce[16];
+    mbedtls_xor(masked_nonce,
+                operation->ctx.ascon_starting.nonce_mask,
+                nonce, 16);
+    tf_psa_crypto_ascon_aead128_setup(&operation->ctx.ascon_active.state,
+                                      operation->ctx.ascon_active.key,
+                                      masked_nonce);
+}
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
+
 static psa_status_t psa_aead_setup(
     mbedtls_psa_aead_operation_t *operation,
     const psa_key_attributes_t *attributes,
@@ -118,12 +143,18 @@ static psa_status_t psa_aead_setup(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
         case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
             operation->alg = PSA_ALG_ASCON_AEAD128;
-            /* The nonce-masking variant with a double-length key
-             * is not yet supported. */
-            if (key_buffer_size != 16) {
-                return PSA_ERROR_INVALID_ARGUMENT;
+            switch (key_buffer_size) {
+                case 16:
+                    memset(&operation->ctx.ascon_starting.nonce_mask, 0, 16);
+                    break;
+                case 32:
+                    memcpy(&operation->ctx.ascon_starting.nonce_mask,
+                           key_buffer + 16, 16);
+                    break;
+                default:
+                    return PSA_ERROR_INVALID_ARGUMENT;
             }
-            memcpy(&operation->ctx.ascon.key_then_tag, key_buffer, 16);
+            memcpy(&operation->ctx.ascon_starting.key, key_buffer, 16);
             status = PSA_SUCCESS;
             break;
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
@@ -212,8 +243,7 @@ psa_status_t mbedtls_psa_aead_encrypt(
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
     if (operation.alg == PSA_ALG_ASCON_AEAD128) {
-        tf_psa_crypto_ascon_16_state_t *state = &operation.ctx.ascon.state;
-        uint8_t *key_then_tag = operation.ctx.ascon.key_then_tag;
+        tf_psa_crypto_ascon_16_state_t *state = &operation.ctx.ascon_active.state;
         /* Double-check the nonce and tag length. The core should
          * already have checked, but better safe than sorry. */
         if (nonce_length != 16) {
@@ -222,7 +252,7 @@ psa_status_t mbedtls_psa_aead_encrypt(
         if (operation.tag_length > 16) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
-        tf_psa_crypto_ascon_aead128_setup(state, key_then_tag, nonce);
+        ascon_aead128_setup(&operation, nonce);
         tf_psa_crypto_ascon_aead128_update_ad(state,
                                               additional_data,
                                               additional_data_length);
@@ -230,9 +260,10 @@ psa_status_t mbedtls_psa_aead_encrypt(
         tf_psa_crypto_ascon_aead128_update(state, 0,
                                            plaintext, ciphertext,
                                            plaintext_length);
-        tf_psa_crypto_ascon_aead128_finish(state, 0, key_then_tag,
-                                           key_then_tag);
-        memcpy(tag, key_then_tag, operation.tag_length);
+        tf_psa_crypto_ascon_aead128_finish(state, 0,
+                                           operation.ctx.ascon_active.key,
+                                           operation.ctx.ascon_finished.tag);
+        memcpy(tag, operation.ctx.ascon_finished.tag, operation.tag_length);
         status = PSA_SUCCESS;
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
@@ -349,8 +380,7 @@ psa_status_t mbedtls_psa_aead_decrypt(
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
     if (operation.alg == PSA_ALG_ASCON_AEAD128) {
-        tf_psa_crypto_ascon_16_state_t *state = &operation.ctx.ascon.state;
-        uint8_t *key_then_tag = operation.ctx.ascon.key_then_tag;
+        tf_psa_crypto_ascon_16_state_t *state = &operation.ctx.ascon_active.state;
         /* Double-check the nonce and tag length. The core should
          * already have checked, but better safe than sorry. */
         if (nonce_length != 16) {
@@ -359,7 +389,7 @@ psa_status_t mbedtls_psa_aead_decrypt(
         if (operation.tag_length < 4 || operation.tag_length > 16) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
-        tf_psa_crypto_ascon_aead128_setup(state, key_then_tag, nonce);
+        ascon_aead128_setup(&operation, nonce);
         tf_psa_crypto_ascon_aead128_update_ad(state,
                                               additional_data,
                                               additional_data_length);
@@ -367,9 +397,11 @@ psa_status_t mbedtls_psa_aead_decrypt(
         tf_psa_crypto_ascon_aead128_update(state, 1,
                                            ciphertext, plaintext,
                                            ciphertext_length - operation.tag_length);
-        tf_psa_crypto_ascon_aead128_finish(state, 1, key_then_tag,
-                                           key_then_tag);
-        if (mbedtls_ct_memcmp(tag, key_then_tag, operation.tag_length) == 0) {
+        tf_psa_crypto_ascon_aead128_finish(state, 1,
+                                           operation.ctx.ascon_active.key,
+                                           operation.ctx.ascon_finished.tag);
+        if (mbedtls_ct_memcmp(tag, operation.ctx.ascon_finished.tag,
+                              operation.tag_length) == 0) {
             status = PSA_SUCCESS;
         } else {
             status = PSA_ERROR_INVALID_SIGNATURE;
@@ -492,9 +524,7 @@ psa_status_t mbedtls_psa_aead_set_nonce(
         if (nonce_length != 16) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
-        tf_psa_crypto_ascon_aead128_setup(&operation->ctx.ascon.state,
-                                          operation->ctx.ascon.key_then_tag,
-                                          nonce);
+        ascon_aead128_setup(operation, nonce);
         status = PSA_SUCCESS;
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
@@ -563,7 +593,7 @@ psa_status_t mbedtls_psa_aead_update_ad(
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
     if (operation->alg == PSA_ALG_ASCON_AEAD128) {
-        tf_psa_crypto_ascon_aead128_update_ad(&operation->ctx.ascon.state,
+        tf_psa_crypto_ascon_aead128_update_ad(&operation->ctx.ascon_active.state,
                                               input, input_length);
         status = PSA_SUCCESS;
     } else
@@ -635,10 +665,10 @@ psa_status_t mbedtls_psa_aead_update(
             return PSA_ERROR_BUFFER_TOO_SMALL;
         }
         if (!operation->aead_finished) {
-            tf_psa_crypto_ascon_aead128_finish_ad(&operation->ctx.ascon.state);
+            tf_psa_crypto_ascon_aead128_finish_ad(&operation->ctx.ascon_active.state);
             operation->aead_finished = 1;
         }
-        tf_psa_crypto_ascon_aead128_update(&operation->ctx.ascon.state,
+        tf_psa_crypto_ascon_aead128_update(&operation->ctx.ascon_active.state,
                                            !operation->is_encrypt,
                                            input, output, input_length);
         status = PSA_SUCCESS;
@@ -718,21 +748,21 @@ psa_status_t mbedtls_psa_aead_finish(
         if (!operation->aead_finished) {
             /* Happens if update() wasn't called, which can happen with an
              * empty plainext. */
-            tf_psa_crypto_ascon_aead128_finish_ad(&operation->ctx.ascon.state);
+            tf_psa_crypto_ascon_aead128_finish_ad(&operation->ctx.ascon_active.state);
         }
-        tf_psa_crypto_ascon_aead128_finish(&operation->ctx.ascon.state,
+        tf_psa_crypto_ascon_aead128_finish(&operation->ctx.ascon_active.state,
                                            !operation->is_encrypt,
-                                           operation->ctx.ascon.key_then_tag,
-                                           operation->ctx.ascon.key_then_tag);
+                                           operation->ctx.ascon_active.key,
+                                           operation->ctx.ascon_finished.tag);
         /* Belt and braces (this should already be fine, but better have
          * redundant checks than a buffer overflow) */
         if (operation->tag_length > tag_size) {
             return PSA_ERROR_BUFFER_TOO_SMALL;
         }
-        if (operation->tag_length > sizeof(operation->ctx.ascon.key_then_tag)) {
+        if (operation->tag_length > sizeof(operation->ctx.ascon_finished.tag)) {
             return PSA_ERROR_CORRUPTION_DETECTED;
         }
-        memcpy(tag, operation->ctx.ascon.key_then_tag, operation->tag_length);
+        memcpy(tag, operation->ctx.ascon_finished.tag, operation->tag_length);
         status = PSA_SUCCESS;
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
@@ -779,8 +809,7 @@ psa_status_t mbedtls_psa_aead_abort(
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
         case PSA_ALG_ASCON_AEAD128:
-            mbedtls_platform_zeroize(&operation->ctx.ascon,
-                                     sizeof(operation->ctx.ascon));
+            mbedtls_platform_zeroize(&operation->ctx, sizeof(operation->ctx));
             break;
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     }
