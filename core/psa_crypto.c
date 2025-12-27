@@ -4920,6 +4920,31 @@ static psa_algorithm_t psa_aead_get_base_algorithm(psa_algorithm_t alg)
     return PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(alg);
 }
 
+static psa_status_t psa_aead_validate_key_type(psa_key_type_t key_type,
+                                               psa_algorithm_t alg)
+{
+#if defined(PSA_WANT_ALG_CCM) || defined(PSA_WANT_ALG_GCM)
+    if (PSA_ALG_IS_AEAD_ON_BLOCK_CIPHER(alg)) {
+        /* Since TF-PSA-Crypto 1.0, all block ciphers have a 16-byte
+         * block size, and thus are suitable for all supported AEAD modes
+         * based on block ciphers. */
+        if (PSA_BLOCK_CIPHER_BLOCK_LENGTH(key_type) != 0) {
+            return PSA_SUCCESS;
+        }
+    }
+#endif
+
+    psa_algorithm_t alg_base = PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 0);
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+    if (key_type == PSA_KEY_TYPE_CHACHA20 &&
+        alg_base == PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0)) {
+        return PSA_SUCCESS;
+    }
+#endif
+
+    return PSA_ERROR_INVALID_ARGUMENT;
+}
+
 static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
 {
     const uint8_t tag_len = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
@@ -4971,7 +4996,10 @@ static psa_status_t psa_aead_validate_algorithm(psa_key_type_t key_type,
         return status;
     }
 
-    (void) key_type //TODO: validate compatibility with alg
+    status = psa_aead_validate_key_type(key_type, alg);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
 
     return PSA_SUCCESS;
 }
