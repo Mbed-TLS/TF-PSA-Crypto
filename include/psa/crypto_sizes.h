@@ -98,6 +98,7 @@
         PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_256 ? 136u :     \
         PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_384 ? 104u :     \
         PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_512 ? 72u :      \
+        /* PSA_ALG_ASCON_HASH256 omitted: no standard block size */ \
         0u)
 
 /** \def PSA_HASH_MAX_SIZE

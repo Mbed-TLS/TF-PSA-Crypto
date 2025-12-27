@@ -6691,18 +6691,49 @@ static psa_status_t psa_key_derivation_set_maximum_capacity(
         return status;
     }
 
+#if defined(PSA_WANT_ALG_HKDF) ||         \
+    defined(PSA_WANT_ALG_HKDF_EXTRACT) || \
+    defined(PSA_WANT_ALG_HKDF_EXPAND) ||  \
+    defined(PSA_WANT_ALG_PBKDF2_HMAC)
+    int hmac_based = (
+#if defined(PSA_WANT_ALG_HKDF)
+        PSA_ALG_IS_HKDF(kdf_alg) ||
+#endif
+#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
+        PSA_ALG_IS_HKDF_EXTRACT(kdf_alg) ||
+#endif
+#if defined(PSA_WANT_ALG_HKDF_EXPAND)
+        PSA_ALG_IS_HKDF_EXPAND(kdf_alg) ||
+#endif
+#if defined(PSA_WANT_ALG_PBKDF2_HMAC)
+        PSA_ALG_IS_PBKDF2_HMAC(kdf_alg) ||
+#endif
+        0);
+    if (hmac_based) {
+        /* For a mechanism based on HMAC, make sure that HMAC is supported
+         * for the selected hash algorithm. As above, we do this to avoid
+         * failing later.  */
+        if (PSA_HASH_BLOCK_LENGTH(hash_alg) == 0) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+    }
+#endif
+
 #if defined(PSA_WANT_ALG_HKDF)
     if (PSA_ALG_IS_HKDF(kdf_alg)) {
+        hmac_based = 1;
         operation->capacity = 255 * hash_size;
     } else
 #endif
 #if defined(PSA_WANT_ALG_HKDF_EXTRACT)
     if (PSA_ALG_IS_HKDF_EXTRACT(kdf_alg)) {
+        hmac_based = 1;
         operation->capacity = hash_size;
     } else
 #endif
 #if defined(PSA_WANT_ALG_HKDF_EXPAND)
     if (PSA_ALG_IS_HKDF_EXPAND(kdf_alg)) {
+        hmac_based = 1;
         operation->capacity = 255 * hash_size;
     } else
 #endif
@@ -6733,6 +6764,7 @@ static psa_status_t psa_key_derivation_set_maximum_capacity(
         (void) hash_size;
         status = PSA_ERROR_NOT_SUPPORTED;
     }
+
     return status;
 }
 

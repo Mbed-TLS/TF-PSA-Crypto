@@ -136,6 +136,18 @@ static int can_exercise(const psa_key_attributes_t *attributes)
         return 0;
     }
 
+#if defined(PSA_ALG_ASCON_HASH256)
+    /* No HMAC for Ascon-Hash256 */
+    if (alg == PSA_ALG_HMAC(PSA_ALG_ASCON_HASH256) ||
+        alg == PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_ASCON_HASH256)) {
+        return 0;
+    }
+    /* No OID for Ascon-Hash256 */
+    if (alg == PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ASCON_HASH256)) {
+        return 0;
+    }
+#endif
+
     (void) key_type;
     (void) alg;
     (void) hash_alg;
