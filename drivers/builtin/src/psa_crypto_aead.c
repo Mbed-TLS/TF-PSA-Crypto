@@ -112,6 +112,19 @@ static psa_status_t psa_aead_setup(
             break;
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+            operation->alg = PSA_ALG_ASCON_AEAD128;
+            /* The nonce-masking variant with a double-length key
+             * is not yet supported. */
+            if (key_buffer_size != 16) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            memcpy(&operation->ctx.ascon.key_then_tag, key_buffer, 16);
+            status = PSA_SUCCESS;
+            break;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
+
         default:
             (void) status;
             (void) key_buffer;
@@ -650,6 +663,12 @@ psa_status_t mbedtls_psa_aead_abort(
             mbedtls_chachapoly_free(&operation->ctx.chachapoly);
             break;
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+        case PSA_ALG_ASCON_AEAD128:
+            mbedtls_platform_zeroize(&operation->ctx.ascon,
+                                     sizeof(operation->ctx.ascon));
+            break;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     }
 
     operation->is_encrypt = 0;

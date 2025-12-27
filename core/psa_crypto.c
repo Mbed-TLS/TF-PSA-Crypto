@@ -4944,6 +4944,12 @@ static psa_status_t psa_aead_validate_key_type(psa_key_type_t key_type,
 #endif
 
     psa_algorithm_t alg_base = PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 0);
+#if defined(PSA_WANT_ALG_ASCON_AEAD128)
+    if (key_type == PSA_KEY_TYPE_ASCON &&
+        alg_base == PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0)) {
+        return PSA_SUCCESS;
+    }
+#endif
 #if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
     if (key_type == PSA_KEY_TYPE_CHACHA20 &&
         alg_base == PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0)) {
@@ -4985,6 +4991,18 @@ static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
             }
             break;
 #endif /* PSA_WANT_ALG_CHACHA20_POLY1305 */
+
+#if defined(PSA_WANT_ALG_ASCON_AEAD128)
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+            /* NIST SP800-232 §4.3 allows tag lengths down to 32 bits. */
+            if (tag_len < 4) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            if (tag_len > 16) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif /* PSA_WANT_ALG_ASCON_AEAD128 */
 
         default:
             (void) tag_len;

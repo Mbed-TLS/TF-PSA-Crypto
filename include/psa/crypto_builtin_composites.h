@@ -101,7 +101,12 @@ typedef struct {
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305)
         mbedtls_chachapoly_context MBEDTLS_PRIVATE(chachapoly);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
-
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+        struct {
+            uint8_t key_then_tag[16]; /* key before finish(), then tag */
+            tf_psa_crypto_ascon_16_state_t state;
+        } MBEDTLS_PRIVATE(ascon);
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     } ctx;
 
 } mbedtls_psa_aead_operation_t;
