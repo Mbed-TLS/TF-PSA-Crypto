@@ -31,19 +31,20 @@ static psa_status_t psa_aead_setup(
     psa_algorithm_t alg)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    mbedtls_cipher_id_t cipher_id;
-    mbedtls_cipher_mode_t mode;
     (void) key_buffer_size;
-
-    status = mbedtls_cipher_values_from_psa(alg, attributes->type,
-                                            &mode, &cipher_id);
-    if (status != PSA_SUCCESS) {
-        return status;
-    }
 
     switch (PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 0)) {
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
         case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0):
+        {
+            mbedtls_cipher_id_t cipher_id;
+            mbedtls_cipher_mode_t mode;
+            status = mbedtls_cipher_values_from_psa(alg, attributes->type,
+                                                    &mode, &cipher_id);
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+
             operation->alg = PSA_ALG_CCM;
             /* CCM allows the following tag lengths: 4, 6, 8, 10, 12, 14, 16.
              * The call to mbedtls_ccm_encrypt_and_tag or
@@ -60,10 +61,20 @@ static psa_status_t psa_aead_setup(
                 return status;
             }
             break;
+        }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CCM */
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
         case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 0):
+        {
+            mbedtls_cipher_id_t cipher_id;
+            mbedtls_cipher_mode_t mode;
+            status = mbedtls_cipher_values_from_psa(alg, attributes->type,
+                                                    &mode, &cipher_id);
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+
             operation->alg = PSA_ALG_GCM;
             /* GCM allows the following tag lengths: 4, 8, 12, 13, 14, 15, 16.
              * The call to mbedtls_gcm_crypt_and_tag or
@@ -80,6 +91,7 @@ static psa_status_t psa_aead_setup(
                 return status;
             }
             break;
+        }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_GCM */
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305)
