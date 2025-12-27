@@ -4959,18 +4959,26 @@ static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
     return PSA_SUCCESS;
 }
 
-static psa_status_t psa_aead_check_algorithm(psa_algorithm_t alg)
+static psa_status_t psa_aead_validate_algorithm(psa_key_type_t key_type,
+                                                psa_algorithm_t alg)
 {
     if (!PSA_ALG_IS_AEAD(alg) || PSA_ALG_IS_WILDCARD(alg)) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
+    psa_status_t status = psa_validate_tag_length(alg);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    (void) key_type //TODO: validate compatibility with alg
+
     return PSA_SUCCESS;
 }
 
 /* Helper function to perform common nonce length checks. */
-static psa_status_t psa_aead_check_nonce_length(psa_algorithm_t alg,
-                                                size_t nonce_length)
+static psa_status_t psa_aead_validate_nonce_length(psa_algorithm_t alg,
+                                                   size_t nonce_length)
 {
     psa_algorithm_t base_alg = psa_aead_get_base_algorithm(alg);
 
@@ -5034,15 +5042,15 @@ psa_status_t psa_aead_encrypt(mbedtls_svc_key_id_t key,
 
     *ciphertext_length = 0;
 
-    status = psa_aead_check_algorithm(alg);
-    if (status != PSA_SUCCESS) {
-        return status;
-    }
-
     status = psa_get_and_lock_key_slot_with_policy(
         key, &slot, PSA_KEY_USAGE_ENCRYPT, alg);
     if (status != PSA_SUCCESS) {
         return status;
+    }
+
+    status = psa_aead_validate_algorithm(slot->attr.type, alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
     }
 
     LOCAL_INPUT_ALLOC(nonce_external, nonce_length, nonce);
@@ -5050,7 +5058,7 @@ psa_status_t psa_aead_encrypt(mbedtls_svc_key_id_t key,
     LOCAL_INPUT_ALLOC(plaintext_external, plaintext_length, plaintext);
     LOCAL_OUTPUT_ALLOC(ciphertext_external, ciphertext_size, ciphertext);
 
-    status = psa_aead_check_nonce_length(alg, nonce_length);
+    status = psa_aead_validate_nonce_length(alg, nonce_length);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
@@ -5100,15 +5108,15 @@ psa_status_t psa_aead_decrypt(mbedtls_svc_key_id_t key,
 
     *plaintext_length = 0;
 
-    status = psa_aead_check_algorithm(alg);
-    if (status != PSA_SUCCESS) {
-        return status;
-    }
-
     status = psa_get_and_lock_key_slot_with_policy(
         key, &slot, PSA_KEY_USAGE_DECRYPT, alg);
     if (status != PSA_SUCCESS) {
         return status;
+    }
+
+    status = psa_aead_validate_algorithm(slot->attr.type, alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
     }
 
     LOCAL_INPUT_ALLOC(nonce_external, nonce_length, nonce);
@@ -5117,7 +5125,7 @@ psa_status_t psa_aead_decrypt(mbedtls_svc_key_id_t key,
     LOCAL_INPUT_ALLOC(ciphertext_external, ciphertext_length, ciphertext);
     LOCAL_OUTPUT_ALLOC(plaintext_external, plaintext_size, plaintext);
 
-    status = psa_aead_check_nonce_length(alg, nonce_length);
+    status = psa_aead_validate_nonce_length(alg, nonce_length);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
@@ -5156,11 +5164,6 @@ static psa_status_t psa_aead_setup(psa_aead_operation_t *operation,
     psa_key_slot_t *slot = NULL;
     psa_key_usage_t key_usage = 0;
 
-    status = psa_aead_check_algorithm(alg);
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
     if (operation->id != 0) {
         status = PSA_ERROR_BAD_STATE;
         goto exit;
@@ -5191,7 +5194,8 @@ static psa_status_t psa_aead_setup(psa_aead_operation_t *operation,
         goto exit;
     }
 
-    if ((status = psa_validate_tag_length(alg)) != PSA_SUCCESS) {
+    status = psa_aead_validate_algorithm(slot->attr.type, alg);
+    if (status != PSA_SUCCESS) {
         goto exit;
     }
 
@@ -5260,7 +5264,7 @@ static psa_status_t psa_aead_set_nonce_internal(psa_aead_operation_t *operation,
         goto exit;
     }
 
-    status = psa_aead_check_nonce_length(operation->alg, nonce_length);
+    status = psa_aead_validate_nonce_length(operation->alg, nonce_length);
     if (status != PSA_SUCCESS) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
