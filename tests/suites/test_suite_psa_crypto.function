@@ -5247,8 +5247,14 @@ void aead_decrypt(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_get_key_attributes(key, &attributes));
     key_bits = psa_get_key_bits(&attributes);
 
-    output_size = input_data->len - PSA_AEAD_TAG_LENGTH(key_type, key_bits,
-                                                        alg);
+    size_t tag_length = PSA_AEAD_TAG_LENGTH(key_type, key_bits, alg);
+    if (input_data->len >= tag_length) {
+        output_size = input_data->len - tag_length;
+    } else {
+        /* Error case: input too short. Make sure this is detected, and
+         * provide a comfortably large output buffer. */
+        output_size = input_data->len + tag_length;
+    }
     if (expected_result != PSA_ERROR_INVALID_ARGUMENT &&
         expected_result != PSA_ERROR_NOT_SUPPORTED) {
         /* For all currently defined algorithms, PSA_AEAD_DECRYPT_OUTPUT_SIZE
