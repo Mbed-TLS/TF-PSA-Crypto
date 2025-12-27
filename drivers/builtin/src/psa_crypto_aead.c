@@ -21,7 +21,10 @@
 #include "mbedtls/private/chachapoly.h"
 #include "mbedtls/private/cipher.h"
 #include "mbedtls/private/gcm.h"
+#include "ascon_internal.h"
+
 #include "mbedtls/private/error_common.h"
+#include "mbedtls/constant_time.h"
 
 static psa_status_t psa_aead_setup(
     mbedtls_psa_aead_operation_t *operation,
@@ -344,6 +347,35 @@ psa_status_t mbedtls_psa_aead_decrypt(
                                             plaintext));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+    if (operation.alg == PSA_ALG_ASCON_AEAD128) {
+        tf_psa_crypto_ascon_16_state_t *state = &operation.ctx.ascon.state;
+        uint8_t *key_then_tag = operation.ctx.ascon.key_then_tag;
+        /* Double-check the nonce and tag length. The core should
+         * already have checked, but better safe than sorry. */
+        if (nonce_length != 16) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        if (operation.tag_length < 4 || operation.tag_length > 16) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        tf_psa_crypto_ascon_aead128_setup(state, key_then_tag, nonce);
+        tf_psa_crypto_ascon_aead128_update_ad(state,
+                                              additional_data,
+                                              additional_data_length);
+        tf_psa_crypto_ascon_aead128_finish_ad(state);
+        tf_psa_crypto_ascon_aead128_update(state, 1,
+                                           ciphertext, plaintext,
+                                           ciphertext_length - operation.tag_length);
+        tf_psa_crypto_ascon_aead128_finish(state, 1, key_then_tag,
+                                           key_then_tag);
+        if (mbedtls_ct_memcmp(tag, key_then_tag, operation.tag_length) == 0) {
+            status = PSA_SUCCESS;
+        } else {
+            status = PSA_ERROR_INVALID_SIGNATURE;
+        }
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     {
         (void) nonce;
         (void) nonce_length;
