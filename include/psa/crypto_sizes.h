@@ -460,6 +460,8 @@
      0u : \
      (key_type) == PSA_KEY_TYPE_CHACHA20 && \
      MBEDTLS_PSA_ALG_AEAD_EQUAL(alg, PSA_ALG_CHACHA20_POLY1305) ? 12u : \
+     (key_type) == PSA_KEY_TYPE_ASCON && \
+     MBEDTLS_PSA_ALG_AEAD_EQUAL(alg, PSA_ALG_ASCON_AEAD128) ? 16u : \
      0u)
 
 /** The maximum default nonce size among all supported pairs of key types and

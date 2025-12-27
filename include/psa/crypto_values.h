@@ -1335,6 +1335,19 @@
  */
 #define PSA_ALG_CHACHA20_POLY1305               ((psa_algorithm_t) 0x05100500)
 
+/** The Ascon-AEAD128 algorithm.
+ *
+ * The corresponding key type is #PSA_KEY_TYPE_ASCON.
+ *
+ * The nonce size is 128 bytes.
+ * The tag size is 16 bytes.
+ * It can be truncated to any length between 4 and 16.
+ *
+ * This algorithm encompasses both the basic Ascon-AEAD128 and the
+ * nonce-masking variant. The key size determines the choice of variant.
+ */
+#define PSA_ALG_ASCON_AEAD128                   ((psa_algorithm_t) 0x05100700)
+
 /* In the encoding of an AEAD algorithm, the bits corresponding to
  * PSA_ALG_AEAD_TAG_LENGTH_MASK encode the length of the AEAD tag.
  * The constants for default lengths follow this encoding.
@@ -1398,6 +1411,7 @@
  */
 #define PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(aead_alg)                   \
     (                                                                    \
+        PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_ASCON_AEAD128) \
         PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_CCM) \
         PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_GCM) \
         PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_CHACHA20_POLY1305) \

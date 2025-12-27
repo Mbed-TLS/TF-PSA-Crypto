@@ -45,6 +45,7 @@
  * \{
  */
 
+#define PSA_WANT_ALG_ASCON_AEAD128              1
 #define PSA_WANT_ALG_ASCON_CXOF128              1
 #define PSA_WANT_ALG_ASCON_HASH256              1
 #define PSA_WANT_ALG_ASCON_XOF128               1
