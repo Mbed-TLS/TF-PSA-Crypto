@@ -520,6 +520,15 @@
  */
 #define PSA_KEY_TYPE_CHACHA20                       ((psa_key_type_t) 0x2004)
 
+/** Key for the Ascon-AEAD128 algorithm.
+ *
+ * The corresponding algorithm is #PSA_ALG_ASCON_AEAD128.
+ *
+ * The key size is 128 bits (16 bytes) for the basic variant of Ascon,
+ * or 256 bits (32 bytes) for the nonce-masking variant.
+ */
+#define PSA_KEY_TYPE_ASCON                          ((psa_key_type_t) 0x2008)
+
 /** RSA public key.
  *
  * The size of an RSA key is the bit size of the modulus.

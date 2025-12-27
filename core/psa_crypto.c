@@ -581,6 +581,15 @@ psa_status_t psa_validate_unstructured_key_bit_size(psa_key_type_t type,
             }
             break;
 #endif
+#if defined(PSA_WANT_KEY_TYPE_ASCON)
+        case PSA_KEY_TYPE_ASCON:
+            /* The nonce-masking variant with a double-length key
+             * is not yet supported. */
+            if (bits != 128) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif
         default:
             return PSA_ERROR_NOT_SUPPORTED;
     }
