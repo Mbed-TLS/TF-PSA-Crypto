@@ -4920,6 +4920,54 @@ static psa_algorithm_t psa_aead_get_base_algorithm(psa_algorithm_t alg)
     return PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(alg);
 }
 
+static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
+{
+    const uint8_t tag_len = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
+
+    switch (PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 0)) {
+#if defined(PSA_WANT_ALG_CCM)
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0):
+            /* CCM allows the following tag lengths: 4, 6, 8, 10, 12, 14, 16.*/
+            if (tag_len < 4 || tag_len > 16 || tag_len % 2) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif /* PSA_WANT_ALG_CCM */
+
+#if defined(PSA_WANT_ALG_GCM)
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 0):
+            /* GCM allows the following tag lengths: 4, 8, 12, 13, 14, 15, 16. */
+            if (tag_len != 4 && tag_len != 8 && (tag_len < 12 || tag_len > 16)) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif /* PSA_WANT_ALG_GCM */
+
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0):
+            /* We only support the default tag length. */
+            if (tag_len != 16) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif /* PSA_WANT_ALG_CHACHA20_POLY1305 */
+
+        default:
+            (void) tag_len;
+            return PSA_ERROR_NOT_SUPPORTED;
+    }
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_aead_check_algorithm(psa_algorithm_t alg)
+{
+    if (!PSA_ALG_IS_AEAD(alg) || PSA_ALG_IS_WILDCARD(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    return PSA_SUCCESS;
+}
+
 /* Helper function to perform common nonce length checks. */
 static psa_status_t psa_aead_check_nonce_length(psa_algorithm_t alg,
                                                 size_t nonce_length)
@@ -4962,15 +5010,6 @@ static psa_status_t psa_aead_check_nonce_length(psa_algorithm_t alg,
     }
 
     return PSA_ERROR_INVALID_ARGUMENT;
-}
-
-static psa_status_t psa_aead_check_algorithm(psa_algorithm_t alg)
-{
-    if (!PSA_ALG_IS_AEAD(alg) || PSA_ALG_IS_WILDCARD(alg)) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-
-    return PSA_SUCCESS;
 }
 
 psa_status_t psa_aead_encrypt(mbedtls_svc_key_id_t key,
@@ -5104,45 +5143,6 @@ exit:
     psa_unregister_read_under_mutex(slot);
 
     return status;
-}
-
-static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
-{
-    const uint8_t tag_len = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
-
-    switch (PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 0)) {
-#if defined(PSA_WANT_ALG_CCM)
-        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0):
-            /* CCM allows the following tag lengths: 4, 6, 8, 10, 12, 14, 16.*/
-            if (tag_len < 4 || tag_len > 16 || tag_len % 2) {
-                return PSA_ERROR_INVALID_ARGUMENT;
-            }
-            break;
-#endif /* PSA_WANT_ALG_CCM */
-
-#if defined(PSA_WANT_ALG_GCM)
-        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 0):
-            /* GCM allows the following tag lengths: 4, 8, 12, 13, 14, 15, 16. */
-            if (tag_len != 4 && tag_len != 8 && (tag_len < 12 || tag_len > 16)) {
-                return PSA_ERROR_INVALID_ARGUMENT;
-            }
-            break;
-#endif /* PSA_WANT_ALG_GCM */
-
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
-        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0):
-            /* We only support the default tag length. */
-            if (tag_len != 16) {
-                return PSA_ERROR_INVALID_ARGUMENT;
-            }
-            break;
-#endif /* PSA_WANT_ALG_CHACHA20_POLY1305 */
-
-        default:
-            (void) tag_len;
-            return PSA_ERROR_NOT_SUPPORTED;
-    }
-    return PSA_SUCCESS;
 }
 
 /* Set the key for a multipart authenticated operation. */
