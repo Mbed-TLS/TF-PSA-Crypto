@@ -87,6 +87,7 @@ typedef struct {
     psa_key_type_t MBEDTLS_PRIVATE(key_type);
 
     unsigned int MBEDTLS_PRIVATE(is_encrypt) : 1;
+    unsigned int MBEDTLS_PRIVATE(aead_finished) : 1; //only tracked by Ascon
 
     uint8_t MBEDTLS_PRIVATE(tag_length);
 
@@ -111,7 +112,7 @@ typedef struct {
 
 } mbedtls_psa_aead_operation_t;
 
-#define MBEDTLS_PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, { 0 } }
+#define MBEDTLS_PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, 0, { 0 } }
 
 #include "mbedtls/private/ecdsa.h"
 

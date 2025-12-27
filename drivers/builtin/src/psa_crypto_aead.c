@@ -487,6 +487,17 @@ psa_status_t mbedtls_psa_aead_set_nonce(
                                       MBEDTLS_CHACHAPOLY_DECRYPT));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+    if (operation->alg == PSA_ALG_ASCON_AEAD128) {
+        if (nonce_length != 16) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        tf_psa_crypto_ascon_aead128_setup(&operation->ctx.ascon.state,
+                                          operation->ctx.ascon.key_then_tag,
+                                          nonce);
+        status = PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     {
         (void) operation;
         (void) nonce;
@@ -550,6 +561,13 @@ psa_status_t mbedtls_psa_aead_update_ad(
                                           input_length));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+    if (operation->alg == PSA_ALG_ASCON_AEAD128) {
+        tf_psa_crypto_ascon_aead128_update_ad(&operation->ctx.ascon.state,
+                                              input, input_length);
+        status = PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     {
         (void) operation;
         (void) input;
@@ -611,6 +629,21 @@ psa_status_t mbedtls_psa_aead_update(
                                       output));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+    if (operation->alg == PSA_ALG_ASCON_AEAD128) {
+        if (output_size < input_length) {
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+        if (!operation->aead_finished) {
+            tf_psa_crypto_ascon_aead128_finish_ad(&operation->ctx.ascon.state);
+            operation->aead_finished = 1;
+        }
+        tf_psa_crypto_ascon_aead128_update(&operation->ctx.ascon.state,
+                                           !operation->is_encrypt,
+                                           input, output, input_length);
+        status = PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     {
         (void) operation;
         (void) input;
@@ -680,6 +713,29 @@ psa_status_t mbedtls_psa_aead_finish(
                                       tag));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+    if (operation->alg == PSA_ALG_ASCON_AEAD128) {
+        if (!operation->aead_finished) {
+            /* Happens if update() wasn't called, which can happen with an
+             * empty plainext. */
+            tf_psa_crypto_ascon_aead128_finish_ad(&operation->ctx.ascon.state);
+        }
+        tf_psa_crypto_ascon_aead128_finish(&operation->ctx.ascon.state,
+                                           !operation->is_encrypt,
+                                           operation->ctx.ascon.key_then_tag,
+                                           operation->ctx.ascon.key_then_tag);
+        /* Belt and braces (this should already be fine, but better have
+         * redundant checks than a buffer overflow) */
+        if (operation->tag_length > tag_size) {
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+        if (operation->tag_length > sizeof(operation->ctx.ascon.key_then_tag)) {
+            return PSA_ERROR_CORRUPTION_DETECTED;
+        }
+        memcpy(tag, operation->ctx.ascon.key_then_tag, operation->tag_length);
+        status = PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     {
         (void) ciphertext;
         (void) ciphertext_size;
