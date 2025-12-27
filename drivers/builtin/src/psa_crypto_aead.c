@@ -207,6 +207,32 @@ psa_status_t mbedtls_psa_aead_encrypt(
                                                tag));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128)
+    if (operation.alg == PSA_ALG_ASCON_AEAD128) {
+        tf_psa_crypto_ascon_16_state_t *state = &operation.ctx.ascon.state;
+        uint8_t *key_then_tag = operation.ctx.ascon.key_then_tag;
+        /* Double-check the nonce and tag length. The core should
+         * already have checked, but better safe than sorry. */
+        if (nonce_length != 16) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        if (operation.tag_length > 16) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        tf_psa_crypto_ascon_aead128_setup(state, key_then_tag, nonce);
+        tf_psa_crypto_ascon_aead128_update_ad(state,
+                                              additional_data,
+                                              additional_data_length);
+        tf_psa_crypto_ascon_aead128_finish_ad(state);
+        tf_psa_crypto_ascon_aead128_update(state, 0,
+                                           plaintext, ciphertext,
+                                           plaintext_length);
+        tf_psa_crypto_ascon_aead128_finish(state, 0, key_then_tag,
+                                           key_then_tag);
+        memcpy(tag, key_then_tag, operation.tag_length);
+        status = PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_AEAD128 */
     {
         (void) tag;
         (void) nonce;

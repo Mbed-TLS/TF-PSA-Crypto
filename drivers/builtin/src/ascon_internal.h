@@ -234,6 +234,7 @@ void tf_psa_crypto_ascon_aead128_update(
  * \param decrypting    \c 0 to encrypt, or a nonzero value to decrypt.
  * \param[in] key       The key. It must be exactly 16 bytes long.
  * \param[out] tag      The 16-byte authentication tag.
+ *                      It may be aliased to \p key.
  */
 void tf_psa_crypto_ascon_aead128_finish(
     tf_psa_crypto_ascon_16_state_t *state,
