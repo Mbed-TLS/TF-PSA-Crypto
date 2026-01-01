@@ -1889,6 +1889,27 @@
 //#define MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
 
 /**
+ * \def MBEDTLS_SHA256RISCV_C
+ *
+ * Enable the SHA256 cryptographic extension support on RISC-V.
+ *
+ * Caller:  drivers/builtin/src/sha256.c
+ *
+ * Requires: MBEDTLS_SHA256_C
+ *
+ * \warning Runtime detection only works on Linux. For non-Linux operating
+ *          system, RISC-V Cryptographic Extensions must be supported by
+ *          the CPU when this option is enabled.
+ *
+ * \note    Minimum compiler versions for this feature when targeting riscv64
+ *          are gcc 14.0
+ *
+ *
+ * This module adds support for the SHA256 RISC-V Cryptographic Extensions on RISC-V systems.
+ */
+#define MBEDTLS_SHA256RISCV_C
+
+/**
  * \def MBEDTLS_SHA512_SMALLER
  *
  * Enable an implementation of SHA-512 that has lower ROM footprint but also

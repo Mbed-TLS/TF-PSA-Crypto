@@ -60,6 +60,14 @@
 
 #include "mbedtls/platform.h"
 
+#if defined(MBEDTLS_SHA256RISCV_C) && defined(MBEDTLS_HAVE_ASM)\
+    && defined(MBEDTLS_ARCH_IS_RV64) \
+    && (defined(MBEDTLS_COMPILER_IS_GCC) || defined(__clang__))
+
+#define MBEDTLS_SHA256_USE_RISCV_IF_PRESENT
+void sha256_block_data_order_zvkb_zvknha_or_zvknhb(void *ctx, const void *in, size_t num_blocks);
+#endif
+
 #if defined(MBEDTLS_ARCH_IS_ARMV8_A)
 
 #  if defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT) || \
@@ -435,7 +443,7 @@ static int mbedtls_internal_sha256_process_a64_crypto(mbedtls_sha256_context *ct
 #undef MBEDTLS_POP_TARGET_PRAGMA
 #endif
 
-#if !defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT)
+#if !defined(MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT) && !defined(MBEDTLS_SHA256_USE_RISCV_IF_PRESENT)
 #define mbedtls_internal_sha256_process_many_c mbedtls_internal_sha256_process_many
 #define mbedtls_internal_sha256_process_c      mbedtls_internal_sha256_process
 #endif
@@ -613,6 +621,36 @@ static int mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx,
 
 #endif /* MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT */
 
+#if defined(MBEDTLS_SHA256_USE_RISCV_IF_PRESENT)
+
+static int mbedtls_riscv64_crypto_sha256_has_support(void)
+{
+    return 1;
+}
+
+static size_t mbedtls_internal_sha256_process_many(mbedtls_sha256_context *ctx,
+                                                   const uint8_t *msg, size_t len)
+{
+    if(mbedtls_riscv64_crypto_sha256_has_support()){
+        sha256_block_data_order_zvkb_zvknha_or_zvknhb(ctx, msg, len / SHA256_BLOCK_SIZE);
+        return (len / SHA256_BLOCK_SIZE) * SHA256_BLOCK_SIZE;
+    } else {
+        return mbedtls_internal_sha256_process_many_c(ctx, msg, len);
+    }
+}
+
+static int mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx,
+                                           const unsigned char data[SHA256_BLOCK_SIZE])
+{
+    if(mbedtls_riscv64_crypto_sha256_has_support()){
+        sha256_block_data_order_zvkb_zvknha_or_zvknhb(ctx, data, 1);
+        return 0;
+    } else {
+        return mbedtls_internal_sha256_process_c(ctx, data);
+    }
+}
+
+#endif /* MBEDTLS_SHA256_USE_RISCV_IF_PRESENT */
 
 /*
  * SHA-256 process buffer

@@ -88,6 +88,16 @@
 #endif
 #endif
 
+/* RISC-V Architecture Detection */
+#if !defined(MBEDTLS_ARCH_IS_RV32) && \
+    (defined(__riscv32__) || (defined(__riscv) && __riscv_xlen == 32))
+#define MBEDTLS_ARCH_IS_RV32
+#endif
+#if !defined(MBEDTLS_ARCH_IS_RV64) && \
+    (defined(__riscv64__) || (defined(__riscv) && __riscv_xlen == 64))
+#define MBEDTLS_ARCH_IS_RV64
+#endif
+
 #if defined(__GNUC__) && !defined(__ARMCC_VERSION) && !defined(__clang__) \
     && !defined(__llvm__) && !defined(__INTEL_COMPILER)
 /* Defined if the compiler really is gcc and not clang, etc */

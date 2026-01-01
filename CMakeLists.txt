@@ -42,12 +42,12 @@ set(TF_PSA_CRYPTO_SOVERSION 1)
 
 if(TEST_CPP)
     project("TF-PSA-Crypto"
-        LANGUAGES C CXX
+        LANGUAGES C CXX ASM
         VERSION ${TF_PSA_CRYPTO_VERSION}
     )
 else()
     project("TF-PSA-Crypto"
-        LANGUAGES C
+        LANGUAGES C ASM
         VERSION ${TF_PSA_CRYPTO_VERSION}
     )
 endif()
