@@ -1,0 +1,3 @@
+Features
+   * Implement Ascon-XOF128 (PSA_ALG_ASCON_XOF128) and Ascon-CXOF128
+     (PSA_ALG_ASCON_CXOF128).

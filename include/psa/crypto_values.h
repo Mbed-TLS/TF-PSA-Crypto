@@ -985,6 +985,21 @@
  */
 #define PSA_ALG_ANY_HASH                        ((psa_algorithm_t) 0x020000ff)
 
+/** The Ascon-XOF128 XOF (extendable-output function) algorithm.
+ *
+ * This algorithm cannot use a customization string. The variant with a
+ * customization string is #PSA_ALG_ASCON_CXOF128.
+ */
+#define PSA_ALG_ASCON_XOF128                    ((psa_algorithm_t) 0x0d000300)
+
+/** The Ascon-CXOF128 XOF (extendable-output function) algorithm with context.
+ *
+ * This algorithm requires a customization string, which must be set with
+ * psa_xof_set_context(). The variant with a customization string is
+ * #PSA_ALG_ASCON_XOF128.
+ */
+#define PSA_ALG_ASCON_CXOF128                   ((psa_algorithm_t) 0x0d008300)
+
 #define PSA_ALG_XOF_CONTEXT_FLAG                ((psa_algorithm_t) 0x00008000)
 /** Whether the specified XOF algorithm supports a context.
  *

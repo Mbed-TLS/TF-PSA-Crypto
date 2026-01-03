@@ -45,7 +45,9 @@
  * \{
  */
 
+#define PSA_WANT_ALG_ASCON_CXOF128              1
 #define PSA_WANT_ALG_ASCON_HASH256              1
+#define PSA_WANT_ALG_ASCON_XOF128               1
 #define PSA_WANT_ALG_CBC_NO_PADDING             1
 #define PSA_WANT_ALG_CBC_PKCS7                  1
 #define PSA_WANT_ALG_CCM                        1
@@ -726,11 +728,6 @@
  * This section sets cryptographic mechanism settings.
  * \{
  */
-
-/* Temporary option intended for testing only. Useless until there's an API
- * for it, at which point it will be enabled through PSA_WANT_xxx. */
-//#define MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128
-//#define MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128
 
 /**
  * \def MBEDTLS_LMS_C

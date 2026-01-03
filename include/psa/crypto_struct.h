@@ -96,13 +96,24 @@ struct psa_xof_operation_s {
      * ID value zero means the context is not valid or not assigned to
      * any driver (i.e. the driver context is not active, in use). */
     unsigned int MBEDTLS_PRIVATE(id);
+
+    /* Algorithm properties */
+    unsigned requires_context : 1;
+    unsigned allows_context : 1;
+
+    /* State tracking */
+    unsigned active : 1;
+    unsigned has_context : 1;
+    unsigned has_input : 1;
+    unsigned has_output : 1;
+
     psa_driver_xof_context_t MBEDTLS_PRIVATE(ctx);
 #endif
 };
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_XOF_OPERATION_INIT { 0 }
 #else
-#define PSA_XOF_OPERATION_INIT { 0, { 0 } }
+#define PSA_XOF_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, { 0 } }
 #endif
 static inline struct psa_xof_operation_s psa_xof_operation_init(void)
 {

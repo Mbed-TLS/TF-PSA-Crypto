@@ -93,10 +93,21 @@ typedef struct {
  * XOF (extendable-output functions) multi-part operation definitions.
  */
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128) || \
+    0
+#define MBEDTLS_PSA_BUILTIN_XOF
+#endif
+
 typedef struct {
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
+    uint8_t have_output;
     union {
         unsigned dummy; /* Make the union non-empty even with no supported algorithms. */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+        tf_psa_crypto_ascon_8_state_t ascon;
+#endif
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_xof_operation_t;
 

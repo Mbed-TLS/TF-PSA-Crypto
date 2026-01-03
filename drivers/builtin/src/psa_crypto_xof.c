@@ -17,6 +17,8 @@
 
 #include <string.h>
 
+#include "ascon_internal.h"
+
 psa_status_t mbedtls_psa_xof_abort(
     mbedtls_psa_xof_operation_t *operation)
 {
@@ -26,6 +28,18 @@ psa_status_t mbedtls_psa_xof_abort(
              * in use. It's ok to call abort on such an object, and there's
              * nothing to do. */
             break;
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+        case PSA_ALG_ASCON_XOF128:
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+        case PSA_ALG_ASCON_CXOF128:
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128) || defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+            tf_psa_crypto_ascon_xof128_reset(&operation->ctx.ascon);
+            break;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
+
         default:
             return PSA_ERROR_BAD_STATE;
     }
@@ -43,6 +57,17 @@ psa_status_t mbedtls_psa_xof_setup(
     }
 
     switch (alg) {
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+        case PSA_ALG_ASCON_XOF128:
+            tf_psa_crypto_ascon_xof128_setup(&operation->ctx.ascon);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+        case PSA_ALG_ASCON_CXOF128:
+            /* Do nothing: setup happens in set_context */
+            break;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128 */
+
         default:
             return PSA_ALG_IS_XOF(alg) ?
                    PSA_ERROR_NOT_SUPPORTED :
@@ -60,6 +85,19 @@ psa_status_t mbedtls_psa_xof_set_context(
     switch (operation->alg) {
         case 0:
             return PSA_ERROR_BAD_STATE;
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+        case PSA_ALG_ASCON_CXOF128:
+#if SIZE_MAX > 0xffffffffffffffffu
+            if (context_length > 0xffffffffffffffffu) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+#endif
+            tf_psa_crypto_ascon_cxof128_setup(&operation->ctx.ascon,
+                                              context, context_length);
+            return PSA_SUCCESS;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128 */
+
         default:
             (void) context;
             (void) context_length;
@@ -72,6 +110,18 @@ psa_status_t mbedtls_psa_xof_update(
     const uint8_t *input, size_t input_length)
 {
     switch (operation->alg) {
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+        case PSA_ALG_ASCON_XOF128:
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+        case PSA_ALG_ASCON_CXOF128:
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128) || defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+            tf_psa_crypto_ascon_xof128_update(&operation->ctx.ascon,
+                                              input, input_length);
+            return PSA_SUCCESS;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
+
         default:
             (void) input;
             (void) input_length;
@@ -87,6 +137,22 @@ psa_status_t mbedtls_psa_xof_output(
      * What would be safe here? */
 
     switch (operation->alg) {
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128)
+        case PSA_ALG_ASCON_XOF128:
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+        case PSA_ALG_ASCON_CXOF128:
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128) || defined(MBEDTLS_PSA_BUILTIN_ALG_ASCON_CXOF128)
+            if (!operation->have_output) {
+                tf_psa_crypto_ascon_xof128_finish(&operation->ctx.ascon);
+                operation->have_output = 1;
+            }
+            tf_psa_crypto_ascon_xof128_output(&operation->ctx.ascon,
+                                              output, output_size);
+            return PSA_SUCCESS;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_ASCON_XOF128 */
+
         default:
             (void) output;
             (void) output_size;
