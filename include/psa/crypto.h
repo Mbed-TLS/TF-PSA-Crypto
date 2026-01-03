@@ -1173,6 +1173,195 @@ psa_status_t psa_hash_clone(const psa_hash_operation_t *source_operation,
 
 /**@}*/
 
+/** \defgroup XOF Extendable-operation functions (XOF)
+ * @{
+ */
+
+/** The type of the state data structure for multipart XOF operations.
+ *
+ * Before calling any function on a XOF operation object, the application must
+ * initialize it by any of the following means:
+ * - Set the structure to all-bits-zero, for example:
+ *   \code
+ *   psa_xof_operation_t operation;
+ *   memset(&operation, 0, sizeof(operation));
+ *   \endcode
+ * - Initialize the structure to logical zero values, for example:
+ *   \code
+ *   psa_xof_operation_t operation = {0};
+ *   \endcode
+ * - Initialize the structure to the initializer #PSA_XOF_OPERATION_INIT,
+ *   for example:
+ *   \code
+ *   psa_xof_operation_t operation = PSA_XOF_OPERATION_INIT;
+ *   \endcode
+ * - Assign the result of the function psa_xof_operation_init()
+ *   to the structure, for example:
+ *   \code
+ *   psa_xof_operation_t operation;
+ *   operation = psa_xof_operation_init();
+ *   \endcode
+ *
+ * This is an implementation-defined \c struct. Applications should not
+ * make any assumptions about the content of this structure.
+ * Implementation details can change in future versions without notice. */
+typedef struct psa_xof_operation_s psa_xof_operation_t;
+
+/** \def PSA_XOF_OPERATION_INIT
+ *
+ * This macro returns a suitable initializer for a XOF operation object
+ * of type #psa_xof_operation_t.
+ */
+
+/** Return an initial value for a XOF operation object.
+ */
+static psa_xof_operation_t psa_xof_operation_init(void);
+
+/** Set up a multipart XOF (extendable-operation function) operation.
+ *
+ * The sequence of operations to calculate a XOF is as follows:
+ * -# Allocate an operation object which will be passed to all the functions
+ *    listed here.
+ * -# Initialize the operation object with one of the methods described in the
+ *    documentation for #psa_xof_operation_t, e.g. #PSA_xof_OPERATION_INIT.
+ * -# Call psa_xof_setup() to specify the algorithm.
+ * -# If the XOF uses a context, call psa_xof_set_context().
+ * -# Call psa_xof_update() zero, one or more times, passing successive
+ *    fragments of the input.
+ * -# Call psa_xof_output() zero, one or more times to obtain successive
+ *    fragments of the output.
+ * -# Call psa_xof_abort() to free the resources associated with the
+ *    operation (other than the operation object itself).
+ *
+ * If an error occurs at any step after a call to psa_xof_setup(), the
+ * operation will need to be reset by a call to psa_xof_abort(). The
+ * application may call psa_xof_abort() at any time after the operation
+ * has been initialized.
+ *
+ * After a successful call to psa_xof_setup(), the application must
+ * eventually terminate the operation by calling psa_xof_abort().
+ *
+ * \param[in,out] operation The operation object to set up. It must have
+ *                          been initialized as per the documentation for
+ *                          #psa_xof_operation_t and not yet in use.
+ * \param alg               The XOF algorithm to compute (\c PSA_ALG_XXX value
+ *                          such that #PSA_ALG_IS_XOF(\p alg) is true).
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         \p alg is not supported.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid (it must be inactive).
+ */
+psa_status_t psa_xof_setup(psa_xof_operation_t * operation,
+                           psa_algorithm_t alg);
+
+/** Pass a context to a multipart XOF (extendable-operation function) operation.
+ *
+ * \param[in,out] operation The operation object to use. It must have
+ *                          been set up with psa_xof_setup(), and must
+ *                          not yet have been received a context with
+ *                          psa_xof_set_context(), received input with
+ *                          psa_xof_update(), switched to output mode with
+ *                          psa_xof_output(), or aborted with psa_xof_abort().
+ * \param[in] context       The context to use.
+ * \param context_length    Size of the \p context buffer in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The algorithm used by \p operation does not allow a context,
+ *         or the context value is invalid for this algorithm.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid (it must be active, it must
+ *         not already have a context set, it must not already have input,
+ *         and it must not have already been switched to output mode).
+ */
+psa_status_t psa_xof_set_context(psa_xof_operation_t * operation,
+                                 const uint8_t *context, size_t context_length);
+
+/** Pass input to a multipart XOF (extendable-operation function) operation.
+ *
+ * This function switches the operation to input mode, even when
+ * \p input_length is 0.
+ *
+ * \param[in,out] operation The operation object to use. It must have
+ *                          been set up with psa_xof_setup(). It must
+ *                          have a context set with psa_xof_set_context()
+ *                          if the algorithm requires it. It must not
+ *                          yet have been switched to output mode with
+ *                          psa_xof_output() or aborted with psa_xof_abort().
+ * \param[in] input         The input fragment.
+ * \param input_length      Size of the \p input buffer in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid (it must be active, it must
+ *         have a context set if the algorithm requires it, and it must
+ *         not yet have been switched to output mode).
+ */
+psa_status_t psa_xof_update(psa_xof_operation_t * operation,
+                            const uint8_t *input, size_t input_length);
+
+/** Extract output from a multipart XOF (extendable-operation function) operation.
+ *
+ * This function switches the operation to output mode, even when
+ * \p output_length is 0.
+ *
+ * \param[in,out] operation The operation object to use. It must have
+ *                          been set up with psa_xof_setup(). It must
+ *                          have a context set with psa_xof_set_context()
+ *                          if the algorithm requires it. It must not
+ *                          yet have been aborted with psa_xof_abort().
+ * \param[out] output       On success, the output fragment.
+ * \param output_length     The number of bytes to write to \p output.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid (it must be active, and
+ *         it must have a context set if the algorithm requires it).
+ */
+psa_status_t psa_xof_output(psa_xof_operation_t * operation,
+                            uint8_t *output, size_t output_length);
+
+/** Abort a multipart XOF (extendable-operation function) operation.
+ *
+ * \param[in,out] operation The operation object to abort. It must have
+ *                          been initialized as per the documentation for
+ *                          #psa_xof_operation_t and not yet in use.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is corrupted.
+ */
+psa_status_t psa_xof_abort(psa_xof_operation_t * operation);
+
+/**@}*/
+
 /** \defgroup MAC Message authentication codes
  * @{
  */

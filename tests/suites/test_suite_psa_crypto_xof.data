@@ -1,0 +1,5 @@
+XOF setup: alg=0 (invalid)
+xof_setup_fail:0:PSA_ERROR_INVALID_ARGUMENT
+
+XOF setup: alg=category (invalid)
+xof_setup_fail:PSA_ALG_CATEGORY_XOF:PSA_ERROR_NOT_SUPPORTED

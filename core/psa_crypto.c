@@ -2476,6 +2476,183 @@ psa_status_t psa_hash_clone(const psa_hash_operation_t *source_operation,
 
 
 /****************************************************************/
+/* XOF */
+/****************************************************************/
+
+psa_status_t psa_xof_abort(psa_xof_operation_t *operation)
+{
+    /* Aborting a non-active operation is allowed */
+    if (operation->id == 0) {
+        return PSA_SUCCESS;
+    }
+
+    psa_status_t status = psa_driver_wrapper_xof_abort(operation);
+    memset(operation, 0, sizeof(*operation));
+
+    return status;
+}
+
+psa_status_t psa_xof_setup(psa_xof_operation_t *operation,
+                           psa_algorithm_t alg)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    /* A context must be freshly initialized before it can be set up. */
+    if (operation->id != 0) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+    if (!PSA_ALG_IS_XOF(alg)) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    /* Make sure the driver-dependent part of the operation is zeroed.
+     * This is a guarantee we make to drivers. Initializing the operation
+     * does not necessarily take care of it, since the context is a
+     * union and initializing a union does not necessarily initialize
+     * all of its members. */
+    memset(&operation->ctx, 0, sizeof(operation->ctx));
+
+    status = psa_driver_wrapper_xof_setup(operation, alg);
+
+exit:
+    if (status == PSA_SUCCESS) {
+        operation->active = 1;
+        if ((alg & PSA_ALG_XOF_CONTEXT_FLAG) != 0) {
+            /* So far there are no XOF algorithms with an optional context */
+            operation->allows_context = 1;
+            operation->requires_context = 1;
+        }
+    } else {
+        psa_xof_abort(operation);
+    }
+
+    return status;
+}
+
+psa_status_t psa_xof_set_context(psa_xof_operation_t *operation,
+                                 const uint8_t *context_external,
+                                 size_t context_length)
+{
+    if (operation->id == 0) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (!operation->active) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (!operation->allows_context) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (operation->has_context) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (operation->has_input) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (operation->has_output) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    LOCAL_INPUT_DECLARE(context_external, context);
+
+    operation->has_context = 1;
+
+    LOCAL_INPUT_ALLOC(context_external, context_length, context);
+    status = psa_driver_wrapper_xof_set_context(operation,
+                                                context, context_length);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_xof_abort(operation);
+    }
+
+    LOCAL_INPUT_FREE(context_external, context);
+    return status;
+}
+
+psa_status_t psa_xof_update(psa_xof_operation_t *operation,
+                            const uint8_t *input_external,
+                            size_t input_length)
+{
+    if (operation->id == 0) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (!operation->active) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (!operation->has_context && operation->requires_context) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (operation->has_output) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    LOCAL_INPUT_DECLARE(input_external, input);
+
+    operation->has_input = 1;
+
+    /* Don't require XOF implementations to behave correctly on a
+     * zero-length input, which may have an invalid pointer. */
+    if (input_length == 0) {
+        return PSA_SUCCESS;
+    }
+
+    LOCAL_INPUT_ALLOC(input_external, input_length, input);
+    status = psa_driver_wrapper_xof_update(operation, input, input_length);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_xof_abort(operation);
+    }
+
+    LOCAL_INPUT_FREE(input_external, input);
+    return status;
+}
+
+psa_status_t psa_xof_output(psa_xof_operation_t *operation,
+                            uint8_t *output_external,
+                            size_t output_length)
+{
+    if (operation->id == 0) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (!operation->active) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (!operation->has_context && operation->requires_context) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    LOCAL_OUTPUT_DECLARE(output_external, output);
+
+    operation->has_output = 1;
+
+    /* Don't require XOF implementations to behave correctly on a
+     * zero-length output, which may have an invalid pointer. */
+    if (output_length == 0) {
+        return PSA_SUCCESS;
+    }
+
+    LOCAL_OUTPUT_ALLOC(output_external, output_length, output);
+    status = psa_driver_wrapper_xof_output(operation, output, output_length);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_xof_abort(operation);
+    }
+
+    LOCAL_OUTPUT_FREE(output_external, output);
+    return status;
+}
+
+
+
+/****************************************************************/
 /* MAC */
 /****************************************************************/
 

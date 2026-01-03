@@ -1,0 +1,58 @@
+/* BEGIN_HEADER */
+
+#include <psa/crypto.h>
+
+#include <test/psa_crypto_helpers.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_CLIENT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void xof_setup_fail(int alg, int expected_status)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+
+    PSA_INIT();
+
+    TEST_EQUAL(psa_xof_setup(&operation, alg), expected_status);
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_inactive()
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* Redundant abort OK */
+    PSA_ASSERT(psa_xof_abort(&operation));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* Any function other than abort and setup requires prior setup */
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_EQUAL(psa_xof_update(&operation, input, sizeof(input)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_EQUAL(psa_xof_output(&operation, output, sizeof(output)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
