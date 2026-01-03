@@ -56,3 +56,190 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_set_context(int alg, psa_status_t expected_status)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+
+    PSA_INIT();
+
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               expected_status);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_good_context(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* After setup: abort OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): update OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, input, sizeof(input)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): output OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_late_context(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* set_context bad after update */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, input, sizeof(input)));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* set_context bad after output */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* set_context bad after update+output */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, input, sizeof(input)));
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_bad_context(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* After setup: abort OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): update OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    TEST_EQUAL(psa_xof_update(&operation, input, sizeof(input)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): output OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    TEST_EQUAL(psa_xof_output(&operation, output, sizeof(output)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_skip_update(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t output[42];
+    uint8_t output_ref[sizeof(output)];
+
+    PSA_INIT();
+
+    /* Skip update */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_output(&operation, output_ref, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* update(NULL, 0) */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, NULL, 0));
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_MEMORY_COMPARE(output, sizeof(output),
+                        output_ref, sizeof(output));
+
+    /* update("A", 0) */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    uint8_t a[1] = { 'A' };
+    PSA_ASSERT(psa_xof_update(&operation, a, 0));
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_MEMORY_COMPARE(output, sizeof(output),
+                        output_ref, sizeof(output));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */

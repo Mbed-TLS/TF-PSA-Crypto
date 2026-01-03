@@ -3,3 +3,33 @@ xof_setup_fail:0:PSA_ERROR_INVALID_ARGUMENT
 
 XOF setup: alg=category (invalid)
 xof_setup_fail:PSA_ALG_CATEGORY_XOF:PSA_ERROR_NOT_SUPPORTED
+
+XOF setup: alg=Ascon-Hash256 (invalid)
+xof_setup_fail:PSA_ALG_ASCON_HASH256:PSA_ERROR_INVALID_ARGUMENT
+
+XOF setup: alg=Ascon-XOF128 not supported
+depends_on:!PSA_WANT_ALG_ASCON_XOF128
+xof_setup_fail:PSA_ALG_ASCON_XOF128:PSA_ERROR_NOT_SUPPORTED
+
+XOF setup: alg=Ascon-CXOF128 not supported
+depends_on:!PSA_WANT_ALG_ASCON_CXOF128
+xof_setup_fail:PSA_ALG_ASCON_CXOF128:PSA_ERROR_NOT_SUPPORTED
+
+XOF states: inactive
+xof_state_inactive:
+
+XOF set_context: Ascon-XOF128 (bad)
+depends_on:PSA_WANT_ALG_ASCON_XOF128
+xof_state_set_context:PSA_ALG_ASCON_XOF128:PSA_ERROR_BAD_STATE
+
+XOF state: Ascon-XOF128 without set_context (good)
+depends_on:PSA_WANT_ALG_ASCON_XOF128
+xof_state_good_context:PSA_ALG_ASCON_XOF128:0
+
+XOF state: Ascon-XOF128 late set_context (bad)
+depends_on:PSA_WANT_ALG_ASCON_XOF128
+xof_state_late_context:PSA_ALG_ASCON_XOF128:0
+
+XOF skip update = update(0): Ascon-XOF128
+depends_on:PSA_WANT_ALG_ASCON_XOF128
+xof_state_skip_update:PSA_ALG_ASCON_XOF128:0
