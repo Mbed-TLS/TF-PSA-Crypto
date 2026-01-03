@@ -1,0 +1,2 @@
+Features
+   * Implement Ascon-Hash256 (PSA_ALG_ASCON_HASH256).
