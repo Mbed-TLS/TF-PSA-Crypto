@@ -985,6 +985,22 @@
  */
 #define PSA_ALG_ANY_HASH                        ((psa_algorithm_t) 0x020000ff)
 
+#define PSA_ALG_XOF_CONTEXT_FLAG                ((psa_algorithm_t) 0x00008000)
+/** Whether the specified XOF algorithm supports a context.
+ *
+ * \param xof_alg       A XOF algorithm (\c PSA_ALG_XXX value such that
+ *                      #PSA_ALG_IS_XOF(\p xof_alg) is true).
+ *
+ * \return              \c 1 if \p xof_alg supports a context parameter
+ *                      passed with psa_xof_set_context(). This includes
+ *                      XOF algorithms with an optional context.
+ *                      \c 0 if \p xof_alg does not allow a context parameter.
+ *                      Unspecified if \p xof_alg is not a supported
+ *                      XOF algorithm.
+ */
+#define PSA_ALG_XOF_HAS_CONTEXT(alg)            \
+    (((alg) & PSA_ALG_XOF_CONTEXT_FLAG) != 0)
+
 #define PSA_ALG_MAC_SUBCATEGORY_MASK            ((psa_algorithm_t) 0x00c00000)
 #define PSA_ALG_HMAC_BASE                       ((psa_algorithm_t) 0x03800000)
 /** Macro to build an HMAC algorithm.
