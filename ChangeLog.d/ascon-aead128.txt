@@ -1,0 +1,2 @@
+Features
+   * Implement Ascon-AEAD128 (PSA_ALG_ASCON_AEAD128).
