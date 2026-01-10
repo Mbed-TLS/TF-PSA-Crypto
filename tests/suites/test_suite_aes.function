@@ -191,10 +191,15 @@ void aes_encrypt_ctr_multipart(int length, int step_size)
     }
 
     // finally, validate that multiple steps produced same result as single-pass
+    // we only check the bytes of stream_block that are still usable for resumption
+    // (because when computing over complete blocks we don't need to generate a
+    // stream block for resumption).
+    size_t offset = length % 16; // number of used bytes in stream_block
+    size_t tail_len = (16 - offset) % 16; // number of unused bytes
     TEST_MEMORY_COMPARE(output_a, length, output_b, length);
     TEST_MEMORY_COMPARE(ctr_a, sizeof(ctr_a), ctr_b, sizeof(ctr_b));
-    TEST_MEMORY_COMPARE(stream_block_a, sizeof(stream_block_a),
-                        stream_block_b, sizeof(stream_block_b));
+    TEST_MEMORY_COMPARE(&stream_block_a[offset], tail_len,
+                        &stream_block_b[offset], tail_len);
     TEST_EQUAL(nc_off_a, nc_off_b);
 
 exit:
