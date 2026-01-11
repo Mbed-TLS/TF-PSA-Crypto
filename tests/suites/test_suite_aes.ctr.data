@@ -135,3 +135,6 @@ aes_encrypt_ctr_multipart:1024:1023
 
 AES-CTR aes_encrypt_ctr_multipart 1024 1024
 aes_encrypt_ctr_multipart:1024:1024
+
+AES-CTR aes_encrypt_ctr_carry
+aes_encrypt_ctr_carry
