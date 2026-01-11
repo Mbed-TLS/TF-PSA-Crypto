@@ -905,6 +905,12 @@ static int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
     t.X[2] = MBEDTLS_GET_UINT32_LE(input,  8); t.X[2] ^= *RK++;
     t.X[3] = MBEDTLS_GET_UINT32_LE(input, 12); t.X[3] ^= *RK++;
 
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    MBEDTLS_ASSUME(ctx->nr == 10);
+#else
+    MBEDTLS_ASSUME((ctx->nr == 10) || (ctx->nr == 12) | (ctx->nr == 14));
+#endif
+
     for (i = (ctx->nr >> 1) - 1; i > 0; i--) {
         AES_FROUND(t.Y[0], t.Y[1], t.Y[2], t.Y[3], t.X[0], t.X[1], t.X[2], t.X[3]);
         AES_FROUND(t.X[0], t.X[1], t.X[2], t.X[3], t.Y[0], t.Y[1], t.Y[2], t.Y[3]);
