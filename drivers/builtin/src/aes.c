@@ -1425,29 +1425,61 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
 
     size_t offset = *nc_off;
 
-    if (offset > 0x0F) {
-        return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
+    size_t i = 0;
+
+    // finish using up left-over stream_block
+    if (offset != 0) {
+        if (offset > 0x0F) {
+            ret = MBEDTLS_ERR_AES_BAD_INPUT_DATA;
+            goto exit;
+        }
+        i = 16u - offset;
+        if (i > length) i = length;
+        mbedtls_xor(&output[0], &input[0], &stream_block[offset], i);
     }
 
-    for (size_t i = 0; i < length;) {
-        size_t n = 16;
-        if (offset == 0) {
-            ret = mbedtls_aes_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
+        // fast path over complete blocks
+        size_t blocks = (length - i) / 16;
+        mbedtls_aesce_encrypt_blocks_ctr(ctx, blocks, nonce_counter, &input[i], &output[i]);
+        i += blocks * 16;
+    } else
+#endif
+    {
+#if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+        for (; (i + 16) <= length; i += 16) {
+            ret = mbedtls_internal_aes_encrypt(ctx, nonce_counter, stream_block);
             if (ret != 0) {
                 goto exit;
             }
             mbedtls_ctr_increment_counter(nonce_counter);
-        } else {
-            n -= offset;
+            mbedtls_xor(&output[i], &input[i], stream_block, 16);
         }
+#endif
+    }
 
-        if (n > (length - i)) {
-            n = (length - i);
+    // final partial block
+    if (i < length) {
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+        if (MBEDTLS_AESCE_HAS_SUPPORT()) {
+            size_t n = length - i;
+            memset(stream_block, 0, 16);
+            memcpy(stream_block, &input[i], n);
+            mbedtls_aesce_encrypt_blocks_ctr(ctx, 1, nonce_counter, stream_block, stream_block);
+            memcpy(&output[i], stream_block, n);
+        } else
+#endif
+        {
+#if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+            ret = mbedtls_internal_aes_encrypt(ctx, nonce_counter, stream_block);
+            if (ret != 0) {
+                goto exit;
+            }
+            mbedtls_ctr_increment_counter(nonce_counter);
+            mbedtls_xor(&output[i], &input[i], stream_block, length - i);
+#endif
         }
-        mbedtls_xor(&output[i], &input[i], &stream_block[offset], n);
-        // offset might be non-zero for the last block, but in that case, we don't use it again
-        offset = 0;
-        i += n;
     }
 
     // capture offset for future resumption

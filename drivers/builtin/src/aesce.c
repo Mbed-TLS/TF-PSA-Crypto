@@ -46,6 +46,7 @@
 #include <string.h>
 
 #include "aesce.h"
+#include "ctr.h"
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
 
@@ -273,6 +274,24 @@ rounds_10:
 }
 #endif
 
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
+void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
+                            size_t blocks,
+                            unsigned char counter[16],
+                            const unsigned char *input,
+                            unsigned char *output)
+{
+    for (size_t i = 0; i < blocks; i++) {
+        uint8_t block[16];
+        mbedtls_aes_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, counter, block);
+        mbedtls_xor(&output[i * 16], block, &input[i * 16], 16);
+        mbedtls_ctr_increment_counter(counter);
+    }
+}
+
+#endif
+
 /*
  * AES-ECB block en(de)cryption
  */
@@ -362,6 +381,7 @@ int mbedtls_aesce_setkey_enc(unsigned char *rk,
          rki += key_len_in_words) {
 
         size_t iteration = (size_t) (rki - (uint32_t *) rk) / key_len_in_words;
+
         uint32_t *rko;
         rko = rki + key_len_in_words;
         rko[0] = aes_rot_word(aes_sub_word(rki[key_len_in_words - 1]));
@@ -369,6 +389,19 @@ int mbedtls_aesce_setkey_enc(unsigned char *rk,
         rko[1] = rko[0] ^ rki[1];
         rko[2] = rko[1] ^ rki[2];
         rko[3] = rko[2] ^ rki[3];
+#if 0
+        const unsigned int k = (key_bit_length == 192) ? 3 : 4;
+        if (key_bit_length == 256)
+        {
+            rko[4] = aes_sub_word(rko[3]) ^ rki[4];
+        }
+        if (key_bit_length > 128)
+        {
+            rko[k + 1] = rko[k + 0] ^ rki[k + 1];
+            rko[k + 2] = rko[k + 1] ^ rki[k + 2];
+            rko[k + 3] = rko[k + 2] ^ rki[k + 3];
+        }
+#else
         if (rko + key_len_in_words > rko_end) {
             /* Do not write overflow words.*/
             continue;
@@ -389,6 +422,7 @@ int mbedtls_aesce_setkey_enc(unsigned char *rk,
                 break;
         }
 #endif /* !MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
+#endif
     }
     return 0;
 }

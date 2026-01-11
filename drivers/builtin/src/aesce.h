@@ -120,6 +120,25 @@ int mbedtls_aesce_setkey_enc(unsigned char *rk,
                              const unsigned char *key,
                              size_t key_bit_length);
 
+
+/**
+ * \brief          Internal AES-CTR encrypt mutiple blocks
+ *
+ * \warning        This assumes that the context specifies either 10, 12 or 14
+ *                 rounds and will behave incorrectly if this is not the case.
+ *
+ * \param ctx      AES context
+ * \param blocks   number of complete blocks to process
+ * \param counter  AES-CTR counter
+ * \param input    input stream
+ * \param output   output stream
+ */
+void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
+                            size_t blocks,
+                            unsigned char counter[16],
+                            const unsigned char *input,
+                            unsigned char *output);
+
 #ifdef __cplusplus
 }
 #endif
