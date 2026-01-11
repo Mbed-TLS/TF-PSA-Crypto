@@ -817,6 +817,25 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
 }
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
+
+MBEDTLS_MAYBE_UNUSED
+static inline void mbedtls_aes_zeroize_block(void *ptr) {
+    // this gains around 7% perf for non-SIMD AES-CTR, and saves 30 bytes
+#if defined(__aarch64__) && defined(MBEDTLS_EFFICIENT_UNALIGNED_ACCESS)
+    asm volatile (
+        "stp xzr, xzr, [%x[p]]        \n\t"
+        :
+        // 16 bytes pointed to by ptr are written to
+        "=m" ((*(char (*)[16]) ptr)),
+        [p] "+r" (ptr)
+        ::
+    );
+#else
+    mbedtls_platform_zeroize(ptr, 16);
+#endif
+}
+
+
 #define AES_FROUND(X0, X1, X2, X3, Y0, Y1, Y2, Y3)                 \
     do                                                      \
     {                                                       \
@@ -922,7 +941,8 @@ static int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
     MBEDTLS_PUT_UINT32_LE(t.X[2], output,  8);
     MBEDTLS_PUT_UINT32_LE(t.X[3], output, 12);
 
-    mbedtls_platform_zeroize(&t, sizeof(t));
+    mbedtls_aes_zeroize_block(&t.X);
+    mbedtls_aes_zeroize_block(&t.Y);
 
     return 0;
 }
