@@ -382,12 +382,12 @@ MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 #endif
 
     for (i = 1; i < 256; i++) {
-        x = pow[255 - log[i]];
-
-        y  = x; y = (y << 1) | (y >> 7);
-        x ^= y; y = (y << 1) | (y >> 7);
-        x ^= y; y = (y << 1) | (y >> 7);
-        x ^= y; y = (y << 1) | (y >> 7);
+        x = 0;
+        y = pow[255 - log[i]];
+        for (unsigned j = 0; j < 4; j++) {
+            x ^= y;
+            y = (y << 1) | (y >> 7);
+        }
         x ^= y ^ 0x63;
 
         FSb[i] = x;
