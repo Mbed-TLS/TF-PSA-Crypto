@@ -589,8 +589,12 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
     }
 #endif
 
+#if defined(MAY_NEED_TO_ALIGN)
     ctx->rk_offset = mbedtls_aes_rk_offset(ctx->buf);
     RK = ctx->buf + ctx->rk_offset;
+#else
+    RK = ctx->buf;
+#endif
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
@@ -660,13 +664,17 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
 #endif
     int ret;
     mbedtls_aes_context cty;
-    uint32_t *RK;
+    MBEDTLS_MAYBE_UNUSED uint32_t *RK;
 
 
     mbedtls_aes_init(&cty);
 
     ctx->rk_offset = mbedtls_aes_rk_offset(ctx->buf);
+#if defined(MAY_NEED_TO_ALIGN)
     RK = ctx->buf + ctx->rk_offset;
+#else
+    RK = ctx->buf;
+#endif
 
     /* Also checks keybits */
     if ((ret = mbedtls_aes_setkey_enc(&cty, key, keybits)) != 0) {
@@ -873,7 +881,11 @@ static int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
                                         unsigned char output[16])
 {
     int i;
+#if defined(MAY_NEED_TO_ALIGN)
     uint32_t *RK = ctx->buf + ctx->rk_offset;
+#else
+    uint32_t *RK = ctx->buf;
+#endif
     struct {
         uint32_t X[4];
         uint32_t Y[4];

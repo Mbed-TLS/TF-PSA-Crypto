@@ -266,7 +266,7 @@ rounds_10:
 
 static void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys) {
     int nr = ctx->nr;
-    unsigned char *keys = (unsigned char *) (ctx->buf + ctx->rk_offset);
+    unsigned char *keys = (unsigned char *) ctx->buf;
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     MBEDTLS_ASSUME(nr == 10);
 #else
@@ -378,7 +378,7 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
     uint8x16_t block = vld1q_u8(&input[0]);
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-    unsigned char *keys = (unsigned char *) (ctx->buf + ctx->rk_offset);
+    unsigned char *keys = (unsigned char *) ctx->buf;
     if (mode == MBEDTLS_AES_DECRYPT) {
         block = aesce_decrypt_block(block, keys, ctx->nr);
     } else
