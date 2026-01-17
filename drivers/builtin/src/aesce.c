@@ -237,6 +237,9 @@ static uint8x16_t aesce_decrypt_block(uint8x16_t block,
                                       int rounds)
 {
     /* 10, 12 or 14 rounds. Unroll loop. */
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    (void) rounds;
+#else
     if (rounds == 10) {
         goto rounds_10;
     }
@@ -247,6 +250,7 @@ static uint8x16_t aesce_decrypt_block(uint8x16_t block,
 rounds_12:
     AESCE_DECRYPT_ROUND_X2;
 rounds_10:
+#endif
     AESCE_DECRYPT_ROUND_X2;
     AESCE_DECRYPT_ROUND_X2;
     AESCE_DECRYPT_ROUND_X2;
