@@ -568,16 +568,21 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
 {
     uint32_t *RK;
 
-    switch (keybits) {
-        case 128: ctx->nr = 10; break;
-#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-        case 192: ctx->nr = 12; break;
-        case 256: ctx->nr = 14; break;
-#endif /* !MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
-        default: return MBEDTLS_ERR_AES_INVALID_KEY_LENGTH;
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    if (keybits != 128) {
+        return MBEDTLS_ERR_AES_INVALID_KEY_LENGTH;
     }
+    const uint32_t nr = 10;
+#else
+    if (keybits != 128 && keybits != 192 && keybits != 256) {
+        return MBEDTLS_ERR_AES_INVALID_KEY_LENGTH;
+    }
+    // set number of rounds to 10, 12 or 14
+    const uint32_t nr = 6 + (keybits >> 5);
+#endif
+    ctx->nr = nr;
 
-#if !defined(MBEDTLS_AES_ROM_TABLES)
+#if !defined(MBEDTLS_AES_ROM_TABLES) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
     if (aes_init_done == 0) {
         aes_gen_tables();
         aes_init_done = 1;
@@ -600,69 +605,43 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
 #endif
 
 #if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
-    for (unsigned int i = 0; i < (keybits >> 5); i++) {
-        RK[i] = MBEDTLS_GET_UINT32_LE(key, i << 2);
+    if (MBEDTLS_IS_BIG_ENDIAN) {
+        for (unsigned int i = 0; i < (keybits >> 5); i++) {
+            RK[i] = MBEDTLS_GET_UINT32_LE(key, i << 2);
+        }
+    } else {
+        memcpy(&RK[0], key, 4 * (keybits >> 5));
     }
 
-    switch (ctx->nr) {
-        case 10:
-
-            for (unsigned int i = 0; i < 10; i++, RK += 4) {
-                RK[4]  = RK[0] ^ round_constants[i] ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[3])]) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[3])] <<  8) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[3])] << 16) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[3])] << 24);
-
-                RK[5]  = RK[1] ^ RK[4];
-                RK[6]  = RK[2] ^ RK[5];
-                RK[7]  = RK[3] ^ RK[6];
-            }
-            break;
-
+    const unsigned s = nr - 7;
+    const unsigned k = nr - 5;
+    const unsigned n = nr == 10 ? 10 : (nr == 12 ? 8 : 7);
+    for (unsigned int i = 0; i < n; i++, RK += (nr - 6)) {
+        RK[nr - 6]  = RK[0] ^ round_constants[i] ^
+                ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[s])]) ^
+                ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[s])] <<  8) ^
+                ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[s])] << 16) ^
+                ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[s])] << 24);
+        RK[k + 0] = RK[1] ^ RK[k - 1];
+        RK[k + 1] = RK[2] ^ RK[k - 0];
+        RK[k + 2] = RK[3] ^ RK[k + 1];
 #if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-        case 12:
+        if (ctx->nr == 12) {
+            RK[k + 3] = RK[4] ^ RK[k + 2];
+            RK[k + 4] = RK[5] ^ RK[k + 3];
+        }
+        if (ctx->nr == 14) {
+            RK[12] = RK[4] ^
+                        ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[11])]) ^
+                        ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[11])] <<  8) ^
+                        ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[11])] << 16) ^
+                        ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[11])] << 24);
 
-            for (unsigned int i = 0; i < 8; i++, RK += 6) {
-                RK[6]  = RK[0] ^ round_constants[i] ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[5])]) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[5])] <<  8) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[5])] << 16) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[5])] << 24);
-
-                RK[7]  = RK[1] ^ RK[6];
-                RK[8]  = RK[2] ^ RK[7];
-                RK[9]  = RK[3] ^ RK[8];
-                RK[10] = RK[4] ^ RK[9];
-                RK[11] = RK[5] ^ RK[10];
-            }
-            break;
-
-        case 14:
-
-            for (unsigned int i = 0; i < 7; i++, RK += 8) {
-                RK[8]  = RK[0] ^ round_constants[i] ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[7])]) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[7])] <<  8) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[7])] << 16) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[7])] << 24);
-
-                RK[9]  = RK[1] ^ RK[8];
-                RK[10] = RK[2] ^ RK[9];
-                RK[11] = RK[3] ^ RK[10];
-
-                RK[12] = RK[4] ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[11])]) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[11])] <<  8) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[11])] << 16) ^
-                         ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[11])] << 24);
-
-                RK[13] = RK[5] ^ RK[12];
-                RK[14] = RK[6] ^ RK[13];
-                RK[15] = RK[7] ^ RK[14];
-            }
-            break;
-#endif /* !MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
+            RK[13] = RK[5] ^ RK[12];
+            RK[14] = RK[6] ^ RK[13];
+            RK[15] = RK[7] ^ RK[14];
+        }
+#endif
     }
 
     return 0;
