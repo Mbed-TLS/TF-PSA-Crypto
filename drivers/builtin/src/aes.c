@@ -693,10 +693,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
     if (MBEDTLS_AESCE_HAS_SUPPORT()) {
-        mbedtls_aesce_inverse_key(
-            (unsigned char *) RK,
-            (const unsigned char *) (cty.buf + cty.rk_offset),
-            ctx->nr);
+        mbedtls_aesce_inverse_key(ctx, &cty);
         goto exit;
     }
 #endif

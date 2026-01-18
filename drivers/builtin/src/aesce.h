@@ -89,14 +89,13 @@ void mbedtls_aesce_gcm_mult(unsigned char c[16],
 /**
  * \brief           Internal round key inversion. This function computes
  *                  decryption round keys from the encryption round keys.
+ *                  The two contexts must be different (i.e., cannot
+ *                  operate in-place).
  *
- * \param invkey    Round keys for the equivalent inverse cipher
- * \param fwdkey    Original round keys (for encryption)
- * \param nr        Number of rounds (that is, number of round keys minus one)
+ * \param dst       AES context to write inverse keys to
+ * \param src       AES context to read forward keys from
  */
-void mbedtls_aesce_inverse_key(unsigned char *invkey,
-                               const unsigned char *fwdkey,
-                               int nr);
+void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, const  mbedtls_aes_context *src);
 #endif /* !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 /**
