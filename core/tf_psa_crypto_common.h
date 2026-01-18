@@ -37,14 +37,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(__ARM_NEON)
-#include <arm_neon.h>
-#define MBEDTLS_HAVE_NEON_INTRINSICS
-#elif defined(MBEDTLS_PLATFORM_IS_WINDOWS_ON_ARM64)
-#include <arm64_neon.h>
-#define MBEDTLS_HAVE_NEON_INTRINSICS
-#endif
-
 /* Decide whether we're built for a Unix-like platform.
  */
 #if defined(MBEDTLS_TEST_PLATFORM_IS_NOT_UNIXLIKE) //no-check-names
