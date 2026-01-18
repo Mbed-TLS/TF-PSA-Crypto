@@ -407,19 +407,16 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
  * Compute decryption round keys from encryption round keys
  */
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-void mbedtls_aesce_inverse_key(unsigned char *invkey,
-                               const unsigned char *fwdkey,
-                               int nr)
+void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, mbedtls_aes_context const *src)
 {
-    invkey += KEY_OFFSET(nr);
-    fwdkey += KEY_OFFSET(nr);
+    uint8_t *invkey = ((uint8_t *)dst->buf) + KEY_OFFSET(src->nr);
+    uint8_t *fwdkey = ((uint8_t *)src->buf) + KEY_OFFSET(dst->nr);
 
     int i, j;
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-    (void) nr;
     j = 10;
 #else
-    j = nr;
+    j = src->nr;
 #endif
 
     vst1q_u8(invkey, vld1q_u8(fwdkey + j * 16));
