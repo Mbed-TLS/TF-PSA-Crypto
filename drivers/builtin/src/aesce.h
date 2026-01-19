@@ -19,14 +19,7 @@
 #include "mbedtls/private/aes.h"
 
 
-#if defined(MBEDTLS_AESCE_C) \
-    && defined(MBEDTLS_ARCH_IS_ARMV8_A) && defined(MBEDTLS_HAVE_NEON_INTRINSICS) \
-    && (defined(MBEDTLS_COMPILER_IS_GCC) || defined(__clang__) || defined(MSC_VER))
-
-/* MBEDTLS_AESCE_HAVE_CODE is defined if we have a suitable target platform, and a
- * potentially suitable compiler (compiler version & flags are not checked when defining
- * this). */
-#define MBEDTLS_AESCE_HAVE_CODE
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,7 +109,8 @@ void mbedtls_aesce_inverse_key(unsigned char *invkey,
  *
  * \return          0 if successful, or MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
  */
-int mbedtls_aesce_setkey_enc(unsigned char *rk,
+int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
+                             unsigned char *rk,
                              const unsigned char *key,
                              size_t key_bit_length);
 
