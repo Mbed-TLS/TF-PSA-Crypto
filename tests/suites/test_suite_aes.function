@@ -58,6 +58,7 @@ exit:
 }
 #endif
 
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
 static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset) {
     unsigned char input[128];
     unsigned char output[128];
@@ -106,6 +107,7 @@ static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset) {
 exit:
     mbedtls_aes_free(&ctx);
 }
+#endif
 
 /* END_HEADER */
 
