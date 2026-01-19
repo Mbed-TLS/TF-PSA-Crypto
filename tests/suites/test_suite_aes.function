@@ -71,6 +71,7 @@ static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset)
     TEST_ASSERT(len <= 128);
 
     mbedtls_aes_init(&ctx);
+    memset(key, 0, 16);
     TEST_EQUAL(mbedtls_aes_setkey_enc(&ctx, (unsigned char *) key, 128), 0);
 
     memcpy(ictr, ctr, 16);
@@ -99,6 +100,8 @@ static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset)
     unsigned expected_offset = (len + 16 - unused_stream_bytes) % 16;
 
     size_t nc_off = offset;
+    memset(input, 0, len);
+    memset(stream_block, 0, 16);
     TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, len, &nc_off,
         (unsigned char *) ctr, stream_block, input, output), 0);
 
