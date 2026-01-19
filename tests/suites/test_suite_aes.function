@@ -59,7 +59,8 @@ exit:
 #endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
-static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset) {
+static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset)
+{
     unsigned char input[128];
     unsigned char output[128];
     uint8_t expected_ctr[16], ictr[16];
@@ -213,7 +214,7 @@ void aes_encrypt_ctr_carry()
                 // where b [0..16] gives the number of non-zero bytes
                 memset(ctr, 0, 16);
                 for (unsigned i = 0; i < b; i++) {
-                    ((uint8_t *)ctr)[15 - i] = 0xff;
+                    ((uint8_t *) ctr)[15 - i] = 0xff;
                 }
                 check_counter_wrap(len, (uint8_t *) ctr, offset);
             }

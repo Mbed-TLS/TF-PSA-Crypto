@@ -127,10 +127,10 @@ int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
  * \param output   output stream
  */
 void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
-                            size_t blocks,
-                            unsigned char counter[16],
-                            const unsigned char *input,
-                            unsigned char *output);
+                                      size_t blocks,
+                                      unsigned char counter[16],
+                                      const unsigned char *input,
+                                      unsigned char *output);
 
 #ifdef __cplusplus
 }
