@@ -365,9 +365,20 @@ void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
         // if the least-significant 64 bits of the counter did not wrap.
         //
         // equivalent to: ctr_le[0] += ctr_le[1] == 0 ? 1 : 0
-        uint64x1_t is_zero = vceqz_u64(vget_high_u64(ctr_le));
+#if defined(__aarch64__)
+        // saturating left shift - top bit set iff ctr_le is non-zero
+        uint64x1_t x = vqshl_n_u64(vget_high_u64(ctr_le), 63);
+        // cast to signed 64-bit, compare to 0. result is 0 or all bits set
+        uint64x1_t is_zero = vcge_s64(vreinterpret_s64_u64(x), vcreate_s64(0));
+        // apply to ctr_le
         uint64x2_t inc = vcombine_u64(is_zero, vcreate_u64(0));
         ctr_le = vsubq_u64(ctr_le, inc);
+#else
+        // A32 lacks suitable intrinsics for 64-bit comparison, so just use scalar
+        uint64_t ls64 = vgetq_lane_u64(ctr_le, 1);
+        uint64x2_t inc = vcombine_u64(vcreate_u64(ls64 == 0 ? 1 : 0), vcreate_u64(0));
+        ctr_le = vaddq_u64(ctr_le, inc);
+#endif
 
         limit = blocks;
     }
