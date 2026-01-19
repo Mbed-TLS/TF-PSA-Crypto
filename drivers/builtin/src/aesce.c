@@ -270,7 +270,8 @@ rounds_10:
 }
 #endif
 
-static inline void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys) {
+static inline void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys)
+{
     uint8_t *p = (uint8_t *) ctx->buf;
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     for (unsigned i = 0; i <= 10; i++) {
@@ -286,10 +287,10 @@ static inline void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
 void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
-                            size_t blocks,
-                            unsigned char counter[16],
-                            const unsigned char *input,
-                            unsigned char *output)
+                                      size_t blocks,
+                                      unsigned char counter[16],
+                                      const unsigned char *input,
+                                      unsigned char *output)
 {
     // reverse to get bytes in LE order (note that top and bottom elements are inverted)
     uint64x2_t ctr_le = vreinterpretq_u64_u8(vrev64q_u8(vld1q_u8(counter)));
@@ -334,9 +335,9 @@ void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
     //
     // The result is only used if blocks > 0 (so "blocks - 1u" is harmless).
     size_t limit = mbedtls_ct_size_if_else_0(
-                        mbedtls_ct_uint_lt(blocks_with_no_carry, blocks - 1u),
-                        blocks_with_no_carry + 1u
-                    );
+        mbedtls_ct_uint_lt(blocks_with_no_carry, blocks - 1u),
+        blocks_with_no_carry + 1u
+        );
 
     uint8x16_t vkeys[15];
     mbedtls_aesce_load_keys(ctx, vkeys);
@@ -415,8 +416,8 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, mbedtls_aes_context const *src)
 {
-    uint8_t *invkey = ((uint8_t *)dst->buf) + KEY_OFFSET(src->nr);
-    uint8_t *fwdkey = ((uint8_t *)src->buf) + KEY_OFFSET(dst->nr);
+    uint8_t *invkey = ((uint8_t *) dst->buf) + KEY_OFFSET(src->nr);
+    uint8_t *fwdkey = ((uint8_t *) src->buf) + KEY_OFFSET(dst->nr);
 
     int i, j;
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)

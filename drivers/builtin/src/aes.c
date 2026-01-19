@@ -622,10 +622,10 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
     const unsigned n = nr == 10 ? 10 : (nr == 12 ? 8 : 7);
     for (unsigned int i = 0; i < n; i++, RK += (nr - 6)) {
         RK[nr - 6]  = RK[0] ^ round_constants[i] ^
-                ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[s])]) ^
-                ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[s])] <<  8) ^
-                ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[s])] << 16) ^
-                ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[s])] << 24);
+                      ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[s])]) ^
+                      ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[s])] <<  8) ^
+                      ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[s])] << 16) ^
+                      ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[s])] << 24);
         RK[k + 0] = RK[1] ^ RK[k - 1];
         RK[k + 1] = RK[2] ^ RK[k - 0];
         RK[k + 2] = RK[3] ^ RK[k + 1];
@@ -636,10 +636,10 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
         }
         if (ctx->nr == 14) {
             RK[12] = RK[4] ^
-                        ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[11])]) ^
-                        ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[11])] <<  8) ^
-                        ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[11])] << 16) ^
-                        ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[11])] << 24);
+                     ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[11])]) ^
+                     ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[11])] <<  8) ^
+                     ((uint32_t) FSb[MBEDTLS_BYTE_2(RK[11])] << 16) ^
+                     ((uint32_t) FSb[MBEDTLS_BYTE_3(RK[11])] << 24);
 
             RK[13] = RK[5] ^ RK[12];
             RK[14] = RK[6] ^ RK[13];
@@ -803,7 +803,8 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
 
 
 MBEDTLS_MAYBE_UNUSED
-static inline void mbedtls_aes_zeroize_block(void *ptr) {
+static inline void mbedtls_aes_zeroize_block(void *ptr)
+{
     // this gains around 7% perf for non-SIMD AES-CTR, and saves 30 bytes
 #if defined(__aarch64__) && defined(MBEDTLS_EFFICIENT_UNALIGNED_ACCESS)
     asm volatile (
@@ -813,7 +814,7 @@ static inline void mbedtls_aes_zeroize_block(void *ptr) {
         "=m" ((*(char (*)[16]) ptr)),
         [p] "+r" (ptr)
         ::
-    );
+        );
 #else
     mbedtls_platform_zeroize(ptr, 16);
 #endif
@@ -1443,7 +1444,9 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
             goto exit;
         }
         i = 16u - offset;
-        if (i > length) i = length;
+        if (i > length) {
+            i = length;
+        }
         mbedtls_xor(&output[0], &input[0], &stream_block[offset], i);
     }
 
