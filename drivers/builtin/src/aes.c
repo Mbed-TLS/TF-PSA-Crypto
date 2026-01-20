@@ -1459,9 +1459,18 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
     } else
 #endif
     {
-#if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+#if defined(MBEDTLS_AESNI_HAVE_CODE) || !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
         for (; (i + 16) <= length; i += 16) {
-            ret = mbedtls_internal_aes_encrypt(ctx, nonce_counter, stream_block);
+#if defined(MBEDTLS_AESNI_HAVE_CODE)
+            if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
+                    ret = mbedtls_aesni_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
+            } else
+#endif
+            {
+#if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+                ret = mbedtls_internal_aes_encrypt(ctx, nonce_counter, stream_block);
+#endif
+            }
             if (ret != 0) {
                 goto exit;
             }
@@ -1483,8 +1492,17 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
         } else
 #endif
         {
+#if defined(MBEDTLS_AESNI_HAVE_CODE) || !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+#if defined(MBEDTLS_AESNI_HAVE_CODE)
+            if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
+                ret = mbedtls_aesni_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
+            } else
+#endif
+            {
 #if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
-            ret = mbedtls_internal_aes_encrypt(ctx, nonce_counter, stream_block);
+                ret = mbedtls_internal_aes_encrypt(ctx, nonce_counter, stream_block);
+#endif
+            }
             if (ret != 0) {
                 goto exit;
             }
