@@ -103,7 +103,7 @@ static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset)
     memset(input, 0, len);
     memset(stream_block, 0, 16);
     TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, len, &nc_off,
-        (unsigned char *) ctr, stream_block, input, output), 0);
+                                     (unsigned char *) ctr, stream_block, input, output), 0);
 
     TEST_MEMORY_COMPARE(ctr, 16, expected_ctr, 16);
     TEST_EQUAL(nc_off, expected_offset);

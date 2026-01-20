@@ -1463,7 +1463,8 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
         for (; (i + 16) <= length; i += 16) {
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
             if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
-                    ret = mbedtls_aesni_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
+                ret =
+                    mbedtls_aesni_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
             } else
 #endif
             {
@@ -1495,7 +1496,8 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
 #if defined(MBEDTLS_AESNI_HAVE_CODE) || !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
             if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
-                ret = mbedtls_aesni_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
+                ret =
+                    mbedtls_aesni_crypt_ecb(ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block);
             } else
 #endif
             {
