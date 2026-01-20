@@ -64,7 +64,7 @@ static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset)
     unsigned char input[128];
     unsigned char output[128];
     uint8_t expected_ctr[16], ictr[16];
-    const unsigned char *key[16];
+    unsigned char key[16];
     unsigned char stream_block[16];
     mbedtls_aes_context ctx;
 
