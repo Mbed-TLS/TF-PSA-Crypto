@@ -759,7 +759,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:MBEDTLS_GENPRIME */
 void mbedtls_rsa_deduce_private_exponent(char *input_P,
                                          char *input_Q,
                                          char *input_E,
