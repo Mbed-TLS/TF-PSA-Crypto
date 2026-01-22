@@ -77,15 +77,6 @@ static int mbedtls_rsa_test_fill_context(mbedtls_rsa_context *rsa,
         MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->D, D_data->x, D_data->len));
     }
 
-    if (mbedtls_mpi_size(&rsa->D) == 0) {
-        if ((mbedtls_mpi_size(&rsa->P) != 0) &&
-            (mbedtls_mpi_size(&rsa->Q) != 0) &&
-            (mbedtls_mpi_size(&rsa->E) != 0)) {
-            MBEDTLS_MPI_CHK(mbedtls_rsa_deduce_private_exponent(&rsa->P, &rsa->Q, &rsa->E,
-                                                                &rsa->D));
-        }
-    }
-
 #if !defined(MBEDTLS_RSA_NO_CRT)
     if ((mbedtls_mpi_size(&rsa->P) != 0) &&
         (mbedtls_mpi_size(&rsa->Q) != 0) &&
