@@ -1284,54 +1284,69 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Make a signature given a signature type.
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sigalg,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
                         unsigned char *sig, size_t sig_size, size_t *sig_len)
 {
+    psa_algorithm_t psa_sig_alg, psa_sig_alg_alt = PSA_ALG_NONE;
+    psa_algorithm_t psa_md_alg;
+    psa_status_t status;
+
     if (ctx->pk_info == NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) pk_type)) {
-        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+    /* mbedtls_md_psa_alg_from_type() doesn't include any check on the MD
+     * alg being provided as input, so we need to manually check here comparing
+     * against 1st and last items in enum psa_algorithm_t. Also this
+     * check is not perfect because not all enum values in that range are taken. */
+    if ((md_alg < MBEDTLS_MD_MD5) || (md_alg > MBEDTLS_MD_SHA3_512)) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+    psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+
+    switch (sigalg) {
+        case MBEDTLS_PK_SIGALG_RSA_PKCS1V15:
+            psa_sig_alg = PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg);
+            break;
+        case MBEDTLS_PK_SIGALG_RSA_PSS:
+            /* PSA_ALG_RSA_PSS() behaves the same as PSA_ALG_RSA_PSS_ANY_SALT() when
+             * performing a signature, but they are encoded differently. Instead of
+             * extracting the proper one from the wrapped key policy, just try both. */
+            psa_sig_alg = PSA_ALG_RSA_PSS(psa_md_alg);
+            psa_sig_alg_alt = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
+            break;
+        case MBEDTLS_PK_SIGALG_ECDSA:
+            psa_sig_alg = MBEDTLS_PK_ALG_ECDSA(psa_md_alg);
+            break;
+        default:
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (pk_type != MBEDTLS_PK_SIGALG_RSA_PSS) {
-        return mbedtls_pk_sign(ctx, md_alg, hash, hash_len,
-                               sig, sig_size, sig_len);
-    }
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    const psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-    if (psa_md_alg == 0) {
+    /* Adjust hashlen based on MD alg. */
+    if (pk_hashlen_helper(md_alg, &hash_len) != 0) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (mbedtls_pk_get_type(ctx) == MBEDTLS_PK_OPAQUE) {
-        psa_status_t status;
-
-        /* PSA_ALG_RSA_PSS() behaves the same as PSA_ALG_RSA_PSS_ANY_SALT() when
-         * performing a signature, but they are encoded differently. Instead of
-         * extracting the proper one from the wrapped key policy, just try both. */
-        status = psa_sign_hash(ctx->priv_id, PSA_ALG_RSA_PSS(psa_md_alg),
-                               hash, hash_len,
+    status = psa_sign_hash(ctx->priv_id, psa_sig_alg, hash, hash_len, sig, sig_size, sig_len);
+    if ((status == PSA_ERROR_NOT_PERMITTED) && (psa_sig_alg_alt != PSA_ALG_NONE)) {
+        status = psa_sign_hash(ctx->priv_id, psa_sig_alg_alt, hash, hash_len,
                                sig, sig_size, sig_len);
-        if (status == PSA_ERROR_NOT_PERMITTED) {
-            status = psa_sign_hash(ctx->priv_id, PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg),
-                                   hash, hash_len,
-                                   sig, sig_size, sig_len);
-        }
-        return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
+    }
+    if (status != 0) {
+        return PSA_PK_TO_MBEDTLS_ERR(status);
     }
 
-    return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PSS(psa_md_alg),
-                                       ctx, hash, hash_len,
-                                       sig, sig_size, sig_len);
-#else
-    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
+#if defined(PSA_HAVE_ALG_SOME_ECDSA)
+    /* In case of ECDSA the signature must be converted from RAW to DER format. */
+    if (sigalg == MBEDTLS_PK_SIGALG_ECDSA) {
+        return mbedtls_ecdsa_raw_to_der(ctx->bits, sig, *sig_len, sig, sig_size, sig_len);
+    }
+#endif /* PSA_HAVE_ALG_SOME_ECDSA */
+
+    return 0;
 }
 
 /*

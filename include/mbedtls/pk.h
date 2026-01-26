@@ -682,12 +682,13 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
 /**
  * \brief           Generate a signature, selecting a specific algorithm.
  *
- * \param sig_type  Signature type to generate.
+ * \param sigalg    Signature type to generate. It must be one from
+ *                  #mbedtls_pk_sigalg_t.
  * \param ctx       The PK context to use. It must have been populated
  *                  with a private key.
- * \param md_alg    Hash algorithm used
- * \param hash      Hash of the message to sign
- * \param hash_len  Hash length
+ * \param md_alg    Hash algorithm used. It must be one of #mbedtls_md_type_t.
+ * \param hash      Hash of the message to sign.
+ * \param hash_len  Hash length.
  * \param sig       Place to write the signature.
  *                  It must have enough room for the signature.
  *                  #MBEDTLS_PK_SIGNATURE_MAX_SIZE is always enough.
@@ -698,11 +699,11 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
  *                  the number of bytes written to \p sig.
  *
  * \return          0 on success,
- *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
- *                  used for this type of signature,
- *                  or a specific error code.
+ * \return          #MBEDTLS_ERR_PK_BAD_INPUT_DATA, if the PK context has not
+ *                  been populated or if \p md_alg is invalid.
+ * \return          Other specific error codes.
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sig_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sigalg,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
