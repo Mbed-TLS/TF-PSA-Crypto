@@ -585,25 +585,30 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
 /**
  * \brief           Verify signature, selecting a specific algorithm.
  *
- * \param type      Signature type to verify
+ * \param sigalg    Signature type to use for verification. It must be one from
+ *                  #mbedtls_pk_sigalg_t.
  * \param ctx       The PK context to use. It must have been populated.
  * \param md_alg    Hash algorithm used.
- * \param hash      Hash of the message to sign
- * \param hash_len  Hash length
- * \param sig       Signature to verify
- * \param sig_len   Signature length
+ * \param hash      Hash of the message to sign.
+ * \param hash_len  Hash length.
+ * \param sig       Signature to verify.
+ * \param sig_len   Signature length.
  *
  * \note            If \p type is #MBEDTLS_PK_SIGALG_RSA_PSS, then any salt
  *                  length is accepted: #PSA_ALG_RSA_PSS_ANY_SALT is used.
  *
- * \return          0 on success (signature is valid),
- *                  #MBEDTLS_ERR_PK_TYPE_MISMATCH if the PK context can't be
- *                  used for this type of signature,
- *                  #PSA_ERROR_INVALID_SIGNATURE if the signature is invalid,
- *                  or a specific error code.
+ * \return          0 on success.
+ * \return          #MBEDTLS_ERR_PK_BAD_INPUT_DATA if:
+ *                  - the PK context has not been intialized.
+ *                  - \p hash is NULL, but \p md_alg is not #MBEDTLS_MD_NONE or
+ *                    \p hash_len is not 0.
+ *                  - \p sigalg is unknown.
+ *                  - \p siglen is larger than the expected signature length
+ *                    for the given PK context.
+ * \return          Another specific error code othewise.
  *
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t sigalg,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len);
