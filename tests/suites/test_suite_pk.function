@@ -1362,7 +1362,7 @@ void pk_rsa_overflow()
 
     TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                      MBEDTLS_MD_NONE, hash, hash_len, sig, sig_len),
-               MBEDTLS_ERR_PK_INVALID_ALG);
+               MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
     TEST_EQUAL(mbedtls_pk_verify(&pk, MBEDTLS_MD_NONE, hash, hash_len,
                                  sig, sig_len),
@@ -1371,7 +1371,7 @@ void pk_rsa_overflow()
     TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
                                    MBEDTLS_MD_NONE, hash, hash_len,
                                    sig, sizeof(sig), &sig_len),
-               MBEDTLS_ERR_PK_KEY_INVALID_FORMAT);
+               MBEDTLS_ERR_PK_BAD_INPUT_DATA);
 
     TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_NONE, hash, hash_len,
                                sig, sizeof(sig), &sig_len),
