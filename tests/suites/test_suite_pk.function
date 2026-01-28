@@ -312,6 +312,7 @@ static int pk_fill_rsa_public_key_fields(mbedtls_pk_context *pk, int mod,
     pk->pub_raw_len = key_len;
     pk->bits = mod;
     pk->pk_info = mbedtls_pk_info_from_type(MBEDTLS_PK_RSA);
+    pk->psa_type = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
 
     return 0;
 }
@@ -1122,7 +1123,6 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
     mbedtls_pk_init(&pk);
     PSA_INIT();
 
-    TEST_ASSERT(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)) == 0);
     TEST_ASSERT(pk_fill_rsa_public_key_fields(&pk, mod, input_N->x, input_N->len,
                                               input_E->x, input_E->len) == 0);
 
