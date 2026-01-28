@@ -89,6 +89,7 @@ typedef struct mbedtls_aes_xts_context {
 typedef enum {
     MBEDTLS_AES_IMP_UNKNOWN = -1,
     MBEDTLS_AES_IMP_SOFTWARE,
+    MBEDTLS_AES_IMP_AESPPC,
     MBEDTLS_AES_IMP_AESCE,
     MBEDTLS_AES_IMP_AESNI_ASM,
     MBEDTLS_AES_IMP_AESNI_INTRINSICS,
