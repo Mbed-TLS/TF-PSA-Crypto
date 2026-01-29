@@ -1267,7 +1267,7 @@
  * \param input_length  Size of the input in bytes.
  */
 #define PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(input_length)     \
-    (PSA_ROUND_UP_TO_MULTIPLE(PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE, input_length))
+    (PSA_ROUND_UP_TO_MULTIPLE(PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE, input_length + 1u))
 
 /** A sufficient ciphertext buffer size for psa_cipher_finish().
  *
