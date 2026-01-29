@@ -47,6 +47,9 @@ reseed_basic:
 Explicit reseed: entropy consumption
 reseed_consumption:
 
+Deplete: entropy consumption
+deplete_consumption:
+
 Explicit reseed: uniqueness tests (0 = 0)
 reseed_uniqueness:"":""
 
