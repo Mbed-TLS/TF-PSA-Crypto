@@ -9801,7 +9801,8 @@ exit:
 void key_agreement(int alg_arg,
                    int our_key_type_arg, data_t *our_key_data,
                    data_t *peer_key_data,
-                   data_t *expected_output)
+                   data_t *expected_output,
+                   int expected_status)
 {
     mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_algorithm_t alg = alg_arg;
@@ -9828,47 +9829,82 @@ void key_agreement(int alg_arg,
     key_bits = psa_get_key_bits(&attributes);
 
     /* Validate size macros */
-    TEST_LE_U(expected_output->len,
-              PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits));
+    if (expected_status == PSA_SUCCESS) {
+        TEST_LE_U(expected_output->len,
+                  PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits));
+    }
     TEST_LE_U(PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits),
               PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE);
 
-    /* Good case with exact output size */
-    TEST_CALLOC(output, expected_output->len);
-    PSA_ASSERT(psa_raw_key_agreement(alg, our_key,
-                                     peer_key_data->x, peer_key_data->len,
-                                     output, expected_output->len,
-                                     &output_length));
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
+    const size_t output_alloc_size = expected_status == PSA_SUCCESS ?
+                                     expected_output->len :
+                                     PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits);
 
-    memset(output, 0, expected_output->len);
+    /* Good case with exact output size */
+    TEST_CALLOC(output, output_alloc_size);
+    TEST_EQUAL(psa_raw_key_agreement(alg, our_key,
+                                     peer_key_data->x, peer_key_data->len,
+                                     output, output_alloc_size,
+                                     &output_length),
+               expected_status);
+    if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(output, output_length,
+                            expected_output->x, expected_output->len);
+    }
+
+    memset(output, 0, output_alloc_size);
     output_length = 0;
 
     psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
     psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
 
-    PSA_ASSERT(psa_key_agreement(our_key, peer_key_data->x, peer_key_data->len,
-                                 alg, &shared_secret_attributes, &shared_secret_id));
+    TEST_EQUAL(psa_key_agreement(our_key, peer_key_data->x, peer_key_data->len,
+                                 alg, &shared_secret_attributes, &shared_secret_id),
+               expected_status);
 
-    PSA_ASSERT(psa_export_key(shared_secret_id, output, expected_output->len, &output_length));
+    if (expected_status == PSA_SUCCESS) {
+        PSA_ASSERT(psa_export_key(shared_secret_id, output, output_alloc_size, &output_length));
 
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
+        TEST_MEMORY_COMPARE(output, output_length,
+                            expected_output->x, expected_output->len);
 
-    PSA_ASSERT(psa_get_key_attributes(shared_secret_id, &output_attributes));
+        PSA_ASSERT(psa_get_key_attributes(shared_secret_id, &output_attributes));
 
-    TEST_EQUAL(PSA_BITS_TO_BYTES(psa_get_key_bits(&output_attributes)),
-               expected_output->len);
-    TEST_EQUAL(psa_get_key_type(&output_attributes), PSA_KEY_TYPE_DERIVE);
-    TEST_EQUAL(psa_get_key_usage_flags(&output_attributes),
-               PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+        TEST_EQUAL(PSA_BITS_TO_BYTES(psa_get_key_bits(&output_attributes)),
+                   expected_output->len);
+        TEST_EQUAL(psa_get_key_type(&output_attributes), PSA_KEY_TYPE_DERIVE);
+        TEST_EQUAL(psa_get_key_usage_flags(&output_attributes),
+                   PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    }
 
     mbedtls_free(output);
     output = NULL;
     output_length = ~0;
     psa_destroy_key(shared_secret_id);
     shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    /* Larger output buffer */
+    TEST_CALLOC(output, output_alloc_size + 1);
+    TEST_EQUAL(psa_raw_key_agreement(alg, our_key,
+                                     peer_key_data->x, peer_key_data->len,
+                                     output, output_alloc_size + 1,
+                                     &output_length),
+               expected_status);
+    if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(output, output_length,
+                            expected_output->x, expected_output->len);
+    }
+
+    mbedtls_free(output);
+    output = NULL;
+    output_length = ~0;
+    psa_destroy_key(shared_secret_id);
+    shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    /* The tests for wrong buffer sizes only make sense with good data. */
+    if (expected_status != PSA_SUCCESS) {
+        goto exit;
+    }
 
     /* Input buffer (peer key) too small */
     size_t bad_peer_key_len = peer_key_data->len - 1;
@@ -9888,21 +9924,6 @@ void key_agreement(int alg_arg,
                                  alg, &shared_secret_attributes, &shared_secret_id));
     mbedtls_free(bad_peer_key);
     bad_peer_key = NULL;
-    psa_destroy_key(shared_secret_id);
-    shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
-
-    /* Larger output buffer */
-    TEST_CALLOC(output, expected_output->len + 1);
-    PSA_ASSERT(psa_raw_key_agreement(alg, our_key,
-                                     peer_key_data->x, peer_key_data->len,
-                                     output, expected_output->len + 1,
-                                     &output_length));
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
-
-    mbedtls_free(output);
-    output = NULL;
-    output_length = ~0;
     psa_destroy_key(shared_secret_id);
     shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
 
