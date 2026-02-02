@@ -41,6 +41,8 @@
 #define MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE -0x3A00
 /** Unavailable feature, e.g. RSA disabled for RSA key. */
 #define MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE -0x3980
+/** Invalid signature */
+#define MBEDTLS_ERR_PK_INVALID_SIGNATURE   PSA_ERROR_INVALID_SIGNATURE
 
 #ifdef __cplusplus
 extern "C" {
