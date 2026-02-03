@@ -686,7 +686,7 @@ psa_status_t mbedtls_psa_ffdh_key_agreement(
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    mbedtls_mpi P, G, X, GY, K;
+    mbedtls_mpi P, X, GY, K;
     const size_t calculated_shared_secret_size = peer_key_length;
 
     if (peer_key_length != key_buffer_size ||
@@ -698,12 +698,12 @@ psa_status_t mbedtls_psa_ffdh_key_agreement(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    mbedtls_mpi_init(&P); mbedtls_mpi_init(&G);
+    mbedtls_mpi_init(&P);
     mbedtls_mpi_init(&X); mbedtls_mpi_init(&GY);
     mbedtls_mpi_init(&K);
 
     status = mbedtls_psa_ffdh_set_prime_generator(
-        PSA_BITS_TO_BYTES(attributes->bits), &P, &G);
+        PSA_BITS_TO_BYTES(attributes->bits), &P, NULL);
 
     if (status != PSA_SUCCESS) {
         goto cleanup;
@@ -747,7 +747,7 @@ psa_status_t mbedtls_psa_ffdh_key_agreement(
     ret = 0;
 
 cleanup:
-    mbedtls_mpi_free(&P); mbedtls_mpi_free(&G);
+    mbedtls_mpi_free(&P);
     mbedtls_mpi_free(&X); mbedtls_mpi_free(&GY);
     mbedtls_mpi_free(&K);
 
