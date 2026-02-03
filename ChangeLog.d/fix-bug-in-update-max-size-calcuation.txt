@@ -1,0 +1,3 @@
+Bugfix
+   * Fix a bug in PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE to return the correct size
+     when a whole number of blocks is used with PKCS7 padding.
