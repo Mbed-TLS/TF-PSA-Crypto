@@ -10102,9 +10102,45 @@ exit:
     mbedtls_free(bad_peer_key);
     PSA_DONE();
 }
-
 /* END_CASE */
 
+/* BEGIN_CASE */
+void key_agreement_interruptible_setup(int alg_arg,
+                                       int our_key_type_arg, data_t *our_key_data,
+                                       data_t *peer_key_data,
+                                       int expected_status_arg)
+{
+    mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t our_key_type = our_key_type_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t shared_secret_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t expected_status = expected_status_arg;
+
+    psa_key_agreement_iop_t operation = psa_key_agreement_iop_init();
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, our_key_type);
+    PSA_ASSERT(psa_import_key(&attributes,
+                              our_key_data->x, our_key_data->len,
+                              &our_key));
+
+    psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+
+    TEST_EQUAL(psa_key_agreement_iop_setup(&operation, our_key, peer_key_data->x,
+                                           peer_key_data->len, alg, &shared_secret_attributes),
+               expected_status);
+
+exit:
+    psa_key_agreement_iop_abort(&operation);
+    psa_destroy_key(our_key);
+    PSA_DONE();
+}
+/* END_CASE */
 
 /* BEGIN_CASE */
 void key_agreement_capacity(int alg_arg,

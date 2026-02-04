@@ -113,6 +113,8 @@ component_tf_psa_crypto_check_test_dependencies () {
     echo "!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH" >> $expected
     # No PSA equivalent - used to skip decryption tests in PSA-ECB, CBC/XTS/NIST_KW/DES
     echo "!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT" >> $expected
+    # No PSA equivalent - we should probably have one in the future.
+    echo "!MBEDTLS_ECP_RESTARTABLE" >> $expected
     # MBEDTLS_ASN1_WRITE_C is used by import_rsa_made_up() in test_suite_psa_crypto
     # in order to build a fake RSA key of the wanted size based on
     # PSA_VENDOR_RSA_MAX_KEY_BITS. The legacy module is only used by
