@@ -30,6 +30,7 @@
 #include "crypto_oid.h"
 #endif /* MBEDTLS_ASN1_PARSE_C */
 
+#include <limits.h>
 #include <string.h>
 
 #include "mbedtls/platform.h"
