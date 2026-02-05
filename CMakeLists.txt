@@ -240,7 +240,7 @@ function(tf_psa_crypto_set_gnu_base_compile_options target)
     # note: starting with CMake 2.8 we could use CMAKE_C_COMPILER_VERSION
     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                     OUTPUT_VARIABLE GCC_VERSION)
-    target_compile_options(${target} PRIVATE -Wall -Wextra -Wwrite-strings -Wmissing-prototypes)
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Wwrite-strings -Wmissing-prototypes -Wundef)
     if (GCC_VERSION VERSION_GREATER 3.0 OR GCC_VERSION VERSION_EQUAL 3.0)
         target_compile_options(${target} PRIVATE -Wformat=2 -Wno-format-nonliteral)
     endif()
@@ -296,7 +296,7 @@ function(tf_psa_crypto_set_gnu_base_compile_options target)
 endfunction(tf_psa_crypto_set_gnu_base_compile_options)
 
 function(tf_psa_crypto_set_clang_base_compile_options target)
-    target_compile_options(${target} PRIVATE -Wall -Wextra -Wwrite-strings -Wmissing-prototypes -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral)
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Wwrite-strings -Wmissing-prototypes -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wvla -Wformat=2 -Wno-format-nonliteral -Wundef)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:-O2>)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-O0 -g3>)
     target_compile_options(${target} PRIVATE $<$<CONFIG:Coverage>:-O0 -g3 --coverage>)
@@ -332,7 +332,7 @@ endfunction(tf_psa_crypto_set_iar_base_compile_options)
 
 function(tf_psa_crypto_set_msvc_base_compile_options target)
     # Strictest warnings, UTF-8 source and execution charset
-    target_compile_options(${target} PRIVATE /W3 /utf-8)
+    target_compile_options(${target} PRIVATE /W3 /w34668 /utf-8)
 
     if(TF_PSA_CRYPTO_FATAL_WARNINGS)
         target_compile_options(${target} PRIVATE /WX)
