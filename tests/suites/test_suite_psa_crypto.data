@@ -2293,6 +2293,14 @@ PSA symmetric encrypt multipart: CCM*-no-tag, AES, 24 bytes, good
 depends_on:PSA_WANT_ALG_CCM_STAR_NO_TAG:PSA_WANT_KEY_TYPE_AES
 cipher_encrypt_multipart:PSA_ALG_CCM_STAR_NO_TAG:PSA_KEY_TYPE_AES:"d24a3d3dde8c84830280cb87abad0bb3":"f1100035bb24a8d26004e0e24b":"7c86135ed9c2a515aaae0e9a208133897269220f30870006":10:10:14:"1faeb0ee2ca2cd52f0aa3966578344f24e69b742c4ab37ab":PSA_SUCCESS
 
+PSA symmetric encrypt/decrypt multipart: AES-CBC-PKCS#7, 16 bytes, good
+depends_on:PSA_WANT_ALG_CBC_PKCS7:PSA_WANT_KEY_TYPE_AES
+cipher_encrypt_decrypt_multipart:PSA_ALG_CBC_PKCS7:PSA_KEY_TYPE_AES:"2b7e151628aed2a6abf7158809cf4f3c":"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a":"6bc1bee22e409f96e93d7e117393172a"
+
+PSA symmetric encrypt/decrypt multipart: AES-CBC-PKCS#7, 32 bytes, good
+depends_on:PSA_WANT_ALG_CBC_PKCS7:PSA_WANT_KEY_TYPE_AES
+cipher_encrypt_decrypt_multipart:PSA_ALG_CBC_PKCS7:PSA_KEY_TYPE_AES:"2b7e151628aed2a6abf7158809cf4f3c":"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a":"6bc1bee22e409f96e93d7e117393172a3ad77bb40d7a3660a89ecaf32466ef97"
+
 PSA cipher decrypt: without initialization
 depends_on:PSA_WANT_ALG_ECB_NO_PADDING:PSA_WANT_KEY_TYPE_AES
 cipher_decrypt_fail:PSA_ALG_ECB_NO_PADDING:PSA_KEY_TYPE_AES:"":"":"":PSA_ERROR_BAD_STATE
