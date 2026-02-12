@@ -44,8 +44,8 @@ void memory_buffer_alloc_free_alloc(int a_bytes, int b_bytes, int c_bytes,
 #if defined(MBEDTLS_MEMORY_DEBUG)
     size_t reported_blocks;
     size_t reported_bytes;
-#endif
     size_t allocated_bytes = 0;
+#endif
 
     mbedtls_memory_buffer_alloc_init(buf, sizeof(buf));
 
@@ -55,28 +55,36 @@ void memory_buffer_alloc_free_alloc(int a_bytes, int b_bytes, int c_bytes,
         ptr_a = mbedtls_calloc(a_bytes, sizeof(char));
         TEST_ASSERT(check_pointer(ptr_a) == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes += a_bytes * sizeof(char);
+#endif
     }
 
     if (b_bytes > 0) {
         ptr_b = mbedtls_calloc(b_bytes, sizeof(char));
         TEST_ASSERT(check_pointer(ptr_b) == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes += b_bytes * sizeof(char);
+#endif
     }
 
     if (c_bytes > 0) {
         ptr_c = mbedtls_calloc(c_bytes, sizeof(char));
         TEST_ASSERT(check_pointer(ptr_c) == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes += c_bytes * sizeof(char);
+#endif
     }
 
     if (d_bytes > 0) {
         ptr_d = mbedtls_calloc(d_bytes, sizeof(char));
         TEST_ASSERT(check_pointer(ptr_d) == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes += d_bytes * sizeof(char);
+#endif
     }
 
 #if defined(MBEDTLS_MEMORY_DEBUG)
@@ -89,7 +97,9 @@ void memory_buffer_alloc_free_alloc(int a_bytes, int b_bytes, int c_bytes,
         ptr_a = NULL;
         TEST_ASSERT(mbedtls_memory_buffer_alloc_verify() == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes -= a_bytes * sizeof(char);
+#endif
     }
 
     if (free_b) {
@@ -97,7 +107,9 @@ void memory_buffer_alloc_free_alloc(int a_bytes, int b_bytes, int c_bytes,
         ptr_b = NULL;
         TEST_ASSERT(mbedtls_memory_buffer_alloc_verify() == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes -= b_bytes * sizeof(char);
+#endif
     }
 
     if (free_c) {
@@ -105,7 +117,9 @@ void memory_buffer_alloc_free_alloc(int a_bytes, int b_bytes, int c_bytes,
         ptr_c = NULL;
         TEST_ASSERT(mbedtls_memory_buffer_alloc_verify() == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes -= c_bytes * sizeof(char);
+#endif
     }
 
     if (free_d) {
@@ -113,7 +127,9 @@ void memory_buffer_alloc_free_alloc(int a_bytes, int b_bytes, int c_bytes,
         ptr_d = NULL;
         TEST_ASSERT(mbedtls_memory_buffer_alloc_verify() == 0);
 
+#if defined(MBEDTLS_MEMORY_DEBUG)
         allocated_bytes -= d_bytes * sizeof(char);
+#endif
     }
 
 #if defined(MBEDTLS_MEMORY_DEBUG)
