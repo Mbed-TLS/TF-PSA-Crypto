@@ -2369,7 +2369,7 @@ PSA symmetric encrypt/decrypt multipart: AES-CBC, 32 bytes, good
 depends_on:PSA_WANT_ALG_CBC_NO_PADDING:PSA_WANT_KEY_TYPE_AES
 cipher_encrypt_decrypt_multipart:PSA_ALG_CBC_NO_PADDING:PSA_KEY_TYPE_AES:"2b7e151628aed2a6abf7158809cf4f3c":"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a":"6bc1bee22e409f96e93d7e117393172a3ad77bb40d7a3660a89ecaf32466ef97"
 
-PSA symmetric encrypt/decrypt multipart: AES-ECB, 16 bytes, good
+PSA symmetric encrypt/decrypt multipart 2: AES-ECB, 16 bytes, good
 depends_on:PSA_WANT_ALG_ECB_NO_PADDING:PSA_WANT_KEY_TYPE_AES
 cipher_encrypt_decrypt_multipart:PSA_ALG_ECB_NO_PADDING:PSA_KEY_TYPE_AES:"2b7e151628aed2a6abf7158809cf4f3c":"":"6bc1bee22e409f96e93d7e117393172a"
 
