@@ -1252,7 +1252,7 @@
         (alg) == PSA_ALG_CBC_NO_PADDING ||                              \
         (alg) == PSA_ALG_ECB_NO_PADDING) ?                              \
        PSA_ROUND_UP_TO_MULTIPLE(PSA_BLOCK_CIPHER_BLOCK_LENGTH(key_type), \
-                                input_length + 1u) :                       \
+                                input_length) :                       \
        (input_length)) : 0u) :                                          \
      0u)
 
@@ -1267,7 +1267,7 @@
  * \param input_length  Size of the input in bytes.
  */
 #define PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(input_length)     \
-    (PSA_ROUND_UP_TO_MULTIPLE(PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE, input_length + 1u))
+    (PSA_ROUND_UP_TO_MULTIPLE(PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE, input_length))
 
 /** A sufficient ciphertext buffer size for psa_cipher_finish().
  *
