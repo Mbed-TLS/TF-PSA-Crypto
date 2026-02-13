@@ -505,11 +505,8 @@ psa_status_t mbedtls_psa_cipher_update(
     uint8_t *output, size_t output_size, size_t *output_length)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    size_t expected_output_size = 0;
 
-    expected_output_size = input_length;
-
-    if (output_size < expected_output_size) {
+    if (output_size < input_length) {
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
