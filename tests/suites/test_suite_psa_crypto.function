@@ -5135,7 +5135,7 @@ void cipher_encrypt_decrypt_multipart(int alg_arg, int key_type_arg,
                                  &output_length));
     ct_total_length += output_length;
 
-    TEST_CALLOC(ct_buffer,ct_total_length);
+    TEST_CALLOC(ct_buffer, ct_total_length);
     memcpy(ct_buffer, update_buffer, ct_total_length - output_length);
     memcpy(ct_buffer + ct_total_length - output_length, finish_buffer, output_length);
 
@@ -5167,7 +5167,7 @@ void cipher_encrypt_decrypt_multipart(int alg_arg, int key_type_arg,
                                  &output_length));
     pt_total_length += output_length;
 
-    TEST_CALLOC(pt_buffer,pt_total_length);
+    TEST_CALLOC(pt_buffer, pt_total_length);
     memcpy(pt_buffer, update_buffer, pt_total_length - output_length);
     memcpy(pt_buffer + pt_total_length - output_length, finish_buffer, output_length);
 
