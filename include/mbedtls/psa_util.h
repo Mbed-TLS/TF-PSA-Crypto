@@ -16,6 +16,9 @@
 
 #include "psa/crypto.h"
 
+/* Needed for the definition of mbedtls_md_type_t */
+#include "mbedtls/md.h"
+
 /* ASN1 defines used in the ECDSA conversion functions.
  * Note: intentionally not adding MBEDTLS_ASN1_[PARSE|WRITE]_C guards here
  * otherwise error codes would be unknown in test_suite_psa_crypto_util.data.*/
