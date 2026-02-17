@@ -1252,7 +1252,7 @@
         (alg) == PSA_ALG_CBC_NO_PADDING ||                              \
         (alg) == PSA_ALG_ECB_NO_PADDING) ?                              \
        PSA_ROUND_UP_TO_MULTIPLE(PSA_BLOCK_CIPHER_BLOCK_LENGTH(key_type), \
-                                input_length) :                       \
+                                input_length) :                         \
        (input_length)) : 0u) :                                          \
      0u)
 
