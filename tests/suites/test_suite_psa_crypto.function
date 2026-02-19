@@ -4702,7 +4702,8 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
 
     memcpy(output, update_buffer1, update1_output_length);
     memcpy(output + update1_output_length, update_buffer2, update2_output_length);
-    memcpy(output + total_output_length - finish_output_length, finish_buffer, finish_output_length);
+    memcpy(output + total_output_length - finish_output_length, finish_buffer,
+           finish_output_length);
 
     if (expected_status == PSA_SUCCESS) {
         PSA_ASSERT(psa_cipher_abort(&operation));
