@@ -4653,6 +4653,7 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
 
     update_buffer_size1 = PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(first_part_size);
     TEST_CALLOC(update_buffer1, update_buffer_size1);
+    TEST_ASSERT(first_part_size <= input->len);
     update_buffer_size2 = PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(input->len - first_part_size);
     TEST_CALLOC(update_buffer2, update_buffer_size2);
 
