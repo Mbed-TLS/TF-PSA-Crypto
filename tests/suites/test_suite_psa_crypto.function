@@ -4669,22 +4669,20 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
               PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(first_part_size));
     total_output_length += update1_output_length;
 
-    if (first_part_size < input->len) {
-        PSA_ASSERT(psa_cipher_update(&operation,
-                                     input->x + first_part_size,
-                                     input->len - first_part_size,
-                                     update_buffer2,
-                                     update_buffer_size2,
-                                     &update2_output_length));
-        TEST_ASSERT(update2_output_length == output2_length);
-        TEST_LE_U(update2_output_length,
-                  PSA_CIPHER_UPDATE_OUTPUT_SIZE(key_type,
-                                                alg,
-                                                input->len - first_part_size));
-        TEST_LE_U(update2_output_length,
-                  PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(input->len));
-        total_output_length += update2_output_length;
-    }
+    PSA_ASSERT(psa_cipher_update(&operation,
+                                 input->x + first_part_size,
+                                 input->len - first_part_size,
+                                 update_buffer2,
+                                 update_buffer_size2,
+                                 &update2_output_length));
+    TEST_ASSERT(update2_output_length == output2_length);
+    TEST_LE_U(update2_output_length,
+              PSA_CIPHER_UPDATE_OUTPUT_SIZE(key_type,
+                                            alg,
+                                            input->len - first_part_size));
+    TEST_LE_U(update2_output_length,
+              PSA_CIPHER_UPDATE_OUTPUT_MAX_SIZE(input->len));
+    total_output_length += update2_output_length;
 
     TEST_CALLOC(finish_buffer, finish_buffer_size);
 
@@ -4698,13 +4696,19 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
               PSA_CIPHER_FINISH_OUTPUT_MAX_SIZE);
     total_output_length += finish_output_length;
     TEST_EQUAL(status, expected_status);
-
-    TEST_CALLOC(output, total_output_length);
-
-    memcpy(output, update_buffer1, update1_output_length);
-    memcpy(output + update1_output_length, update_buffer2, update2_output_length);
-    memcpy(output + total_output_length - finish_output_length, finish_buffer,
-           finish_output_length);
+    if(total_output_length != 0) {
+        TEST_CALLOC(output, total_output_length);
+        if(update1_output_length != 0){
+            memcpy(output, update_buffer1, update1_output_length);
+        }
+        if(update2_output_length != 0){
+            memcpy(output + update1_output_length, update_buffer2, update2_output_length);
+        }
+        if(finish_output_length != 0){
+            memcpy(output + total_output_length - finish_output_length, finish_buffer,
+                   finish_output_length);
+        }
+    }
 
     if (expected_status == PSA_SUCCESS) {
         PSA_ASSERT(psa_cipher_abort(&operation));
