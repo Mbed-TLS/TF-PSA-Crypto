@@ -1128,11 +1128,23 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Verify a signature, with explicit selection of the signature algorithm.
  */
-int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
+int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t sigalg,
                           mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
                           const unsigned char *hash, size_t hash_len,
                           const unsigned char *sig, size_t sig_len)
 {
+    psa_key_type_t key_type;
+    psa_algorithm_t psa_md_alg, psa_sig_alg;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t status, destruction_status;
+    const unsigned char *verify_sig;
+    size_t exp_sig_len, verify_sig_len;
+#if defined(PSA_HAVE_ALG_SOME_ECDSA)
+    unsigned char raw_sig[PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE];
+    size_t raw_sig_len;
+#endif /* PSA_HAVE_ALG_SOME_ECDSA */
+
     if ((md_alg != MBEDTLS_MD_NONE || hash_len != 0) && hash == NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
@@ -1141,71 +1153,83 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) type)) {
-        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
-    }
-
-    if (type != MBEDTLS_PK_SIGALG_RSA_PSS) {
-        return mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
-    }
-
-    /* Ensure the PK context is of the right type. */
-    if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) {
-        return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-    }
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-
 #if SIZE_MAX > UINT_MAX
     if (md_alg == MBEDTLS_MD_NONE && UINT_MAX < hash_len) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 #endif
 
-    size_t signature_length;
-    psa_status_t status = PSA_ERROR_DATA_CORRUPT;
-    psa_status_t destruction_status = PSA_ERROR_DATA_CORRUPT;
-
-    psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_algorithm_t psa_sig_alg = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
-
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+    /* First select attributes to associate with the key being imported into PSA. */
+    key_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(mbedtls_pk_get_key_type(ctx));
+    psa_set_key_type(&attributes, key_type);
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
-    psa_set_key_algorithm(&attributes, psa_sig_alg);
 
-    status = psa_import_key(&attributes,
-                            ctx->pub_raw, ctx->pub_raw_len,
-                            &key_id);
-    if (status != PSA_SUCCESS) {
-        psa_destroy_key(key_id);
-        return PSA_PK_TO_MBEDTLS_ERR(status);
-    }
-
-    /* This function must fail on a valid signature with trailing data in a
-     * buffer (checked below). Moreover mbedtls_psa_rsa_verify_hash() requires
-     * the sig_len to be exact. For this reason the passed sig_len is
-     * overwritten. Smaller signature lengths should not be accepted for
-     * verification. */
-    signature_length = sig_len > mbedtls_pk_get_len(ctx) ?
-                       mbedtls_pk_get_len(ctx) : sig_len;
-    status = psa_verify_hash(key_id, psa_sig_alg, hash,
-                             hash_len, sig, signature_length);
-    destruction_status = psa_destroy_key(key_id);
-
-    if (status == PSA_SUCCESS && sig_len > mbedtls_pk_get_len(ctx)) {
+    if (PSA_KEY_TYPE_IS_RSA(key_type)) {
+        psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+        psa_set_key_enrollment_algorithm(&attributes, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
+#endif /* MBEDTLS_PSA_CRYPTO_C */
+    } else if (PSA_KEY_TYPE_IS_ECC(key_type)) {
+        psa_set_key_algorithm(&attributes, MBEDTLS_PK_ALG_ECDSA(PSA_ALG_ANY_HASH));
+    } else {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
+    /* Then determine which PSA algorithm is to be used for verification. */
+    psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+    switch (sigalg) {
+        case MBEDTLS_PK_SIGALG_ECDSA:
+            psa_sig_alg = MBEDTLS_PK_ALG_ECDSA(psa_md_alg);
+            break;
+        case MBEDTLS_PK_SIGALG_RSA_PKCS1V15:
+            psa_sig_alg = PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg);
+            break;
+        case MBEDTLS_PK_SIGALG_RSA_PSS:
+            psa_sig_alg = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
+            break;
+        default:
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+
+#if defined(PSA_HAVE_ALG_SOME_ECDSA)
+    /* In case of ECDSA the signature must be converted from DER to RAW format.
+     * For RSA ones no change is needed. */
+    if (sigalg == MBEDTLS_PK_SIGALG_ECDSA) {
+        if (mbedtls_ecdsa_der_to_raw(ctx->bits, sig, sig_len, raw_sig,
+                                     sizeof(raw_sig), &raw_sig_len) != 0) {
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+        }
+        verify_sig = raw_sig;
+        verify_sig_len = raw_sig_len;
+    } else
+#endif /* PSA_HAVE_ALG_SOME_ECDSA */
+    {
+        verify_sig = sig;
+        verify_sig_len = sig_len;
+    }
+
+    /* Adjust hashlen based on MD alg. */
+    if (pk_hashlen_helper(md_alg, &hash_len) != 0) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+
+    /* This function must fail on a valid signature with trailing data in a buffer. */
+    exp_sig_len = PSA_SIGN_OUTPUT_SIZE(key_type, mbedtls_pk_get_bitlen(ctx), psa_sig_alg);
+    if (verify_sig_len > exp_sig_len) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+
+    status = psa_import_key(&attributes, ctx->pub_raw, ctx->pub_raw_len, &key_id);
+    if (status != PSA_SUCCESS) {
+        return PSA_PK_TO_MBEDTLS_ERR(status);
+    }
+
+    status = psa_verify_hash(key_id, psa_sig_alg, hash, hash_len, verify_sig, verify_sig_len);
+    destruction_status = psa_destroy_key(key_id);
     if (status == PSA_SUCCESS) {
         status = destruction_status;
     }
-
-    return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
-#else
-    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
+    return PSA_PK_TO_MBEDTLS_ERR(status);
 }
 
 /*
@@ -1277,54 +1301,69 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Make a signature given a signature type.
  */
-int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
+int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t sigalg,
                         mbedtls_pk_context *ctx,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
                         unsigned char *sig, size_t sig_size, size_t *sig_len)
 {
+    psa_algorithm_t psa_sig_alg, psa_sig_alg_alt = PSA_ALG_NONE;
+    psa_algorithm_t psa_md_alg;
+    psa_status_t status;
+
     if (ctx->pk_info == NULL) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (!mbedtls_pk_can_do(ctx, (mbedtls_pk_type_t) pk_type)) {
-        return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+    /* mbedtls_md_psa_alg_from_type() doesn't include any check on the MD
+     * alg being provided as input, so we need to manually check here comparing
+     * against 1st and last items in enum psa_algorithm_t. Also this
+     * check is not perfect because not all enum values in that range are taken. */
+    if ((md_alg < MBEDTLS_MD_MD5) || (md_alg > MBEDTLS_MD_SHA3_512)) {
+        return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+    psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
+
+    switch (sigalg) {
+        case MBEDTLS_PK_SIGALG_RSA_PKCS1V15:
+            psa_sig_alg = PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg);
+            break;
+        case MBEDTLS_PK_SIGALG_RSA_PSS:
+            /* PSA_ALG_RSA_PSS() behaves the same as PSA_ALG_RSA_PSS_ANY_SALT() when
+             * performing a signature, but they are encoded differently. Instead of
+             * extracting the proper one from the wrapped key policy, just try both. */
+            psa_sig_alg = PSA_ALG_RSA_PSS(psa_md_alg);
+            psa_sig_alg_alt = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
+            break;
+        case MBEDTLS_PK_SIGALG_ECDSA:
+            psa_sig_alg = MBEDTLS_PK_ALG_ECDSA(psa_md_alg);
+            break;
+        default:
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (pk_type != MBEDTLS_PK_SIGALG_RSA_PSS) {
-        return mbedtls_pk_sign(ctx, md_alg, hash, hash_len,
-                               sig, sig_size, sig_len);
-    }
-
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    const psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-    if (psa_md_alg == 0) {
+    /* Adjust hashlen based on MD alg. */
+    if (pk_hashlen_helper(md_alg, &hash_len) != 0) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    if (mbedtls_pk_get_type(ctx) == MBEDTLS_PK_OPAQUE) {
-        psa_status_t status;
-
-        /* PSA_ALG_RSA_PSS() behaves the same as PSA_ALG_RSA_PSS_ANY_SALT() when
-         * performing a signature, but they are encoded differently. Instead of
-         * extracting the proper one from the wrapped key policy, just try both. */
-        status = psa_sign_hash(ctx->priv_id, PSA_ALG_RSA_PSS(psa_md_alg),
-                               hash, hash_len,
+    status = psa_sign_hash(ctx->priv_id, psa_sig_alg, hash, hash_len, sig, sig_size, sig_len);
+    if ((status == PSA_ERROR_NOT_PERMITTED) && (psa_sig_alg_alt != PSA_ALG_NONE)) {
+        status = psa_sign_hash(ctx->priv_id, psa_sig_alg_alt, hash, hash_len,
                                sig, sig_size, sig_len);
-        if (status == PSA_ERROR_NOT_PERMITTED) {
-            status = psa_sign_hash(ctx->priv_id, PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg),
-                                   hash, hash_len,
-                                   sig, sig_size, sig_len);
-        }
-        return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
+    }
+    if (status != 0) {
+        return PSA_PK_TO_MBEDTLS_ERR(status);
     }
 
-    return mbedtls_pk_psa_rsa_sign_ext(PSA_ALG_RSA_PSS(psa_md_alg),
-                                       ctx, hash, hash_len,
-                                       sig, sig_size, sig_len);
-#else
-    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
+#if defined(PSA_HAVE_ALG_SOME_ECDSA)
+    /* In case of ECDSA the signature must be converted from RAW to DER format. */
+    if (sigalg == MBEDTLS_PK_SIGALG_ECDSA) {
+        return mbedtls_ecdsa_raw_to_der(ctx->bits, sig, *sig_len, sig, sig_size, sig_len);
+    }
+#endif /* PSA_HAVE_ALG_SOME_ECDSA */
+
+    return 0;
 }
 
 /*
