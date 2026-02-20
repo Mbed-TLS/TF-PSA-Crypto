@@ -1,0 +1,2 @@
+Bugfix
+   * Fix a bug in the size calculation of updates to account for padding.
