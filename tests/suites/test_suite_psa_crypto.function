@@ -4696,15 +4696,15 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
               PSA_CIPHER_FINISH_OUTPUT_MAX_SIZE);
     total_output_length += finish_output_length;
     TEST_EQUAL(status, expected_status);
-    if(total_output_length != 0) {
+    if (total_output_length != 0) {
         TEST_CALLOC(output, total_output_length);
-        if(update1_output_length != 0){
+        if (update1_output_length != 0) {
             memcpy(output, update_buffer1, update1_output_length);
         }
-        if(update2_output_length != 0){
+        if (update2_output_length != 0) {
             memcpy(output + update1_output_length, update_buffer2, update2_output_length);
         }
-        if(finish_output_length != 0){
+        if (finish_output_length != 0) {
             memcpy(output + total_output_length - finish_output_length, finish_buffer,
                    finish_output_length);
         }
