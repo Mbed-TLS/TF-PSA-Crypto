@@ -4708,13 +4708,12 @@ void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
             memcpy(output + total_output_length - finish_output_length, finish_buffer,
                    finish_output_length);
         }
-    }
+        if (expected_status == PSA_SUCCESS) {
+            PSA_ASSERT(psa_cipher_abort(&operation));
 
-    if (expected_status == PSA_SUCCESS) {
-        PSA_ASSERT(psa_cipher_abort(&operation));
-
-        TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
-                            output, total_output_length);
+            TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
+                                output, total_output_length);
+        }
     }
 
 exit:
