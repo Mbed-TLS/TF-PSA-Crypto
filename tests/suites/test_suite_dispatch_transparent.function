@@ -11,6 +11,13 @@
 #include <psa_crypto_driver_wrappers.h>
 #include <psa_crypto_driver_wrappers_no_static.h>
 
+/* While ML-DSA is only supported in the lower layers but not in the API,
+ * include the internal header with the encoding of key types and algorithms.
+ * This header is not yet included unconditionally by the driver wrapper
+ * headers, but we need all constants that appear in test data to be
+ * defined unconditionally. */
+#include "psa_crypto_mldsa.h"
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
