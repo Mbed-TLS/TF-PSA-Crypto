@@ -535,7 +535,7 @@
  * non-Windows platforms unless a dedicated system call is available
  * (see #MBEDTLS_PSA_BUILTIN_GET_ENTROPY).
  *
- * The default value is `/dev/urandom`, which is suitable on most platforms
+ * The default value is `/dev/random`, which is suitable on most platforms
  * other than Linux. On Linux, either `/dev/random` or `/dev/urandom`
  * may be the right choice, depending on the circumstances:
  *
@@ -550,14 +550,14 @@
  *   if it is used early after the kernel boots, especially on embedded
  *   devices without an interactive user.
  *
- * Thus you should change the value to `/dev/random` if your application
+ * Thus you should change the value to `/dev/urandom` if your application
  * may be used on a device running Linux without a dedicated hardware
- * entropy source early after boot.
+ * entropy source, and doesn't run early during or after boot.
  *
  * This is the default value of ::mbedtls_platform_dev_random, which
  * can be changed at run time.
  */
-//#define MBEDTLS_PLATFORM_DEV_RANDOM "/dev/urandom"
+//#define MBEDTLS_PLATFORM_DEV_RANDOM "/dev/random"
 
 /** \} name SECTION: Platform abstraction layer */
 
