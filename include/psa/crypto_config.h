@@ -528,6 +528,18 @@
 //#define MBEDTLS_PLATFORM_VSNPRINTF_MACRO    vsnprintf /**< Default vsnprintf macro to use, can be undefined */
 //#define MBEDTLS_PRINTF_MS_TIME    PRId64 /**< Default fmt for printf. That's avoid compiler warning if mbedtls_ms_time_t is redefined */
 
+/*** \def MBEDTLS_PLATFORM_DEV_RANDOM
+ *
+ * Path to a special file that returns cryptographic-quality random bytes
+ * when read. This is used by the default platform entropy source on
+ * non-Windows platforms unless a dedicated system call is available
+ * (see #MBEDTLS_PSA_BUILTIN_GET_ENTROPY).
+ *
+ * This is the default value of ::mbedtls_platform_dev_random, which
+ * can be changed at run time.
+ */
+//#define MBEDTLS_PLATFORM_DEV_RANDOM "/dev/urandom"
+
 /** \} name SECTION: Platform abstraction layer */
 
 /**
@@ -1083,7 +1095,8 @@
  * - getrandom() on Linux (if syscall() is available at compile time);
  * - getrandom() on FreeBSD and DragonFlyBSD (if available at compile time);
  * - `sysctl(KERN_ARND)` on FreeBSD and NetBSD;
- * - `/dev/urandom` on Unix-like platforms (unless one of the above is used);
+ * - #MBEDTLS_PLATFORM_DEV_RANDOM on Unix-like platforms (unless one of the
+ *   above is used);
  * - BCryptGenRandom() on Windows.
  *
  * You should enable this option if your platform has one of these. If not:
