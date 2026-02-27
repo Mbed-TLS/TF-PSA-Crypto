@@ -53,25 +53,28 @@ void mbedtls_gcm_init(mbedtls_gcm_context *ctx)
     memset(ctx, 0, sizeof(mbedtls_gcm_context));
 }
 
-static inline void gcm_set_acceleration(mbedtls_gcm_context *ctx)
+
+static inline unsigned gcm_get_acceleration()
 {
-#if defined(MBEDTLS_GCM_LARGE_TABLE)
-    ctx->acceleration = MBEDTLS_GCM_ACC_LARGETABLE;
-#else
-    ctx->acceleration = MBEDTLS_GCM_ACC_SMALLTABLE;
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    /* Note: we do not need AES support to use the AESCE GCM implementation
+     * for a non-AES cipher. */
+    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
+        return MBEDTLS_GCM_ACC_AESCE;
+    }
 #endif
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     /* With CLMUL support, we need only h, not the rest of the table */
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_CLMUL)) {
-        ctx->acceleration = MBEDTLS_GCM_ACC_AESNI;
+        return MBEDTLS_GCM_ACC_AESNI;
     }
 #endif
 
-#if defined(MBEDTLS_AESCE_HAVE_CODE)
-    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
-        ctx->acceleration = MBEDTLS_GCM_ACC_AESCE;
-    }
+#if defined(MBEDTLS_GCM_LARGE_TABLE)
+    return MBEDTLS_GCM_ACC_LARGETABLE;
+#else
+    return MBEDTLS_GCM_ACC_SMALLTABLE;
 #endif
 }
 
@@ -110,13 +113,11 @@ static int gcm_gen_table(mbedtls_gcm_context *ctx)
         return ret;
     }
 
-    gcm_set_acceleration(ctx);
-
     /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
     ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
     ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
 
-    switch (ctx->acceleration) {
+    switch (gcm_get_acceleration()) {
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESNI:
             return 0;
@@ -345,7 +346,7 @@ static void gcm_mult_smalltable(uint8_t *output, const uint8_t *x, uint64_t H[16
 static void gcm_mult(mbedtls_gcm_context *ctx, const unsigned char x[16],
                      unsigned char output[16])
 {
-    switch (ctx->acceleration) {
+    switch (gcm_get_acceleration()) {
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESNI:
             mbedtls_aesni_gcm_mult(output, x, (uint8_t *) ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2]);
