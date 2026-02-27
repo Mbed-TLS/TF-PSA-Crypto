@@ -580,7 +580,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
     // set number of rounds to 10, 12 or 14
     const uint32_t nr = 6 + (keybits >> 5);
 #endif
-    ctx->nr = nr;
+    MBEDTLS_AES_SET_NR(ctx, nr);
 
 #if !defined(MBEDTLS_AES_ROM_TABLES) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
     if (aes_init_done == 0) {
@@ -589,12 +589,8 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
     }
 #endif
 
-#if defined(MAY_NEED_TO_ALIGN)
-    ctx->rk_offset = mbedtls_aes_rk_offset(ctx->buf);
-    RK = ctx->buf + ctx->rk_offset;
-#else
-    RK = ctx->buf;
-#endif
+    MBEDTLS_AES_SET_RK_OFFSET(ctx, mbedtls_aes_rk_offset(ctx->buf));
+    RK = ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx);
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
@@ -630,11 +626,11 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
         RK[k + 1] = RK[2] ^ RK[k - 0];
         RK[k + 2] = RK[3] ^ RK[k + 1];
 #if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-        if (ctx->nr == 12) {
+        if (MBEDTLS_AES_GET_NR(ctx) == 12) {
             RK[k + 3] = RK[4] ^ RK[k + 2];
             RK[k + 4] = RK[5] ^ RK[k + 3];
         }
-        if (ctx->nr == 14) {
+        if (MBEDTLS_AES_GET_NR(ctx) == 14) {
             RK[12] = RK[4] ^
                      ((uint32_t) FSb[MBEDTLS_BYTE_0(RK[11])]) ^
                      ((uint32_t) FSb[MBEDTLS_BYTE_1(RK[11])] <<  8) ^
@@ -669,24 +665,25 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
 
     mbedtls_aes_init(&cty);
 
-    ctx->rk_offset = mbedtls_aes_rk_offset(ctx->buf);
 #if defined(MAY_NEED_TO_ALIGN)
-    RK = ctx->buf + ctx->rk_offset;
+    MBEDTLS_AES_SET_RK_OFFSET(ctx, mbedtls_aes_rk_offset(ctx->buf));
 #else
-    RK = ctx->buf;
+    MBEDTLS_AES_SET_RK_OFFSET(ctx, 0);
 #endif
+    RK = ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx);
 
     /* Also checks keybits */
     if ((ret = mbedtls_aes_setkey_enc(&cty, key, keybits)) != 0) {
         goto exit;
     }
 
-    ctx->nr = cty.nr;
+    MBEDTLS_AES_SET_NR(ctx, MBEDTLS_AES_GET_NR(&cty));
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
         mbedtls_aesni_inverse_key((unsigned char *) RK,
-                                  (const unsigned char *) (cty.buf + cty.rk_offset), ctx->nr);
+                                  (const unsigned char *) (cty.buf + cty.rk_offset),
+                                  MBEDTLS_AES_GET_NR(ctx));
         goto exit;
     }
 #endif
@@ -706,7 +703,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
     *RK++ = *SK++;
     *RK++ = *SK++;
     SK -= 8;
-    for (int i = ctx->nr - 1; i > 0; i--, SK -= 8) {
+    for (int i = MBEDTLS_AES_GET_NR(ctx) - 1; i > 0; i--, SK -= 8) {
         for (int j = 0; j < 4; j++, SK++) {
             *RK++ = AES_RT0(FSb[MBEDTLS_BYTE_0(*SK)]) ^
                     AES_RT1(FSb[MBEDTLS_BYTE_1(*SK)]) ^
@@ -879,11 +876,7 @@ static int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
                                         unsigned char output[16])
 {
     int i;
-#if defined(MAY_NEED_TO_ALIGN)
-    uint32_t *RK = ctx->buf + ctx->rk_offset;
-#else
-    uint32_t *RK = ctx->buf;
-#endif
+    uint32_t *RK = ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx);
     struct {
         uint32_t X[4];
         uint32_t Y[4];
@@ -894,13 +887,11 @@ static int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
     t.X[2] = MBEDTLS_GET_UINT32_LE(input,  8); t.X[2] ^= *RK++;
     t.X[3] = MBEDTLS_GET_UINT32_LE(input, 12); t.X[3] ^= *RK++;
 
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-    MBEDTLS_ASSUME(ctx->nr == 10);
-#else
+#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     MBEDTLS_ASSUME((ctx->nr == 10) || (ctx->nr == 12) | (ctx->nr == 14));
 #endif
 
-    for (i = (ctx->nr >> 1) - 1; i > 0; i--) {
+    for (i = (MBEDTLS_AES_GET_NR(ctx) >> 1) - 1; i > 0; i--) {
         AES_FROUND(t.Y[0], t.Y[1], t.Y[2], t.Y[3], t.X[0], t.X[1], t.X[2], t.X[3]);
         AES_FROUND(t.X[0], t.X[1], t.X[2], t.X[3], t.Y[0], t.Y[1], t.Y[2], t.Y[3]);
     }
@@ -952,7 +943,7 @@ static int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx,
                                         unsigned char output[16])
 {
     int i;
-    uint32_t *RK = ctx->buf + ctx->rk_offset;
+    uint32_t *RK = ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx);
     struct {
         uint32_t X[4];
         uint32_t Y[4];
@@ -963,7 +954,7 @@ static int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx,
     t.X[2] = MBEDTLS_GET_UINT32_LE(input,  8); t.X[2] ^= *RK++;
     t.X[3] = MBEDTLS_GET_UINT32_LE(input, 12); t.X[3] ^= *RK++;
 
-    for (i = (ctx->nr >> 1) - 1; i > 0; i--) {
+    for (i = (MBEDTLS_AES_GET_NR(ctx) >> 1) - 1; i > 0; i--) {
         AES_RROUND(t.Y[0], t.Y[1], t.Y[2], t.Y[3], t.X[0], t.X[1], t.X[2], t.X[3]);
         AES_RROUND(t.X[0], t.X[1], t.X[2], t.X[3], t.Y[0], t.Y[1], t.Y[2], t.Y[3]);
     }
@@ -1017,11 +1008,11 @@ static int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx,
 MBEDTLS_MAYBE_UNUSED static void aes_maybe_realign(mbedtls_aes_context *ctx)
 {
     unsigned new_offset = mbedtls_aes_rk_offset(ctx->buf);
-    if (new_offset != ctx->rk_offset) {
+    if (new_offset != MBEDTLS_AES_GET_RK_OFFSET(ctx)) {
         memmove(ctx->buf + new_offset,     // new address
-                ctx->buf + ctx->rk_offset, // current address
-                (ctx->nr + 1) * 16);       // number of round keys * bytes per rk
-        ctx->rk_offset = new_offset;
+                ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx), // current address
+                (MBEDTLS_AES_GET_NR(ctx) + 1) * 16);       // number of round keys * bytes per rk
+        MBEDTLS_AES_SET_RK_OFFSET(ctx, new_offset);
     }
 }
 #endif /* MAY_NEED_TO_ALIGN */

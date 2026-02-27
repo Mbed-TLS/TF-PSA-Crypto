@@ -68,23 +68,47 @@ extern "C" {
  * \brief The AES context-type definition.
  */
 typedef struct mbedtls_aes_context {
+#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     int MBEDTLS_PRIVATE(nr);                     /*!< The number of rounds. */
-    size_t MBEDTLS_PRIVATE(rk_offset);           /*!< The offset in array elements to AES
-                                                    round keys in the buffer. */
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-    uint32_t MBEDTLS_PRIVATE(buf)[44];           /*!< Aligned data buffer to hold
-                                                    10 round keys for 128-bit case. */
-#else
+
     uint32_t MBEDTLS_PRIVATE(buf)[68];           /*!< Unaligned data buffer. This buffer can
                                                     hold 32 extra Bytes, which can be used for
                                                     simplifying key expansion in the 256-bit
                                                     case by generating an extra round key. */
+#else
+    uint32_t MBEDTLS_PRIVATE(buf)[44];           /*!< Aligned data buffer to hold
+                                                    10 round keys for 128-bit case. */
 #endif /* MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
     uint8x16_t vkeys[15];                       /* Neon copy of the round keys. */
 #endif
+#if defined(MBEDTLS_AESNI_C)
+    size_t MBEDTLS_PRIVATE(rk_offset);           /*!< The offset in array elements to AES
+                                                    round keys in the buffer. */
+#endif
 }
 mbedtls_aes_context;
+
+
+// Using these macros simplifies the code by allowing a lot of
+// #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH) ... #else ... #endif
+// to be dropped, as the compiler can then infer this automatically.
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#define MBEDTLS_AES_GET_NR(ctx) 10
+#define MBEDTLS_AES_SET_NR(ctx, nr) do { (void) (nr); } while (0)
+#else
+#define MBEDTLS_AES_GET_NR(ctx) ((ctx)->nr)
+#define MBEDTLS_AES_SET_NR(ctx, rounds) ((ctx)->nr) = rounds
+#endif
+
+#if defined(MBEDTLS_AESNI_C)
+#define MBEDTLS_AES_GET_RK_OFFSET(ctx)      ((ctx)->rk_offset)
+#define MBEDTLS_AES_SET_RK_OFFSET(ctx, off) do { (ctx)->rk_offset = (off); } while (0)
+#else
+#define MBEDTLS_AES_GET_RK_OFFSET(ctx)      0
+#define MBEDTLS_AES_SET_RK_OFFSET(ctx, off) do {} while (0)
+#endif
+
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #if defined(MBEDTLS_CIPHER_MODE_XTS)

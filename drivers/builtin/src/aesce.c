@@ -346,7 +346,7 @@ void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
     uint8x16_t vkeys[15];
     mbedtls_aesce_load_keys(ctx, vkeys);
 
-    int nr = ctx->nr;
+    int nr = MBEDTLS_AES_GET_NR(ctx);
 
     size_t i = 0;
     while (i < blocks) {
@@ -401,13 +401,13 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
     if (mode == MBEDTLS_AES_DECRYPT) {
-        block = aesce_decrypt_block(block, ctx->vkeys, ctx->nr);
+        block = aesce_decrypt_block(block, ctx->vkeys, MBEDTLS_AES_GET_NR(ctx));
     } else
 #else
     (void) mode;
 #endif
     {
-        block = aesce_encrypt_block(block, ctx->vkeys, ctx->nr);
+        block = aesce_encrypt_block(block, ctx->vkeys, MBEDTLS_AES_GET_NR(ctx));
     }
     vst1q_u8(&output[0], block);
 
