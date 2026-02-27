@@ -14,12 +14,12 @@
  *
  * In the libtestdriver1 build, the next two code lines are
  * `#define LIBTESTDRIVER_FOO 1` and
- * `#if LIBTESTDRIVER_FOO == LIBTESTDRIVER_FOO` so the conditional is true.
+ * `#if defined(LIBTESTDRIVER_FOO)` so the conditional is true.
  * In a normal build, `LIBTESTDRIVER1_TF_PSA_CRYPTO_MARKER` remains
  * undefined so the conditional is false.
  */
 #define TF_PSA_CRYPTO_MARKER 1
-#if LIBTESTDRIVER1_TF_PSA_CRYPTO_MARKER == TF_PSA_CRYPTO_MARKER
+#if defined(LIBTESTDRIVER1_TF_PSA_CRYPTO_MARKER)
 #define TF_PSA_CRYPTO_WE_ARE_IN_LIBTESTDRIVER1
 #endif
 #undef TF_PSA_CRYPTO_MARKER
