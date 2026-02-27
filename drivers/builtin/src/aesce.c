@@ -611,8 +611,8 @@ static inline uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
 
     return vreinterpretq_u8_p128(
         MBEDTLS_VMULL_P64(
-            (poly64_t) vget_low_p64(vreinterpretq_p64_u8(a)),
-            (poly64_t) vget_low_p64(vreinterpretq_p64_u8(b))
+            (poly64_t) vreinterpret_p64_u8(vget_low_u8(a)),
+            (poly64_t) vreinterpret_p64_u8(vget_low_u8(b))
             ));
 }
 
