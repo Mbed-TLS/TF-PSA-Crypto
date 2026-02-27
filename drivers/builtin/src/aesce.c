@@ -161,12 +161,6 @@ int mbedtls_aesce_has_support_impl(void)
 
 #endif /* defined(__linux__) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY) */
 
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-#define KEY_OFFSET(nr) (0)
-#else
-#define KEY_OFFSET(nr) ((14 - (nr)) * 16)
-#endif
-
 /* Single round of AESCE encryption */
 #define AESCE_ENCRYPT_ROUND(k)          \
     block = vaeseq_u8(block, vkeys[k]);  \
@@ -412,23 +406,22 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, mbedtls_aes_context const *src)
 {
-    uint8_t *invkey = ((uint8_t *) dst->buf) + KEY_OFFSET(src->nr);
-    uint8_t *fwdkey = ((uint8_t *) src->buf) + KEY_OFFSET(dst->nr);
-
-    int i, j;
+    unsigned nr = MBEDTLS_AES_GET_NR(src);
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-    j = 10;
+    const uint8x16_t *sk = &src->vkeys[4];
+    uint8x16_t       *dk = &dst->vkeys[4];
 #else
-    j = src->nr;
+    unsigned offset  = 14 - nr;
+    const uint8x16_t *sk = &src->vkeys[offset];
+    uint8x16_t       *dk = &dst->vkeys[offset];
 #endif
 
-    vst1q_u8(invkey, vld1q_u8(fwdkey + j * 16));
-    for (i = 1, j--; j > 0; i++, j--) {
-        vst1q_u8(invkey + i * 16,
-                 vaesimcq_u8(vld1q_u8(fwdkey + j * 16)));
+    dk[0] = sk[nr];
+    for (int i = 1, j = nr - 1; j > 0; i++, j--) {
+        uint8x16_t k = sk[j];
+        dk[i] = vaesimcq_u8(k);
     }
-    vst1q_u8(invkey + i * 16, vld1q_u8(fwdkey + j * 16));
-    mbedtls_aesce_load_keys(dst, dst->vkeys);
+    dk[nr] = sk[0];
 }
 #endif
 
