@@ -31,6 +31,24 @@
 
 #include <stdint.h>
 
+/*
+ * MBEDTLS_ONLY_GCM_CIPHER_IS_AES is set if we know at compile-time that we can dispatch directly to
+ * AES for all GCM operations, (because there are no other ciphers that
+ * might use GCM, which is the common case).
+ * This enables a lot of code-size savings.
+ */
+#if defined(MBEDTLS_AES_C)
+#if defined(MBEDTLS_BLOCK_CIPHER_C)
+#if !defined(MBEDTLS_ARIA_C) && !defined(MBEDTLS_CAMELLIA_C)
+#define MBEDTLS_ONLY_GCM_CIPHER_IS_AES
+#endif
+#elif defined(MBEDTLS_CIPHER_C)
+#if !defined(MBEDTLS_ARIA_C) && !defined(MBEDTLS_CAMELLIA_C) && !defined(MBEDTLS_CHACHA20_C)
+#define MBEDTLS_ONLY_GCM_CIPHER_IS_AES
+#endif
+#endif // MBEDTLS_BLOCK_CIPHER_C or MBEDTLS_CIPHER_C
+#endif // MBEDTLS_AES_C
+
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_GCM_ENCRYPT     1
 #define MBEDTLS_GCM_DECRYPT     0
