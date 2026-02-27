@@ -661,27 +661,20 @@ int mbedtls_gcm_finish(mbedtls_gcm_context *ctx,
     orig_len = ctx->len * 8;
     orig_add_len = ctx->add_len * 8;
 
-    if (ctx->len == 0 && ctx->add_len % 16 != 0) {
-        gcm_mult(ctx, ctx->buf, ctx->buf);
-    }
-
     if (tag_len > 16 || tag_len < 4) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
 
-    if (ctx->len % 16 != 0) {
+    if ((ctx->len == 0 && ctx->add_len % 16 != 0)
+        || (ctx->len % 16 != 0)) {
         gcm_mult(ctx, ctx->buf, ctx->buf);
     }
 
     memcpy(tag, ctx->base_ectr, tag_len);
 
     if (orig_len || orig_add_len) {
-        memset(work_buf, 0x00, 16);
-
-        MBEDTLS_PUT_UINT32_BE((orig_add_len >> 32), work_buf, 0);
-        MBEDTLS_PUT_UINT32_BE((orig_add_len), work_buf, 4);
-        MBEDTLS_PUT_UINT32_BE((orig_len     >> 32), work_buf, 8);
-        MBEDTLS_PUT_UINT32_BE((orig_len), work_buf, 12);
+        MBEDTLS_PUT_UINT64_BE(orig_add_len, work_buf, 0);
+        MBEDTLS_PUT_UINT64_BE(orig_len, work_buf, 8);
 
         mbedtls_xor_small(ctx->buf, ctx->buf, work_buf, 16);
 
