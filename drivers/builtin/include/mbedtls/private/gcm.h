@@ -23,6 +23,7 @@
 #include "tf-psa-crypto/build_info.h"
 
 #include "mbedtls/private/cipher.h"
+#include "mbedtls/private/aesce_common.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
 #include "mbedtls/private/block_cipher.h"

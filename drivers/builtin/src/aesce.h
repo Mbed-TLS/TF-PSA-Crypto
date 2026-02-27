@@ -17,6 +17,7 @@
 #include "tf_psa_crypto_common.h"
 
 #include "mbedtls/private/aes.h"
+#include "mbedtls/private/aesce_common.h"
 
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
