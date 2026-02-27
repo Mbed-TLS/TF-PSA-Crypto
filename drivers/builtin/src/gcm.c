@@ -377,7 +377,6 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
                        const unsigned char *iv, size_t iv_len)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char work_buf[16];
     const unsigned char *p;
     size_t use_len;
     uint64_t iv_bits;
@@ -402,9 +401,7 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
         memcpy(ctx->y, iv, iv_len);
         ctx->y[15] = 1;
     } else {
-        memset(work_buf, 0x00, 16);
         iv_bits = (uint64_t) iv_len * 8;
-        MBEDTLS_PUT_UINT64_BE(iv_bits, work_buf, 8);
 
         p = iv;
         while (iv_len > 0) {
@@ -427,22 +424,20 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
             p += use_len;
         }
 
-        mbedtls_xor(ctx->y, ctx->y, work_buf, 16);
+        uint64_t k = MBEDTLS_GET_UINT64_BE(ctx->y, 8);
+        k ^= iv_bits;
+        MBEDTLS_PUT_UINT64_BE(k, ctx->y, 8);
 
         gcm_mult(ctx, ctx->y, ctx->y);
     }
-
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     ret = mbedtls_block_cipher_encrypt(&ctx->block_cipher_ctx, ctx->y, ctx->base_ectr);
 #else
     ret = mbedtls_cipher_update(&ctx->cipher_ctx, ctx->y, 16, ctx->base_ectr, &olen);
 #endif
-    if (ret != 0) {
-        return ret;
-    }
 
-    return 0;
+    return ret;
 }
 
 /**
