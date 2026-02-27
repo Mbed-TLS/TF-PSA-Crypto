@@ -543,12 +543,16 @@ static int gcm_mask(mbedtls_gcm_context *ctx,
         return ret;
     }
 
-    if (ctx->mode == MBEDTLS_GCM_DECRYPT) {
-        mbedtls_xor(ctx->buf + offset, ctx->buf + offset, input, use_len);
-    }
-    mbedtls_xor(output, ectr + offset, input, use_len);
-    if (ctx->mode == MBEDTLS_GCM_ENCRYPT) {
-        mbedtls_xor(ctx->buf + offset, ctx->buf + offset, output, use_len);
+    // slightly awkward but saves 140b to use a loop like this.
+    // note that for in-place operations, the order of the two xor operations matters.
+    uint8_t *ps[] = {
+        ctx->buf + offset, ctx->buf + offset, (uint8_t *) input,
+        output, ectr + offset, (uint8_t *) input,
+        ctx->buf + offset, ctx->buf + offset, output,
+    };
+    uint8_t **ap = (ctx->mode == MBEDTLS_GCM_DECRYPT) ? &ps[0] : &ps[3];
+    for (unsigned i = 0; i < 6; i += 3) {
+        mbedtls_xor_no_simd(ap[i], (const uint8_t *) ap[i + 1], (const uint8_t *) ap[i + 2], use_len);
     }
 
     return 0;
