@@ -497,27 +497,25 @@ int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
     vst1q_u8(r + (key_bit_length - 128) / 8, vk);
 #endif
 
-    for (uint32_t *rki = (uint32_t *) r;
+    for (uint32_t *rki = (uint32_t *) r, iteration = 0;
          rki + key_len_in_words < rko_end;
-         rki += key_len_in_words) {
-
-        size_t iteration = (size_t) (rki - (uint32_t *) r) / key_len_in_words;
-
+         rki += key_len_in_words, iteration++) {
         uint32_t *rko;
         rko = rki + key_len_in_words;
         rko[0] = aes_rot_word(aes_sub_word(rki[key_len_in_words - 1]));
         rko[0] ^= rcon[iteration] ^ rki[0];
+
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
         rko[1] = rko[0] ^ rki[1];
         rko[2] = rko[1] ^ rki[2];
         rko[3] = rko[2] ^ rki[3];
-#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-        rko[4] = rko[3] ^ rki[4];
-        if (key_bit_length == 256) {
-            rko[4] = aes_sub_word(rko[3]) ^ rki[4];
+#else
+        for (unsigned i = 0; i < 7; i++) {
+            rko[i + 1] = rko[i] ^ rki[i + 1];
+            if (key_bit_length == 256 && i == 3) {
+                rko[4] = aes_sub_word(rko[3]) ^ rki[4];
+            }
         }
-        rko[5] = rko[4] ^ rki[5];
-        rko[6] = rko[5] ^ rki[6];
-        rko[7] = rko[6] ^ rki[7];
 #endif
     }
 
