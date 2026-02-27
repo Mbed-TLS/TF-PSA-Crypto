@@ -415,7 +415,7 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
 #pragma GCC diagnostic warning "-Wstringop-overflow=0"
 #endif
 
-            mbedtls_xor(ctx->y, ctx->y, p, use_len);
+            mbedtls_xor_small(ctx->y, ctx->y, p, use_len);
 
 #if defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 70110)
 #pragma GCC diagnostic pop
@@ -490,7 +490,7 @@ int mbedtls_gcm_update_ad(mbedtls_gcm_context *ctx,
             use_len = add_len;
         }
 
-        mbedtls_xor(ctx->buf + offset, ctx->buf + offset, p, use_len);
+        mbedtls_xor_small(ctx->buf + offset, ctx->buf + offset, p, use_len);
 
         if (offset + use_len == 16) {
             gcm_mult(ctx, ctx->buf, ctx->buf);
@@ -504,7 +504,7 @@ int mbedtls_gcm_update_ad(mbedtls_gcm_context *ctx,
     ctx->add_len += add_len;
 
     while (add_len >= 16) {
-        mbedtls_xor(ctx->buf, ctx->buf, p, 16);
+        mbedtls_xor_small(ctx->buf, ctx->buf, p, 16);
 
         gcm_mult(ctx, ctx->buf, ctx->buf);
 
@@ -513,7 +513,7 @@ int mbedtls_gcm_update_ad(mbedtls_gcm_context *ctx,
     }
 
     if (add_len > 0) {
-        mbedtls_xor(ctx->buf, ctx->buf, p, add_len);
+        mbedtls_xor_small(ctx->buf, ctx->buf, p, add_len);
     }
 
     return 0;
@@ -688,11 +688,11 @@ int mbedtls_gcm_finish(mbedtls_gcm_context *ctx,
         MBEDTLS_PUT_UINT32_BE((orig_len     >> 32), work_buf, 8);
         MBEDTLS_PUT_UINT32_BE((orig_len), work_buf, 12);
 
-        mbedtls_xor(ctx->buf, ctx->buf, work_buf, 16);
+        mbedtls_xor_small(ctx->buf, ctx->buf, work_buf, 16);
 
         gcm_mult(ctx, ctx->buf, ctx->buf);
 
-        mbedtls_xor(tag, tag, ctx->buf, tag_len);
+        mbedtls_xor_small(tag, tag, ctx->buf, tag_len);
     }
 
     return 0;
