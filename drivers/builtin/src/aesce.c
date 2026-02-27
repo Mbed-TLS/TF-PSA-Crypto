@@ -184,16 +184,12 @@ static uint8x16_t aesce_encrypt_block(uint8x16_t block,
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     (void) nr;
 #else
-    if (nr == 10) {
-        goto rounds_10;
+    if (nr & 4) {
+        if (nr & 2) {
+            AESCE_ENCRYPT_ROUND_X2(0);
+        }
+        AESCE_ENCRYPT_ROUND_X2(2);
     }
-    if (nr == 12) {
-        goto rounds_12;
-    }
-    AESCE_ENCRYPT_ROUND_X2(0);
-rounds_12:
-    AESCE_ENCRYPT_ROUND_X2(2);
-rounds_10:
 #endif
     AESCE_ENCRYPT_ROUND_X2(4);
     AESCE_ENCRYPT_ROUND_X2(6);
@@ -247,16 +243,12 @@ static uint8x16_t aesce_decrypt_block(uint8x16_t block,
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     (void) rounds;
 #else
-    if (rounds == 10) {
-        goto rounds_10;
+    if (rounds & 4) {
+        if (rounds & 2) {
+            AESCE_DECRYPT_ROUND_X2(0);
+        }
+        AESCE_DECRYPT_ROUND_X2(2);
     }
-    if (rounds == 12) {
-        goto rounds_12;
-    }
-    AESCE_DECRYPT_ROUND_X2(0);
-rounds_12:
-    AESCE_DECRYPT_ROUND_X2(2);
-rounds_10:
 #endif
     AESCE_DECRYPT_ROUND_X2(4);
     AESCE_DECRYPT_ROUND_X2(6);
