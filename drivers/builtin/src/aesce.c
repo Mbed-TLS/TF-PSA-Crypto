@@ -639,7 +639,7 @@ static inline poly64x1_t vget_low_p64(poly64x2_t a)
 #define MBEDTLS_VMULL_P64(a, b) vmull_p64(a, b)
 #endif /* MBEDTLS_COMPILER_IS_GCC */
 
-static inline uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
+static FORCE_INLINE uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
 {
 
     return vreinterpretq_u8_p128(
@@ -649,7 +649,7 @@ static inline uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
             ));
 }
 
-static inline uint8x16_t pmull_high(uint8x16_t a, uint8x16_t b)
+static FORCE_INLINE uint8x16_t pmull_high(uint8x16_t a, uint8x16_t b)
 {
     return vreinterpretq_u8_p128(
         vmull_high_p64(vreinterpretq_p64_u8(a),
@@ -672,7 +672,7 @@ static inline uint8x16_t pmull_high(uint8x16_t a, uint8x16_t b)
  * | ret.val[1] |   :m2:m1:00 | middle 128b |
  * | ret.val[2] |   :  :l1:l0 | low    128b |
  */
-static inline uint8x16x3_t poly_mult_128(uint8x16_t a, uint8x16_t b)
+static FORCE_INLINE uint8x16x3_t poly_mult_128(uint8x16_t a, uint8x16_t b)
 {
     uint8x16x3_t ret;
     uint8x16_t h, m, l; /* retval high/middle/low */
@@ -705,7 +705,7 @@ static inline uint8x16x3_t poly_mult_128(uint8x16_t a, uint8x16_t b)
  * simply multiply the higher part of the operand by r(z) and add it to l(z). If
  * the result is still larger than 128 bits, we reduce again.
  */
-static inline uint8x16_t poly_mult_reduce(uint8x16x3_t input)
+static FORCE_INLINE uint8x16_t poly_mult_reduce(uint8x16x3_t input)
 {
     uint8x16_t const ZERO = vdupq_n_u8(0);
 
