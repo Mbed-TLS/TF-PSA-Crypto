@@ -80,6 +80,9 @@ typedef struct mbedtls_gcm_context {
 #else
     mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher_ctx);    /*!< The cipher context used. */
 #endif
+#if defined(MBEDTLS_AESCE_C)
+    uint8_t MBEDTLS_PRIVATE(aesce_H)[32];                    /* constant 1, followed by hash key */
+#endif
     uint64_t MBEDTLS_PRIVATE(H)[MBEDTLS_GCM_HTABLE_SIZE][2]; /*!< Precalculated HTable. */
     uint64_t MBEDTLS_PRIVATE(len);                           /*!< The total length of the encrypted data. */
     uint64_t MBEDTLS_PRIVATE(add_len);                       /*!< The total length of the additional data. */
