@@ -374,7 +374,7 @@ void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
         do {
             uint8x16_t ctr_be = vrev64q_u8(vreinterpretq_u8_u64(ctr_le));
             uint8x16_t in = vld1q_u8(&input[i * 16]);
-            uint8x16_t block = aesce_encrypt_block(ctr_be, vkeys, nr);
+            uint8x16_t block = aesce_encrypt_block_inline(ctr_be, vkeys, nr);
             uint8x16_t output_block = veorq_u8(block, in);
             ctr_le = vaddq_u64(ctr_le, k0_1);
             vst1q_u8(&output[i * 16], output_block);
