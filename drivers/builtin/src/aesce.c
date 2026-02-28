@@ -5,6 +5,29 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#if defined(__clang__) || defined(__GNUC__)
+#define FORCE_INLINE inline __attribute__((always_inline))
+#else
+#define FORCE_INLINE inline
+#endif
+
+
+/* C-only: prevent inlining where the compiler supports it */
+#if defined(_MSC_VER)
+  #define NO_INLINE __declspec(noinline)
+#elif defined(__clang__)
+    #define NO_INLINE __attribute__((noinline))
+#elif defined(__GNUC__)
+    #if (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
+        #define NO_INLINE __attribute__((noinline))
+    #else
+        #define NO_INLINE
+    #endif
+#else
+    #define NO_INLINE
+#endif
+
+
 #if defined(__clang__) &&  (__clang_major__ >= 4)
 
 /* Ideally, we would simply use MBEDTLS_ARCH_IS_ARMV8_A in the following #if,
