@@ -64,6 +64,37 @@ void mbedtls_gcm_init(mbedtls_gcm_context *ctx)
     memset(ctx, 0, sizeof(mbedtls_gcm_context));
 }
 
+static unsigned gcm_use_aesce(mbedtls_gcm_context *ctx)
+{
+    /* Helper function to determine if GCM cipher operations should use AESCE -
+     * ie., AESCE is compiled in, supported by the hardware and the cipher being
+     * used is AES.
+     *
+     * This differs from gcm_get_acceleration() which is used to determine if
+     * GCM tag operations (independent of cipher) should use AESCE.
+     *
+     * This all typically resolves to a compile-time constant, which is
+     * very impactful for code-size. */
+    (void) ctx;
+    // first check AESCE is built and supported
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
+        // check cipher is AES
+#if defined(MBEDTLS_ONLY_GCM_CIPHER_IS_AES)
+        return 1;
+#elif defined(MBEDTLS_BLOCK_CIPHER_C)
+        return ctx->block_cipher_ctx.id == MBEDTLS_BLOCK_CIPHER_ID_AES;
+#elif defined(MBEDTLS_CIPHER_C)
+        return ctx->cipher_ctx.cipher_info->type == MBEDTLS_CIPHER_ID_AES;
+#else
+#error Neither MBEDTLS_BLOCK_CIPHER_C or MBEDTLS_CIPHER_C is defined
+#endif // AES cipher check
+    }
+#endif // MBEDTLS_AESCE_HAVE_CODE
+
+    // Either AESCE not available, or cipher is not AES
+    return 0;
+}
 
 static inline unsigned gcm_get_acceleration()
 {
