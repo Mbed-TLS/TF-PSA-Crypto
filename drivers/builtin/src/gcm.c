@@ -207,9 +207,15 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    if (keybits != 128) {
+        return MBEDTLS_ERR_GCM_BAD_INPUT;
+    }
+#else
     if (keybits != 128 && keybits != 192 && keybits != 256) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
+#endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     mbedtls_block_cipher_free(&ctx->block_cipher_ctx);
@@ -246,11 +252,7 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
     }
 #endif
 
-    if ((ret = gcm_gen_table(ctx)) != 0) {
-        return ret;
-    }
-
-    return 0;
+    return gcm_gen_table(ctx);
 }
 
 #if defined(MBEDTLS_GCM_LARGE_TABLE)
