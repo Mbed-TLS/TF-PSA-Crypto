@@ -735,14 +735,25 @@ static FORCE_INLINE uint8x16_t poly_mult_reduce(uint8x16x3_t input)
 /*
  * GCM multiplication: c = a times b in GF(2^128)
  */
-void mbedtls_aesce_gcm_mult(unsigned char c[16],
+static FORCE_INLINE uint8x16_t mbedtls_aesce_gcm_mult_impl_inline(
+                            const uint8x16_t a,
+                            const uint8x16_t b)
+{
+    uint8x16_t va, vb, vc;
+    va = vrbitq_u8(a);
+    vb = b; // assume b has already had vrbitq_u8 applied
+    vc = vrbitq_u8(poly_mult_reduce(poly_mult_128(va, vb)));
+    return vc;
+}
+
+NO_INLINE void mbedtls_aesce_gcm_mult(unsigned char c[16],
                             const unsigned char a[16],
                             const unsigned char b[16])
 {
     uint8x16_t va, vb, vc;
-    va = vrbitq_u8(vld1q_u8(&a[0]));
+    va = vld1q_u8(&a[0]);
     vb = vrbitq_u8(vld1q_u8(&b[0]));
-    vc = vrbitq_u8(poly_mult_reduce(poly_mult_128(va, vb)));
+    vc = mbedtls_aesce_gcm_mult_impl_inline(va, vb);
     vst1q_u8(&c[0], vc);
 }
 
