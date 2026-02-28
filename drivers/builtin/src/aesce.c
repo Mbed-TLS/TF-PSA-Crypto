@@ -293,7 +293,7 @@ static uint8x16_t aesce_decrypt_block(uint8x16_t block,
 }
 #endif
 
-static inline void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys)
+static void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys)
 {
     uint8_t *p = (uint8_t *) ctx->buf;
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
