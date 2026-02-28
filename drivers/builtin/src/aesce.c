@@ -231,6 +231,7 @@ static uint8x16_t aesce_encrypt_block(uint8x16_t block,
     return aesce_encrypt_block_inline(block, vkeys, nr);
 }
 
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /* Single round of AESCE decryption
  *
  * AES AddRoundKey, SubBytes, ShiftRows
@@ -261,7 +262,6 @@ static uint8x16_t aesce_encrypt_block(uint8x16_t block,
     AESCE_DECRYPT_ROUND(k);             \
     AESCE_DECRYPT_ROUND(k + 1)
 
-#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 static uint8x16_t aesce_decrypt_block(uint8x16_t block,
                                       const uint8x16_t *vkeys,
                                       int rounds)
@@ -291,7 +291,7 @@ static uint8x16_t aesce_decrypt_block(uint8x16_t block,
     block = veorq_u8(block, vkeys[14]);
     return block;
 }
-#endif
+#endif // MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
 
 static void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys)
 {
@@ -307,7 +307,7 @@ static void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys)
 #endif
 }
 
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
+#if defined(MBEDTLS_CIPHER_MODE_CTR) && defined(MBEDTLS_AES_C)
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
 void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
                                       size_t blocks,
@@ -406,7 +406,7 @@ void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
     vst1q_u8(counter, vrev64q_u8(vreinterpretq_u8_u64(ctr_le)));
 }
 
-#endif
+#endif // MBEDTLS_CIPHER_MODE_CTR && MBEDTLS_AES_C
 
 /*
  * AES-ECB block en(de)cryption

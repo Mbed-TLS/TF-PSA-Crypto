@@ -167,6 +167,7 @@ int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
                              const unsigned char *key,
                              size_t key_bit_length);
 
+#if defined(MBEDTLS_CIPHER_MODE_CTR) && defined(MBEDTLS_AES_C)
 
 /**
  * \brief          Internal AES-CTR encrypt mutiple blocks
@@ -185,6 +186,8 @@ void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
                                       unsigned char counter[16],
                                       const unsigned char *input,
                                       unsigned char *output);
+#endif // MBEDTLS_CIPHER_MODE_CTR && MBEDTLS_AES_C
+
 
 #ifdef __cplusplus
 }
