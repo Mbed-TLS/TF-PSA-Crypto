@@ -82,7 +82,7 @@ typedef struct mbedtls_gcm_context {
 #endif
 #if defined(MBEDTLS_AESCE_C)
     uint8_t MBEDTLS_PRIVATE(aesce_H)[32];                    /* constant 1, followed by hash key */
-#if defined(MBEDTLS_AES_C) && !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if defined(MBEDTLS_AES_C) && (MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0)
     uint8x16x4_t MBEDTLS_PRIVATE(vghash_4);
 #endif
 #endif

@@ -117,7 +117,7 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
  * \param blocks   Number of 16-byte blocks to process
  */
 
-#if !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0
 
 void mbedtls_aesce_gcm_update_blocks(
                        mbedtls_aes_context *aes_ctx,

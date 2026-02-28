@@ -687,7 +687,7 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
 #if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
     if (use_aesce) {
         size_t blocks = input_length / 16;
-#if defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 1
         for (size_t i = 0; i < blocks; i++) {
             mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p + i * 16, out_p + i * 16, 0, 16, scratch);
         }

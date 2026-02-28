@@ -11,8 +11,10 @@
 #define TF_PSA_CRYPTO_MBEDTLS_PRIVATE_AESCE_H
 
 /*
- * If set, this saves around 800b of code size for AESCE AES-GCM.
+ * If set to 1, this saves around 800b of code size for AESCE AES-GCM.
  */
-//#define MBEDTLS_AESCE_OPTIMISE_FOR_SIZE
+#if !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#define MBEDTLS_AESCE_OPTIMISE_FOR_SIZE 0
+#endif
 
 #endif // TF_PSA_CRYPTO_MBEDTLS_PRIVATE_AESCE_H

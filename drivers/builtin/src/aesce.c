@@ -838,7 +838,7 @@ void mbedtls_aesce_gcm_gen_table(mbedtls_gcm_context *ctx, uint8_t hash_key[16])
     vh = vld1q_u8(hash_key);
     vst1q_u8(&ctx->aesce_H[16], vh);
 
-#if defined(MBEDTLS_AES_C) && !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if defined(MBEDTLS_AES_C) && (MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0)
     /*
      * Pre-compute 4 powers of the hash key, so that we can efficiently compute
      * the tag over 4 blocks at a time. This is very high-impact for performance.
@@ -881,7 +881,7 @@ void mbedtls_aesce_gcm_update_block_partial(
     vst1q_u8(ctx->y, vctr_be);
     uint8x16_t vectr = aesce_encrypt_block(vctr_be, vkeys, nr);
 
-#if defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 1
     // in size-optimised mode, add a less-slow path to avoid perf regression
     // adds around 70b but doubles performance compared to not having it.
     if (len == 16) {
@@ -915,7 +915,7 @@ void mbedtls_aesce_gcm_update_block_partial(
     mbedtls_aesce_gcm_mult(ctx->buf, ctx->buf, &(ctx)->aesce_H[(offset + len) & 16]);
 }
 
-#if !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0
 
 #if defined(MBEDTLS_COMPILER_IS_GCC)
 static inline uint8x16_t
