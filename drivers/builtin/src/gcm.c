@@ -141,9 +141,9 @@ static inline void gcm_gen_table_rightshift(uint64_t dst[2], const uint64_t src[
  */
 static int gcm_gen_table(mbedtls_gcm_context *ctx)
 {
-    int ret, i, j;
     uint64_t u64h[2] = { 0 };
     uint8_t *h = (uint8_t *) u64h;
+    int ret;
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     ret = mbedtls_block_cipher_encrypt(&ctx->block_cipher_ctx, h, h);
@@ -155,40 +155,44 @@ static int gcm_gen_table(mbedtls_gcm_context *ctx)
         return ret;
     }
 
-    /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
-    ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
-    ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
-
     switch (gcm_get_acceleration()) {
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESNI:
+            /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
             return 0;
 #endif
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESCE:
+            mbedtls_aesce_gcm_gen_table(ctx, h);
             return 0;
 #endif
 
         default:
+            /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
+
             /* 0 corresponds to 0 in GF(2^128) */
             ctx->H[0][0] = 0;
             ctx->H[0][1] = 0;
 
-            for (i = MBEDTLS_GCM_HTABLE_SIZE/4; i > 0; i >>= 1) {
+            for (int i = MBEDTLS_GCM_HTABLE_SIZE/4; i > 0; i >>= 1) {
                 gcm_gen_table_rightshift(ctx->H[i], ctx->H[i*2]);
             }
 
 #if !defined(MBEDTLS_GCM_LARGE_TABLE)
             /* pack elements of H as 64-bits ints, big-endian */
-            for (i = MBEDTLS_GCM_HTABLE_SIZE/2; i > 0; i >>= 1) {
+            for (int i = MBEDTLS_GCM_HTABLE_SIZE/2; i > 0; i >>= 1) {
                 MBEDTLS_PUT_UINT64_BE(ctx->H[i][0], &ctx->H[i][0], 0);
                 MBEDTLS_PUT_UINT64_BE(ctx->H[i][1], &ctx->H[i][1], 0);
             }
 #endif
 
-            for (i = 2; i < MBEDTLS_GCM_HTABLE_SIZE; i <<= 1) {
-                for (j = 1; j < i; j++) {
+            for (int i = 2; i < MBEDTLS_GCM_HTABLE_SIZE; i <<= 1) {
+                for (int j = 1; j < i; j++) {
                     mbedtls_xor_no_simd((unsigned char *) ctx->H[i+j],
                                         (unsigned char *) ctx->H[i],
                                         (unsigned char *) ctx->H[j],
@@ -399,7 +403,7 @@ static void gcm_mult(mbedtls_gcm_context *ctx, const unsigned char x[16],
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESCE:
-            mbedtls_aesce_gcm_mult(output, x, (uint8_t *) ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2]);
+            mbedtls_aesce_gcm_mult(output, x, &ctx->aesce_H[16]);
             break;
 #endif
 
@@ -638,6 +642,12 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
 
+    /* Determine if we should use directly aesce gcm. This circumvents a
+     * bunch of indirect dispatch for each block. */
+    unsigned use_aesce = gcm_use_aesce(ctx);
+
+    uint8_t scratch[32];
+
     if (ctx->len == 0 && ctx->add_len % 16 != 0) {
         gcm_mult(ctx, ctx->buf, ctx->buf);
     }
@@ -649,12 +659,19 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
             use_len = input_length;
         }
 
-        if ((ret = gcm_mask(ctx, ectr, offset, use_len, p, out_p)) != 0) {
-            return ret;
-        }
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+        if (use_aesce) {
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p, out_p, offset, use_len, scratch);
+        } else
+#endif
+        {
+            if ((ret = gcm_mask(ctx, ectr, offset, use_len, p, out_p)) != 0) {
+                goto done;
+            }
 
-        if (offset + use_len == 16) {
-            gcm_mult(ctx, ctx->buf, ctx->buf);
+            if (offset + use_len == 16) {
+                gcm_mult(ctx, ctx->buf, ctx->buf);
+            }
         }
 
         ctx->len += use_len;
@@ -665,28 +682,61 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
 
     ctx->len += input_length;
 
-    while (input_length >= 16) {
-        gcm_incr(ctx->y);
-        if ((ret = gcm_mask(ctx, ectr, 0, 16, p, out_p)) != 0) {
-            return ret;
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    if (use_aesce) {
+        size_t blocks = input_length / 16;
+#if defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+        for (size_t i = 0; i < blocks; i++) {
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p + i * 16, out_p + i * 16, 0, 16, scratch);
         }
+#else
+        mbedtls_aesce_gcm_update_blocks(GCM_GET_AES_CTX(ctx), ctx, p, out_p, blocks);
+#endif
+        input_length -= blocks * 16;
+        p += blocks * 16;
+        out_p += blocks * 16;
+    } else
+#endif
+    {
+        while (input_length >= 16) {
+            gcm_incr(ctx->y);
+            if ((ret = gcm_mask(ctx, ectr, 0, 16, p, out_p)) != 0) {
+                goto done;
+            }
 
-        gcm_mult(ctx, ctx->buf, ctx->buf);
+            gcm_mult(ctx, ctx->buf, ctx->buf);
 
-        input_length -= 16;
-        p += 16;
-        out_p += 16;
+            input_length -= 16;
+            p += 16;
+            out_p += 16;
+        }
     }
 
     if (input_length > 0) {
-        gcm_incr(ctx->y);
-        if ((ret = gcm_mask(ctx, ectr, 0, input_length, p, out_p)) != 0) {
-            return ret;
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+        if (use_aesce) {
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p, out_p, 0, input_length, scratch);
+        } else
+#endif
+        {
+            gcm_incr(ctx->y);
+            if ((ret = gcm_mask(ctx, ectr, 0, input_length, p, out_p)) != 0) {
+                goto done;
+            }
         }
     }
 
-    mbedtls_platform_zeroize(ectr, sizeof(ectr));
-    return 0;
+    if (use_aesce) {
+        mbedtls_platform_zeroize(scratch, sizeof(scratch));
+    }
+
+    ret = 0;
+
+done:
+    if (!use_aesce) {
+        mbedtls_platform_zeroize(ectr, sizeof(ectr));
+    }
+    return ret;
 }
 
 int mbedtls_gcm_finish(mbedtls_gcm_context *ctx,
