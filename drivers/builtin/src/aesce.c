@@ -757,6 +757,125 @@ NO_INLINE void mbedtls_aesce_gcm_mult(unsigned char c[16],
     vst1q_u8(&c[0], vc);
 }
 
+#define MBEDTLS_AESCE_GCM_MULTIBLOCK 4
+
+MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
+void mbedtls_aesce_gcm_update_blocks(
+                        mbedtls_aes_context *aes_ctx,
+                        mbedtls_gcm_context *ctx,
+                        const unsigned char *input,
+                        unsigned char *output,
+                        size_t blocks)
+{
+    const uint8x16_t *vkeys = aes_ctx->vkeys;
+
+    MBEDTLS_MAYBE_UNUSED
+    const int nr = MBEDTLS_AES_GET_NR(aes_ctx);
+
+    const uint32x4_t k1 = vsetq_lane_u32(1, vdupq_n_u32(0), 3);
+    uint8x16_t vbuf     = vld1q_u8(ctx->buf);
+    uint8x16_t vctr_ne  = MBEDTLS_IS_BIG_ENDIAN ? vld1q_u8(ctx->y) : vrev32q_u8(vld1q_u8(ctx->y));
+    uint8x16_t ve[MBEDTLS_AESCE_GCM_MULTIBLOCK];
+
+    uint8x16_t vio[MBEDTLS_AESCE_GCM_MULTIBLOCK * 2];
+    uint8x16_t *vin = &vio[0];
+    uint8x16_t *vout = &vio[MBEDTLS_AESCE_GCM_MULTIBLOCK];
+#if MBEDTLS_GCM_DECRYPT != 0 || MBEDTLS_GCM_ENCRYPT != 1
+#error This code assumes MBEDTLS_GCM_DECRYPT == 0 && MBEDTLS_GCM_ENCRYPT == 1
+#endif
+    uint8x16_t *cts = &vio[ctx->mode * MBEDTLS_AESCE_GCM_MULTIBLOCK];
+
+    // compute keystream in ve
+    for (size_t b = 0; b < (blocks - (blocks % MBEDTLS_AESCE_GCM_MULTIBLOCK)); b += MBEDTLS_AESCE_GCM_MULTIBLOCK) {
+        // manually unrolling and ordering instructions makes a big difference
+        // to performance (esp. GCC), and also a small size benefit.
+
+        ve[0] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(vctr_ne), k1));
+        ve[1] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[0]), k1));
+        ve[2] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[1]), k1));
+        ve[3] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[2]), k1));
+        vctr_ne = ve[3];
+
+        if (!MBEDTLS_IS_BIG_ENDIAN) {
+            ve[0] = vrev32q_u8(ve[0]);
+            ve[1] = vrev32q_u8(ve[1]);
+            ve[2] = vrev32q_u8(ve[2]);
+            ve[3] = vrev32q_u8(ve[3]);
+        }
+
+        // Having round as the outer loop reduces register pressure, which
+        // helps AES-256 by around 10%
+        for (unsigned round = 14 - nr; round < 13; round++) {
+            ve[0] = vaeseq_u8(ve[0], vkeys[round]);
+            ve[1] = vaeseq_u8(ve[1], vkeys[round]);
+            ve[2] = vaeseq_u8(ve[2], vkeys[round]);
+            ve[3] = vaeseq_u8(ve[3], vkeys[round]);
+            ve[0] = vaesmcq_u8(ve[0]);
+            ve[1] = vaesmcq_u8(ve[1]);
+            ve[2] = vaesmcq_u8(ve[2]);
+            ve[3] = vaesmcq_u8(ve[3]);
+        }
+
+        ve[0] = vaeseq_u8(ve[0], vkeys[13]);
+        ve[1] = vaeseq_u8(ve[1], vkeys[13]);
+        ve[2] = vaeseq_u8(ve[2], vkeys[13]);
+        ve[3] = vaeseq_u8(ve[3], vkeys[13]);
+
+        ve[0] = veorq_u8(ve[0], vkeys[14]);
+        ve[1] = veorq_u8(ve[1], vkeys[14]);
+        ve[2] = veorq_u8(ve[2], vkeys[14]);
+        ve[3] = veorq_u8(ve[3], vkeys[14]);
+
+        vin[0]  = vld1q_u8(&input[0]);
+        vin[1]  = vld1q_u8(&input[16]);
+        vin[2]  = vld1q_u8(&input[32]);
+        vin[3]  = vld1q_u8(&input[48]);
+
+        vout[0] = veorq_u8(vin[0], ve[0]);
+        vst1q_u8(&output[0], vout[0]);
+
+        vout[1] = veorq_u8(vin[1], ve[1]);
+        vst1q_u8(&output[16], vout[1]);
+
+        vout[2] = veorq_u8(vin[2], ve[2]);
+        vst1q_u8(&output[32], vout[2]);
+
+        vout[3] = veorq_u8(vin[3], ve[3]);
+        vst1q_u8(&output[48], vout[3]);
+
+        uint8x16_t vh = vrbitq_u8(vld1q_u8(&ctx->aesce_H[16]));
+        for (unsigned i = 0; i < 4; i++) {
+            vbuf = veorq_u8(vbuf, cts[i]);
+            vbuf = mbedtls_aesce_gcm_mult_impl_inline(vbuf, vh);
+        }
+
+        input  += 16 * MBEDTLS_AESCE_GCM_MULTIBLOCK;
+        output += 16 * MBEDTLS_AESCE_GCM_MULTIBLOCK;
+    }
+
+    uint8x16_t vctr_be = MBEDTLS_IS_BIG_ENDIAN ? vctr_ne : vrev32q_u8(vctr_ne);
+    vst1q_u8(ctx->buf, vbuf);
+    vst1q_u8(ctx->y, vctr_be);
+
+    size_t n = blocks % MBEDTLS_AESCE_GCM_MULTIBLOCK;
+    if (n > 0) {
+        uint8_t scratch[32];
+        while (n--) {
+            mbedtls_aesce_gcm_update_block_partial(
+                aes_ctx, ctx,
+                input,
+                output,
+                0,
+                16,
+                scratch
+            );
+            input += 16;
+            output += 16;
+        }
+        mbedtls_platform_zeroize(scratch, 32);
+    }
+}
+
 #endif /* MBEDTLS_GCM_C */
 
 #if defined(MBEDTLS_POP_TARGET_PRAGMA)

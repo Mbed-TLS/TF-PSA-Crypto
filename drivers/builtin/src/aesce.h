@@ -17,6 +17,7 @@
 #include "tf_psa_crypto_common.h"
 
 #include "mbedtls/private/aes.h"
+#include "mbedtls/private/gcm.h"
 #include "mbedtls/private/aesce_common.h"
 
 
@@ -85,6 +86,23 @@ void mbedtls_aesce_gcm_mult(unsigned char c[16],
                             const unsigned char a[16],
                             const unsigned char b[16]);
 
+
+/**
+ * \brief          Internal AES-GCM encryption and decryption over multiple
+ *                 complete blocks.
+ *
+ * \param aes_ctx  AES context
+ * \param ctx      GCM context
+ * \param input    Input data
+ * \param output   Output data
+ * \param blocks   Number of 16-byte blocks to process
+ */
+void mbedtls_aesce_gcm_update_blocks(
+                       mbedtls_aes_context *aes_ctx,
+                       mbedtls_gcm_context *ctx,
+                       const unsigned char *input,
+                       unsigned char *output,
+                       size_t blocks);
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /**
