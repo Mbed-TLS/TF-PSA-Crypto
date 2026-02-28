@@ -661,7 +661,7 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
             use_len = input_length;
         }
 
-#if defined(MBEDTLS_AESCE_HAVE_CODE)
+#if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
         if (use_aesce) {
             mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p, out_p, offset, use_len, scratch);
         } else
@@ -684,7 +684,7 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
 
     len += input_length;
 
-#if defined(MBEDTLS_AESCE_HAVE_CODE)
+#if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
     if (use_aesce) {
         size_t blocks = input_length / 16;
 #if defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
@@ -715,7 +715,7 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
     }
 
     if (input_length > 0) {
-#if defined(MBEDTLS_AESCE_HAVE_CODE)
+#if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
         if (use_aesce) {
             mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p, out_p, 0, input_length, scratch);
         } else

@@ -184,6 +184,8 @@ int mbedtls_aesce_has_support_impl(void)
 
 #endif /* defined(__linux__) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY) */
 
+#if defined MBEDTLS_AES_C
+
 /* Single round of AESCE encryption */
 #define AESCE_ENCRYPT_ROUND(k)          \
     block = vaeseq_u8(block, vkeys[k]);  \
@@ -542,6 +544,8 @@ int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
     return 0;
 }
 
+#endif
+
 #if defined(MBEDTLS_GCM_C)
 
 #if defined(MBEDTLS_ARCH_IS_ARM32)
@@ -776,7 +780,7 @@ void mbedtls_aesce_gcm_gen_table(mbedtls_gcm_context *ctx, uint8_t hash_key[16])
     vh = vld1q_u8(hash_key);
     vst1q_u8(&ctx->aesce_H[16], vh);
 
-#if !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+#if defined(MBEDTLS_AES_C) && !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
     /*
      * Pre-compute 4 powers of the hash key, so that we can efficiently compute
      * the tag over 4 blocks at a time. This is very high-impact for performance.
@@ -796,6 +800,8 @@ void mbedtls_aesce_gcm_gen_table(mbedtls_gcm_context *ctx, uint8_t hash_key[16])
     }
 #endif
 }
+
+#if defined(MBEDTLS_AES_C)
 
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
 void mbedtls_aesce_gcm_update_block_partial(
@@ -1019,6 +1025,8 @@ void mbedtls_aesce_gcm_update_blocks(
 }
 
 #endif // MBEDTLS_AESCE_OPTIMISE_FOR_SIZE
+
+#endif // MBEDTLS_AES_C
 
 #endif /* MBEDTLS_GCM_C */
 
