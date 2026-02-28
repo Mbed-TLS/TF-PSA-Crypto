@@ -985,7 +985,7 @@ void mbedtls_aesce_gcm_update_blocks(
     const uint32x4_t k1 = vsetq_lane_u32(1, vdupq_n_u32(0), 3);
     uint8x16_t vbuf     = vld1q_u8(ctx->buf);
     uint8x16_t vctr_ne  = MBEDTLS_IS_BIG_ENDIAN ? vld1q_u8(ctx->y) : vrev32q_u8(vld1q_u8(ctx->y));
-    uint8x16_t ve[MBEDTLS_AESCE_GCM_MULTIBLOCK];
+    uint8x16_t ve0, ve1, ve2, ve3;//[MBEDTLS_AESCE_GCM_MULTIBLOCK];
 
     uint8x16_t vio[MBEDTLS_AESCE_GCM_MULTIBLOCK * 2];
     uint8x16_t *vin = &vio[0];
@@ -1000,57 +1000,71 @@ void mbedtls_aesce_gcm_update_blocks(
         // manually unrolling and ordering instructions makes a big difference
         // to performance (esp. GCC), and also a small size benefit.
 
-        ve[0] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(vctr_ne), k1));
-        ve[1] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[0]), k1));
-        ve[2] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[1]), k1));
-        ve[3] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[2]), k1));
-        vctr_ne = ve[3];
+        ve0 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(vctr_ne), k1));
+        ve1 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve0), k1));
+        ve2 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve1), k1));
+        ve3 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve2), k1));
+        vctr_ne = ve3;
 
         if (!MBEDTLS_IS_BIG_ENDIAN) {
-            ve[0] = vrev32q_u8(ve[0]);
-            ve[1] = vrev32q_u8(ve[1]);
-            ve[2] = vrev32q_u8(ve[2]);
-            ve[3] = vrev32q_u8(ve[3]);
+            ve0 = vrev32q_u8(ve0);
+            ve1 = vrev32q_u8(ve1);
+            ve2 = vrev32q_u8(ve2);
+            ve3 = vrev32q_u8(ve3);
         }
 
         // Having round as the outer loop reduces register pressure, which
         // helps AES-256 by around 10%
         for (unsigned round = 14 - nr; round < 13; round++) {
-            ve[0] = vaeseq_u8(ve[0], vkeys[round]);
-            ve[1] = vaeseq_u8(ve[1], vkeys[round]);
-            ve[2] = vaeseq_u8(ve[2], vkeys[round]);
-            ve[3] = vaeseq_u8(ve[3], vkeys[round]);
-            ve[0] = vaesmcq_u8(ve[0]);
-            ve[1] = vaesmcq_u8(ve[1]);
-            ve[2] = vaesmcq_u8(ve[2]);
-            ve[3] = vaesmcq_u8(ve[3]);
+            #if 1
+            uint8x16_t v0 = vaeseq_u8(ve0, vkeys[round]);
+            ve0 = vaesmcq_u8(v0);
+
+            uint8x16_t v1 = vaeseq_u8(ve1, vkeys[round]);
+            ve1 = vaesmcq_u8(v1);
+
+            uint8x16_t v2 = vaeseq_u8(ve2, vkeys[round]);
+            ve2 = vaesmcq_u8(v2);
+
+            uint8x16_t v3 = vaeseq_u8(ve3, vkeys[round]);
+            ve3 = vaesmcq_u8(v3);
+        #else
+            ve0 = vaeseq_u8(ve0, vkeys[round]);
+            ve0 = vaesmcq_u8(ve0);
+            ve1 = vaeseq_u8(ve1, vkeys[round]);
+            ve1 = vaesmcq_u8(ve1);
+            ve2 = vaeseq_u8(ve2, vkeys[round]);
+            ve2 = vaesmcq_u8(ve2);
+            ve3 = vaeseq_u8(ve3, vkeys[round]);
+            ve3 = vaesmcq_u8(ve3);
+            #endif
         }
 
-        ve[0] = vaeseq_u8(ve[0], vkeys[13]);
-        ve[1] = vaeseq_u8(ve[1], vkeys[13]);
-        ve[2] = vaeseq_u8(ve[2], vkeys[13]);
-        ve[3] = vaeseq_u8(ve[3], vkeys[13]);
+        ve0 = vaeseq_u8(ve0, vkeys[13]);
+        ve1 = vaeseq_u8(ve1, vkeys[13]);
+        ve2 = vaeseq_u8(ve2, vkeys[13]);
+        ve3 = vaeseq_u8(ve3, vkeys[13]);
 
-        ve[0] = veorq_u8(ve[0], vkeys[14]);
-        ve[1] = veorq_u8(ve[1], vkeys[14]);
-        ve[2] = veorq_u8(ve[2], vkeys[14]);
-        ve[3] = veorq_u8(ve[3], vkeys[14]);
+        ve0 = veorq_u8(ve0, vkeys[14]);
+        ve1 = veorq_u8(ve1, vkeys[14]);
+        ve2 = veorq_u8(ve2, vkeys[14]);
+        ve3 = veorq_u8(ve3, vkeys[14]);
 
         vin[0]  = vld1q_u8(&input[0]);
         vin[1]  = vld1q_u8(&input[16]);
         vin[2]  = vld1q_u8(&input[32]);
         vin[3]  = vld1q_u8(&input[48]);
 
-        vout[0] = veorq_u8(vin[0], ve[0]);
-        vst1q_u8(&output[0], vout[0]);
+        vout[0] = veorq_u8(vin[0], ve0);
+        vout[1] = veorq_u8(vin[1], ve1);
 
-        vout[1] = veorq_u8(vin[1], ve[1]);
+        vst1q_u8(&output[0], vout[0]);
         vst1q_u8(&output[16], vout[1]);
 
-        vout[2] = veorq_u8(vin[2], ve[2]);
-        vst1q_u8(&output[32], vout[2]);
+        vout[2] = veorq_u8(vin[2], ve2);
+        vout[3] = veorq_u8(vin[3], ve3);
 
-        vout[3] = veorq_u8(vin[3], ve[3]);
+        vst1q_u8(&output[32], vout[2]);
         vst1q_u8(&output[48], vout[3]);
 
         vbuf = ghash_update_x4(vbuf, cts, ctx->vghash_4);
