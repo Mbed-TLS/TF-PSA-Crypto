@@ -775,6 +775,26 @@ void mbedtls_aesce_gcm_gen_table(mbedtls_gcm_context *ctx, uint8_t hash_key[16])
     // next 16 bytes - hash key
     vh = vld1q_u8(hash_key);
     vst1q_u8(&ctx->aesce_H[16], vh);
+
+#if !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+    /*
+     * Pre-compute 4 powers of the hash key, so that we can efficiently compute
+     * the tag over 4 blocks at a time. This is very high-impact for performance.
+     *
+     * This is just a size-optimised version of:
+     * vghash_4.val[0] = vh
+     * vghash_4.val[1] = vh * vh
+     * vghash_4.val[2] = vh * vh * vh
+     * vghash_4.val[3] = vh * vh * vh * vh
+     */
+    ctx->vghash_4.val[0] = vrbitq_u8(vh);
+    for (unsigned i = 0; i < 3;) {
+        uint8x16_t a = ctx->vghash_4.val[i>>1];
+        i++;
+        uint8x16_t b = ctx->vghash_4.val[i>>1];
+        ctx->vghash_4.val[i] = poly_mult_reduce(poly_mult_128(a, b));
+    }
+#endif
 }
 
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
@@ -829,6 +849,58 @@ void mbedtls_aesce_gcm_update_block_partial(
     }
 
     mbedtls_aesce_gcm_mult(ctx->buf, ctx->buf, &(ctx)->aesce_H[(offset + len) & 16]);
+}
+
+#if !defined(MBEDTLS_AESCE_OPTIMISE_FOR_SIZE)
+
+#if defined(MBEDTLS_COMPILER_IS_GCC)
+static inline uint8x16_t
+veor3q_u8(uint8x16_t a,
+          uint8x16_t b,
+          uint8x16_t c)
+{
+    uint8x16_t r;
+    __asm__("eor3 %0.16b, %1.16b, %2.16b, %3.16b"
+            : "=w"(r)
+            : "w"(a), "w"(b), "w"(c));
+    return r;
+}
+#endif
+
+MBEDTLS_MAYBE_UNUSED
+static FORCE_INLINE uint8x16_t ghash_update_x4(uint8x16_t X,
+                                               uint8x16_t *Y,
+                                               const uint8x16x4_t vh
+) {
+    /*
+     * Equivalent to:
+     *
+     * for (unsigned i = 0; i < 4; i++) {
+     *     acc = veorq_u8_x3(acc, poly_mult_128(vrbitq_u8(Y[i]), vh.val[3 - i]))
+     * }
+     *
+     * Unrolling and taking advantage of eor3 gains significant perf,
+     * especially for GCC.
+     */
+
+    // Unreduced accumulation in 128x128 "wide" representation (x3)
+    uint8x16x3_t acc = poly_mult_128(vrbitq_u8(X),  vh.val[3]);
+
+    // Convert operands into PMULL-domain
+    uint8x16x3_t a = poly_mult_128(vrbitq_u8(Y[0]), vh.val[3]);
+    uint8x16x3_t b = poly_mult_128(vrbitq_u8(Y[1]), vh.val[2]);
+    acc.val[0] = veor3q_u8(acc.val[0], a.val[0], b.val[0]);
+    acc.val[1] = veor3q_u8(acc.val[1], a.val[1], b.val[1]);
+    uint8x16x3_t c = poly_mult_128(vrbitq_u8(Y[2]), vh.val[1]);
+    acc.val[2] = veor3q_u8(acc.val[2], a.val[2], b.val[2]);
+    uint8x16x3_t d = poly_mult_128(vrbitq_u8(Y[3]), vh.val[0]);
+    acc.val[0] = veor3q_u8(acc.val[0], c.val[0], d.val[0]);
+    acc.val[1] = veor3q_u8(acc.val[1], c.val[1], d.val[1]);
+    acc.val[2] = veor3q_u8(acc.val[2], c.val[2], d.val[2]);
+
+    // Single reduction for the whole group, then convert back
+    uint8x16_t Rr = poly_mult_reduce(acc);
+    return vrbitq_u8(Rr);
 }
 
 #define MBEDTLS_AESCE_GCM_MULTIBLOCK 4
@@ -917,11 +989,7 @@ void mbedtls_aesce_gcm_update_blocks(
         vout[3] = veorq_u8(vin[3], ve[3]);
         vst1q_u8(&output[48], vout[3]);
 
-        uint8x16_t vh = vrbitq_u8(vld1q_u8(&ctx->aesce_H[16]));
-        for (unsigned i = 0; i < 4; i++) {
-            vbuf = veorq_u8(vbuf, cts[i]);
-            vbuf = mbedtls_aesce_gcm_mult_impl_inline(vbuf, vh);
-        }
+        vbuf = ghash_update_x4(vbuf, cts, ctx->vghash_4);
 
         input  += 16 * MBEDTLS_AESCE_GCM_MULTIBLOCK;
         output += 16 * MBEDTLS_AESCE_GCM_MULTIBLOCK;
@@ -949,6 +1017,8 @@ void mbedtls_aesce_gcm_update_blocks(
         mbedtls_platform_zeroize(scratch, 32);
     }
 }
+
+#endif // MBEDTLS_AESCE_OPTIMISE_FOR_SIZE
 
 #endif /* MBEDTLS_GCM_C */
 
