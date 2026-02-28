@@ -45,6 +45,17 @@
 #define MBEDTLS_GCM_ACC_AESNI       2
 #define MBEDTLS_GCM_ACC_AESCE       3
 
+#if !defined(MBEDTLS_AES_C)
+// Helper macro to get the AES context from a GCM context
+#define GCM_GET_AES_CTX(gcm_ctx)     NULL
+#else // MBEDTLS_AES_C
+#if defined(MBEDTLS_BLOCK_CIPHER_C)
+#define GCM_GET_AES_CTX(gcm_ctx)     (&((gcm_ctx)->block_cipher_ctx.ctx.aes))
+#elif defined(MBEDTLS_CIPHER_C)
+#define GCM_GET_AES_CTX(gcm_ctx)     ((mbedtls_aes_context *) ((gcm_ctx)->cipher_ctx.cipher_ctx))
+#endif
+#endif // MBEDTLS_AES_C
+
 /*
  * Initialize a context
  */
