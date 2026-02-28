@@ -193,7 +193,9 @@ int mbedtls_aesce_has_support_impl(void)
     AESCE_ENCRYPT_ROUND(k);             \
     AESCE_ENCRYPT_ROUND(k + 1)
 
-static uint8x16_t aesce_encrypt_block(uint8x16_t block,
+
+FORCE_INLINE
+static uint8x16_t aesce_encrypt_block_inline(uint8x16_t block,
                                       const uint8x16_t *vkeys,
                                       int nr)
 {
@@ -219,6 +221,14 @@ static uint8x16_t aesce_encrypt_block(uint8x16_t block,
     block = vaeseq_u8(block, vkeys[13]);
     block = veorq_u8(block, vkeys[14]);
     return block;
+}
+
+NO_INLINE
+static uint8x16_t aesce_encrypt_block(uint8x16_t block,
+                                      const uint8x16_t *vkeys,
+                                      const int nr)
+{
+    return aesce_encrypt_block_inline(block, vkeys, nr);
 }
 
 /* Single round of AESCE decryption
