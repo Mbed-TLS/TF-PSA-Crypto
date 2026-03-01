@@ -712,31 +712,37 @@ static inline uint8x16_t pmull_high(uint8x16_t a, uint8x16_t b)
  * multiplies to generate a 128b.
  *
  * `poly_mult_128` executes polynomial multiplication and outputs 256b that
- * represented by 3 128b due to code size optimization.
+ * represented by 4x128b. The middle two values, ret.val[1] and ret.val[2]
+ * need to be xor'd together to get the result.
  *
  * Output layout:
  * |            |             |             |
  * |------------|-------------|-------------|
  * | ret.val[0] | h3:h2:00:00 | high   128b |
  * | ret.val[1] |   :m2:m1:00 | middle 128b |
- * | ret.val[2] |   :  :l1:l0 | low    128b |
+ * | ret.val[2] |   :m2:m1:00 | middle 128b |
+ * | ret.val[3] |   :  :l1:l0 | low    128b |
  */
-static FORCE_INLINE uint8x16x3_t poly_mult_128(uint8x16_t a, uint8x16_t b)
+static inline uint8x16x4_t poly_mult_128(uint8x16_t a, uint8x16_t b)
 {
-    uint8x16x3_t ret;
-    uint8x16_t h, m, l; /* retval high/middle/low */
+    uint8x16x4_t ret;
+    uint8x16_t h, l; /* retval high/low */
     uint8x16_t c, d, e;
 
+    c = vextq_u8(b, b, 8);                      /*      :c1:c0 = b0:b1 */
     h = pmull_high(a, b);                       /* h3:h2:00:00 = a1*b1 */
     l = pmull_low(a, b);                        /*   :  :l1:l0 = a0*b0 */
-    c = vextq_u8(b, b, 8);                      /*      :c1:c0 = b0:b1 */
     d = pmull_high(a, c);                       /*   :d2:d1:00 = a1*b0 */
     e = pmull_low(a, c);                        /*   :e2:e1:00 = a0*b1 */
-    m = veorq_u8(d, e);                         /*   :m2:m1:00 = d + e */
 
     ret.val[0] = h;
-    ret.val[1] = m;
-    ret.val[2] = l;
+    // d and e should be xor'd together - this is left to the caller
+    // as it is sometimes possible to get some efficiencies by combining with
+    // other xors needed via veor3q
+    ret.val[1] = d;
+    ret.val[2] = e;
+    ret.val[3] = l;
+
     return ret;
 }
 
@@ -754,10 +760,8 @@ static FORCE_INLINE uint8x16x3_t poly_mult_128(uint8x16_t a, uint8x16_t b)
  * simply multiply the higher part of the operand by r(z) and add it to l(z). If
  * the result is still larger than 128 bits, we reduce again.
  */
-static FORCE_INLINE uint8x16_t poly_mult_reduce(uint8x16x3_t input)
+static inline uint8x16_t poly_mult_reduce(uint8x16x4_t input)
 {
-    uint8x16_t const ZERO = vdupq_n_u8(0);
-
     uint64x2_t r = vreinterpretq_u64_u8(vdupq_n_u8(0x87));
 #if defined(__GNUC__)
     /* use 'asm' as an optimisation barrier to prevent loading MODULO from
@@ -766,43 +770,36 @@ static FORCE_INLINE uint8x16_t poly_mult_reduce(uint8x16x3_t input)
     asm volatile ("" : "+w" (r));
 #endif
     uint8x16_t const MODULO = vreinterpretq_u8_u64(vshrq_n_u64(r, 64 - 8));
-    uint8x16_t h, m, l; /* input high/middle/low 128b */
-    uint8x16_t c, d, e, f, g, n, o;
+    uint8x16_t h, l; /* input high/middle/low 128b */
+    uint8x16_t c, d, e, f, g, n;//, o;
     h = input.val[0];            /* h3:h2:00:00                          */
-    m = input.val[1];            /*   :m2:m1:00                          */
-    l = input.val[2];            /*   :  :l1:l0                          */
-    c = pmull_high(h, MODULO);   /*   :c2:c1:00 = reduction of h3        */
+    l = input.val[3];            /*   :  :l1:l0                          */
+    c = pmull_high(h, MODULO);   /*   :   c2:c1:00 = reduction of h3     */
     d = pmull_low(h, MODULO);    /*   :  :d1:d0 = reduction of h2        */
-    e = veorq_u8(c, m);          /*   :e2:e1:00 = m2:m1:00 + c2:c1:00    */
+    e = VEOR3Q_U8(c, input.val[1], input.val[2]);  /*   :e2:e1:00 = m2:m1:00 + c2:c1:00    */
+    uint8x16_t const ZERO = vdupq_n_u8(0);
     f = pmull_high(e, MODULO);   /*   :  :f1:f0 = reduction of e2        */
     g = vextq_u8(ZERO, e, 8);    /*   :  :g1:00 = e1:00                  */
     n = veorq_u8(d, l);          /*   :  :n1:n0 = d1:d0 + l1:l0          */
-    o = veorq_u8(n, f);          /*       o1:o0 = f1:f0 + n1:n0          */
-    return veorq_u8(o, g);       /*             = o1:o0 + g1:00          */
+    return VEOR3Q_U8(n, f, g);   /*   :  f1:f0 + n1:n0 + g1:00          */
+}
+
+// Having a not-inlined copy helps code-size on non-perf-sensitive paths
+static NO_INLINE uint8x16_t poly_mult_multiply_and_reduce(uint8x16_t a, uint8x16_t b) {
+    return poly_mult_reduce(poly_mult_128(a,b));
 }
 
 /*
  * GCM multiplication: c = a times b in GF(2^128)
  */
-static FORCE_INLINE uint8x16_t mbedtls_aesce_gcm_mult_impl_inline(
-                            const uint8x16_t a,
-                            const uint8x16_t b)
-{
-    uint8x16_t va, vb, vc;
-    va = vrbitq_u8(a);
-    vb = b; // assume b has already had vrbitq_u8 applied
-    vc = vrbitq_u8(poly_mult_reduce(poly_mult_128(va, vb)));
-    return vc;
-}
-
 NO_INLINE void mbedtls_aesce_gcm_mult(unsigned char c[16],
                             const unsigned char a[16],
                             const unsigned char b[16])
 {
     uint8x16_t va, vb, vc;
-    va = vld1q_u8(&a[0]);
+    va = vrbitq_u8(vld1q_u8(&a[0]));
     vb = vrbitq_u8(vld1q_u8(&b[0]));
-    vc = mbedtls_aesce_gcm_mult_impl_inline(va, vb);
+    vc = vrbitq_u8(poly_mult_multiply_and_reduce(va, vb));
     vst1q_u8(&c[0], vc);
 }
 
@@ -841,7 +838,7 @@ void mbedtls_aesce_gcm_gen_table(mbedtls_gcm_context *ctx, uint8_t hash_key[16])
         uint8x16_t a = ctx->vghash_4.val[i>>1];
         i++;
         uint8x16_t b = ctx->vghash_4.val[i>>1];
-        ctx->vghash_4.val[i] = poly_mult_reduce(poly_mult_128(a, b));
+        ctx->vghash_4.val[i] = poly_mult_multiply_and_reduce(a, b);
     }
 #endif
 }
@@ -904,56 +901,6 @@ void mbedtls_aesce_gcm_update_block_partial(
 
 #if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0
 
-#if defined(MBEDTLS_COMPILER_IS_GCC)
-static inline uint8x16_t
-veor3q_u8(uint8x16_t a,
-          uint8x16_t b,
-          uint8x16_t c)
-{
-    uint8x16_t r;
-    __asm__("eor3 %0.16b, %1.16b, %2.16b, %3.16b"
-            : "=w"(r)
-            : "w"(a), "w"(b), "w"(c));
-    return r;
-}
-#endif
-
-MBEDTLS_MAYBE_UNUSED
-static FORCE_INLINE uint8x16_t ghash_update_x4(uint8x16_t X,
-                                               uint8x16_t *Y,
-                                               const uint8x16x4_t vh
-) {
-    /*
-     * Equivalent to:
-     *
-     * for (unsigned i = 0; i < 4; i++) {
-     *     acc = veorq_u8_x3(acc, poly_mult_128(vrbitq_u8(Y[i]), vh.val[3 - i]))
-     * }
-     *
-     * Unrolling and taking advantage of eor3 gains significant perf,
-     * especially for GCC.
-     */
-
-    // Unreduced accumulation in 128x128 "wide" representation (x3)
-    uint8x16x3_t acc = poly_mult_128(vrbitq_u8(X),  vh.val[3]);
-
-    // Convert operands into PMULL-domain
-    uint8x16x3_t a = poly_mult_128(vrbitq_u8(Y[0]), vh.val[3]);
-    uint8x16x3_t b = poly_mult_128(vrbitq_u8(Y[1]), vh.val[2]);
-    acc.val[0] = veor3q_u8(acc.val[0], a.val[0], b.val[0]);
-    acc.val[1] = veor3q_u8(acc.val[1], a.val[1], b.val[1]);
-    uint8x16x3_t c = poly_mult_128(vrbitq_u8(Y[2]), vh.val[1]);
-    acc.val[2] = veor3q_u8(acc.val[2], a.val[2], b.val[2]);
-    uint8x16x3_t d = poly_mult_128(vrbitq_u8(Y[3]), vh.val[0]);
-    acc.val[0] = veor3q_u8(acc.val[0], c.val[0], d.val[0]);
-    acc.val[1] = veor3q_u8(acc.val[1], c.val[1], d.val[1]);
-    acc.val[2] = veor3q_u8(acc.val[2], c.val[2], d.val[2]);
-
-    // Single reduction for the whole group, then convert back
-    uint8x16_t Rr = poly_mult_reduce(acc);
-    return vrbitq_u8(Rr);
-}
-
 #define MBEDTLS_AESCE_GCM_MULTIBLOCK 4
 
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
@@ -970,98 +917,156 @@ void mbedtls_aesce_gcm_update_blocks(
     const int nr = MBEDTLS_AES_GET_NR(aes_ctx);
 
     const uint32x4_t k1 = vsetq_lane_u32(1, vdupq_n_u32(0), 3);
-    uint8x16_t vbuf     = vld1q_u8(ctx->buf);
+    // native-endianness version of the counter
     uint8x16_t vctr_ne  = MBEDTLS_IS_BIG_ENDIAN ? vld1q_u8(ctx->y) : vrev32q_u8(vld1q_u8(ctx->y));
-    uint8x16_t ve0, ve1, ve2, ve3;//[MBEDTLS_AESCE_GCM_MULTIBLOCK];
+    uint8x16_t ve[MBEDTLS_AESCE_GCM_MULTIBLOCK];
 
-    uint8x16_t vio[MBEDTLS_AESCE_GCM_MULTIBLOCK * 2];
-    uint8x16_t *vin = &vio[0];
-    uint8x16_t *vout = &vio[MBEDTLS_AESCE_GCM_MULTIBLOCK];
+    uint8x16_t vin[MBEDTLS_AESCE_GCM_MULTIBLOCK];
+    uint8x16_t vout[MBEDTLS_AESCE_GCM_MULTIBLOCK];
 #if MBEDTLS_GCM_DECRYPT != 0 || MBEDTLS_GCM_ENCRYPT != 1
 #error This code assumes MBEDTLS_GCM_DECRYPT == 0 && MBEDTLS_GCM_ENCRYPT == 1
 #endif
-    uint8x16_t *cts = &vio[ctx->mode * MBEDTLS_AESCE_GCM_MULTIBLOCK];
+    const unsigned mode = ctx->mode;
+    uint8x16_t vtag = vrbitq_u8(vld1q_u8(ctx->buf));
+    MBEDTLS_MAYBE_UNUSED const uint8x16x4_t vh = ctx->vghash_4;
 
     // compute keystream in ve
     for (size_t b = 0; b < (blocks - (blocks % MBEDTLS_AESCE_GCM_MULTIBLOCK)); b += MBEDTLS_AESCE_GCM_MULTIBLOCK) {
         // manually unrolling and ordering instructions makes a big difference
         // to performance (esp. GCC), and also a small size benefit.
 
-        ve0 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(vctr_ne), k1));
-        ve1 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve0), k1));
-        ve2 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve1), k1));
-        ve3 = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve2), k1));
-        vctr_ne = ve3;
+        ve[0] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(vctr_ne), k1));
+        ve[1] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[0]), k1));
+        ve[2] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[1]), k1));
+        ve[3] = vreinterpretq_u8_u32(vaddq_u32(vreinterpretq_u32_u8(ve[2]), k1));
+        vctr_ne = ve[3];
 
         if (!MBEDTLS_IS_BIG_ENDIAN) {
-            ve0 = vrev32q_u8(ve0);
-            ve1 = vrev32q_u8(ve1);
-            ve2 = vrev32q_u8(ve2);
-            ve3 = vrev32q_u8(ve3);
+            ve[0] = vrev32q_u8(ve[0]);
+            ve[1] = vrev32q_u8(ve[1]);
+            ve[2] = vrev32q_u8(ve[2]);
+            ve[3] = vrev32q_u8(ve[3]);
         }
 
         // Having round as the outer loop reduces register pressure, which
         // helps AES-256 by around 10%
         for (unsigned round = 14 - nr; round < 13; round++) {
-            #if 1
-            uint8x16_t v0 = vaeseq_u8(ve0, vkeys[round]);
-            ve0 = vaesmcq_u8(v0);
-
-            uint8x16_t v1 = vaeseq_u8(ve1, vkeys[round]);
-            ve1 = vaesmcq_u8(v1);
-
-            uint8x16_t v2 = vaeseq_u8(ve2, vkeys[round]);
-            ve2 = vaesmcq_u8(v2);
-
-            uint8x16_t v3 = vaeseq_u8(ve3, vkeys[round]);
-            ve3 = vaesmcq_u8(v3);
-        #else
-            ve0 = vaeseq_u8(ve0, vkeys[round]);
-            ve0 = vaesmcq_u8(ve0);
-            ve1 = vaeseq_u8(ve1, vkeys[round]);
-            ve1 = vaesmcq_u8(ve1);
-            ve2 = vaeseq_u8(ve2, vkeys[round]);
-            ve2 = vaesmcq_u8(ve2);
-            ve3 = vaeseq_u8(ve3, vkeys[round]);
-            ve3 = vaesmcq_u8(ve3);
-            #endif
+            ve[0] = vaeseq_u8(ve[0], vkeys[round]);
+            ve[0] = vaesmcq_u8(ve[0]);
+            ve[1] = vaeseq_u8(ve[1], vkeys[round]);
+            ve[1] = vaesmcq_u8(ve[1]);
+            ve[2] = vaeseq_u8(ve[2], vkeys[round]);
+            ve[2] = vaesmcq_u8(ve[2]);
+            ve[3] = vaeseq_u8(ve[3], vkeys[round]);
+            ve[3] = vaesmcq_u8(ve[3]);
         }
 
-        ve0 = vaeseq_u8(ve0, vkeys[13]);
-        ve1 = vaeseq_u8(ve1, vkeys[13]);
-        ve2 = vaeseq_u8(ve2, vkeys[13]);
-        ve3 = vaeseq_u8(ve3, vkeys[13]);
+        ve[0] = vaeseq_u8(ve[0], vkeys[13]);
+        ve[1] = vaeseq_u8(ve[1], vkeys[13]);
+        ve[2] = vaeseq_u8(ve[2], vkeys[13]);
+        ve[3] = vaeseq_u8(ve[3], vkeys[13]);
 
-        ve0 = veorq_u8(ve0, vkeys[14]);
-        ve1 = veorq_u8(ve1, vkeys[14]);
-        ve2 = veorq_u8(ve2, vkeys[14]);
-        ve3 = veorq_u8(ve3, vkeys[14]);
+        ve[0] = veorq_u8(ve[0], vkeys[14]);
+        ve[1] = veorq_u8(ve[1], vkeys[14]);
+        ve[2] = veorq_u8(ve[2], vkeys[14]);
+        ve[3] = veorq_u8(ve[3], vkeys[14]);
 
         vin[0]  = vld1q_u8(&input[0]);
         vin[1]  = vld1q_u8(&input[16]);
         vin[2]  = vld1q_u8(&input[32]);
         vin[3]  = vld1q_u8(&input[48]);
 
-        vout[0] = veorq_u8(vin[0], ve0);
-        vout[1] = veorq_u8(vin[1], ve1);
-
+        vout[0] = veorq_u8(vin[0], ve[0]);
         vst1q_u8(&output[0], vout[0]);
+        vout[1] = veorq_u8(vin[1], ve[1]);
         vst1q_u8(&output[16], vout[1]);
-
-        vout[2] = veorq_u8(vin[2], ve2);
-        vout[3] = veorq_u8(vin[3], ve3);
-
+        vout[2] = veorq_u8(vin[2], ve[2]);
         vst1q_u8(&output[32], vout[2]);
+        vout[3] = veorq_u8(vin[3], ve[3]);
         vst1q_u8(&output[48], vout[3]);
-
-        vbuf = ghash_update_x4(vbuf, cts, ctx->vghash_4);
 
         input  += 16 * MBEDTLS_AESCE_GCM_MULTIBLOCK;
         output += 16 * MBEDTLS_AESCE_GCM_MULTIBLOCK;
+
+        /*
+         * Calculate GCM tag for 4 blocks.
+         *
+         * This gets significant performance and code-size benefits from
+         * unrolling and manually ordering the operations to mitigate data
+         * dependencies (which is why the ordering looks a bit irregular).
+         * Unrolling also allows use of veor3q which saves a few
+         * instructions and helps performance.
+         *
+         * We also take advantage of doing 4 blocks at once by
+         * - xor'ing the tag with the first ciphertext before multiplying,
+         *   which saves a call to poly_mult_128
+         * - doing a single reduction at the end instead after each block
+         * - pre-computing powers of vh (ie. vh, vh * vh, vh * vh * vh,
+         *   vh * vh * vh * vh), to facilitate computing over each block
+         *   independently
+         *
+         * This is derived from the ifdef'd out block, which is
+         * present for reference.
+         */
+    #if 0
+        // get hash key hk
+        const uint8x16_t hash_key = vh.val[0];
+        // iterate over 4 blocks
+        for (int i = 0; i < 4; i++) {
+            // get ciphertext block ct
+            uint8x16_t ct = mode == MBEDTLS_AES_ENCRYPT ? vout[i] : vin[i];
+            // vtag is kept in the pmull domain, ie.
+            // each byte is bit-reversed as per vrbitq_u8.
+            //
+            // vtag_normal = vtag, converted to normal domain
+            uint8x16_t vtag_normal = vrbitq_u8(vtag);
+            // xor with ciphertext
+            vtag_normal = veorq_u8(vtag_normal, ct);
+            // convert tag back to pmull domain
+            vtag = vrbitq_u8(vtag_normal);
+            // multiply tag by hash key, resulting in 4x128-bit representation
+            uint8x16x4_t tag_x4 = poly_mult_128(vtag, hash_key);
+            // reduce tag back to 128-bit representation
+            vtag = poly_mult_reduce(tag_x4);
+        }
+    #else
+        uint8x16_t ct0,ct1,ct2,ct3;
+        if (mode == MBEDTLS_AES_ENCRYPT) {
+            ct0 = vout[0];
+            ct1 = vout[1];
+            ct2 = vout[2];
+            ct3 = vout[3];
+        } else {
+            ct0 = vin[0];
+            ct1 = vin[1];
+            ct2 = vin[2];
+            ct3 = vin[3];
+        }
+
+        uint8x16x4_t r;
+        ct0 = vrbitq_u8(ct0);
+        uint8x16_t a = veorq_u8(vtag, ct0);
+        ct1 = vrbitq_u8(ct1);
+        uint8x16x4_t ha = poly_mult_128(a, vh.val[3]);
+        uint8x16x4_t hb = poly_mult_128(ct1, vh.val[2]);
+        uint8x16_t t2 = veorq_u8(ha.val[1], ha.val[2]);
+        uint8x16_t t1 = veorq_u8(ha.val[0], hb.val[0]);
+        uint8x16_t t5 = veorq_u8(ha.val[3], hb.val[3]);
+        r.val[1] = VEOR3Q_U8(t2, hb.val[1], hb.val[2]);
+        ct2 = vrbitq_u8(ct2);
+        uint8x16x4_t hc = poly_mult_128(ct2, vh.val[1]);
+        ct3 = vrbitq_u8(ct3);
+        uint8x16x4_t hd = poly_mult_128(ct3, vh.val[0]);
+        uint8x16_t t7 = veorq_u8(hc.val[1], hc.val[2]);
+        r.val[0] = VEOR3Q_U8(t1, hc.val[0], hd.val[0]);
+        r.val[3] = VEOR3Q_U8(t5, hc.val[3], hd.val[3]);
+        r.val[2] = VEOR3Q_U8(t7, hd.val[1], hd.val[2]);
+        vtag = poly_mult_reduce(r);
+#endif
     }
 
     uint8x16_t vctr_be = MBEDTLS_IS_BIG_ENDIAN ? vctr_ne : vrev32q_u8(vctr_ne);
-    vst1q_u8(ctx->buf, vbuf);
+    vst1q_u8(ctx->buf, vrbitq_u8(vtag));
     vst1q_u8(ctx->y, vctr_be);
 
     size_t n = blocks % MBEDTLS_AESCE_GCM_MULTIBLOCK;
