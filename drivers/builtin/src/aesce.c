@@ -548,6 +548,64 @@ int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
 
 #if defined(MBEDTLS_GCM_C)
 
+/*
+ * The SHA-3 cryptographic extension is required for EOR3 support. Compiler
+ * support is a bit patchy, so only use it for compilers where it is known to
+ * work.
+ *
+ * The docs specify that __ARM_FEATURE_SHA3 implies target support AND
+ * intrinsics available, but this isn't always reliable, so we only use EOR3
+ * for known-good compilers.
+ *
+ * https://arm-software.github.io/acle/main/acle.html#sha3-extension
+ */
+
+#if defined(MBEDTLS_COMPILER_IS_GCC) && defined(MBEDTLS_ARCH_IS_ARM64) \
+    && defined(MBEDTLS_ARCH_IS_ARMV9_A) && defined(__ARM_FEATURE_CRYPTO)
+// On 64-bit Armv9-A, the crypto extension includes the SHA3 extension, but
+// gcc does not define the SHA3 feature flag.
+// See:
+// https://developer.arm.com/documentation/109697/2025_12/Feature-descriptions/The-Armv9-0-architecture-extension
+// "If FEAT_Armv9_Crypto is implemented, then ... FEAT_SHA3 are implemented."
+#define __ARM_FEATURE_SHA3
+#endif
+
+#if defined(__ARM_FEATURE_SHA3)
+
+#if defined(__clang__) && (__clang_major__ >= 7)
+
+// for clang >= 7, just use the intrinsic
+#define VEOR3Q_U8 veor3q_u8
+
+#elif defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 110000)
+
+// GCC >= 11: use assembly
+static inline uint8x16_t mbedtls_aesce_veor3q_u8(
+    const uint8x16_t a,
+    const uint8x16_t b,
+    const uint8x16_t c)
+{
+    uint8x16_t r;
+    asm ("eor3 %0.16b, %1.16b, %2.16b, %3.16b"
+         : "=w" (r)
+         : "w" (a), "w" (b), "w" (c));
+    return r;
+}
+
+#define VEOR3Q_U8 mbedtls_aesce_veor3q_u8
+
+#endif // compiler
+
+#endif // __ARM_FEATURE_SHA3
+
+#if !defined(VEOR3Q_U8)
+// Target does not suport eor3, or unknown compiler - use 2 veorq_u8 operations
+// Using a macro here (rather than a static inline function) helps MSVC codegen.
+
+#define VEOR3Q_U8(a, b, c) veorq_u8(veorq_u8((a), (b)), (c))
+
+#endif // VEOR3Q_U8
+
 #if defined(MBEDTLS_ARCH_IS_ARM32)
 
 #if defined(__clang__)
