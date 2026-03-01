@@ -88,6 +88,16 @@
 #endif
 #endif
 
+/* This is defined if the architecture is Armv9-A, or higher */
+#if !defined(MBEDTLS_ARCH_IS_ARMV9_A)
+#if defined(__ARM_ARCH) && defined(__ARM_ARCH_PROFILE)
+#if (__ARM_ARCH >= 9) && (__ARM_ARCH_PROFILE == 'A')
+/* GCC, clang, armclang and IAR */
+#define MBEDTLS_ARCH_IS_ARMV9_A
+#endif
+#endif
+#endif
+
 #if defined(__ARM_NEON)
 #include <arm_neon.h>
 #define MBEDTLS_HAVE_NEON_INTRINSICS
