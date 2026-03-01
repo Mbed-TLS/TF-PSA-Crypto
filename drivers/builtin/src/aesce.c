@@ -186,8 +186,8 @@ int mbedtls_aesce_has_support_impl(void)
 
 
 static inline uint8x16_t aesce_encrypt_block_inline(uint8x16_t block,
-                                      const uint8x16_t *vkeys,
-                                      int nr)
+                                                    const uint8x16_t *vkeys,
+                                                    int nr)
 {
     /* 10, 12 or 14 rounds. Unroll loop. */
 #if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
@@ -214,8 +214,8 @@ static inline uint8x16_t aesce_encrypt_block_inline(uint8x16_t block,
 }
 
 static NO_INLINE uint8x16_t aesce_encrypt_block(uint8x16_t block,
-                                      const uint8x16_t *vkeys,
-                                      const int nr)
+                                                const uint8x16_t *vkeys,
+                                                const int nr)
 {
     return aesce_encrypt_block_inline(block, vkeys, nr);
 }
@@ -785,16 +785,17 @@ static inline uint8x16_t poly_mult_reduce(uint8x16x4_t input)
 }
 
 // Having a not-inlined copy helps code-size on non-perf-sensitive paths
-static NO_INLINE uint8x16_t poly_mult_multiply_and_reduce(uint8x16_t a, uint8x16_t b) {
-    return poly_mult_reduce(poly_mult_128(a,b));
+static NO_INLINE uint8x16_t poly_mult_multiply_and_reduce(uint8x16_t a, uint8x16_t b)
+{
+    return poly_mult_reduce(poly_mult_128(a, b));
 }
 
 /*
  * GCM multiplication: c = a times b in GF(2^128)
  */
 NO_INLINE void mbedtls_aesce_gcm_mult(unsigned char c[16],
-                            const unsigned char a[16],
-                            const unsigned char b[16])
+                                      const unsigned char a[16],
+                                      const unsigned char b[16])
 {
     uint8x16_t va, vb, vc;
     va = vrbitq_u8(vld1q_u8(&a[0]));
@@ -852,7 +853,8 @@ void mbedtls_aesce_gcm_update_block_partial(
     const uint8_t *input,
     uint8_t *output,
     unsigned offset, unsigned len, uint8_t scratch[32]
-) {
+    )
+{
     MBEDTLS_ASSUME(len > 0);
     int nr = MBEDTLS_AES_GET_NR(aes_ctx);
     const uint8x16_t *vkeys = aes_ctx->vkeys;
@@ -905,11 +907,11 @@ void mbedtls_aesce_gcm_update_block_partial(
 
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
 void mbedtls_aesce_gcm_update_blocks(
-                        mbedtls_aes_context *aes_ctx,
-                        mbedtls_gcm_context *ctx,
-                        const unsigned char *input,
-                        unsigned char *output,
-                        size_t blocks)
+    mbedtls_aes_context *aes_ctx,
+    mbedtls_gcm_context *ctx,
+    const unsigned char *input,
+    unsigned char *output,
+    size_t blocks)
 {
     const uint8x16_t *vkeys = aes_ctx->vkeys;
 
@@ -931,7 +933,9 @@ void mbedtls_aesce_gcm_update_blocks(
     MBEDTLS_MAYBE_UNUSED const uint8x16x4_t vh = ctx->vghash_4;
 
     // compute keystream in ve
-    for (size_t b = 0; b < (blocks - (blocks % MBEDTLS_AESCE_GCM_MULTIBLOCK)); b += MBEDTLS_AESCE_GCM_MULTIBLOCK) {
+    for (size_t b = 0;
+         b < (blocks - (blocks % MBEDTLS_AESCE_GCM_MULTIBLOCK));
+         b += MBEDTLS_AESCE_GCM_MULTIBLOCK) {
         // manually unrolling and ordering instructions makes a big difference
         // to performance (esp. GCC), and also a small size benefit.
 
@@ -1030,7 +1034,7 @@ void mbedtls_aesce_gcm_update_blocks(
             vtag = poly_mult_reduce(tag_x4);
         }
     #else
-        uint8x16_t ct0,ct1,ct2,ct3;
+        uint8x16_t ct0, ct1, ct2, ct3;
         if (mode == MBEDTLS_AES_ENCRYPT) {
             ct0 = vout[0];
             ct1 = vout[1];
@@ -1080,7 +1084,7 @@ void mbedtls_aesce_gcm_update_blocks(
                 0,
                 16,
                 scratch
-            );
+                );
             input += 16;
             output += 16;
         }

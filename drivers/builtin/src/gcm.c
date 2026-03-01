@@ -601,7 +601,8 @@ static int gcm_mask(mbedtls_gcm_context *ctx,
     };
     uint8_t **ap = (ctx->mode == MBEDTLS_GCM_DECRYPT) ? &ps[0] : &ps[3];
     for (unsigned i = 0; i < 6; i += 3) {
-        mbedtls_xor_no_simd(ap[i], (const uint8_t *) ap[i + 1], (const uint8_t *) ap[i + 2], use_len);
+        mbedtls_xor_no_simd(ap[i], (const uint8_t *) ap[i + 1], (const uint8_t *) ap[i + 2],
+                            use_len);
     }
 
     return 0;
@@ -663,7 +664,13 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
         if (use_aesce) {
-            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p, out_p, offset, use_len, scratch);
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx),
+                                                   ctx,
+                                                   p,
+                                                   out_p,
+                                                   offset,
+                                                   use_len,
+                                                   scratch);
         } else
 #endif
         {
@@ -689,7 +696,13 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
         size_t blocks = input_length / 16;
 #if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 1
         for (size_t i = 0; i < blocks; i++) {
-            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p + i * 16, out_p + i * 16, 0, 16, scratch);
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx),
+                                                   ctx,
+                                                   p + i * 16,
+                                                   out_p + i * 16,
+                                                   0,
+                                                   16,
+                                                   scratch);
         }
 #else
         mbedtls_aesce_gcm_update_blocks(GCM_GET_AES_CTX(ctx), ctx, p, out_p, blocks);
@@ -717,7 +730,13 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
     if (input_length > 0) {
 #if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
         if (use_aesce) {
-            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx), ctx, p, out_p, 0, input_length, scratch);
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx),
+                                                   ctx,
+                                                   p,
+                                                   out_p,
+                                                   0,
+                                                   input_length,
+                                                   scratch);
         } else
 #endif
         {

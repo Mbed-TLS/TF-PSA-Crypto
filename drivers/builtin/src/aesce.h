@@ -120,11 +120,11 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
 #if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0
 
 void mbedtls_aesce_gcm_update_blocks(
-                       mbedtls_aes_context *aes_ctx,
-                       mbedtls_gcm_context *ctx,
-                       const unsigned char *input,
-                       unsigned char *output,
-                       size_t blocks);
+    mbedtls_aes_context *aes_ctx,
+    mbedtls_gcm_context *ctx,
+    const unsigned char *input,
+    unsigned char *output,
+    size_t blocks);
 
 #endif // MBEDTLS_AESCE_OPTIMISE_FOR_SIZE
 
@@ -146,7 +146,7 @@ void mbedtls_aesce_gcm_update_block_partial(
     unsigned offset,
     unsigned length,
     uint8_t scratch[32]
-);
+    );
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /**
