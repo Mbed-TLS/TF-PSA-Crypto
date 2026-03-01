@@ -185,8 +185,7 @@ int mbedtls_aesce_has_support_impl(void)
     AESCE_ENCRYPT_ROUND(k + 1)
 
 
-FORCE_INLINE
-static uint8x16_t aesce_encrypt_block_inline(uint8x16_t block,
+static inline uint8x16_t aesce_encrypt_block_inline(uint8x16_t block,
                                       const uint8x16_t *vkeys,
                                       int nr)
 {
@@ -214,8 +213,7 @@ static uint8x16_t aesce_encrypt_block_inline(uint8x16_t block,
     return block;
 }
 
-NO_INLINE
-static uint8x16_t aesce_encrypt_block(uint8x16_t block,
+static NO_INLINE uint8x16_t aesce_encrypt_block(uint8x16_t block,
                                       const uint8x16_t *vkeys,
                                       const int nr)
 {
@@ -690,7 +688,7 @@ static inline poly64x1_t vget_low_p64(poly64x2_t a)
 #define MBEDTLS_VMULL_P64(a, b) vmull_p64(a, b)
 #endif /* MBEDTLS_COMPILER_IS_GCC */
 
-static FORCE_INLINE uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
+static inline uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
 {
 
     return vreinterpretq_u8_p128(
@@ -700,7 +698,7 @@ static FORCE_INLINE uint8x16_t pmull_low(uint8x16_t a, uint8x16_t b)
             ));
 }
 
-static FORCE_INLINE uint8x16_t pmull_high(uint8x16_t a, uint8x16_t b)
+static inline uint8x16_t pmull_high(uint8x16_t a, uint8x16_t b)
 {
     return vreinterpretq_u8_p128(
         vmull_high_p64(vreinterpretq_p64_u8(a),
