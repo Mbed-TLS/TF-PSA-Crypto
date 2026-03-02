@@ -31,6 +31,7 @@
 
 #include "tf-psa-crypto/build_info.h"
 #include "mbedtls/platform_util.h"
+#include "mbedtls/private/aesce_common.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -52,16 +53,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if defined(MBEDTLS_AESCE_C) \
-    && defined(MBEDTLS_ARCH_IS_ARMV8_A) && defined(MBEDTLS_HAVE_NEON_INTRINSICS) \
-    && (defined(MBEDTLS_COMPILER_IS_GCC) || defined(__clang__) || defined(MSC_VER))
-
-/* MBEDTLS_AESCE_HAVE_CODE is defined if we have a suitable target platform, and a
- * potentially suitable compiler (compiler version & flags are not checked when defining
- * this). */
-#define MBEDTLS_AESCE_HAVE_CODE
 #endif
 
 /**

@@ -80,7 +80,7 @@ typedef struct mbedtls_gcm_context {
 #else
     mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher_ctx);    /*!< The cipher context used. */
 #endif
-#if defined(MBEDTLS_AESCE_C)
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
     uint8_t MBEDTLS_PRIVATE(aesce_H)[32];                    /* constant 1, followed by hash key */
 #if defined(MBEDTLS_AES_C) && (MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0)
     uint8x16x4_t MBEDTLS_PRIVATE(vghash_4);
