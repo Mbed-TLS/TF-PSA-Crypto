@@ -492,6 +492,11 @@ int mbedtls_ccm_finish(mbedtls_ccm_context *ctx,
         ctx->ctr[15-i] = 0;
     }
 
+    if ((tag_len != 0 && (tag_len < 4 || tag_len > 16 || (tag_len & 1) != 0)) ||
+        (tag_len != ctx->tag_len)) {
+        return MBEDTLS_ERR_CCM_BAD_INPUT;
+    }
+
     ret = mbedtls_ccm_crypt(ctx, 0, 16, ctx->y, ctx->y);
     if (ret != 0) {
         return ret;
