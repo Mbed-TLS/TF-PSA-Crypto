@@ -485,16 +485,19 @@ int mbedtls_ccm_finish(mbedtls_ccm_context *ctx,
         return MBEDTLS_ERR_CCM_BAD_INPUT;
     }
 
+    /* Reject invalid tag lengths and mismatches with negotiated length (if set). */
+    if (tag_len != 0 && (tag_len < 4 || tag_len > 16 || (tag_len & 1) != 0)) {
+        return MBEDTLS_ERR_CCM_BAD_INPUT;
+    }
+    if ((ctx->state & CCM_STATE__LENGTHS_SET) && tag_len != ctx->tag_len) {
+        return MBEDTLS_ERR_CCM_BAD_INPUT;
+    }
+
     /*
      * Authentication: reset counter and crypt/mask internal tag
      */
     for (i = 0; i < ctx->q; i++) {
         ctx->ctr[15-i] = 0;
-    }
-
-    if ((tag_len != 0 && (tag_len < 4 || tag_len > 16 || (tag_len & 1) != 0)) ||
-        (tag_len != ctx->tag_len)) {
-        return MBEDTLS_ERR_CCM_BAD_INPUT;
     }
 
     ret = mbedtls_ccm_crypt(ctx, 0, 16, ctx->y, ctx->y);
