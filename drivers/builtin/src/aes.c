@@ -682,7 +682,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
         mbedtls_aesni_inverse_key((unsigned char *) RK,
-                                  (const unsigned char *) (cty.buf + cty.rk_offset),
+                                  (const unsigned char *) (cty.buf + MBEDTLS_AES_GET_RK_OFFSET(&cty)),
                                   MBEDTLS_AES_GET_NR(ctx));
         goto exit;
     }
@@ -696,7 +696,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
 #endif
 
 #if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
-    SK = cty.buf + cty.rk_offset + cty.nr * 4;
+    SK = cty.buf + MBEDTLS_AES_GET_RK_OFFSET(&cty) + MBEDTLS_AES_GET_NR(&cty) * 4;
 
     *RK++ = *SK++;
     *RK++ = *SK++;
