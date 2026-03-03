@@ -466,3 +466,47 @@ component_test_accel_hash () {
     msg "test: accelerated hash"
     ctest
 }
+
+component_test_pqcp_own_shake_full () {
+    msg "build: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHAKE enabled"
+    scripts/config.py full
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_OWN_SHAKE
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    # Make sure that mldsa-native's internal SHAKE is included in the build.
+    # It would be better, but harder, to assert that mldsa-native is
+    # actually using it.
+    grep -q tf_psa_crypto_pqcp_mldsa_shake128_absorb core/libtfpsacrypto.a
+    grep -q tf_psa_crypto_pqcp_mldsa_shake128x4_absorb_once core/libtfpsacrypto.a
+    grep -q tf_psa_crypto_pqcp_mldsa_shake256_absorb core/libtfpsacrypto.a
+    grep -q tf_psa_crypto_pqcp_mldsa_shake256x4_absorb_once core/libtfpsacrypto.a
+    # Make sure the built-in SHAKE, or at least SHA3, is included in the build.
+    grep -q mbedtls_sha3_update ${CMAKE_BUILTIN_BUILD_DIR}/sha3.c.o
+
+    msg "test: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHAKE enabled"
+    ctest
+}
+
+component_test_pqcp_own_shake_no_builtin () {
+    msg "build: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHA3/SHAKE disabled"
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_OWN_SHAKE
+    scripts/config.py unset PSA_WANT_ALG_SHAKE128
+    scripts/config.py unset PSA_WANT_ALG_SHAKE256
+    scripts/config.py unset PSA_WANT_ALG_SHA3_224
+    scripts/config.py unset PSA_WANT_ALG_SHA3_256
+    scripts/config.py unset PSA_WANT_ALG_SHA3_384
+    scripts/config.py unset PSA_WANT_ALG_SHA3_512
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    # Make sure that our SHAKE is not included in the build.
+    not grep mbedtls_sha3 ${CMAKE_BUILTIN_BUILD_DIR}/sha3.c.o
+
+    msg "test: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHA3/SHAKE disabled"
+    ctest
+}
