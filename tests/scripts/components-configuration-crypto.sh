@@ -473,17 +473,20 @@ component_test_pqcp_own_shake_full () {
     scripts/config.py set TF_PSA_CRYPTO_PQCP_OWN_SHAKE
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+    # Enable the test driver, so that we can assert that mldsa-native isn't
+    # calling the XOF driver.
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
 
     # Make sure that mldsa-native's internal SHAKE is included in the build.
-    # It would be better, but harder, to assert that mldsa-native is
-    # actually using it.
     grep -q tf_psa_crypto_pqcp_mldsa_shake128_absorb core/libtfpsacrypto.a
     grep -q tf_psa_crypto_pqcp_mldsa_shake128x4_absorb_once core/libtfpsacrypto.a
     grep -q tf_psa_crypto_pqcp_mldsa_shake256_absorb core/libtfpsacrypto.a
     grep -q tf_psa_crypto_pqcp_mldsa_shake256x4_absorb_once core/libtfpsacrypto.a
     # Make sure the built-in SHAKE, or at least SHA3, is included in the build.
     grep -q mbedtls_sha3_update ${CMAKE_BUILTIN_BUILD_DIR}/sha3.c.o
+    # We assert which one is used in shake_driver_calls() in
+    # test_suite_pqcp_mldsa.
 
     msg "test: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHAKE enabled"
     ctest
@@ -503,6 +506,7 @@ component_test_pqcp_own_shake_no_builtin () {
 
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
 
     # Make sure that our SHAKE is not included in the build.
     not grep mbedtls_sha3 ${CMAKE_BUILTIN_BUILD_DIR}/sha3.c.o
