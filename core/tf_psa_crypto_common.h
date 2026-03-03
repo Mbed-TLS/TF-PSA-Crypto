@@ -19,14 +19,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(__ARM_NEON)
-#include <arm_neon.h>
-#define MBEDTLS_HAVE_NEON_INTRINSICS
-#elif defined(MBEDTLS_PLATFORM_IS_WINDOWS_ON_ARM64)
-#include <arm64_neon.h>
-#define MBEDTLS_HAVE_NEON_INTRINSICS
-#endif
-
 /** Helper to define a function as static except when building invasive tests.
  *
  * If a function is only used inside its own source file and should be

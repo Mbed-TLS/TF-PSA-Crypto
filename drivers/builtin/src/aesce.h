@@ -19,14 +19,7 @@
 #include "mbedtls/private/aes.h"
 
 
-#if defined(MBEDTLS_AESCE_C) \
-    && defined(MBEDTLS_ARCH_IS_ARMV8_A) && defined(MBEDTLS_HAVE_NEON_INTRINSICS) \
-    && (defined(MBEDTLS_COMPILER_IS_GCC) || defined(__clang__) || defined(MSC_VER))
-
-/* MBEDTLS_AESCE_HAVE_CODE is defined if we have a suitable target platform, and a
- * potentially suitable compiler (compiler version & flags are not checked when defining
- * this). */
-#define MBEDTLS_AESCE_HAVE_CODE
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,14 +89,13 @@ void mbedtls_aesce_gcm_mult(unsigned char c[16],
 /**
  * \brief           Internal round key inversion. This function computes
  *                  decryption round keys from the encryption round keys.
+ *                  The two contexts must be different (i.e., cannot
+ *                  operate in-place).
  *
- * \param invkey    Round keys for the equivalent inverse cipher
- * \param fwdkey    Original round keys (for encryption)
- * \param nr        Number of rounds (that is, number of round keys minus one)
+ * \param dst       AES context to write inverse keys to
+ * \param src       AES context to read forward keys from
  */
-void mbedtls_aesce_inverse_key(unsigned char *invkey,
-                               const unsigned char *fwdkey,
-                               int nr);
+void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, const  mbedtls_aes_context *src);
 #endif /* !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 /**
@@ -111,13 +103,34 @@ void mbedtls_aesce_inverse_key(unsigned char *invkey,
  *
  * \param rk        Destination buffer where the round keys are written
  * \param key       Encryption key
- * \param bits      Key size in bits (must be 128, 192 or 256)
+ * \param key_bit_length
+ *                  Key size in bits (must be 128, 192 or 256)
  *
  * \return          0 if successful, or MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
  */
-int mbedtls_aesce_setkey_enc(unsigned char *rk,
+int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
+                             unsigned char *rk,
                              const unsigned char *key,
-                             size_t bits);
+                             size_t key_bit_length);
+
+
+/**
+ * \brief          Internal AES-CTR encrypt mutiple blocks
+ *
+ * \warning        This assumes that the context specifies either 10, 12 or 14
+ *                 rounds and will behave incorrectly if this is not the case.
+ *
+ * \param ctx      AES context
+ * \param blocks   number of complete blocks to process
+ * \param counter  AES-CTR counter
+ * \param input    input stream
+ * \param output   output stream
+ */
+void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
+                                      size_t blocks,
+                                      unsigned char counter[16],
+                                      const unsigned char *input,
+                                      unsigned char *output);
 
 #ifdef __cplusplus
 }

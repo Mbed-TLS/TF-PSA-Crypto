@@ -46,6 +46,7 @@
 #include <string.h>
 
 #include "aesce.h"
+#include "constant_time_internal.h"
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
 
@@ -160,46 +161,50 @@ int mbedtls_aesce_has_support_impl(void)
 
 #endif /* defined(__linux__) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY) */
 
-/* Single round of AESCE encryption */
-#define AESCE_ENCRYPT_ROUND                   \
-    block = vaeseq_u8(block, vld1q_u8(keys)); \
-    block = vaesmcq_u8(block);                \
-    keys += 16
-/* Two rounds of AESCE encryption */
-#define AESCE_ENCRYPT_ROUND_X2        AESCE_ENCRYPT_ROUND; AESCE_ENCRYPT_ROUND
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#define KEY_OFFSET(nr) (0)
+#else
+#define KEY_OFFSET(nr) ((14 - (nr)) * 16)
+#endif
 
-MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
+/* Single round of AESCE encryption */
+#define AESCE_ENCRYPT_ROUND(k)          \
+    block = vaeseq_u8(block, vkeys[k]);  \
+    block = vaesmcq_u8(block);
+/* Two rounds of AESCE encryption */
+#define AESCE_ENCRYPT_ROUND_X2(k)       \
+    AESCE_ENCRYPT_ROUND(k);             \
+    AESCE_ENCRYPT_ROUND(k + 1)
+
 static uint8x16_t aesce_encrypt_block(uint8x16_t block,
-                                      unsigned char *keys,
-                                      int rounds)
+                                      const uint8x16_t *vkeys,
+                                      int nr)
 {
     /* 10, 12 or 14 rounds. Unroll loop. */
-    if (rounds == 10) {
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    (void) nr;
+#else
+    if (nr == 10) {
         goto rounds_10;
     }
-    if (rounds == 12) {
+    if (nr == 12) {
         goto rounds_12;
     }
-    AESCE_ENCRYPT_ROUND_X2;
+    AESCE_ENCRYPT_ROUND_X2(0);
 rounds_12:
-    AESCE_ENCRYPT_ROUND_X2;
+    AESCE_ENCRYPT_ROUND_X2(2);
 rounds_10:
-    AESCE_ENCRYPT_ROUND_X2;
-    AESCE_ENCRYPT_ROUND_X2;
-    AESCE_ENCRYPT_ROUND_X2;
-    AESCE_ENCRYPT_ROUND_X2;
-    AESCE_ENCRYPT_ROUND;
+#endif
+    AESCE_ENCRYPT_ROUND_X2(4);
+    AESCE_ENCRYPT_ROUND_X2(6);
+    AESCE_ENCRYPT_ROUND_X2(8);
+    AESCE_ENCRYPT_ROUND_X2(10);
+    AESCE_ENCRYPT_ROUND(12);
 
     /* AES AddRoundKey for the previous round.
      * SubBytes, ShiftRows for the final round.  */
-    block = vaeseq_u8(block, vld1q_u8(keys));
-    keys += 16;
-
-    /* Final round: no MixColumns */
-
-    /* Final AddRoundKey */
-    block = veorq_u8(block, vld1q_u8(keys));
-
+    block = vaeseq_u8(block, vkeys[13]);
+    block = veorq_u8(block, vkeys[14]);
     return block;
 }
 
@@ -224,45 +229,164 @@ rounds_10:
  *
  *      block = vaesimcq_u8(block);
  */
-#define AESCE_DECRYPT_ROUND                   \
-    block = vaesdq_u8(block, vld1q_u8(keys)); \
-    block = vaesimcq_u8(block);               \
-    keys += 16
+/* Single round of AESCE decryption */
+#define AESCE_DECRYPT_ROUND(k)          \
+    block = vaesdq_u8(block, vkeys[k]);  \
+    block = vaesimcq_u8(block);
 /* Two rounds of AESCE decryption */
-#define AESCE_DECRYPT_ROUND_X2        AESCE_DECRYPT_ROUND; AESCE_DECRYPT_ROUND
+#define AESCE_DECRYPT_ROUND_X2(k)       \
+    AESCE_DECRYPT_ROUND(k);             \
+    AESCE_DECRYPT_ROUND(k + 1)
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 static uint8x16_t aesce_decrypt_block(uint8x16_t block,
-                                      unsigned char *keys,
+                                      const uint8x16_t *vkeys,
                                       int rounds)
 {
     /* 10, 12 or 14 rounds. Unroll loop. */
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    (void) rounds;
+#else
     if (rounds == 10) {
         goto rounds_10;
     }
     if (rounds == 12) {
         goto rounds_12;
     }
-    AESCE_DECRYPT_ROUND_X2;
+    AESCE_DECRYPT_ROUND_X2(0);
 rounds_12:
-    AESCE_DECRYPT_ROUND_X2;
+    AESCE_DECRYPT_ROUND_X2(2);
 rounds_10:
-    AESCE_DECRYPT_ROUND_X2;
-    AESCE_DECRYPT_ROUND_X2;
-    AESCE_DECRYPT_ROUND_X2;
-    AESCE_DECRYPT_ROUND_X2;
-    AESCE_DECRYPT_ROUND;
+#endif
+    AESCE_DECRYPT_ROUND_X2(4);
+    AESCE_DECRYPT_ROUND_X2(6);
+    AESCE_DECRYPT_ROUND_X2(8);
+    AESCE_DECRYPT_ROUND_X2(10);
+    AESCE_DECRYPT_ROUND(12);
 
     /* The inverses of AES AddRoundKey, SubBytes, ShiftRows finishing up the
      * last full round. */
-    block = vaesdq_u8(block, vld1q_u8(keys));
-    keys += 16;
+    block = vaesdq_u8(block, vkeys[13]);
 
     /* Inverse AddRoundKey for inverting the initial round key addition. */
-    block = veorq_u8(block, vld1q_u8(keys));
-
+    block = veorq_u8(block, vkeys[14]);
     return block;
 }
+#endif
+
+static inline void mbedtls_aesce_load_keys(mbedtls_aes_context *ctx, uint8x16_t *vkeys)
+{
+    uint8_t *p = (uint8_t *) ctx->buf;
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    for (unsigned i = 0; i <= 10; i++) {
+        vkeys[i + 4] = vld1q_u8(&p[i * 16]);
+    }
+#else
+    for (unsigned i = 0; i <= 14; i++) {
+        vkeys[i] = vld1q_u8(&p[i * 16]);
+    }
+#endif
+}
+
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
+void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
+                                      size_t blocks,
+                                      unsigned char counter[16],
+                                      const unsigned char *input,
+                                      unsigned char *output)
+{
+    // reverse to get bytes in LE order (note that top and bottom elements are inverted)
+    uint64x2_t ctr_le = vreinterpretq_u64_u8(vrev64q_u8(vld1q_u8(counter)));
+
+    // constant used for incrementing counter
+    const uint64x2_t k0_1 = vcombine_u64(vcreate_u64(0), vcreate_u64(1));
+
+    // Determine the point to exit the inner loop where either
+    // (a) we run out of blocks
+    // (b) we need to propagate a carry in the counter
+    //
+    // In case no carry propagation is required, we pick a point and exit
+    // anyway to ensure constant-time behaviour w.r.t. the counter value.
+    // This means that for blocks > 1, we do two carry propagations of which
+    // at least one is a no-op, and for blocks == 1, we do one.
+    //
+    // There are a lot of awkward edge cases in correctly selecting the point to
+    // exit the inner loop. Careful testing is needed.
+
+    // Number of blocks that can be processed before we hit a block which
+    // requires us to propagate the carry
+    uint64_t blocks_with_no_carry = UINT64_MAX - vgetq_lane_u64(ctr_le, 1);
+
+    // Select a point to break the main-loop for possible carry propagation.
+    //
+    // We process max(1, limit) blocks, then carry-propagate, then process
+    // remaining blocks, then carry-propagate.
+    //
+    // limit is checked after processing a block, so we always process one block
+    // even if limit == 0; otherwise exactly limit blocks are processed before
+    // doing carry propagation.
+    //
+    // If no carry propagation is needed (bwnc >= blocks):
+    //      any point is ok
+    //      limit = 0 -> process 1 block
+    // If needed for the last block (bwnc == blocks - 1):
+    //      any point is ok because we always propagate after the last block
+    //      limit = 0 -> process 1 block
+    // Otherwise (bwnc < blocks - 1):
+    //      block after processing bwnc blocks requires carry
+    //      limit = bwnc + 1
+    //
+    // The result is only used if blocks > 0 (so "blocks - 1u" is harmless).
+    size_t limit = mbedtls_ct_size_if_else_0(
+        mbedtls_ct_uint_lt(blocks_with_no_carry, blocks - 1u),
+        blocks_with_no_carry + 1u
+        );
+
+    uint8x16_t vkeys[15];
+    mbedtls_aesce_load_keys(ctx, vkeys);
+
+    int nr = ctx->nr;
+
+    size_t i = 0;
+    while (i < blocks) {
+        // process blocks up to point of needing carry propagation in counter
+        // (at least one block)
+        do {
+            uint8x16_t ctr_be = vrev64q_u8(vreinterpretq_u8_u64(ctr_le));
+            uint8x16_t in = vld1q_u8(&input[i * 16]);
+            uint8x16_t block = aesce_encrypt_block(ctr_be, vkeys, nr);
+            uint8x16_t output_block = veorq_u8(block, in);
+            ctr_le = vaddq_u64(ctr_le, k0_1);
+            vst1q_u8(&output[i * 16], output_block);
+        } while (++i < limit);
+
+        // Propagate carry from incrementing counter - this is slow so
+        // needs to be pulled out of the main loop above. This is a no-op
+        // if the least-significant 64 bits of the counter did not wrap.
+        //
+        // equivalent to: ctr_le[0] += ctr_le[1] == 0 ? 1 : 0
+#if defined(__aarch64__)
+        // saturating left shift - top bit set iff ctr_le is non-zero
+        uint64x1_t x = vqshl_n_u64(vget_high_u64(ctr_le), 63);
+        // cast to signed 64-bit, compare to 0. result is 0 or all bits set
+        uint64x1_t is_zero = vcge_s64(vreinterpret_s64_u64(x), vcreate_s64(0));
+        // apply to ctr_le
+        uint64x2_t inc = vcombine_u64(is_zero, vcreate_u64(0));
+        ctr_le = vsubq_u64(ctr_le, inc);
+#else
+        // A32 lacks suitable intrinsics for 64-bit comparison, so just use scalar
+        uint64_t ls64 = vgetq_lane_u64(ctr_le, 1);
+        uint64x2_t inc = vcombine_u64(vcreate_u64(ls64 == 0 ? 1 : 0), vcreate_u64(0));
+        ctr_le = vaddq_u64(ctr_le, inc);
+#endif
+
+        limit = blocks;
+    }
+
+    vst1q_u8(counter, vrev64q_u8(vreinterpretq_u8_u64(ctr_le)));
+}
+
 #endif
 
 /*
@@ -274,17 +398,16 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
                             unsigned char output[16])
 {
     uint8x16_t block = vld1q_u8(&input[0]);
-    unsigned char *keys = (unsigned char *) (ctx->buf + ctx->rk_offset);
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
     if (mode == MBEDTLS_AES_DECRYPT) {
-        block = aesce_decrypt_block(block, keys, ctx->nr);
+        block = aesce_decrypt_block(block, ctx->vkeys, ctx->nr);
     } else
 #else
     (void) mode;
 #endif
     {
-        block = aesce_encrypt_block(block, keys, ctx->nr);
+        block = aesce_encrypt_block(block, ctx->vkeys, ctx->nr);
     }
     vst1q_u8(&output[0], block);
 
@@ -295,19 +418,25 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
  * Compute decryption round keys from encryption round keys
  */
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-void mbedtls_aesce_inverse_key(unsigned char *invkey,
-                               const unsigned char *fwdkey,
-                               int nr)
+void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, mbedtls_aes_context const *src)
 {
+    uint8_t *invkey = ((uint8_t *) dst->buf) + KEY_OFFSET(src->nr);
+    uint8_t *fwdkey = ((uint8_t *) src->buf) + KEY_OFFSET(dst->nr);
+
     int i, j;
-    j = nr;
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    j = 10;
+#else
+    j = src->nr;
+#endif
+
     vst1q_u8(invkey, vld1q_u8(fwdkey + j * 16));
     for (i = 1, j--; j > 0; i++, j--) {
         vst1q_u8(invkey + i * 16,
                  vaesimcq_u8(vld1q_u8(fwdkey + j * 16)));
     }
     vst1q_u8(invkey + i * 16, vld1q_u8(fwdkey + j * 16));
-
+    mbedtls_aesce_load_keys(dst, dst->vkeys);
 }
 #endif
 
@@ -330,10 +459,24 @@ static inline uint32_t aes_sub_word(uint32_t in)
 /*
  * Key expansion function
  */
-static void aesce_setkey_enc(unsigned char *rk,
+int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
+                             unsigned char *rk,
                              const unsigned char *key,
                              const size_t key_bit_length)
 {
+
+    uint8_t *r = rk;
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    MBEDTLS_ASSUME(key_bit_length == 128);
+#else
+    // ensure consistent layout (ie if 128 or 192-bit keys, the leading
+    // 32 or 64 bytes are skipped, so the remaining keys always sit in the same
+    // part of ctx->buf)
+    // this layout simplifies loading into NEON registers, which helps
+    // size and perf
+    r += (256 - key_bit_length) >> 1;
+#endif
+
     static uint8_t const rcon[] = { 0x01, 0x02, 0x04, 0x08, 0x10,
                                     0x20, 0x40, 0x80, 0x1b, 0x36 };
     /* See https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
@@ -345,15 +488,21 @@ static void aesce_setkey_enc(unsigned char *rk,
     const size_t rounds_needed = key_len_in_words + 6;      /* Nr */
     const size_t round_keys_len_in_words =
         round_key_len_in_words * (rounds_needed + 1);       /* Nb*(Nr+1) */
-    const uint32_t *rko_end = (uint32_t *) rk + round_keys_len_in_words;
+    const uint32_t *rko_end = (uint32_t *) r + round_keys_len_in_words;
 
-    memcpy(rk, key, key_len_in_words * 4);
+    uint8x16_t vk = vld1q_u8(key);
+    vst1q_u8(r, vk);
+#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    vk = vld1q_u8(key + (key_bit_length - 128) / 8);
+    vst1q_u8(r + (key_bit_length - 128) / 8, vk);
+#endif
 
-    for (uint32_t *rki = (uint32_t *) rk;
+    for (uint32_t *rki = (uint32_t *) r;
          rki + key_len_in_words < rko_end;
          rki += key_len_in_words) {
 
-        size_t iteration = (size_t) (rki - (uint32_t *) rk) / key_len_in_words;
+        size_t iteration = (size_t) (rki - (uint32_t *) r) / key_len_in_words;
+
         uint32_t *rko;
         rko = rki + key_len_in_words;
         rko[0] = aes_rot_word(aes_sub_word(rki[key_len_in_words - 1]));
@@ -361,45 +510,18 @@ static void aesce_setkey_enc(unsigned char *rk,
         rko[1] = rko[0] ^ rki[1];
         rko[2] = rko[1] ^ rki[2];
         rko[3] = rko[2] ^ rki[3];
-        if (rko + key_len_in_words > rko_end) {
-            /* Do not write overflow words.*/
-            continue;
-        }
 #if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-        switch (key_bit_length) {
-            case 128:
-                break;
-            case 192:
-                rko[4] = rko[3] ^ rki[4];
-                rko[5] = rko[4] ^ rki[5];
-                break;
-            case 256:
-                rko[4] = aes_sub_word(rko[3]) ^ rki[4];
-                rko[5] = rko[4] ^ rki[5];
-                rko[6] = rko[5] ^ rki[6];
-                rko[7] = rko[6] ^ rki[7];
-                break;
+        rko[4] = rko[3] ^ rki[4];
+        if (key_bit_length == 256) {
+            rko[4] = aes_sub_word(rko[3]) ^ rki[4];
         }
-#endif /* !MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
+        rko[5] = rko[4] ^ rki[5];
+        rko[6] = rko[5] ^ rki[6];
+        rko[7] = rko[6] ^ rki[7];
+#endif
     }
-}
 
-/*
- * Key expansion, wrapper
- */
-int mbedtls_aesce_setkey_enc(unsigned char *rk,
-                             const unsigned char *key,
-                             size_t bits)
-{
-    switch (bits) {
-        case 128:
-        case 192:
-        case 256:
-            aesce_setkey_enc(rk, key, bits);
-            break;
-        default:
-            return MBEDTLS_ERR_AES_INVALID_KEY_LENGTH;
-    }
+    mbedtls_aesce_load_keys(ctx, ctx->vkeys);
 
     return 0;
 }

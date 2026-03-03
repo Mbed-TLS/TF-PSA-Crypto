@@ -1,0 +1,5 @@
+Changes
+   * Improvements to AES performance. AES-CTR, gcc and Arm Neon benefit most,
+     but AES-GCM also benefits. AES-CTR improves up to 2-3x. GCC AES-GCM
+     improves around 15% (scalar), and around 40% for gcc Arm Neon. Size
+     improves (around 100-350 bytes) on gcc.
