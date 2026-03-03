@@ -376,7 +376,15 @@ static inline void mbedtls_xor_small_impl_nonconst(uint8_t *r,
     }
 }
 
-/* Code-size optimised, for when n is known at compile-time */
+#if (MBEDTLS_HAS_BUILTIN(__builtin_constant_p) && MBEDTLS_HAS_BUILTIN(__builtin_choose_expr)) \
+    && ((defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 100000)) \
+        || (defined(__clang__) && (__clang_major__ >= 10)))
+
+/*
+ * Code-size optimised, for when n is known at compile-time, for compilers with
+ * support for __builtin_constant_p and __builtin_choose_expr (ie., all recent
+ * gcc and clang)
+ */
 static inline void mbedtls_xor_small_impl_const(uint8_t *r,
                                                 const uint8_t *a,
                                                 const uint8_t *b,
@@ -422,8 +430,6 @@ static inline void mbedtls_xor_small_impl_const(uint8_t *r,
     }
 }
 
-#if (MBEDTLS_HAS_BUILTIN(__builtin_constant_p) && MBEDTLS_HAS_BUILTIN(__builtin_choose_expr)) || \
-    (defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 40000))
 /*
  * The not-selected path can't always be optimised away unless this is written
  * as a macro (rather than static inline).
@@ -455,9 +461,12 @@ static inline void mbedtls_xor_small_impl_const(uint8_t *r,
             mbedtls_xor_small_impl_nonconst((r), (a), (b), (n)) \
             ); \
 } while (0)
+
 #else
+
 // best for code-size if n is not known
-#define mbedtls_xor_small_impl_nonconst
+#define mbedtls_xor_small mbedtls_xor_small_impl_nonconst
+
 #endif
 
 
