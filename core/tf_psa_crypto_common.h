@@ -454,18 +454,18 @@ static inline void mbedtls_xor_small_impl_const(uint8_t *r,
  * \param   b Pointer to input (buffer of at least \p n bytes)
  * \param   n Number of bytes to process.
  */
-#define mbedtls_xor_small(r, a, b, n) do { \
+#define MBEDTLS_XOR_SMALL(r, a, b, n) do { \
         __builtin_choose_expr( \
             __builtin_constant_p(n), \
             mbedtls_xor_small_impl_const((r), (a), (b), (n)), \
             mbedtls_xor_small_impl_nonconst((r), (a), (b), (n)) \
             ); \
-} while (0)
+    } while (0)
 
 #else
 
 // best for code-size if n is not known
-#define mbedtls_xor_small mbedtls_xor_small_impl_nonconst
+#define MBEDTLS_XOR_SMALL mbedtls_xor_small_impl_nonconst
 
 #endif
 

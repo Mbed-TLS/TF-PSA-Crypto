@@ -895,7 +895,7 @@ void mbedtls_aesce_gcm_update_block_partial(
 #error This code assumes MBEDTLS_GCM_DECRYPT == 0 && MBEDTLS_GCM_ENCRYPT == 1
 #endif
         const uint8_t *p = &scratch[ctx->mode * 16]; // ciphertext pointer
-        mbedtls_xor_small(ctx->buf + offset, ctx->buf + offset, p + offset, len);
+        MBEDTLS_XOR_SMALL(ctx->buf + offset, ctx->buf + offset, p + offset, len);
     }
 
     mbedtls_aesce_gcm_mult(ctx->buf, ctx->buf, &(ctx)->aesce_H[(offset + len) & 16]);
