@@ -72,7 +72,7 @@ void mbedtls_aesce_gcm_mult(unsigned char c[16],
                             const unsigned char a[16],
                             const unsigned char b[16]);
 
-/*
+/**
  * \brief          Initialise data for AES GCM computations.
  *
  * \note           This function is only for internal use by other library
