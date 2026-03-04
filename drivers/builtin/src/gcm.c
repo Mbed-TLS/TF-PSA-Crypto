@@ -211,7 +211,7 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#if defined(MBEDTLS_ONLY_GCM_CIPHER_IS_AES) && defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
     if (keybits != 128) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
