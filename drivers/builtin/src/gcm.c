@@ -96,7 +96,7 @@ static unsigned gcm_use_aesce(mbedtls_gcm_context *ctx)
     return 0;
 }
 
-static inline unsigned gcm_get_acceleration()
+static inline unsigned gcm_get_acceleration(void)
 {
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
     /* Note: we do not need AES support to use the AESCE GCM implementation
