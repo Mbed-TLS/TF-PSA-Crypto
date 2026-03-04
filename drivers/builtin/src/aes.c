@@ -681,9 +681,10 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_AES)) {
-        mbedtls_aesni_inverse_key((unsigned char *) RK,
-                                  (const unsigned char *) (cty.buf + MBEDTLS_AES_GET_RK_OFFSET(&cty)),
-                                  MBEDTLS_AES_GET_NR(ctx));
+        mbedtls_aesni_inverse_key(
+            (unsigned char *) RK,
+            (const unsigned char *) (cty.buf + MBEDTLS_AES_GET_RK_OFFSET(&cty)),
+            MBEDTLS_AES_GET_NR(ctx));
         goto exit;
     }
 #endif
