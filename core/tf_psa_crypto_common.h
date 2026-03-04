@@ -369,7 +369,7 @@ static inline void mbedtls_xor_no_simd(unsigned char *r,
 static inline void mbedtls_xor_small_impl_nonconst(uint8_t *r,
                                                    const uint8_t *a,
                                                    const uint8_t *b,
-                                                   unsigned n)
+                                                   size_t n)
 {
     for (unsigned i = 0; i < n; i++) {
         r[i] = a[i] ^ b[i];
@@ -388,7 +388,7 @@ static inline void mbedtls_xor_small_impl_nonconst(uint8_t *r,
 static inline void mbedtls_xor_small_impl_const(uint8_t *r,
                                                 const uint8_t *a,
                                                 const uint8_t *b,
-                                                unsigned n)
+                                                size_t n)
 {
     /*
      * Given that n is known at compile-time, use the first path which can
