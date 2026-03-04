@@ -662,6 +662,7 @@ static inline uint8x16_t vrbitq_u8(uint8x16_t x)
 
 #define vreinterpretq_p64_u8(a)  ((poly64x2_t) a)
 #define vreinterpretq_u8_p128(a) ((uint8x16_t) a)
+#define vreinterpret_p64_u8(a)   ((poly64_t)   a)
 
 static inline poly64x1_t vget_low_p64(poly64x2_t a)
 {
