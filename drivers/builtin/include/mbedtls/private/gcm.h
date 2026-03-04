@@ -39,11 +39,12 @@
  */
 #if defined(MBEDTLS_AES_C)
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
-#if !defined(MBEDTLS_ARIA_C) && !defined(MBEDTLS_CAMELLIA_C)
+#if !defined(PSA_WANT_KEY_TYPE_ARIA) && !defined(PSA_WANT_KEY_TYPE_CAMELLIA)
 #define MBEDTLS_ONLY_GCM_CIPHER_IS_AES
 #endif
 #elif defined(MBEDTLS_CIPHER_C)
-#if !defined(MBEDTLS_ARIA_C) && !defined(MBEDTLS_CAMELLIA_C) && !defined(MBEDTLS_CHACHA20_C)
+#if !defined(PSA_WANT_KEY_TYPE_ARIA) && !defined(PSA_WANT_KEY_TYPE_CAMELLIA) && \
+    !defined(PSA_WANT_KEY_TYPE_CHACHA20)
 #define MBEDTLS_ONLY_GCM_CIPHER_IS_AES
 #endif
 #endif // MBEDTLS_BLOCK_CIPHER_C or MBEDTLS_CIPHER_C
