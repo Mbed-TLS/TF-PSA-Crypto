@@ -19,6 +19,7 @@
 #include "mbedtls/platform.h"
 #include "mbedtls/private/error_common.h"
 #include "mbedtls/private/ecp.h"
+#include "mbedtls/private/rsa.h"
 #include "pk_internal.h"
 
 #include <string.h>
@@ -544,7 +545,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
     }
 
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    if (pk_alg == MBEDTLS_PK_RSA) {
+    if (pk_alg == MBEDTLS_PK_RSA || pk_alg == MBEDTLS_PK_RSASSA_PSS) {
         ret = mbedtls_pk_rsa_set_pubkey(pk, *p, (size_t) (end - *p));
         if (ret == 0) {
             /* On success all the input has been consumed by the parsing function. */
@@ -555,6 +556,10 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
             ret = MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PK_INVALID_PUBKEY, ret);
         } else {
             ret = MBEDTLS_ERR_PK_INVALID_PUBKEY;
+        }
+        /* For RSASSA-PSS, the padding must be set (by default, it is PKCS#1 v1.5) */
+        if (pk_alg == MBEDTLS_PK_RSASSA_PSS) {
+            ret = mbedtls_rsa_set_padding((mbedtls_rsa_context *) pk, MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE); 
         }
     } else
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
