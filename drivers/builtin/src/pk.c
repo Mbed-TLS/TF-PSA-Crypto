@@ -99,6 +99,7 @@ const mbedtls_pk_info_t *mbedtls_pk_info_from_type(mbedtls_pk_type_t pk_type)
     switch (pk_type) {
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
         case MBEDTLS_PK_RSA:
+        case MBEDTLS_PK_RSASSA_PSS:
             return &mbedtls_rsa_info;
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
