@@ -6570,12 +6570,13 @@ void aead_multipart_state_test(int key_type_arg, data_t *key_data,
                                    input_data->len, output_data,
                                    output_size, &output_length));
 
+        /* Signature verification is expected fail, but after the checks for lengths */
         TEST_EQUAL(psa_aead_verify(&operation, final_data,
                                    finish_output_size,
                                    &output_part_length,
                                    tag_buffer,
                                    tag_length),
-                   PSA_ERROR_INVALID_ARGUMENT);
+                   PSA_ERROR_INVALID_SIGNATURE);
     } else {
         PSA_ASSERT(psa_aead_finish(&operation, final_data,
                                    finish_output_size,
@@ -6692,12 +6693,13 @@ void aead_multipart_state_test(int key_type_arg, data_t *key_data,
                                    input_data->len, output_data,
                                    output_size, &output_length));
 
+        /* Signature verification is expected fail, but after the checks for lengths */
         TEST_EQUAL(psa_aead_verify(&operation, final_data,
                                    finish_output_size,
                                    &output_part_length,
                                    tag_buffer,
                                    tag_length),
-                   PSA_ERROR_INVALID_ARGUMENT);
+                   PSA_ERROR_INVALID_SIGNATURE);
     } else {
         PSA_ASSERT(psa_aead_finish(&operation, final_data,
                                    finish_output_size,
