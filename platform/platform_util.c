@@ -89,7 +89,7 @@ void mbedtls_platform_zeroize(void *buf, size_t len)
          */
         __msan_unpoison(buf, len);
 #endif
-#elif defined(__STDC_LIB_EXT1__) && !defined(__IAR_SYSTEMS_ICC__)
+#elif defined(__STDC_LIB_EXT1__)
         memset_s(buf, len, 0, len);
 #elif defined(_WIN32)
         SecureZeroMemory(buf, len);
