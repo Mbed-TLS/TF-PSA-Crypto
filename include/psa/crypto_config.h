@@ -528,7 +528,7 @@
 //#define MBEDTLS_PLATFORM_VSNPRINTF_MACRO    vsnprintf /**< Default vsnprintf macro to use, can be undefined */
 //#define MBEDTLS_PRINTF_MS_TIME    PRId64 /**< Default fmt for printf. That's avoid compiler warning if mbedtls_ms_time_t is redefined */
 
-/*** \def MBEDTLS_PLATFORM_DEV_RANDOM
+/** \def MBEDTLS_PLATFORM_DEV_RANDOM
  *
  * Path to a special file that returns cryptographic-quality random bytes
  * when read. This is used by the default platform entropy source on
