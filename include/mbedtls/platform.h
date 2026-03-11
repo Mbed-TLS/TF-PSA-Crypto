@@ -351,8 +351,7 @@ int mbedtls_platform_set_exit(void (*exit_func)(int status));
 #define MBEDTLS_EXIT_FAILURE 1
 #endif
 
-#if defined(MBEDTLS_ENTROPY_C) && \
-    !defined(MBEDTLS_NO_PLATFORM_ENTROPY) && \
+#if defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY) && \
     !(defined(_WIN32) && !defined(EFIX64) && !defined(EFI32))
 /* Platforms where MBEDTLS_PLATFORM_DEV_RANDOM is used
  * unless a dedicated system call is available both at
