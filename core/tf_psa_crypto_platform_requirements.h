@@ -18,6 +18,8 @@
 #ifndef __STDC_WANT_LIB_EXT1__
 /* Ask for the C11 gmtime_s() and memset_s() if available */
 #define __STDC_WANT_LIB_EXT1__ 1
+/* This causes IAR to deprecate non-s functions that have an Annex K
+ * equivalent. We hack around this in tf_psa_crypto_common.h. */
 #endif
 
 #if !defined(_POSIX_C_SOURCE)
