@@ -20,6 +20,15 @@
 
 #include <string.h>
 
+#if defined(__IAR_SYSTEMS_ICC__)
+/* Suppress a very overeager warning from IAR: it dislikes a forward goto
+ * that bypasses the initialization of a variable, even if that variable
+ * is not used after the jump. (This is perfectly valid C; it would only
+ * be invalid C if jumping into a block from outside that block.)
+ */
+#pragma diag_suppress=Pe546 // transfer of control bypasses initialization
+#endif
+
 #if defined(MBEDTLS_PSA_BUILTIN_CIPHER) || \
     defined(MBEDTLS_PSA_BUILTIN_AEAD) || \
     defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_AES) || \
