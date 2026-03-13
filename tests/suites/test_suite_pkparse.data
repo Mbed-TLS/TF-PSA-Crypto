@@ -1191,6 +1191,14 @@ Parse Public EC Key #4b (RFC 5480, secp256r1, DER)
 depends_on:PSA_WANT_ECC_SECP_R1_256
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_256_pub.der":0
 
+Parse Public EC Key #4c (RFC 5480, secp256r1, explicit)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_SECP256R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_256_pub.expl.pem":0
+
+Parse Public EC Key #4d (RFC 5480, secp256r1, explicit, DER)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_SECP256R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_256_pub.expl.der":0
+
 Parse Public EC Key #5 (RFC 5480, secp384r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_384
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_384_pub.pem":0
@@ -1198,6 +1206,10 @@ pk_parse_public_keyfile_ec:"../framework/data_files/ec_384_pub.pem":0
 Parse Public EC Key #5a (RFC 5480, secp384r1, compressed)
 depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP384R1_ENABLED
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_384_pub.comp.pem":0
+
+Parse Public EC Key #5b (RFC 5480, secp384r1, explicit)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_SECP384R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_384_pub.expl.pem":0
 
 Parse Public EC Key #6 (RFC 5480, secp521r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_521
@@ -1207,6 +1219,14 @@ Parse Public EC Key #6a (RFC 5480, secp521r1, compressed)
 depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP521R1_ENABLED
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_521_pub.comp.pem":0
 
+Parse Public EC Key #6b (RFC 5480, secp521r1, explicit)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_SECP521R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_521_pub.expl.pem":0
+
+Parse Public EC Key #6c (RFC 5480, secp521r1, explicit, DER)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_SECP521R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_521_pub.expl.der":0
+
 Parse Public EC Key #7 (RFC 5480, brainpoolP256r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_256
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp256_pub.pem":0
@@ -1214,6 +1234,10 @@ pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp256_pub.pem":0
 Parse Public EC Key #7a (RFC 5480, brainpoolP256r1, compressed)
 depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP256R1_ENABLED
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp256_pub.comp.pem":0
+
+Parse Public EC Key #7b (RFC 5480, brainpoolP256r1, explicit)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_BP256R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp256_pub.expl.pem":0
 
 Parse Public EC Key #8 (RFC 5480, brainpoolP384r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_384
@@ -1223,6 +1247,10 @@ Parse Public EC Key #8a (RFC 5480, brainpoolP384r1, compressed)
 depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP384R1_ENABLED
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp384_pub.comp.pem":0
 
+Parse Public EC Key #8b (RFC 5480, brainpoolP384r1, explicit)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_BP384R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp384_pub.expl.pem":0
+
 Parse Public EC Key #9 (RFC 5480, brainpoolP512r1)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_512
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.pem":0
@@ -1230,6 +1258,14 @@ pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.pem":0
 Parse Public EC Key #9a (RFC 5480, brainpoolP512r1, compressed)
 depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP512R1_ENABLED
 pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.comp.pem":0
+
+Parse Public EC Key #9b (RFC 5480, brainpoolP512r1, explicit)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_BP512R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.expl.pem":0
+
+Parse Public EC Key #9c (RFC 5480, brainpoolP512r1, explicit, DER)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_ECP_DP_BP512R1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.expl.der":0
 
 Parse Public EC Key #10 (RFC 8410, DER, X25519)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_255
