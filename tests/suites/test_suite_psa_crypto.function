@@ -1922,7 +1922,14 @@ void import_export_public_key(data_t *data,
     }
 
     status = psa_export_public_key_iop_setup(&export_key_operation, key);
-    TEST_EQUAL(status, expected_export_status);
+    if (expected_export_status == PSA_ERROR_BUFFER_TOO_SMALL) {
+        /* Interruptible export will not report BUFFER_TOO_SMALL
+         * until we call complete(), since we do not yet pass
+         * the output buffer size. */
+        TEST_EQUAL(status, PSA_SUCCESS);
+    } else {
+        TEST_EQUAL(status, expected_export_status);
+    }
 
     if (status != PSA_SUCCESS) {
         expected_export_status = PSA_ERROR_BAD_STATE;
