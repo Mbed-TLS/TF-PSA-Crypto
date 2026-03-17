@@ -1042,7 +1042,7 @@ typedef uint32_t psa_pake_primitive_t;
  *                      return 0.
  */
 #define PSA_PAKE_OUTPUT_SIZE(alg, primitive, output_step)               \
-    (PSA_ALG_IS_JPAKE((alg)) &&                                         \
+    (PSA_ALG_IS_JPAKE(alg) &&                                         \
      (primitive) == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,     \
                                      PSA_ECC_FAMILY_SECP_R1, 256) ?    \
      (                                                                 \
@@ -1072,7 +1072,7 @@ typedef uint32_t psa_pake_primitive_t;
  *                      the parameters are incompatible, return 0.
  */
 #define PSA_PAKE_INPUT_SIZE(alg, primitive, input_step)                 \
-    (PSA_ALG_IS_JPAKE((alg)) &&                                         \
+    (PSA_ALG_IS_JPAKE(alg) &&                                         \
      (primitive) == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,     \
                                      PSA_ECC_FAMILY_SECP_R1, 256) ?    \
      (                                                                 \
