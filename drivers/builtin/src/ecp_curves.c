@@ -3935,7 +3935,7 @@ int mbedtls_ecp_group_load(mbedtls_ecp_group *grp, mbedtls_ecp_group_id id)
 
 #else /* 64 bit */
 
-#define MAX32   ((X_limbs) * 2)
+#define MAX32   (X_limbs * 2)
 #define A(j)                                                \
     (j) % 2 ?                                               \
     (uint32_t) (X[(j) / 2] >> 32) :                         \
