@@ -11,6 +11,7 @@ If the provided content is part of the present PR remove the # symbol.
 
 - [ ] **changelog** provided | not required because: 
 - [ ] **framework PR** provided Mbed-TLS/mbedtls-framework# | not required
+- [ ] **1.1 PR** provided Mbed-TLS/mbedtls# | not required because: 
 - [ ] **mbedtls development PR** provided Mbed-TLS/mbedtls# | not required because: 
 - [ ] **mbedtls 3.6 PR** provided Mbed-TLS/mbedtls# | not required because: 
 - **tests**  provided | not required because: 
