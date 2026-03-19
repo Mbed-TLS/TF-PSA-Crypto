@@ -1023,6 +1023,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
         }
 
         mbedtls_pem_free(&pem);
+        mbedtls_pk_set_pubkey_from_prv(pk);
         return ret;
     } else if (ret != MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT) {
         return ret;
@@ -1045,6 +1046,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
         }
 
         mbedtls_pem_free(&pem);
+        mbedtls_pk_set_pubkey_from_prv(pk);
         return ret;
     } else if (ret != MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT) {
         return ret;
@@ -1079,6 +1081,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
     }
 
     if (ret == 0) {
+        mbedtls_pk_set_pubkey_from_prv(pk);
         return 0;
     }
 

@@ -2592,10 +2592,6 @@ void pk_parse_keyfile_rsa(char *key_file, char *password, int result, int bits)
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        /* TODO: The below line is currently needed as the mbedtls_pk_parse_keyfile,
-         * does not setup the public key in the context correctly. Once this is
-         *  resolve the below line can be removed. */
-        TEST_ASSERT(mbedtls_pk_set_pubkey_from_prv(&ctx) == 0);
         TEST_ASSERT(validate_pk_context(&ctx, NULL, bits, PSA_KEY_TYPE_RSA_KEY_PAIR,
                                         MBEDTLS_PK_RSA) == 0);
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_RSA));
