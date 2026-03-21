@@ -6958,7 +6958,9 @@ static int psa_key_derivation_allows_free_form_secret_input(
 psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation,
                                       psa_algorithm_t alg)
 {
+#if defined(AT_LEAST_ONE_BUILTIN_KDF)
     psa_status_t status;
+#endif
 
     if (operation->alg != 0) {
         return PSA_ERROR_BAD_STATE;
@@ -6991,10 +6993,12 @@ psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation,
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
+#if defined(AT_LEAST_ONE_BUILTIN_KDF)
     if (status == PSA_SUCCESS) {
         operation->alg = alg;
     }
     return status;
+#endif /* AT_LEAST_ONE_BUILTIN_KDF */
 }
 
 #if defined(BUILTIN_ALG_ANY_HKDF)
