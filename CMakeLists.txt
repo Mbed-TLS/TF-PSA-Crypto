@@ -143,7 +143,7 @@ endif()
 # We now potentially need to link all executables against PThreads, if available
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads)
+find_package(Threads QUIET)
 
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
 if(NOT TF_PSA_CRYPTO_AS_SUBPROJECT)
