@@ -633,9 +633,6 @@ static int common_context_checks(mbedtls_pk_context *pk,
     //bits
     TEST_ASSERT(mbedtls_pk_get_bitlen(pk) == bitlen);
     TEST_ASSERT(mbedtls_pk_get_len(pk) == PSA_BITS_TO_BYTES(pk->bits));
-    /* TODO: There appears to be a number of fields not set if the key is wrapped it
-     * is unknown if this is a feature or a bug and this will need further
-     * investigation. */
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
         TEST_ASSERT(psa_get_key_attributes(pk->priv_id, attributes) == PSA_SUCCESS);
     } else {
@@ -644,17 +641,15 @@ static int common_context_checks(mbedtls_pk_context *pk,
 
     TEST_ASSERT(psa_get_key_bits(attributes) == bitlen);
     //ec_family
-    //TODO is this a bug or a feature?
-    if(mbedtls_pk_get_type(pk) != MBEDTLS_PK_OPAQUE) {
-        #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-        if (PSA_KEY_TYPE_IS_ECC(psa_type)) {
-            TEST_ASSERT(PSA_KEY_TYPE_ECC_GET_FAMILY(pk->psa_type) == pk->ec_family);
-        }
-        #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    if (PSA_KEY_TYPE_IS_ECC(psa_type)) {
+        TEST_ASSERT(PSA_KEY_TYPE_ECC_GET_FAMILY(pk->psa_type) == pk->ec_family);
     }
+    #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+
     //psa_type
     psa_key_type_t expected_psa_type = has_private ? psa_type :
-                                           PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(psa_type);
+                                       PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(psa_type);
     TEST_ASSERT(psa_get_key_type(attributes) == expected_psa_type);
     ret = 0;
 
