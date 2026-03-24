@@ -1,3 +1,22 @@
 file(GLOB builtin_src_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
 set(tf_psa_crypto_driver "builtin")
 include(${PROJECT_SOURCE_DIR}/drivers/driver.cmake)
+
+
+# Disable autovectorization for chacha20 to avoid Neon auto-vec regressions.
+set(chacha20_compile_options)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 4.0)
+        list(APPEND chacha20_compile_options -fno-tree-vectorize)
+    endif()
+    if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 4.7)
+        list(APPEND chacha20_compile_options -fno-tree-slp-vectorize)
+    endif()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+    if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 3.1)
+        list(APPEND chacha20_compile_options -fno-vectorize -fno-slp-vectorize)
+    endif()
+endif()
+if(chacha20_compile_options)
+    set_property(SOURCE src/chacha20.c APPEND PROPERTY COMPILE_OPTIONS ${chacha20_compile_options})
+endif()
