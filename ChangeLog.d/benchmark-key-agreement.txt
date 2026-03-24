@@ -1,0 +1,4 @@
+Bugfix
+   * Restore ECDH and FFDH coverage in the benchmark program, so users can
+     measure PSA-based key agreement performance again after the removal of
+     the legacy key agreement APIs.
