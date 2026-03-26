@@ -13,16 +13,20 @@ import scripts_path # pylint: disable=unused-import
 from mbedtls_framework import outcome_analysis
 
 
+# Test cases that it makes sense not to execute in Mbed TLS, because they
+# are about implementation details of TF-PSA-Crypto, e.g. optimization options.
+# This has the same format as `CoverageTask.IGNORED_TESTS`.
+INTERNAL_TEST_CASES = {
+    'test_suite_config.crypto_combinations': [
+        'Config: entropy: NV seed only',
+    ],
+}
+
+
 class CoverageTask(outcome_analysis.CoverageTask):
     """Justify test cases that are never executed."""
 
     IGNORED_TESTS = {
-        'test_suite_config.crypto_combinations': [
-            # New thing in crypto. Not intended to be tested separately
-            # in mbedtls.
-            # https://github.com/Mbed-TLS/mbedtls/issues/10300
-            'Config: entropy: NV seed only',
-        ],
         'test_suite_config.psa_boolean': [
             # We don't test with HMAC disabled.
             # https://github.com/Mbed-TLS/mbedtls/issues/9591
@@ -164,6 +168,7 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'PSA sign DETERMINISTIC_ECDSA(SHA_256): !ECDSA but DETERMINISTIC_ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
         ],
     }
+
 
 # List of tasks with a function that can handle this task and additional arguments if required
 KNOWN_TASKS: typing.Dict[str, typing.Type[outcome_analysis.Task]] = {
