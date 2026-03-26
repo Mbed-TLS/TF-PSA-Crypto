@@ -1922,7 +1922,14 @@ void import_export_public_key(data_t *data,
     }
 
     status = psa_export_public_key_iop_setup(&export_key_operation, key);
-    TEST_EQUAL(status, expected_export_status);
+    if (expected_export_status == PSA_ERROR_BUFFER_TOO_SMALL) {
+        /* Interruptible export will not report BUFFER_TOO_SMALL
+         * until we call complete(), since we do not yet pass
+         * the output buffer size. */
+        TEST_EQUAL(status, PSA_SUCCESS);
+    } else {
+        TEST_EQUAL(status, expected_export_status);
+    }
 
     if (status != PSA_SUCCESS) {
         expected_export_status = PSA_ERROR_BAD_STATE;
@@ -6523,11 +6530,94 @@ void aead_multipart_state_test(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
     if (operation.alg == PSA_ALG_CCM) {
-        PSA_ASSERT(psa_aead_finish(&operation, final_data,
+        /* For CCM, finishing without setting lengths must fail. */
+        TEST_EQUAL(psa_aead_finish(&operation, final_data,
                                    finish_output_size,
                                    &output_part_length,
                                    tag_buffer, tag_length,
-                                   &tag_size));
+                                   &tag_size),
+                   PSA_ERROR_BAD_STATE);
+        psa_aead_abort(&operation);
+
+        /* For CCM, finishing after setting length without aead_update/ad must fail. */
+        PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        TEST_EQUAL(psa_aead_finish(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer, tag_length,
+                                   &tag_size),
+                   PSA_ERROR_INVALID_ARGUMENT);
+        psa_aead_abort(&operation);
+
+        /* Valid path */
+        PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
+                                      additional_data->len));
+        PSA_ASSERT(psa_aead_update(&operation, input_data->x,
+                                   input_data->len, output_data,
+                                   output_size, &output_length));
+
+        TEST_EQUAL(psa_aead_finish(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer, tag_length,
+                                   &tag_size),
+                   PSA_SUCCESS);
+        psa_aead_abort(&operation);
+
+        /* For CCM, verifying without setting lengths must fail. */
+        PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+        TEST_EQUAL(psa_aead_verify(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer,
+                                   tag_length),
+                   PSA_ERROR_BAD_STATE);
+        psa_aead_abort(&operation);
+
+        /* For CCM, verifying after setting length without aead_update/ad must fail. */
+        PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        TEST_EQUAL(psa_aead_verify(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer,
+                                   tag_length),
+                   PSA_ERROR_INVALID_ARGUMENT);
+        psa_aead_abort(&operation);
+
+        /* Valid path */
+        PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
+                                      additional_data->len));
+        PSA_ASSERT(psa_aead_update(&operation, input_data->x,
+                                   input_data->len, output_data,
+                                   output_size, &output_length));
+
+        /* psa_driver_wrapper_aead_verify, which is called after psa_aead_final_checks
+           will return PSA_ERROR_INVALID_SIGNATURE */
+        TEST_EQUAL(psa_aead_verify(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer,
+                                   tag_length),
+                   PSA_ERROR_INVALID_SIGNATURE);
     } else {
         PSA_ASSERT(psa_aead_finish(&operation, final_data,
                                    finish_output_size,
@@ -6595,11 +6685,97 @@ void aead_multipart_state_test(int key_type_arg, data_t *key_data,
                                        PSA_AEAD_NONCE_MAX_SIZE,
                                        &nonce_length));
     if (operation.alg == PSA_ALG_CCM) {
-        PSA_ASSERT(psa_aead_finish(&operation, final_data,
+        /* For CCM, finishing without setting lengths must fail. */
+        TEST_EQUAL(psa_aead_finish(&operation, final_data,
                                    finish_output_size,
                                    &output_part_length,
                                    tag_buffer, tag_length,
-                                   &tag_size));
+                                   &tag_size),
+                   PSA_ERROR_BAD_STATE);
+        psa_aead_abort(&operation);
+
+        /* For CCM, finishing after setting length without aead_update/ad must fail. */
+        PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
+                                           PSA_AEAD_NONCE_MAX_SIZE,
+                                           &nonce_length));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        TEST_EQUAL(psa_aead_finish(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer, tag_length,
+                                   &tag_size),
+                   PSA_ERROR_INVALID_ARGUMENT);
+        psa_aead_abort(&operation);
+
+        /* Valid path */
+        PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
+                                           PSA_AEAD_NONCE_MAX_SIZE,
+                                           &nonce_length));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
+                                      additional_data->len));
+        PSA_ASSERT(psa_aead_update(&operation, input_data->x,
+                                   input_data->len, output_data,
+                                   output_size, &output_length));
+
+        TEST_EQUAL(psa_aead_finish(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer, tag_length,
+                                   &tag_size),
+                   PSA_SUCCESS);
+        psa_aead_abort(&operation);
+
+        /* For CCM, verifying without setting lengths must fail. */
+        PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+        TEST_EQUAL(psa_aead_verify(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer,
+                                   tag_length),
+                   PSA_ERROR_BAD_STATE);
+        psa_aead_abort(&operation);
+
+        /* For CCM, verifying after setting length without aead_update/ad must fail. */
+        PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        TEST_EQUAL(psa_aead_verify(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer,
+                                   tag_length),
+                   PSA_ERROR_INVALID_ARGUMENT);
+        psa_aead_abort(&operation);
+
+        /* Valid path */
+        PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
+        PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
+                                      additional_data->len));
+        PSA_ASSERT(psa_aead_update(&operation, input_data->x,
+                                   input_data->len, output_data,
+                                   output_size, &output_length));
+
+        /* psa_driver_wrapper_aead_verify, which is called after psa_aead_final_checks
+           will return PSA_ERROR_INVALID_SIGNATURE */
+        TEST_EQUAL(psa_aead_verify(&operation, final_data,
+                                   finish_output_size,
+                                   &output_part_length,
+                                   tag_buffer,
+                                   tag_length),
+                   PSA_ERROR_INVALID_SIGNATURE);
     } else {
         PSA_ASSERT(psa_aead_finish(&operation, final_data,
                                    finish_output_size,
@@ -9755,7 +9931,7 @@ exit:
 void key_agreement_setup(int alg_arg,
                          int our_key_type_arg, int our_key_alg_arg,
                          data_t *our_key_data, data_t *peer_key_data,
-                         int expected_status_arg)
+                         int expected_status_keyag_arg)
 {
     mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_algorithm_t alg = alg_arg;
@@ -9763,8 +9939,7 @@ void key_agreement_setup(int alg_arg,
     psa_key_type_t our_key_type = our_key_type_arg;
     psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_status_t expected_status = expected_status_arg;
-    psa_status_t status;
+    psa_status_t expected_status_keyag = expected_status_keyag_arg;
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -9775,20 +9950,13 @@ void key_agreement_setup(int alg_arg,
                               our_key_data->x, our_key_data->len,
                               &our_key));
 
-    /* The tests currently include inputs that should fail at either step.
-     * Test cases that fail at the setup step should be changed to call
-     * key_derivation_setup instead, and this function should be renamed
-     * to key_agreement_fail. */
-    status = psa_key_derivation_setup(&operation, alg);
-    if (status == PSA_SUCCESS) {
-        TEST_EQUAL(psa_key_derivation_key_agreement(
-                       &operation, PSA_KEY_DERIVATION_INPUT_SECRET,
-                       our_key,
-                       peer_key_data->x, peer_key_data->len),
-                   expected_status);
-    } else {
-        TEST_ASSERT(status == expected_status);
-    }
+    PSA_ASSERT(psa_key_derivation_setup(&operation, alg));
+
+    TEST_EQUAL(psa_key_derivation_key_agreement(
+                   &operation, PSA_KEY_DERIVATION_INPUT_SECRET,
+                   our_key,
+                   peer_key_data->x, peer_key_data->len),
+               expected_status_keyag);
 
 exit:
     psa_key_derivation_abort(&operation);
@@ -9801,7 +9969,8 @@ exit:
 void key_agreement(int alg_arg,
                    int our_key_type_arg, data_t *our_key_data,
                    data_t *peer_key_data,
-                   data_t *expected_output)
+                   data_t *expected_output,
+                   int expected_status)
 {
     mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_algorithm_t alg = alg_arg;
@@ -9828,47 +9997,84 @@ void key_agreement(int alg_arg,
     key_bits = psa_get_key_bits(&attributes);
 
     /* Validate size macros */
-    TEST_LE_U(expected_output->len,
-              PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits));
+    if (expected_status == PSA_SUCCESS) {
+        TEST_LE_U(expected_output->len,
+                  PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits));
+    }
     TEST_LE_U(PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits),
               PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE);
 
-    /* Good case with exact output size */
-    TEST_CALLOC(output, expected_output->len);
-    PSA_ASSERT(psa_raw_key_agreement(alg, our_key,
-                                     peer_key_data->x, peer_key_data->len,
-                                     output, expected_output->len,
-                                     &output_length));
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
+    /* Note: the case where we expect PSA_ERROR_BUFFER_TOO_SMALL is not covered
+     * by separate test data, but by additional code below in this function. */
+    const size_t output_alloc_size = expected_status == PSA_SUCCESS ?
+                                     expected_output->len :
+                                     PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits);
 
-    memset(output, 0, expected_output->len);
+    /* Good case with exact output size */
+    TEST_CALLOC(output, output_alloc_size);
+    TEST_EQUAL(psa_raw_key_agreement(alg, our_key,
+                                     peer_key_data->x, peer_key_data->len,
+                                     output, output_alloc_size,
+                                     &output_length),
+               expected_status);
+    if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(output, output_length,
+                            expected_output->x, expected_output->len);
+    }
+
+    memset(output, 0, output_alloc_size);
     output_length = 0;
 
     psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
     psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
 
-    PSA_ASSERT(psa_key_agreement(our_key, peer_key_data->x, peer_key_data->len,
-                                 alg, &shared_secret_attributes, &shared_secret_id));
+    TEST_EQUAL(psa_key_agreement(our_key, peer_key_data->x, peer_key_data->len,
+                                 alg, &shared_secret_attributes, &shared_secret_id),
+               expected_status);
 
-    PSA_ASSERT(psa_export_key(shared_secret_id, output, expected_output->len, &output_length));
+    if (expected_status == PSA_SUCCESS) {
+        PSA_ASSERT(psa_export_key(shared_secret_id, output, output_alloc_size, &output_length));
 
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
+        TEST_MEMORY_COMPARE(output, output_length,
+                            expected_output->x, expected_output->len);
 
-    PSA_ASSERT(psa_get_key_attributes(shared_secret_id, &output_attributes));
+        PSA_ASSERT(psa_get_key_attributes(shared_secret_id, &output_attributes));
 
-    TEST_EQUAL(PSA_BITS_TO_BYTES(psa_get_key_bits(&output_attributes)),
-               expected_output->len);
-    TEST_EQUAL(psa_get_key_type(&output_attributes), PSA_KEY_TYPE_DERIVE);
-    TEST_EQUAL(psa_get_key_usage_flags(&output_attributes),
-               PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+        TEST_EQUAL(PSA_BITS_TO_BYTES(psa_get_key_bits(&output_attributes)),
+                   expected_output->len);
+        TEST_EQUAL(psa_get_key_type(&output_attributes), PSA_KEY_TYPE_DERIVE);
+        TEST_EQUAL(psa_get_key_usage_flags(&output_attributes),
+                   PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    }
 
     mbedtls_free(output);
     output = NULL;
     output_length = ~0;
     psa_destroy_key(shared_secret_id);
     shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    /* Larger output buffer */
+    TEST_CALLOC(output, output_alloc_size + 1);
+    TEST_EQUAL(psa_raw_key_agreement(alg, our_key,
+                                     peer_key_data->x, peer_key_data->len,
+                                     output, output_alloc_size + 1,
+                                     &output_length),
+               expected_status);
+    if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(output, output_length,
+                            expected_output->x, expected_output->len);
+    }
+
+    mbedtls_free(output);
+    output = NULL;
+    output_length = ~0;
+    psa_destroy_key(shared_secret_id);
+    shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    /* The tests for wrong buffer sizes only make sense with good data. */
+    if (expected_status != PSA_SUCCESS) {
+        goto exit;
+    }
 
     /* Input buffer (peer key) too small */
     size_t bad_peer_key_len = peer_key_data->len - 1;
@@ -9891,18 +10097,47 @@ void key_agreement(int alg_arg,
     psa_destroy_key(shared_secret_id);
     shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
 
-    /* Larger output buffer */
-    TEST_CALLOC(output, expected_output->len + 1);
-    PSA_ASSERT(psa_raw_key_agreement(alg, our_key,
-                                     peer_key_data->x, peer_key_data->len,
-                                     output, expected_output->len + 1,
+    /* Input buffer (peer key) too large (leading 0) */
+    bad_peer_key_len = peer_key_data->len + 1;
+    TEST_CALLOC(bad_peer_key, bad_peer_key_len);
+    bad_peer_key[0] = 0x00;
+    memcpy(bad_peer_key + 1, peer_key_data->x, peer_key_data->len);
+    TEST_CALLOC(output, expected_output->len);
+    TEST_EQUAL(PSA_ERROR_INVALID_ARGUMENT,
+               psa_raw_key_agreement(alg, our_key,
+                                     bad_peer_key, bad_peer_key_len,
+                                     output, expected_output->len,
                                      &output_length));
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
-
     mbedtls_free(output);
     output = NULL;
     output_length = ~0;
+    TEST_EQUAL(PSA_ERROR_INVALID_ARGUMENT,
+               psa_key_agreement(our_key, bad_peer_key, bad_peer_key_len,
+                                 alg, &shared_secret_attributes, &shared_secret_id));
+    mbedtls_free(bad_peer_key);
+    bad_peer_key = NULL;
+    psa_destroy_key(shared_secret_id);
+    shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    /* Input buffer (peer key) too large (larger value) */
+    bad_peer_key_len = peer_key_data->len + 1;
+    TEST_CALLOC(bad_peer_key, bad_peer_key_len);
+    bad_peer_key[0] = 0x01;
+    memcpy(bad_peer_key + 1, peer_key_data->x, peer_key_data->len);
+    TEST_CALLOC(output, expected_output->len);
+    TEST_EQUAL(PSA_ERROR_INVALID_ARGUMENT,
+               psa_raw_key_agreement(alg, our_key,
+                                     bad_peer_key, bad_peer_key_len,
+                                     output, expected_output->len,
+                                     &output_length));
+    mbedtls_free(output);
+    output = NULL;
+    output_length = ~0;
+    TEST_EQUAL(PSA_ERROR_INVALID_ARGUMENT,
+               psa_key_agreement(our_key, bad_peer_key, bad_peer_key_len,
+                                 alg, &shared_secret_attributes, &shared_secret_id));
+    mbedtls_free(bad_peer_key);
+    bad_peer_key = NULL;
     psa_destroy_key(shared_secret_id);
     shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -10083,9 +10318,45 @@ exit:
     mbedtls_free(bad_peer_key);
     PSA_DONE();
 }
-
 /* END_CASE */
 
+/* BEGIN_CASE */
+void key_agreement_interruptible_setup(int alg_arg,
+                                       int our_key_type_arg, data_t *our_key_data,
+                                       data_t *peer_key_data,
+                                       int expected_status_arg)
+{
+    mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t our_key_type = our_key_type_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t shared_secret_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t expected_status = expected_status_arg;
+
+    psa_key_agreement_iop_t operation = psa_key_agreement_iop_init();
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, our_key_type);
+    PSA_ASSERT(psa_import_key(&attributes,
+                              our_key_data->x, our_key_data->len,
+                              &our_key));
+
+    psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+
+    TEST_EQUAL(psa_key_agreement_iop_setup(&operation, our_key, peer_key_data->x,
+                                           peer_key_data->len, alg, &shared_secret_attributes),
+               expected_status);
+
+exit:
+    psa_key_agreement_iop_abort(&operation);
+    psa_destroy_key(our_key);
+    PSA_DONE();
+}
+/* END_CASE */
 
 /* BEGIN_CASE */
 void key_agreement_capacity(int alg_arg,

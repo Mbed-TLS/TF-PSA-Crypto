@@ -528,6 +528,38 @@
 //#define MBEDTLS_PLATFORM_VSNPRINTF_MACRO    vsnprintf /**< Default vsnprintf macro to use, can be undefined */
 //#define MBEDTLS_PRINTF_MS_TIME    PRId64 /**< Default fmt for printf. That's avoid compiler warning if mbedtls_ms_time_t is redefined */
 
+/** \def MBEDTLS_PLATFORM_DEV_RANDOM
+ *
+ * Path to a special file that returns cryptographic-quality random bytes
+ * when read. This is used by the default platform entropy source on
+ * non-Windows platforms unless a dedicated system call is available
+ * (see #MBEDTLS_PSA_BUILTIN_GET_ENTROPY).
+ *
+ * The default value is `/dev/random`, which is suitable on most platforms
+ * other than Linux. On Linux, either `/dev/random` or `/dev/urandom`
+ * may be the right choice, depending on the circumstances:
+ *
+ * - If possible, the library will use the getrandom() system call,
+ *   which is preferable, and #MBEDTLS_PLATFORM_DEV_RANDOM is not used.
+ * - If there is a dedicated hardware entropy source (e.g. RDRAND on x86
+ *   processors), then both `/dev/random` and `/dev/urandom` are fine.
+ * - `/dev/random` is always secure. However, with kernels older than 5.6,
+ *   `/dev/random` often blocks unnecessarily if there is no dedicated
+ *   hardware entropy source.
+ * - `/dev/urandom` never blocks. However, it may return predictable data
+ *   if it is used early after the kernel boots, especially on embedded
+ *   devices without an interactive user.
+ *
+ * Thus you should change the value to `/dev/urandom` if your application
+ * definitely won't be used on a device running Linux without a dedicated
+ * entropy source early during or after boot.
+ *
+ *
+ * This is the default value of ::mbedtls_platform_dev_random, which
+ * can be changed at run time.
+ */
+//#define MBEDTLS_PLATFORM_DEV_RANDOM "/dev/random"
+
 /** \} name SECTION: Platform abstraction layer */
 
 /**
@@ -1083,7 +1115,8 @@
  * - getrandom() on Linux (if syscall() is available at compile time);
  * - getrandom() on FreeBSD and DragonFlyBSD (if available at compile time);
  * - `sysctl(KERN_ARND)` on FreeBSD and NetBSD;
- * - `/dev/urandom` on Unix-like platforms (unless one of the above is used);
+ * - #MBEDTLS_PLATFORM_DEV_RANDOM on Unix-like platforms (unless one of the
+ *   above is used);
  * - BCryptGenRandom() on Windows.
  *
  * You should enable this option if your platform has one of these. If not:
