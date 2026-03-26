@@ -17,43 +17,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
     """Justify test cases that are never executed."""
 
     IGNORED_TESTS = {
-        'ssl-opt': [
-            # We don't run ssl-opt.sh with Valgrind on the CI because
-            # it's extremely slow. We don't intend to change this.
-            'DTLS client reconnect from same port: reconnect, nbio, valgrind',
-            # We don't have IPv6 in our CI environment.
-            # https://github.com/Mbed-TLS/mbedtls-test/issues/176
-            'DTLS cookie: enabled, IPv6',
-            # Disabled due to OpenSSL bug.
-            # https://github.com/openssl/openssl/issues/18887
-            'DTLS fragmenting: 3d, MTU=512, openssl client, DTLS 1.2',
-            # We don't run ssl-opt.sh with Valgrind on the CI because
-            # it's extremely slow. We don't intend to change this.
-            'DTLS fragmenting: proxy MTU: auto-reduction (with valgrind)',
-            # TLS doesn't use restartable ECDH yet.
-            # https://github.com/Mbed-TLS/mbedtls/issues/7294
-            re.compile(r'EC restart:.*no USE_PSA.*'),
-            # The following test fails intermittently on the CI with a frequency
-            # that significantly impacts CI throughput. They are thus disabled
-            # for the time being. See
-            # https://github.com/Mbed-TLS/mbedtls/issues/10652 for more
-            # information.
-            'DTLS proxy: 3d, openssl client, fragmentation',
-            'DTLS proxy: 3d, openssl client, fragmentation, nbio',
-            'DTLS proxy: 3d, gnutls client, fragmentation',
-            'DTLS proxy: 3d, gnutls client, fragmentation, nbio=2',
-        ],
-        'test_suite_config.mbedtls_boolean': [
-            # Missing coverage of test configurations.
-            # https://github.com/Mbed-TLS/mbedtls/issues/9585
-            'Config: !MBEDTLS_SSL_DTLS_ANTI_REPLAY',
-            # Missing coverage of test configurations.
-            # https://github.com/Mbed-TLS/mbedtls/issues/9585
-            'Config: !MBEDTLS_SSL_DTLS_HELLO_VERIFY',
-            # We don't run test_suite_config when we test this.
-            # https://github.com/Mbed-TLS/mbedtls/issues/9586
-            'Config: !MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_ENABLED',
-        ],
         'test_suite_config.crypto_combinations': [
             # New thing in crypto. Not intended to be tested separately
             # in mbedtls.
@@ -199,14 +162,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # We don't test this unusual, but sensible configuration.
             # https://github.com/Mbed-TLS/mbedtls/issues/9592
             'PSA sign DETERMINISTIC_ECDSA(SHA_256): !ECDSA but DETERMINISTIC_ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
-        ],
-        'tls13-misc': [
-            # Disabled due to OpenSSL bug.
-            # https://github.com/openssl/openssl/issues/10714
-            'TLS 1.3 O->m: resumption',
-            # Disabled due to OpenSSL command line limitation.
-            # https://github.com/Mbed-TLS/mbedtls/issues/9582
-            'TLS 1.3 m->O: resumption with early data',
         ],
     }
 
