@@ -125,3 +125,18 @@ if (GEN_FILES)
             ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
     endforeach()
 endif()
+
+if(TF_PSA_CRYPTO_TEST_DRIVER)
+    foreach (target IN LISTS driver_targets driver_static_targets)
+        # Note: "tests/include/test" exists solely to provide access to
+        #       "mbedtls/build_info.h". That header is an alias of
+        #       "tf-psa-crypto/build_info.h".
+        #
+        #       It is included in framework headers and C modules because those
+        #       components are also used in the Mbed TLS context.
+        target_include_directories(${target} PRIVATE
+            ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
+            ${PROJECT_SOURCE_DIR}/tests/include/test
+        )
+    endforeach()
+endif()
