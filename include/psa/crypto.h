@@ -111,6 +111,7 @@ psa_status_t psa_crypto_init(void);
  * @{
  */
 
+#ifdef __DOXYGEN_ONLY__
 /** \def PSA_KEY_ATTRIBUTES_INIT
  *
  * This macro returns a suitable initializer for a key attribute structure
@@ -120,7 +121,9 @@ psa_status_t psa_crypto_init(void);
 /** Return an initial value for a key attributes structure.
  */
 static psa_key_attributes_t psa_key_attributes_init(void);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Declare a key as persistent and set its key identifier.
  *
  * If the attribute structure currently declares the key as volatile (which
@@ -147,8 +150,10 @@ static psa_key_attributes_t psa_key_attributes_init(void);
  */
 static void psa_set_key_id(psa_key_attributes_t *attributes,
                            mbedtls_svc_key_id_t key);
+#endif
 
 #ifdef MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+#if defined(__DOXYGEN_ONLY__)
 /** Set the owner identifier of a key.
  *
  * When key identifiers encode key owner identifiers, psa_set_key_id() does
@@ -166,7 +171,9 @@ static void psa_set_key_id(psa_key_attributes_t *attributes,
 static void mbedtls_set_key_owner_id(psa_key_attributes_t *attributes,
                                      mbedtls_key_owner_id_t owner);
 #endif
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Set the location of a persistent key.
  *
  * To make a key persistent, you must give it a persistent key identifier
@@ -195,7 +202,9 @@ static void mbedtls_set_key_owner_id(psa_key_attributes_t *attributes,
  */
 static void psa_set_key_lifetime(psa_key_attributes_t *attributes,
                                  psa_key_lifetime_t lifetime);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Retrieve the key identifier from key attributes.
  *
  * This function may be declared as `static` (i.e. without external
@@ -210,7 +219,9 @@ static void psa_set_key_lifetime(psa_key_attributes_t *attributes,
  */
 static mbedtls_svc_key_id_t psa_get_key_id(
     const psa_key_attributes_t *attributes);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Retrieve the lifetime from key attributes.
  *
  * This function may be declared as `static` (i.e. without external
@@ -223,7 +234,9 @@ static mbedtls_svc_key_id_t psa_get_key_id(
  */
 static psa_key_lifetime_t psa_get_key_lifetime(
     const psa_key_attributes_t *attributes);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Declare usage flags for a key.
  *
  * Usage flags are part of a key's usage policy. They encode what
@@ -242,7 +255,9 @@ static psa_key_lifetime_t psa_get_key_lifetime(
  */
 static void psa_set_key_usage_flags(psa_key_attributes_t *attributes,
                                     psa_key_usage_t usage_flags);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Retrieve the usage flags from key attributes.
  *
  * This function may be declared as `static` (i.e. without external
@@ -255,7 +270,9 @@ static void psa_set_key_usage_flags(psa_key_attributes_t *attributes,
  */
 static psa_key_usage_t psa_get_key_usage_flags(
     const psa_key_attributes_t *attributes);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Declare the permitted algorithm policy for a key.
  *
  * The permitted algorithm policy of a key encodes which algorithm or
@@ -288,8 +305,10 @@ static psa_key_usage_t psa_get_key_usage_flags(
  */
 static void psa_set_key_algorithm(psa_key_attributes_t *attributes,
                                   psa_algorithm_t alg);
+#endif
 
 
+#ifdef __DOXYGEN_ONLY__
 /** Retrieve the algorithm policy from key attributes.
  *
  * This function may be declared as `static` (i.e. without external
@@ -302,7 +321,9 @@ static void psa_set_key_algorithm(psa_key_attributes_t *attributes,
  */
 static psa_algorithm_t psa_get_key_algorithm(
     const psa_key_attributes_t *attributes);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Declare the type of a key.
  *
  * This function overwrites any key type
@@ -319,8 +340,10 @@ static psa_algorithm_t psa_get_key_algorithm(
  */
 static void psa_set_key_type(psa_key_attributes_t *attributes,
                              psa_key_type_t type);
+#endif
 
 
+#ifdef __DOXYGEN_ONLY__
 /** Declare the size of a key.
  *
  * This function overwrites any key size previously set in \p attributes.
@@ -337,7 +360,9 @@ static void psa_set_key_type(psa_key_attributes_t *attributes,
  */
 static void psa_set_key_bits(psa_key_attributes_t *attributes,
                              size_t bits);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Retrieve the key type from key attributes.
  *
  * This function may be declared as `static` (i.e. without external
@@ -349,7 +374,9 @@ static void psa_set_key_bits(psa_key_attributes_t *attributes,
  * \return The key type stored in the attribute structure.
  */
 static psa_key_type_t psa_get_key_type(const psa_key_attributes_t *attributes);
+#endif
 
+#ifdef __DOXYGEN_ONLY__
 /** Retrieve the key size from key attributes.
  *
  * This function may be declared as `static` (i.e. without external
@@ -361,6 +388,7 @@ static psa_key_type_t psa_get_key_type(const psa_key_attributes_t *attributes);
  * \return The key size stored in the attribute structure, in bits.
  */
 static size_t psa_get_key_bits(const psa_key_attributes_t *attributes);
+#endif
 
 /** Retrieve the attributes of a key.
  *
@@ -939,6 +967,7 @@ psa_status_t psa_hash_compare(psa_algorithm_t alg,
  * Implementation details can change in future versions without notice. */
 typedef struct psa_hash_operation_s psa_hash_operation_t;
 
+#ifdef __DOXYGEN_ONLY__
 /** \def PSA_HASH_OPERATION_INIT
  *
  * This macro returns a suitable initializer for a hash operation object
@@ -948,6 +977,7 @@ typedef struct psa_hash_operation_s psa_hash_operation_t;
 /** Return an initial value for a hash operation object.
  */
 static psa_hash_operation_t psa_hash_operation_init(void);
+#endif
 
 /** Set up a multipart hash operation.
  *
@@ -1213,9 +1243,11 @@ typedef struct psa_xof_operation_s psa_xof_operation_t;
  * of type #psa_xof_operation_t.
  */
 
+#ifdef __DOXYGEN_ONLY__
 /** Return an initial value for a XOF operation object.
  */
 static psa_xof_operation_t psa_xof_operation_init(void);
+#endif
 
 /** Set up a multipart XOF (extendable-operation function) operation.
  *
@@ -1493,9 +1525,11 @@ typedef struct psa_mac_operation_s psa_mac_operation_t;
  * #psa_mac_operation_t.
  */
 
+#ifdef __DOXYGEN_ONLY__
 /** Return an initial value for a MAC operation object.
  */
 static psa_mac_operation_t psa_mac_operation_init(void);
+#endif
 
 /** Set up a multipart MAC calculation operation.
  *
@@ -1906,9 +1940,11 @@ typedef struct psa_cipher_operation_s psa_cipher_operation_t;
  * type #psa_cipher_operation_t.
  */
 
+#ifdef __DOXYGEN_ONLY__
 /** Return an initial value for a cipher operation object.
  */
 static psa_cipher_operation_t psa_cipher_operation_init(void);
+#endif
 
 /** Set the key for a multipart symmetric encryption operation.
  *
@@ -2424,9 +2460,11 @@ typedef struct psa_aead_operation_s psa_aead_operation_t;
  * type #psa_aead_operation_t.
  */
 
+#ifdef __DOXYGEN_ONLY__
 /** Return an initial value for an AEAD operation object.
  */
 static psa_aead_operation_t psa_aead_operation_init(void);
+#endif
 
 /** Set the key for a multipart authenticated encryption operation.
  *
@@ -3411,9 +3449,11 @@ typedef struct psa_key_derivation_s psa_key_derivation_operation_t;
  * object of type #psa_key_derivation_operation_t.
  */
 
+#ifdef __DOXYGEN_ONLY__
 /** Return an initial value for a key derivation operation object.
  */
 static psa_key_derivation_operation_t psa_key_derivation_operation_init(void);
+#endif
 
 /** Set up a key derivation operation.
  *
