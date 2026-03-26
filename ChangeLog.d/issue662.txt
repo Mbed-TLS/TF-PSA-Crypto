@@ -1,4 +1,0 @@
-Removals
-   * The headers no longer define 'inline' as a macro. This was done on Arm
-     Compiler 5 and MSVC. The compiler versions that needed this definition are
-     no longer supported since TF-PSA-Crypto 1.0.
