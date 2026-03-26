@@ -1,0 +1,10 @@
+Bugfix
+   * The algorithm policy PSA_ALG_ECDSA(PSA_ALG_ANY_HASH) no longer
+     allows the usage PSA_ALG_ECDSA_ANY. This brings us into compliance
+     with the PSA Crypto API (explicit requirement since version 1.1.0).
+     Fixes #533.
+
+Features
+   * If a key policy specifies the deterministic variant of ECDSA, the key
+     now allows verification with the randomized variant (which has
+     identical behavior), and vice versa. Fixes #534.
