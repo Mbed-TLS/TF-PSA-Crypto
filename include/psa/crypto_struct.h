@@ -341,7 +341,7 @@ static inline void psa_set_key_id(psa_key_attributes_t *attributes,
     if (PSA_KEY_LIFETIME_IS_VOLATILE(lifetime)) {
         attributes->MBEDTLS_PRIVATE(lifetime) =
             PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(
-                PSA_KEY_LIFETIME_PERSISTENT,
+                PSA_KEY_PERSISTENCE_DEFAULT,
                 PSA_KEY_LIFETIME_GET_LOCATION(lifetime));
     }
 }
