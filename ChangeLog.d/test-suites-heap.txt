@@ -1,4 +1,0 @@
-Changes
-   * Running the unit tests now requires a heap (possibly from
-     MBEDTLS_MEMORY_BUFFER_ALLOC_C). They now use less stack (almost
-     5000 bytes less).

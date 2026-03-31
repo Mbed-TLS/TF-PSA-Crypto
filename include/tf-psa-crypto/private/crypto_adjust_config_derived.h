@@ -47,6 +47,14 @@
 #undef MBEDTLS_ENTROPY_HAVE_SOURCES
 #endif
 
+/* Test function dependencies can only check with defined(),
+ * not other preprocessor expressions. */
+#if MBEDTLS_ENTROPY_TRUE_SOURCES > 0
+#define MBEDTLS_ENTROPY_HAVE_TRUE_SOURCES
+#else
+#undef MBEDTLS_ENTROPY_HAVE_TRUE_SOURCES
+#endif
+
 #if defined(PSA_WANT_ALG_ECDSA) || defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
 #define PSA_HAVE_ALG_SOME_ECDSA
 #endif
