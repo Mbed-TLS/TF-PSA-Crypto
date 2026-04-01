@@ -198,7 +198,9 @@ void verify_pure(int type_arg, int bits_arg, int alg_arg,
 
     if (expected_status == PSA_SUCCESS) {
         /* Try verifying a signature whose last byte is wrong */
-        signature->x[signature->len - 1] ^= 1;
+        TEST_CALLOC(buf, signature->len);
+        memcpy(buf, signature->x, signature->len);
+        buf[signature->len - 1] ^= 1;
         TEST_EQUAL(tf_psa_crypto_mldsa_verify_message(
                        &attributes,
                        public_key->x, public_key->len,
@@ -206,7 +208,8 @@ void verify_pure(int type_arg, int bits_arg, int alg_arg,
                        message->x, message->len,
                        signature->x, signature->len - 1),
                    PSA_ERROR_INVALID_SIGNATURE);
-        signature->x[signature->len - 1] ^= 1;
+        mbedtls_free(buf);
+        buf  = NULL;
 
         /* Try verifying a signature that's too short */
         TEST_CALLOC(buf, signature->len - 1);
