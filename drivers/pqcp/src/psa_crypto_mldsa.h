@@ -83,7 +83,7 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
  *                              just the 32-byte seed.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param alg                   The algorithm:
- *                              #PSA_ALG_ML_DSA or
+ *                              #PSA_ALG_ML_DSA (not implemented yet) or
  *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
  * \param[in] message           The message to sign.
  * \param message_length        The length of \p message, in bytes.
@@ -117,7 +117,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
  *                              in the standard representation.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param alg                   The algorithm:
- *                              #PSA_ALG_ML_DSA or
+ *                              #PSA_ALG_ML_DSA (not implemented yet) or
  *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
  * \param[in] message           The message to verify.
  * \param message_length        The length of \p message, in bytes.
