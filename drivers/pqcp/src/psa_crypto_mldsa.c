@@ -18,6 +18,22 @@
 #define TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE MLDSA87_PUBLICKEYBYTES
 #define TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE MLDSA87_BYTES
 
+static psa_status_t pqcp_to_psa_error(int ret)
+{
+    /* At the time of writing, mldsa-native has very few documented error
+     * conditions: only invalid signature on verification, and self-test
+     * failure. But this will change when we update mldsa-native
+     * with support for heap allocation of intermediate values.
+     */
+    if (ret == 0) {
+        return PSA_SUCCESS;
+    } else {
+        /* Not really hardware, but this is the fallback error code for
+         * something unexpectedly going wrong in a driver. */
+        return PSA_ERROR_HARDWARE_FAILURE;
+    }
+}
+
 static psa_status_t seed_to_public_key(
     size_t bits,
     const uint8_t *key_buffer, size_t key_buffer_size,
@@ -38,24 +54,20 @@ static psa_status_t seed_to_public_key(
     }
 
     /* Beyond this point, we must go through the cleanup code. */
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-
     uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(data,
                                                           secret,
                                                           key_buffer);
     if (ret != 0) {
-        /* The only documented error is an internal error which is not
-         * supposed to ever happen (failure of a self-test). */
         goto cleanup;
     }
-    status = PSA_SUCCESS;
+    ret = 0;
     *data_length = public_key_length;
 
 cleanup:
     mbedtls_platform_zeroize(secret, sizeof(secret));
-    return status;
+    return pqcp_to_psa_error(ret);
 }
 
 psa_status_t tf_psa_crypto_mldsa_export_public_key(
@@ -105,8 +117,6 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
     }
 
     /* Beyond this point, we must go through the cleanup code. */
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-
     uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
     uint8_t public[TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
@@ -114,8 +124,6 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
                                                           secret,
                                                           key_buffer);
     if (ret != 0) {
-        /* The only documented error is an internal error which is not
-         * supposed to ever happen (failure of a self-test). */
         goto cleanup;
     }
 
@@ -130,11 +138,11 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
                                                         rnd,
                                                         secret,
                                                         0);
-    status = PSA_SUCCESS;
+    ret = 0;
 
 cleanup:
     mbedtls_platform_zeroize(secret, sizeof(secret));
-    return status;
+    return pqcp_to_psa_error(ret);
 }
 
 psa_status_t tf_psa_crypto_mldsa_verify_message(
@@ -170,6 +178,10 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
     if (ret == 0) {
         return PSA_SUCCESS;
     } else {
+        /* At the time of writing, invalid signature is the only possible
+         * error condition. But this will change when we update mldsa-native
+         * with support for heap allocation of intermediate values.
+         */
         return PSA_ERROR_INVALID_SIGNATURE;
     }
 }
