@@ -1,3 +1,0 @@
-Bugfix
-   * Fix CMake package version that was inconsistent with the product version.
-     Fixes #553.

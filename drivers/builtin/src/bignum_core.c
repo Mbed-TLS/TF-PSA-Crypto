@@ -9,6 +9,7 @@
 
 #if defined(MBEDTLS_BIGNUM_C)
 
+#include <limits.h>
 #include <string.h>
 
 #include "mbedtls/private/error_common.h"

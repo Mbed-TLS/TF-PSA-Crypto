@@ -37,8 +37,8 @@ cmake_policy(SET CMP0011 NEW)
 # is deprecated and will be removed in future versions.
 cmake_policy(SET CMP0012 NEW)
 
-set(TF_PSA_CRYPTO_VERSION 1.0.0)
-set(TF_PSA_CRYPTO_SOVERSION 1)
+set(TF_PSA_CRYPTO_VERSION 1.1.0)
+set(TF_PSA_CRYPTO_SOVERSION 2)
 
 if(TEST_CPP)
     project("TF-PSA-Crypto"
@@ -143,7 +143,7 @@ endif()
 # We now potentially need to link all executables against PThreads, if available
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads)
+find_package(Threads QUIET)
 
 # If this is the root project add longer list of available CMAKE_BUILD_TYPE values
 if(NOT TF_PSA_CRYPTO_AS_SUBPROJECT)

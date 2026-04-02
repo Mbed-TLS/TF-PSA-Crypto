@@ -40,6 +40,7 @@
  * standard C headers for functions we'll use here. */
 #include "tf-psa-crypto/build_info.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

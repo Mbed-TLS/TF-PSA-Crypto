@@ -45,6 +45,28 @@
 #define PEM_BEGIN_ENCRYPTED_PRIVATE_KEY_PKCS8 "-----BEGIN ENCRYPTED PRIVATE KEY-----"
 #define PEM_END_ENCRYPTED_PRIVATE_KEY_PKCS8   "-----END ENCRYPTED PRIVATE KEY-----"
 
+/*
+ * We're trying to statisfy two kinds of users:
+ * - those who don't want to use the heap;
+ * - those who can't afford large stack buffers.
+ *
+ * The current compromise is that if ECC is the only key type supported in PK,
+ * then we export keys on the stack, and otherwise we use the heap.
+ *
+ * Note: add && !ML-DSA when adding support for ML-DSA */
+#if !defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+#define PK_EXPORT_KEYS_ON_THE_STACK
+#endif
+
+#if defined(PK_EXPORT_KEYS_ON_THE_STACK)
+/* We know for ECC, pubkey are longer than privkeys, but double check */
+#define PK_EXPORT_KEY_STACK_BUFFER_SIZE  MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
+#if MBEDTLS_PSA_MAX_EC_KEY_PAIR_LENGTH > PK_EXPORT_KEY_STACK_BUFFER_SIZE
+#undef PK_EXPORT_KEY_STACK_BUFFER_SIZE
+#define PK_EXPORT_KEY_STACK_BUFFER_SIZE  MBEDTLS_PSA_MAX_EC_KEY_PAIR_LENGTH
+#endif
+#endif
+
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 
 static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_context *pk)

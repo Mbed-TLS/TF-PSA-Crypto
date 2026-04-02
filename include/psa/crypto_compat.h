@@ -59,6 +59,14 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * our implementation simpler. This may change without notice. */
 #define PSA_ALG_JPAKE_BETA PSA_ALG_JPAKE_BASE
 
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+/** Old non-standard name for #PSA_EXPORT_ASYMMETRIC_KEY_MAX_SIZE.
+ * \deprecated  Please use #PSA_EXPORT_ASYMMETRIC_KEY_MAX_SIZE instead.
+ */
+#define PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE \
+    ((size_t) MBEDTLS_DEPRECATED_NUMERIC_CONSTANT(PSA_EXPORT_ASYMMETRIC_KEY_MAX_SIZE))
+#endif
+
 #ifdef __cplusplus
 }
 #endif

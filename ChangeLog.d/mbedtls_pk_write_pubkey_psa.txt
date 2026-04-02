@@ -1,3 +1,0 @@
-Features
-   * mbedtls_pk_write_pubkey_psa() is introduced to allow exporting the public
-     key from a PK context in a format that can easily be imported into PSA.

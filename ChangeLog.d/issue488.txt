@@ -1,4 +1,0 @@
-Removals
-   * The undocumented ability to load persistent keys outside the user key ID
-     range has been removed. (This does not affect
-     MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS.)
