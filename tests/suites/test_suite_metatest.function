@@ -57,6 +57,13 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+#include <test/fork_helpers.h>
+#include <limits.h>
+#include <signal.h>
+#include <unistd.h>
+#endif
+
 typedef enum {
     DO_PASS,
     DO_ASSUME,
@@ -93,10 +100,7 @@ exit:
 
 static void expect_message(const char *substring)
 {
-    if (substring[0] != 0) {
-        TEST_ASSERT(saved_info.test != NULL);
-        TEST_ASSERT(strstr(saved_info.test, substring) != NULL);
-    }
+    TEST_STRSTR(saved_info.test, substring);
 
 exit:
     ;
@@ -104,14 +108,59 @@ exit:
 
 static void expect_file(const char *substring)
 {
-    if (saved_info.result != MBEDTLS_TEST_RESULT_SUCCESS) {
-        TEST_ASSERT(saved_info.test != NULL);
-        TEST_ASSERT(strstr(saved_info.filename, substring) != NULL);
-    }
+    TEST_STRSTR(saved_info.filename, substring);
 
 exit:
     ;
 }
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+typedef struct {
+    mbedtls_test_result_t result;
+    unsigned char *data;
+    size_t data_size;
+    size_t reported_length;
+    int signal;
+    int exit;
+} child_instructions_t;
+
+static const child_instructions_t child_instructions_init = {
+    .result = 0,
+    .data = NULL,
+    .data_size = 0,
+    .reported_length = 0,
+    .signal = 0,
+    .exit = -1,
+};
+
+/* Child callback function for testing mbedtls_test_fork_run_child(). */
+static void child_callback(void *param,
+                           unsigned char *output, size_t output_size,
+                           size_t *output_length)
+{
+    child_instructions_t *instructions = param;
+
+    (void) output_size;
+    if (instructions->data_size > 0) {
+        memcpy(output, instructions->data, instructions->data_size);
+    }
+    *output_length = instructions->reported_length;
+
+    if (instructions->result == MBEDTLS_TEST_RESULT_SKIPPED) {
+        TEST_ASSUME(!"metatesting skipping in child");
+    } else if (instructions->result == MBEDTLS_TEST_RESULT_FAILED) {
+        TEST_FAIL("metatesting failure in child");
+    }
+
+exit:
+    if (instructions->signal > 0) {
+        kill(getpid(), instructions->signal);
+    }
+    if (instructions->exit >= 0) {
+        _exit(instructions->exit);
+    }
+}
+#endif /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
 
 /* END_HEADER */
 
@@ -159,5 +208,97 @@ exit:
     if (expected_result != MBEDTLS_TEST_RESULT_SUCCESS) {
         expect_file(__FILE__);
     }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_output(int result,
+                          data_t *data, int buffer_size_delta,
+                          int reported_length_delta,
+                          const char *failure_substring)
+{
+    size_t output_size = data->len + buffer_size_delta;
+    unsigned char *output = NULL;
+    int expected_result = result;
+    if (result == MBEDTLS_TEST_RESULT_SUCCESS && failure_substring[0] != 0) {
+        /* We're telling the child to succeed, but we're setting up for
+         * a failure in the test code. */
+        expected_result = MBEDTLS_TEST_RESULT_FAILED;
+    }
+
+    TEST_CALLOC(output, output_size);
+
+    child_instructions_t instructions = child_instructions_init;
+    instructions.result = result;
+    instructions.data = data->x;
+    instructions.data_size = data->len;
+    instructions.reported_length = data->len + reported_length_delta;
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, output_size, &output_length);
+
+    conclude(expected_result);
+    expect_message(failure_substring);
+    if (expected_result == MBEDTLS_TEST_RESULT_SUCCESS) {
+        TEST_EQUAL(ret, 0);
+        TEST_MEMORY_COMPARE(data->x, data->len,
+                            output, output_length);
+    } else {
+        TEST_ASSERT(ret != 0);
+        TEST_EQUAL(output_length, 0);
+    }
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_large_output(int size)
+{
+    child_instructions_t instructions = child_instructions_init;
+    unsigned char *output = NULL;
+    TEST_CALLOC(instructions.data, size);
+    instructions.data_size = size;
+    instructions.reported_length = size;
+    memset(instructions.data, 'c', size);
+    TEST_CALLOC(output, size);
+
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, size, &output_length);
+
+    conclude(MBEDTLS_TEST_RESULT_SUCCESS);
+    TEST_EQUAL(ret, 0);
+    TEST_MEMORY_COMPARE(instructions.data, size,
+                        output, output_length);
+
+exit:
+    mbedtls_free(output);
+    mbedtls_free(instructions.data);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_die(int signum, int exit_code,
+                       const char *failure_substring)
+{
+    child_instructions_t instructions = child_instructions_init;
+    unsigned char data[] = "abc";
+    unsigned char output[sizeof(data) - 1];
+    instructions.data = data;
+    instructions.data_size = sizeof(output);
+    instructions.reported_length = sizeof(output);
+    instructions.signal = signum;
+    instructions.exit = exit_code;
+
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, sizeof(output), &output_length);
+
+    conclude(MBEDTLS_TEST_RESULT_FAILED);
+    expect_message(failure_substring);
+    TEST_ASSERT(ret != 0);
+    TEST_EQUAL(output_length, 0);
 }
 /* END_CASE */
