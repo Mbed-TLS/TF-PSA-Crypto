@@ -1,0 +1,163 @@
+/* BEGIN_HEADER */
+
+/* This test suite contains test of some features of the test framework.
+ *
+ * Overview of metatests
+ * ---------------------
+ *
+ * As a general rule, we don't test the tests. However, a few parts of
+ * the test framework are fragile or complicated, so we want to have
+ * some validation that they behave as expected. This is what metatests
+ * are for.
+ *
+ * Mostly, we want to make sure that failure conditions are expected.
+ * Occasionally we also check the reported failure reason.
+ *
+ * We have metatests in two places:
+ *
+ * - `tests/suites/test_suite_metatest.function` contains test code that is
+ *   unit tests with the usual reporting, with the particularity that what
+ *   they are testing is some code in the test framework, rather than
+ *   some library code.
+ * - `framework/test/programs/metatest.c` checks that certain failure
+ *   conditions are properly detected, without caring how they are detected:
+ *   marking a test as failed, exiting with a nonzero status, or crashing.
+ *
+ * How to decide where to put a metatest:
+ *
+ * - If it reacts to failures by crashing or exiting, it must go in
+ *   `metatest.c`.
+ * - If it relies on a specific linking or execution context and not just
+ *   compile-time choices, it must go in `metatest.c` with a suitable
+ *   platform indication.
+ * - If it validates more than just whether an expected failure is
+ *   detected, it should go in the test suite, which has better tools
+ *   for reporting how a metatest failed, and has some infrastructure in
+ *   place for inspecting how the test code reports a failure.
+ *
+ * General structure of tests in `test_suite_metatest`
+ * ---------------------------------------------------
+ *
+ * The test framework records failures through a global variable that
+ * contains the test result. A test is initially in the passing state,
+ * and can change to a skipping or failed state if a test assertion fails.
+ *
+ * Metatests are structured in three parts:
+ *
+ * 1. Do things that may cause the test case to be marked as failed or skipped.
+ * 2. Call conclude() (generally just after the `exit:` label in the
+ *    test entry point function). This function saves the result of the
+ *    code under test, and overwrites the status inside the test framework
+ *    to reflect whether the code under test had the expected pass/skip/fail
+ *    result.
+ * 3. Optionally call expect_message() and similar functions to check the
+ *    reporting information in the result of the code under test.
+ */
+
+#include <stdint.h>
+#include <string.h>
+
+typedef enum {
+    DO_PASS,
+    DO_ASSUME,
+    DO_FAIL,
+    DO_FAIL_TWICE,
+    DO_ASSERT,
+    DO_EQUAL_42,
+    DO_LE_S_42,
+    DO_LE_U_42,
+} metatest_simple_instruction_t;
+
+static mbedtls_test_info_t saved_info;
+
+/* Call this function after running the code under test.
+ *
+ * This function overwrites the result of the current test to a passing state.
+ * Then it asserts whether the result of the code under test is
+ * `expected_result`.
+ *
+ * The result of the code under test is saved so that you can call
+ * functions like expect_message() to check if failure reporting contains
+ * the expected information.
+ */
+static void conclude(int expected_result)
+{
+    mbedtls_test_info_save(&saved_info);
+    mbedtls_test_info_reset();
+
+    TEST_EQUAL(saved_info.result, expected_result);
+
+exit:
+    ;
+}
+
+static void expect_message(const char *substring)
+{
+    if (substring[0] != 0) {
+        TEST_ASSERT(saved_info.test != NULL);
+        TEST_ASSERT(strstr(saved_info.test, substring) != NULL);
+    }
+
+exit:
+    ;
+}
+
+static void expect_file(const char *substring)
+{
+    if (saved_info.result != MBEDTLS_TEST_RESULT_SUCCESS) {
+        TEST_ASSERT(saved_info.test != NULL);
+        TEST_ASSERT(strstr(saved_info.filename, substring) != NULL);
+    }
+
+exit:
+    ;
+}
+
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void metatest_simple(int instruction, int param,
+                     int expected_result, const char *expected_substring)
+{
+    const char *message = "hello";
+
+    switch (instruction) {
+        case DO_PASS:
+            break;
+        case DO_ASSUME:
+            TEST_ASSUME(param);
+            break;
+        case DO_FAIL:
+            TEST_FAIL(message);
+            break;
+        case DO_FAIL_TWICE:
+            mbedtls_test_fail("first failure", __LINE__, __FILE__);
+            TEST_FAIL("cursed, failed again!");
+            break;
+        case DO_ASSERT:
+            TEST_ASSERT(param);
+            break;
+        case DO_EQUAL_42:
+            TEST_EQUAL(param, 42);
+            break;
+        case DO_LE_S_42:
+            TEST_LE_S(param, 42);
+            break;
+        case DO_LE_U_42:
+            TEST_LE_U((unsigned) param, 42);
+            break;
+        default:
+            /* This is a failure to set up the metatest conditions.
+             * So don't jump to exit. */
+            mbedtls_test_fail("unknown instruction", __LINE__, __FILE__);
+            return;
+    }
+
+exit:
+    conclude(expected_result);
+    expect_message(expected_substring);
+    if (expected_result != MBEDTLS_TEST_RESULT_SUCCESS) {
+        expect_file(__FILE__);
+    }
+}
+/* END_CASE */
