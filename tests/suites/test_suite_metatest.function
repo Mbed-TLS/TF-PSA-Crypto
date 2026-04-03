@@ -62,6 +62,7 @@
 #include <limits.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/resource.h>
 #endif
 
 typedef enum {
@@ -115,6 +116,14 @@ exit:
 }
 
 #if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+typedef enum {
+    FORK_FAIL_FORK,
+    FORK_FAIL_OPEN,
+    FORK_FAIL_WRITE_INIT,
+    FORK_FAIL_WRITE_RESULT,
+    FORK_FAIL_WRITE_OUTPUT,
+} fork_system_failure_t;
+
 typedef struct {
     mbedtls_test_result_t result;
     unsigned char *data;
@@ -122,6 +131,7 @@ typedef struct {
     size_t reported_length;
     int signal;
     int exit;
+    int fail_write_result;
 } child_instructions_t;
 
 static const child_instructions_t child_instructions_init = {
@@ -131,6 +141,7 @@ static const child_instructions_t child_instructions_init = {
     .reported_length = 0,
     .signal = 0,
     .exit = -1,
+    .fail_write_result = 0,
 };
 
 /* Child callback function for testing mbedtls_test_fork_run_child(). */
@@ -150,6 +161,11 @@ static void child_callback(void *param,
         TEST_ASSUME(!"metatesting skipping in child");
     } else if (instructions->result == MBEDTLS_TEST_RESULT_FAILED) {
         TEST_FAIL("metatesting failure in child");
+    }
+
+    if (instructions->fail_write_result) {
+        extern int mbedtls_test_fork_child_fd;
+        close(mbedtls_test_fork_child_fd);
     }
 
 exit:
@@ -300,5 +316,72 @@ void metatest_fork_die(int signum, int exit_code,
     expect_message(failure_substring);
     TEST_ASSERT(ret != 0);
     TEST_EQUAL(output_length, 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_system_failure(int fault,
+                                  const char *failure_substring)
+{
+    child_instructions_t instructions = child_instructions_init;
+    unsigned char data[] = "abc";
+    unsigned char output[sizeof(data) - 1];
+    instructions.data = data;
+    instructions.data_size = sizeof(output);
+    instructions.reported_length = sizeof(output);
+    int resource = -1;
+    unsigned long limit = 0;
+    struct rlimit saved_limit, new_limit;
+    void (*saved_handler)(int) = SIG_DFL;
+
+    switch (fault) {
+        case FORK_FAIL_FORK:
+            resource = RLIMIT_NPROC;
+            break;
+        case FORK_FAIL_OPEN:
+            resource = RLIMIT_NOFILE;
+            break;
+        case FORK_FAIL_WRITE_INIT:
+            resource = RLIMIT_FSIZE;
+            limit = sizeof(mbedtls_test_info_t) - 1;
+            break;
+        case FORK_FAIL_WRITE_RESULT:
+            instructions.fail_write_result = 1;
+            break;
+        case FORK_FAIL_WRITE_OUTPUT:
+            resource = RLIMIT_FSIZE;
+            limit = sizeof(mbedtls_test_info_t);
+            break;
+        default:
+            TEST_FAIL("Unknown fault in test data");
+    }
+
+    if (resource >= 0) {
+        TEST_ASSERT_ERRNO(getrlimit(resource, &saved_limit) == 0);
+        new_limit = saved_limit;
+        new_limit.rlim_cur = limit;
+        TEST_ASSERT_ERRNO(setrlimit(resource, &new_limit) == 0);
+    }
+    if (resource == RLIMIT_FSIZE) {
+        saved_handler = signal(SIGXFSZ, SIG_IGN);
+        TEST_ASSERT_ERRNO(saved_handler != SIG_ERR);
+    }
+
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, sizeof(output), &output_length);
+
+    conclude(MBEDTLS_TEST_RESULT_FAILED);
+    expect_message(failure_substring);
+    TEST_ASSERT(ret != 0);
+    TEST_EQUAL(output_length, 0);
+
+exit:
+    if (resource >= 0) {
+        setrlimit(resource, &saved_limit);
+    }
+    if (resource == RLIMIT_FSIZE && saved_handler != SIG_ERR) {
+        signal(SIGXFSZ, saved_handler);
+    }
 }
 /* END_CASE */

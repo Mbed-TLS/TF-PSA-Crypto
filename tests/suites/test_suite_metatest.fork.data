@@ -33,3 +33,22 @@ metatest_fork_die:0:0:"died without reporting"
 
 metatest fork: exit(1)
 metatest_fork_die:0:1:"wstatus"
+
+metatest fork: fault fork()
+metatest_fork_system_failure:FORK_FAIL_FORK:"pid"
+
+metatest fork: fault parent creating temporary file
+metatest_fork_system_failure:FORK_FAIL_OPEN:"file != NULL"
+
+metatest fork: fault parent preparing temporary file
+# The write failure may be detected in fwrite() or fflush().
+metatest_fork_system_failure:FORK_FAIL_WRITE_INIT:"file"
+
+metatest fork: fault child writing result
+# The child fails to write its result, so it exits with a nonzero status.
+metatest_fork_system_failure:FORK_FAIL_WRITE_RESULT:"wstatus"
+
+metatest fork: fault child writing output
+# The write failure may be detected in fwrite() or fflush().
+metatest_fork_system_failure:FORK_FAIL_WRITE_OUTPUT:"file"
+
