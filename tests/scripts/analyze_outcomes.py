@@ -26,7 +26,7 @@ INTERNAL_TEST_CASES = {
 class CoverageTask(outcome_analysis.CoverageTask):
     """Justify test cases that are never executed."""
 
-    IGNORED_TESTS = {
+    UNCOVERED_TESTS = {
         'test_suite_config.psa_boolean': [
             # We don't test with HMAC disabled.
             # https://github.com/Mbed-TLS/mbedtls/issues/9591
