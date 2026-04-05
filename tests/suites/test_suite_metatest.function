@@ -115,7 +115,8 @@ exit:
     ;
 }
 
-#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+/* These enum constants are used in test data, so they must be defined
+ * unconditionally. */
 typedef enum {
     FORK_FAIL_FORK,
     FORK_FAIL_OPEN,
@@ -124,6 +125,7 @@ typedef enum {
     FORK_FAIL_WRITE_OUTPUT,
 } fork_system_failure_t;
 
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
 typedef struct {
     mbedtls_test_result_t result;
     unsigned char *data;
@@ -176,6 +178,22 @@ exit:
         _exit(instructions->exit);
     }
 }
+#else /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
+
+/* Identifiers used in test data must be defined in all configurations, even
+ * if the test function that would use the test case is disabled.
+ * So make sure that some identifiers are defined.
+ */
+#if !defined(PIPE_BUF)
+#define PIPE_BUF 512
+#endif
+#if !defined(SIGHUP)
+#define SIGHUP 1
+#endif
+#if !defined(SIGKILL)
+#define SIGKILL 9
+#endif
+
 #endif /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
 
 /* END_HEADER */
