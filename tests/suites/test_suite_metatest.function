@@ -62,8 +62,11 @@
 #include <limits.h>
 #include <signal.h>
 #include <unistd.h>
+
+#if defined(__linux__)
 #include <sys/resource.h>
 #endif
+#endif /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
 
 typedef enum {
     DO_PASS,
@@ -337,7 +340,15 @@ void metatest_fork_die(int signum, int exit_code,
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+/* The system failure metatests cause a system function to fail, and assert
+ * that the test support code reacted as desired. Most of these metatests
+ * rely on resource limits, which behave slightly differently on different
+ * Unix variants. To keep things simple, only build and run these tests
+ * on Linux. The code under test only use portable Unix features, so coverage
+ * on Linux gives us sufficient confidence that it will also behave correctly
+ * on other Unix variants.
+ */
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE:__linux__ */
 void metatest_fork_system_failure(int fault,
                                   const char *failure_substring)
 {
