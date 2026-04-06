@@ -169,6 +169,18 @@ class CoverageTask(outcome_analysis.CoverageTask):
         ],
     }
 
+    def __init__(self, options) -> None:
+        super().__init__(options)
+        self.internal_test_cases = outcome_analysis.TestCaseSet(INTERNAL_TEST_CASES)
+
+    def note_ignored_test(self, results: outcome_analysis.Results,
+                          test_suite: str, test_description: str) -> None:
+        """Enforce that we don't tell Mbed TLS to ignore a test case that we also ignore."""
+        super().note_ignored_test(results, test_suite, test_description)
+        if self.internal_test_cases.contains(test_suite, test_description):
+            results.error('Test case was ignored, but Mbed TLS will ignore it too: {};{}',
+                          test_suite, test_description)
+
 
 # List of tasks with a function that can handle this task and additional arguments if required
 KNOWN_TASKS: typing.Dict[str, typing.Type[outcome_analysis.Task]] = {
