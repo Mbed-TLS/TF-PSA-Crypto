@@ -13,6 +13,13 @@
 #include "wrap_mldsa_native.h"
 #include <mbedtls/platform_util.h>
 
+/* The size of an ML-DSA seed in bytes.
+ * The PSA API uses the seed as the private key.
+ * (Some other ML-DSA interfaces use the "expanded secret", which is
+ * derived from the seed, as the private key.)
+ */
+#define SEED_SIZE 32
+
 /* For now, hard-coded values for MLDSA-87 */
 #define TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
 #define TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE MLDSA87_PUBLICKEYBYTES
@@ -39,7 +46,7 @@ static psa_status_t seed_to_public_key(
     const uint8_t *key_buffer, size_t key_buffer_size,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
-    if (key_buffer_size != 32) {
+    if (key_buffer_size != SEED_SIZE) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -108,7 +115,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
     }
     size_t actual_signature_length = MLDSA87_BYTES;
 
-    if (key_buffer_size != 32) {
+    if (key_buffer_size != SEED_SIZE) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
