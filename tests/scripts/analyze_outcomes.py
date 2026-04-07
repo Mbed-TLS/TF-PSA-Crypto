@@ -80,7 +80,7 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'PSA sign hash int: ECDSA not supported',
             'PSA sign hash: deterministic ECDSA not supported',
             'PSA sign message: deterministic ECDSA not supported',
-            'PSA verify hash with keypair: deterministic ECDSA SECP256R1, only randomized supported',
+            'PSA verify hash with keypair: deterministic ECDSA SECP256R1, only randomized supported', #pylint: disable=line-too-long
             'PSA verify hash: deterministic ECDSA SECP256R1, only randomized supported',
         ],
         'test_suite_psa_crypto_driver_wrappers': [
@@ -102,7 +102,7 @@ class CoverageTask(outcome_analysis.CoverageTask):
             re.compile('.* !.*'),
         ],
         'test_suite_psa_crypto_op_fail.misc': [
-            'PSA sign DETERMINISTIC_ECDSA(SHA_256): !DETERMINISTIC_ECDSA but ECDSA with ECC_KEY_PAIR(SECP_R1)',
+            'PSA sign DETERMINISTIC_ECDSA(SHA_256): !DETERMINISTIC_ECDSA but ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
             'PSA sign RSA_PSS(SHA_256): RSA_PSS not enabled, key pair',
         ],
         'test_suite_psa_crypto_persistent_key': [
