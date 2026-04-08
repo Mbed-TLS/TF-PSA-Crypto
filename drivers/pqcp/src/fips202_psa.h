@@ -23,6 +23,20 @@
 #error "PSA SHAKE256 required for MLDSA, but not enabled"
 #endif
 
+/* All the SHAKE callbacks return void, so there's no channel for
+ * reporting a runtime failure.
+ *
+ * Our built-in SHAKE cannot fail (unless the requested SHAKE variant is
+ * disabled at compile time, but that is detected at compile time above).
+ * So we just ignore the return code from SHAKE calls.
+ *
+ * However, a third-party SHAKE driver could in principle fail.
+ *
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/744
+ */
+
+/* At the time of writing, mldsa-native expects this header to define
+ * these constants, even though they aren't implementation-specific. */
 #define SHAKE128_RATE 168
 #define SHAKE256_RATE 136
 
