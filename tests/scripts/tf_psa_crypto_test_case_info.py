@@ -8,7 +8,10 @@
 # other modules from the project or the framework. It's only intended
 # to be a data module anyway.
 
-#import re
+# At any given time, there may or may not be a test case matcher that's
+# built with `re.compile`. Always include the `re` module so that we
+# don't keep adding and removing it as the matchers evolve.
+import re #pylint: disable=unused-import
 
 # Test cases that it makes sense not to execute in Mbed TLS, because they
 # are about implementation details of TF-PSA-Crypto, e.g. optimization options.
