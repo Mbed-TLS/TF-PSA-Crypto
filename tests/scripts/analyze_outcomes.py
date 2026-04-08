@@ -31,9 +31,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
         'test_suite_block_cipher': [
             re.compile('.*'),
         ],
-        'test_suite_ccm': [
-            re.compile('CCM finish check-boundary .*'),
-        ],
         'test_suite_cipher.aes': [
             re.compile('.*XTS.*'),
         ],
