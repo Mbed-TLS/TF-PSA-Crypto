@@ -9,11 +9,13 @@ Please write a few sentences describing the overall goals of the pull request's 
 Please remove the segment/s on either side of the | symbol as appropriate, and add any relevant link/s to the end of the line.
 If the provided content is part of the present PR remove the # symbol.
 
-- [ ] **changelog** provided | not required because: 
+- [ ] **changelog** provided | not required because:
+- [ ] **TF-PSA-Crypto PR** provided # | not required because:
+- [ ] **TF-PSA-Crypto 1.1 PR** provided # | not required because:
 - [ ] **framework PR** provided Mbed-TLS/mbedtls-framework# | not required
-- [ ] **mbedtls development PR** provided Mbed-TLS/mbedtls# | not required because: 
-- [ ] **mbedtls 3.6 PR** provided Mbed-TLS/mbedtls# | not required because: 
-- **tests**  provided | not required because: 
+- [ ] **mbedtls development PR** provided Mbed-TLS/mbedtls# | not required because:
+- [ ] **mbedtls 3.6 PR** provided Mbed-TLS/mbedtls# | not required because:
+- **tests**  provided | not required because:
 
 
 
