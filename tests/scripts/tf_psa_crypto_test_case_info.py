@@ -13,15 +13,17 @@
 # don't keep adding and removing it as the matchers evolve.
 import re #pylint: disable=unused-import
 
-# Test cases that it makes sense not to execute in Mbed TLS, because they
-# are about implementation details of TF-PSA-Crypto, e.g. optimization options.
+# Test cases that it makes sense not to execute in Mbed TLS. Typically
+# this is because they relate to implementation details of TF-PSA-Crypto,
+# such as optimization options.
+#
 # This has the same format as `CoverageTask.IGNORED_TESTS` in outcome_analysis:
 # ```{ test_suite_name: [matcher, ...], ... }```
 # with each ``matcher`` being either of:
-# - a string, standing for an exact test case description;
+# - a string, which is an exact test case description;
 # - a regex, which must match the full test case description.
 # A test suite with no "." matches all test suites with the same .function
-# file. A test suite wiht a "." only matches that specific .data file.
+# file. A test suite with a "." only matches that specific .data file.
 INTERNAL_TEST_CASES = {
     'test_suite_config.crypto_combinations': [
         'Config: entropy: NV seed only',
