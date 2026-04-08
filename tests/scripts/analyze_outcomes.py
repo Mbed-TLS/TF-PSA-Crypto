@@ -15,15 +15,7 @@ import typing
 import scripts_path # pylint: disable=unused-import
 from mbedtls_framework import outcome_analysis
 
-
-# Test cases that it makes sense not to execute in Mbed TLS, because they
-# are about implementation details of TF-PSA-Crypto, e.g. optimization options.
-# This has the same format as `CoverageTask.IGNORED_TESTS`.
-INTERNAL_TEST_CASES = {
-    'test_suite_config.crypto_combinations': [
-        'Config: entropy: NV seed only',
-    ],
-}
+import tf_psa_crypto_test_case_info
 
 
 class CoverageTask(outcome_analysis.CoverageTask):
@@ -272,7 +264,8 @@ class CoverageTask(outcome_analysis.CoverageTask):
 
     def __init__(self, options) -> None:
         super().__init__(options)
-        self.internal_test_cases = outcome_analysis.TestCaseSet(INTERNAL_TEST_CASES)
+        self.internal_test_cases = outcome_analysis.TestCaseSet(
+            tf_psa_crypto_test_case_info.INTERNAL_TEST_CASES)
 
     def note_ignored_test(self, results: outcome_analysis.Results,
                           test_suite: str, test_description: str) -> None:
