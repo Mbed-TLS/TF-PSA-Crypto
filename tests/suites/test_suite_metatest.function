@@ -175,7 +175,8 @@ static void child_callback(void *param,
 
 exit:
     if (instructions->signal > 0) {
-        kill(getpid(), instructions->signal);
+        signal(instructions->signal, SIG_DFL);
+        raise(instructions->signal);
     }
     if (instructions->exit >= 0) {
         _exit(instructions->exit);
@@ -190,8 +191,8 @@ exit:
 #if !defined(PIPE_BUF)
 #define PIPE_BUF 512
 #endif
-#if !defined(SIGHUP)
-#define SIGHUP 1
+#if !defined(SIGTERM)
+#define SIGTERM 15
 #endif
 #if !defined(SIGKILL)
 #define SIGKILL 9

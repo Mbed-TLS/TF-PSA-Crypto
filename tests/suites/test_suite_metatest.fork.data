@@ -22,8 +22,8 @@ metatest_fork_output:MBEDTLS_TEST_RESULT_SKIPPED:"":0:0:"metatesting skipping in
 metatest fork: fail
 metatest_fork_output:MBEDTLS_TEST_RESULT_FAILED:"":0:0:"metatesting failure in child"
 
-metatest fork: SIGHUP
-metatest_fork_die:SIGHUP:-1:"wstatus"
+metatest fork: SIGTERM
+metatest_fork_die:SIGTERM:-1:"wstatus"
 
 metatest fork: SIGKILL
 metatest_fork_die:SIGKILL:-1:"wstatus"
