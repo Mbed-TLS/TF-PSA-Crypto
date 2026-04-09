@@ -27,6 +27,11 @@
 #define TEST_DRIVER_LOCATION 0x7fffff
 #endif
 
+/* While ML-DSA is only supported in the lower layers but not in the API,
+ * we test that it isn't supported. We do need to know the encoding of
+ * key types and algorithms, which is not yet defined in public headers. */
+#include "psa_crypto_mldsa.h"
+
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include "mbedtls/threading.h"
 #endif
