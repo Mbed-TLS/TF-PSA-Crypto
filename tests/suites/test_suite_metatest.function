@@ -1,0 +1,417 @@
+/* BEGIN_HEADER */
+
+/* This test suite contains test of some features of the test framework.
+ *
+ * Overview of metatests
+ * ---------------------
+ *
+ * As a general rule, we don't test the tests. However, a few parts of
+ * the test framework are fragile or complicated, so we want to have
+ * some validation that they behave as expected. This is what metatests
+ * are for.
+ *
+ * Mostly, we want to make sure that failure conditions are expected.
+ * Occasionally we also check the reported failure reason.
+ *
+ * We have metatests in two places:
+ *
+ * - `tests/suites/test_suite_metatest.function` contains test code that is
+ *   unit tests with the usual reporting, with the particularity that what
+ *   they are testing is some code in the test framework, rather than
+ *   some library code.
+ * - `framework/test/programs/metatest.c` checks that certain failure
+ *   conditions are properly detected, without caring how they are detected:
+ *   marking a test as failed, exiting with a nonzero status, or crashing.
+ *
+ * How to decide where to put a metatest:
+ *
+ * - If it reacts to failures by crashing or exiting, it must go in
+ *   `metatest.c`.
+ * - If it relies on a specific linking or execution context and not just
+ *   compile-time choices, it must go in `metatest.c` with a suitable
+ *   platform indication.
+ * - If it validates more than just whether an expected failure is
+ *   detected, it should go in the test suite, which has better tools
+ *   for reporting how a metatest failed, and has some infrastructure in
+ *   place for inspecting how the test code reports a failure.
+ *
+ * General structure of tests in `test_suite_metatest`
+ * ---------------------------------------------------
+ *
+ * The test framework records failures through a global variable that
+ * contains the test result. A test is initially in the passing state,
+ * and can change to a skipping or failed state if a test assertion fails.
+ *
+ * Metatests are structured in three parts:
+ *
+ * 1. Do things that may cause the test case to be marked as failed or skipped.
+ * 2. Call conclude() (generally just after the `exit:` label in the
+ *    test entry point function). This function saves the result of the
+ *    code under test, and overwrites the status inside the test framework
+ *    to reflect whether the code under test had the expected pass/skip/fail
+ *    result.
+ * 3. Optionally call expect_message() and similar functions to check the
+ *    reporting information in the result of the code under test.
+ */
+
+#include <stdint.h>
+#include <string.h>
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+#include <test/fork_helpers.h>
+#include <limits.h>
+#include <signal.h>
+#include <unistd.h>
+
+#if defined(__linux__)
+#include <sys/resource.h>
+#endif
+#endif /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
+
+typedef enum {
+    DO_PASS,
+    DO_ASSUME,
+    DO_FAIL,
+    DO_FAIL_TWICE,
+    DO_ASSERT,
+    DO_EQUAL_42,
+    DO_LE_S_42,
+    DO_LE_U_42,
+} metatest_simple_instruction_t;
+
+static mbedtls_test_info_t saved_info;
+
+/* Call this function after running the code under test.
+ *
+ * This function overwrites the result of the current test to a passing state.
+ * Then it asserts whether the result of the code under test is
+ * `expected_result`.
+ *
+ * The result of the code under test is saved so that you can call
+ * functions like expect_message() to check if failure reporting contains
+ * the expected information.
+ */
+static void conclude(int expected_result)
+{
+    mbedtls_test_info_save(&saved_info);
+    mbedtls_test_info_reset();
+
+    TEST_EQUAL(saved_info.result, expected_result);
+
+exit:
+    ;
+}
+
+static void expect_message(const char *substring)
+{
+    TEST_STRSTR(saved_info.test, substring);
+
+exit:
+    ;
+}
+
+static void expect_file(const char *substring)
+{
+    TEST_STRSTR(saved_info.filename, substring);
+
+exit:
+    ;
+}
+
+/* These enum constants are used in test data, so they must be defined
+ * unconditionally. */
+typedef enum {
+    FORK_FAIL_FORK,
+    FORK_FAIL_OPEN,
+    FORK_FAIL_WRITE_INIT,
+    FORK_FAIL_WRITE_RESULT,
+    FORK_FAIL_WRITE_OUTPUT,
+} fork_system_failure_t;
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+typedef struct {
+    mbedtls_test_result_t result;
+    unsigned char *data;
+    size_t data_size;
+    size_t reported_length;
+    int signal;
+    int exit;
+    int fail_write_result;
+} child_instructions_t;
+
+static const child_instructions_t child_instructions_init = {
+    .result = 0,
+    .data = NULL,
+    .data_size = 0,
+    .reported_length = 0,
+    .signal = 0,
+    .exit = -1,
+    .fail_write_result = 0,
+};
+
+/* Child callback function for testing mbedtls_test_fork_run_child(). */
+static void child_callback(void *param,
+                           unsigned char *output, size_t output_size,
+                           size_t *output_length)
+{
+    child_instructions_t *instructions = param;
+
+    (void) output_size;
+    if (instructions->data_size > 0) {
+        memcpy(output, instructions->data, instructions->data_size);
+    }
+    *output_length = instructions->reported_length;
+
+    if (instructions->result == MBEDTLS_TEST_RESULT_SKIPPED) {
+        TEST_ASSUME(!"metatesting skipping in child");
+    } else if (instructions->result == MBEDTLS_TEST_RESULT_FAILED) {
+        TEST_FAIL("metatesting failure in child");
+    }
+
+    if (instructions->fail_write_result) {
+        extern int mbedtls_test_fork_child_fd;
+        close(mbedtls_test_fork_child_fd);
+    }
+
+exit:
+    if (instructions->signal > 0) {
+        signal(instructions->signal, SIG_DFL);
+        raise(instructions->signal);
+    }
+    if (instructions->exit >= 0) {
+        _exit(instructions->exit);
+    }
+}
+#else /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
+
+/* Identifiers used in test data must be defined in all configurations, even
+ * if the test function that would use the test case is disabled.
+ * So make sure that some identifiers are defined.
+ */
+#if !defined(PIPE_BUF)
+#define PIPE_BUF 512
+#endif
+#if !defined(SIGTERM)
+#define SIGTERM 15
+#endif
+#if !defined(SIGKILL)
+#define SIGKILL 9
+#endif
+
+#endif /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
+
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void metatest_simple(int instruction, int param,
+                     int expected_result, const char *expected_substring)
+{
+    const char *message = "hello";
+
+    switch (instruction) {
+        case DO_PASS:
+            break;
+        case DO_ASSUME:
+            TEST_ASSUME(param);
+            break;
+        case DO_FAIL:
+            TEST_FAIL(message);
+            break;
+        case DO_FAIL_TWICE:
+            mbedtls_test_fail("first failure", __LINE__, __FILE__);
+            TEST_FAIL("cursed, failed again!");
+            break;
+        case DO_ASSERT:
+            TEST_ASSERT(param);
+            break;
+        case DO_EQUAL_42:
+            TEST_EQUAL(param, 42);
+            break;
+        case DO_LE_S_42:
+            TEST_LE_S(param, 42);
+            break;
+        case DO_LE_U_42:
+            TEST_LE_U((unsigned) param, 42);
+            break;
+        default:
+            /* This is a failure to set up the metatest conditions.
+             * So don't jump to exit. */
+            mbedtls_test_fail("unknown instruction", __LINE__, __FILE__);
+            return;
+    }
+
+exit:
+    conclude(expected_result);
+    expect_message(expected_substring);
+    if (expected_result != MBEDTLS_TEST_RESULT_SUCCESS) {
+        expect_file(__FILE__);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_output(int result,
+                          data_t *data, int buffer_size_delta,
+                          int reported_length_delta,
+                          const char *failure_substring)
+{
+    size_t output_size = data->len + buffer_size_delta;
+    unsigned char *output = NULL;
+    int expected_result = result;
+    if (result == MBEDTLS_TEST_RESULT_SUCCESS && failure_substring[0] != 0) {
+        /* We're telling the child to succeed, but we're setting up for
+         * a failure in the test code. */
+        expected_result = MBEDTLS_TEST_RESULT_FAILED;
+    }
+
+    TEST_CALLOC(output, output_size);
+
+    child_instructions_t instructions = child_instructions_init;
+    instructions.result = result;
+    instructions.data = data->x;
+    instructions.data_size = data->len;
+    instructions.reported_length = data->len + reported_length_delta;
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, output_size, &output_length);
+
+    conclude(expected_result);
+    expect_message(failure_substring);
+    if (expected_result == MBEDTLS_TEST_RESULT_SUCCESS) {
+        TEST_EQUAL(ret, 0);
+        TEST_MEMORY_COMPARE(data->x, data->len,
+                            output, output_length);
+    } else {
+        TEST_ASSERT(ret != 0);
+        TEST_EQUAL(output_length, 0);
+    }
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_large_output(int size)
+{
+    child_instructions_t instructions = child_instructions_init;
+    unsigned char *output = NULL;
+    TEST_CALLOC(instructions.data, size);
+    instructions.data_size = size;
+    instructions.reported_length = size;
+    memset(instructions.data, 'c', size);
+    TEST_CALLOC(output, size);
+
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, size, &output_length);
+
+    conclude(MBEDTLS_TEST_RESULT_SUCCESS);
+    TEST_EQUAL(ret, 0);
+    TEST_MEMORY_COMPARE(instructions.data, size,
+                        output, output_length);
+
+exit:
+    mbedtls_free(output);
+    mbedtls_free(instructions.data);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void metatest_fork_die(int signum, int exit_code,
+                       const char *failure_substring)
+{
+    child_instructions_t instructions = child_instructions_init;
+    unsigned char data[] = "abc";
+    unsigned char output[sizeof(data) - 1];
+    instructions.data = data;
+    instructions.data_size = sizeof(output);
+    instructions.reported_length = sizeof(output);
+    instructions.signal = signum;
+    instructions.exit = exit_code;
+
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, sizeof(output), &output_length);
+
+    conclude(MBEDTLS_TEST_RESULT_FAILED);
+    expect_message(failure_substring);
+    TEST_ASSERT(ret != 0);
+    TEST_EQUAL(output_length, 0);
+}
+/* END_CASE */
+
+/* The system failure metatests cause a system function to fail, and assert
+ * that the test support code reacted as desired. Most of these metatests
+ * rely on resource limits, which behave slightly differently on different
+ * Unix variants. To keep things simple, only build and run these tests
+ * on Linux. The code under test only use portable Unix features, so coverage
+ * on Linux gives us sufficient confidence that it will also behave correctly
+ * on other Unix variants.
+ */
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE:__linux__ */
+void metatest_fork_system_failure(int fault,
+                                  const char *failure_substring)
+{
+    child_instructions_t instructions = child_instructions_init;
+    unsigned char data[] = "abc";
+    unsigned char output[sizeof(data) - 1];
+    instructions.data = data;
+    instructions.data_size = sizeof(output);
+    instructions.reported_length = sizeof(output);
+    int resource = -1;
+    unsigned long limit = 0;
+    struct rlimit saved_limit, new_limit;
+    void (*saved_handler)(int) = SIG_DFL;
+
+    switch (fault) {
+        case FORK_FAIL_FORK:
+            resource = RLIMIT_NPROC;
+            break;
+        case FORK_FAIL_OPEN:
+            resource = RLIMIT_NOFILE;
+            break;
+        case FORK_FAIL_WRITE_INIT:
+            resource = RLIMIT_FSIZE;
+            limit = sizeof(mbedtls_test_info_t) - 1;
+            break;
+        case FORK_FAIL_WRITE_RESULT:
+            instructions.fail_write_result = 1;
+            break;
+        case FORK_FAIL_WRITE_OUTPUT:
+            resource = RLIMIT_FSIZE;
+            limit = sizeof(mbedtls_test_info_t);
+            break;
+        default:
+            TEST_FAIL("Unknown fault in test data");
+    }
+
+    if (resource >= 0) {
+        TEST_ASSERT_ERRNO(getrlimit(resource, &saved_limit) == 0);
+        new_limit = saved_limit;
+        new_limit.rlim_cur = limit;
+        TEST_ASSERT_ERRNO(setrlimit(resource, &new_limit) == 0);
+    }
+    if (resource == RLIMIT_FSIZE) {
+        saved_handler = signal(SIGXFSZ, SIG_IGN);
+        TEST_ASSERT_ERRNO(saved_handler != SIG_ERR);
+    }
+
+    size_t output_length = SIZE_MAX;
+    int ret = mbedtls_test_fork_run_child(child_callback, &instructions,
+                                          output, sizeof(output), &output_length);
+
+    conclude(MBEDTLS_TEST_RESULT_FAILED);
+    expect_message(failure_substring);
+    TEST_ASSERT(ret != 0);
+    TEST_EQUAL(output_length, 0);
+
+exit:
+    if (resource >= 0) {
+        setrlimit(resource, &saved_limit);
+    }
+    if (resource == RLIMIT_FSIZE && saved_handler != SIG_ERR) {
+        signal(SIGXFSZ, saved_handler);
+    }
+}
+/* END_CASE */

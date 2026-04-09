@@ -1,0 +1,50 @@
+metatest: pass
+metatest_simple:DO_PASS:0:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: don't skip
+metatest_simple:DO_ASSUME:1:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: skip
+metatest_simple:DO_ASSUME:0:MBEDTLS_TEST_RESULT_SKIPPED:"param"
+
+metatest: fail
+metatest_simple:DO_FAIL:0:MBEDTLS_TEST_RESULT_FAILED:"hello"
+
+metatest: first failure sets the message
+metatest_simple:DO_FAIL_TWICE:0:MBEDTLS_TEST_RESULT_FAILED:"first failure"
+
+metatest: assert true
+metatest_simple:DO_ASSERT:1:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: assert false
+metatest_simple:DO_ASSERT:0:MBEDTLS_TEST_RESULT_FAILED:"param"
+
+metatest: 42==42 pass
+metatest_simple:DO_EQUAL_42:42:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: 41==42 fail
+metatest_simple:DO_EQUAL_42:41:MBEDTLS_TEST_RESULT_FAILED:" == "
+
+metatest: 42<=42 signed pass
+metatest_simple:DO_LE_S_42:42:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: 41<=42 signed pass
+metatest_simple:DO_LE_S_42:41:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: 43<=42 signed fail
+metatest_simple:DO_LE_S_42:43:MBEDTLS_TEST_RESULT_FAILED:" <= "
+
+metatest: -1<=42 signed pass
+metatest_simple:DO_LE_S_42:-1:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: 42<=42 unsigned pass
+metatest_simple:DO_LE_U_42:42:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: 41<=42 unsigned pass
+metatest_simple:DO_LE_U_42:41:MBEDTLS_TEST_RESULT_SUCCESS:""
+
+metatest: 43<=42 unsigned fail
+metatest_simple:DO_LE_U_42:43:MBEDTLS_TEST_RESULT_FAILED:" <= "
+
+metatest: -1<=42 unsigned fail
+metatest_simple:DO_LE_U_42:-1:MBEDTLS_TEST_RESULT_FAILED:" <= "
