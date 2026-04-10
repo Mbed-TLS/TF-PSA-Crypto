@@ -4512,23 +4512,12 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
                                   0x01, 0x00, 0x00, 0x00)
     };
 
-    int ret = 0;
-
-    size_t P_limbs = BITS_TO_LIMBS(256);
-
-    mbedtls_mpi_uint *A1 = mbedtls_calloc(P_limbs, ciL);
-    if (A1 == NULL) {
-        return MBEDTLS_ERR_ECP_ALLOC_FAILED;
-    }
+    const size_t P_limbs = BITS_TO_LIMBS(256);
+    mbedtls_mpi_uint A1[BITS_TO_LIMBS(256)] = { 0 };
 
     /* Create a buffer to store the value of `R * A1` */
-    size_t R_limbs = P_KOBLITZ_R;
-    size_t M_limbs = P_limbs + R_limbs;
-    mbedtls_mpi_uint *M = mbedtls_calloc(M_limbs, ciL);
-    if (M == NULL) {
-        ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
-        goto cleanup;
-    }
+    mbedtls_mpi_uint M[BITS_TO_LIMBS(256) + P_KOBLITZ_R] = { 0 };
+    const size_t R_limbs = P_KOBLITZ_R;
 
     /* Two passes are needed to reduce the value of `A0 + R * A1` and then
      * we need an additional one to reduce the possible overflow during
@@ -4557,11 +4546,7 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
          */
     }
 
-cleanup:
-    mbedtls_free(M);
-    mbedtls_free(A1);
-
-    return ret;
+    return 0;
 }
 
 #endif /* MBEDTLS_ECP_DP_SECP256K1_ENABLED */
