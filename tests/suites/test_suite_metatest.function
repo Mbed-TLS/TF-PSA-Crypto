@@ -155,6 +155,18 @@ static void child_callback(void *param,
                            size_t *output_length)
 {
     child_instructions_t *instructions = param;
+    sigset_t sigs;
+    sigemptyset(&sigs);
+
+    /* If we're supposed to signal ourselves at the end, arrange to block
+     * the signal during this function (to avoid weird behavior if the signal
+     * is already blocked but pending for some reason), and unblock it later.
+     */
+    if (instructions->signal > 0) {
+        TEST_ASSERT_ERRNO(sigaddset(&sigs, instructions->signal) == 0);
+        TEST_ASSERT_ERRNO(sigprocmask(SIG_BLOCK, &sigs, NULL) == 0);
+        TEST_ASSERT_ERRNO(signal(instructions->signal, SIG_DFL));
+    }
 
     (void) output_size;
     if (instructions->data_size > 0) {
@@ -175,7 +187,12 @@ static void child_callback(void *param,
 
 exit:
     if (instructions->signal > 0) {
-        signal(instructions->signal, SIG_DFL);
+        if (sigprocmask(SIG_UNBLOCK, &sigs, NULL) != 0) {
+            /* We couldn't unblock the signal. This is really weird.
+             * We don't have much of a way to report what's happening.
+             * So exit with a unique status, which the parent can report. */
+            _exit(128);
+        }
         raise(instructions->signal);
     }
     if (instructions->exit >= 0) {
