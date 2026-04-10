@@ -789,8 +789,8 @@ void ecjpake_setup(int policy_alg_arg, int setup_alg_arg,
     }
 
 exit:
-    PSA_ASSERT(psa_destroy_key(key));
-    PSA_ASSERT(psa_pake_abort(&operation));
+    psa_destroy_key(key);
+    psa_pake_abort(&operation);
     mbedtls_free(output_key_share);
     mbedtls_free(output_zk_public);
     mbedtls_free(output_zk_proof);
@@ -1058,8 +1058,8 @@ void pake_input_getters_password()
                PSA_ERROR_BAD_STATE);
 
 exit:
-    PSA_ASSERT(psa_destroy_key(key));
-    PSA_ASSERT(psa_pake_abort(&operation));
+    psa_destroy_key(key);
+    psa_pake_abort(&operation);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1103,8 +1103,8 @@ void pake_input_getters_cipher_suite()
                PSA_ERROR_BAD_STATE);
 
 exit:
-    PSA_ASSERT(psa_pake_abort(&operation));
-    PSA_ASSERT(psa_destroy_key(key));
+    psa_pake_abort(&operation);
+    psa_destroy_key(key);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1174,9 +1174,10 @@ void pake_input_getters_user()
 
         TEST_MEMORY_COMPARE(user_ret, buffer_len_ret, user, user_len);
     }
+
 exit:
-    PSA_ASSERT(psa_pake_abort(&operation));
-    PSA_ASSERT(psa_destroy_key(key));
+    psa_pake_abort(&operation);
+    psa_destroy_key(key);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1246,9 +1247,10 @@ void pake_input_getters_peer()
 
         TEST_MEMORY_COMPARE(peer_ret, buffer_len_ret, peer, peer_len);
     }
+
 exit:
-    PSA_ASSERT(psa_pake_abort(&operation));
-    PSA_ASSERT(psa_destroy_key(key));
+    psa_pake_abort(&operation);
+    psa_destroy_key(key);
     PSA_DONE();
 }
 /* END_CASE */
