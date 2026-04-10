@@ -1,0 +1,2 @@
+Features
+   * Use getrandom() rather than /dev/random on Android. Fixes #745.
