@@ -4477,8 +4477,7 @@ int mbedtls_ecp_mod_p448_raw(mbedtls_mpi_uint *X, size_t X_limbs)
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
 
 /*
- * Fast quasi-reduction modulo p256k1 = 2^256 - R,
- * with R = 2^32 + 2^9 + 2^8 + 2^7 + 2^6 + 2^4 + 1 = 0x01000003D1
+ * Fast quasi-reduction modulo p256k1
  */
 static int ecp_mod_p256k1(mbedtls_mpi *N)
 {
@@ -4495,6 +4494,8 @@ cleanup:
 
 /*
  * Fast quasi-reduction modulo P = 2^256 - R.
+ * with R = 2^32 + 2^9 + 2^8 + 2^7 + 2^6 + 2^4 + 1 = 0x01000003D1
+ *
  * Documented in ecp_invasive.h
  *
  * Write X as A0 + 2^256 A1, reduce as A0 + R * A1.
@@ -4502,27 +4503,18 @@ cleanup:
 MBEDTLS_STATIC_TESTABLE
 int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
 {
-    static mbedtls_mpi_uint Rp[] = {
-        MBEDTLS_BYTES_TO_T_UINT_8(0xD1, 0x03, 0x00, 0x00,
-                                  0x01, 0x00, 0x00, 0x00)
-    };
-
     if (X_limbs != BITS_TO_LIMBS(256) * 2) {
         return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
     }
 
-    const mbedtls_mpi_uint *R = Rp;
-    const size_t bits = 256;
+    static const mbedtls_mpi_uint R[] = {
+        MBEDTLS_BYTES_TO_T_UINT_8(0xD1, 0x03, 0x00, 0x00,
+                                  0x01, 0x00, 0x00, 0x00)
+    };
 
     int ret = 0;
 
-    /* Determine if A1 is aligned to limb bitsize. If not then the used limbs
-     * of P, A0 and A1 must be set accordingly and there is a middle limb
-     * which is shared by A0 and A1 and need to handle accordingly.
-     */
-    size_t shift   = bits % biL;
-    size_t adjust  = (shift + biL - 1) / biL;
-    size_t P_limbs = bits / biL + adjust;
+    size_t P_limbs = BITS_TO_LIMBS(256);
 
     mbedtls_mpi_uint *A1 = mbedtls_calloc(P_limbs, ciL);
     if (A1 == NULL) {
@@ -4538,28 +4530,13 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
         goto cleanup;
     }
 
-    mbedtls_mpi_uint mask = 0;
-    if (adjust != 0) {
-        mask  = ((mbedtls_mpi_uint) 1 << shift) - 1;
-    }
-
     /* Two passes are needed to reduce the value of `A0 + R * A1` and then
      * we need an additional one to reduce the possible overflow during
      * the addition.
      */
     for (size_t pass = 0; pass < 3; pass++) {
         /* Copy A1 */
-        memcpy(A1, X + P_limbs - adjust, P_limbs * ciL);
-
-        /* Shift A1 to be aligned */
-        if (shift != 0) {
-            mbedtls_mpi_core_shift_r(A1, P_limbs, shift);
-        }
-
-        /* Zeroize the A1 part of the shared limb */
-        if (mask != 0) {
-            X[P_limbs - 1] &= mask;
-        }
+        memcpy(A1, X + P_limbs, P_limbs * ciL);
 
         /* X = A0
          * Zeroize the A1 part of X to keep only the A0 part.
