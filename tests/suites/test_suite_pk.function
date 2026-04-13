@@ -579,75 +579,85 @@ exit:
     return new_key_id;
 }
 
-static mbedtls_pk_type_t get_pk_key_type_from_psa(psa_key_type_t key_type)
+static psa_key_usage_t select_canonical_usage(const mbedtls_pk_context *pk)
 {
-    if (PSA_KEY_TYPE_IS_RSA(key_type)) {
-        return MBEDTLS_PK_RSA;
-    } else if (PSA_KEY_TYPE_IS_ECC(key_type)) {
-        return MBEDTLS_PK_ECKEY;
-    } else {
-        mbedtls_printf("Unsupported psa key type");
-        return MBEDTLS_PK_NONE;
+    if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
+        psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+        psa_key_usage_t usage = 0;
+
+        if (psa_get_key_attributes(pk->priv_id, &attributes) == PSA_SUCCESS) {
+            usage = psa_get_key_usage_flags(&attributes);
+        }
+        psa_reset_key_attributes(&attributes);
+        return usage;
     }
-    return MBEDTLS_PK_NONE;
+
+    switch (mbedtls_pk_get_type(pk)) {
+        case MBEDTLS_PK_RSA:
+        case MBEDTLS_PK_RSASSA_PSS:
+            return mbedtls_svc_key_id_is_null(pk->priv_id) ?
+                   PSA_KEY_USAGE_ENCRYPT : PSA_KEY_USAGE_SIGN_HASH;
+
+        case MBEDTLS_PK_ECDSA:
+            return mbedtls_svc_key_id_is_null(pk->priv_id) ?
+                   PSA_KEY_USAGE_VERIFY_HASH : PSA_KEY_USAGE_SIGN_HASH;
+
+        case MBEDTLS_PK_ECKEY_DH:
+            return mbedtls_svc_key_id_is_null(pk->priv_id) ?
+                   PSA_KEY_USAGE_DERIVE_PUBLIC : PSA_KEY_USAGE_DERIVE;
+
+        case MBEDTLS_PK_ECKEY:
+            if (pk->ec_family == PSA_ECC_FAMILY_MONTGOMERY) {
+                return mbedtls_svc_key_id_is_null(pk->priv_id) ?
+                       PSA_KEY_USAGE_DERIVE_PUBLIC : PSA_KEY_USAGE_DERIVE;
+            }
+            return mbedtls_svc_key_id_is_null(pk->priv_id) ?
+                   PSA_KEY_USAGE_VERIFY_HASH : PSA_KEY_USAGE_SIGN_HASH;
+
+        default:
+            return 0;
+    }
 }
 
 static int common_context_checks(mbedtls_pk_context *pk,
-                                 mbedtls_pk_type_t pk_type,
-                                 psa_key_type_t psa_type,
                                  psa_key_attributes_t *attributes,
                                  psa_key_usage_t *key_usage)
 {
     int ret = -1;
-    int has_private = !mbedtls_svc_key_id_is_null(pk->priv_id);
 
-    switch (pk_type) {
-        case MBEDTLS_PK_RSA:
-            *key_usage = has_private ? PSA_KEY_USAGE_SIGN_HASH : PSA_KEY_USAGE_VERIFY_HASH;
-            break;
-
-        case MBEDTLS_PK_ECKEY:
-        case MBEDTLS_PK_ECDSA:
-            *key_usage = has_private ? PSA_KEY_USAGE_SIGN_HASH : PSA_KEY_USAGE_VERIFY_HASH;
-            break;
-
-        case MBEDTLS_PK_ECKEY_DH:
-            *key_usage = has_private ? PSA_KEY_USAGE_DERIVE : PSA_KEY_USAGE_VERIFY_HASH;
-            break;
-
-        case MBEDTLS_PK_OPAQUE:
-            /* Opaque keys depend on PSA attrs; pick a default and adjust if needed. */
-            *key_usage = PSA_KEY_USAGE_SIGN_HASH;
-            break;
-
-        default:
-            *key_usage = 0; /* unsupported */
-            break;
-    }
+    *key_usage = select_canonical_usage(pk);
 
     //pk_info
     TEST_ASSERT(pk->pk_info != NULL);
-    //psa_type
+    //pk_type
     TEST_ASSERT(mbedtls_pk_get_type(pk) != MBEDTLS_PK_NONE);
     //bits
     TEST_ASSERT(mbedtls_pk_get_bitlen(pk) != 0);
     TEST_ASSERT(mbedtls_pk_get_len(pk) == PSA_BITS_TO_BYTES(pk->bits));
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
         TEST_ASSERT(psa_get_key_attributes(pk->priv_id, attributes) == PSA_SUCCESS);
+    } else if (*key_usage == PSA_KEY_USAGE_DERIVE_PUBLIC) {
+        psa_set_key_type(attributes, pk->psa_type);
+        psa_set_key_bits(attributes, pk->bits);
+        psa_set_key_usage_flags(attributes, *key_usage);
+        psa_set_key_algorithm(attributes, PSA_ALG_ECDH);
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+        psa_set_key_enrollment_algorithm(attributes, PSA_ALG_NONE);
+#endif
     } else {
         TEST_ASSERT(mbedtls_pk_get_psa_attributes(pk, *key_usage, attributes) == 0);
     }
 
+    //psa_type
+    TEST_ASSERT(psa_get_key_type(attributes) != PSA_KEY_TYPE_NONE);
+
     TEST_ASSERT(psa_get_key_bits(attributes) != 0);
     //ec_family
     #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-    if (PSA_KEY_TYPE_IS_ECC(psa_type)) {
+    if (PSA_KEY_TYPE_IS_ECC(psa_get_key_type(attributes))) {
         TEST_ASSERT(PSA_KEY_TYPE_ECC_GET_FAMILY(pk->psa_type) == pk->ec_family);
     }
     #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
-
-    //psa_type
-    TEST_ASSERT(psa_get_key_type(attributes) != PSA_KEY_TYPE_NONE);
     ret = 0;
 
 exit:
@@ -656,27 +666,33 @@ exit:
 
 //test all of the elements of the context are configured correctly.
 static int validate_pk_context(mbedtls_pk_context *pk_priv,
-                               mbedtls_pk_context *pk_pub,
-                               psa_key_type_t psa_type,
-                               mbedtls_pk_type_t pk_type)
+                               mbedtls_pk_context *pk_pub)
 {
     unsigned char pub_key_buf[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
     size_t pub_key_len;
     mbedtls_svc_key_id_t pk_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_usage_t import_usage = 0;
     int ret = -1;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_usage_t key_usage = 0;
 
     if (pk_priv != NULL) {
-        TEST_ASSERT(common_context_checks(pk_priv, pk_type, psa_type, &attributes,
+        TEST_ASSERT(common_context_checks(pk_priv, &attributes,
                                           &key_usage) == 0);
     }
 
     if (pk_pub != NULL) {
-        TEST_ASSERT(common_context_checks(pk_pub, pk_type, psa_type, &attributes,
+        TEST_ASSERT(common_context_checks(pk_pub, &attributes,
                                           &key_usage) == 0);
+        import_usage = key_usage;
+        if (key_usage == PSA_KEY_USAGE_DERIVE_PUBLIC) {
+            /* DERIVE_PUBLIC is the semantic match for public ECDH keys, but
+             * importing such a key for this round-trip validation needs a
+             * standard importable policy. */
+            import_usage = PSA_KEY_USAGE_EXPORT;
+        }
         TEST_ASSERT(pk_psa_import_key(pk_pub->pub_raw, pk_pub->pub_raw_len,
-                                      pk_pub->psa_type, key_usage,
+                                      pk_pub->psa_type, import_usage,
                                       psa_get_key_algorithm(&attributes), PSA_ALG_NONE,
                                       &pk_id) == 0);
     }
@@ -1168,7 +1184,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_PK_WRITE_C:MBEDTLS_PK_PARSE_C */
-void valid_parameters_pkwrite(data_t *key_data, int psa_type)
+void valid_parameters_pkwrite(data_t *key_data)
 {
     mbedtls_pk_context pk;
 
@@ -1178,8 +1194,7 @@ void valid_parameters_pkwrite(data_t *key_data, int psa_type)
 
     TEST_ASSERT(mbedtls_pk_parse_key(&pk,
                                      key_data->x, key_data->len, NULL, 0) == 0);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, psa_type, get_pk_key_type_from_psa(
-                                        psa_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     TEST_ASSERT(mbedtls_pk_write_key_der(&pk, NULL, 0) ==
                 MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
@@ -1369,7 +1384,7 @@ exit:
 void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
                             char *QX_str, char *QY_str,
                             int md_alg, data_t *hash, data_t *sig_check,
-                            int max_ops, int min_restart, int max_restart, int bitlen, int psa_type)
+                            int max_ops, int min_restart, int max_restart)
 {
     int ret, cnt_restart;
     mbedtls_pk_restart_ctx rs_ctx;
@@ -1400,7 +1415,7 @@ void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
 
     TEST_ASSERT(mbedtls_pk_ecc_set_group(&pub, grp_id) == 0);
     TEST_ASSERT(mbedtls_pk_ecc_set_pubkey(&pub, pub_key, pub_key_len) == 0);
-    TEST_ASSERT(validate_pk_context(&prv, &pub, psa_type, pk_type) == 0);
+    TEST_ASSERT(validate_pk_context(&prv, &pub) == 0);
 
     psa_interruptible_set_max_ops(max_ops);
 
@@ -1649,8 +1664,7 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
     mbedtls_pk_free(&pk);
     mbedtls_pk_init(&pk);
     TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, psa_type, get_pk_key_type_from_psa(
-                                        psa_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     /* Sign with the PSA-wrapping context. */
     memset(hash, 0x2a, sizeof(hash));
@@ -1698,24 +1712,21 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
     mbedtls_pk_init(&pk);
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
     TEST_EQUAL(mbedtls_pk_parse_public_key(&pk, normal_pub_key, normal_pub_key_len), 0);
-    TEST_ASSERT(validate_pk_context(NULL, &pk, psa_type, get_pk_key_type_from_psa(
-                                        psa_type)) == 0);
+    TEST_ASSERT(validate_pk_context(NULL, &pk) == 0);
 #else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
 #if defined(PSA_HAVE_ALG_ECDSA_SIGN)
     if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
         TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)), 0);
         TEST_EQUAL(mbedtls_pk_ecc_set_group(&pk, ecp_grp_id), 0);
         TEST_EQUAL(mbedtls_pk_ecc_set_pubkey(&pk, normal_pub_key, normal_pub_key_len), 0);
-        TEST_ASSERT(validate_pk_context(NULL, &pk, psa_type,
-                                        get_pk_key_type_from_psa(psa_type)) == 0);
+        TEST_ASSERT(validate_pk_context(NULL, &pk) == 0);
     }
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #if defined(MBEDTLS_RSA_C)
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
         TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
         TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, normal_pub_key, normal_pub_key_len), 0);
-        TEST_ASSERT(validate_pk_context(NULL, &pk, psa_type,
-                                        get_pk_key_type_from_psa(psa_type)) == 0);
+        TEST_ASSERT(validate_pk_context(NULL, &pk) == 0);
     }
 #endif /* MBEDTLS_RSA_C */
 #endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
@@ -1771,7 +1782,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg, int psa_type)
+void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg)
 {
     mbedtls_pk_context pk;
     size_t sig_len, pkey_len;
@@ -1802,7 +1813,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     mbedtls_pk_free(&pk);
     mbedtls_pk_init(&pk);
     TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, psa_type, pk_type) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     memset(hash, 0x2a, sizeof(hash));
     memset(sig, 0, sizeof(sig));
@@ -1837,7 +1848,7 @@ void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg
     mbedtls_pk_init(&pk);
     TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(pk_type)), 0);
     TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, pkey, pkey_len), 0);
-    TEST_ASSERT(validate_pk_context(NULL, &pk, psa_type, pk_type) == 0);
+    TEST_ASSERT(validate_pk_context(NULL, &pk) == 0);
 
     TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
@@ -2046,8 +2057,7 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
     PSA_ASSERT(pk_psa_setup(from_type, bits, from_usage, alg, 42,
                             MBEDTLS_SVC_KEY_ID_INIT, &old_key_id));
     TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, old_key_id), 0);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, from_type_arg,
-                                    get_pk_key_type_from_psa(from_type_arg)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, usage, &attributes),
                expected_ret);
@@ -2136,8 +2146,7 @@ void pk_import_into_psa_opaque(int from_type, int from_bits,
     PSA_ASSERT(pk_psa_setup(from_type, from_bits, from_usage, from_alg, PSA_ALG_NONE,
                             MBEDTLS_SVC_KEY_ID_INIT, &from_key_id));
     TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, from_key_id), 0);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, from_type,
-                                    get_pk_key_type_from_psa(from_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     psa_set_key_type(&to_attributes, to_type);
     psa_set_key_bits(&to_attributes, to_bits);
@@ -2263,12 +2272,9 @@ void pk_copy_from_psa_success(data_t *priv_key_data, int key_type_arg,
     priv_key_id = psa_copy_and_destroy(priv_key_id);
     pub_key_id = psa_copy_and_destroy(pub_key_id);
 
-    TEST_ASSERT(validate_pk_context(&pk_priv, &pk_priv_copy_public, key_type,
-                                    get_pk_key_type_from_psa(key_type)) == 0);
-    TEST_ASSERT(validate_pk_context(&pk_priv, &pk_pub, key_type,
-                                    get_pk_key_type_from_psa(key_type)) == 0);
-    TEST_ASSERT(validate_pk_context(&pk_priv, &pk_pub_copy_public, key_type,
-                                    get_pk_key_type_from_psa(key_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk_priv, &pk_priv_copy_public) == 0);
+    TEST_ASSERT(validate_pk_context(&pk_priv, &pk_pub) == 0);
+    TEST_ASSERT(validate_pk_context(&pk_priv, &pk_pub_copy_public) == 0);
 
 exit:
     mbedtls_pk_free(&pk_priv);
@@ -2309,12 +2315,10 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg)
 
     TEST_EQUAL(mbedtls_pk_copy_public_from_psa(exportable_key_id,
                                                &pk_from_exportable), 0);
-    TEST_ASSERT(validate_pk_context(NULL, &pk_from_exportable, key_type,
-                                    get_pk_key_type_from_psa(key_type)) == 0);
+    TEST_ASSERT(validate_pk_context(NULL, &pk_from_exportable) == 0);
     TEST_EQUAL(mbedtls_pk_copy_public_from_psa(non_exportable_key_id,
                                                &pk_from_non_exportable), 0);
-    TEST_ASSERT(validate_pk_context(NULL, &pk_from_non_exportable, key_type,
-                                    get_pk_key_type_from_psa(key_type)) == 0);
+    TEST_ASSERT(validate_pk_context(NULL, &pk_from_non_exportable) == 0);
 
     /* Check that the non-exportable key really is non-exportable */
     TEST_EQUAL(mbedtls_pk_copy_from_psa(non_exportable_key_id, &pk_private),
@@ -2362,8 +2366,7 @@ void pk_get_key_type_wrap_psa(int key_type_arg, int bits)
     TEST_EQUAL(mbedtls_pk_wrap_psa(&ctx, key), 0);
 
     /* 3. Validate the context */
-    TEST_ASSERT(validate_pk_context(&ctx, NULL, key_type, get_pk_key_type_from_psa(
-                                        key_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
     psa_destroy_key(key);
@@ -2373,18 +2376,22 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C */
-void pk_get_key_type_parse_key(char *key_file, int psa_key_type_arg)
-{
-    psa_key_type_t psa_key_type = (psa_key_type_t) psa_key_type_arg;
+-void pk_get_key_type_parse_key(char *key_file, int key_type_arg)
++void pk_get_key_type_parse_key(char *key_file)
+ {
+    psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t returned_key_type;
 
     mbedtls_pk_context ctx;
     mbedtls_pk_init(&ctx);
-
+ 
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_keyfile(&ctx, key_file, NULL), 0);
-    TEST_ASSERT(validate_pk_context(&ctx, NULL, psa_key_type,
-                                    get_pk_key_type_from_psa(psa_key_type)) == 0);
+
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+    TEST_EQUAL(returned_key_type, key_type);
+    TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
     mbedtls_pk_free(&ctx);
@@ -2394,17 +2401,19 @@ exit:
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C */
 void pk_get_key_type_parse_public_key(char *key_file, int key_type_arg)
-{
+ {
     psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t returned_key_type;
 
-    mbedtls_pk_context ctx;
-    mbedtls_pk_init(&ctx);
+     mbedtls_pk_context ctx;
+     mbedtls_pk_init(&ctx);
 
-    PSA_INIT();
+     PSA_INIT();
+ 
+     TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&ctx, key_file), 0);
 
-    TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&ctx, key_file), 0);
-    TEST_ASSERT(validate_pk_context(NULL, &ctx, key_type, get_pk_key_type_from_psa(
-                                        key_type)) == 0);
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+    TEST_EQUAL(returned_key_type, key_type);
 
 exit:
     mbedtls_pk_free(&ctx);
@@ -2413,7 +2422,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void pk_get_key_type_copy_from_psa_keypair(int key_type_arg, int bits, int pk_key_type)
+void pk_get_key_type_copy_from_psa_keypair(int key_type_arg, int bits)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_pk_context ctx;
@@ -2434,7 +2443,7 @@ void pk_get_key_type_copy_from_psa_keypair(int key_type_arg, int bits, int pk_ke
     TEST_EQUAL(mbedtls_pk_copy_from_psa(key, &ctx), 0);
 
     /* 3. Validate the pk context */
-    TEST_ASSERT(validate_pk_context(&ctx, NULL, psa_key_type, pk_key_type) == 0);
+    TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
     psa_destroy_key(key);
@@ -2496,8 +2505,7 @@ void pk_get_key_type_copy_from_psa_public(int key_type_arg, int bits)
     TEST_EQUAL(mbedtls_pk_copy_from_psa(public_key, &ctx), 0);
 
     /* 5. Validate the pk context */
-    TEST_ASSERT(validate_pk_context(NULL, &ctx, key_type, get_pk_key_type_from_psa(
-                                        key_type)) == 0);
+    TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
 
 exit:
     psa_destroy_key(keypair);
@@ -2536,8 +2544,7 @@ void pk_get_key_type_copy_public_from_psa(int key_type_arg, int bits)
     TEST_EQUAL(mbedtls_pk_copy_public_from_psa(keypair, &ctx), 0);
 
     /* 3. Validate the pk context */
-    TEST_ASSERT(validate_pk_context(NULL, &ctx, key_type, get_pk_key_type_from_psa(
-                                        key_type)) == 0);
+    TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
 
 exit:
     psa_destroy_key(keypair);
@@ -2589,8 +2596,7 @@ void pk_parse_keyfile_rsa(char *key_file, char *password, int result)
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        TEST_ASSERT(validate_pk_context(&ctx, NULL, PSA_KEY_TYPE_RSA_KEY_PAIR,
-                                        MBEDTLS_PK_RSA) == 0);
+        TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_RSA));
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
@@ -2624,8 +2630,7 @@ void pk_parse_public_keyfile_rsa(char *key_file, int result)
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        TEST_ASSERT(validate_pk_context(NULL, &ctx, PSA_KEY_TYPE_RSA_KEY_PAIR,
-                                        MBEDTLS_PK_RSA) == 0);
+        TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_RSA));
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
@@ -2642,7 +2647,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PK_PARSE_C */
-void pk_parse_public_keyfile_ec(char *key_file, int result, int psa_type)
+void pk_parse_public_keyfile_ec(char *key_file, int result)
 {
     mbedtls_pk_context ctx;
     int res;
@@ -2655,8 +2660,7 @@ void pk_parse_public_keyfile_ec(char *key_file, int result, int psa_type)
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        TEST_ASSERT(validate_pk_context(NULL, &ctx, psa_type,
-                                        get_pk_key_type_from_psa(psa_type)) == 0);
+        TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_ECKEY));
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
@@ -2675,7 +2679,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PK_PARSE_C */
-void pk_parse_keyfile_ec(char *key_file, char *password, int result, int psa_type)
+void pk_parse_keyfile_ec(char *key_file, char *password, int result)
 {
     mbedtls_pk_context ctx;
     int res;
@@ -2688,8 +2692,7 @@ void pk_parse_keyfile_ec(char *key_file, char *password, int result, int psa_typ
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        TEST_ASSERT(validate_pk_context(&ctx, NULL, psa_type, get_pk_key_type_from_psa(
-                                            psa_type)) == 0);
+        TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
         TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_ECKEY));
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
@@ -2736,8 +2739,7 @@ void pk_parse_key_encrypted(data_t *buf, data_t *pass, int result, int bits, int
 
     TEST_EQUAL(mbedtls_pk_parse_key_pkcs8_encrypted_der(&pk, buf->x, buf->len,
                                                         pass->x, pass->len), result);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, bits, get_pk_key_type_from_psa(
-                                        psa_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL, bits) == 0);
 exit:
     mbedtls_pk_free(&pk);
     USE_PSA_DONE();
@@ -2753,8 +2755,7 @@ void pk_parse_key_unencrypted(data_t *buf, int result, int bits, int psa_type)
     USE_PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_key_pkcs8_unencrypted_der(&pk, buf->x, buf->len), result);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, psa_type, get_pk_key_type_from_psa(
-                                        psa_type)) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 exit:
     mbedtls_pk_free(&pk);
     USE_PSA_DONE();
@@ -2777,9 +2778,7 @@ void pk_parse_fix_montgomery(data_t *input_key, data_t *exp_output)
     USE_PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_key(&pk, input_key->x, input_key->len, NULL, 0), 0);
-    TEST_ASSERT(validate_pk_context(&pk, NULL,
-                                    PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY),
-                                    MBEDTLS_PK_ECKEY) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     output_key_len = input_key->len;
     TEST_CALLOC(output_key, output_key_len);
