@@ -170,7 +170,7 @@ void verify_message(int type_arg, int bits_arg, int alg_arg,
                        public_key->x, public_key->len,
                        alg_arg,
                        message->x, message->len,
-                       signature->x, signature->len - 1),
+                       buf, signature->len),
                    PSA_ERROR_INVALID_SIGNATURE);
         mbedtls_free(buf);
         buf  = NULL;
@@ -183,7 +183,7 @@ void verify_message(int type_arg, int bits_arg, int alg_arg,
                        public_key->x, public_key->len,
                        alg_arg,
                        message->x, message->len,
-                       signature->x, signature->len - 1),
+                       buf, signature->len - 1),
                    PSA_ERROR_INVALID_SIGNATURE);
         mbedtls_free(buf);
         buf  = NULL;
@@ -196,7 +196,7 @@ void verify_message(int type_arg, int bits_arg, int alg_arg,
                        public_key->x, public_key->len,
                        alg_arg,
                        message->x, message->len,
-                       signature->x, signature->len + 1),
+                       buf, signature->len + 1),
                    PSA_ERROR_INVALID_SIGNATURE);
         mbedtls_free(buf);
         buf = NULL;
