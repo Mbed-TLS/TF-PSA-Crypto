@@ -27,5 +27,9 @@ import re #pylint: disable=unused-import
 INTERNAL_TEST_CASES = {
     'test_suite_config.crypto_combinations': [
         'Config: entropy: NV seed only',
+        re.compile('Config: mldsa-native.*'),
     ],
+    'test_suite_pqcp_mldsa': [
+        re.compile('.*SHAKE.*'),
+    ]
 }
