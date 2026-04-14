@@ -164,6 +164,35 @@ component_tf_psa_crypto_build_config_name () {
     rm -f include/psa/crypto_config_full.h
 }
 
+component_test_tf_psa_crypto_install_with_destdir () {
+      $MAKE_COMMAND neat
+
+      msg "install: cmake tf-psa-crypto with DESTDIR staging"
+      TF_PSA_CRYPTO_ROOT_DIR="$PWD"
+      mkdir "$OUT_OF_SOURCE_DIR"
+      cd "$OUT_OF_SOURCE_DIR"
+      cmake -DGEN_FILES=ON -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_TF_PSA_CRYPTO_LIBRARY=ON -DCMAKE_INSTALL_PREFIX:PATH=/usr "$TF_PSA_CRYPTO_ROOT_DIR"
+      make
+
+      DESTDIR="$OUT_OF_SOURCE_DIR/stage" make install
+
+      install_lib_subdir="$(sed -n 's/^CMAKE_INSTALL_LIBDIR:PATH=//p' CMakeCache.txt)"
+      [ -n "$install_lib_subdir" ] # Failed to read CMAKE_INSTALL_LIBDIR from CMakeCache.txt
+
+      install_lib_path="$OUT_OF_SOURCE_DIR/stage/usr/${install_lib_subdir}"
+
+      [ -f "$install_lib_path/libtfpsacrypto.a" ]
+      if [[ "$OSTYPE" == darwin* ]]; then
+          [ -e "$install_lib_path/libtfpsacrypto.dylib" ]
+      else
+          [ -L "$install_lib_path/libtfpsacrypto.so" ]
+          [ -e "$install_lib_path/libtfpsacrypto.so" ]
+          versioned=( "$install_lib_path/libtfpsacrypto.so".* )
+          [ "${#versioned[@]}" -ge 1 ]
+          [ -e "${versioned[0]}" ]
+      fi
+  }
+
 component_tf_psa_crypto_build_programs_no_testing () {
     # Verify that the type of builds performed by oss-fuzz don't get accidentally broken
     msg "build: cmake with -DENABLE_PROGRAMS=ON and -DENABLE_TESTING=OFF"
