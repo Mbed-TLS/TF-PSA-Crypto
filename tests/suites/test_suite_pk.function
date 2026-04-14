@@ -1384,7 +1384,7 @@ exit:
 void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
                             char *QX_str, char *QY_str,
                             int md_alg, data_t *hash, data_t *sig_check,
-                            int max_ops, int min_restart, int max_restart)
+                            int max_ops, int min_restart, int max_restart, int bitlen, int psa_type)
 {
     int ret, cnt_restart;
     mbedtls_pk_restart_ctx rs_ctx;
@@ -2376,21 +2376,14 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C */
--void pk_get_key_type_parse_key(char *key_file, int key_type_arg)
-+void pk_get_key_type_parse_key(char *key_file)
- {
-    psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
-    psa_key_type_t returned_key_type;
-
+void pk_get_key_type_parse_key(char *key_file)
+{
     mbedtls_pk_context ctx;
     mbedtls_pk_init(&ctx);
- 
+
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_keyfile(&ctx, key_file, NULL), 0);
-
-    returned_key_type = mbedtls_pk_get_key_type(&ctx);
-    TEST_EQUAL(returned_key_type, key_type);
     TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
@@ -2400,20 +2393,15 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C */
-void pk_get_key_type_parse_public_key(char *key_file, int key_type_arg)
- {
-    psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
-    psa_key_type_t returned_key_type;
+void pk_get_key_type_parse_public_key(char *key_file)
+{
+    mbedtls_pk_context ctx;
+    mbedtls_pk_init(&ctx);
 
-     mbedtls_pk_context ctx;
-     mbedtls_pk_init(&ctx);
+    PSA_INIT();
 
-     PSA_INIT();
- 
-     TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&ctx, key_file), 0);
-
-    returned_key_type = mbedtls_pk_get_key_type(&ctx);
-    TEST_EQUAL(returned_key_type, key_type);
+    TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&ctx, key_file), 0);
+    TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
 
 exit:
     mbedtls_pk_free(&ctx);
