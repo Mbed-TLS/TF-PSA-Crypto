@@ -12,6 +12,7 @@
 # built with `re.compile`. Always include the `re` module so that we
 # don't keep adding and removing it as the matchers evolve.
 import re #pylint: disable=unused-import
+from typing import Dict, List, Pattern, Union
 
 # Test cases that it makes sense not to execute in Mbed TLS. Typically
 # this is because they relate to implementation details of TF-PSA-Crypto,
@@ -24,8 +25,12 @@ import re #pylint: disable=unused-import
 # - a regex, which must match the full test case description.
 # A test suite with no "." matches all test suites with the same .function
 # file. A test suite with a "." only matches that specific .data file.
-INTERNAL_TEST_CASES = {
+INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
     'test_suite_config.crypto_combinations': [
         'Config: entropy: NV seed only',
+        re.compile('Config: mldsa-native.*'),
+    ],
+    'test_suite_pqcp_mldsa': [
+        re.compile('.*SHAKE.*'),
     ],
 }
