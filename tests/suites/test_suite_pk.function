@@ -1664,6 +1664,11 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
     mbedtls_pk_free(&pk);
     mbedtls_pk_init(&pk);
     TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
+
+    PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
+    TEST_EQUAL(psa_get_key_type(&attributes), (psa_key_type_t) psa_type);
+    TEST_EQUAL(psa_get_key_bits(&attributes), (size_t) bits);
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
     TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     /* Sign with the PSA-wrapping context. */
@@ -2057,6 +2062,9 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
     PSA_ASSERT(pk_psa_setup(from_type, bits, from_usage, alg, 42,
                             MBEDTLS_SVC_KEY_ID_INIT, &old_key_id));
     TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, old_key_id), 0);
+
+    psa_key_type_t expected_psa_type =
+        to_pair ? from_type : PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(from_type);
     TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, usage, &attributes),
@@ -2066,6 +2074,8 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
         TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
         TEST_ASSERT(mbedtls_svc_key_id_equal(psa_get_key_id(&attributes),
                                              MBEDTLS_SVC_KEY_ID_INIT));
+        TEST_EQUAL(psa_get_key_type(&attributes), expected_psa_type);
+        TEST_EQUAL(psa_get_key_bits(&attributes), bits);
         TEST_EQUAL(psa_get_key_usage_flags(&attributes), expected_usage);
         TEST_EQUAL(psa_get_key_algorithm(&attributes), alg);
         TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
@@ -2272,6 +2282,35 @@ void pk_copy_from_psa_success(data_t *priv_key_data, int key_type_arg,
     priv_key_id = psa_copy_and_destroy(priv_key_id);
     pub_key_id = psa_copy_and_destroy(pub_key_id);
 
+    /* - Check that the generated PK contexts are of the correct type.
+     * - [Only for RSA] check that the padding mode is correct.
+     */
+    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type)) {
+        TEST_EQUAL(mbedtls_pk_get_type(&pk_priv), MBEDTLS_PK_ECKEY);
+        TEST_EQUAL(mbedtls_pk_get_type(&pk_pub), MBEDTLS_PK_ECKEY);
+    } else {
+        TEST_EQUAL(mbedtls_pk_get_type(&pk_priv), MBEDTLS_PK_RSA);
+        TEST_EQUAL(mbedtls_pk_get_type(&pk_pub), MBEDTLS_PK_RSA);
+    }
+
+    /* Check that generated private/public PK contexts form a valid private/public key pair. */
+    TEST_EQUAL(mbedtls_pk_check_pair(&pk_pub, &pk_priv), 0);
+    TEST_EQUAL(mbedtls_pk_check_pair(&pk_priv_copy_public, &pk_priv), 0);
+    TEST_EQUAL(mbedtls_pk_check_pair(&pk_pub_copy_public, &pk_priv), 0);
+
+    /* Check consistency between copied PSA keys and generated PK contexts. */
+    TEST_EQUAL(mbedtls_test_key_consistency_psa_pk(priv_key_id, &pk_priv), 1);
+    TEST_EQUAL(mbedtls_test_key_consistency_psa_pk(priv_key_id, &pk_pub), 1);
+    TEST_EQUAL(mbedtls_test_key_consistency_psa_pk(pub_key_id, &pk_priv), 1);
+    TEST_EQUAL(mbedtls_test_key_consistency_psa_pk(pub_key_id, &pk_pub), 1);
+
+    /* Test that the keys from mbedtls_pk_copy_public_from_psa() are identical
+     * to the public keys from mbedtls_pk_copy_from_psa(). */
+    mbedtls_test_set_step(1);
+    TEST_ASSERT(pk_public_same(&pk_pub, &pk_priv_copy_public));
+    mbedtls_test_set_step(2);
+    TEST_ASSERT(pk_public_same(&pk_pub, &pk_pub_copy_public));
+
     TEST_ASSERT(validate_pk_context(&pk_priv, &pk_priv_copy_public) == 0);
     TEST_ASSERT(validate_pk_context(&pk_priv, &pk_pub) == 0);
     TEST_ASSERT(validate_pk_context(&pk_priv, &pk_pub_copy_public) == 0);
@@ -2350,6 +2389,7 @@ void pk_get_key_type_wrap_psa(int key_type_arg, int bits)
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_pk_context ctx;
     psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t returned_key_type;
 
     mbedtls_pk_init(&ctx);
 
@@ -2365,7 +2405,13 @@ void pk_get_key_type_wrap_psa(int key_type_arg, int bits)
     /* 2. Wrap PSA key in PK context */
     TEST_EQUAL(mbedtls_pk_wrap_psa(&ctx, key), 0);
 
-    /* 3. Validate the context */
+    /* 3. Get the key type out of the PK context */
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+
+    /* 4. Check that it matches the expected key type */
+    TEST_EQUAL(returned_key_type, key_type);
+
+    /* 5. Validate the context */
     TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
@@ -2376,14 +2422,20 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C */
-void pk_get_key_type_parse_key(char *key_file)
+void pk_get_key_type_parse_key(char *key_file, int key_type_arg)
 {
+    psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t returned_key_type;
+
     mbedtls_pk_context ctx;
     mbedtls_pk_init(&ctx);
 
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_keyfile(&ctx, key_file, NULL), 0);
+
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+    TEST_EQUAL(returned_key_type, key_type);
     TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
@@ -2393,14 +2445,20 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C */
-void pk_get_key_type_parse_public_key(char *key_file)
+void pk_get_key_type_parse_public_key(char *key_file, int key_type_arg)
 {
+    psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t returned_key_type;
+
     mbedtls_pk_context ctx;
     mbedtls_pk_init(&ctx);
 
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&ctx, key_file), 0);
+
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+    TEST_EQUAL(returned_key_type, key_type);
     TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
 
 exit:
@@ -2414,7 +2472,8 @@ void pk_get_key_type_copy_from_psa_keypair(int key_type_arg, int bits)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_pk_context ctx;
-    psa_key_type_t psa_key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
+    psa_key_type_t returned_key_type;
 
     mbedtls_pk_init(&ctx);
 
@@ -2423,14 +2482,20 @@ void pk_get_key_type_copy_from_psa_keypair(int key_type_arg, int bits)
     /* 1. Get a PSA key */
     /* We don't need to use the key for anything but it needs to be
      * exportable. */
-    pk_psa_setup(psa_key_type, bits, PSA_KEY_USAGE_EXPORT,
+    pk_psa_setup(key_type, bits, PSA_KEY_USAGE_EXPORT,
                  PSA_ALG_NONE, PSA_ALG_NONE,
                  MBEDTLS_SVC_KEY_ID_INIT, &key);
 
     /* 2. Copy PSA key into a PK context */
     TEST_EQUAL(mbedtls_pk_copy_from_psa(key, &ctx), 0);
 
-    /* 3. Validate the pk context */
+    /* 3. Get the key type out of the PK context */
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+
+    /* 4. Check that it matches the expected key type */
+    TEST_EQUAL(returned_key_type, key_type);
+
+    /* 5. Validate the pk context */
     TEST_ASSERT(validate_pk_context(&ctx, NULL) == 0);
 
 exit:
@@ -2449,6 +2514,7 @@ void pk_get_key_type_copy_from_psa_public(int key_type_arg, int bits)
     mbedtls_pk_context ctx;
     psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
     psa_key_type_t keypair_type;
+    psa_key_type_t returned_key_type;
 
     uint8_t *exported = NULL;
     size_t exported_size;
@@ -2492,7 +2558,13 @@ void pk_get_key_type_copy_from_psa_public(int key_type_arg, int bits)
     /* 4. Copy public PSA key into a PK context */
     TEST_EQUAL(mbedtls_pk_copy_from_psa(public_key, &ctx), 0);
 
-    /* 5. Validate the pk context */
+    /* 5. Get the key type out of the PK context */
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+
+    /* 6. Check that it matches the expected key type */
+    TEST_EQUAL(returned_key_type, key_type);
+
+    /* 7. Validate the pk context */
     TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
 
 exit:
@@ -2511,6 +2583,7 @@ void pk_get_key_type_copy_public_from_psa(int key_type_arg, int bits)
     mbedtls_pk_context ctx;
     psa_key_type_t key_type = (psa_key_type_t) key_type_arg;
     psa_key_type_t keypair_type;
+    psa_key_type_t returned_key_type;
 
     mbedtls_pk_init(&ctx);
 
@@ -2531,7 +2604,14 @@ void pk_get_key_type_copy_public_from_psa(int key_type_arg, int bits)
     /* 2. Copy public key into a PK context */
     TEST_EQUAL(mbedtls_pk_copy_public_from_psa(keypair, &ctx), 0);
 
-    /* 3. Validate the pk context */
+    /* 3. Get the key type out of the PK context */
+    returned_key_type = mbedtls_pk_get_key_type(&ctx);
+
+    /* 4. Check that it matches the expected key type */
+    TEST_EQUAL(returned_key_type, key_type);
+
+
+    /* 5. Validate the pk context */
     TEST_ASSERT(validate_pk_context(NULL, &ctx) == 0);
 
 exit:
