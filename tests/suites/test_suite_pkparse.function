@@ -18,7 +18,7 @@
 #define HAVE_mbedtls_pk_parse_key_pkcs8_encrypted_der
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_FS_IO)
+#if defined(MBEDTLS_PSA_CRYPTO_C)
 static int test_psa_bridge(const mbedtls_pk_context *ctx,
                            psa_key_usage_t usage_flag)
 {
@@ -99,7 +99,7 @@ static int pk_can_ecdsa(const mbedtls_pk_context *ctx)
     return ctx->ec_family != PSA_ECC_FAMILY_MONTGOMERY;
 }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
-#endif /* MBEDTLS_PSA_CRYPTO_C &&  && MBEDTLS_FS_IO */
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /* END_HEADER */
 
