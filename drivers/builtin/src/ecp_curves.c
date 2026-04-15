@@ -4520,12 +4520,11 @@ cleanup:
 #define P_KOBLITZ_R     (8 / sizeof(mbedtls_mpi_uint))            // Limbs in R
 
 /*
- * Fast quasi-reduction modulo P = 2^256 - R.
- * with R = 2^32 + 2^9 + 2^8 + 2^7 + 2^6 + 2^4 + 1 = 0x01000003D1
+ * Raw fast quasi-reduction modulo P = 2^256 - R, with R = 0x01000003D1
  *
- * Documented in ecp_invasive.h
+ * See ecp_invasive.h and FAST_QUASI_REDUCTION above.
  *
- * Write X as A0 + 2^256 A1, reduce as A0 + R * A1.
+ * Write X as A0 + 2^256 A1, update as A0 + R * A1.
  */
 MBEDTLS_STATIC_TESTABLE
 int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
@@ -4546,10 +4545,7 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
     mbedtls_mpi_uint M[BITS_TO_LIMBS(256) + P_KOBLITZ_R] = { 0 };
     const size_t R_limbs = P_KOBLITZ_R;
 
-    /* Two passes are needed to reduce the value of `A0 + R * A1` and then
-     * we need an additional one to reduce the possible overflow during
-     * the addition.
-     */
+    /* See end of the loop for why 3 passes */
     for (size_t pass = 0; pass < 3; pass++) {
         /* Copy A1 */
         memcpy(A1, X + P_limbs, P_limbs * ciL);
@@ -4564,12 +4560,18 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
         /* X = A0 + R * A1 */
         mbedtls_mpi_core_mul(M, A1, P_limbs, R, R_limbs);
         (void) mbedtls_mpi_core_add(X, X, M, P_limbs + R_limbs);
-
-        /* Carry can not be generated since R is a 33-bit value and stored in
-         * 64 bits. The result value of the multiplication is at most
-         * P length + 33 bits in length and the result value of the addition
-         * is at most P length + 34 bits in length. So the result of the
-         * addition always fits in P length + 64 bits.
+        /* The above cannot generate a carry since P_limbs + R_limbs is enough.
+         *
+         * More precisely, if n is P's bit length:
+         * 1st pass: A0 is n bits, R * A1 is 33 + n, so X is n + 34 bits.
+         *           This fits in P_limbs + R_limbs which is n + 64 bits.
+         * 2nd pass: A0 is n bits, R * A1 is 33 + 34, so X is n + 1 bits.
+         *           Actually, X < 2^n + 2^67
+         * 3rd pass: Either A1 is 0, then X = A0 is at most n bits.
+         *           Or A1 is 1, but then A0 = X - A1 * 2^n < 2^67,
+         *           so X = A0 + R * A1 < 2^67 + 2^33 is less than n bits,
+         *           since n >= 68.
+         * So, after the 3rd pass, X is at most n bits.
          */
     }
 
