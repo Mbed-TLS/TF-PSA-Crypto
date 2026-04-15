@@ -120,6 +120,12 @@ exit:
 
 int mbedtls_pk_ecc_set_pubkey(mbedtls_pk_context *pk, const unsigned char *pub, size_t pub_len)
 {
+    /* We need to read the first byte to determine the format (compressed,
+     * uncompressed or 0). */
+    if (pub_len == 0) {
+        return MBEDTLS_ERR_PK_INVALID_PUBKEY;
+    }
+
     /* Load the key */
     if (!PSA_ECC_FAMILY_IS_WEIERSTRASS(pk->ec_family) || *pub == 0x04) {
         /* Format directly supported by PSA:
