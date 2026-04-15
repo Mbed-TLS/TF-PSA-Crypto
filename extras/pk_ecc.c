@@ -132,7 +132,7 @@ int mbedtls_pk_ecc_set_pubkey(mbedtls_pk_context *pk, const unsigned char *pub, 
          * - non-Weierstrass curves that only have one format;
          * - uncompressed format for Weierstrass curves. */
         if (pub_len > sizeof(pk->pub_raw)) {
-            return MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
+            return MBEDTLS_ERR_PK_INVALID_PUBKEY;
         }
         memcpy(pk->pub_raw, pub, pub_len);
         pk->pub_raw_len = pub_len;
