@@ -49,6 +49,8 @@
     ((alg) == PSA_ALG_DETERMINISTIC_ML_DSA || \
      (alg) == PSA_ALG_ML_DSA)
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+
 /** Export the public key of an ML-DSA key pair.
  *
  * \param[in] attributes        The key attributes.
@@ -140,5 +142,73 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
     psa_algorithm_t alg,
     const uint8_t *message, size_t message_length,
     const uint8_t *signature, size_t signature_length);
+
+/** Set up a pure-ML-DSA signature operation.
+ *
+ * \param operation             An operation structure. It must not
+ *                              be in use.
+ * \param[in] attributes        The key attributes.
+ * \param[in] key_buffer        The key material. This must be a key pair
+ *                              in the standard representation, i.e.
+ *                              just the 32-byte seed.
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ * \param alg                   The algorithm:
+ *                              #PSA_ALG_ML_DSA (not implemented yet) or
+ *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
+ *
+ * \retval 0
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The key type or size registered in \p attributes is not supported,
+ *         or the algorithm is not supported.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key material is invalid, or the key type is invalid for the
+ *         given algorithm.
+ */
+psa_status_t tf_psa_crypto_mldsa_sign_setup(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg);
+
+/** Set up a pure-ML-DSA verification operation.
+ *
+ * \param operation             An operation structure. It must not
+ *                              be in use.
+ * \param[in] attributes        The key attributes.
+ * \param[in] key_buffer        The key material. This must be a public key
+ *                              in the standard representation.
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ * \param alg                   The algorithm:
+ *                              #PSA_ALG_ML_DSA or
+ *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
+ *
+ * \retval 0
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The key type or size registered in \p attributes is not supported,
+ *         or the algorithm is not supported.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key material is invalid, or the key type is invalid for the
+ *         given algorithm.
+ */
+psa_status_t tf_psa_crypto_mldsa_verify_setup(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg);
+
+/** Abort a pure-ML-DSA signature or verification operation.
+ *
+ * \param operation             An operation structure. It must have
+ *                              been initialized.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ */
+psa_status_t tf_psa_crypto_mldsa_abort(
+    tf_psa_crypto_mldsa_operation_t *operation);
+
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #endif /* "psa_crypto_mldsa.h" */

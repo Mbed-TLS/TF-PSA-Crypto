@@ -12,6 +12,7 @@
 #include "psa_crypto_mldsa.h"
 #include "wrap_mldsa_native.h"
 #include <mbedtls/platform_util.h>
+#include <mbedtls/platform.h>
 
 /* The size of an ML-DSA seed in bytes.
  * The PSA API uses the seed as the private key.
@@ -193,6 +194,103 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
          */
         return PSA_ERROR_INVALID_SIGNATURE;
     }
+}
+
+static psa_status_t setup(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    psa_algorithm_t alg)
+{
+    memset(operation, 0, sizeof(*operation));
+
+    if (psa_get_key_bits(attributes) != 87) {
+        /* Other parameter sets are not supported yet. */
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    operation->parameter_set = psa_get_key_bits(attributes);
+
+    switch (alg) {
+        case PSA_ALG_DETERMINISTIC_ML_DSA:
+            operation->hedged = 0;
+            break;
+        case PSA_ALG_ML_DSA:
+            operation->hedged = 1;
+            break;
+        default:
+            return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_sign_setup(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg)
+{
+    psa_status_t status = setup(operation, attributes, alg);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    if (operation->hedged) {
+        /* not implemented yet */
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (key_buffer_size != SEED_SIZE) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    /* not implemented yet */
+    (void) key_buffer;
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_verify_setup(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg)
+{
+    psa_status_t status = setup(operation, attributes, alg);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (key_buffer_size != MLDSA87_PUBLICKEYBYTES) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    /* not implemented yet */
+    (void) key_buffer;
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t tf_psa_crypto_mldsa_abort(
+    tf_psa_crypto_mldsa_operation_t *operation)
+{
+    /* If operation->parameter_set is 0, we may have an operation object
+     * that's only partially initialized. This shouldn't happen, since
+     * the PSA crypto driver specification says that the core initialized
+     * driver contexts to all-bits-zero. But avoid calling free() in that
+     * case as an extra bit of robustness. Of course, if the operation
+     * object is completely uninitialized, there's no way to detect that.
+     */
+    if (operation->parameter_set != 0) {
+        mbedtls_zeroize_and_free(operation->key, operation->key_length);
+    }
+    mbedtls_platform_zeroize(operation, sizeof(*operation));
+    return PSA_SUCCESS;
 }
 
 #endif /* MBEDTLS_PSA_CRYPTO_C && TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */

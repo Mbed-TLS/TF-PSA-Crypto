@@ -243,3 +243,59 @@ exit:
     mbedtls_free(buf);
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void sign_setup(int type_arg, int bits_arg, int alg_arg,
+                data_t *seed,
+                psa_status_t expected_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    tf_psa_crypto_mldsa_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+
+    PSA_INIT();
+
+    psa_set_key_type(&attributes, type_arg);
+    psa_set_key_bits(&attributes, bits_arg);
+
+    TEST_EQUAL(tf_psa_crypto_mldsa_sign_setup(&operation,
+                                              &attributes,
+                                              seed->x, seed->len,
+                                              alg_arg),
+               expected_status);
+
+    PSA_ASSERT(tf_psa_crypto_mldsa_abort(&operation));
+
+exit:
+    tf_psa_crypto_mldsa_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void verify_setup(int type_arg, int bits_arg, int alg_arg,
+                  data_t *public_key,
+                  psa_status_t expected_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    tf_psa_crypto_mldsa_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+
+    PSA_INIT();
+
+    psa_set_key_type(&attributes, type_arg);
+    psa_set_key_bits(&attributes, bits_arg);
+
+    TEST_EQUAL(tf_psa_crypto_mldsa_verify_setup(&operation,
+                                                &attributes,
+                                                public_key->x, public_key->len,
+                                                alg_arg),
+               expected_status);
+
+    PSA_ASSERT(tf_psa_crypto_mldsa_abort(&operation));
+
+exit:
+    PSA_DONE();
+    tf_psa_crypto_mldsa_abort(&operation);
+}
+/* END_CASE */
