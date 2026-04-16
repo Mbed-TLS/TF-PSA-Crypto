@@ -15,7 +15,7 @@ import typing
 import scripts_path # pylint: disable=unused-import
 from mbedtls_framework import outcome_analysis
 
-import tf_psa_crypto_test_case_info
+from project_knowledge import tf_psa_crypto_test_case_info
 
 
 class CoverageTask(outcome_analysis.CoverageTask):
