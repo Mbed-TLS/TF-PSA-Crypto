@@ -606,9 +606,6 @@ component_test_no_pem_no_fs () {
 
     msg "test: !MBEDTLS_PEM_PARSE_C !MBEDTLS_FS_IO - main suites (inc. selftests) (ASan build)" # ~ 50s
     make test
-
-    msg "test: !MBEDTLS_PEM_PARSE_C !MBEDTLS_FS_IO - ssl-opt.sh (ASan build)" # ~ 6 min
-    tests/ssl-opt.sh
 }
 
 component_test_rsa_no_crt () {
@@ -619,19 +616,10 @@ component_test_rsa_no_crt () {
 
     msg "test: RSA_NO_CRT - main suites (inc. selftests) (ASan build)" # ~ 50s
     make test
-
-    msg "test: RSA_NO_CRT - RSA-related part of ssl-opt.sh (ASan build)" # ~ 5s
-    tests/ssl-opt.sh -f RSA
-
-    msg "test: RSA_NO_CRT - RSA-related part of compat.sh (ASan build)" # ~ 3 min
-    tests/compat.sh -t RSA
-
-    msg "test: RSA_NO_CRT - RSA-related part of context-info.sh (ASan build)" # ~ 15 sec
-    tests/context-info.sh
 }
 
-component_test_no_ctr_drbg_use_psa () {
-    msg "build: Full minus CTR_DRBG, PSA crypto in TLS"
+component_test_no_ctr_drbg () {
+    msg "build: Full minus CTR_DRBG"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
 
@@ -640,19 +628,10 @@ component_test_no_ctr_drbg_use_psa () {
 
     msg "test: Full minus CTR_DRBG, USE_PSA_CRYPTO - main suites"
     make test
-
-    # In this configuration, the TLS test programs use HMAC_DRBG.
-    # The SSL tests are slow, so run a small subset, just enough to get
-    # confidence that the SSL code copes with HMAC_DRBG.
-    msg "test: Full minus CTR_DRBG, USE_PSA_CRYPTO - ssl-opt.sh (subset)"
-    tests/ssl-opt.sh -f 'Default\|SSL async private.*delay=\|tickets enabled on server'
-
-    msg "test: Full minus CTR_DRBG, USE_PSA_CRYPTO - compat.sh (subset)"
-    tests/compat.sh -m tls12 -t 'ECDSA PSK' -V NO -p OpenSSL
 }
 
-component_test_no_hmac_drbg_use_psa () {
-    msg "build: Full minus HMAC_DRBG, PSA crypto in TLS"
+component_test_no_hmac_drbg () {
+    msg "build: Full minus HMAC_DRBG"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_HMAC_DRBG_C
     scripts/config.py unset PSA_WANT_ALG_DETERMINISTIC_ECDSA # requires HMAC_DRBG
@@ -662,23 +641,10 @@ component_test_no_hmac_drbg_use_psa () {
 
     msg "test: Full minus HMAC_DRBG, USE_PSA_CRYPTO - main suites"
     make test
-
-    # Normally our ECDSA implementation uses deterministic ECDSA. But since
-    # HMAC_DRBG is disabled in this configuration, randomized ECDSA is used
-    # instead.
-    # Test SSL with non-deterministic ECDSA. Only test features that
-    # might be affected by how ECDSA signature is performed.
-    msg "test: Full minus HMAC_DRBG, USE_PSA_CRYPTO - ssl-opt.sh (subset)"
-    tests/ssl-opt.sh -f 'Default\|SSL async private: sign'
-
-    # To save time, only test one protocol version, since this part of
-    # the protocol is identical in (D)TLS up to 1.2.
-    msg "test: Full minus HMAC_DRBG, USE_PSA_CRYPTO - compat.sh (ECDSA)"
-    tests/compat.sh -m tls12 -t 'ECDSA'
 }
 
-component_test_psa_external_rng_no_drbg_use_psa () {
-    msg "build: PSA_CRYPTO_EXTERNAL_RNG minus *_DRBG, PSA crypto in TLS"
+component_test_psa_external_rng_no_drbg () {
+    msg "build: PSA_CRYPTO_EXTERNAL_RNG minus *_DRBG"
     scripts/config.py full
     scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
     scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
@@ -692,9 +658,6 @@ component_test_psa_external_rng_no_drbg_use_psa () {
 
     msg "test: PSA_CRYPTO_EXTERNAL_RNG minus *_DRBG, PSA crypto - main suites"
     ctest
-
-    msg "test: PSA_CRYPTO_EXTERNAL_RNG minus *_DRBG, PSA crypto - ssl-opt.sh (subset)"
-    tests/ssl-opt.sh -f 'Default\|opaque'
 }
 
 component_test_psa_external_rng_use_psa_crypto () {
@@ -710,9 +673,6 @@ component_test_psa_external_rng_use_psa_crypto () {
 
     msg "test: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG/NV_SEED"
     ctest
-
-    msg "test: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG/NV_SEED"
-    tests/ssl-opt.sh -f 'Default\|opaque'
 }
 
 component_full_no_pkparse_pkwrite () {
@@ -831,17 +791,7 @@ component_test_full_no_cipher () {
 component_test_full_no_ccm () {
     msg "build: full no PSA_WANT_ALG_CCM"
 
-    # Full config enables:
-    # - USE_PSA_CRYPTO so that TLS code dispatches cipher/AEAD to PSA
-    # - CRYPTO_CONFIG so that PSA_WANT config symbols are evaluated
     scripts/config.py full
-
-    # Disable PSA_WANT_ALG_CCM so that CCM is not supported in PSA. CCM_C is still
-    # enabled, but not used from TLS since USE_PSA is set.
-    # This is helpful to ensure that TLS tests below have proper dependencies.
-    #
-    # Note: also PSA_WANT_ALG_CCM_STAR_NO_TAG is enabled, but it does not cause
-    # PSA_WANT_ALG_CCM to be re-enabled.
     scripts/config.py unset PSA_WANT_ALG_CCM
 
     cmake -D CMAKE_BUILD_TYPE:String=Release .
@@ -887,13 +837,12 @@ component_test_full_no_ccm_star_no_tag () {
 }
 
 component_test_config_symmetric_only () {
-    msg "build: configs/config-symmetric-only.h"
-    MBEDTLS_CONFIG="configs/config-symmetric-only.h"
+    msg "build: configs/crypto-config-symmetric-only.h"
     CRYPTO_CONFIG="tf-psa-crypto/configs/crypto-config-symmetric-only.h"
-    CC=$ASAN_CC cmake -DMBEDTLS_CONFIG_FILE="$MBEDTLS_CONFIG" -DTF_PSA_CRYPTO_CONFIG_FILE="$CRYPTO_CONFIG" -D CMAKE_BUILD_TYPE:String=Asan .
+    CC=$ASAN_CC cmake -DTF_PSA_CRYPTO_CONFIG_FILE="$CRYPTO_CONFIG" -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: configs/config-symmetric-only.h - unit tests"
+    msg "test: configs/crypto-config-symmetric-only.h - unit tests"
     make test
 }
 
@@ -908,13 +857,6 @@ component_test_everest () {
 
     msg "test: metatests (clang, ASan)"
     framework/scripts/run-metatests.sh any asan poison
-
-    msg "test: Everest ECDH context - ECDH-related part of ssl-opt.sh (ASan build)" # ~ 5s
-    tests/ssl-opt.sh -f ECDH
-
-    msg "test: Everest ECDH context - compat.sh with some ECDH ciphersuites (ASan build)" # ~ 3 min
-    # Exclude some symmetric ciphers that are redundant here to gain time.
-    tests/compat.sh -f ECDH -V NO -e 'ARIA\|CAMELLIA\|CHACHA'
 }
 
 component_test_everest_curve25519_only () {
@@ -939,11 +881,6 @@ component_test_everest_curve25519_only () {
 }
 
 # Check that the specified libraries exist and are empty.
-are_empty_libraries () {
-  nm "$@" >/dev/null 2>/dev/null
-  ! nm "$@" 2>/dev/null | grep -v ':$' | grep .
-}
-
 component_test_crypto_for_psa_service () {
   msg "build: make, config for PSA crypto service"
   scripts/config.py crypto
@@ -973,7 +910,6 @@ component_test_crypto_for_psa_service () {
   CFLAGS="-O1" cmake .
   cmake --build .
   ctest
-  are_empty_libraries library/libmbedx509.* library/libmbedtls.*
 }
 
 component_test_psa_crypto_config_ffdh_2048_only () {
@@ -992,19 +928,15 @@ component_test_psa_crypto_config_ffdh_2048_only () {
 
     msg "test: full config - only DH 2048"
     ctest
-
-    msg "ssl-opt: full config - only DH 2048"
-    tests/ssl-opt.sh -f "ffdh"
 }
 
 component_test_tfm_config_as_is () {
-    msg "build: configs/config-tfm.h"
-    MBEDTLS_CONFIG="configs/config-tfm.h"
+    msg "build: crypto_config_profile_medium.h"
     CRYPTO_CONFIG="tf-psa-crypto/configs/ext/crypto_config_profile_medium.h"
-    CC=$ASAN_CC cmake -DMBEDTLS_CONFIG_FILE="$MBEDTLS_CONFIG" -DTF_PSA_CRYPTO_CONFIG_FILE="$CRYPTO_CONFIG" -D CMAKE_BUILD_TYPE:String=Asan .
+    CC=$ASAN_CC cmake -DTF_PSA_CRYPTO_CONFIG_FILE="$CRYPTO_CONFIG" -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: configs/config-tfm.h - unit tests"
+    msg "test: crypto_config_profile_medium.h - unit tests"
     make test
 }
 
@@ -1013,7 +945,6 @@ component_test_tfm_config_as_is () {
 # - component_test_tfm_config_no_p256m()
 common_tfm_config () {
     # Enable TF-M config
-    cp configs/config-tfm.h "$CONFIG_H"
     cp tf-psa-crypto/configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
 
     # Config adjustment for better test coverage in our environment.
@@ -1111,10 +1042,6 @@ component_test_psa_ecc_key_pair_no_derive () {
 }
 
 component_test_psa_ecc_key_pair_no_generate () {
-    # TLS needs ECC key generation whenever ephemeral ECDH is enabled.
-    # We don't have proper guards for configurations with ECC key generation
-    # disabled (https://github.com/Mbed-TLS/mbedtls/issues/9481). Until
-    # then (if ever), just test the crypto part of the library.
     build_and_test_psa_want_key_pair_partial crypto_full "ECC" "GENERATE"
 }
 
