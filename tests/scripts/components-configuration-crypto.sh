@@ -10,6 +10,7 @@
 ################################################################
 
 CMAKE_BUILTIN_BUILD_DIR="drivers/builtin/CMakeFiles/builtin.dir/src"
+CMAKE_EXTRAS_BUILD_DIR="extras/CMakeFiles/extras.dir"
 
 component_test_accel_ecc_all () {
     msg "build: full + all ECC accelerated"
