@@ -606,6 +606,7 @@ static psa_key_usage_t select_canonical_usage(const mbedtls_pk_context *pk)
             return mbedtls_svc_key_id_is_null(pk->priv_id) ?
                    PSA_KEY_USAGE_DERIVE_PUBLIC : PSA_KEY_USAGE_DERIVE;
 
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
         case MBEDTLS_PK_ECKEY:
             if (pk->ec_family == PSA_ECC_FAMILY_MONTGOMERY) {
                 return mbedtls_svc_key_id_is_null(pk->priv_id) ?
@@ -614,6 +615,7 @@ static psa_key_usage_t select_canonical_usage(const mbedtls_pk_context *pk)
             return mbedtls_svc_key_id_is_null(pk->priv_id) ?
                    PSA_KEY_USAGE_VERIFY_HASH : PSA_KEY_USAGE_SIGN_HASH;
 
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
         default:
             return 0;
     }
@@ -653,11 +655,11 @@ static int common_context_checks(mbedtls_pk_context *pk,
 
     TEST_ASSERT(psa_get_key_bits(attributes) != 0);
     //ec_family
-    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     if (PSA_KEY_TYPE_IS_ECC(psa_get_key_type(attributes))) {
         TEST_ASSERT(PSA_KEY_TYPE_ECC_GET_FAMILY(pk->psa_type) == pk->ec_family);
     }
-    #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
     ret = 0;
 
 exit:
