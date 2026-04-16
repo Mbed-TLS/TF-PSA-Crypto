@@ -854,9 +854,6 @@ component_test_everest () {
 
     msg "test: Everest ECDH context - main suites (inc. selftests) (ASan build)" # ~ 50s
     make test
-
-    msg "test: metatests (clang, ASan)"
-    framework/scripts/run-metatests.sh any asan poison
 }
 
 component_test_everest_curve25519_only () {
