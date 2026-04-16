@@ -2790,9 +2790,9 @@ void pk_parse_key(data_t *buf, int result)
     USE_PSA_INIT();
 
     TEST_ASSERT(mbedtls_pk_parse_key(&pk, buf->x, buf->len, NULL, 0) == result);
-    if(result == 0) {
+    if (result == 0) {
         TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
-    } 
+    }
 
 exit:
     mbedtls_pk_free(&pk);
