@@ -2790,6 +2790,9 @@ void pk_parse_key(data_t *buf, int result)
     USE_PSA_INIT();
 
     TEST_ASSERT(mbedtls_pk_parse_key(&pk, buf->x, buf->len, NULL, 0) == result);
+    if(result == 0) {
+        TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
+    } 
 
 exit:
     mbedtls_pk_free(&pk);
@@ -2807,7 +2810,7 @@ void pk_parse_key_encrypted(data_t *buf, data_t *pass, int result, int bits, int
 
     TEST_EQUAL(mbedtls_pk_parse_key_pkcs8_encrypted_der(&pk, buf->x, buf->len,
                                                         pass->x, pass->len), result);
-    TEST_ASSERT(validate_pk_context(&pk, NULL, bits) == 0);
+    TEST_ASSERT(validate_pk_context(&pk, NULL) == 0);
 exit:
     mbedtls_pk_free(&pk);
     USE_PSA_DONE();
