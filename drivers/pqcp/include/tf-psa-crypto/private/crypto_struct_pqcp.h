@@ -35,10 +35,14 @@ typedef struct psa_xof_operation_s tf_psa_crypto_mldsa_shake256_t;
 #endif
 
 typedef struct {
+    /* Depending on the library version and compilation options, some fields
+     * may be unused or repurposed. See psa_crypto_mldsa.c for actual usage
+     * details. */
     uint8_t parameter_set;      /* 44, 65 or 87 */
     uint8_t hedged;             /* 0=deterministic, 1=hedged */
     uint8_t context_set;        /* boolean: has set_context been called? */
-    size_t key_length;          /* Size of key in bytes */
+    uint8_t reserved;           /* uses space anyway, reserver for future use */
+    size_t key_length;          /* size of key in bytes */
     uint8_t *key;               /* heap pointer, owned by the driver */
     tf_psa_crypto_mldsa_shake256_t shake;
 } tf_psa_crypto_mldsa_operation_t;
