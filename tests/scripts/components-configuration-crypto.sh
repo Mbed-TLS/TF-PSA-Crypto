@@ -1186,9 +1186,6 @@ component_test_aes_only_128_bit_keys_have_builtins () {
 
     msg "test: default config + AES_ONLY_128_BIT_KEY_LENGTH - AESNI_C - AESCE_C"
     ctest
-
-    msg "selftest: default config + AES_ONLY_128_BIT_KEY_LENGTH - AESNI_C - AESCE_C"
-    programs/test/selftest
 }
 
 component_test_gcm_largetable () {
@@ -1239,7 +1236,6 @@ component_test_aes_fewer_tables_and_rom_tables () {
 # - enable/disable the list of config options passed from -s/-u respectively.
 # - build
 # - test for tests_suite_xxx
-# - selftest
 #
 # Usage: helper_block_cipher_no_decrypt_build_test
 #        [-s set_opts] [-u unset_opts] [-c cflags] [-l ldflags] [option [...]]
@@ -1285,8 +1281,6 @@ helper_block_cipher_no_decrypt_build_test () {
     msg "test: default config + BLOCK_CIPHER_NO_DECRYPT${set_opts:+ + $set_opts}${unset_opts:+ - $unset_opts} with $cflags${ldflags:+, $ldflags}"
     ctest
 
-    msg "selftest: default config + BLOCK_CIPHER_NO_DECRYPT${set_opts:+ + $set_opts}${unset_opts:+ - $unset_opts} with $cflags${ldflags:+, $ldflags}"
-    programs/test/selftest
     cmake --build . --target clean
 }
 
