@@ -529,7 +529,7 @@ component_build_psa_crypto_spm () {
     # aren't equipped for the modified names used when MBEDTLS_PSA_CRYPTO_SPM
     # is active.
     CFLAGS="-I$PWD/framework/tests/include/spe" cmake -D CMAKE_BUILD_TYPE:String=Release .
-    cmake --build . --target lib
+    cmake --build . --target tfpsacrypto
 
     # Check that if a symbol is renamed by crypto_spe.h, the non-renamed
     # version is not present.
