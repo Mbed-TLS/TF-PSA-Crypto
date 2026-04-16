@@ -540,7 +540,7 @@ component_test_psa_assume_exclusive_buffers () {
 
 component_test_crypto_with_static_key_slots() {
     msg "build: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
-    scripts/config.py crypto_full
+    scripts/config.py full
     scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
     # Intentionally set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE to a value that
     # is enough to contain:
@@ -678,7 +678,7 @@ component_test_psa_external_rng_use_psa_crypto () {
 component_full_no_pkparse_pkwrite () {
     msg "build: full without pkparse and pkwrite"
 
-    scripts/config.py crypto_full
+    scripts/config.py full
     scripts/config.py unset MBEDTLS_PK_PARSE_C
     scripts/config.py unset MBEDTLS_PK_WRITE_C
 
@@ -725,7 +725,7 @@ component_full_no_pkwrite () {
 
 component_test_crypto_full_md_light_only () {
     msg "build: crypto_full with only the light subset of MD"
-    scripts/config.py crypto_full
+    scripts/config.py full
 
     # Disable MD
     scripts/config.py unset MBEDTLS_MD_C
@@ -883,7 +883,6 @@ component_test_everest_curve25519_only () {
 # Check that the specified libraries exist and are empty.
 component_test_crypto_for_psa_service () {
   msg "build: make, config for PSA crypto service"
-  scripts/config.py crypto
   scripts/config.py set MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
   # Disable things that are not needed for just cryptography, to
   # reach a configuration that would be typical for a PSA cryptography
@@ -1042,7 +1041,7 @@ component_test_psa_ecc_key_pair_no_derive () {
 }
 
 component_test_psa_ecc_key_pair_no_generate () {
-    build_and_test_psa_want_key_pair_partial crypto_full "ECC" "GENERATE"
+    build_and_test_psa_want_key_pair_partial full "ECC" "GENERATE"
 }
 
 # This is a temporary test to verify that full RSA support is present even when
@@ -1058,9 +1057,6 @@ component_test_new_psa_want_key_pair_symbol () {
         MBEDTLS_TEST_OUTCOME_FILE="$PWD/out.csv"
         export MBEDTLS_TEST_OUTCOME_FILE
     fi
-
-    # Start from crypto configuration
-    scripts/config.py crypto
 
     # Remove RSA dependencies
     scripts/config.py unset MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
