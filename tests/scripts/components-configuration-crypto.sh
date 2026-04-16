@@ -838,7 +838,7 @@ component_test_full_no_ccm_star_no_tag () {
 
 component_test_config_symmetric_only () {
     msg "build: configs/crypto-config-symmetric-only.h"
-    CRYPTO_CONFIG="tf-psa-crypto/configs/crypto-config-symmetric-only.h"
+    CRYPTO_CONFIG="configs/crypto-config-symmetric-only.h"
     CC=$ASAN_CC cmake -DTF_PSA_CRYPTO_CONFIG_FILE="$CRYPTO_CONFIG" -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -932,7 +932,7 @@ component_test_psa_crypto_config_ffdh_2048_only () {
 
 component_test_tfm_config_as_is () {
     msg "build: crypto_config_profile_medium.h"
-    CRYPTO_CONFIG="tf-psa-crypto/configs/ext/crypto_config_profile_medium.h"
+    CRYPTO_CONFIG="configs/ext/crypto_config_profile_medium.h"
     CC=$ASAN_CC cmake -DTF_PSA_CRYPTO_CONFIG_FILE="$CRYPTO_CONFIG" -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -945,7 +945,7 @@ component_test_tfm_config_as_is () {
 # - component_test_tfm_config_no_p256m()
 common_tfm_config () {
     # Enable TF-M config
-    cp tf-psa-crypto/configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
+    cp configs/ext/crypto_config_profile_medium.h "$CRYPTO_CONFIG_H"
 
     # Config adjustment for better test coverage in our environment.
     # This is not needed just to build and pass tests.
@@ -974,7 +974,7 @@ component_test_tfm_config_p256m_driver_accel_ec () {
     not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.c.o
     not grep mbedtls_mpi_ ${CMAKE_BUILTIN_BUILD_DIR}/bignum.c.o
     # Check that p256m was built
-    grep -q p256_ecdsa_ library/libmbedcrypto.a
+    grep -q p256_ecdsa_ core/libtfpsacrypto.a
 
     # In "config-tfm.h" we disabled CIPHER_C tweaking TF-M's configuration
     # files, so we want to ensure that it has not be re-enabled accidentally.
@@ -1116,9 +1116,7 @@ component_test_aead_only_ccm () {
 component_test_ccm_aes_sha256 () {
     msg "build: CCM + AES + SHA256 configuration"
 
-    # Setting a blank config disables everyhing in the library side.
-    echo '#define MBEDTLS_CONFIG_H ' >"$CONFIG_H"
-    cp tf-psa-crypto/configs/crypto-config-ccm-aes-sha256.h "$CRYPTO_CONFIG_H"
+    cp configs/crypto-config-ccm-aes-sha256.h "$CRYPTO_CONFIG_H"
 
     cmake -D CMAKE_BUILD_TYPE:String=Release .
     cmake --build .
