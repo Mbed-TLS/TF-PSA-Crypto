@@ -61,7 +61,7 @@
  * \param[out] data_length      On success, the length of the data written
  *                              to \p data.
  *
- * \retval 0
+ * \retval #PSA_SUCCESS
  *         Success.
  * \retval #PSA_ERROR_NOT_SUPPORTED
  *         The key type or size registered in \p attributes is not supported.
@@ -92,7 +92,7 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
  * \param[out] signature_length On success, the length of the data written
  *                              to \p signature.
  *
- * \retval 0
+ * \retval #PSA_SUCCESS
  *         Success.
  * \retval #PSA_ERROR_NOT_SUPPORTED
  *         The key type or size registered in \p attributes is not supported,
@@ -121,10 +121,10 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
  *                              #PSA_ALG_DETERMINISTIC_ML_DSA.
  * \param[in] message           The message to verify.
  * \param message_length        The length of \p message, in bytes.
- * \param[out] signature        The signature to verify.
+ * \param[in] signature         The signature to verify.
  * \param signature_length      The length of \p signature, in bytes.
  *
- * \retval 0
+ * \retval #PSA_SUCCESS
  *         Success.
  * \retval #PSA_ERROR_NOT_SUPPORTED
  *         The key type or size registered in \p attributes is not supported,
