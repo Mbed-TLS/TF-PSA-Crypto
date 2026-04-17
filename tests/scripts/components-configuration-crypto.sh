@@ -1070,7 +1070,7 @@ component_test_ccm_aes_sha256 () {
 }
 
 support_build_aes_aesce_armcc () {
-    support_build_armcc
+    support_build_tf_psa_crypto_armcc
 }
 
 # For timebeing, no aarch64 gcc available in CI and no arm64 CI node.
@@ -1278,7 +1278,7 @@ component_test_block_cipher_no_decrypt_aesni () {
 }
 
 support_test_block_cipher_no_decrypt_aesce_armcc () {
-    support_build_armcc
+    support_build_tf_psa_crypto_armcc
 }
 
 component_test_block_cipher_no_decrypt_aesce_armcc () {
