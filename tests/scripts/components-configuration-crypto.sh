@@ -514,3 +514,34 @@ component_test_pqcp_own_shake_no_builtin () {
     msg "test: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHA3/SHAKE disabled"
     ctest
 }
+
+component_build_mldsa_program_symbol_partition () {
+    msg "build: ML-DSA program symbol partition"
+
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
+    scripts/config.py set MBEDTLS_ASN1_WRITE_C
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DENABLE_PROGRAMS=ON -DENABLE_TESTING=OFF "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build . --target mldsa_export_public mldsa_sign mldsa_verify
+
+    nm -C --defined-only programs/mldsa/mldsa_sign > mldsa_sign.syms
+    nm -C --defined-only programs/mldsa/mldsa_verify > mldsa_verify.syms
+    nm -C --defined-only programs/mldsa/mldsa_export_public > mldsa_export_public.syms
+
+    grep -Eq \
+        'tf_psa_crypto_mldsa_sign_message|tf_psa_crypto_pqcp_mldsa87_signature_internal' \
+        mldsa_sign.syms
+
+    not grep -Eq \
+        'tf_psa_crypto_mldsa_sign_message|tf_psa_crypto_pqcp_mldsa87_signature_internal' \
+        mldsa_verify.syms
+    not grep -Eq \
+        'tf_psa_crypto_mldsa_sign_message|tf_psa_crypto_pqcp_mldsa87_signature_internal' \
+        mldsa_export_public.syms
+
+    grep -Eq \
+        'tf_psa_crypto_mldsa_verify_message|tf_psa_crypto_pqcp_mldsa87_verify' \
+        mldsa_verify.syms
+}
