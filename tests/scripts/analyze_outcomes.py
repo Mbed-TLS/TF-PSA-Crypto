@@ -25,35 +25,17 @@ class CoverageTask(outcome_analysis.CoverageTask):
     # covered by Mbed TLS testing.
     # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/740
     IGNORED_TESTS = {
-        'test_suite_aes.xts': [
-            re.compile('.*'),
-        ],
-        'test_suite_block_cipher': [
-            re.compile('.*'),
-        ],
-        'test_suite_cipher.aes': [
-            re.compile('.*XTS.*'),
-        ],
         'test_suite_config.psa_boolean': [
-            re.compile('.* !.*'),
-            'Config: MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH',
-            'Config: MBEDTLS_BLOCK_CIPHER_NO_DECRYPT',
+            'Config: !MBEDTLS_PLATFORM_C',
+            'Config: !MBEDTLS_PSA_CRYPTO_C',
+            'Config: !PSA_WANT_ALG_HKDF',
+            'Config: !PSA_WANT_ALG_SHA_224',
+            'Config: !PSA_WANT_ALG_SHA_256',
+            'Config: !PSA_WANT_ALG_TLS12_PRF',
+            'Config: !PSA_WANT_ALG_TLS12_PSK_TO_MS',
+            'Config: !PSA_WANT_KEY_TYPE_AES',
             'Config: MBEDTLS_DEPRECATED_WARNING',
-            'Config: MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED',
-            'Config: MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS',
             'Config: MBEDTLS_PSA_CRYPTO_CLIENT',
-            'Config: MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG',
-            'Config: MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER',
-            'Config: MBEDTLS_PSA_P256M_DRIVER_ENABLED',
-            'Config: MBEDTLS_PSA_STATIC_KEY_SLOTS',
-            'Config: MBEDTLS_RSA_NO_CRT',
-        ],
-        'test_suite_config.psa_combinations': [
-            'Config: PSA_WANT_ALG_ECDSA without PSA_WANT_ALG_DETERMINISTIC_ECDSA',
-        ],
-        'test_suite_ctr_drbg': [
-            re.compile('.*AES-128.*'),
-            'CTR_DRBG entropy strength: 128 bits',
         ],
         'test_suite_pk': [
             'PK size macro: MBEDTLS_PK_ECP_PRV_DER_MAX_BYTES: only curve is P-256',
@@ -61,31 +43,14 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'PK size macro: MBEDTLS_PK_MAX_PUBKEY_RAW_LEN: RSA, !ECC',
         ],
         'test_suite_psa_crypto': [
-            'PSA MAC setup: algorithm known but not supported, long key',
-            'PSA MAC setup: algorithm known but not supported, short key',
-            'PSA MAC setup: bad algorithm (unsupported HMAC hash algorithm)',
             'PSA generate key custom: RSA, e=3 with driver and no fallback (not yet supported)',
-            'PSA generate key: RSA, key pair size does not fit in static key buffer',
-            'PSA generate key: RSA, key pair size fits in static key buffer',
-            'PSA sign hash int (ops=inf): det ECDSA not supported',
-            'PSA sign hash int (ops=min): det ECDSA not supported',
             'PSA sign hash int: ECDSA not supported',
-            'PSA sign hash: deterministic ECDSA not supported',
-            'PSA sign message: deterministic ECDSA not supported',
-            'PSA verify hash with keypair: deterministic ECDSA SECP256R1, only randomized supported', #pylint: disable=line-too-long
-            'PSA verify hash: deterministic ECDSA SECP256R1, only randomized supported',
         ],
         'test_suite_psa_crypto_driver_wrappers': [
             re.compile('PSA MAC .*'),
             re.compile('PSA decrypt transparent driver: .*'),
             re.compile('PSA encrypt transparent driver: .*'),
             re.compile('PSA encrypt-decrypt transparent driver: .*'),
-        ],
-        'test_suite_psa_crypto_entropy': [
-            'Fake entropy: more than one block in two steps',
-            'Fake entropy: one block eventually',
-            'Fake entropy: one block in two steps',
-            re.compile('PSA external RNG failure: .*'),
         ],
         'test_suite_psa_crypto_not_supported.generated': [
             re.compile('.*'),
@@ -94,23 +59,7 @@ class CoverageTask(outcome_analysis.CoverageTask):
             re.compile('.* !.*'),
         ],
         'test_suite_psa_crypto_op_fail.misc': [
-            'PSA sign DETERMINISTIC_ECDSA(SHA_256): !DETERMINISTIC_ECDSA but ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
             'PSA sign RSA_PSS(SHA_256): RSA_PSS not enabled, key pair',
-        ],
-        'test_suite_psa_crypto_persistent_key': [
-            re.compile('Load key: owner=[^0].*'),
-        ],
-        'test_suite_psa_crypto_slot_management': [
-            'Copy persistent to persistent, same id but different owner',
-            'Create not supported',
-            'Non reusable key slots integrity in case of key slot starvation',
-        ],
-        'test_suite_psa_crypto_storage_format.misc': [
-            'PSA storage read: key larger than MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE',
-        ],
-        'test_suite_random': [
-            'PSA classic wrapper: HMAC_DRBG max',
-            'PSA classic wrapper: external RNG large',
         ],
     }
 
