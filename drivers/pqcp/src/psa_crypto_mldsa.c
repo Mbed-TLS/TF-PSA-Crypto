@@ -21,10 +21,25 @@
  */
 #define SEED_SIZE 32
 
+/* We want to expose size values in public headers, but we don't want to
+ * expose the header that defines macros for these values in mldsa-native.
+ * So we define our own macros in public headers, and check that the
+ * values match.
+ */
+#if MLDSA87_BYTES != PSA_MLDSA_SIGNATURE_SIZE(87)
+#error "PSA and mldsa-native disagree on the ML-DSA-87 signature size"
+#endif
+
 /* For now, hard-coded values for MLDSA-87 */
 #define TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
 #define TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE MLDSA87_PUBLICKEYBYTES
 #define TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE MLDSA87_BYTES
+
+/* Check that what the API adversises as a sufficient output buffer for
+ * sign_message() is enough for the largest signature we might write. */
+#if TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE > PSA_MLDSA_SIGNATURE_MAX_SIZE
+#error "PSA and mldsa-native disagree on the maximum ML-DSA signature size"
+#endif
 
 static psa_status_t pqcp_to_psa_error(int ret)
 {
