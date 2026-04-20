@@ -178,11 +178,10 @@ component_tf_psa_crypto_install_with_destdir () {
 
     install_lib_path="$OUT_OF_SOURCE_DIR/stage/usr/${install_lib_subdir}"
 
+    [ -f "$install_lib_path/libtfpsacrypto.a" ]
     if [[ "$OSTYPE" == darwin* ]]; then
-        [ -f "$install_lib_path/libtfpsacrypto.a" ]
         [ -e "$install_lib_path/libtfpsacrypto.dylib" ]
     else
-        [ -f "$install_lib_path/libtfpsacrypto.a" ]
         [ -L "$install_lib_path/libtfpsacrypto.so" ]
         [ -e "$install_lib_path/libtfpsacrypto.so" ]
 
