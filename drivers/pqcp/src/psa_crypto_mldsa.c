@@ -303,6 +303,25 @@ static psa_status_t setup(
     return PSA_SUCCESS;
 }
 
+static void start_pure(tf_psa_crypto_mldsa_shake256_t *shake_ctx,
+                       const uint8_t *public_key, size_t public_key_length)
+{
+    /* Hash the public key */
+    mld_shake256_init(shake_ctx);
+    mld_shake256_absorb(shake_ctx, public_key, public_key_length);
+    mld_shake256_finalize(shake_ctx);
+    uint8_t tr[MLDSA_CRHBYTES];
+    mld_shake256_squeeze(tr, sizeof(tr), shake_ctx);
+    mld_shake256_release(shake_ctx);
+    mld_shake256_init(shake_ctx);
+    mld_shake256_absorb(shake_ctx, tr, sizeof(tr));
+
+    /* Hash the domain separation prefix */
+    tr[0] = 0;                  /* pure ML-DSA (1 for Hash-ML-DSA) */
+    tr[1] = 0;                  /* context length */
+    mld_shake256_absorb(shake_ctx, tr, 2);
+}
+
 psa_status_t tf_psa_crypto_mldsa_sign_setup(
     tf_psa_crypto_mldsa_operation_t *operation,
     const psa_key_attributes_t *attributes,
@@ -326,10 +345,39 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    /* not implemented yet */
-    (void) key_buffer;
+    /* After this point, we may allocate memory, so we must go through
+     * cleanup. */
+    size_t public_key_length = MLDSA87_PUBLICKEYBYTES;
+    uint8_t *public_key = mbedtls_calloc(1, public_key_length);
+    if (public_key == NULL) {
+        status = PSA_ERROR_INSUFFICIENT_MEMORY;
+        goto cleanup;
+    }
+    operation->key = mbedtls_calloc(1, MLDSA87_SECRETKEYBYTES);
+    if (operation->key == NULL) {
+        status = PSA_ERROR_INSUFFICIENT_MEMORY;
+        goto cleanup;
+    }
+    operation->key_length = MLDSA87_SECRETKEYBYTES;
 
-    return PSA_SUCCESS;
+    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public_key,
+                                                          operation->key,
+                                                          key_buffer);
+    if (ret != 0) {
+        status = pqcp_to_psa_error(ret);
+        goto cleanup;
+    }
+
+    start_pure(&operation->shake, public_key, public_key_length);
+
+cleanup:
+    mbedtls_free(public_key);
+    if (status != PSA_SUCCESS) {
+        mbedtls_zeroize_and_free(operation->key, operation->key_length);
+        mld_shake256_release(&operation->shake);
+        mbedtls_platform_zeroize(operation, sizeof(*operation));
+    }
+    return status;
 }
 
 psa_status_t tf_psa_crypto_mldsa_verify_setup(
@@ -353,20 +401,7 @@ psa_status_t tf_psa_crypto_mldsa_verify_setup(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    /* Hash the public key */
-    mld_shake256_init(&operation->shake);
-    mld_shake256_absorb(&operation->shake, key_buffer, key_buffer_size);
-    mld_shake256_finalize(&operation->shake);
-    uint8_t tr[MLDSA_CRHBYTES];
-    mld_shake256_squeeze(tr, sizeof(tr), &operation->shake);
-    mld_shake256_release(&operation->shake);
-    mld_shake256_init(&operation->shake);
-    mld_shake256_absorb(&operation->shake, tr, sizeof(tr));
-
-    /* Hash the domain separation prefix */
-    tr[0] = 0;                  /* pure ML-DSA (1 for Hash-ML-DSA) */
-    tr[1] = 0;                  /* context length */
-    mld_shake256_absorb(&operation->shake, tr, 2);
+    start_pure(&operation->shake, key_buffer, key_buffer_size);
 
     return PSA_SUCCESS;
 }
@@ -386,15 +421,42 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
 {
     *signature_length = 0;
 
-    if (key_buffer_size != SEED_SIZE) {
-        return PSA_ERROR_INVALID_ARGUMENT;
+    if (operation->parameter_set != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (signature_size < MLDSA87_BYTES) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
-    /* not implemented yet */
+    /* Rely on setup() having stored the expanded private key in the
+     * operation structure. This is a performance/memory trade-off:
+     * we could instead re-expand the private key from the seed
+     * in \p key_buffer here. */
+    if (operation->key_length != MLDSA87_SECRETKEYBYTES) {
+        return PSA_ERROR_CORRUPTION_DETECTED;
+    }
     (void) key_buffer;
-    (void) signature;
-    (void) signature_size;
-    return tf_psa_crypto_mldsa_abort(operation);
+    (void) key_buffer_size;
+
+    uint8_t mu[MLDSA_CRHBYTES];
+    mld_shake256_finalize(&operation->shake);
+    mld_shake256_squeeze(mu, sizeof(mu), &operation->shake);
+    mld_shake256_release(&operation->shake);
+
+    uint8_t rnd[MLDSA_RNDBYTES];
+    memset(rnd, 0, sizeof(rnd));
+
+    int ret = tf_psa_crypto_pqcp_mldsa87_signature_internal(
+        signature, signature_length,
+        mu, sizeof(mu),
+        NULL, 0, rnd,
+        operation->key, 1);
+
+    psa_status_t abort_status = tf_psa_crypto_mldsa_abort(operation);
+    if (abort_status != PSA_SUCCESS) {
+        return abort_status;
+    }
+    return pqcp_to_psa_error(ret);
 }
 
 psa_status_t tf_psa_crypto_mldsa_verify_finish(
