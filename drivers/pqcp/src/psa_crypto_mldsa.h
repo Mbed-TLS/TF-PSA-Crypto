@@ -205,6 +205,69 @@ psa_status_t tf_psa_crypto_mldsa_verify_setup(
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg);
 
+/** Add a message chunk to a pure-ML-DSA signature or verification operation.
+ *
+ * \param operation             An operation structure. It must have
+ *                              been set up and not finished
+ *                              or aborted yet.
+ * \param[in] input             The message chunk.
+ * \param input_length          The length of \p input, in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The state of \p operation has been detected as inconsistent
+ *         with the request. Note that this function does not guarantee
+ *         that an inconsistent state is detected.
+ */
+psa_status_t tf_psa_crypto_mldsa_update(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *input, size_t input_length);
+
+/** Finish a pure-ML-DSA signature operation.
+ *
+ * \param operation             An operation structure. It must have
+ *                              been set up for signing and not finished
+ *                              or aborted yet.
+ * \param[out] signature        On success, the exported key.
+ * \param signature_size        The size of \p signature, in bytes.
+ * \param[out] signature_length On success, the length of the data written
+ *                              to \p signature.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The state of \p operation has been detected as inconsistent
+ *         with the request. Note that this function does not guarantee
+ *         that an inconsistent state is detected.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         \p signature_size is too small.
+ */
+psa_status_t tf_psa_crypto_mldsa_sign_finish(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    uint8_t *signature, size_t signature_size, size_t *signature_length);
+
+/** Finish a pure-ML-DSA verification operation.
+ *
+ * \param operation             An operation structure. It must have
+ *                              been set up for verifying and not finished
+ *                              or aborted yet.
+ * \param[in] signature         The signature to verify.
+ * \param signature_length      The length of \p signature, in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The state of \p operation has been detected as inconsistent
+ *         with the request. Note that this function does not guarantee
+ *         that an inconsistent state is detected.
+ * \retval #PSA_ERROR_INVALID_SIGNATURE
+ *         The signature is not valid for this message.
+ */
+psa_status_t tf_psa_crypto_mldsa_verify_finish(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *signature, size_t signature_length);
+
 /** Abort a pure-ML-DSA signature or verification operation.
  *
  * \param operation             An operation structure. It must have

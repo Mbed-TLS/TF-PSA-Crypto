@@ -291,6 +291,38 @@ psa_status_t tf_psa_crypto_mldsa_verify_setup(
     return PSA_SUCCESS;
 }
 
+psa_status_t tf_psa_crypto_mldsa_update(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *input, size_t input_length)
+{
+    /* not implemented yet */
+    (void) operation;
+    (void) input;
+    (void) input_length;
+    return PSA_ERROR_GENERIC_ERROR;
+}
+
+psa_status_t tf_psa_crypto_mldsa_sign_finish(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    uint8_t *signature, size_t signature_size, size_t *signature_length)
+{
+    *signature_length = 0;
+    /* not implemented yet */
+    (void) signature;
+    (void) signature_size;
+    return tf_psa_crypto_mldsa_abort(operation);
+}
+
+psa_status_t tf_psa_crypto_mldsa_verify_finish(
+    tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *signature, size_t signature_length)
+{
+    /* not implemented yet */
+    (void) signature;
+    (void) signature_length;
+    return tf_psa_crypto_mldsa_abort(operation);
+}
+
 psa_status_t tf_psa_crypto_mldsa_abort(
     tf_psa_crypto_mldsa_operation_t *operation)
 {

@@ -299,3 +299,95 @@ exit:
     tf_psa_crypto_mldsa_abort(&operation);
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void sign_deterministic_multipart(
+    int type, int bits, int alg, data_t *seed,
+    int n_chunks, data_t *chunk1, data_t *chunk2, data_t *chunk3,
+    data_t *expected_signature, int expected_finish_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    tf_psa_crypto_mldsa_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+    const size_t signature_size = expected_signature->len;
+    size_t signature_length = SIZE_MAX;
+    uint8_t *signature = NULL;
+
+    PSA_INIT();
+    TEST_CALLOC(signature, signature_size);
+
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+
+    PSA_ASSERT(tf_psa_crypto_mldsa_sign_setup(&operation,
+                                              &attributes,
+                                              seed->x, seed->len,
+                                              alg));
+    if (n_chunks >= 1) {
+        PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
+                                              chunk1->x, chunk1->len));
+    }
+    if (n_chunks >= 2) {
+        PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
+                                              chunk2->x, chunk2->len));
+    }
+    if (n_chunks >= 3) {
+        PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
+                                              chunk3->x, chunk3->len));
+    }
+    TEST_EQUAL(tf_psa_crypto_mldsa_sign_finish(&operation,
+                                               signature, signature_size,
+                                               &signature_length),
+               expected_finish_status);
+    if (expected_finish_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(expected_signature->x, expected_signature->len,
+                            signature, signature_length);
+    }
+
+exit:
+    tf_psa_crypto_mldsa_abort(&operation);
+    PSA_DONE();
+    mbedtls_free(signature);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void verify_multipart(
+    int type, int bits, int alg, data_t *public_key,
+    int n_chunks, data_t *chunk1, data_t *chunk2, data_t *chunk3,
+    data_t *signature, int expected_verify_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    tf_psa_crypto_mldsa_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+
+    PSA_INIT();
+
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+
+    PSA_ASSERT(tf_psa_crypto_mldsa_verify_setup(&operation,
+                                                &attributes,
+                                                public_key->x, public_key->len,
+                                                alg));
+    if (n_chunks >= 1) {
+        PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
+                                              chunk1->x, chunk1->len));
+    }
+    if (n_chunks >= 2) {
+        PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
+                                              chunk2->x, chunk2->len));
+    }
+    if (n_chunks >= 3) {
+        PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
+                                              chunk3->x, chunk3->len));
+    }
+    TEST_EQUAL(tf_psa_crypto_mldsa_verify_finish(&operation,
+                                                 signature->x, signature->len),
+               expected_verify_status);
+
+exit:
+    PSA_DONE();
+    tf_psa_crypto_mldsa_abort(&operation);
+}
+/* END_CASE */
