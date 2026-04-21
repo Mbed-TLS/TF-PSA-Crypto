@@ -515,6 +515,13 @@ component_test_pqcp_own_shake_no_builtin () {
     ctest
 }
 
+support_build_mldsa_program_symbol_partition () {
+    case "$OSTYPE" in
+        msys*|cygwin*|win32*) false ;;
+        *) type nm >/dev/null 2>/dev/null ;;
+    esac
+}
+
 component_build_mldsa_program_symbol_partition () {
     msg "build: ML-DSA program symbol partition"
 
@@ -524,7 +531,9 @@ component_build_mldsa_program_symbol_partition () {
 
     cd "$OUT_OF_SOURCE_DIR"
     cmake -DENABLE_PROGRAMS=ON -DENABLE_TESTING=OFF "$TF_PSA_CRYPTO_ROOT_DIR"
-    cmake --build . --target mldsa_export_public mldsa_sign mldsa_verify
+    cmake --build . --target mldsa_export_public
+    cmake --build . --target mldsa_sign
+    cmake --build . --target mldsa_verify
 
     nm -C --defined-only programs/mldsa/mldsa_sign > mldsa_sign.syms
     nm -C --defined-only programs/mldsa/mldsa_verify > mldsa_verify.syms

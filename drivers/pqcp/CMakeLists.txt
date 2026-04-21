@@ -11,4 +11,9 @@ foreach (target IN LISTS target_libraries)
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
         PRIVATE mldsa-native/mldsa
     )
+    if(CMAKE_COMPILER_IS_GNU OR CMAKE_COMPILER_IS_CLANG)
+        target_compile_options(${target} PRIVATE
+            -ffunction-sections
+            -fdata-sections)
+    endif()
 endforeach(target)
