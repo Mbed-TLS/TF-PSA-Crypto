@@ -2065,6 +2065,23 @@
  */
 //#define TF_PSA_CRYPTO_PQCP_OWN_SHAKE
 
+/**
+ * \def TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
+ *
+ * If this option is enabled, the MLDSA implementation from mldsa-native
+ * (#TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) will allocate large objects from
+ * a global, statically allocated buffer, rather than placing them on
+ * the stack.
+ *
+ * \warning This option is experimental. It may change or be removed without
+ *          notice.
+ *
+ * Module:  drivers/pqcp/src/mldsa_native_buffer_alloc.c
+ *
+ * Uncomment to have mldsa-native allocate large objects from a global buffer
+ */
+#define TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
+
 /** \} name SECTION: Builtin drivers */
 
 /* Do not enable except for testing. Will be removed in a future minor version.

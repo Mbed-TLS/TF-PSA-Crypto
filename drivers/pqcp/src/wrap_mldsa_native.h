@@ -29,6 +29,28 @@
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
 #  define MLD_CONFIG_PARAMETER_SET 87
 #  include "mldsa_native.h"
+#  if defined(MLD_CONFIG_CONTEXT_PARAMETER) && \
+    !defined(TF_PSA_CRYPTO_PQCP_DISABLE_CONTEXT_STUFFING)
+/* Pass in an empty-initialized context variable. */
+#    define tf_psa_crypto_pqcp_mldsa87_keypair_internal(arg0, arg1, arg2) \
+    tf_psa_crypto_pqcp_mldsa87_keypair_internal(arg0, arg1, arg2, \
+                                                (MLD_CONFIG_CONTEXT_PARAMETER_TYPE) { 0 })
+#    define tf_psa_crypto_pqcp_mldsa87_keypair(arg0, arg1) \
+    tf_psa_crypto_pqcp_mldsa87_keypair(arg0, arg1, (MLD_CONFIG_CONTEXT_PARAMETER_TYPE) { 0 })
+#    define tf_psa_crypto_pqcp_mldsa87_signature_internal(arg0, arg1, arg2, arg3, arg4, arg5, arg6, \
+                                                          arg7, arg8) \
+    tf_psa_crypto_pqcp_mldsa87_signature_internal(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, \
+                                                  arg8, (MLD_CONFIG_CONTEXT_PARAMETER_TYPE) { 0 })
+#    define tf_psa_crypto_pqcp_mldsa87_signature(arg0, arg1, arg2, arg3, arg4, arg5, arg6) \
+    tf_psa_crypto_pqcp_mldsa87_signature(arg0, arg1, arg2, arg3, arg4, arg5, arg6, \
+                                         (MLD_CONFIG_CONTEXT_PARAMETER_TYPE) { 0 })
+#    define tf_psa_crypto_pqcp_mldsa87_sign(arg0, arg1, arg2, arg3, arg4, arg5, arg6) \
+    tf_psa_crypto_pqcp_mldsa87_sign(arg0, arg1, arg2, arg3, arg4, arg5, arg6, \
+                                    (MLD_CONFIG_CONTEXT_PARAMETER_TYPE) { 0 })
+#    define tf_psa_crypto_pqcp_mldsa87_verify(arg0, arg1, arg2, arg3, arg4, arg5, arg6) \
+    tf_psa_crypto_pqcp_mldsa87_verify(arg0, arg1, arg2, arg3, arg4, arg5, arg6, \
+                                      (MLD_CONFIG_CONTEXT_PARAMETER_TYPE) { 0 })
+#  endif
 #  undef MLD_CONFIG_PARAMETER_SET
 #endif
 
