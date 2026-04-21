@@ -230,6 +230,9 @@ psa_status_t tf_psa_crypto_mldsa_update(
  *                              been set up for signing and not finished
  *                              or aborted yet.
  * \param[out] signature        On success, the exported key.
+ * \param[in] key_buffer        The key material. This must be the same seed
+ *                              passed to tf_psa_crypto_mldsa_sign_setup().
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param signature_size        The size of \p signature, in bytes.
  * \param[out] signature_length On success, the length of the data written
  *                              to \p signature.
@@ -240,11 +243,16 @@ psa_status_t tf_psa_crypto_mldsa_update(
  *         The state of \p operation has been detected as inconsistent
  *         with the request. Note that this function does not guarantee
  *         that an inconsistent state is detected.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key material has been detected to be invalid or inconsistent
+ *         with the key passed during setup. Note that this function does not
+ *         guarantee that an inconsistent key is detected.
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
  *         \p signature_size is too small.
  */
 psa_status_t tf_psa_crypto_mldsa_sign_finish(
     tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *key_buffer, size_t key_buffer_size,
     uint8_t *signature, size_t signature_size, size_t *signature_length);
 
 /** Finish a pure-ML-DSA verification operation.
@@ -252,6 +260,10 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
  * \param operation             An operation structure. It must have
  *                              been set up for verifying and not finished
  *                              or aborted yet.
+ * \param[in] key_buffer        The key material. This must be the same
+ *                              public key passed to
+ *                              tf_psa_crypto_mldsa_verify_setup().
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param[in] signature         The signature to verify.
  * \param signature_length      The length of \p signature, in bytes.
  *
@@ -261,11 +273,16 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
  *         The state of \p operation has been detected as inconsistent
  *         with the request. Note that this function does not guarantee
  *         that an inconsistent state is detected.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The key material has been detected to be invalid or inconsistent
+ *         with the key passed during setup. Note that this function does not
+ *         guarantee that an inconsistent key is detected.
  * \retval #PSA_ERROR_INVALID_SIGNATURE
  *         The signature is not valid for this message.
  */
 psa_status_t tf_psa_crypto_mldsa_verify_finish(
     tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *key_buffer, size_t key_buffer_size,
     const uint8_t *signature, size_t signature_length);
 
 /** Abort a pure-ML-DSA signature or verification operation.

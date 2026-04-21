@@ -304,10 +304,17 @@ psa_status_t tf_psa_crypto_mldsa_update(
 
 psa_status_t tf_psa_crypto_mldsa_sign_finish(
     tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *key_buffer, size_t key_buffer_size,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     *signature_length = 0;
+
+    if (key_buffer_size != SEED_SIZE) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     /* not implemented yet */
+    (void) key_buffer;
     (void) signature;
     (void) signature_size;
     return tf_psa_crypto_mldsa_abort(operation);
@@ -315,9 +322,15 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
 
 psa_status_t tf_psa_crypto_mldsa_verify_finish(
     tf_psa_crypto_mldsa_operation_t *operation,
+    const uint8_t *key_buffer, size_t key_buffer_size,
     const uint8_t *signature, size_t signature_length)
 {
+    if (key_buffer_size != MLDSA87_PUBLICKEYBYTES) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     /* not implemented yet */
+    (void) key_buffer;
     (void) signature;
     (void) signature_length;
     return tf_psa_crypto_mldsa_abort(operation);

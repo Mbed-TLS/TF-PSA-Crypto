@@ -336,6 +336,7 @@ void sign_deterministic_multipart(
                                               chunk3->x, chunk3->len));
     }
     TEST_EQUAL(tf_psa_crypto_mldsa_sign_finish(&operation,
+                                               seed->x, seed->len,
                                                signature, signature_size,
                                                &signature_length),
                expected_finish_status);
@@ -383,6 +384,7 @@ void verify_multipart(
                                               chunk3->x, chunk3->len));
     }
     TEST_EQUAL(tf_psa_crypto_mldsa_verify_finish(&operation,
+                                                 public_key->x, public_key->len,
                                                  signature->x, signature->len),
                expected_verify_status);
 
