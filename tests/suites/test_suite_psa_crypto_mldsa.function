@@ -393,3 +393,53 @@ exit:
     tf_psa_crypto_mldsa_abort(&operation);
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void verify_multipart_finish(
+    int type, int bits, int alg,
+    data_t *setup_public_key, data_t *finish_public_key,
+    data_t *message,
+    data_t *signature, int expected_verify_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    tf_psa_crypto_mldsa_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+    /* Temporary copy of the public key which is freed as soon as the
+     * library function returns. This lets us validate that the
+     * library doesn't rely on the key pointer remaining valid
+     * throughout the operation. */
+    uint8_t *public_key = NULL;
+
+    PSA_INIT();
+
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+
+    TEST_CALLOC(public_key, setup_public_key->len);
+    memcpy(public_key, setup_public_key->x, setup_public_key->len);
+    PSA_ASSERT(tf_psa_crypto_mldsa_verify_setup(&operation,
+                                                &attributes,
+                                                public_key, setup_public_key->len,
+                                                alg));
+    mbedtls_free(public_key);
+    public_key = NULL;
+
+    PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation, message->x, message->len));
+
+    TEST_CALLOC(public_key, finish_public_key->len);
+    if (finish_public_key->len != 0) {
+        memcpy(public_key, finish_public_key->x, finish_public_key->len);
+    }
+    TEST_EQUAL(tf_psa_crypto_mldsa_verify_finish(&operation,
+                                                 public_key, finish_public_key->len,
+                                                 signature->x, signature->len),
+               expected_verify_status);
+    mbedtls_free(public_key);
+    public_key = NULL;
+
+exit:
+    PSA_DONE();
+    tf_psa_crypto_mldsa_abort(&operation);
+    mbedtls_free(public_key);
+}
+/* END_CASE */
