@@ -214,3 +214,59 @@ exit:
     mbedtls_free(buf);
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void sign_setup(int type_arg, int bits_arg, int alg_arg,
+                data_t *key_buffer,
+                psa_status_t expected_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_sign_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+
+    PSA_INIT();
+
+    psa_set_key_type(&attributes, type_arg);
+    psa_set_key_bits(&attributes, bits_arg);
+
+    TEST_EQUAL(psa_driver_wrapper_sign_setup(&operation,
+                                             &attributes,
+                                             key_buffer->x, key_buffer->len,
+                                             alg_arg),
+               expected_status);
+
+    PSA_ASSERT(psa_driver_wrapper_sign_abort(&operation));
+
+exit:
+    psa_driver_wrapper_sign_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void verify_setup(int type_arg, int bits_arg, int alg_arg,
+                  data_t *public_key,
+                  psa_status_t expected_status)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_verify_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+
+    PSA_INIT();
+
+    psa_set_key_type(&attributes, type_arg);
+    psa_set_key_bits(&attributes, bits_arg);
+
+    TEST_EQUAL(psa_driver_wrapper_verify_setup(&operation,
+                                               &attributes,
+                                               public_key->x, public_key->len,
+                                               alg_arg),
+               expected_status);
+
+    PSA_ASSERT(psa_driver_wrapper_verify_abort(&operation));
+
+exit:
+    PSA_DONE();
+    psa_driver_wrapper_verify_abort(&operation);
+}
+/* END_CASE */
