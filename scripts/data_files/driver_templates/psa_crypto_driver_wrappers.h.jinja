@@ -303,6 +303,7 @@ static inline psa_status_t psa_driver_wrapper_sign_update(
 
 static inline psa_status_t psa_driver_wrapper_sign_finish(
     psa_sign_operation_t *operation,
+    const uint8_t *key_buffer, size_t key_buffer_size,
     uint8_t *signature,  size_t signature_size,
     size_t *signature_length )
 {
@@ -311,6 +312,7 @@ static inline psa_status_t psa_driver_wrapper_sign_finish(
 #if defined(MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART)
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return( mbedtls_psa_sign_finish( &operation->ctx.mbedtls_ctx,
+                                             key_buffer, key_buffer_size,
                                              signature, signature_size,
                                              signature_length ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
@@ -320,15 +322,19 @@ static inline psa_status_t psa_driver_wrapper_sign_finish(
         case MBEDTLS_TEST_TRANSPARENT_DRIVER_ID:
             return( mbedtls_test_transparent_sign_finish(
                         &operation->ctx.transparent_test_driver_ctx,
+                        key_buffer, key_buffer_size,
                         signature, signature_size, signature_length ) );
 
         case MBEDTLS_TEST_OPAQUE_DRIVER_ID:
             return( mbedtls_test_opaque_signature_sign_finish(
                         &operation->ctx.opaque_test_driver_ctx,
+                        key_buffer, key_buffer_size,
                         signature, signature_size, signature_length ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
+            (void) key_buffer;
+            (void) key_buffer_size;
             (void) signature;
             (void) signature_size;
             (void) signature_length;
@@ -570,6 +576,7 @@ static inline psa_status_t psa_driver_wrapper_verify_update(
 
 static inline psa_status_t psa_driver_wrapper_verify_finish(
     psa_verify_operation_t *operation,
+    const uint8_t *key_buffer, size_t key_buffer_size,
     const uint8_t *signature, size_t signature_length )
 {
     switch( operation->id )
@@ -577,6 +584,7 @@ static inline psa_status_t psa_driver_wrapper_verify_finish(
 #if defined(MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART)
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return( mbedtls_psa_verify_finish( &operation->ctx.mbedtls_ctx,
+                                               key_buffer, key_buffer_size,
                                                signature, signature_length ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
 
@@ -585,15 +593,19 @@ static inline psa_status_t psa_driver_wrapper_verify_finish(
         case MBEDTLS_TEST_TRANSPARENT_DRIVER_ID:
             return( mbedtls_test_transparent_verify_finish(
                         &operation->ctx.transparent_test_driver_ctx,
+                        key_buffer, key_buffer_size,
                         signature, signature_length ) );
 
         case MBEDTLS_TEST_OPAQUE_DRIVER_ID:
             return( mbedtls_test_opaque_signature_verify_finish(
                         &operation->ctx.opaque_test_driver_ctx,
+                        key_buffer, key_buffer_size,
                         signature, signature_length ) );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
         default:
+            (void) key_buffer;
+            (void) key_buffer_size;
             (void) signature;
             (void) signature_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
