@@ -209,6 +209,21 @@ static inline psa_status_t psa_driver_wrapper_sign_setup(
                 return( status );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+            if( PSA_KEY_TYPE_IS_ML_DSA( psa_get_key_type( attributes ) ) )
+            {
+                status = tf_psa_crypto_mldsa_sign_setup( &operation->ctx.pqcp,
+                                                         attributes,
+                                                         key_buffer, key_buffer_size,
+                                                         alg );
+                if( status == PSA_SUCCESS )
+                    operation->id = PQCP_TRANSPARENT_DRIVER_ID;
+                if( status != PSA_ERROR_NOT_SUPPORTED )
+                    return( status );
+            }
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
+
 #if defined(MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART)
             /* Fell through, meaning no accelerator supports this operation */
             status = mbedtls_psa_sign_setup( &operation->ctx.mbedtls_ctx,
@@ -217,7 +232,6 @@ static inline psa_status_t psa_driver_wrapper_sign_setup(
                                              alg );
             if( status == PSA_SUCCESS )
                 operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
-
             if( status != PSA_ERROR_NOT_SUPPORTED )
                 return( status );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
@@ -281,6 +295,12 @@ static inline psa_status_t psa_driver_wrapper_sign_update(
                                              input, input_length ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        case PQCP_TRANSPARENT_DRIVER_ID:
+            return( tf_psa_crypto_mldsa_update( &operation->ctx.pqcp,
+                                                input, input_length ) );
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
+
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
         case MBEDTLS_TEST_TRANSPARENT_DRIVER_ID:
@@ -316,6 +336,14 @@ static inline psa_status_t psa_driver_wrapper_sign_finish(
                                              signature, signature_size,
                                              signature_length ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        case PQCP_TRANSPARENT_DRIVER_ID:
+            return( tf_psa_crypto_mldsa_sign_finish( &operation->ctx.pqcp,
+                                                     key_buffer, key_buffer_size,
+                                                     signature, signature_size,
+                                                     signature_length ) );
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
@@ -353,6 +381,11 @@ static inline psa_status_t psa_driver_wrapper_sign_abort(
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return( mbedtls_psa_sign_abort( &operation->ctx.mbedtls_ctx ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        case PQCP_TRANSPARENT_DRIVER_ID:
+            return( tf_psa_crypto_mldsa_abort( &operation->ctx.pqcp ) );
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
@@ -482,6 +515,21 @@ static inline psa_status_t psa_driver_wrapper_verify_setup(
                 return( status );
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+            if( PSA_KEY_TYPE_IS_ML_DSA( psa_get_key_type( attributes ) ) )
+            {
+                status = tf_psa_crypto_mldsa_verify_setup( &operation->ctx.pqcp,
+                                                           attributes,
+                                                           key_buffer, key_buffer_size,
+                                                           alg );
+                if( status == PSA_SUCCESS )
+                    operation->id = PQCP_TRANSPARENT_DRIVER_ID;
+                if( status != PSA_ERROR_NOT_SUPPORTED )
+                    return( status );
+            }
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
+
 #if defined(MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART)
             /* Fell through, meaning no accelerator supports this operation */
             status = mbedtls_psa_verify_setup( &operation->ctx.mbedtls_ctx,
@@ -490,7 +538,6 @@ static inline psa_status_t psa_driver_wrapper_verify_setup(
                                                alg );
             if( status == PSA_SUCCESS )
                 operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
-
             if( status != PSA_ERROR_NOT_SUPPORTED )
                 return( status );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
@@ -554,6 +601,12 @@ static inline psa_status_t psa_driver_wrapper_verify_update(
                                                input, input_length ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        case PQCP_TRANSPARENT_DRIVER_ID:
+            return( tf_psa_crypto_mldsa_update( &operation->ctx.pqcp,
+                                                input, input_length ) );
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
+
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
         case MBEDTLS_TEST_TRANSPARENT_DRIVER_ID:
@@ -587,6 +640,13 @@ static inline psa_status_t psa_driver_wrapper_verify_finish(
                                                key_buffer, key_buffer_size,
                                                signature, signature_length ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        case PQCP_TRANSPARENT_DRIVER_ID:
+            return( tf_psa_crypto_mldsa_verify_finish( &operation->ctx.pqcp,
+                                                       key_buffer, key_buffer_size,
+                                                       signature, signature_length ) );
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
@@ -623,6 +683,11 @@ static inline psa_status_t psa_driver_wrapper_verify_abort(
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return( mbedtls_psa_verify_abort( &operation->ctx.mbedtls_ctx ) );
 #endif /* MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART */
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        case PQCP_TRANSPARENT_DRIVER_ID:
+            return( tf_psa_crypto_mldsa_abort( &operation->ctx.pqcp ) );
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/

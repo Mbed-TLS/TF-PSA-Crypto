@@ -31,6 +31,9 @@
 
 /* Include the context structure definitions for those drivers that were
  * declared during the autogeneration process. */
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+#include "tf-psa-crypto/private/crypto_struct_pqcp.h"
+#endif
 
 #if defined(MBEDTLS_TEST_LIBTESTDRIVER1)
 #if defined(TF_PSA_CRYPTO_TEST_LIBTESTDRIVER1)
@@ -136,6 +139,9 @@ typedef union {
 
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+    tf_psa_crypto_mldsa_operation_t pqcp;
+#endif
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
     mbedtls_transparent_test_driver_sign_operation_t transparent_test_driver_ctx;
     mbedtls_opaque_test_driver_sign_operation_t opaque_test_driver_ctx;
@@ -144,6 +150,9 @@ typedef union {
 
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+    tf_psa_crypto_mldsa_operation_t pqcp;
+#endif
 #if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
     mbedtls_transparent_test_driver_verify_operation_t transparent_test_driver_ctx;
     mbedtls_opaque_test_driver_verify_operation_t opaque_test_driver_ctx;
