@@ -136,6 +136,22 @@ typedef union {
 
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */
+#if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
+    mbedtls_transparent_test_driver_sign_operation_t transparent_test_driver_ctx;
+    mbedtls_opaque_test_driver_sign_operation_t opaque_test_driver_ctx;
+#endif
+} psa_driver_sign_context_t;
+
+typedef union {
+    unsigned dummy; /* Make sure this union is always non-empty */
+#if defined(PSA_CRYPTO_DRIVER_TEST) && 0 /*not implemented yet*/
+    mbedtls_transparent_test_driver_verify_operation_t transparent_test_driver_ctx;
+    mbedtls_opaque_test_driver_verify_operation_t opaque_test_driver_ctx;
+#endif
+} psa_driver_verify_context_t;
+
+typedef union {
+    unsigned dummy; /* Make sure this union is always non-empty */
     mbedtls_psa_sign_hash_interruptible_operation_t mbedtls_ctx;
 } psa_driver_sign_hash_interruptible_context_t;
 

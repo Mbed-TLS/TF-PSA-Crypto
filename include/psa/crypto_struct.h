@@ -232,6 +232,58 @@ static inline struct psa_aead_operation_s psa_aead_operation_init(void)
     return v;
 }
 
+struct psa_sign_operation_s {
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+    mbedtls_psa_client_handle_t handle;
+#else
+    /** Unique ID indicating which driver got assigned to do the
+     * operation. Since driver contexts are driver-specific, swapping
+     * drivers halfway through the operation is not supported.
+     * ID values are auto-generated in psa_driver_wrappers.h
+     * ID value zero means the context is not valid or not assigned to
+     * any driver (i.e. none of the driver contexts are active). */
+    unsigned int MBEDTLS_PRIVATE(id);
+    psa_driver_sign_context_t MBEDTLS_PRIVATE(ctx);
+#endif
+};
+
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+#define PSA_SIGN_OPERATION_INIT { 0 }
+#else
+#define PSA_SIGN_OPERATION_INIT { 0, { 0 } }
+#endif
+static inline struct psa_sign_operation_s psa_sign_operation_init(void)
+{
+    const struct psa_sign_operation_s v = PSA_SIGN_OPERATION_INIT;
+    return v;
+}
+
+struct psa_verify_operation_s {
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+    mbedtls_psa_client_handle_t handle;
+#else
+    /** Unique ID indicating which driver got assigned to do the
+     * operation. Since driver contexts are driver-specific, swapping
+     * drivers halfway through the operation is not supported.
+     * ID values are auto-generated in psa_driver_wrappers.h
+     * ID value zero means the context is not valid or not assigned to
+     * any driver (i.e. none of the driver contexts are active). */
+    unsigned int MBEDTLS_PRIVATE(id);
+    psa_driver_verify_context_t MBEDTLS_PRIVATE(ctx);
+#endif
+};
+
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+#define PSA_VERIFY_OPERATION_INIT { 0 }
+#else
+#define PSA_VERIFY_OPERATION_INIT { 0, { 0 } }
+#endif
+static inline struct psa_verify_operation_s psa_verify_operation_init(void)
+{
+    const struct psa_verify_operation_s v = PSA_VERIFY_OPERATION_INIT;
+    return v;
+}
+
 /* Include the context definition for the compiled-in drivers for the key
  * derivation algorithms. */
 #include "psa/crypto_driver_contexts_key_derivation.h"
