@@ -48,6 +48,14 @@ Config: no built-in AEAD
 depends_on:!MBEDTLS_PSA_BUILTIN_AEAD
 pass:
 
+Config: some built-in multipart signature
+depends_on:MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART
+pass:
+
+Config: no built-in multipart signature
+depends_on:!MBEDTLS_PSA_BUILTIN_SIGNATURE_MULTIPART
+pass:
+
 Config: some built-in PAKE
 depends_on:MBEDTLS_PSA_BUILTIN_PAKE
 pass:
