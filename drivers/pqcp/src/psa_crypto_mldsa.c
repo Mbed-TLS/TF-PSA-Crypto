@@ -286,7 +286,7 @@ static psa_status_t setup(
         /* Other parameter sets are not supported yet. */
         return PSA_ERROR_NOT_SUPPORTED;
     }
-    operation->parameter_set = psa_get_key_bits(attributes);
+    operation->parameter_set = (uint8_t) psa_get_key_bits(attributes);
 
     switch (alg) {
         case PSA_ALG_DETERMINISTIC_ML_DSA:
