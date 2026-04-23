@@ -91,9 +91,8 @@ static inline void mld_shake256_release(tf_psa_crypto_mldsa_shake256_t *state)
  * So we define our own macros in public headers, and check that the
  * values match.
  */
-#if MLDSA87_BYTES != PSA_MLDSA_SIGNATURE_SIZE(87)
-#error "PSA and mldsa-native disagree on the ML-DSA-87 signature size"
-#endif
+MBEDTLS_STATIC_ASSERT(MLDSA87_BYTES == PSA_MLDSA_SIGNATURE_SIZE(87),
+                      "PSA and mldsa-native disagree on the ML-DSA-87 signature size");
 
 /* For now, hard-coded values for MLDSA-87 */
 #define TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
@@ -102,9 +101,9 @@ static inline void mld_shake256_release(tf_psa_crypto_mldsa_shake256_t *state)
 
 /* Check that what the API adversises as a sufficient output buffer for
  * sign_message() is enough for the largest signature we might write. */
-#if TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE > PSA_MLDSA_SIGNATURE_MAX_SIZE
-#error "PSA and mldsa-native disagree on the maximum ML-DSA signature size"
-#endif
+MBEDTLS_STATIC_ASSERT(
+    TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE <= PSA_MLDSA_SIGNATURE_MAX_SIZE,
+    "PSA and mldsa-native disagree on the maximum ML-DSA signature size");
 
 static psa_status_t pqcp_to_psa_error(int ret)
 {
