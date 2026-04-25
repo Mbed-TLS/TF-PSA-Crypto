@@ -34,6 +34,8 @@ static psa_status_t pqcp_to_psa_error(int ret)
      */
     if (ret == 0) {
         return PSA_SUCCESS;
+    } else if (ret == MLD_ERR_OUT_OF_MEMORY) {
+        return PSA_ERROR_INSUFFICIENT_MEMORY;
     } else {
         /* Not really hardware, but this is the fallback error code for
          * something unexpectedly going wrong in a driver. */
@@ -145,7 +147,6 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
                                                         rnd,
                                                         secret,
                                                         0);
-    ret = 0;
 
 cleanup:
     mbedtls_platform_zeroize(secret, sizeof(secret));

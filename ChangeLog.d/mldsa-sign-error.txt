@@ -1,0 +1,3 @@
+Bugfix
+   * Fix ML-DSA signing to report internal mldsa-native failures instead of
+     reporting success without a signature.
