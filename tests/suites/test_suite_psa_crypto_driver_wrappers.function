@@ -3331,7 +3331,6 @@ void xof_dispatch(int alg_arg,
     PSA_ASSERT(psa_crypto_init());
     TEST_CALLOC(output, expected_output->len);
 
-    /* Do this after psa_crypto_init() which may call XOF drivers. */
     mbedtls_test_driver_xof_hooks = mbedtls_test_driver_xof_hooks_init();
     mbedtls_test_driver_xof_hooks.forced_status = forced_status;
 
@@ -3362,7 +3361,7 @@ void xof_dispatch(int alg_arg,
 exit:
     psa_xof_abort(&operation);
     mbedtls_free(output);
-    PSA_DONE();
     mbedtls_test_driver_xof_hooks = mbedtls_test_driver_xof_hooks_init();
+    PSA_DONE();
 }
 /* END_CASE */
