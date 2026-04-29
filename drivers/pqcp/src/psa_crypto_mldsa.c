@@ -27,18 +27,19 @@
 
 static psa_status_t pqcp_to_psa_error(int ret)
 {
-    /* At the time of writing, mldsa-native has very few documented error
-     * conditions: only invalid signature on verification, and self-test
-     * failure. But this will change when we update mldsa-native
-     * with support for heap allocation of intermediate values.
-     */
     if (ret == 0) {
         return PSA_SUCCESS;
     } else if (ret == MLD_ERR_OUT_OF_MEMORY) {
         return PSA_ERROR_INSUFFICIENT_MEMORY;
     } else {
-        /* Not really hardware, but this is the fallback error code for
-         * something unexpectedly going wrong in a driver. */
+        /* MLD_ERR_RNG_FAIL is intentionally not mapped: we don't install
+         * mldsa-native's RNG callback (mu is computed on our side for
+         * hedged ML-DSA), so it shouldn't be reachable. It would land
+         * here and be reported as a generic driver failure.
+         *
+         * Not really hardware, but PSA_ERROR_HARDWARE_FAILURE is the
+         * fallback error code for something unexpectedly going wrong
+         * in a driver. */
         return PSA_ERROR_HARDWARE_FAILURE;
     }
 }
