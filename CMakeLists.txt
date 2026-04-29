@@ -79,15 +79,19 @@ ADD_CUSTOM_TARGET(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/doxygen)
 
 # Create an in-tree symlink to the apidoc built in the binary folder. This is
-# only performed on Unix platforms and if "apidoc" doesn't exist in-tree.
-if(UNIX AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/apidoc)
+# only performed on Unix platforms and for out-of-tree builds. The existence
+# check is deferred to build time so that multiple out-of-tree build dirs each
+# register the command, but only the first one to build actually creates the
+# symlink.
+if(UNIX AND NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     file(RELATIVE_PATH _apidoc_rel_path
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_BINARY_DIR}/apidoc)
     add_custom_command(TARGET ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${_apidoc_rel_path}
-            ${CMAKE_CURRENT_SOURCE_DIR}/apidoc
+        COMMAND sh -c
+            "test -e '${CMAKE_CURRENT_SOURCE_DIR}/apidoc' || \
+             '${CMAKE_COMMAND}' -E create_symlink \
+             '${_apidoc_rel_path}' '${CMAKE_CURRENT_SOURCE_DIR}/apidoc'"
         COMMENT "Creating in-tree symlink to apidoc documentation")
 endif()
 
