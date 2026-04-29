@@ -229,10 +229,10 @@ psa_status_t tf_psa_crypto_mldsa_update(
  * \param operation             An operation structure. It must have
  *                              been set up for signing and not finished
  *                              or aborted yet.
- * \param[out] signature        On success, the exported key.
  * \param[in] key_buffer        The key material. This must be the same seed
  *                              passed to tf_psa_crypto_mldsa_sign_setup().
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ * \param[out] signature        On success, the exported key.
  * \param signature_size        The size of \p signature, in bytes.
  * \param[out] signature_length On success, the length of the data written
  *                              to \p signature.
