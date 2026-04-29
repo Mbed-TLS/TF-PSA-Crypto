@@ -346,6 +346,17 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
 
     /* After this point, we may allocate memory, so we must go through
      * cleanup. */
+
+    /* The signature process needs the (hash of the) public key at the
+     * beginning, and the (expanded) private key at the end (finish step).
+     * The PSA representation of the key is just the seed, and the same
+     * mldsa-native function calculates both the expanded private key and
+     * the public key from the seed. We store the expanded private key
+     * in the operation object so that the finish step doesn't need to
+     * recalculate it. We put both the public key and the expanded private
+     * key on the heap because they are very big (multiple kB) on the scale
+     * of embedded devices.
+     */
     size_t public_key_length = MLDSA87_PUBLICKEYBYTES;
     uint8_t *public_key = mbedtls_calloc(1, public_key_length);
     if (public_key == NULL) {
