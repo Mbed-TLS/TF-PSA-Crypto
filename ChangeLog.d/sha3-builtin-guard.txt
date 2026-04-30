@@ -1,3 +1,0 @@
-Bugfix
-   * Built-in SHA3 was included in the build even when SHA3 had a PSA
-     accelerator. Fix this. Fixes #542.

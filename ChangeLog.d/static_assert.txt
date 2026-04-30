@@ -1,4 +1,0 @@
-Changes
-   * Static assertions in the library (`MBEDTLS_STATIC_ASSERT`) are now
-     always enabled, using indirect methods in pre-C11 compilers. This change
-     also fixes warnings in pedantic mode with GCC or Clang on some platforms.

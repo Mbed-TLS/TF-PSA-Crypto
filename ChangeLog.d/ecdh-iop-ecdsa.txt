@@ -1,4 +1,0 @@
-Bugfix
-   * Interruptible operations (ECDH key agreement, ECC key generation) were not
-     actually interruptible (always completed in one go) in builds with ECDSA
-     disabled.
