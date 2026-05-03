@@ -498,10 +498,11 @@ mbedtls_aes_implementation mbedtls_aes_get_implementation(void)
     }
 #endif
 
-#if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+#if defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
+    return MBEDTLS_AES_IMP_UNKNOWN;
+#else
     return MBEDTLS_AES_IMP_SOFTWARE;
 #endif
-    return MBEDTLS_AES_IMP_UNKNOWN;
 }
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)

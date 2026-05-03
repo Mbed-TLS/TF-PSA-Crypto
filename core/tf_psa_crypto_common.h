@@ -26,6 +26,30 @@
  * headers what we expect of them. */
 #include "tf_psa_crypto_platform_requirements.h"
 
+#if defined(__IAR_SYSTEMS_ICC__)
+/* In IAR (at least IAR 9.40 for Arm), enabling the C11 annex K functions
+ * (memset_s(), memcpy_s(), ...) with `#define __STDC_WANT_LIB_EXT1__ 1`
+ * causes the non-s functions to be declared as deprecatd. We want some
+ * s functions (specifically memset_s() and gmtime_s()), but we also want
+ * to be able to use the non-s functions. Try to hack around this:
+ *
+ * - tf_psa_crypto_platform_requirements.h enables annex K functions.
+ * - tf_psa_crypto_platform_requirements.h does not include any system
+ *   header, so that a parent project such as Mbed TLS can declare
+ *   more platform requirements after including only
+ *   tf_psa_crypto_platform_requirements.h.
+ * - Then, here, we include a system header that causes the effects of
+ *   `__STDC_WANT_LIB_EXT1__` to be analyzed.
+ * - These effects include the definition of the macro `__DEPREC`, but
+ *   not yet the declaration of functions that use it (because stddef.h
+ *   doesn't declare any affected function). We redeclare this macro
+ *   to make the subsequent function declarations not be deprecated.
+ */
+#include <stddef.h>
+#undef __DEPREC
+#define __DEPREC
+#endif
+
 /* From this point onwards, ensure we have the library configuration and
  * the configuration-derived macros. */
 #include "tf-psa-crypto/build_info.h"
