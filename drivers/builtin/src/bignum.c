@@ -2059,8 +2059,14 @@ int mbedtls_mpi_inv_mod(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi 
 
 #if defined(MBEDTLS_GENPRIME)
 
-/* Product of small primes up to 997 included */
+/* Largest "small prime" tested. If this is ever changed, must update:
+ * - the product below obviously,
+ * - the documentation and tests of mbedtls_mpi_is_prime_ext() about this limit,
+ * - documentation tests and code of mbedtls_mpi_gen_prime() about the minimum
+ *   value of nbits.
+ */
 static const mbedtls_mpi_sint small_primes_limit = 997;
+/* Product of small primes up to small_primes_limit included */
 static const unsigned char small_primes_product_bin[] = {
     0x05, 0xf0, 0x78, 0x61, 0x8e, 0x81, 0x21, 0xe1, 0xf0, 0xc5, 0x8a, 0xf3,
     0xf5, 0xc7, 0xea, 0x54, 0xbf, 0x9d, 0x72, 0x52, 0xd3, 0x0b, 0xa9, 0xf7,
@@ -2078,39 +2084,14 @@ static const unsigned char small_primes_product_bin[] = {
     0x9d, 0x7b, 0x9f, 0xa4, 0x20, 0xa4, 0x10, 0x2c, 0xa7, 0x95, 0xdf, 0xd0,
     0xbb, 0x97, 0x6a, 0x13, 0x4b,
 };
-/* Gaps between primes, starting at 3. https://oeis.org/A001223 */
-static const unsigned char small_prime_gaps[] = {
-    2, 2, 4, 2, 4, 2, 4, 6,
-    2, 6, 4, 2, 4, 6, 6, 2,
-    6, 4, 2, 6, 4, 6, 8, 4,
-    2, 4, 2, 4, 14, 4, 6, 2,
-    10, 2, 6, 6, 4, 6, 6, 2,
-    10, 2, 4, 2, 12, 12, 4, 2,
-    4, 6, 2, 10, 6, 6, 6, 2,
-    6, 4, 2, 10, 14, 4, 2, 4,
-    14, 6, 10, 2, 4, 6, 8, 6,
-    6, 4, 6, 8, 4, 8, 10, 2,
-    10, 2, 6, 4, 6, 8, 4, 2,
-    4, 12, 8, 4, 8, 4, 6, 12,
-    2, 18, 6, 10, 6, 6, 2, 6,
-    10, 6, 6, 2, 6, 6, 4, 2,
-    12, 10, 2, 4, 6, 6, 2, 12,
-    4, 6, 8, 10, 8, 10, 8, 6,
-    6, 4, 8, 6, 4, 8, 4, 14,
-    10, 12, 2, 10, 2, 4, 2, 10,
-    14, 4, 2, 4, 14, 4, 2, 4,
-    20, 4, 8, 10, 8, 4, 6, 6,
-    14, 4, 6, 6, 8, 6, /*reaches 997*/
-    0 /* the last entry is effectively unused */
-};
 
 /*
  * Small divisors test (X must be positive)
  *
  * Return values:
  * 0: no small factor (possible prime, more tests needed)
- * 1: certain prime
  * MBEDTLS_ERR_MPI_NOT_ACCEPTABLE: certain non-prime
+ * MBEDTLS_ERR_MPI_BAD_INPUT_DATA: input too small
  * other negative: error
  */
 static int mpi_check_small_factors(const mbedtls_mpi *X)
@@ -2121,19 +2102,12 @@ static int mpi_check_small_factors(const mbedtls_mpi *X)
     mbedtls_mpi_init(&prod);
     mbedtls_mpi_init(&g);
 
-    if ((X->p[0] & 1) == 0) {
-        return MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
-    }
-
     /* The GCD test below only works if X > small_primes_limit. */
     if (mbedtls_mpi_cmp_int(X, small_primes_limit) <= 0) {
-        unsigned p = 3;
-        for (size_t i = 0; i < sizeof(small_prime_gaps); i++) {
-            if (mbedtls_mpi_cmp_int(X, p) == 0) {
-                return 1;
-            }
-            p += small_prime_gaps[i];
-        }
+        return MBEDTLS_ERR_MPI_BAD_INPUT_DATA;
+    }
+
+    if ((X->p[0] & 1) == 0) {
         return MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
     }
 
@@ -2256,30 +2230,12 @@ int mbedtls_mpi_is_prime_ext(const mbedtls_mpi *X, int rounds,
                              void *p_rng)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    mbedtls_mpi XX;
 
-    XX.s = 1;
-    XX.n = X->n;
-    XX.p = X->p;
-
-    if (mbedtls_mpi_cmp_int(&XX, 0) == 0 ||
-        mbedtls_mpi_cmp_int(&XX, 1) == 0) {
-        return MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
-    }
-
-    if (mbedtls_mpi_cmp_int(&XX, 2) == 0) {
-        return 0;
-    }
-
-    if ((ret = mpi_check_small_factors(&XX)) != 0) {
-        if (ret == 1) {
-            return 0;
-        }
-
+    if ((ret = mpi_check_small_factors(X)) != 0) {
         return ret;
     }
 
-    return mpi_miller_rabin(&XX, rounds, f_rng, p_rng);
+    return mpi_miller_rabin(X, rounds, f_rng, p_rng);
 }
 
 /*
@@ -2306,7 +2262,11 @@ int mbedtls_mpi_gen_prime(mbedtls_mpi *X, size_t nbits, int flags,
     mbedtls_mpi_uint r;
     mbedtls_mpi Y;
 
-    if (nbits < 3 || nbits > MBEDTLS_MPI_MAX_BITS) {
+    /* The minimum value must be such that 2^(nbits - 2) > small_primes_limit,
+     * so we can use mbedtls_mpi_is_prime_ext(). The -2 comes from:
+     * - first -1 because X will be generated with 2^(nbits-1) <= X < 2^nbits;
+     * - another -1 because for safe primes we test (X-1) / 2. */
+    if (nbits < 12 || nbits > MBEDTLS_MPI_MAX_BITS) {
         return MBEDTLS_ERR_MPI_BAD_INPUT_DATA;
     }
 
