@@ -187,7 +187,7 @@
  *
  * Comment if your system does not support time functions.
  */
-#define MBEDTLS_HAVE_TIME
+//#define MBEDTLS_HAVE_TIME
 
 /**
  * \def MBEDTLS_HAVE_TIME_DATE
@@ -1100,7 +1100,7 @@
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
  */
-#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
+//#define MBEDTLS_PSA_BUILTIN_GET_ENTROPY
 
 /** \def MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
  *
@@ -1244,7 +1244,7 @@
  *   client-only builds (#MBEDTLS_PSA_CRYPTO_CLIENT enabled and
  *   #MBEDTLS_PSA_CRYPTO_C disabled).
  */
-//#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
+#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
 /**
  * \def MBEDTLS_PSA_ITS_FILE_C
