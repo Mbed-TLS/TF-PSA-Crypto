@@ -408,6 +408,8 @@ endif()
 # drivers, that are appended in `drivers/CMakeLists.txt`.
 #
 set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
+        # psa_crypto_driver_wrappers.h is generated, so it may be in the build tree.
+        ${CMAKE_CURRENT_BINARY_DIR}/core
         ${CMAKE_CURRENT_SOURCE_DIR}/core
         ${CMAKE_CURRENT_SOURCE_DIR}/dispatch
         ${CMAKE_CURRENT_SOURCE_DIR}/extras
