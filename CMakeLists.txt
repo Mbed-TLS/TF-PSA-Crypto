@@ -88,11 +88,9 @@ if(UNIX AND NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_BINARY_DIR}/apidoc)
     add_custom_command(TARGET ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc POST_BUILD
-        COMMAND sh -c
-            "test -e '${CMAKE_CURRENT_SOURCE_DIR}/apidoc' || \
-             '${CMAKE_COMMAND}' -E create_symlink \
-             '${_apidoc_rel_path}' '${CMAKE_CURRENT_SOURCE_DIR}/apidoc'"
-        COMMENT "Creating in-tree symlink to apidoc documentation")
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/doxygen/create_symlink.sh"
+            "${_apidoc_rel_path}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/apidoc")
 endif()
 
 option(ENABLE_PROGRAMS "Build TF-PSA-Crypto programs." ON)
