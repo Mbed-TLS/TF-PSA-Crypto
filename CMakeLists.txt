@@ -71,12 +71,27 @@ set(version_number_files
         doxygen/tfpsacrypto.doxyfile)
 foreach(file ${version_number_files})
     configure_file(${file}.in
-                   ${PROJECT_SOURCE_DIR}/${file})
+                   ${PROJECT_BINARY_DIR}/${file})
 endforeach(file)
 
 ADD_CUSTOM_TARGET(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc
     COMMAND doxygen tfpsacrypto.doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doxygen)
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/doxygen)
+
+# Create an in-tree symlink to the apidoc built in the binary folder. This is
+# only performed on Unix platforms and for out-of-tree builds. The existence
+# check is deferred to build time so that multiple out-of-tree build dirs each
+# register the command, but only the first one to build actually creates the
+# symlink.
+if(UNIX AND NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    file(RELATIVE_PATH _apidoc_rel_path
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${PROJECT_BINARY_DIR}/apidoc)
+    add_custom_command(TARGET ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc POST_BUILD
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/doxygen/create_symlink.sh"
+            "${_apidoc_rel_path}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/apidoc")
+endif()
 
 option(ENABLE_PROGRAMS "Build TF-PSA-Crypto programs." ON)
 
