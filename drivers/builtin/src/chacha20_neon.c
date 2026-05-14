@@ -206,12 +206,48 @@ static inline uint32x4_t chacha20_neon_blocks(chacha20_neon_regs_t r_original,
     }
 }
 
+static int chacha20_check_remaining_blocks(const mbedtls_chacha20_context *ctx,
+                                           size_t size)
+{
+    size_t available_keystream = 0;
+    uint64_t needed_blocks = 0;
+
+    if (ctx->keystream_bytes_used < MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
+        available_keystream =
+            MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES - ctx->keystream_bytes_used;
+
+        if (size <= available_keystream) {
+            return 0;
+        }
+
+        size -= available_keystream;
+    }
+
+    needed_blocks = (uint64_t) (size / MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
+
+    if (size % MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES != 0U) {
+        needed_blocks++;
+    }
+
+    if (needed_blocks > ctx->remaining_blocks) {
+        return MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA;
+    }
+
+    return 0;
+}
+
 int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
                             size_t size,
                             const unsigned char *input,
                             unsigned char *output)
 {
     size_t offset = 0U;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+
+    ret = chacha20_check_remaining_blocks(ctx, size);
+    if (ret != 0) {
+        return ret;
+    }
 
     /* Use leftover keystream bytes, if available */
     while (ctx->keystream_bytes_used < MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES && size > 0) {
@@ -234,6 +270,7 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
     if (size >= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
         size_t blocks = size / MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES;
         state.d = chacha20_neon_blocks(state, output + offset, input + offset, blocks);
+        ctx->remaining_blocks -= blocks;
 
         offset += MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * blocks;
         size   -= MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES * blocks;
@@ -244,6 +281,7 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
         /* Generate new keystream block and increment counter */
         memset(ctx->keystream8, 0, MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
         state.d = chacha20_neon_blocks(state, ctx->keystream8, ctx->keystream8, 1);
+        ctx->remaining_blocks--;
 
         mbedtls_xor_no_simd(output + offset, input + offset, ctx->keystream8, size);
 
