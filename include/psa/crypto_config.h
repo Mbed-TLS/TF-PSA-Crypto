@@ -2076,7 +2076,7 @@
  * \warning This option is experimental. It may change or be removed without
  *          notice.
  *
- * Module:  drivers/pqcp/src/mldsa_native_buffer_alloc.c
+ * Module:  drivers/pqcp/src/pqcp_buffer_alloc.c
  *
  * Uncomment to have mldsa-native allocate large objects from a global buffer
  */
