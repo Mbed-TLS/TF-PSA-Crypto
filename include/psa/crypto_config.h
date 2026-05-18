@@ -2080,7 +2080,7 @@
  *
  * Uncomment to have mldsa-native allocate large objects from a global buffer
  */
-#define TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
+//#define TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
 
 /** \} name SECTION: Builtin drivers */
 
