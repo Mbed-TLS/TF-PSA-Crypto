@@ -514,3 +514,33 @@ component_test_pqcp_own_shake_no_builtin () {
     msg "test: TF_PSA_CRYPTO_PQCP_OWN_SHAKE, built-in SHA3/SHAKE disabled"
     ctest
 }
+
+component_test_pqcp_buffer_alloc () {
+    msg "build: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC"
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
+
+    msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC"
+    ctest
+}
+
+component_test_pqcp_buffer_alloc_pthread () {
+    msg "build: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread"
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
+    scripts/config.py set TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
+    scripts/config.py set MBEDTLS_THREADING_C
+    scripts/config.py set MBEDTLS_THREADING_PTHREAD
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
+
+    msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread"
+    ctest
+}
