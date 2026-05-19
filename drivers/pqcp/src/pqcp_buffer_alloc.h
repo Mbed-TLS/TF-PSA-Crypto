@@ -8,7 +8,9 @@
 
 #include "tf_psa_crypto_common.h"
 
-#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) && defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
 #include <psa/crypto_values.h>
 
 #if defined(MBEDTLS_THREADING_C)
@@ -18,56 +20,48 @@
 // Sufficient for signing with TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE 123200
 
-extern uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
-
-struct tf_psa_crypto_pqcp_context {
-    int alloc_offset; // Negative values indicate allocator errors
-};
-
 #if defined(MBEDTLS_THREADING_C)
-#define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK() \
-    mbedtls_mutex_lock(&mbedtls_threading_pqcp_buffer_alloc_mutex)
+#define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK()                                 \
+    do {                                                                \
+        if (mbedtls_mutex_lock(&mbedtls_threading_pqcp_buffer_alloc_mutex)) { \
+            return PSA_ERROR_BAD_STATE;                                 \
+        }                                                               \
+    } while (0)
+#define TF_PSA_CRYPTO_PQCP_ALLOC_UNLOCK()                                 \
+    mbedtls_mutex_unlock(&mbedtls_threading_pqcp_buffer_alloc_mutex)
 #else
-#define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK() 0
+#define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK() ((void) 0)
+#define TF_PSA_CRYPTO_PQCP_ALLOC_UNLOCK() ((void) 0)
 #endif
 
-#define TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC(v, T, N, context) \
-    T *(v) = NULL; \
-    do { \
-        /* Verify that the allocation would fit in the buffer by itself, avoiding overflows \
-           This should be optimized away at compile-time */ \
-        if ((N) > 0 && (N) <= TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE / sizeof(T)) { \
-            if ((context).alloc_offset == 0) { \
-                (context).alloc_offset = TF_PSA_CRYPTO_PQCP_ALLOC_LOCK(); \
-            } \
-            if ((context).alloc_offset >= 0) { \
-                if ((size_t) (context).alloc_offset <= \
-                    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE - MLD_ALIGN_UP(sizeof(T) * (N))) { \
-                    (v) = (T *) (tf_psa_crypto_pqcp_alloc_buffer + (context).alloc_offset); \
-                    (context).alloc_offset += MLD_ALIGN_UP(sizeof(T) * (N)); \
-                } else { \
-                    /* Fail all further allocations in this function -> goto cleanup \
-                     * If we ended up here, that implies (alloc_offset != 0) \
-                     * thus we don't need to call mutex_unlock() */ \
-                    (context).alloc_offset = PSA_ERROR_INSUFFICIENT_MEMORY; \
-                } \
-            } \
-        } \
-    } while (0)
+void *tf_psa_crypto_pqcp_alloc_push(size_t size);
+void tf_psa_crypto_pqcp_alloc_pop(size_t size);
 
-#if defined(MBEDTLS_THREADING_C)
-// mldsa-native only calls this macro if v != NULL
-#define TF_PSA_CRYPTO_PQCP_CUSTOM_FREE(v, T, N, context) \
-    do { \
-        /* Unlock only after freeing the last allocation */ \
-        if ((uint8_t *) (v) == tf_psa_crypto_pqcp_alloc_buffer) { \
-            mbedtls_mutex_unlock(&mbedtls_threading_pqcp_buffer_alloc_mutex); \
-        } \
-    } while (0)
-#else
-#define TF_PSA_CRYPTO_PQCP_CUSTOM_FREE(v, T, N, context)
-#endif
+#define TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC(v, T, N)                \
+    T *(v) = tf_psa_crypto_pqcp_alloc_push((N) * sizeof(T))
+#define TF_PSA_CRYPTO_PQCP_CUSTOM_FREE(v, T, N)                \
+    tf_psa_crypto_pqcp_alloc_pop((N) * sizeof(T))
 
-#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED && TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_start()
+{
+    TF_PSA_CRYPTO_PQCP_ALLOC_LOCK();
+    return PSA_SUCCESS;
+}
+psa_status_t tf_psa_crypto_pqcp_alloc_done(void);
+
+#else /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_start()
+{
+    return PSA_SUCCESS;
+}
+
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_done() {
+    return PSA_SUCCESS;
+}
+
+#endif /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #endif /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC_H */

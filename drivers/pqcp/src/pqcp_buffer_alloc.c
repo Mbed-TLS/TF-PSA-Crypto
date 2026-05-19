@@ -12,5 +12,60 @@
 #include "src/common.h"
 
 MLD_ALIGN uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
+size_t tf_psa_crypto_pqcp_alloc_used;
+int tf_psa_crypto_pqcp_alloc_status;
+
+psa_status_t tf_psa_crypto_pqcp_alloc_done(void)
+{
+    psa_status_t status = tf_psa_crypto_pqcp_alloc_status;
+    mbedtls_platform_zeroize(tf_psa_crypto_pqcp_alloc_buffer,
+                             sizeof(tf_psa_crypto_pqcp_alloc_buffer));
+    tf_psa_crypto_pqcp_alloc_status = 0;
+    if (tf_psa_crypto_pqcp_alloc_used != 0) {
+        status = PSA_ERROR_BAD_STATE;
+        tf_psa_crypto_pqcp_alloc_used = 0;
+    }
+    TF_PSA_CRYPTO_PQCP_ALLOC_UNLOCK();
+    return status;
+}
+
+void *tf_psa_crypto_pqcp_alloc_push(size_t size)
+{
+    /* If something's already gone wrong, avoid doing anything that could
+     * make things worse. */
+    if (tf_psa_crypto_pqcp_alloc_status != PSA_SUCCESS) {
+        return NULL;
+    }
+
+    /* The base address and every allocation are aligned to a multiple
+     * of MLD_ALIGN. */
+    size = MLD_ALIGN_UP(size);
+
+    /* Check that there is room. This shouldn't happen if the buffer size
+     * was configured correctly. */
+    if (tf_psa_crypto_pqcp_alloc_used + size > sizeof(tf_psa_crypto_pqcp_alloc_buffer)) {
+        tf_psa_crypto_pqcp_alloc_status = PSA_ERROR_INSUFFICIENT_MEMORY;
+        return NULL;
+    }
+
+    void *p = tf_psa_crypto_pqcp_alloc_buffer + tf_psa_crypto_pqcp_alloc_used;
+    tf_psa_crypto_pqcp_alloc_used += size;
+    return p;
+}
+
+void tf_psa_crypto_pqcp_alloc_pop(size_t size)
+{
+    /* The base address and every allocation are aligned to a multiple
+     * of MLD_ALIGN. */
+    size = MLD_ALIGN_UP(size);
+
+    /* This should happen, but make sure we don't underflow the buffer. */
+    if (tf_psa_crypto_pqcp_alloc_used < size) {
+        tf_psa_crypto_pqcp_alloc_status = PSA_ERROR_BAD_STATE;
+        return;
+    }
+
+    tf_psa_crypto_pqcp_alloc_used -= size;
+}
 
 #endif
