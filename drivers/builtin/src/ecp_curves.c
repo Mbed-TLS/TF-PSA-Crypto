@@ -4610,12 +4610,8 @@ int mbedtls_ecp_mod_p256k1_raw(mbedtls_mpi_uint *X, size_t X_limbs)
         /* Copy A1 */
         memcpy(A1, X + P_limbs, P_limbs * ciL);
 
-        /* X = A0
-         * Zeroize the A1 part of X to keep only the A0 part.
-         */
-        for (size_t i = P_limbs; i < X_limbs; i++) {
-            X[i] = 0;
-        }
+        /* X = A0: Zeroize the A1 part of X to keep only the A0 part. */
+        memset(X + P_limbs, 0, P_limbs * ciL);
 
         /* X = A0 + R * A1 */
         mbedtls_mpi_core_mul(M, A1, P_limbs, R, R_limbs);
