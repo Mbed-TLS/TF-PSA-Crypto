@@ -190,7 +190,7 @@ void pk_parse_public_key_ec(data_t *key_data, int result)
     int res;
     unsigned char *key_copy = NULL;
 
-    MD_OR_USE_PSA_INIT();
+    PSA_INIT();
     TEST_CALLOC(key_copy, key_data->len);
     memcpy(key_copy, key_data->x, key_data->len);
 
@@ -199,10 +199,14 @@ void pk_parse_public_key_ec(data_t *key_data, int result)
     TEST_EQUAL(res, result);
 
     if (res == 0) {
-        TEST_ASSERT(mbedtls_pk_can_do(&ctx, MBEDTLS_PK_ECKEY));
+        TEST_ASSERT(mbedtls_pk_can_do_psa(&ctx,
+                                          PSA_ALG_ECDSA(PSA_ALG_SHA_256),
+                                          PSA_KEY_USAGE_VERIFY_HASH) ||
+                    mbedtls_pk_can_do_psa(&ctx,
+                                          PSA_ALG_ECDH,
+                                          PSA_KEY_USAGE_DERIVE_PUBLIC));
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-        PSA_INIT();
         if (pk_can_ecdsa(&ctx)) {
             TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_VERIFY_HASH));
             TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_VERIFY_MESSAGE));
