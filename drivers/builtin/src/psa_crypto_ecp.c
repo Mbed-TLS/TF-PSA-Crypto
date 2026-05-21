@@ -561,6 +561,18 @@ static psa_status_t ecdh_everest_shared_secret(
 
     mbedtls_x25519_scalarmult(shared_secret, key_buffer, peer_key);
 
+    /* Check that the shared secret is not zero. This is not required by RFC
+     * 7748, but ecp.c does it (by checking if the input is a low-order point,
+     * see ecp_check_bad_points_mx()), and protocols that require contributory
+     * behaviour need it. Also, it will never happen in normal ECDH usage. */
+    uint8_t s = 0;
+    for (size_t i = 0; i < *shared_secret_length; i++) {
+        s |= shared_secret[i];
+    }
+    if (s == 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     return PSA_SUCCESS;
 }
 #endif /* MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED */
