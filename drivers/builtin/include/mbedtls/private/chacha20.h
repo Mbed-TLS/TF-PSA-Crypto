@@ -42,10 +42,29 @@ typedef struct mbedtls_chacha20_context {
 }
 mbedtls_chacha20_context;
 
+#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
+/**
+ * \brief           Check whether a ChaCha20 operation would wrap the block
+ *                  counter.
+ *
+ *                  This function takes any unused bytes in the current
+ *                  keystream block into account. It does not modify the
+ *                  context.
+ *
+ * \param ctx       The ChaCha20 context to check. It must be initialized and
+ *                  bound to a key and nonce.
+ * \param size      The number of bytes to process.
+ *
+ * \return          \c 0 if processing \p size bytes would not make the
+ *                  32-bit block counter wrap.
+ * \return          #MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA if processing
+ *                  \p size bytes would make the 32-bit block counter wrap, or
+ *                  if the counter has already been exhausted and \p size is
+ *                  not zero.
+ */
 int mbedtls_chacha20_check_counter_wrap(const mbedtls_chacha20_context *ctx,
                                         size_t size);
 
-#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief           This function initializes the specified ChaCha20 context.
  *
