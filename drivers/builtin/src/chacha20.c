@@ -215,10 +215,8 @@ int mbedtls_chacha20_starts(mbedtls_chacha20_context *ctx,
     return 0;
 }
 
-#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
-
-static int chacha20_check_counter_wrap(const mbedtls_chacha20_context *ctx,
-                                       size_t size)
+int mbedtls_chacha20_check_counter_wrap(const mbedtls_chacha20_context *ctx,
+                                        size_t size)
 {
     size_t available_keystream = 0;
     uint64_t needed_blocks = 0;
@@ -248,12 +246,15 @@ static int chacha20_check_counter_wrap(const mbedtls_chacha20_context *ctx,
         needed_blocks++;
     }
 
-    if (needed_blocks >  (uint64_t) CHACHA20_MAX_BLOCKS + 1 - ctx->state[CHACHA20_CTR_INDEX]) {
+    if (needed_blocks >
+        (uint64_t) CHACHA20_MAX_BLOCKS + 1U - ctx->state[CHACHA20_CTR_INDEX]) {
         return MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA;
     }
 
     return 0;
 }
+
+#if MBEDTLS_CHACHA20_NEON_MULTIBLOCK == 0
 
 int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
                             size_t size,
@@ -263,7 +264,7 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
     size_t offset = 0U;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-    ret = chacha20_check_counter_wrap(ctx, size);
+    ret = mbedtls_chacha20_check_counter_wrap(ctx, size);
     if (ret != 0) {
         return ret;
     }
