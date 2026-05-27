@@ -3320,10 +3320,12 @@ void xof_dispatch(int alg_arg,
                   data_t *input,
                   data_t *expected_output,
                   int forced_status_arg,
+                  int expected_driver_status_arg,
                   int expected_status_arg)
 {
     psa_algorithm_t alg = alg_arg;
     psa_status_t forced_status = forced_status_arg;
+    psa_status_t expected_driver_status = expected_driver_status_arg;
     psa_status_t expected_status = expected_status_arg;
     psa_xof_operation_t operation = psa_xof_operation_init();
     unsigned char *output = NULL;
@@ -3336,23 +3338,27 @@ void xof_dispatch(int alg_arg,
 
     TEST_EQUAL(psa_xof_setup(&operation, alg), expected_status);
     TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits, 1);
-    TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status, forced_status);
+    TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status,
+               expected_driver_status);
 
     if (expected_status == PSA_SUCCESS) {
         PSA_ASSERT(psa_xof_update(&operation, input->x, input->len));
         TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits,
                    forced_status == PSA_SUCCESS ? 2 : 1);
-        TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status, forced_status);
+        TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status,
+                   expected_driver_status);
 
         PSA_ASSERT(psa_xof_output(&operation, output, expected_output->len));
         TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits,
                    forced_status == PSA_SUCCESS ? 3 : 1);
-        TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status, forced_status);
+        TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status,
+                   expected_driver_status);
 
         PSA_ASSERT(psa_xof_abort(&operation));
         TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits,
                    forced_status == PSA_SUCCESS ? 4 : 1);
-        TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status, forced_status);
+        TEST_EQUAL(mbedtls_test_driver_xof_hooks.driver_status,
+                   expected_driver_status);
 
         TEST_MEMORY_COMPARE(output, expected_output->len,
                             expected_output->x, expected_output->len);
