@@ -42,6 +42,9 @@ typedef struct mbedtls_chacha20_context {
 }
 mbedtls_chacha20_context;
 
+int mbedtls_chacha20_check_counter_wrap(const mbedtls_chacha20_context *ctx,
+                                        size_t size);
+
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 /**
  * \brief           This function initializes the specified ChaCha20 context.

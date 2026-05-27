@@ -210,46 +210,6 @@ static inline uint32x4_t chacha20_neon_blocks(chacha20_neon_regs_t r_original,
     }
 }
 
-static int chacha20_check_counter_wrap(const mbedtls_chacha20_context *ctx,
-                                       size_t size)
-{
-    size_t available_keystream = 0;
-    uint64_t needed_blocks = 0;
-
-    if (ctx->keystream_bytes_used == CHACHA20_COUNTER_EXHAUSTED) {
-        return size == 0U ? 0 : MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA;
-    }
-
-    if (ctx->keystream_bytes_used < MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES) {
-        available_keystream =
-            MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES - ctx->keystream_bytes_used;
-
-        if (size <= available_keystream) {
-            return 0;
-        }
-
-        if (ctx->state[CHACHA20_CTR_INDEX] == 0U) {
-            return MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA;
-        }
-
-        size -= available_keystream;
-    }
-
-    needed_blocks = (uint64_t) (size / MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES);
-
-    if (size % MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES != 0U) {
-        needed_blocks++;
-    }
-
-    if (needed_blocks != 0U &&
-        needed_blocks - 1U >
-        (uint64_t) CHACHA20_MAX_BLOCKS - ctx->state[CHACHA20_CTR_INDEX]) {
-        return MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA;
-    }
-
-    return 0;
-}
-
 int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
                             size_t size,
                             const unsigned char *input,
@@ -261,7 +221,7 @@ int mbedtls_chacha20_update(mbedtls_chacha20_context *ctx,
     size_t partial_block_size = 0U;
     int final_counter_block = 0;
 
-    ret = chacha20_check_counter_wrap(ctx, size);
+    ret = mbedtls_chacha20_check_counter_wrap(ctx, size);
     if (ret != 0) {
         return ret;
     }
