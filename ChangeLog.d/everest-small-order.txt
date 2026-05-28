@@ -1,0 +1,6 @@
+Security
+   * In configurations with MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED (non-default),
+     when doing ECDH key agreement with x25519, it was possible for the peer to
+     force the shared secret to all-zero by sending a low-order point. This is
+     only a problem for protocols that expect contributory behaviour, that is,
+     where neither party should be able to force the shared secret.
