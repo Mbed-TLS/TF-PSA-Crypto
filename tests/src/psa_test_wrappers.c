@@ -714,15 +714,7 @@ psa_status_t mbedtls_test_wrap_psa_hash_compare(
     const uint8_t *arg3_hash,
     size_t arg4_hash_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_input, arg2_input_length);
-    MBEDTLS_TEST_MEMORY_POISON(arg3_hash, arg4_hash_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_hash_compare)(arg0_alg, arg1_input, arg2_input_length, arg3_hash, arg4_hash_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_input, arg2_input_length);
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg3_hash, arg4_hash_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -735,15 +727,7 @@ psa_status_t mbedtls_test_wrap_psa_hash_compute(
     size_t arg4_hash_size,
     size_t *arg5_hash_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_input, arg2_input_length);
-    MBEDTLS_TEST_MEMORY_POISON(arg3_hash, arg4_hash_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_hash_compute)(arg0_alg, arg1_input, arg2_input_length, arg3_hash, arg4_hash_size, arg5_hash_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_input, arg2_input_length);
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg3_hash, arg4_hash_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -754,13 +738,7 @@ psa_status_t mbedtls_test_wrap_psa_hash_finish(
     size_t arg2_hash_size,
     size_t *arg3_hash_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_hash, arg2_hash_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_hash_finish)(arg0_operation, arg1_hash, arg2_hash_size, arg3_hash_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_hash, arg2_hash_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -779,13 +757,7 @@ psa_status_t mbedtls_test_wrap_psa_hash_update(
     const uint8_t *arg1_input,
     size_t arg2_input_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_input, arg2_input_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_hash_update)(arg0_operation, arg1_input, arg2_input_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_input, arg2_input_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -795,13 +767,7 @@ psa_status_t mbedtls_test_wrap_psa_hash_verify(
     const uint8_t *arg1_hash,
     size_t arg2_hash_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_hash, arg2_hash_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_hash_verify)(arg0_operation, arg1_hash, arg2_hash_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_hash, arg2_hash_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1030,15 +996,7 @@ psa_status_t mbedtls_test_wrap_psa_mac_compute(
     size_t arg5_mac_size,
     size_t *arg6_mac_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg2_input, arg3_input_length);
-    MBEDTLS_TEST_MEMORY_POISON(arg4_mac, arg5_mac_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_mac_compute)(arg0_key, arg1_alg, arg2_input, arg3_input_length, arg4_mac, arg5_mac_size, arg6_mac_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg2_input, arg3_input_length);
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg4_mac, arg5_mac_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1049,13 +1007,7 @@ psa_status_t mbedtls_test_wrap_psa_mac_sign_finish(
     size_t arg2_mac_size,
     size_t *arg3_mac_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_mac, arg2_mac_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_mac_sign_finish)(arg0_operation, arg1_mac, arg2_mac_size, arg3_mac_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_mac, arg2_mac_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1075,13 +1027,7 @@ psa_status_t mbedtls_test_wrap_psa_mac_update(
     const uint8_t *arg1_input,
     size_t arg2_input_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_input, arg2_input_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_mac_update)(arg0_operation, arg1_input, arg2_input_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_input, arg2_input_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1094,15 +1040,7 @@ psa_status_t mbedtls_test_wrap_psa_mac_verify(
     const uint8_t *arg4_mac,
     size_t arg5_mac_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg2_input, arg3_input_length);
-    MBEDTLS_TEST_MEMORY_POISON(arg4_mac, arg5_mac_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_mac_verify)(arg0_key, arg1_alg, arg2_input, arg3_input_length, arg4_mac, arg5_mac_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg2_input, arg3_input_length);
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg4_mac, arg5_mac_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1112,13 +1050,7 @@ psa_status_t mbedtls_test_wrap_psa_mac_verify_finish(
     const uint8_t *arg1_mac,
     size_t arg2_mac_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_mac, arg2_mac_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_mac_verify_finish)(arg0_operation, arg1_mac, arg2_mac_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_mac, arg2_mac_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1286,13 +1218,7 @@ psa_status_t mbedtls_test_wrap_psa_random_reseed(
     const uint8_t *arg0_perso,
     size_t arg1_perso_size)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg0_perso, arg1_perso_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_random_reseed)(arg0_perso, arg1_perso_size);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg0_perso, arg1_perso_size);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1507,13 +1433,7 @@ psa_status_t mbedtls_test_wrap_psa_xof_output(
     uint8_t *arg1_output,
     size_t arg2_output_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_output, arg2_output_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_xof_output)(arg0_operation, arg1_output, arg2_output_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_output, arg2_output_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1523,13 +1443,7 @@ psa_status_t mbedtls_test_wrap_psa_xof_set_context(
     const uint8_t *arg1_context,
     size_t arg2_context_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_context, arg2_context_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_xof_set_context)(arg0_operation, arg1_context, arg2_context_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_context, arg2_context_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
@@ -1548,13 +1462,7 @@ psa_status_t mbedtls_test_wrap_psa_xof_update(
     const uint8_t *arg1_input,
     size_t arg2_input_length)
 {
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_POISON(arg1_input, arg2_input_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     psa_status_t status = (psa_xof_update)(arg0_operation, arg1_input, arg2_input_length);
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
-    MBEDTLS_TEST_MEMORY_UNPOISON(arg1_input, arg2_input_length);
-#endif /* !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) */
     return status;
 }
 
