@@ -22,7 +22,7 @@
 #include "mbedtls/platform.h"
 
 #define CHACHA20_CTR_INDEX (12U)
-#define CHACHA20_MAX_BLOCKS 0xFFFFFFFF
+#define CHACHA20_MAX_BLOCKS UINT32_MAX
 #define CHACHA20_COUNTER_EXHAUSTED (MBEDTLS_CHACHA20_BLOCK_SIZE_BYTES + 1U)
 
 // Tested on all combinations of Armv7 arm/thumb2; Armv8 arm/thumb2/aarch64; Armv8 aarch64_be on
