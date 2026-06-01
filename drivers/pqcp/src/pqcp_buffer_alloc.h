@@ -37,10 +37,18 @@
 void *tf_psa_crypto_pqcp_alloc_push(size_t size);
 void tf_psa_crypto_pqcp_alloc_pop(size_t size);
 
-#define TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC(v, T, N)                \
-    T *(v) = tf_psa_crypto_pqcp_alloc_push((N) * sizeof(T))
+#define TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC(v, T, N) \
+    T *(v) = NULL; \
+    do { \
+        /* Verify that the allocation would fit in the buffer by itself, avoiding overflows \
+           This should be optimized away at compile-time */ \
+        if ((N) > 0 && (N) <= TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE / sizeof(T)) { \
+            (v) = tf_psa_crypto_pqcp_alloc_push(MLD_ALIGN_UP(sizeof(T) * (N))); \
+        } \
+    } while (0)
+
 #define TF_PSA_CRYPTO_PQCP_CUSTOM_FREE(v, T, N)                \
-    tf_psa_crypto_pqcp_alloc_pop((N) * sizeof(T))
+    tf_psa_crypto_pqcp_alloc_pop(MLD_ALIGN_UP(sizeof(T) * (N)))
 
 static inline psa_status_t tf_psa_crypto_pqcp_alloc_start()
 {
@@ -56,7 +64,8 @@ static inline psa_status_t tf_psa_crypto_pqcp_alloc_start()
     return PSA_SUCCESS;
 }
 
-static inline psa_status_t tf_psa_crypto_pqcp_alloc_done() {
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_done()
+{
     return PSA_SUCCESS;
 }
 

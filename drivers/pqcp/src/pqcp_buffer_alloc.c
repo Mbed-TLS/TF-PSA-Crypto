@@ -29,6 +29,8 @@ psa_status_t tf_psa_crypto_pqcp_alloc_done(void)
     return status;
 }
 
+/* The base address and every allocation are aligned to a multiple
+ * of MLD_ALIGN. */
 void *tf_psa_crypto_pqcp_alloc_push(size_t size)
 {
     /* If something's already gone wrong, avoid doing anything that could
@@ -36,10 +38,6 @@ void *tf_psa_crypto_pqcp_alloc_push(size_t size)
     if (tf_psa_crypto_pqcp_alloc_status != PSA_SUCCESS) {
         return NULL;
     }
-
-    /* The base address and every allocation are aligned to a multiple
-     * of MLD_ALIGN. */
-    size = MLD_ALIGN_UP(size);
 
     /* Check that there is room. This shouldn't happen if the buffer size
      * was configured correctly. */
@@ -53,12 +51,10 @@ void *tf_psa_crypto_pqcp_alloc_push(size_t size)
     return p;
 }
 
+/* The base address and every allocation are aligned to a multiple
+ * of MLD_ALIGN. */
 void tf_psa_crypto_pqcp_alloc_pop(size_t size)
 {
-    /* The base address and every allocation are aligned to a multiple
-     * of MLD_ALIGN. */
-    size = MLD_ALIGN_UP(size);
-
     /* This should happen, but make sure we don't underflow the buffer. */
     if (tf_psa_crypto_pqcp_alloc_used < size) {
         tf_psa_crypto_pqcp_alloc_status = PSA_ERROR_BAD_STATE;
