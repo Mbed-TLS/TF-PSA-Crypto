@@ -4,7 +4,40 @@
 #include "bignum_core.h"
 #include "rsa_alt_helpers.h"
 #include "rsa_internal.h"
+#include "rsa_invasive.h"
 #include "test/bignum_codepath_check.h"
+#include <test/constant_flow.h>
+
+#if defined(MBEDTLS_TEST_HOOKS)
+static void pkcs1_v15_decode_raw(const unsigned char *input,
+                                 size_t input_size,
+                                 size_t output_size,
+                                 int expected_result,
+                                 size_t expected_plaintext_length)
+{
+    unsigned char *input_buf = NULL;
+    unsigned char *output_buf = NULL;
+    size_t olen = 0;
+
+    TEST_CALLOC(output_buf, output_size);
+
+    TEST_CALLOC(input_buf, input_size);
+    memcpy(input_buf, input, input_size);
+
+    TEST_CF_SECRET(input_buf, input_size);
+    TEST_EQUAL(expected_result,
+               mbedtls_ct_rsaes_pkcs1_v15_unpadding(
+                   input_buf, input_size,
+                   output_buf, output_size, &olen));
+    if (expected_result == 0) {
+        TEST_EQUAL(expected_plaintext_length, olen);
+    }
+
+exit:
+    mbedtls_free(input_buf);
+    mbedtls_free(output_buf);
+}
+#endif /* MBEDTLS_TEST_HOOKS */
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_BIGNUM_C)
 
@@ -1184,6 +1217,11 @@ void pkcs1_v15_decode(data_t *input,
          * that final wasn't overwritten. */
         TEST_ASSERT(count < 16);
     }
+
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_RSA_ALT)
+    pkcs1_v15_decode_raw(original, sizeof(original), output_size,
+                         expected_result, expected_plaintext_length);
+#endif
 
 exit:
     mbedtls_rsa_free(&ctx);
