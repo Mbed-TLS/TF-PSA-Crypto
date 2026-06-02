@@ -11,11 +11,7 @@
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
 //#include "pqcp-config.h"
-/* Disable the context-stuffing implemented in wrap_mldsa_native.h,
- * As it might interfere with the function's definitions. */
-#define TF_PSA_CRYPTO_PQCP_DISABLE_CONTEXT_STUFFING
 #include "wrap_mldsa_native.h"
-#undef TF_PSA_CRYPTO_PQCP_DISABLE_CONTEXT_STUFFING
 
 /* The mldsa-native code comes with SHAKE (FIPS 202) implementation,
  * which it uses by default. We turn the default around and have

@@ -10,7 +10,6 @@
 
 #include <psa/crypto.h>
 #include "psa_crypto_mldsa.h"
-#include "pqcp_buffer_alloc.h"
 #include "wrap_mldsa_native.h"
 #include <mbedtls/platform_util.h>
 #include <mbedtls/platform.h>
@@ -144,10 +143,6 @@ static psa_status_t seed_to_public_key(
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
-    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
-    if (status != 0) {
-        return status;
-    }
     /* Beyond this point, we must go through the cleanup code. */
     uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
 
@@ -161,13 +156,8 @@ static psa_status_t seed_to_public_key(
     *data_length = public_key_length;
 
 cleanup:
-    status = tf_psa_crypto_pqcp_alloc_done();
     mbedtls_platform_zeroize(secret, sizeof(secret));
-    if (status != PSA_SUCCESS) {
-        return status;
-    } else {
-        return pqcp_to_psa_error(ret);
-    }
+    return pqcp_to_psa_error(ret);
 }
 
 psa_status_t tf_psa_crypto_mldsa_export_public_key(
@@ -216,12 +206,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
-    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
-    if (status != 0) {
-        return status;
-    }
     /* Beyond this point, we must go through the cleanup code. */
-
     uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
     uint8_t public[TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
@@ -243,15 +228,11 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
                                                         rnd,
                                                         secret,
                                                         0);
+    ret = 0;
 
 cleanup:
-    status = tf_psa_crypto_pqcp_alloc_done();
     mbedtls_platform_zeroize(secret, sizeof(secret));
-    if (status != PSA_SUCCESS) {
-        return status;
-    } else {
-        return pqcp_to_psa_error(ret);
-    }
+    return pqcp_to_psa_error(ret);
 }
 
 psa_status_t tf_psa_crypto_mldsa_verify_message(
@@ -280,20 +261,11 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
         return PSA_ERROR_INVALID_SIGNATURE;
     }
 
-    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
-    if (status != 0) {
-        return status;
-    }
-
     int ret = tf_psa_crypto_pqcp_mldsa87_verify(signature, signature_length,
                                                 message, message_length,
                                                 NULL, 0,
                                                 key_buffer);
-
-    status = tf_psa_crypto_pqcp_alloc_done();
-    if (status != PSA_SUCCESS) {
-        return status;
-    } else if (ret == 0) {
+    if (ret == 0) {
         return PSA_SUCCESS;
     } else {
         /* At the time of writing, invalid signature is the only possible
