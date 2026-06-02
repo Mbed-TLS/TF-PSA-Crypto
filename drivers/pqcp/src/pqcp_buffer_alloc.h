@@ -17,7 +17,20 @@
 #endif
 
 // Sufficient for signing with TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE 123200
+// Call stack: mldsa87_signature_internal -> attempt_signature_generation87
+#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE \
+    /* mldsa87_signature_internal */ ( \
+        /* seedbuf      */ (2 * MLDSA_SEEDBYTES + MLDSA_TRBYTES + 2 * MLDSA_CRHBYTES) + \
+        /* mld_polymat  */ (1024*8*7) + \
+        /* mld_polyvecl */ (1024*7) + \
+        /* mld_polyveck */ 2*(1024*8) \
+        ) + \
+    /* attempt_signature_generation87 */ ( \
+        /* MLDSA_CTILDEBYTES */ 64 + \
+        /* mld_polyvecl      */ 2*(1024*7) + \
+        /* mld_polyveck      */ 3*(1024*8) + \
+        /* mld_poly          */ 3*(1024) \
+        ) /* == 123200 */
 
 #if defined(MBEDTLS_THREADING_C)
 #define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK()                                 \
