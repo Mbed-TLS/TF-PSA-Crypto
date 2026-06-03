@@ -37,6 +37,11 @@ exit:
     mbedtls_free(input_buf);
     mbedtls_free(output_buf);
 }
+
+static void test_cf_secret(const void *ptr, size_t size)
+{
+    TEST_CF_SECRET(ptr, size);
+}
 #endif /* MBEDTLS_TEST_HOOKS */
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_BIGNUM_C)
@@ -1068,19 +1073,25 @@ void pkcs1_rsaes_v15_decrypt(int mod, data_t *input_P, data_t *input_Q,
     TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
     TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
 
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_rsa_cf_secret = test_cf_secret;
+#endif
+
     if (result_str->len == 0) {
-        TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
-                                              &mbedtls_test_rnd_pseudo_rand,
-                                              &rnd_info,
-                                              &output_len, message_str->x,
-                                              NULL, 0) == result);
+        TEST_EQUAL(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                             &mbedtls_test_rnd_pseudo_rand,
+                                             &rnd_info,
+                                             &output_len, message_str->x,
+                                             NULL, 0), result);
     } else {
-        TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
-                                              &mbedtls_test_rnd_pseudo_rand,
-                                              &rnd_info,
-                                              &output_len, message_str->x,
-                                              output, 1000) == result);
+        TEST_EQUAL(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                             &mbedtls_test_rnd_pseudo_rand,
+                                             &rnd_info,
+                                             &output_len, message_str->x,
+                                             output, 1000), result);
         if (result == 0) {
+            TEST_CF_PUBLIC(&output_len, sizeof(output_len));
+            TEST_CF_PUBLIC(output, output_len);
             TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
                                             output_len,
                                             result_str->len) == 0);
@@ -1088,6 +1099,9 @@ void pkcs1_rsaes_v15_decrypt(int mod, data_t *input_P, data_t *input_Q,
     }
 
 exit:
+#if defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_rsa_cf_secret = NULL;
+#endif
     mbedtls_rsa_free(&ctx);
 }
 /* END_CASE */

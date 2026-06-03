@@ -49,6 +49,10 @@
 
 #include "mbedtls/platform.h"
 
+#if defined(MBEDTLS_TEST_HOOKS)
+void (*mbedtls_rsa_cf_secret)(const void *ptr, size_t size) = NULL;
+#endif
+
 /*
  * Wrapper around mbedtls_asn1_get_mpi() that rejects zero.
  *
@@ -1733,10 +1737,15 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_rsa_context *ctx,
     }
 
     ret = mbedtls_rsa_private(ctx, f_rng, p_rng, input, buf);
-
     if (ret != 0) {
         goto cleanup;
     }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (mbedtls_rsa_cf_secret != NULL) {
+        mbedtls_rsa_cf_secret(buf, sizeof(buf));
+    }
+#endif
 
     ret = mbedtls_ct_rsaes_pkcs1_v15_unpadding(buf, ilen,
                                                output, output_max_len, olen);

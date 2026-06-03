@@ -45,6 +45,13 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_ct_rsaes_pkcs1_v15_unpadding(
     unsigned char *output, size_t output_max_len, size_t *olen);
 #endif /* MBEDTLS_PKCS1_V15 && MBEDTLS_RSA_C */
 
+/* mbedtls_rsa_private() is not fully constant-time yet, so we can't do
+ * end-to-end constant-time testing by marking external inputs as secret.
+ *
+ * The next best thing we can do is mark its output as a secret, when we expect
+ * further processing to be constant-time, including error handling. */
+extern void (*mbedtls_rsa_cf_secret)(const void *ptr, size_t size);
+
 #endif /* MBEDTLS_TEST_HOOKS */
 
 #endif /* TF_PSA_CRYPTO_RSA_INVASIVE_H */
