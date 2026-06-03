@@ -11,9 +11,9 @@
 #include "wrap_mldsa_native.h"
 #include "src/common.h"
 
-MLD_ALIGN uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
-size_t tf_psa_crypto_pqcp_alloc_used;
-int tf_psa_crypto_pqcp_alloc_status;
+static MLD_ALIGN uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
+static size_t tf_psa_crypto_pqcp_alloc_used;
+static int tf_psa_crypto_pqcp_alloc_status;
 
 int tf_psa_crypto_pqcp_alloc_done(void)
 {
