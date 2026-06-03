@@ -53,7 +53,7 @@ void *tf_psa_crypto_pqcp_alloc_push(size_t size)
  * of MLD_ALIGN. */
 void tf_psa_crypto_pqcp_alloc_pop(size_t size)
 {
-    /* This should happen, but make sure we don't underflow the buffer. */
+    /* This shouldn't happen, but make sure we don't underflow the buffer. */
     if (tf_psa_crypto_pqcp_alloc_used < size) {
         tf_psa_crypto_pqcp_alloc_status = MLD_ERR_FAIL;
         return;
