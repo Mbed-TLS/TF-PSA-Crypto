@@ -1714,13 +1714,14 @@ cleanup:
 /*
  * Implementation of the PKCS#1 v2.1 RSAES-PKCS1-V1_5-DECRYPT function
  */
-int mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_rsa_context *ctx,
-                                        int (*f_rng)(void *, unsigned char *, size_t),
-                                        void *p_rng,
-                                        size_t *olen,
-                                        const unsigned char *input,
-                                        unsigned char *output,
-                                        size_t output_max_len)
+int mbedtls_rsa_rsaes_pkcs1_v15_decrypt_ext(mbedtls_rsa_context *ctx,
+                                            int (*f_rng)(void *, unsigned char *, size_t),
+                                            void *p_rng,
+                                            size_t *olen,
+                                            const unsigned char *input,
+                                            unsigned char *output,
+                                            size_t output_max_len,
+                                            int *sensitive_ret)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t ilen;
@@ -1747,13 +1748,29 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_rsa_context *ctx,
     }
 #endif
 
-    ret = mbedtls_ct_rsaes_pkcs1_v15_unpadding(buf, ilen,
-                                               output, output_max_len, olen);
+    *sensitive_ret = mbedtls_ct_rsaes_pkcs1_v15_unpadding(
+        buf, ilen, output, output_max_len, olen);
 
 cleanup:
     mbedtls_platform_zeroize(buf, sizeof(buf));
 
     return ret;
+}
+
+int mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_rsa_context *ctx,
+                                        int (*f_rng)(void *, unsigned char *, size_t),
+                                        void *p_rng,
+                                        size_t *olen,
+                                        const unsigned char *input,
+                                        unsigned char *output,
+                                        size_t output_max_len)
+{
+    int sensitive_ret = 0;
+    int ret = mbedtls_rsa_rsaes_pkcs1_v15_decrypt_ext(ctx, f_rng, p_rng, olen,
+                                                      input, output,
+                                                      output_max_len,
+                                                      &sensitive_ret);
+    return (ret == 0) ? sensitive_ret : ret;
 }
 #endif /* MBEDTLS_PKCS1_V15 */
 
