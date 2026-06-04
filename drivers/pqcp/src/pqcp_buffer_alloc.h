@@ -20,7 +20,7 @@
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_DETERMINISTIC_KL(K, L) \
     /* mldsa87_signature_internal */ ( \
         /* seedbuf      */ (2 * MLDSA_SEEDBYTES + MLDSA_TRBYTES + 2 * MLDSA_CRHBYTES) + \
-        /* mld_polymat  */ (1024*(K)*(L)) + \
+        /* mld_polymat  */ (1024*(K) *(L)) + \
         /* mld_polyvecl */ (1024*(L)) + \
         /* mld_polyveck */ 2*(1024*(K)) \
         ) + \
@@ -32,7 +32,7 @@
         )
 
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_DETERMINISTIC(param_set) \
- TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_DETERMINISTIC_KL((param_set)/10, (param_set)%10)
+    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_DETERMINISTIC_KL((param_set)/10, (param_set)%10)
 
 // Sufficient for deterministic signatures with TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE \
