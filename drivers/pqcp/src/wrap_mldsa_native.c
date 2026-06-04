@@ -32,11 +32,11 @@
 #  define MLD_CONFIG_SERIAL_FIPS202_ONLY
 #endif /* !defined(TF_PSA_CRYPTO_PQCP_OWN_SHAKE) */
 
-/* Get dependency analysis to rebuild this file if fips202_mbedtls.h changes.
+/* Get dependency analysis to rebuild this file if fips202_psa.h changes.
  * It's included by mldsa_native.c through MLD_CONFIG_FIPS202_CUSTOM_HEADER
  * when we configure mldsa-native to use our SHAKE. */
 #if 0
-#include "fips202_mbedtls.h"
+#include "fips202_psa.h"
 #endif
 
 /* If we include multiple levels, tell the first level to include the
