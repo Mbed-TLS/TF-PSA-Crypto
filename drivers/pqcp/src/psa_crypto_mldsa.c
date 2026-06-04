@@ -228,7 +228,6 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
                                                         rnd,
                                                         secret,
                                                         0);
-    ret = 0;
 
 cleanup:
     mbedtls_platform_zeroize(secret, sizeof(secret));
