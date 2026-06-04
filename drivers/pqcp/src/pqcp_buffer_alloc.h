@@ -25,7 +25,7 @@
         /* mld_polyveck */ 2*(1024*(K)) \
         ) + \
     /* attempt_signature_generation87 */ ( \
-        /* MLDSA_CTILDEBYTES */ (8*(K)) + \
+        /* MLDSA_CTILDEBYTES */ MLD_ALIGN_UP(8*(K)) + \
         /* mld_polyvecl      */ 2*(1024*(L)) + \
         /* mld_polyveck      */ 3*(1024*(K)) + \
         /* mld_poly          */ 3*(1024) \
