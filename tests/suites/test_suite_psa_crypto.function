@@ -17,6 +17,10 @@
 
 #include "psa_crypto_core.h"
 
+/* For constant-time testing of PKCS#1 v1.5 decryption errors */
+#include "rsa_invasive.h"
+
+#include "test/constant_flow.h"
 #include "test/asn1_helpers.h"
 #include "test/psa_crypto_helpers.h"
 #include "test/psa_exercise_key.h"
@@ -1497,6 +1501,13 @@ exit:
 }
 #endif /* MBEDTLS_THREADING_PTHREAD */
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
+static void test_cf_secret(const void *prt, size_t size)
+{
+    TEST_CF_SECRET(prt, size);
+
+}
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -8858,12 +8869,18 @@ void asymmetric_decrypt(int key_type_arg,
     TEST_LE_U(output_size, PSA_ASYMMETRIC_DECRYPT_OUTPUT_MAX_SIZE);
     TEST_CALLOC(output, output_size);
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
+    mbedtls_rsa_cf_secret = test_cf_secret;
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
+
     PSA_ASSERT(psa_asymmetric_decrypt(key, alg,
                                       input_data->x, input_data->len,
                                       label->x, label->len,
                                       output,
                                       output_size,
                                       &output_length));
+    TEST_CF_PUBLIC(&output_length, sizeof(output_length));
+    TEST_CF_PUBLIC(output, output_length);
     TEST_MEMORY_COMPARE(expected_data->x, expected_data->len,
                         output, output_length);
 
@@ -8880,11 +8897,16 @@ void asymmetric_decrypt(int key_type_arg,
                                           output,
                                           output_size,
                                           &output_length));
+        TEST_CF_PUBLIC(&output_length, sizeof(output_length));
+        TEST_CF_PUBLIC(output, output_length);
         TEST_MEMORY_COMPARE(expected_data->x, expected_data->len,
                             output, output_length);
     }
 
 exit:
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
+    mbedtls_rsa_cf_secret = NULL;
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
     psa_reset_key_attributes(&attributes);
     psa_destroy_key(key);
     mbedtls_free(output);
@@ -8922,6 +8944,10 @@ void asymmetric_decrypt_fail(int key_type_arg,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
+    mbedtls_rsa_cf_secret = test_cf_secret;
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
+
     actual_status = psa_asymmetric_decrypt(key, alg,
                                            input_data->x, input_data->len,
                                            label->x, label->len,
@@ -8947,6 +8973,9 @@ void asymmetric_decrypt_fail(int key_type_arg,
     }
 
 exit:
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
+    mbedtls_rsa_cf_secret = NULL;
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
     psa_reset_key_attributes(&attributes);
     psa_destroy_key(key);
     mbedtls_free(output);
