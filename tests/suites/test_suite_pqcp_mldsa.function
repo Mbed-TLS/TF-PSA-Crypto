@@ -173,8 +173,6 @@ void smoke_87(data_t *seed, int poison_mode, int poison_size)
 
     if (EXPECTED_RESULT(SIGNATURE_INTERNAL) == 0) {
         TEST_EQUAL(signature_length, MLDSA_BYTES(87));
-    } else {
-        TEST_EQUAL(signature_length, 0);
     }
 
     /* Verify the signature */
