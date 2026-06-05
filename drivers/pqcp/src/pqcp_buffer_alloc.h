@@ -17,7 +17,7 @@
 #endif
 
 // Call stack: verify -> verify_internal
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERFIY_KL(K, L) ( \
+#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY_KL(K, L) ( \
         /* verify_internal */ ( \
             /* buf          */ ((K) * (192-64*((K) -(L)))) + \
             /* rho          */ (MLDSA_SEEDBYTES) + \
@@ -31,7 +31,7 @@
         ) /* == 99552 for mldsa87 */
 
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY(param_set) \
-    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERFIY_KL((param_set)/10, (param_set)%10)
+    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY_KL((param_set)/10, (param_set)%10)
 
 // Call stack: keypair_internal -> compute_t0_t1_tr_from_sk_components
 # define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_KEYPAIR_KL(K, L) ( \
