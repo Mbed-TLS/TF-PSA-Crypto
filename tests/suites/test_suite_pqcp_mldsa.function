@@ -11,10 +11,63 @@
  * - We don't assert properties that we don't rely on.
  * - We don't try to test algorithmic edge cases.
  */
+#include "tf_psa_crypto_common.h"
 
 #include <wrap_mldsa_native.h>
 
 #include <test/drivers/test_driver.h>
+
+#include "src/common.h"
+
+enum poison_mode {
+    POISON_NONE,
+    POISON_ON_LOCK,
+    POISON_ON_UNLOCK,
+};
+
+/* Sorted in increasing order*/
+enum poison_size {
+    POISON_ZERO,
+    POISON_SIGNATURE_INTERNAL_MINUS_ONE,
+    POISON_SIGNATURE_INTERNAL,
+    POISON_KEYPAIR_INTERNAL_MINUS_ONE,
+    POISON_KEYPAIR_INTERNAL,
+    POISON_VERIFY_MINUS_ONE,
+    POISON_VERIFY,
+    POISON_ALL,
+};
+
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C)
+#include "threading_internal.h"
+
+static size_t buffer_alloc_poison_bytes;
+static int (*mbedtls_mutex_lock_orig_ptr)(mbedtls_platform_mutex_t *mutex);
+static int (*mbedtls_mutex_unlock_orig_ptr)(mbedtls_platform_mutex_t *mutex);
+static int buffer_alloc_poison_mutex_lock(mbedtls_platform_mutex_t *mutex)
+{
+    int ret = mbedtls_mutex_lock_orig_ptr(mutex);
+    if (ret == 0 && mutex == &mbedtls_threading_pqcp_buffer_alloc_mutex.mutex) {
+        tf_psa_crypto_pqcp_alloc_push(buffer_alloc_poison_bytes);
+    }
+    return ret;
+}
+static int buffer_alloc_clear_mutex_lock(mbedtls_platform_mutex_t *mutex)
+{
+    int ret = mbedtls_mutex_lock_orig_ptr(mutex);
+    if (ret == 0 && mutex == &mbedtls_threading_pqcp_buffer_alloc_mutex.mutex) {
+        tf_psa_crypto_pqcp_alloc_pop(buffer_alloc_poison_bytes);
+    }
+    return ret;
+}
+static int buffer_alloc_poison_mutex_unlock(mbedtls_platform_mutex_t *mutex)
+{
+    if (mutex == &mbedtls_threading_pqcp_buffer_alloc_mutex.mutex) {
+        tf_psa_crypto_pqcp_alloc_push(buffer_alloc_poison_bytes);
+    }
+    return mbedtls_mutex_unlock_orig_ptr(mutex);
+}
+
+#endif /* defined(MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_PTHREAD) */
 
 /* END_HEADER */
 
@@ -23,7 +76,7 @@
  * END_DEPENDENCIES */
 
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
-void smoke_87(data_t *seed)
+void smoke_87(data_t *seed, int poison_mode, int poison_size)
 {
     uint8_t *secret_key = NULL;
     const size_t secret_key_length = MLDSA_SECRETKEYBYTES(87);
@@ -37,6 +90,68 @@ void smoke_87(data_t *seed)
     size_t signature_length = SIZE_MAX;
     uint8_t message[14] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "This is a test";
     const size_t message_length = sizeof(message);
+    size_t poison_bytes = 0;
+
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C)
+    poison_bytes = TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE;
+    switch (poison_size) {
+        case POISON_ZERO:
+            poison_bytes = 0;
+            break;
+        case POISON_SIGNATURE_INTERNAL:
+            poison_bytes += MLD_DEFAULT_ALIGN;
+        /* fall through */
+        case POISON_SIGNATURE_INTERNAL_MINUS_ONE:
+            poison_bytes -= TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_SIGNATURE_INTERNAL(87);
+            break;
+        case POISON_KEYPAIR_INTERNAL:
+            poison_bytes += MLD_DEFAULT_ALIGN;
+        /* fall through */
+        case POISON_KEYPAIR_INTERNAL_MINUS_ONE:
+            poison_bytes -= TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_KEYPAIR(87);
+            break;
+        case POISON_VERIFY:
+            poison_bytes += MLD_DEFAULT_ALIGN;
+        /* fall through */
+        case POISON_VERIFY_MINUS_ONE:
+            poison_bytes -= TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY(87);
+            break;
+        case POISON_ALL:
+            break;
+        default:
+            TEST_FAIL("Invalid poison size");
+    }
+
+    mbedtls_mutex_lock_orig_ptr = mbedtls_mutex_lock_ptr;
+    mbedtls_mutex_unlock_orig_ptr = mbedtls_mutex_unlock_ptr;
+    buffer_alloc_poison_bytes = poison_bytes;
+
+    /* Alignment sanity checks*/
+    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE % MLD_DEFAULT_ALIGN, 0);
+    TEST_EQUAL(poison_bytes % MLD_DEFAULT_ALIGN, 0);
+
+    /* Poison the buffer allocator to check allocation sizes and
+     * if the mutex effectively controls access to the allocator */
+    if (poison_mode == POISON_ON_LOCK) {
+        mbedtls_mutex_lock_ptr = buffer_alloc_poison_mutex_lock;
+        /* The allocation will be cleared by tf_psa_crypto_pqcp_alloc_done() */
+    } else if (poison_mode == POISON_ON_UNLOCK) {
+        mbedtls_mutex_lock_ptr = buffer_alloc_clear_mutex_lock;
+        mbedtls_mutex_unlock_ptr = buffer_alloc_poison_mutex_unlock;
+        tf_psa_crypto_pqcp_alloc_push(poison_bytes);
+    } else
+#endif
+    {
+        TEST_EQUAL(poison_mode, POISON_NONE);
+        TEST_EQUAL(poison_size, POISON_ZERO);
+    }
+
+#define EXPECTED_RESULT(func) \
+    ((poison_mode) == POISON_ON_LOCK ? \
+     (poison_bytes) == 0 ? 0 : \
+     (poison_size) < (POISON_##func) ? MLD_ERR_FAIL : \
+     MLD_ERR_OUT_OF_MEMORY : \
+     0)
 
     /* Sanity checks on the test data */
     TEST_EQUAL(seed->len, MLDSA_SEEDBYTES);
@@ -48,22 +163,33 @@ void smoke_87(data_t *seed)
     /* Calculate the expanded key pair from the seed */
     TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_keypair_internal(
                    public_key, secret_key,
-                   seed->x), 0);
+                   seed->x), EXPECTED_RESULT(KEYPAIR_INTERNAL));
 
     /* Calculate a deterministic signature */
     TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_signature_internal(
                    signature, &signature_length,
                    message, message_length,
-                   prefix, prefix_length, rnd, secret_key, 0), 0);
-    TEST_EQUAL(signature_length, MLDSA_BYTES(87));
+                   prefix, prefix_length, rnd, secret_key, 0), EXPECTED_RESULT(SIGNATURE_INTERNAL));
+
+    if (EXPECTED_RESULT(SIGNATURE_INTERNAL) == 0) {
+        TEST_EQUAL(signature_length, MLDSA_BYTES(87));
+    } else {
+        TEST_EQUAL(signature_length, 0);
+    }
 
     /* Verify the signature */
     TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(
                    signature, signature_length,
                    message, message_length,
-                   NULL, 0, public_key), 0);
+                   NULL, 0, public_key), EXPECTED_RESULT(VERIFY));
+
+#undef EXPECTED_RESULT
 
 exit:
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_lock_ptr = mbedtls_mutex_lock_orig_ptr;
+    mbedtls_mutex_unlock_ptr = mbedtls_mutex_unlock_orig_ptr;
+#endif
     mbedtls_free(secret_key);
     mbedtls_free(public_key);
     mbedtls_free(signature);
