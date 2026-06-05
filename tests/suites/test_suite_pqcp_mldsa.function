@@ -67,7 +67,7 @@ static int buffer_alloc_poison_mutex_unlock(mbedtls_platform_mutex_t *mutex)
     return mbedtls_mutex_unlock_orig_ptr(mutex);
 }
 
-#endif /* defined(MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_PTHREAD) */
+#endif /* defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C) */
 
 /* END_HEADER */
 
@@ -140,7 +140,7 @@ void smoke_87(data_t *seed, int poison_mode, int poison_size)
         mbedtls_mutex_unlock_ptr = buffer_alloc_poison_mutex_unlock;
         tf_psa_crypto_pqcp_alloc_push(poison_bytes);
     } else
-#endif
+#endif /* defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C) */
     {
         TEST_EQUAL(poison_mode, POISON_NONE);
         TEST_EQUAL(poison_size, POISON_ZERO);
