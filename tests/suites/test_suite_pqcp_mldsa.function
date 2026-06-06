@@ -187,6 +187,10 @@ exit:
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C)
     mbedtls_mutex_lock_ptr = mbedtls_mutex_lock_orig_ptr;
     mbedtls_mutex_unlock_ptr = mbedtls_mutex_unlock_orig_ptr;
+    /* Reset the allocator to clear any remaining poison
+     * left behind by eg. POISON_ON_UNLOCK */
+    tf_psa_crypto_pqcp_alloc_start();
+    tf_psa_crypto_pqcp_alloc_done();
 #endif
     mbedtls_free(secret_key);
     mbedtls_free(public_key);
