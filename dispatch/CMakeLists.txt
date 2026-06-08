@@ -38,3 +38,9 @@ endif(GEN_FILES)
 
 set(tf_psa_crypto_objlib "dispatch")
 include(${PROJECT_SOURCE_DIR}/objlib.cmake)
+
+if(INSTALL_TF_PSA_CRYPTO_HEADERS)
+    install(DIRECTORY "include/"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h")
+endif(INSTALL_TF_PSA_CRYPTO_HEADERS)

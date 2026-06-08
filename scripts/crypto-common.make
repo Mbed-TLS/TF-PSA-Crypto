@@ -58,6 +58,7 @@ endif
 # Directories with headers of public interfaces of TF-PSA-Crypto
 TF_PSA_CRYPTO_LIBRARY_PUBLIC_INCLUDE = \
 	-I$(TF_PSA_CRYPTO_PATH)/include \
+	-I$(TF_PSA_CRYPTO_DISPATCH_PATH)/include \
 	-I$(TF_PSA_CRYPTO_PATH)/drivers/builtin/include \
 	$(THIRDPARTY_INCLUDES)
 

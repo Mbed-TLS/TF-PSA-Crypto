@@ -124,6 +124,7 @@ foreach(target IN LISTS target_libraries)
         # so that generated headers in the build tree take precedence.
         PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/>
                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
+               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DISPATCH_DIR}/include/>
                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         PRIVATE ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS}
                 # Needed to include psa_crypto_driver_wrappers.h

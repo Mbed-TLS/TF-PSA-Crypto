@@ -22,6 +22,7 @@ foreach (target IN LISTS target_libraries)
       PRIVATE ${PROJECT_BINARY_DIR}/include
               ${PROJECT_SOURCE_DIR}/include
               ${PROJECT_SOURCE_DIR}/core
+              ${TF_PSA_CRYPTO_DISPATCH_DIR}/include
               ${TF_PSA_CRYPTO_DISPATCH_DIR}
               ${TF_PSA_CRYPTO_DRIVERS_INCLUDE_DIRS}
     )

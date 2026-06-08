@@ -29,6 +29,7 @@ foreach (target IN LISTS target_libraries)
               # so that generated headers in the build tree take precedence.
               ${PROJECT_BINARY_DIR}/include
               ${PROJECT_SOURCE_DIR}/include
+              ${TF_PSA_CRYPTO_DISPATCH_DIR}/include
               ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS})
     foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})
         get_target_property(public_includes ${driver_target} INTERFACE_INCLUDE_DIRECTORIES)

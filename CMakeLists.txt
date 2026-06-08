@@ -503,6 +503,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
                 # so that generated headers in the build tree take precedence.
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include
+                ${TF_PSA_CRYPTO_DISPATCH_DIR}/include
                 ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS})
 
     foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})
