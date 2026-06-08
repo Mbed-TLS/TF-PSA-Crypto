@@ -361,8 +361,8 @@ void verify_setup(int type_arg, int bits_arg, int alg_arg,
     PSA_ASSERT(psa_driver_wrapper_verify_abort(&operation));
 
 exit:
-    PSA_DONE();
     psa_driver_wrapper_verify_abort(&operation);
+    PSA_DONE();
 }
 /* END_CASE */
 
@@ -403,8 +403,8 @@ void verify_multipart(
                expected_verify_status);
 
 exit:
-    PSA_DONE();
     psa_driver_wrapper_verify_abort(&operation);
+    PSA_DONE();
 }
 /* END_CASE */
 
@@ -452,8 +452,8 @@ void verify_multipart_finish(
     public_key = NULL;
 
 exit:
-    PSA_DONE();
     psa_driver_wrapper_verify_abort(&operation);
+    PSA_DONE();
     mbedtls_free(public_key);
 }
 /* END_CASE */
