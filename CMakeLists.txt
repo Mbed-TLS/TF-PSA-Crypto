@@ -412,9 +412,11 @@ endif()
 # drivers, that are appended in `drivers/CMakeLists.txt`.
 #
 set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
-        # psa_crypto_driver_wrappers.h is generated, so it may be in the build tree.
+        # tf_psa_crypto_config_check.h is generated, so it may be in the build tree.
         ${CMAKE_CURRENT_BINARY_DIR}/core
         ${CMAKE_CURRENT_SOURCE_DIR}/core
+        # psa_crypto_driver_wrappers.h is generated, so it may be in the build tree.
+        ${CMAKE_CURRENT_BINARY_DIR}/dispatch
         ${TF_PSA_CRYPTO_DISPATCH_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/extras
         ${CMAKE_CURRENT_SOURCE_DIR}/platform
@@ -426,10 +428,13 @@ set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
 # set up in `core` depends on the list of available drivers, which is
 # constructed in `drivers/CMakeLists.txt`. This list may include a generated
 # test driver.
+# `dispatch` must be added after `drivers` because the dispatch implementation
+# must know of all drivers.
 #
 add_subdirectory(framework)
 add_subdirectory(include)
-add_subdirectory(drivers)   # must precede core
+add_subdirectory(drivers)   # must precede dispatch and core
+add_subdirectory(${TF_PSA_CRYPTO_DISPATCH_DIR})
 add_subdirectory(extras)
 add_subdirectory(platform)
 add_subdirectory(utilities)

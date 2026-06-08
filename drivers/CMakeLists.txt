@@ -122,6 +122,8 @@ if (GEN_FILES)
     # driver code.
     foreach (target IN LISTS driver_targets driver_static_targets)
         add_dependencies(${target}
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_dispatch_target)
+        add_dependencies(${target}
             ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
     endforeach()
 endif()

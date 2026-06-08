@@ -182,10 +182,10 @@ def main() -> int:
     if build_tree.looks_like_mbedtls_root(project_root):
         project_root = os.path.join(project_root, 'tf-psa-crypto')
 
-    crypto_core_directory = build_tree.crypto_core_directory(project_root)
+    crypto_dispatch_directory = os.path.join(project_root, 'dispatch')
 
     output_directory = args.output_directory if args.output_directory is not None else \
-        crypto_core_directory
+        crypto_dispatch_directory
 
     template_directory = args.template_dir if args.template_dir is not None else \
         os.path.join(project_root,
