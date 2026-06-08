@@ -22,7 +22,7 @@ foreach (target IN LISTS target_libraries)
       PRIVATE ${PROJECT_BINARY_DIR}/include
               ${PROJECT_SOURCE_DIR}/include
               ${PROJECT_SOURCE_DIR}/core
-              ${PROJECT_SOURCE_DIR}/dispatch
+              ${TF_PSA_CRYPTO_DISPATCH_DIR}
               ${TF_PSA_CRYPTO_DRIVERS_INCLUDE_DIRS}
     )
     tf_psa_crypto_set_config_files_compile_definitions(${target})

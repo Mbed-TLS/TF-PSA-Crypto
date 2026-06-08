@@ -46,8 +46,8 @@ endif # BUILDING_LIBTESTDRIVER1 empty?
 
 TF_PSA_CRYPTO_LIBRARY_OBJS := $(patsubst %.c, %.o,$(wildcard \
                     $(TF_PSA_CRYPTO_CORE_PATH)/*.c \
+                    $(TF_PSA_CRYPTO_DISPATCH_PATH)/*.c \
                     $(TF_PSA_CRYPTO_DRIVERS_BUILTIN_SRC_PATH)/*.c \
-                    $(TF_PSA_CRYPTO_PATH)/dispatch/*.c \
                     $(TF_PSA_CRYPTO_PATH)/extras/*.c \
                     $(TF_PSA_CRYPTO_PATH)/platform/*.c \
                     $(TF_PSA_CRYPTO_PATH)/utilities/*.c))

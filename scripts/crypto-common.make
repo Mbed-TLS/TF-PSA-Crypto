@@ -24,6 +24,7 @@ ifeq (,$(wildcard $(TF_PSA_CRYPTO_PATH)/core/psa_crypto.c))
 endif
 
 TF_PSA_CRYPTO_CORE_PATH = $(TF_PSA_CRYPTO_PATH)/core
+TF_PSA_CRYPTO_DISPATCH_PATH = $(TF_PSA_CRYPTO_PATH)/dispatch
 TF_PSA_CRYPTO_DRIVERS_BUILTIN_SRC_PATH = $(TF_PSA_CRYPTO_PATH)/drivers/builtin/src
 
 # Are we building libtestdriver1? Figure it out based on the path to the
@@ -65,8 +66,8 @@ TF_PSA_CRYPTO_LIBRARY_PUBLIC_INCLUDE = \
 # cleaning up)
 TF_PSA_CRYPTO_LIBRARY_PRIVATE_INCLUDE = \
 	-I$(TF_PSA_CRYPTO_CORE_PATH) \
+	-I$(TF_PSA_CRYPTO_DISPATCH_PATH) \
 	-I$(TF_PSA_CRYPTO_DRIVERS_BUILTIN_SRC_PATH) \
-	-I$(TF_PSA_CRYPTO_PATH)/dispatch \
 	-I$(TF_PSA_CRYPTO_PATH)/extras \
 	-I$(TF_PSA_CRYPTO_PATH)/platform \
 	-I$(TF_PSA_CRYPTO_PATH)/utilities \
