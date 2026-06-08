@@ -93,6 +93,9 @@ void smoke_87(data_t *seed, int poison_mode, int poison_size)
     size_t poison_bytes = 0;
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_lock_orig_ptr = mbedtls_mutex_lock_ptr;
+    mbedtls_mutex_unlock_orig_ptr = mbedtls_mutex_unlock_ptr;
+
     poison_bytes = TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE;
     switch (poison_size) {
         case POISON_ZERO:
@@ -122,8 +125,6 @@ void smoke_87(data_t *seed, int poison_mode, int poison_size)
             TEST_FAIL("Invalid poison size");
     }
 
-    mbedtls_mutex_lock_orig_ptr = mbedtls_mutex_lock_ptr;
-    mbedtls_mutex_unlock_orig_ptr = mbedtls_mutex_unlock_ptr;
     buffer_alloc_poison_bytes = poison_bytes;
 
     /* Alignment sanity checks*/
