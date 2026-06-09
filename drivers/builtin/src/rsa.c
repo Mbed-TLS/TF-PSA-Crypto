@@ -1729,6 +1729,8 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt_ext(mbedtls_rsa_context *ctx,
 
     ilen = ctx->len;
 
+    *sensitive_ret = 0;
+
     if (ctx->padding != MBEDTLS_RSA_PKCS_V15) {
         return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
     }
@@ -1770,7 +1772,7 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_rsa_context *ctx,
                                                       input, output,
                                                       output_max_len,
                                                       &sensitive_ret);
-    return (ret == 0) ? sensitive_ret : ret;
+    return ret | sensitive_ret;
 }
 #endif /* MBEDTLS_PKCS1_V15 */
 
