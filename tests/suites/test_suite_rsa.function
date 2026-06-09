@@ -40,6 +40,10 @@ exit:
 
 static void test_cf_secret(const void *ptr, size_t size)
 {
+    /* In case TEST_CF_SECRET() expands to nothing */
+    (void) ptr;
+    (void) size;
+
     TEST_CF_SECRET(ptr, size);
 }
 #endif /* MBEDTLS_TEST_HOOKS */
