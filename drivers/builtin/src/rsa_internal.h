@@ -128,6 +128,7 @@ int mbedtls_rsa_write_pubkey(const mbedtls_rsa_context *rsa, unsigned char *star
  *                 was invalid, or #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE if the
  *                 padding was valid but resulted in a plaintext larger than the
  *                 output buffer.
+ *                 If this function returns non-zero this is set to \c 0.
  *
  * \return         \c 0 on success, or when the only error is invalid padding,
  *                 or valid padding that results in a plaintext larger than the
