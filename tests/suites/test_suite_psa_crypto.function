@@ -1502,10 +1502,13 @@ exit:
 #endif /* MBEDTLS_THREADING_PTHREAD */
 
 #if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
-static void test_cf_secret(const void *prt, size_t size)
+static void test_cf_secret(const void *ptr, size_t size)
 {
-    TEST_CF_SECRET(prt, size);
+    /* In case TEST_CF_SECRET() expands to nothing */
+    (void) ptr;
+    (void) size;
 
+    TEST_CF_SECRET(ptr, size);
 }
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
 /* END_HEADER */
