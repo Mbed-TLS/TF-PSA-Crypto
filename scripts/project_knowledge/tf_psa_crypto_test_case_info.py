@@ -28,6 +28,7 @@ from typing import Dict, List, Pattern, Union
 INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
     'test_suite_config.crypto_combinations': [
         'Config: entropy: NV seed only',
+        re.compile('.*built-in.*'),
         re.compile('Config: mldsa-native.*'),
     ],
     'test_suite_pqcp_mldsa': [
