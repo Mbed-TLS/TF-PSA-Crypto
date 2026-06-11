@@ -26,7 +26,6 @@
 #include <mbedtls/private/rsa.h>
 #include <mbedtls/private/error_common.h>
 #include "rsa_internal.h"
-#include "constant_time_internal.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_OAEP) || \
@@ -651,20 +650,9 @@ psa_status_t mbedtls_psa_asymmetric_decrypt(const psa_key_attributes_t *attribut
             int ret = mbedtls_rsa_rsaes_pkcs1_v15_decrypt_ext(
                 rsa, mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE,
                 output_length, input, output, output_size, &sensitive_ret);
-            status = mbedtls_to_psa_error(ret);
-
-            /* Merge sensitive_ret into status without leaking it */
-            mbedtls_ct_condition_t bad_padding = mbedtls_ct_uint_eq(
-                (mbedtls_ct_uint_t) sensitive_ret,
-                (mbedtls_ct_uint_t) MBEDTLS_ERR_RSA_INVALID_PADDING);
-            status = mbedtls_ct_error_if(bad_padding,
-                                         PSA_ERROR_INVALID_PADDING, status);
-
-            mbedtls_ct_condition_t large_msg = mbedtls_ct_uint_eq(
-                (mbedtls_ct_uint_t) sensitive_ret,
-                (mbedtls_ct_uint_t) MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE);
-            status = mbedtls_ct_error_if(large_msg,
-                                         PSA_ERROR_BUFFER_TOO_SMALL, status);
+            /* Some errors need translating, but the 2 possible non-zero values
+             * of sensitive_ret do not need translating. */
+            status = mbedtls_to_psa_error(ret) | sensitive_ret;
 #else
             status = PSA_ERROR_NOT_SUPPORTED;
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT */
