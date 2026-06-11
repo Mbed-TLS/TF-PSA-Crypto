@@ -443,7 +443,7 @@ int mbedtls_rsa_rsaes_oaep_encrypt(mbedtls_rsa_context *ctx,
  *                 128 Bytes if RSA-1024 is used) to be able to hold an
  *                 arbitrary decrypted message. If it is not large enough to
  *                 hold the decryption of the particular ciphertext provided,
- *                 the function returns \c MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *                 the function returns \c PSA_ERROR_BUFFER_TOO_SMALL.
  *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. This is used for blinding and is
@@ -484,7 +484,7 @@ int mbedtls_rsa_pkcs1_decrypt(mbedtls_rsa_context *ctx,
  *                 128 Bytes if RSA-1024 is used, to be able to hold an
  *                 arbitrary decrypted message. If it is not large enough to
  *                 hold the decryption of the particular ciphertext provided,
- *                 the function returns #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *                 the function returns #PSA_ERROR_BUFFER_TOO_SMALL.
  *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. This is used for blinding and is
@@ -522,7 +522,7 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_rsa_context *ctx,
  *                   hold an arbitrary decrypted message. If it is not
  *                   large enough to hold the decryption of the particular
  *                   ciphertext provided, the function returns
- *                   #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *                   #PSA_ERROR_BUFFER_TOO_SMALL.
  *
  * \param ctx        The initialized RSA context to use.
  * \param f_rng      The RNG function. This is used for blinding and is

@@ -107,7 +107,7 @@ int mbedtls_rsa_write_pubkey(const mbedtls_rsa_context *rsa, unsigned char *star
  *                 128 Bytes if RSA-1024 is used, to be able to hold an
  *                 arbitrary decrypted message. If it is not large enough to
  *                 hold the decryption of the particular ciphertext provided,
- *                 the function returns #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *                 the function returns #PSA_ERROR_BUFFER_TOO_SMALL.
  *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. This is used for blinding and is
@@ -125,7 +125,7 @@ int mbedtls_rsa_write_pubkey(const mbedtls_rsa_context *rsa, unsigned char *star
  * \param sensitive_ret
  *                 If this function returns \c 0, this is set to either 0 for
  *                 success, or #PSA_ERROR_INVALID_PADDING if the padding
- *                 was invalid, or #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE if the
+ *                 was invalid, or #PSA_ERROR_BUFFER_TOO_SMALL if the
  *                 padding was valid but resulted in a plaintext larger than the
  *                 output buffer.
  *                 If this function returns non-zero this is set to \c 0.
