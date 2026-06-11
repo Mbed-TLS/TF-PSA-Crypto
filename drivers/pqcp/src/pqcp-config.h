@@ -68,9 +68,6 @@
 #define MLD_CONFIG_CUSTOM_ALLOC_FREE
 #define MLD_CUSTOM_ALLOC TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC
 #define MLD_CUSTOM_FREE TF_PSA_CRYPTO_PQCP_CUSTOM_FREE
-/* Redefine the namespace prefix to make space for our wrapper functions */
-#undef MLD_CONFIG_NAMESPACE_PREFIX
-#define MLD_CONFIG_NAMESPACE_PREFIX tf_psa_crypto_pqcp_locked_mldsa
 #endif /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 
 #endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */

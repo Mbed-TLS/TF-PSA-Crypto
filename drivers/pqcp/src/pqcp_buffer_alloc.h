@@ -11,6 +11,7 @@
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+#include <psa/crypto_values.h>
 
 #if defined(MBEDTLS_THREADING_C)
 #include "threading_internal.h"
@@ -79,7 +80,7 @@
 #define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK()                                 \
     do {                                                                \
         if (mbedtls_mutex_lock(&mbedtls_threading_pqcp_buffer_alloc_mutex)) { \
-            return MLD_ERR_FAIL;                                 \
+            return PSA_ERROR_BAD_STATE;                                 \
         }                                                               \
     } while (0)
 #define TF_PSA_CRYPTO_PQCP_ALLOC_UNLOCK()                                 \
@@ -105,12 +106,24 @@ void tf_psa_crypto_pqcp_alloc_pop(size_t size);
 #define TF_PSA_CRYPTO_PQCP_CUSTOM_FREE(v, T, N)                \
     tf_psa_crypto_pqcp_alloc_pop(MLD_ALIGN_UP(sizeof(T) * (N)))
 
-static inline int tf_psa_crypto_pqcp_alloc_start(void)
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
 {
     TF_PSA_CRYPTO_PQCP_ALLOC_LOCK();
-    return 0;
+    return PSA_SUCCESS;
 }
-int tf_psa_crypto_pqcp_alloc_done(void);
+psa_status_t tf_psa_crypto_pqcp_alloc_done(void);
+
+#else /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
+{
+    return PSA_SUCCESS;
+}
+
+static inline psa_status_t tf_psa_crypto_pqcp_alloc_done(void)
+{
+    return PSA_SUCCESS;
+}
 
 #endif /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 
