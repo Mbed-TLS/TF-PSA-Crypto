@@ -149,7 +149,7 @@ void mbedtls_rsa_init(mbedtls_rsa_context *ctx);
  *                 Ignored if \p padding is #MBEDTLS_RSA_PKCS_V15.
  *
  * \return         \c 0 on success.
- * \return         #MBEDTLS_ERR_RSA_INVALID_PADDING failure:
+ * \return         #PSA_ERROR_INVALID_PADDING failure:
  *                 \p padding or \p hash_id is invalid.
  */
 int mbedtls_rsa_set_padding(mbedtls_rsa_context *ctx, int padding,

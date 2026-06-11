@@ -125,12 +125,12 @@ void rsa_invalid_param()
     TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
                                        invalid_padding,
                                        MBEDTLS_MD_NONE),
-               MBEDTLS_ERR_RSA_INVALID_PADDING);
+               PSA_ERROR_INVALID_PADDING);
 
     TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
                                        MBEDTLS_RSA_PKCS_V21,
                                        invalid_hash_id),
-               MBEDTLS_ERR_RSA_INVALID_PADDING);
+               PSA_ERROR_INVALID_PADDING);
 
     TEST_EQUAL(mbedtls_rsa_pkcs1_sign(&ctx, NULL,
                                       NULL, MBEDTLS_MD_NONE,
@@ -158,7 +158,7 @@ void rsa_invalid_param()
     TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
                                        MBEDTLS_RSA_PKCS_V15,
                                        MBEDTLS_MD_NONE),
-               MBEDTLS_ERR_RSA_INVALID_PADDING);
+               PSA_ERROR_INVALID_PADDING);
 #endif
 
 #if defined(MBEDTLS_PKCS1_V15)
@@ -191,7 +191,7 @@ void rsa_invalid_param()
     TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
                                        MBEDTLS_RSA_PKCS_V21,
                                        MBEDTLS_MD_NONE),
-               MBEDTLS_ERR_RSA_INVALID_PADDING);
+               PSA_ERROR_INVALID_PADDING);
 #endif
 
 #if defined(MBEDTLS_PKCS1_V21)
@@ -1208,7 +1208,7 @@ void pkcs1_v15_decode(data_t *input,
         TEST_ASSERT(memcmp(original + sizeof(N) - output_length,
                            final,
                            output_length) == 0);
-    } else if (expected_result == MBEDTLS_ERR_RSA_INVALID_PADDING ||
+    } else if (expected_result == PSA_ERROR_INVALID_PADDING ||
                expected_result == MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE) {
         size_t max_payload_length =
             output_size > sizeof(N) - 11 ? sizeof(N) - 11 : output_size;

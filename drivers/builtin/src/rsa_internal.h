@@ -124,7 +124,7 @@ int mbedtls_rsa_write_pubkey(const mbedtls_rsa_context *rsa, unsigned char *star
  * \param output_max_len The length in Bytes of the output buffer \p output.
  * \param sensitive_ret
  *                 If this function returns \c 0, this is set to either 0 for
- *                 success, or #MBEDTLS_ERR_RSA_INVALID_PADDING if the padding
+ *                 success, or #PSA_ERROR_INVALID_PADDING if the padding
  *                 was invalid, or #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE if the
  *                 padding was valid but resulted in a plaintext larger than the
  *                 output buffer.

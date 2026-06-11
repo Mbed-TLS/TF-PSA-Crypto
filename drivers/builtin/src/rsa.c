@@ -455,7 +455,7 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_ct_rsaes_pkcs1_v15_unpadding(
      * - 0 if the padding is correct. */
     ret = mbedtls_ct_error_if(
         bad,
-        MBEDTLS_ERR_RSA_INVALID_PADDING,
+        PSA_ERROR_INVALID_PADDING,
         mbedtls_ct_error_if_else_0(output_too_large, MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE)
         );
 
@@ -624,7 +624,7 @@ int mbedtls_rsa_set_padding(mbedtls_rsa_context *ctx, int padding,
             break;
 #endif
         default:
-            return MBEDTLS_ERR_RSA_INVALID_PADDING;
+            return PSA_ERROR_INVALID_PADDING;
     }
 
 #if defined(MBEDTLS_PKCS1_V21)
@@ -632,7 +632,7 @@ int mbedtls_rsa_set_padding(mbedtls_rsa_context *ctx, int padding,
         (hash_id != MBEDTLS_MD_NONE)) {
         /* Just make sure this hash is supported in this build. */
         if (mbedtls_md_info_from_type(hash_id) == NULL) {
-            return MBEDTLS_ERR_RSA_INVALID_PADDING;
+            return PSA_ERROR_INVALID_PADDING;
         }
     }
 #endif /* MBEDTLS_PKCS1_V21 */
@@ -1579,7 +1579,7 @@ int mbedtls_rsa_pkcs1_encrypt(mbedtls_rsa_context *ctx,
 #endif
 
         default:
-            return MBEDTLS_ERR_RSA_INVALID_PADDING;
+            return PSA_ERROR_INVALID_PADDING;
     }
 }
 
@@ -1687,7 +1687,7 @@ int mbedtls_rsa_rsaes_oaep_decrypt(mbedtls_rsa_context *ctx,
      * the different error conditions.
      */
     if (bad != MBEDTLS_CT_FALSE) {
-        ret = MBEDTLS_ERR_RSA_INVALID_PADDING;
+        ret = PSA_ERROR_INVALID_PADDING;
         goto cleanup;
     }
 
@@ -1802,7 +1802,7 @@ int mbedtls_rsa_pkcs1_decrypt(mbedtls_rsa_context *ctx,
 #endif
 
         default:
-            return MBEDTLS_ERR_RSA_INVALID_PADDING;
+            return PSA_ERROR_INVALID_PADDING;
     }
 }
 
@@ -2202,7 +2202,7 @@ int mbedtls_rsa_pkcs1_sign(mbedtls_rsa_context *ctx,
 #endif
 
         default:
-            return MBEDTLS_ERR_RSA_INVALID_PADDING;
+            return PSA_ERROR_INVALID_PADDING;
     }
 }
 
@@ -2246,7 +2246,7 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
     p = buf;
 
     if (buf[siglen - 1] != 0xBC) {
-        return MBEDTLS_ERR_RSA_INVALID_PADDING;
+        return PSA_ERROR_INVALID_PADDING;
     }
 
     if (md_alg != MBEDTLS_MD_NONE) {
@@ -2298,14 +2298,14 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
     }
 
     if (*p++ != 0x01) {
-        return MBEDTLS_ERR_RSA_INVALID_PADDING;
+        return PSA_ERROR_INVALID_PADDING;
     }
 
     observed_salt_len = (size_t) (hash_start - p);
 
     if (expected_salt_len != MBEDTLS_RSA_SALT_LEN_ANY &&
         observed_salt_len != (size_t) expected_salt_len) {
-        return MBEDTLS_ERR_RSA_INVALID_PADDING;
+        return PSA_ERROR_INVALID_PADDING;
     }
 
     /*
@@ -2429,7 +2429,7 @@ int mbedtls_rsa_pkcs1_verify(mbedtls_rsa_context *ctx,
 #endif
 
         default:
-            return MBEDTLS_ERR_RSA_INVALID_PADDING;
+            return PSA_ERROR_INVALID_PADDING;
     }
 }
 
