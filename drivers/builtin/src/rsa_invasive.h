@@ -18,7 +18,7 @@
  *  operation (EME-PKCS1-v1_5 decoding).
  *
  * \note The return value from this function is a sensitive value
- *       (this is unusual). #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE shouldn't happen
+ *       (this is unusual). #PSA_ERROR_BUFFER_TOO_SMALL shouldn't happen
  *       in a well-written application, but 0 vs #PSA_ERROR_INVALID_PADDING
  *       is often a situation that an attacker can provoke and leaking which
  *       one is the result is precisely the information the attacker wants.
@@ -35,7 +35,7 @@
  * \param output_max_len The length in bytes of the output buffer \p output.
  *
  * \return      \c 0 on success.
- * \return      #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE
+ * \return      #PSA_ERROR_BUFFER_TOO_SMALL
  *              The output buffer is too small for the unpadded payload.
  * \return      #PSA_ERROR_INVALID_PADDING
  *              The input doesn't contain properly formatted padding.

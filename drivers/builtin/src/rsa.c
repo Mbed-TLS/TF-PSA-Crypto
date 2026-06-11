@@ -456,7 +456,7 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_ct_rsaes_pkcs1_v15_unpadding(
     ret = mbedtls_ct_error_if(
         bad,
         PSA_ERROR_INVALID_PADDING,
-        mbedtls_ct_error_if_else_0(output_too_large, MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE)
+        mbedtls_ct_error_if_else_0(output_too_large, PSA_ERROR_BUFFER_TOO_SMALL)
         );
 
     /* If the padding is bad or the plaintext is too large, zero the
@@ -1692,7 +1692,7 @@ int mbedtls_rsa_rsaes_oaep_decrypt(mbedtls_rsa_context *ctx,
     }
 
     if (ilen - ((size_t) (p - buf)) > output_max_len) {
-        ret = MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE;
+        ret = PSA_ERROR_BUFFER_TOO_SMALL;
         goto cleanup;
     }
 

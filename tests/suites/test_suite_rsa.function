@@ -1209,7 +1209,7 @@ void pkcs1_v15_decode(data_t *input,
                            final,
                            output_length) == 0);
     } else if (expected_result == PSA_ERROR_INVALID_PADDING ||
-               expected_result == MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE) {
+               expected_result == PSA_ERROR_BUFFER_TOO_SMALL) {
         size_t max_payload_length =
             output_size > sizeof(N) - 11 ? sizeof(N) - 11 : output_size;
         size_t i;
