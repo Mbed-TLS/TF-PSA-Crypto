@@ -8887,8 +8887,7 @@ void asymmetric_decrypt(int key_type_arg,
                                       output,
                                       output_size,
                                       &output_length));
-    TEST_CF_PUBLIC(&output_length, sizeof(output_length));
-    TEST_CF_PUBLIC(output, output_length);
+    TEST_CF_PUBLIC(output, output_size);
     TEST_MEMORY_COMPARE(expected_data->x, expected_data->len,
                         output, output_length);
 
@@ -8905,8 +8904,7 @@ void asymmetric_decrypt(int key_type_arg,
                                           output,
                                           output_size,
                                           &output_length));
-        TEST_CF_PUBLIC(&output_length, sizeof(output_length));
-        TEST_CF_PUBLIC(output, output_length);
+        TEST_CF_PUBLIC(output, output_size);
         TEST_MEMORY_COMPARE(expected_data->x, expected_data->len,
                             output, output_length);
     }
