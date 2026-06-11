@@ -19,7 +19,7 @@
  *
  * \note The return value from this function is a sensitive value
  *       (this is unusual). #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE shouldn't happen
- *       in a well-written application, but 0 vs #MBEDTLS_ERR_RSA_INVALID_PADDING
+ *       in a well-written application, but 0 vs #PSA_ERROR_INVALID_PADDING
  *       is often a situation that an attacker can provoke and leaking which
  *       one is the result is precisely the information the attacker wants.
  *
@@ -37,7 +37,7 @@
  * \return      \c 0 on success.
  * \return      #MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE
  *              The output buffer is too small for the unpadded payload.
- * \return      #MBEDTLS_ERR_RSA_INVALID_PADDING
+ * \return      #PSA_ERROR_INVALID_PADDING
  *              The input doesn't contain properly formatted padding.
  */
 MBEDTLS_STATIC_TESTABLE int mbedtls_ct_rsaes_pkcs1_v15_unpadding(
