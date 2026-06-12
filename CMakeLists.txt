@@ -14,6 +14,11 @@
 #   calling CMake in order to avoid target name clashes, via the use of
 #   TF_PSA_CRYPTO_TARGET_PREFIX. The value of this variable is prefixed to the
 #   tfpsacrypto and tfpsacrypto-apidoc targets.
+# - TF_PSA_CRYPTO_DISPATCH_DIR: If set, this directory is used instead of the
+#   built-in `dispatch` directory for the definition of the `dispatch` (and
+#   `dispatch_static` if both static and shared libraries are enabled) target.
+#   This allows combining the TF-PSA-Crypto core with an out-of-tree
+#   implementation of dispatch to cryptographic drivers.
 #
 
 # We specify a minimum requirement of 3.10.2, but for now use 3.5.1 here

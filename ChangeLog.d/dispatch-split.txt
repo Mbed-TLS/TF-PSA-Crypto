@@ -1,0 +1,13 @@
+Changes
+   * The `dispatch` directory now hosts all code that dispatches cryptographic
+     operations to drivers. When code generation is enabled, the driver
+     wrappers are generated into `dispatch` in the build directory. Driver
+     context structures previously in `include/psa/crypto_driver_contexts_*.h`
+     have been moved to `dispatch/include/psa/crypto_driver_contexts_*.h`. The
+     `dispatch/include` directory is part of the public interface for the
+     TF-PSA-Crypto library when building from the source tree, while there is
+     no change for installed packages.
+   * A custom `dispatch` directory can be configured using the
+     `TF_PSA_CRYPTO_DISPATCH_DIR` CMake variable. This allows combining the
+     PSA Crypto Core from TF-PSA-Crypto with out-of-tree dispatch and driver
+     implementations.
