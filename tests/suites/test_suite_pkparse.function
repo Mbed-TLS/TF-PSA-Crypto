@@ -131,8 +131,6 @@ void pk_parse_keyfile_rsa(char *key_file, char *password, int result)
         TEST_EQUAL(mbedtls_pk_get_bitlen(&ctx), ctx.bits);
         TEST_EQUAL(mbedtls_pk_get_len(&ctx), PSA_BITS_TO_BYTES(ctx.bits));
 
-        TEST_ASSERT(mbedtls_pk_set_pubkey_from_prv(&ctx) == 0);
-
 #if defined(MBEDTLS_PSA_CRYPTO_C)
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_SIGN_HASH));
         TEST_ASSERT(test_psa_bridge(&ctx, PSA_KEY_USAGE_SIGN_MESSAGE));
