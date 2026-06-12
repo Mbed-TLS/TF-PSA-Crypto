@@ -185,6 +185,38 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
                               data, data_size, data_length);
 }
 
+static psa_status_t sign_from_seed(
+    const uint8_t seed[SEED_SIZE],
+    const uint8_t *message, size_t message_length,
+    uint8_t *signature, size_t *signature_length)
+{
+    uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
+    uint8_t public[TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE];
+
+    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public,
+                                                          secret,
+                                                          seed);
+    if (ret != 0) {
+        goto cleanup;
+    }
+
+    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
+    const size_t prefix_length = sizeof(prefix);
+    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
+
+    ret = tf_psa_crypto_pqcp_mldsa87_signature_internal(signature,
+                                                        signature_length,
+                                                        message, message_length,
+                                                        prefix, prefix_length,
+                                                        rnd,
+                                                        secret,
+                                                        0);
+
+cleanup:
+    mbedtls_platform_zeroize(secret, sizeof(secret));
+    return pqcp_to_psa_error(ret);
+}
+
 psa_status_t tf_psa_crypto_mldsa_sign_message(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
@@ -221,35 +253,15 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
     }
     /* Beyond this point, we must go through the cleanup code. */
 
-    uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
-    uint8_t public[TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    status = sign_from_seed(key_buffer,
+                            message, message_length,
+                            signature, signature_length);
 
-    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public,
-                                                          secret,
-                                                          key_buffer);
-    if (ret != 0) {
-        goto cleanup;
-    }
-
-    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
-    const size_t prefix_length = sizeof(prefix);
-    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
-
-    ret = tf_psa_crypto_pqcp_mldsa87_signature_internal(signature,
-                                                        signature_length,
-                                                        message, message_length,
-                                                        prefix, prefix_length,
-                                                        rnd,
-                                                        secret,
-                                                        0);
-
-cleanup:
-    status = tf_psa_crypto_pqcp_alloc_done();
-    mbedtls_platform_zeroize(secret, sizeof(secret));
-    if (status != PSA_SUCCESS) {
-        return status;
+    psa_status_t alloc_status = tf_psa_crypto_pqcp_alloc_done();
+    if (alloc_status != PSA_SUCCESS) {
+        return alloc_status;
     } else {
-        return pqcp_to_psa_error(ret);
+        return status;
     }
 }
 
