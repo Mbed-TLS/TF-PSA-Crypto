@@ -434,7 +434,7 @@ set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
 add_subdirectory(framework)
 add_subdirectory(include)
 add_subdirectory(drivers)   # must precede dispatch and core
-add_subdirectory(${TF_PSA_CRYPTO_DISPATCH_DIR})
+add_subdirectory(${TF_PSA_CRYPTO_DISPATCH_DIR} dispatch)
 add_subdirectory(extras)
 add_subdirectory(platform)
 add_subdirectory(utilities)
