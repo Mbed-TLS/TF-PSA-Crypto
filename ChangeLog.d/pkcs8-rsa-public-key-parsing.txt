@@ -1,0 +1,5 @@
+Bugfix
+   * Fixed a PKCS#8 bug where the public part of RSA key was not correctly
+     added to the PK context when the key was parsed. This could cause
+     other unexpected failures when using that PK context for other operations.
+     Fixes #807.
