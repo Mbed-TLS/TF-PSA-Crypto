@@ -16,12 +16,6 @@ if(GEN_FILES)
             ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
 
-    add_custom_target(
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_dispatch_target
-        DEPENDS
-            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
-            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
-        )
 
     # List generated headers as sources explicitly. Normally CMake finds
     # headers by tracing include directives, but if that happens before the

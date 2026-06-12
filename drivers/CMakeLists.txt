@@ -99,8 +99,10 @@ endforeach()
 
 if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
     if(NOT USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
+        set(dispatch_static_target ${TF_PSA_CRYPTO_TARGET_PREFIX}dispatch)
         set(driver_static_targets ${driver_targets})
     else()
+        set(dispatch_static_target ${TF_PSA_CRYPTO_TARGET_PREFIX}dispatch_static)
         set(driver_static_targets "")
         foreach(target ${driver_targets})
             list(APPEND driver_static_targets "${target}_static")
@@ -120,12 +122,14 @@ add_subdirectory(pqcp)
 if (GEN_FILES)
     # Make sure psa_crypto_driver_wrappers.h is available before building
     # driver code.
-    foreach (target IN LISTS driver_targets driver_static_targets)
-        add_dependencies(${target}
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_dispatch_target)
-        add_dependencies(${target}
-            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target)
+    foreach (target IN LISTS driver_targets)
+        add_dependencies(${target} ${TF_PSA_CRYPTO_TARGET_PREFIX}dispatch)
     endforeach()
+    if (USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
+        foreach (target IN LISTS driver_static_targets)
+            add_dependencies(${target} ${dispatch_static_target})
+        endforeach()
+    endif()
 endif()
 
 if(TF_PSA_CRYPTO_TEST_DRIVER)
