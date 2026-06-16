@@ -373,6 +373,11 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
+    status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
     /* After this point, we may allocate memory, so we must go through
      * cleanup. */
 
@@ -411,12 +416,17 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
 
 cleanup:
     mbedtls_free(public_key);
+    psa_status_t alloc_status = tf_psa_crypto_pqcp_alloc_done();
     if (status != PSA_SUCCESS) {
         mbedtls_zeroize_and_free(operation->key, operation->key_length);
         mld_shake256_release(&operation->shake);
         mbedtls_platform_zeroize(operation, sizeof(*operation));
     }
-    return status;
+    if (status == PSA_SUCCESS) {
+        return alloc_status;
+    } else {
+        return status;
+    }
 }
 
 psa_status_t tf_psa_crypto_mldsa_verify_setup(
@@ -477,6 +487,11 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
     (void) key_buffer;
     (void) key_buffer_size;
 
+    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
     uint8_t mu[MLDSA_CRHBYTES];
     mld_shake256_finalize(&operation->shake);
     mld_shake256_squeeze(mu, sizeof(mu), &operation->shake);
@@ -491,7 +506,12 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
         NULL, 0, rnd,
         operation->key, 1);
 
+    status = tf_psa_crypto_pqcp_alloc_done();
     psa_status_t abort_status = tf_psa_crypto_mldsa_abort(operation);
+
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
     if (abort_status != PSA_SUCCESS) {
         return abort_status;
     }
@@ -513,6 +533,11 @@ psa_status_t tf_psa_crypto_mldsa_verify_finish(
         return PSA_ERROR_INVALID_SIGNATURE;
     }
 
+    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
     uint8_t mu[MLDSA_CRHBYTES];
     mld_shake256_finalize(&operation->shake);
     mld_shake256_squeeze(mu, sizeof(mu), &operation->shake);
@@ -524,7 +549,12 @@ psa_status_t tf_psa_crypto_mldsa_verify_finish(
         NULL, 0,
         key_buffer, 1);
 
+    status = tf_psa_crypto_pqcp_alloc_done();
     psa_status_t abort_status = tf_psa_crypto_mldsa_abort(operation);
+
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
     if (abort_status != PSA_SUCCESS) {
         return abort_status;
     }
