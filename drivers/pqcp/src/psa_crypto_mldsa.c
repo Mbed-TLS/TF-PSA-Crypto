@@ -145,7 +145,7 @@ static psa_status_t seed_to_public_key(
     }
 
     psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
-    if (status != 0) {
+    if (status != PSA_SUCCESS) {
         return status;
     }
     /* Beyond this point, we must go through the cleanup code. */
@@ -217,7 +217,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
     }
 
     psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
-    if (status != 0) {
+    if (status != PSA_SUCCESS) {
         return status;
     }
     /* Beyond this point, we must go through the cleanup code. */
@@ -281,7 +281,7 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
     }
 
     psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
-    if (status != 0) {
+    if (status != PSA_SUCCESS) {
         return status;
     }
 
