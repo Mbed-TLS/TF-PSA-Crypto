@@ -1,0 +1,5 @@
+Bugfix
+   * Doxygen documentation `apidoc` is now built into CMake's binary folder,
+     not in-tree. For backward compatibility on Unix platforms an in-tree
+     symlink named `apidoc` is created pointing to the folder in the build
+     directory. Fixes #381.
