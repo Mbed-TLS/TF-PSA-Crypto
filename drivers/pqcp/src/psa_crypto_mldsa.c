@@ -349,7 +349,7 @@ static void start_pure(tf_psa_crypto_mldsa_shake256_t *shake_ctx,
     mld_shake256_init(shake_ctx);
     mld_shake256_absorb(shake_ctx, public_key, public_key_length);
     mld_shake256_finalize(shake_ctx);
-    uint8_t tr[MLDSA_CRHBYTES];
+    uint8_t tr[MLDSA_TRBYTES];
     mld_shake256_squeeze(tr, sizeof(tr), shake_ctx);
     mld_shake256_release(shake_ctx);
     mld_shake256_init(shake_ctx);
