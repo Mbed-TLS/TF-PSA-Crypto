@@ -192,6 +192,24 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
                               data, data_size, data_length);
 }
 
+static int sign_from_expanded(
+    const uint8_t *secret,
+    const uint8_t *message, size_t message_length,
+    uint8_t *signature, size_t *signature_length)
+{
+    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
+    const size_t prefix_length = sizeof(prefix);
+    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
+
+    return tf_psa_crypto_pqcp_mldsa87_signature_internal(signature,
+                                                         signature_length,
+                                                         message, message_length,
+                                                         prefix, prefix_length,
+                                                         rnd,
+                                                         secret,
+                                                         0);
+}
+
 static psa_status_t sign_from_seed(
     const uint8_t seed[SEED_SIZE],
     const uint8_t *message, size_t message_length,
@@ -207,17 +225,9 @@ static psa_status_t sign_from_seed(
         goto cleanup;
     }
 
-    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
-    const size_t prefix_length = sizeof(prefix);
-    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
-
-    ret = tf_psa_crypto_pqcp_mldsa87_signature_internal(signature,
-                                                        signature_length,
-                                                        message, message_length,
-                                                        prefix, prefix_length,
-                                                        rnd,
-                                                        secret,
-                                                        0);
+    ret = sign_from_expanded(secret,
+                             message, message_length,
+                             signature, signature_length);
 
 cleanup:
     mbedtls_platform_zeroize(secret, sizeof(secret));
@@ -246,10 +256,6 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
     }
     size_t actual_signature_length = MLDSA87_BYTES;
 
-    if (key_buffer_size != SEED_SIZE) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-
     if (signature_size < actual_signature_length) {
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
@@ -260,9 +266,17 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
     }
     /* Beyond this point, we must go through the cleanup code. */
 
-    status = sign_from_seed(key_buffer,
-                            message, message_length,
-                            signature, signature_length);
+    if (key_buffer_size == SEED_SIZE) {
+        status = sign_from_seed(key_buffer,
+                                message, message_length,
+                                signature, signature_length);
+    } else if (key_buffer_size == SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
+        status = sign_from_expanded(key_buffer + SEED_SIZE,
+                                    message, message_length,
+                                    signature, signature_length);
+    } else {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+    }
 
     psa_status_t alloc_status = tf_psa_crypto_pqcp_alloc_done();
     if (alloc_status != PSA_SUCCESS) {
@@ -393,7 +407,13 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
-    if (key_buffer_size != SEED_SIZE) {
+
+    if (key_buffer_size == SEED_SIZE) {
+        /* We'll expand the key below */
+    } else if (key_buffer_size == SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
+        start_pure(&operation->shake, key_buffer + JOINED_TR_OFFSET);
+        return PSA_SUCCESS;
+    } else {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -504,15 +524,21 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
-    /* Rely on setup() having stored the expanded private key in the
-     * operation structure. This is a performance/memory trade-off:
-     * we could instead re-expand the private key from the seed
-     * in \p key_buffer here. */
-    if (operation->key_length != MLDSA87_SECRETKEYBYTES) {
-        return PSA_ERROR_CORRUPTION_DETECTED;
+    const uint8_t *private_key = NULL;
+    if (key_buffer_size == SEED_SIZE) {
+        /* Rely on setup() having stored the expanded private key in the
+         * operation structure. This is a performance/memory trade-off:
+         * we could instead re-expand the private key from the seed
+         * in \p key_buffer here. */
+        if (operation->key_length != MLDSA87_SECRETKEYBYTES) {
+            return PSA_ERROR_BAD_STATE;
+        }
+        private_key = operation->key;
+    } else if (key_buffer_size == SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
+        private_key = key_buffer + SEED_SIZE;
+    } else {
+        return PSA_ERROR_INVALID_ARGUMENT;
     }
-    (void) key_buffer;
-    (void) key_buffer_size;
 
     psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
     if (status != PSA_SUCCESS) {
@@ -535,7 +561,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
         signature, signature_length,
         mu, sizeof(mu),
         NULL, 0, rnd,
-        operation->key, 1);
+        private_key, 1);
 
     status = tf_psa_crypto_pqcp_alloc_done();
     psa_status_t abort_status = tf_psa_crypto_mldsa_abort(operation);
