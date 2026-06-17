@@ -12,17 +12,32 @@
 #include "src/common.h"
 
 static MLD_ALIGN uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
-static size_t tf_psa_crypto_pqcp_alloc_used;
-static int tf_psa_crypto_pqcp_alloc_status;
+MBEDTLS_STATIC_TESTABLE size_t tf_psa_crypto_pqcp_alloc_used;
+static psa_status_t tf_psa_crypto_pqcp_alloc_status;
+
+#if defined(MBEDTLS_TEST_HOOKS)
+/* Added on start, subtracted on done*/
+int64_t tf_psa_crypto_pqcp_alloc_poison_bytes;
+#endif /* MBEDTLS_TEST_HOOKS */
 
 psa_status_t tf_psa_crypto_pqcp_alloc_done(void)
 {
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (tf_psa_crypto_pqcp_alloc_poison_bytes > 0) {
+        tf_psa_crypto_pqcp_alloc_used -= tf_psa_crypto_pqcp_alloc_poison_bytes;
+    }
+#endif
     psa_status_t status = tf_psa_crypto_pqcp_alloc_status;
     tf_psa_crypto_pqcp_alloc_status = 0;
     if (tf_psa_crypto_pqcp_alloc_used != 0) {
         status = PSA_ERROR_BAD_STATE;
         tf_psa_crypto_pqcp_alloc_used = 0;
     }
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (tf_psa_crypto_pqcp_alloc_poison_bytes < 0) {
+        tf_psa_crypto_pqcp_alloc_used -= tf_psa_crypto_pqcp_alloc_poison_bytes;
+    }
+#endif
     TF_PSA_CRYPTO_PQCP_ALLOC_UNLOCK();
     return status;
 }

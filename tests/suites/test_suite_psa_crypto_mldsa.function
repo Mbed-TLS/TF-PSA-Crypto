@@ -7,7 +7,44 @@
  * validation.
  */
 
+#include <wrap_mldsa_native.h>
+#include <pqcp_buffer_alloc.h>
 #include <psa_crypto_mldsa.h>
+
+
+enum poison_mode {
+    POISON_ON_LOCK,
+    POISON_ON_UNLOCK,
+};
+
+
+static psa_status_t poison_setup(int poison_mode, int64_t poison_bytes)
+{
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_TEST_HOOKS)
+    TEST_LE_S(0, poison_bytes);
+    TEST_LE_U(poison_mode, POISON_ON_UNLOCK);
+    if (poison_mode == POISON_ON_LOCK) {
+        tf_psa_crypto_pqcp_alloc_poison_bytes = poison_bytes;
+    } else if (poison_mode == POISON_ON_UNLOCK) {
+        tf_psa_crypto_pqcp_alloc_poison_bytes = -poison_bytes;
+        tf_psa_crypto_pqcp_alloc_used += poison_bytes;
+    } else
+#endif
+    {
+        TEST_EQUAL(poison_bytes, 0);
+    }
+    return PSA_SUCCESS;
+exit:
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+static void poison_cleanup(void)
+{
+#if defined(MBEDTLS_TEST_HOOKS)
+    tf_psa_crypto_pqcp_alloc_used = 0;
+    tf_psa_crypto_pqcp_alloc_poison_bytes = 0;
+#endif
+}
 
 /* END_HEADER */
 
@@ -19,13 +56,17 @@
 void export_public_key(int type_arg, int bits_arg,
                        data_t *seed,
                        data_t *expected_public_key,
-                       psa_status_t expected_status)
+                       psa_status_t expected_status,
+                       int poison_mode,
+                       int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *public_key = NULL;
 
     PSA_INIT();
 
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
+    
     psa_set_key_type(&attributes, type_arg);
     psa_set_key_bits(&attributes, bits_arg);
 
@@ -89,6 +130,7 @@ void export_public_key(int type_arg, int bits_arg,
 exit:
     mbedtls_free(public_key);
     psa_reset_key_attributes(&attributes);
+    poison_cleanup();
     PSA_DONE();
 }
 /* END_CASE */
@@ -98,12 +140,16 @@ void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
                              data_t *seed,
                              data_t *message,
                              data_t *expected_signature,
-                             psa_status_t expected_status)
+                             psa_status_t expected_status,
+                             int poison_mode,
+                             int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *signature = NULL;
 
     PSA_INIT();
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type_arg);
     psa_set_key_bits(&attributes, bits_arg);
@@ -170,6 +216,7 @@ void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
 exit:
     mbedtls_free(signature);
     psa_reset_key_attributes(&attributes);
+    poison_cleanup();
     PSA_DONE();
 }
 /* END_CASE */
@@ -179,12 +226,16 @@ void verify_pure(int type_arg, int bits_arg, int alg_arg,
                  data_t *public_key,
                  data_t *message,
                  data_t *signature,
-                 psa_status_t expected_status)
+                 psa_status_t expected_status,
+                 int poison_mode,
+                 int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *buf = NULL;
 
     PSA_INIT();
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type_arg);
     psa_set_key_bits(&attributes, bits_arg);
@@ -239,6 +290,7 @@ void verify_pure(int type_arg, int bits_arg, int alg_arg,
     }
 
 exit:
+    poison_cleanup();
     PSA_DONE();
     mbedtls_free(buf);
 }
@@ -247,13 +299,17 @@ exit:
 /* BEGIN_CASE */
 void sign_setup(int type_arg, int bits_arg, int alg_arg,
                 data_t *seed,
-                psa_status_t expected_status)
+                psa_status_t expected_status,
+                int poison_mode,
+                int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     tf_psa_crypto_mldsa_operation_t operation;
     memset(&operation, 0, sizeof(operation));
 
     PSA_INIT();
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type_arg);
     psa_set_key_bits(&attributes, bits_arg);
@@ -275,13 +331,17 @@ exit:
 /* BEGIN_CASE */
 void verify_setup(int type_arg, int bits_arg, int alg_arg,
                   data_t *public_key,
-                  psa_status_t expected_status)
+                  psa_status_t expected_status,
+                  int poison_mode,
+                  int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     tf_psa_crypto_mldsa_operation_t operation;
     memset(&operation, 0, sizeof(operation));
 
     PSA_INIT();
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type_arg);
     psa_set_key_bits(&attributes, bits_arg);
@@ -296,6 +356,7 @@ void verify_setup(int type_arg, int bits_arg, int alg_arg,
 
 exit:
     tf_psa_crypto_mldsa_abort(&operation);
+    poison_cleanup();
     PSA_DONE();
 }
 /* END_CASE */
@@ -304,7 +365,8 @@ exit:
 void sign_deterministic_multipart(
     int type, int bits, int alg, data_t *seed,
     int n_chunks, data_t *chunk1, data_t *chunk2, data_t *chunk3,
-    data_t *expected_signature, int expected_finish_status)
+    data_t *expected_signature, int expected_finish_status,
+    int poison_mode, int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     tf_psa_crypto_mldsa_operation_t operation;
@@ -315,6 +377,7 @@ void sign_deterministic_multipart(
 
     PSA_INIT();
     TEST_CALLOC(signature, signature_size);
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type);
     psa_set_key_bits(&attributes, bits);
@@ -347,6 +410,7 @@ void sign_deterministic_multipart(
 
 exit:
     tf_psa_crypto_mldsa_abort(&operation);
+    poison_cleanup();
     PSA_DONE();
     mbedtls_free(signature);
 }
@@ -357,7 +421,8 @@ void sign_deterministic_multipart_finish(
     int type, int bits, int alg, data_t *seed,
     data_t *message,
     data_t *expected_signature, int signature_size_delta,
-    int expected_finish_status)
+    int expected_finish_status,
+    int poison_mode, int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     tf_psa_crypto_mldsa_operation_t operation;
@@ -368,6 +433,7 @@ void sign_deterministic_multipart_finish(
 
     PSA_INIT();
     TEST_CALLOC(signature, signature_size);
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type);
     psa_set_key_bits(&attributes, bits);
@@ -390,6 +456,7 @@ void sign_deterministic_multipart_finish(
 
 exit:
     tf_psa_crypto_mldsa_abort(&operation);
+    poison_cleanup();
     PSA_DONE();
     mbedtls_free(signature);
 }
@@ -399,13 +466,16 @@ exit:
 void verify_multipart(
     int type, int bits, int alg, data_t *public_key,
     int n_chunks, data_t *chunk1, data_t *chunk2, data_t *chunk3,
-    data_t *signature, int expected_verify_status)
+    data_t *signature, int expected_verify_status,
+    int poison_mode, int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     tf_psa_crypto_mldsa_operation_t operation;
     memset(&operation, 0, sizeof(operation));
 
     PSA_INIT();
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type);
     psa_set_key_bits(&attributes, bits);
@@ -433,6 +503,7 @@ void verify_multipart(
 
 exit:
     tf_psa_crypto_mldsa_abort(&operation);
+    poison_cleanup();
     PSA_DONE();
 }
 /* END_CASE */
@@ -442,7 +513,8 @@ void verify_multipart_finish(
     int type, int bits, int alg,
     data_t *setup_public_key, data_t *finish_public_key,
     data_t *message,
-    data_t *signature, int expected_verify_status)
+    data_t *signature, int expected_verify_status,
+    int poison_mode, int64_t poison_bytes)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     tf_psa_crypto_mldsa_operation_t operation;
@@ -454,6 +526,8 @@ void verify_multipart_finish(
     uint8_t *public_key = NULL;
 
     PSA_INIT();
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
 
     psa_set_key_type(&attributes, type);
     psa_set_key_bits(&attributes, bits);
@@ -482,6 +556,7 @@ void verify_multipart_finish(
 
 exit:
     tf_psa_crypto_mldsa_abort(&operation);
+    poison_cleanup();
     PSA_DONE();
     mbedtls_free(public_key);
 }

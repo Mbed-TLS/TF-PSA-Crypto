@@ -17,64 +17,7 @@
 #include "threading_internal.h"
 #endif
 
-// Call stack: verify -> verify_internal
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY_KL(K, L) ( \
-        /* verify_internal */ ( \
-            /* buf          */ ((K) * (192-64*((K) -(L)))) + \
-            /* rho          */ (MLDSA_SEEDBYTES) + \
-            /* mu           */ (MLDSA_CRHBYTES) + \
-            /* c, c2        */ 2*MLD_ALIGN_UP(8*(K)) + \
-            /* mld_poly     */ (1024) + \
-            /* mld_polymat  */ (1024*(K) *(L)) + \
-            /* mld_polyvecl */ (1024*(L)) + \
-            /* mld_polyveck */ 4*(1024*(K)) \
-            ) \
-        ) /* == 99552 for mldsa87 */
-
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY(param_set) \
-    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_VERIFY_KL((param_set)/10, (param_set)%10)
-
-// Call stack: keypair_internal -> compute_t0_t1_tr_from_sk_components
-# define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_KEYPAIR_KL(K, L) ( \
-        /* keypair_internal */ ( \
-            /* seedbuf      */ (2 * MLDSA_SEEDBYTES + MLDSA_CRHBYTES) + \
-            /* inbuf        */ MLD_ALIGN_UP(MLDSA_SEEDBYTES + 2) + \
-            /* tr           */ MLDSA_TRBYTES + \
-            /* mld_polyvecl */ (1024*(L)) + \
-            /* mld_polyveck */ 3*(1024*(K)) \
-            ) + \
-        /* compute_t0_t1_tr_from_sk_components */ ( \
-            /* mld_polymat  */ (1024*(K) *(L)) + \
-            /* mld_polyvecl */ (1024*(L)) + \
-            /* mld_polyveck */ (1024*(K)) \
-            ) \
-        ) /* == 104704 for mldsa87 */
-
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_KEYPAIR(param_set) \
-    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_KEYPAIR_KL((param_set)/10, (param_set)%10)
-
-// Call stack: signature_internal -> attempt_signature_generation
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_SIGNATURE_INTERNAL_KL(K, L) ( \
-        /* signature_internal */ ( \
-            /* seedbuf      */ (2 * MLDSA_SEEDBYTES + MLDSA_TRBYTES + 2 * MLDSA_CRHBYTES) + \
-            /* mld_polymat  */ (1024*(K) *(L)) + \
-            /* mld_polyvecl */ (1024*(L)) + \
-            /* mld_polyveck */ 2*(1024*(K)) \
-            ) + \
-        /* attempt_signature_generation */ ( \
-            /* MLDSA_CTILDEBYTES */ MLD_ALIGN_UP(8*(K)) + \
-            /* mld_polyvecl      */ 2*(1024*(L)) + \
-            /* mld_polyveck      */ 3*(1024*(K)) + \
-            /* mld_poly          */ 3*(1024) \
-            ) \
-        ) /* == 123200 for mldsa87 */
-
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_SIGNATURE_INTERNAL(param_set) \
-    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_SIGNATURE_INTERNAL_KL((param_set)/10, (param_set)%10)
-
-// Sufficient for deterministic signatures with TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
-#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE \
-    TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE_SIGNATURE_INTERNAL(87) /* == 123200 */
+#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE MLD_TOTAL_ALLOC_87
 
 #if defined(MBEDTLS_THREADING_C)
 #define TF_PSA_CRYPTO_PQCP_ALLOC_LOCK()                                 \
@@ -106,9 +49,18 @@ void tf_psa_crypto_pqcp_alloc_pop(size_t size);
 #define TF_PSA_CRYPTO_PQCP_CUSTOM_FREE(v, T, N)                \
     tf_psa_crypto_pqcp_alloc_pop(MLD_ALIGN_UP(sizeof(T) * (N)))
 
+#if defined(MBEDTLS_TEST_HOOKS)
+extern size_t tf_psa_crypto_pqcp_alloc_used;
+/* Added on start, subtracted on done */
+extern int64_t tf_psa_crypto_pqcp_alloc_poison_bytes;
+#endif
+
 static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
 {
     TF_PSA_CRYPTO_PQCP_ALLOC_LOCK();
+#if defined(MBEDTLS_TEST_HOOKS)
+    tf_psa_crypto_pqcp_alloc_used += tf_psa_crypto_pqcp_alloc_poison_bytes;
+#endif
     return PSA_SUCCESS;
 }
 psa_status_t tf_psa_crypto_pqcp_alloc_done(void);
