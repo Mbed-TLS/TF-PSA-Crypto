@@ -18,9 +18,17 @@ class MLDSATestGenerator(test_data_generation.TestGenerator):
         self.targets = {
             'test_suite_pqcp_mldsa.dilithium_py': mldsa_test_generator.gen_pqcp_mldsa_all,
             'test_suite_psa_crypto_mldsa.dilithium_py': \
-            lambda: mldsa_test_generator.DriverGenerator().gen_all(multipart=True),
+            lambda: mldsa_test_generator.DriverGenerator().gen_all(
+                multipart=True,
+                private_key_formats=[
+                    mldsa_test_generator.PrivateKeyFormat.SEED,
+                    mldsa_test_generator.PrivateKeyFormat.SEED_PLUS_EXPANDED,
+                ],
+            ),
             'test_suite_dispatch_transparent.dilithium_py': \
-            lambda: mldsa_test_generator.DispatchGenerator().gen_all(multipart=True),
+            lambda: mldsa_test_generator.DispatchGenerator().gen_all(
+                multipart=True,
+            )
         }
         super().__init__(settings)
 
