@@ -86,6 +86,13 @@ static inline void mld_shake256_release(tf_psa_crypto_mldsa_shake256_t *state)
  */
 #define SEED_SIZE 32
 
+/* The offset of the public key hash (tr) in an expanded private key. */
+#define SK_TR_OFFSET 64
+/* The offset of the public key hash (tr) in joined private key
+ * (seed followed by thn expanded private key). */
+#define JOINED_TR_OFFSET (SEED_SIZE + SK_TR_OFFSET)
+/* The length of tr is MLDSA_TRBYTES. */
+
 /* We want to expose size values in public headers, but we don't want to
  * expose the header that defines macros for these values in mldsa-native.
  * So we define our own macros in public headers, and check that the
@@ -342,23 +349,29 @@ static psa_status_t setup(
     return PSA_SUCCESS;
 }
 
-static void start_pure(tf_psa_crypto_mldsa_shake256_t *shake_ctx,
-                       const uint8_t *public_key, size_t public_key_length)
+static void hash_public_key(tf_psa_crypto_mldsa_shake256_t *shake_ctx,
+                            const uint8_t *key_buffer, size_t key_buffer_size,
+                            uint8_t tr[MLDSA_TRBYTES])
 {
-    /* Hash the public key */
     mld_shake256_init(shake_ctx);
-    mld_shake256_absorb(shake_ctx, public_key, public_key_length);
+    mld_shake256_absorb(shake_ctx, key_buffer, key_buffer_size);
     mld_shake256_finalize(shake_ctx);
-    uint8_t tr[MLDSA_TRBYTES];
-    mld_shake256_squeeze(tr, sizeof(tr), shake_ctx);
+    mld_shake256_squeeze(tr, MLDSA_TRBYTES, shake_ctx);
     mld_shake256_release(shake_ctx);
+}
+
+static void start_pure(tf_psa_crypto_mldsa_shake256_t *shake_ctx,
+                       const uint8_t tr[MLDSA_TRBYTES])
+{
     mld_shake256_init(shake_ctx);
-    mld_shake256_absorb(shake_ctx, tr, sizeof(tr));
+    mld_shake256_absorb(shake_ctx, tr, MLDSA_TRBYTES);
 
     /* Hash the domain separation prefix */
-    tr[0] = 0;                  /* pure ML-DSA (1 for Hash-ML-DSA) */
-    tr[1] = 0;                  /* context length */
-    mld_shake256_absorb(shake_ctx, tr, 2);
+    uint8_t pre[2] = {
+        0,                  /* pure ML-DSA (1 for Hash-ML-DSA) */
+        0,                  /* context length */
+    };
+    mld_shake256_absorb(shake_ctx, pre, 2);
 }
 
 psa_status_t tf_psa_crypto_mldsa_sign_setup(
@@ -424,7 +437,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
         goto cleanup;
     }
 
-    start_pure(&operation->shake, public_key, public_key_length);
+    start_pure(&operation->shake, operation->key + SK_TR_OFFSET);
 
 cleanup:
     mbedtls_free(public_key);
@@ -462,7 +475,9 @@ psa_status_t tf_psa_crypto_mldsa_verify_setup(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    start_pure(&operation->shake, key_buffer, key_buffer_size);
+    uint8_t tr[MLDSA_TRBYTES];
+    hash_public_key(&operation->shake, key_buffer, key_buffer_size, tr);
+    start_pure(&operation->shake, tr);
 
     return PSA_SUCCESS;
 }
