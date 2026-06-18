@@ -32,6 +32,11 @@
 #include "mbedtls/constant_time.h"
 #include "mbedtls/private/error_common.h"
 
+#if defined(MBEDTLS_CMAC_C)
+#include "mbedtls/private/cmac.h"
+#include "mbedtls/private/cipher.h"
+#endif
+
 #include <string.h>
 
 /* CMAC-AES-128 confirmation key length / tag length (RFC 9383 Section 3.4). */
@@ -764,8 +769,8 @@ cleanup:
 
 /*
  * MAC over a key share, used for the confirmation messages.
- * Only the HMAC profile is wired here (tag length = hash_len); the CMAC arm
- * lands in a later change.
+ * HMAC ciphersuites use HMAC-Hash (tag length = hash_len); CMAC ciphersuites
+ * use AES-CMAC-128 (tag length = 16).
  */
 static int spake2p_mac(mbedtls_spake2p_context *ctx,
                        const unsigned char *key, size_t key_len,
@@ -785,7 +790,17 @@ static int spake2p_mac(mbedtls_spake2p_context *ctx,
             mbedtls_md_info_from_type(ctx->md_type);
         MBEDTLS_MPI_CHK(mbedtls_md_hmac(md_info, key, key_len,
                                         msg, msg_len, out));
-    } else {
+    }
+#if defined(MBEDTLS_CMAC_C)
+    else if (ctx->mac_type == MBEDTLS_SPAKE2P_MAC_CMAC) {
+        const mbedtls_cipher_info_t *cipher_info =
+            mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_128_ECB);
+        /* mbedtls_cipher_cmac takes the key length in bits. */
+        MBEDTLS_MPI_CHK(mbedtls_cipher_cmac(cipher_info, key, key_len * 8,
+                                            msg, msg_len, out));
+    }
+#endif
+    else {
         ret = MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
         goto cleanup;
     }

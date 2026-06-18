@@ -1,0 +1,4 @@
+Features
+   * Add CMAC support for SPAKE2+. The PSA_ALG_SPAKE2P_CMAC ciphersuites use
+     AES-CMAC-128 instead of HMAC for the key confirmation MAC (RFC 9383
+     Section 3.4); the key schedule stays HKDF. Resolves Mbed-TLS/mbedtls#9377.
