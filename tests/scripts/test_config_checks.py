@@ -18,6 +18,7 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
 
     PROJECT_CONFIG_C = 'core/tf_psa_crypto_config.c'
     PROJECT_SPECIFIC_INCLUDE_DIRECTORIES = [
+        'dispatch/include',
         'drivers/builtin/include',
     ]
 
@@ -79,6 +80,7 @@ class CryptoTestRNGConfigChecks(unittest_config_checks.TestConfigChecks):
 
     PROJECT_CONFIG_C = 'core/tf_psa_crypto_config.c'
     PROJECT_SPECIFIC_INCLUDE_DIRECTORIES = [
+        'dispatch/include',
         'drivers/builtin/include',
     ]
 
