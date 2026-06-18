@@ -33,6 +33,7 @@
 #include "spake2p_invasive.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
+#include "mbedtls/constant_time.h"
 #include "mbedtls/private/error_common.h"
 
 #include <string.h>
@@ -825,6 +826,46 @@ int mbedtls_spake2p_write_confirm(mbedtls_spake2p_context *ctx,
     }
 
     return spake2p_mac(ctx, own_key, ctx->conf_key_len, peer_share, buf, olen);
+}
+
+int mbedtls_spake2p_read_confirm(mbedtls_spake2p_context *ctx,
+                                 const unsigned char *buf, size_t len)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    const unsigned char *peer_key;
+    const mbedtls_ecp_point *own_share;
+    unsigned char expected[MBEDTLS_MD_MAX_SIZE];
+    size_t expected_len;
+
+    if (!ctx->keys_ready) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+
+    /* The peer confirms over our own share with its confirmation key:
+     * a client verifies confirmV = MAC(K_confirmV, shareP);
+     * a server verifies confirmP = MAC(K_confirmP, shareV). */
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        peer_key = ctx->K_confirmV;
+        own_share = &ctx->shareP;
+    } else {
+        peer_key = ctx->K_confirmP;
+        own_share = &ctx->shareV;
+    }
+
+    MBEDTLS_MPI_CHK(spake2p_mac(ctx, peer_key, ctx->conf_key_len, own_share,
+                                expected, &expected_len));
+
+    if (len != expected_len ||
+        mbedtls_ct_memcmp(buf, expected, expected_len) != 0) {
+        ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;
+        goto cleanup;
+    }
+
+    ret = 0;
+
+cleanup:
+    mbedtls_platform_zeroize(expected, sizeof(expected));
+    return ret;
 }
 
 #if defined(MBEDTLS_TEST_HOOKS)

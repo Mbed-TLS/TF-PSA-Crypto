@@ -292,6 +292,25 @@ int mbedtls_spake2p_write_confirm(mbedtls_spake2p_context *ctx,
                                   unsigned char *buf, size_t len, size_t *olen);
 
 /**
+ * \brief           Read and verify the peer's confirmation MAC.
+ *
+ *                  For a client the peer message is
+ *                  \c confirmV = MAC(K_confirmV, shareP); for a server it is
+ *                  \c confirmP = MAC(K_confirmP, shareV). The comparison is
+ *                  performed in constant time.
+ *
+ * \param ctx       The SPAKE2+ context. The key schedule must be derived.
+ * \param buf       The buffer holding the peer's confirmation MAC.
+ * \param len       The length in bytes of \p buf.
+ *
+ * \return          \c 0 if the confirmation message is valid.
+ * \return          #MBEDTLS_ERR_ECP_VERIFY_FAILED if the MAC does not match.
+ * \return          Another negative error code on other failures.
+ */
+int mbedtls_spake2p_read_confirm(mbedtls_spake2p_context *ctx,
+                                 const unsigned char *buf, size_t len);
+
+/**
  * \brief           Clear a SPAKE2+ context and free embedded data.
  *
  * \param ctx       The SPAKE2+ context to free. This may be \c NULL, in which

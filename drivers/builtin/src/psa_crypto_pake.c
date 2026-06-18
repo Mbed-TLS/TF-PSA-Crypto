@@ -787,6 +787,9 @@ static psa_status_t mbedtls_psa_pake_input_internal(
                                                  input, input_length,
                                                  mbedtls_psa_get_random,
                                                  MBEDTLS_PSA_RANDOM_STATE);
+        } else if (step == PSA_SPAKE2P_STEP_CONFIRM) {
+            ret = mbedtls_spake2p_read_confirm(&operation->ctx.spake2p,
+                                               input, input_length);
         } else {
             return PSA_ERROR_NOT_SUPPORTED;
         }
