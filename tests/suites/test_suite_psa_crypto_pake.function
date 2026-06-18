@@ -2561,7 +2561,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_SPAKE2P_HMAC:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_KEY_TYPE_HMAC:PSA_WANT_ALG_SHA_256 */
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_KEY_TYPE_HMAC:PSA_WANT_ALG_SHA_256 */
 void spake2p_rounds(int alg_arg, int bits_arg,
                     data_t *client_key, data_t *server_key,
                     int canonical_confirm_order)
@@ -2640,7 +2640,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_SPAKE2P_HMAC:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_ALG_SHA_256 */
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_ALG_SHA_256 */
 void spake2p_rounds_wrong_password(int alg_arg, int bits_arg,
                                    data_t *client_key, data_t *server_key)
 {
