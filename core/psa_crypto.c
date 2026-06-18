@@ -9790,6 +9790,16 @@ psa_status_t psa_pake_input(
             &operation->computation_stage.jpake);
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        status = psa_spake2p_prologue(operation, step, 0);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+        driver_step = (step == PSA_PAKE_STEP_KEY_SHARE) ?
+                      PSA_SPAKE2P_STEP_KEY_SHARE : PSA_SPAKE2P_STEP_CONFIRM;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         (void) step;
         status = PSA_ERROR_NOT_SUPPORTED;
@@ -9812,6 +9822,14 @@ psa_status_t psa_pake_input(
         }
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        status = psa_spake2p_epilogue(operation, 0);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;

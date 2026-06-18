@@ -97,6 +97,91 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void spake2p_verifier_transcript_hash_kat(int curve_arg, int hash_arg,
+                                          int mac_arg, data_t *context,
+                                          data_t *prover_id, data_t *verifier_id,
+                                          data_t *server_key, data_t *y,
+                                          data_t *peer_shareP,
+                                          data_t *exp_tt_prefix)
+{
+    /* Known-answer test for the Verifier (server) transcript hash. After the
+     * verifier writes its own share (shareV, from the fixed ephemeral y) and
+     * reads the prover's share (shareP), the share-derivable prefix of the
+     * RFC 9383 Section 3.3 transcript TT -- the length-prefixed concatenation
+     * of Context, idProver, idVerifier, M, N, shareP, shareV -- is hashed.
+     * exp_tt_prefix is that Hash(prefix), cross-checked against the RFC 9383
+     * Appendix C field encoding. */
+    mbedtls_ecp_group_id curve = curve_arg;
+    mbedtls_md_type_t hash = hash_arg;
+    mbedtls_spake2p_mac_type mac = mac_arg;
+    mbedtls_spake2p_context srv;
+    unsigned char shareV[MBEDTLS_ECP_MAX_PT_LEN];
+    unsigned char tt[MBEDTLS_MD_MAX_SIZE];
+    size_t lenV, tt_len;
+    uint32_t rng_srv = 0x00c0ffeeu;
+
+    mbedtls_spake2p_init(&srv);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER, hash, mac,
+                                     curve, server_key->x, server_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
+    /* For the server, set_user is idVerifier and set_peer is idProver. */
+    TEST_EQUAL(mbedtls_spake2p_set_user(&srv, verifier_id->x,
+                                        verifier_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_peer(&srv, prover_id->x, prover_id->len), 0);
+
+    /* Transcript is not available until both shares are exchanged. */
+    TEST_ASSERT(mbedtls_spake2p_test_get_transcript_prefix_hash(
+                    &srv, tt, sizeof(tt), &tt_len) != 0);
+
+    TEST_EQUAL(mbedtls_spake2p_write_key_share_with_ephemeral(
+                   &srv, y->x, y->len, shareV, sizeof(shareV), &lenV,
+                   spake2p_kat_rng, &rng_srv), 0);
+
+    /* Still incomplete after our own share alone. */
+    TEST_ASSERT(mbedtls_spake2p_test_get_transcript_prefix_hash(
+                    &srv, tt, sizeof(tt), &tt_len) != 0);
+
+    TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, peer_shareP->x,
+                                              peer_shareP->len), 0);
+
+    TEST_EQUAL(mbedtls_spake2p_test_get_transcript_prefix_hash(
+                   &srv, tt, sizeof(tt), &tt_len), 0);
+    TEST_MEMORY_COMPARE(tt, tt_len, exp_tt_prefix->x, exp_tt_prefix->len);
+
+exit:
+    mbedtls_spake2p_free(&srv);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
+void spake2p_read_key_share_invalid(data_t *server_key, data_t *bad_share,
+                                    int expected_ret)
+{
+    /* read_key_share must reject a peer share that is not a valid SEC1 point
+     * on the curve (parse failure or group-membership failure). */
+    mbedtls_spake2p_context srv;
+
+    mbedtls_spake2p_init(&srv);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER,
+                                     MBEDTLS_MD_SHA256, MBEDTLS_SPAKE2P_MAC_HMAC,
+                                     MBEDTLS_ECP_DP_SECP256R1,
+                                     server_key->x, server_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, bad_share->x,
+                                              bad_share->len),
+               expected_ret);
+
+exit:
+    mbedtls_spake2p_free(&srv);
+    PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
 void spake2p_setup_negative(int curve_arg, int hash_arg, int mac_arg,
                             data_t *key, int expected_ret)

@@ -73,6 +73,35 @@ int mbedtls_spake2p_write_key_share_with_ephemeral(
 extern const unsigned char *mbedtls_spake2p_test_injected_ephemeral;
 extern size_t mbedtls_spake2p_test_injected_ephemeral_len;
 
+/**
+ * \brief           Read back the accumulated transcript-prefix hash.
+ *
+ *                  Returns Hash(prefix), where prefix is the share-derivable
+ *                  part of the RFC 9383 Section 3.3 transcript TT (the
+ *                  length-prefixed concatenation of Context, idProver,
+ *                  idVerifier, M, N, shareP, shareV). It exists solely so the
+ *                  test suite can validate the transcript field encoding
+ *                  against RFC 9383 Appendix C values, independently of the
+ *                  (out-of-scope) key schedule.
+ *
+ *                  The transcript TT itself is internal and normally only
+ *                  observable through the downstream confirmation MAC and
+ *                  shared key; this hook makes the in-scope prefix testable.
+ *
+ * \param ctx       The SPAKE2+ context. Both key shares must have been
+ *                  exchanged (write_key_share and read_key_share both done).
+ * \param out       Buffer to receive the hash.
+ * \param out_size  Size of \p out in bytes; must be at least the hash length.
+ * \param out_len   Address at which to store the number of bytes written.
+ *
+ * \return          \c 0 on success.
+ * \return          A negative error code if the prefix is not yet available or
+ *                  the buffer is too small.
+ */
+int mbedtls_spake2p_test_get_transcript_prefix_hash(
+    const mbedtls_spake2p_context *ctx,
+    unsigned char *out, size_t out_size, size_t *out_len);
+
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_SPAKE2P_C */
 
 #endif /* TF_PSA_CRYPTO_SPAKE2P_INVASIVE_H */

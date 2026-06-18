@@ -1,0 +1,7 @@
+Features
+   * Add the SPAKE2+ (RFC 9383) verifier transcript hash and peer key-share
+     input to the PSA PAKE API: psa_pake_input() now accepts the
+     PSA_PAKE_STEP_KEY_SHARE message for a SPAKE2+ operation, and the
+     transcript TT (RFC 9383 Section 3.3) is accumulated over the fields
+     derivable from the exchanged shares (Context, idProver, idVerifier, M, N,
+     shareP, shareV). Resolves Mbed-TLS/mbedtls#9349.

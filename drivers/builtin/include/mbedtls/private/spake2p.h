@@ -24,10 +24,12 @@
  *   - #MBEDTLS_SPAKE2P_CLIENT is the Prover   (holds w0 and w1).
  *   - #MBEDTLS_SPAKE2P_SERVER is the Verifier (holds w0 and L).
  *
- * This slice covers the Prover/Verifier setup and the generation of this
- * party's public key share (RFC 9383 Appendix A.5 write_key_share). The
- * later protocol steps (read_key_share, confirmation, shared-key derivation)
- * are out of scope here.
+ * This slice covers the Prover/Verifier setup, the generation of this party's
+ * public key share (RFC 9383 Appendix A.5 write_key_share), reading the peer's
+ * key share (read_key_share), and the accumulation of the transcript hash TT
+ * (RFC 9383 Section 3.3) over the fields available from the shares. The
+ * remaining protocol steps (confirmation, shared-key derivation) are out of
+ * scope here.
  *
  * The key-share serialization is the SEC1 uncompressed point format.
  *
@@ -100,6 +102,11 @@ typedef struct mbedtls_spake2p_context {
     size_t MBEDTLS_PRIVATE(context_len);
 
     int MBEDTLS_PRIVATE(keys_ready);                      /**< Key schedule derived?  */
+#if defined(MBEDTLS_TEST_HOOKS)
+    int MBEDTLS_PRIVATE(tt_prefix_ready);                 /**< TT prefix hash computed?*/
+    /** Hash of the share-derivable TT prefix. */
+    unsigned char MBEDTLS_PRIVATE(tt_prefix_hash)[MBEDTLS_MD_MAX_SIZE];
+#endif /* MBEDTLS_TEST_HOOKS */
     size_t MBEDTLS_PRIVATE(hash_len);                     /**< Hash output length     */
     size_t MBEDTLS_PRIVATE(conf_key_len);                 /**< Confirmation key length*/
     size_t MBEDTLS_PRIVATE(mac_len);                      /**< Confirmation MAC length*/
@@ -232,6 +239,27 @@ int mbedtls_spake2p_write_key_share(mbedtls_spake2p_context *ctx,
                                     unsigned char *buf, size_t len, size_t *olen,
                                     int (*f_rng)(void *, unsigned char *, size_t),
                                     void *p_rng);
+
+/**
+ * \brief           Read and process the peer's public key share.
+ *
+ *                  The point is validated for group membership (RFC 9383
+ *                  Section 6). For a client this stores \c shareV, for a server
+ *                  \c shareP. Once both this party's and the peer's shares are
+ *                  known, the transcript hash TT (RFC 9383 Section 3.3) is
+ *                  accumulated over the fields that are derivable from the
+ *                  shares (Context, idProver, idVerifier, M, N, shareP,
+ *                  shareV).
+ *
+ * \param ctx       The SPAKE2+ context. This must be set up.
+ * \param buf       The buffer holding the peer's share (SEC1 uncompressed).
+ * \param len       The length in bytes of \p buf.
+ *
+ * \return          \c 0 if successful.
+ * \return          A negative error code on failure.
+ */
+int mbedtls_spake2p_read_key_share(mbedtls_spake2p_context *ctx,
+                                   const unsigned char *buf, size_t len);
 
 /**
  * \brief           Clear a SPAKE2+ context and free embedded data.

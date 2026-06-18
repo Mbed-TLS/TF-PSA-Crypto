@@ -14,8 +14,12 @@
  * multiplications of RFC 9383 Section 3.3 are no-ops and are omitted; group
  * membership is enforced with mbedtls_ecp_check_pubkey().
  *
- * This slice covers setup and the generation of this party's public key share
- * (write_key_share). The remaining protocol steps land in subsequent changes.
+ * This slice covers setup, the generation of this party's public key share
+ * (write_key_share), reading the peer's key share (read_key_share), and the
+ * accumulation of the RFC 9383 Section 3.3 transcript hash TT over the fields
+ * that are derivable from the shares (Context, idProver, idVerifier, M, N,
+ * shareP, shareV). The shared values Z and V, the confirmation MAC and the
+ * key schedule land in subsequent changes.
  */
 
 #include "tf_psa_crypto_common.h"
@@ -313,6 +317,93 @@ int mbedtls_spake2p_set_peer(mbedtls_spake2p_context *ctx,
     return spake2p_set_buf(&ctx->peer, &ctx->peer_len, peer, len);
 }
 
+#if defined(MBEDTLS_TEST_HOOKS)
+/*
+ * Absorb one 8-byte little-endian length-prefixed field into the running
+ * transcript hash (the TT encoding of RFC 9383 Section 3.3).
+ */
+static int spake2p_tt_update(mbedtls_md_context_t *md,
+                             const unsigned char *data, size_t len)
+{
+    unsigned char lenbuf[8];
+    int ret;
+
+    MBEDTLS_PUT_UINT64_LE((uint64_t) len, lenbuf, 0);
+    if ((ret = mbedtls_md_update(md, lenbuf, sizeof(lenbuf))) != 0) {
+        return ret;
+    }
+    if (len > 0) {
+        if ((ret = mbedtls_md_update(md, data, len)) != 0) {
+            return ret;
+        }
+    }
+    return 0;
+}
+
+static int spake2p_tt_update_point(mbedtls_md_context_t *md,
+                                   const mbedtls_ecp_group *grp,
+                                   const mbedtls_ecp_point *pt)
+{
+    unsigned char tmp[MBEDTLS_ECP_MAX_PT_LEN];
+    size_t len;
+    int ret = mbedtls_ecp_point_write_binary(grp, pt,
+                                             MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                             &len, tmp, sizeof(tmp));
+    if (ret != 0) {
+        return ret;
+    }
+    return spake2p_tt_update(md, tmp, len);
+}
+
+/*
+ * Accumulate the share-derivable prefix of the transcript TT into a hash.
+ *
+ * TT is the hash of 10 length-prefixed fields (RFC 9383 Section 3.3):
+ *   Context, idProver, idVerifier, M, N, shareP, shareV, Z, V, w0.
+ * The first seven are fixed by the ciphersuite and the exchanged shares; the
+ * remaining three (Z, V, w0) are secret-derived and belong to the key schedule
+ * (out of scope here). This computes Hash(prefix) once both shares exist so the
+ * transcript field encoding can be validated independently of key derivation.
+ *
+ * idProver/idVerifier are fixed by RFC role, not by which party we are.
+ */
+static int spake2p_update_tt_prefix(mbedtls_spake2p_context *ctx)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type(ctx->md_type);
+    mbedtls_md_context_t md_ctx;
+    const unsigned char *id_prover, *id_verifier;
+    size_t id_prover_len, id_verifier_len;
+
+    mbedtls_md_init(&md_ctx);
+
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        id_prover = ctx->user;   id_prover_len = ctx->user_len;
+        id_verifier = ctx->peer; id_verifier_len = ctx->peer_len;
+    } else {
+        id_prover = ctx->peer;   id_prover_len = ctx->peer_len;
+        id_verifier = ctx->user; id_verifier_len = ctx->user_len;
+    }
+
+    MBEDTLS_MPI_CHK(mbedtls_md_setup(&md_ctx, md_info, 0));
+    MBEDTLS_MPI_CHK(mbedtls_md_starts(&md_ctx));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, ctx->context, ctx->context_len));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, id_prover, id_prover_len));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, id_verifier, id_verifier_len));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->M));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->N));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->shareP));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->shareV));
+    MBEDTLS_MPI_CHK(mbedtls_md_finish(&md_ctx, ctx->tt_prefix_hash));
+
+    ctx->tt_prefix_ready = 1;
+
+cleanup:
+    mbedtls_md_free(&md_ctx);
+    return ret;
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /*
  * Compute and serialize this party's public share from the (already chosen)
  * ephemeral scalar ctx->xy.
@@ -360,6 +451,12 @@ static int spake2p_make_own_share(mbedtls_spake2p_context *ctx,
     } else {
         ctx->have_shareV = 1;
     }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (ctx->have_shareP && ctx->have_shareV && !ctx->tt_prefix_ready) {
+        MBEDTLS_MPI_CHK(spake2p_update_tt_prefix(ctx));
+    }
+#endif
 
 cleanup:
     mbedtls_ecp_point_free(&eph);
@@ -424,6 +521,53 @@ int mbedtls_spake2p_write_key_share_with_ephemeral(
 
 cleanup:
     return ret;
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+
+int mbedtls_spake2p_read_key_share(mbedtls_spake2p_context *ctx,
+                                   const unsigned char *buf, size_t len)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    mbedtls_ecp_point *peer;
+
+    /* The peer's share is the other role's: a client reads shareV, a server
+     * reads shareP. */
+    peer = (ctx->role == MBEDTLS_SPAKE2P_CLIENT) ? &ctx->shareV : &ctx->shareP;
+
+    MBEDTLS_MPI_CHK(mbedtls_ecp_point_read_binary(&ctx->grp, peer, buf, len));
+    /* Group membership check (RFC 9383 Section 6). */
+    MBEDTLS_MPI_CHK(mbedtls_ecp_check_pubkey(&ctx->grp, peer));
+
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        ctx->have_shareV = 1;
+    } else {
+        ctx->have_shareP = 1;
+    }
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if (ctx->have_shareP && ctx->have_shareV && !ctx->tt_prefix_ready) {
+        MBEDTLS_MPI_CHK(spake2p_update_tt_prefix(ctx));
+    }
+#endif
+
+cleanup:
+    return ret;
+}
+
+#if defined(MBEDTLS_TEST_HOOKS)
+int mbedtls_spake2p_test_get_transcript_prefix_hash(
+    const mbedtls_spake2p_context *ctx,
+    unsigned char *out, size_t out_size, size_t *out_len)
+{
+    if (!ctx->tt_prefix_ready) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    if (out_size < ctx->hash_len) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    memcpy(out, ctx->tt_prefix_hash, ctx->hash_len);
+    *out_len = ctx->hash_len;
+    return 0;
 }
 #endif /* MBEDTLS_TEST_HOOKS */
 
