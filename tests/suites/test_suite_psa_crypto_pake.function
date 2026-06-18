@@ -2537,3 +2537,186 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SPAKE2P_HMAC:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_KEY_TYPE_HMAC:PSA_WANT_ALG_SHA_256 */
+void spake2p_rounds(int alg_arg, int bits_arg,
+                    data_t *client_key, data_t *server_key)
+{
+    /* End-to-end SPAKE2+ exchange between two independent PSA PAKE operations
+     * with REAL (random) ephemerals -- no MBEDTLS_TEST_HOOKS injection, so this
+     * runs in a default build -- on par with ecjpake_rounds. Both roles run the
+     * full handshake (key share + mutual confirmation), then export the shared
+     * key via psa_pake_get_shared_key(); the two shared keys must be identical. */
+    psa_algorithm_t alg = alg_arg;
+    size_t bits = (size_t) bits_arg;
+    psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
+    psa_pake_operation_t client = psa_pake_operation_init_short();
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    psa_key_attributes_t ca = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t sa = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t ka = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t ckey = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t skey = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t shared_c = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t shared_s = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t shareP[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t shareV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t confirmP[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t confirmV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t exp_c[128];
+    uint8_t exp_s[128];
+    size_t lp = 0, lv = 0, lcp = 0, lcv = 0, ec = 0, es = 0;
+
+    PSA_INIT();
+
+    psa_pake_cs_set_algorithm(&cs, alg);
+    psa_pake_cs_set_primitive(&cs, PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                                                      PSA_ECC_FAMILY_SECP_R1, bits));
+
+    psa_set_key_usage_flags(&ca, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&ca, alg);
+    psa_set_key_type(&ca, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&ca, client_key->x, client_key->len, &ckey));
+
+    psa_set_key_usage_flags(&sa, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&sa, alg);
+    psa_set_key_type(&sa, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&sa, server_key->x, server_key->len, &skey));
+
+    /* Setup both roles. */
+    PSA_ASSERT(psa_pake_setup(&client, ckey, &cs));
+    PSA_ASSERT(psa_pake_set_role(&client, PSA_PAKE_ROLE_CLIENT));
+    PSA_ASSERT(psa_pake_set_user(&client, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+    PSA_ASSERT(psa_pake_set_peer(&client, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+
+    PSA_ASSERT(psa_pake_setup(&server, skey, &cs));
+    PSA_ASSERT(psa_pake_set_role(&server, PSA_PAKE_ROLE_SERVER));
+    PSA_ASSERT(psa_pake_set_user(&server, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+    PSA_ASSERT(psa_pake_set_peer(&server, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+
+    /* KEY_SHARE round with real, randomly generated ephemerals. */
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
+                               shareP, sizeof(shareP), &lp));
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_KEY_SHARE,
+                               shareV, sizeof(shareV), &lv));
+    PSA_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_KEY_SHARE, shareV, lv));
+    PSA_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_KEY_SHARE, shareP, lp));
+
+    /* CONFIRM round: each side outputs its MAC and verifies the peer's. */
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_CONFIRM,
+                               confirmP, sizeof(confirmP), &lcp));
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
+                               confirmV, sizeof(confirmV), &lcv));
+    PSA_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_CONFIRM, confirmV, lcv));
+    PSA_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_CONFIRM, confirmP, lcp));
+
+    /* Both sides export the shared key; they must be identical. */
+    psa_set_key_usage_flags(&ka, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&ka, PSA_ALG_HMAC(PSA_ALG_SHA_256));
+    psa_set_key_type(&ka, PSA_KEY_TYPE_HMAC);
+    PSA_ASSERT(psa_pake_get_shared_key(&client, &ka, &shared_c));
+    PSA_ASSERT(psa_pake_get_shared_key(&server, &ka, &shared_s));
+
+    PSA_ASSERT(psa_export_key(shared_c, exp_c, sizeof(exp_c), &ec));
+    PSA_ASSERT(psa_export_key(shared_s, exp_s, sizeof(exp_s), &es));
+    TEST_ASSERT(ec > 0);
+    TEST_MEMORY_COMPARE(exp_c, ec, exp_s, es);
+
+exit:
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_destroy_key(shared_c);
+    psa_destroy_key(shared_s);
+    psa_pake_abort(&client);
+    psa_pake_abort(&server);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SPAKE2P_HMAC:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_ALG_SHA_256 */
+void spake2p_rounds_wrong_password(int alg_arg, int bits_arg,
+                                   data_t *client_key, data_t *server_key)
+{
+    /* Extended end-to-end test: the security property that defines a PAKE.
+     * The client's key pair (w0 || w1) does NOT match the server's registration
+     * record (w0 || L) -- i.e. the two parties used different passwords. The
+     * key-share exchange still succeeds (shares are just curve points), but the
+     * key confirmation MUST fail: each side derives different confirmation keys,
+     * so verifying the peer's confirmation MAC rejects. No shared key is
+     * established. Real random ephemerals, no test hooks. */
+    psa_algorithm_t alg = alg_arg;
+    size_t bits = (size_t) bits_arg;
+    psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
+    psa_pake_operation_t client = psa_pake_operation_init_short();
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    psa_key_attributes_t ca = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t sa = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t ckey = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t skey = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t shareP[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t shareV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t confirmV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t confirmP[PSA_PAKE_OUTPUT_MAX_SIZE];
+    size_t lp = 0, lv = 0, lcv = 0, lcp = 0;
+
+    PSA_INIT();
+
+    psa_pake_cs_set_algorithm(&cs, alg);
+    psa_pake_cs_set_primitive(&cs, PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                                                      PSA_ECC_FAMILY_SECP_R1, bits));
+
+    psa_set_key_usage_flags(&ca, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&ca, alg);
+    psa_set_key_type(&ca, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&ca, client_key->x, client_key->len, &ckey));
+
+    psa_set_key_usage_flags(&sa, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&sa, alg);
+    psa_set_key_type(&sa, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&sa, server_key->x, server_key->len, &skey));
+
+    PSA_ASSERT(psa_pake_setup(&client, ckey, &cs));
+    PSA_ASSERT(psa_pake_set_role(&client, PSA_PAKE_ROLE_CLIENT));
+    PSA_ASSERT(psa_pake_set_user(&client, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+    PSA_ASSERT(psa_pake_set_peer(&client, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+
+    PSA_ASSERT(psa_pake_setup(&server, skey, &cs));
+    PSA_ASSERT(psa_pake_set_role(&server, PSA_PAKE_ROLE_SERVER));
+    PSA_ASSERT(psa_pake_set_user(&server, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+    PSA_ASSERT(psa_pake_set_peer(&server, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+
+    /* Key-share exchange succeeds even with a mismatched password. */
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
+                               shareP, sizeof(shareP), &lp));
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_KEY_SHARE,
+                               shareV, sizeof(shareV), &lv));
+    PSA_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_KEY_SHARE, shareV, lv));
+    PSA_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_KEY_SHARE, shareP, lp));
+
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_CONFIRM,
+                               confirmP, sizeof(confirmP), &lcp));
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
+                               confirmV, sizeof(confirmV), &lcv));
+
+    /* Confirmation must fail on both sides: neither party's MAC verifies. */
+    TEST_EQUAL(psa_pake_input(&client, PSA_PAKE_STEP_CONFIRM, confirmV, lcv),
+               PSA_ERROR_INVALID_SIGNATURE);
+    TEST_EQUAL(psa_pake_input(&server, PSA_PAKE_STEP_CONFIRM, confirmP, lcp),
+               PSA_ERROR_INVALID_SIGNATURE);
+
+exit:
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_pake_abort(&client);
+    psa_pake_abort(&server);
+    PSA_DONE();
+}
+/* END_CASE */
