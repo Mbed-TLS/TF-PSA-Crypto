@@ -1,0 +1,7 @@
+Features
+   * Implement psa_pake_get_shared_key() for SPAKE2+. Once both the key share
+     and the key confirmation exchanges have completed, both parties can export
+     the RFC 9383 K_shared shared secret. As a security measure the shared key
+     is released only after the peer's confirmation MAC has been verified.
+     Use PSA_ALG_SPAKE2P_HMAC for P-256/P-384/P-521. Resolves Mbed-
+     TLS/mbedtls#9370.

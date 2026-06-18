@@ -14,15 +14,11 @@
  * multiplications of RFC 9383 Section 3.3 are no-ops and are omitted; group
  * membership is enforced with mbedtls_ecp_check_pubkey().
  *
- * This slice covers setup, the generation of this party's public key share
- * (write_key_share), reading the peer's key share (read_key_share), the
- * accumulation of the RFC 9383 Section 3.3 transcript hash TT, the key schedule
- * that derives K_confirmP / K_confirmV / K_shared from TT (RFC 9383 Section
- * 3.3-3.4), and the verifier confirmation MAC output (write_confirm).
- *
- * Only the HMAC confirmation profile is wired in this slice; the CMAC/Matter
- * MAC arms, the peer confirmation check (read_confirm) and the shared-key
- * export (get_shared_key) land in subsequent changes.
+ * This module implements the full RFC 9383 protocol flow: setup, key-share
+ * generation and validation, the Section 3.3 transcript hash TT, the key
+ * schedule deriving K_confirmP / K_confirmV / K_shared, the confirmation
+ * MAC exchange and the shared-key export. The confirmation-MAC and
+ * key-schedule profiles are selected at setup time.
  */
 
 #include "tf_psa_crypto_common.h"
@@ -861,11 +857,40 @@ int mbedtls_spake2p_read_confirm(mbedtls_spake2p_context *ctx,
         goto cleanup;
     }
 
+    /* The peer's confirmation MAC verified: key confirmation is complete on
+     * this side. This guards mbedtls_spake2p_get_shared_key() and is tracked
+     * independently of any call-sequence enforcement (RFC 9383 Section 4: the
+     * shared secret must not be used before key confirmation). */
+    ctx->confirmed = 1;
     ret = 0;
 
 cleanup:
     mbedtls_platform_zeroize(expected, sizeof(expected));
     return ret;
+}
+
+int mbedtls_spake2p_get_shared_key(mbedtls_spake2p_context *ctx,
+                                   unsigned char *buf, size_t len, size_t *olen)
+{
+    if (!ctx->keys_ready) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    /* Security property: refuse to release the shared key until the peer's key
+     * confirmation has been verified. This is a defence-in-depth gate keyed on
+     * the dedicated `confirmed` flag (set only when the confirmation MAC was
+     * successfully verified), deliberately separate from whatever enforces the
+     * protocol call sequence at higher layers. */
+    if (!ctx->confirmed) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    if (len < ctx->shared_key_len) {
+        return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
+    }
+
+    memcpy(buf, ctx->K_shared, ctx->shared_key_len);
+    *olen = ctx->shared_key_len;
+
+    return 0;
 }
 
 #if defined(MBEDTLS_TEST_HOOKS)

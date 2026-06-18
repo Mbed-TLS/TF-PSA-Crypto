@@ -793,9 +793,8 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
 /** SPAKE2+ algorithm using HMAC for key confirmation, per RFC 9383.
  *
- * Partially implemented: operation setup and key-share output are
- * available. The remaining protocol steps (key-share input, key
- * confirmation, shared-key extraction) are not implemented yet.
+ * Implemented for the secp_r1 curves (P-256, P-384 and P-521): operation
+ * setup, key-share exchange, key confirmation and shared-key extraction.
  */
 #define PSA_ALG_SPAKE2P_HMAC(hash_alg)                                  \
     (PSA_ALG_SPAKE2P_HMAC_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))

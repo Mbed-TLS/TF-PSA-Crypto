@@ -840,6 +840,18 @@ psa_status_t mbedtls_psa_pake_get_implicit_key(
 #else
     (void) output;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        ret = mbedtls_spake2p_get_shared_key(&operation->ctx.spake2p,
+                                             output, output_size,
+                                             output_length);
+        if (ret != 0) {
+            return mbedtls_spake2p_to_psa_error(ret);
+        }
+
+        return PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_SPAKE2P */
     { return PSA_ERROR_NOT_SUPPORTED; }
 }
 

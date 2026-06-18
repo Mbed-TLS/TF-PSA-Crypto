@@ -24,12 +24,11 @@
  *   - #MBEDTLS_SPAKE2P_CLIENT is the Prover   (holds w0 and w1).
  *   - #MBEDTLS_SPAKE2P_SERVER is the Verifier (holds w0 and L).
  *
- * This slice covers the Prover/Verifier setup, the generation of this party's
- * public key share (RFC 9383 Appendix A.5 write_key_share), reading the peer's
- * key share (read_key_share), and the accumulation of the transcript hash TT
- * (RFC 9383 Section 3.3) over the fields available from the shares. The
- * remaining protocol steps (confirmation, shared-key derivation) are out of
- * scope here.
+ * This header covers the full protocol flow: Prover/Verifier setup, key-share
+ * generation (write_key_share) and validation (read_key_share), the RFC 9383
+ * Section 3.3 transcript hash TT, the confirmation MAC exchange
+ * (write_confirm / read_confirm) and the shared-key export
+ * (get_shared_key).
  *
  * The key-share serialization is the SEC1 uncompressed point format.
  *
@@ -102,6 +101,7 @@ typedef struct mbedtls_spake2p_context {
     size_t MBEDTLS_PRIVATE(context_len);
 
     int MBEDTLS_PRIVATE(keys_ready);                      /**< Key schedule derived?  */
+    int MBEDTLS_PRIVATE(confirmed);                       /**< Peer confirmation verified? */
 #if defined(MBEDTLS_TEST_HOOKS)
     int MBEDTLS_PRIVATE(tt_prefix_ready);                 /**< TT prefix hash computed?*/
     /** Hash of the share-derivable TT prefix. */
@@ -309,6 +309,29 @@ int mbedtls_spake2p_write_confirm(mbedtls_spake2p_context *ctx,
  */
 int mbedtls_spake2p_read_confirm(mbedtls_spake2p_context *ctx,
                                  const unsigned char *buf, size_t len);
+
+/**
+ * \brief           Write the derived shared key (RFC 9383 \c K_shared).
+ *
+ * \note            As a security measure this fails unless the peer's key
+ *                  confirmation has been successfully verified with
+ *                  mbedtls_spake2p_read_confirm(): the shared key must never be
+ *                  released before key confirmation completes. This check is
+ *                  independent of any call-sequence enforcement done by the
+ *                  caller.
+ *
+ * \param ctx       The SPAKE2+ context. The key schedule must be derived and
+ *                  the peer's confirmation must have been verified.
+ * \param buf       The buffer to write the shared key to.
+ * \param len       The size of \p buf in bytes.
+ * \param olen      The address at which to store the number of bytes written.
+ *                  This must not be \c NULL.
+ *
+ * \return          \c 0 if successful.
+ * \return          A negative error code on failure.
+ */
+int mbedtls_spake2p_get_shared_key(mbedtls_spake2p_context *ctx,
+                                   unsigned char *buf, size_t len, size_t *olen);
 
 /**
  * \brief           Clear a SPAKE2+ context and free embedded data.

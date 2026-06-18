@@ -9849,7 +9849,10 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t abort_status = PSA_ERROR_CORRUPTION_DETECTED;
-    uint8_t shared_key[MBEDTLS_PSA_JPAKE_BUFFER_SIZE];
+    /* Large enough for any PAKE shared secret: an uncompressed J-PAKE P-256
+     * point (65 bytes) or a SPAKE2+ shared key, which is a hash output
+     * (at most PSA_HASH_MAX_SIZE bytes). */
+    uint8_t shared_key[PSA_HASH_MAX_SIZE > 65 ? PSA_HASH_MAX_SIZE : 65];
     size_t shared_key_len = 0;
 
     if (operation->stage != PSA_PAKE_OPERATION_STAGE_COMPUTATION) {
@@ -9867,6 +9870,21 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
         }
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        psa_spake2p_computation_stage_t *computation_stage =
+            &operation->computation_stage.spake2p;
+        /* Security property, enforced independently of the per-step sequence
+         * checks in psa_spake2p_prologue(): the shared key is only released
+         * once both the key-share exchange and the mutual key confirmation
+         * are complete (PSA_PAKE_CONFIRMED_KEY semantics, RFC 9383 section
+         * 3.3). An unconfirmed shared key is never exposed to the caller. */
+        if (computation_stage->round != PSA_SPAKE2P_FINISHED) {
+            status = PSA_ERROR_BAD_STATE;
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
@@ -9884,6 +9902,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
     status = psa_import_key(attributes, shared_key, shared_key_len, key);
 
 exit:
+    mbedtls_platform_zeroize(shared_key, sizeof(shared_key));
 
     if (status != PSA_SUCCESS) {
         *key = MBEDTLS_SVC_KEY_ID_INIT;
