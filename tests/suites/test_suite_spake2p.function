@@ -354,6 +354,69 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void spake2p_prover_confirm_kat(int curve_arg, int hash_arg, int mac_arg,
+                                data_t *context, data_t *prover_id,
+                                data_t *verifier_id, data_t *client_key,
+                                data_t *x, data_t *peer_shareV,
+                                data_t *exp_confirmP)
+{
+    /* Known-answer test for the Prover (client) confirmation MAC. After the
+     * client writes its own share (shareP, from the fixed ephemeral x) and
+     * reads the verifier's share (shareV), the key schedule (RFC 9383 Section
+     * 3.3-3.4) is fully determined, so confirmP = MAC(K_confirmP, shareV) is a
+     * function of the two shares alone. exp_confirmP is the RFC 9383 Appendix C
+     * value. */
+    mbedtls_ecp_group_id curve = curve_arg;
+    mbedtls_md_type_t hash = hash_arg;
+    mbedtls_spake2p_mac_type mac = mac_arg;
+    mbedtls_spake2p_context cli;
+    unsigned char shareP[MBEDTLS_ECP_MAX_PT_LEN];
+    unsigned char confirmP[MBEDTLS_MD_MAX_SIZE];
+    size_t lenP, clenP;
+    uint32_t rng_cli = 0x00c0ffeeu;
+
+    mbedtls_spake2p_init(&cli);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     curve, client_key->x, client_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
+    /* For the client, set_user is idProver and set_peer is idVerifier. */
+    TEST_EQUAL(mbedtls_spake2p_set_user(&cli, prover_id->x,
+                                        prover_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_peer(&cli, verifier_id->x,
+                                        verifier_id->len), 0);
+
+    /* Confirmation is not available until the key schedule is derived, i.e.
+     * before both shares have been exchanged. */
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&cli, confirmP, sizeof(confirmP),
+                                             &clenP),
+               MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_spake2p_write_key_share_with_ephemeral(
+                   &cli, x->x, x->len, shareP, sizeof(shareP), &lenP,
+                   spake2p_kat_rng, &rng_cli), 0);
+
+    /* Still incomplete after our own share alone. */
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&cli, confirmP, sizeof(confirmP),
+                                             &clenP),
+               MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_spake2p_read_key_share(&cli, peer_shareV->x,
+                                              peer_shareV->len,
+                                              spake2p_kat_rng, &rng_cli), 0);
+
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&cli, confirmP, sizeof(confirmP),
+                                             &clenP), 0);
+    TEST_MEMORY_COMPARE(confirmP, clenP, exp_confirmP->x, exp_confirmP->len);
+
+exit:
+    mbedtls_spake2p_free(&cli);
+    PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
 void spake2p_read_key_share_invalid(data_t *server_key, data_t *bad_share,
                                     int expected_ret)
