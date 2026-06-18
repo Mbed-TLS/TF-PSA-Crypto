@@ -621,6 +621,38 @@ exit:
     psa_destroy_key(ckey);
     return ok;
 }
+static int spake2p_setup_server(psa_pake_operation_t *server,
+                                psa_algorithm_t alg, uint32_t bits,
+                                const data_t *server_key)
+{
+    psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
+    psa_key_attributes_t sa = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t skey = MBEDTLS_SVC_KEY_ID_INIT;
+    int ok = 0;
+
+    psa_pake_cs_set_algorithm(&cs, alg);
+    psa_pake_cs_set_primitive(&cs, PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                                                      PSA_ECC_FAMILY_SECP_R1, bits));
+
+    psa_set_key_usage_flags(&sa, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&sa, alg);
+    psa_set_key_type(&sa, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&sa, server_key->x, server_key->len, &skey));
+
+    PSA_ASSERT(psa_pake_setup(server, skey, &cs));
+    PSA_ASSERT(psa_pake_set_role(server, PSA_PAKE_ROLE_SERVER));
+    /* The server's own identity is the Verifier, its peer is the Prover. */
+    PSA_ASSERT(psa_pake_set_user(server, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+    PSA_ASSERT(psa_pake_set_peer(server, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+
+    ok = 1;
+exit:
+    psa_destroy_key(skey);
+    return ok;
+}
+
 #endif /* PSA_WANT_ALG_SOME_SPAKE2P */
 /* END_HEADER */
 
@@ -1802,6 +1834,40 @@ exit:
     mbedtls_spake2p_test_injected_ephemeral = NULL;
     mbedtls_spake2p_test_injected_ephemeral_len = 0;
     psa_destroy_key(skey);
+    psa_pake_abort(&server);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P */
+void spake2p_verifier_key_share_format(int alg_arg, int bits_arg,
+                                       int expected_len, data_t *server_key)
+{
+    /* psa_pake_output(KEY_SHARE) for the Verifier must emit an uncompressed
+     * SEC1 point of the curve's fixed length, consistent with
+     * PSA_PAKE_OUTPUT_SIZE(). */
+    psa_algorithm_t alg = alg_arg;
+    psa_pake_primitive_t prim = PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                                                   PSA_ECC_FAMILY_SECP_R1,
+                                                   (uint32_t) bits_arg);
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    uint8_t shareV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    size_t lv = 0;
+
+    PSA_INIT();
+
+    TEST_EQUAL(PSA_PAKE_OUTPUT_SIZE(alg, prim, PSA_PAKE_STEP_KEY_SHARE),
+               (size_t) expected_len);
+
+    TEST_ASSERT(spake2p_setup_server(&server, alg, (uint32_t) bits_arg,
+                                     server_key) == 1);
+
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_KEY_SHARE,
+                               shareV, sizeof(shareV), &lv));
+    TEST_EQUAL(lv, (size_t) expected_len);
+    TEST_EQUAL(shareV[0], 0x04);
+
+exit:
     psa_pake_abort(&server);
     PSA_DONE();
 }

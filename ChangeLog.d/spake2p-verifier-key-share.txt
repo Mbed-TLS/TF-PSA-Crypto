@@ -1,0 +1,7 @@
+Features
+   * Add the SPAKE2+ (RFC 9383) Verifier setup and key-share output to the PSA
+     PAKE API: psa_pake_setup() now accepts a SPAKE2+ public-key registration
+     record (w0||L) for the server (Verifier) role, and psa_pake_output()
+     produces the server PSA_PAKE_STEP_KEY_SHARE message (shareV = y*P + w0*N).
+     Supported on the NIST P-256, P-384 and P-521 curves. Resolves part of
+     #9347 (Verifier key share).
