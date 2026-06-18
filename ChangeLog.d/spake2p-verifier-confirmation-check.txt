@@ -1,0 +1,9 @@
+Features
+   * Add the SPAKE2+ (RFC 9383) verifier confirmation check to the PSA PAKE
+     API: once both key shares have been exchanged and the key schedule is
+     derived, psa_pake_input() now accepts the PSA_PAKE_STEP_CONFIRM message
+     on the verifier (server) side, verifying the prover's confirmation MAC
+     confirmP = MAC(K_confirmP, shareV) in constant time and failing with
+     PSA_ERROR_INVALID_SIGNATURE on mismatch. Supported for the HMAC
+     confirmation profile (PSA_ALG_SPAKE2P_HMAC) over the P-256/P-384/P-521
+     ciphersuites. Resolves Mbed-TLS/mbedtls#9367 verifier confirmation check.
