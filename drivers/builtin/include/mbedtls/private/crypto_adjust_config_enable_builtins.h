@@ -245,6 +245,8 @@
     !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256) || \
     defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES_BASIC)
 #define MBEDTLS_PSA_BUILTIN_PAKE 1
+/* The transcript hash and HKDF/HMAC key schedule use the MD layer. */
+#define MBEDTLS_MD_C
 #define MBEDTLS_PSA_BUILTIN_ALG_JPAKE 1
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_BIGNUM_C
@@ -252,6 +254,50 @@
 #define MBEDTLS_ECJPAKE_C
 #endif /* missing accel */
 #endif /* PSA_WANT_ALG_JPAKE */
+
+/* SPAKE2+ (RFC 9383).
+ *
+ * Enable the builtin PAKE dispatch, the low-level math module
+ * (drivers/builtin/spake2p.c) and the EC/bignum/curve prerequisites whenever a
+ * SPAKE2+ algorithm is wanted and not fully accelerated. The CMAC variant also
+ * needs AES-CMAC; the Matter variant is the HMAC profile pinned to P-256. */
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+#if !defined(MBEDTLS_PSA_ACCEL_ALG_SPAKE2P_HMAC) || \
+    !defined(MBEDTLS_PSA_ACCEL_ALG_SPAKE2P_CMAC) || \
+    !defined(MBEDTLS_PSA_ACCEL_ALG_SPAKE2P_MATTER) || \
+    !defined(MBEDTLS_PSA_ACCEL_ECC_SECP_R1_256) || \
+    defined(MBEDTLS_PSA_ECC_ACCEL_INCOMPLETE_KEY_TYPES_BASIC)
+#define MBEDTLS_PSA_BUILTIN_PAKE 1
+#define MBEDTLS_SPAKE2P_C
+#define MBEDTLS_BIGNUM_C
+#define MBEDTLS_ECP_C
+#if defined(PSA_WANT_ECC_SECP_R1_256)
+#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_384)
+#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_521)
+#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
+#endif
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC)
+#define MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_HMAC 1
+#endif
+#if defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+#define MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_MATTER 1
+/* Matter is the HMAC-SHA-256 / P-256 profile. */
+#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
+#endif
+#if defined(PSA_WANT_ALG_SPAKE2P_CMAC)
+#define MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_CMAC 1
+#define MBEDTLS_CMAC_C
+#define MBEDTLS_CIPHER_C
+#define MBEDTLS_AES_C
+#endif
+#endif /* missing accel */
+#endif /* PSA_WANT_ALG_SPAKE2P_* */
 
 /* SPAKE2+ key types.
  *

@@ -115,4 +115,31 @@
 #error "PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_xxx defined, but not all prerequisites"
 #endif
 
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) && \
+    !(defined(PSA_WANT_ALG_HMAC) && \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) && \
+    (defined(PSA_WANT_ECC_SECP_R1_256) || \
+    defined(PSA_WANT_ECC_SECP_R1_384) || \
+    defined(PSA_WANT_ECC_SECP_R1_521)))
+#error "PSA_WANT_ALG_SPAKE2P_HMAC defined, but not all prerequisites"
+#endif
+
+#if defined(PSA_WANT_ALG_SPAKE2P_CMAC) && \
+    !(defined(PSA_WANT_ALG_CMAC) && \
+    defined(PSA_WANT_KEY_TYPE_AES) && \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) && \
+    (defined(PSA_WANT_ECC_SECP_R1_256) || \
+    defined(PSA_WANT_ECC_SECP_R1_384) || \
+    defined(PSA_WANT_ECC_SECP_R1_521)))
+#error "PSA_WANT_ALG_SPAKE2P_CMAC defined, but not all prerequisites"
+#endif
+
+#if defined(PSA_WANT_ALG_SPAKE2P_MATTER) && \
+    !(defined(PSA_WANT_ALG_HMAC) && \
+    defined(PSA_WANT_ALG_SHA_256) && \
+    defined(PSA_WANT_ECC_SECP_R1_256) && \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+#error "PSA_WANT_ALG_SPAKE2P_MATTER defined, but not all prerequisites"
+#endif
+
 #endif /* TF_PSA_CRYPTO_CHECK_CRYPTO_CONFIG_H */

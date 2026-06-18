@@ -145,9 +145,211 @@ static psa_status_t psa_pake_ecjpake_setup(mbedtls_psa_pake_operation_t *operati
 }
 #endif
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
 /* The only two JPAKE user/peer identifiers supported in built-in implementation. */
 static const uint8_t jpake_server_id[] = { 's', 'e', 'r', 'v', 'e', 'r' };
 static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
+#endif
+
+#if defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
+static psa_status_t mbedtls_spake2p_to_psa_error(int ret)
+{
+    /* The SPAKE2+ module returns either a PSA error code (which this repo uses
+     * for the MBEDTLS_ERR_ECP/MPI_* codes, in the range (-0x1000, -0x80]) or a
+     * legacy low-level/high-level code that still needs translating. */
+    if (ret > -0x1000 && ret <= -0x80) {
+        return (psa_status_t) ret;
+    }
+    switch (ret) {
+        case MBEDTLS_ERR_ECP_INVALID_KEY:
+            /* An invalid point: an off-curve peer key share, or an invalid L
+             * in the Verifier's registration record. The PSA PAKE spec
+             * mandates PSA_ERROR_INVALID_ARGUMENT when the validation of a
+             * key share fails. */
+            return PSA_ERROR_INVALID_ARGUMENT;
+        case MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE:
+            return PSA_ERROR_NOT_SUPPORTED;
+        default:
+            return PSA_ERROR_GENERIC_ERROR;
+    }
+}
+
+/* Replace a Verifier's key pair (w0 || w1) password with the registration
+ * record (w0 || L), computing L = w1*G. The server side of the protocol
+ * only ever needs L, so downstream code sees a single password format per
+ * role. */
+static psa_status_t psa_pake_spake2p_keypair_to_record(
+    mbedtls_psa_pake_operation_t *operation,
+    mbedtls_ecp_group_id curve, size_t plen)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_point L;
+    mbedtls_mpi w1;
+    uint8_t *record = NULL;
+    const size_t point_len = 2 * plen + 1;
+    size_t olen = 0;
+
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_ecp_point_init(&L);
+    mbedtls_mpi_init(&w1);
+
+    MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, curve));
+    MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&w1, operation->password + plen,
+                                            plen));
+    /* w1 is a scalar mod n (RFC 9383 Section 3.2). Reduce so the scalar
+     * multiplication is well-defined even for an out-of-range imported
+     * value, as mbedtls_spake2p_setup() does for the client. */
+    MBEDTLS_MPI_CHK(mbedtls_mpi_mod_mpi(&w1, &w1, &grp.N));
+    MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &L, &w1, &grp.G,
+                                    mbedtls_psa_get_random,
+                                    MBEDTLS_PSA_RANDOM_STATE));
+
+    record = mbedtls_calloc(1, plen + point_len);
+    if (record == NULL) {
+        ret = MBEDTLS_ERR_MPI_ALLOC_FAILED;
+        goto cleanup;
+    }
+    memcpy(record, operation->password, plen);
+    MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &L,
+                                                   MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                                   &olen, record + plen,
+                                                   point_len));
+
+    mbedtls_zeroize_and_free(operation->password, operation->password_len);
+    operation->password = record;
+    operation->password_len = plen + point_len;
+    record = NULL;
+
+cleanup:
+    mbedtls_free(record);
+    mbedtls_mpi_free(&w1);
+    mbedtls_ecp_point_free(&L);
+    mbedtls_ecp_group_free(&grp);
+    if (ret != 0) {
+        return mbedtls_spake2p_to_psa_error(ret);
+    }
+    return PSA_SUCCESS;
+}
+
+/*
+ * Map the PSA cipher suite + collected inputs to the SPAKE2+ ciphersuite and
+ * set up the built-in operation. The role is derived from the length of the
+ * password-derived key material: w0 || w1 (key pair / Prover / client) is
+ * 2 * plen bytes, while w0 || L (public key / Verifier / server) is
+ * plen + (2 * plen + 1) bytes. A key pair is also valid for the Verifier:
+ * when psa_pake_set_role() selected the server role, the registration record
+ * is derived from it first.
+ */
+static psa_status_t psa_pake_spake2p_setup(
+    mbedtls_psa_pake_operation_t *operation,
+    const psa_pake_cipher_suite_t *cipher_suite,
+    psa_pake_role_t psa_role,
+    const uint8_t *user, size_t user_len,
+    const uint8_t *peer, size_t peer_len,
+    const uint8_t *context, size_t context_len)
+{
+    /* The PSA PAKE spec makes psa_pake_set_role() mandatory for SPAKE2+:
+     * do not infer the role from the key material. */
+    if (psa_role == PSA_PAKE_ROLE_NONE) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    int ret;
+    psa_status_t status;
+    psa_algorithm_t alg = cipher_suite->algorithm;
+    mbedtls_spake2p_role role;
+    mbedtls_spake2p_mac_type mac;
+    mbedtls_md_type_t hash;
+    mbedtls_ecp_group_id curve;
+    size_t plen;
+
+    if (cipher_suite->type != PSA_PAKE_PRIMITIVE_TYPE_ECC ||
+        cipher_suite->family != PSA_ECC_FAMILY_SECP_R1) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    curve = mbedtls_ecc_group_from_psa(PSA_ECC_FAMILY_SECP_R1, cipher_suite->bits);
+    if (curve == MBEDTLS_ECP_DP_NONE) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_CMAC)
+    if (PSA_ALG_IS_SPAKE2P_CMAC(alg)) {
+        mac = MBEDTLS_SPAKE2P_MAC_CMAC;
+        hash = mbedtls_md_type_from_psa_alg(PSA_ALG_GET_HASH(alg));
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_CMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_MATTER)
+    if (alg == PSA_ALG_SPAKE2P_MATTER) {
+        /* Matter is the HMAC-SHA-256 profile pinned to P-256. */
+        if (cipher_suite->bits != 256) {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+        mac = MBEDTLS_SPAKE2P_MAC_HMAC;
+        hash = MBEDTLS_MD_SHA256;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_MATTER */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_HMAC)
+    if (PSA_ALG_IS_SPAKE2P_HMAC(alg)) {
+        mac = MBEDTLS_SPAKE2P_MAC_HMAC;
+        hash = mbedtls_md_type_from_psa_alg(PSA_ALG_GET_HASH(alg));
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_HMAC */
+    {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    plen = (cipher_suite->bits + 7) / 8;
+
+    if (psa_role == PSA_PAKE_ROLE_SERVER &&
+        operation->password_len == 2 * plen) {
+        /* Verifier holding a key pair: derive the registration record. */
+        status = psa_pake_spake2p_keypair_to_record(operation, curve, plen);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+    }
+
+    if (operation->password_len == 2 * plen) {
+        role = MBEDTLS_SPAKE2P_CLIENT;
+    } else if (operation->password_len == plen + (2 * plen + 1)) {
+        role = MBEDTLS_SPAKE2P_SERVER;
+    } else {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    mbedtls_spake2p_init(&operation->ctx.spake2p);
+
+    ret = mbedtls_spake2p_setup(&operation->ctx.spake2p, role, hash, mac, curve,
+                                operation->password, operation->password_len);
+    if (ret != 0) {
+        return mbedtls_spake2p_to_psa_error(ret);
+    }
+
+    /* The SPAKE2+ context has made its own copy of the key material: do not
+     * keep a second live copy of the secrets for the operation's lifetime. */
+    mbedtls_zeroize_and_free(operation->password, operation->password_len);
+    operation->password = NULL;
+    operation->password_len = 0;
+
+    ret = mbedtls_spake2p_set_user(&operation->ctx.spake2p, user, user_len);
+    if (ret != 0) {
+        return mbedtls_spake2p_to_psa_error(ret);
+    }
+    ret = mbedtls_spake2p_set_peer(&operation->ctx.spake2p, peer, peer_len);
+    if (ret != 0) {
+        return mbedtls_spake2p_to_psa_error(ret);
+    }
+    ret = mbedtls_spake2p_set_context(&operation->ctx.spake2p,
+                                      context, context_len);
+    if (ret != 0) {
+        return mbedtls_spake2p_to_psa_error(ret);
+    }
+
+    return PSA_SUCCESS;
+}
+#endif /* MBEDTLS_PSA_BUILTIN_SPAKE2P */
 
 psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
                                     const psa_crypto_driver_pake_inputs_t *inputs)
@@ -163,13 +365,21 @@ psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
         return status;
     }
 
+    /* The identities are optional for SPAKE2+ (a zero-length string is used
+     * when one is absent): treat "not set" (PSA_ERROR_BAD_STATE) as empty.
+     * J-PAKE requires both identities, which the core enforces before
+     * calling this entry point. */
     status = psa_crypto_driver_pake_get_user_len(inputs, &user_len);
-    if (status != PSA_SUCCESS) {
+    if (status == PSA_ERROR_BAD_STATE) {
+        user_len = 0;
+    } else if (status != PSA_SUCCESS) {
         return status;
     }
 
     status = psa_crypto_driver_pake_get_peer_len(inputs, &peer_len);
-    if (status != PSA_SUCCESS) {
+    if (status == PSA_ERROR_BAD_STATE) {
+        peer_len = 0;
+    } else if (status != PSA_SUCCESS) {
         return status;
     }
 
@@ -184,16 +394,20 @@ psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
         goto error;
     }
 
-    user = mbedtls_calloc(1, user_len);
-    if (user == NULL) {
-        status = PSA_ERROR_INSUFFICIENT_MEMORY;
-        goto error;
+    if (user_len != 0) {
+        user = mbedtls_calloc(1, user_len);
+        if (user == NULL) {
+            status = PSA_ERROR_INSUFFICIENT_MEMORY;
+            goto error;
+        }
     }
 
-    peer = mbedtls_calloc(1, peer_len);
-    if (peer == NULL) {
-        status = PSA_ERROR_INSUFFICIENT_MEMORY;
-        goto error;
+    if (peer_len != 0) {
+        peer = mbedtls_calloc(1, peer_len);
+        if (peer == NULL) {
+            status = PSA_ERROR_INSUFFICIENT_MEMORY;
+            goto error;
+        }
     }
 
     status = psa_crypto_driver_pake_get_password(inputs, operation->password,
@@ -202,16 +416,20 @@ psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
         goto error;
     }
 
-    status = psa_crypto_driver_pake_get_user(inputs, user,
-                                             user_len, &actual_user_len);
-    if (status != PSA_SUCCESS) {
-        goto error;
+    if (user_len != 0) {
+        status = psa_crypto_driver_pake_get_user(inputs, user,
+                                                 user_len, &actual_user_len);
+        if (status != PSA_SUCCESS) {
+            goto error;
+        }
     }
 
-    status = psa_crypto_driver_pake_get_peer(inputs, peer,
-                                             peer_len, &actual_peer_len);
-    if (status != PSA_SUCCESS) {
-        goto error;
+    if (peer_len != 0) {
+        status = psa_crypto_driver_pake_get_peer(inputs, peer,
+                                                 peer_len, &actual_peer_len);
+        if (status != PSA_SUCCESS) {
+            goto error;
+        }
     }
 
     operation->password_len = actual_password_len;
@@ -258,12 +476,57 @@ psa_status_t mbedtls_psa_pake_setup(mbedtls_psa_pake_operation_t *operation,
         mbedtls_free(user); mbedtls_free(peer);
 
         return PSA_SUCCESS;
-    } else
-#else
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_JPAKE */
+#if defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(cipher_suite.algorithm)) {
+        uint8_t *context = NULL;
+        size_t context_len = 0, actual_context_len = 0;
+        psa_pake_role_t role = PSA_PAKE_ROLE_NONE;
+
+        status = psa_crypto_driver_pake_get_role(inputs, &role);
+        if (status != PSA_SUCCESS) {
+            goto error;
+        }
+
+        status = psa_crypto_driver_pake_get_context_len(inputs, &context_len);
+        if (status != PSA_SUCCESS) {
+            goto error;
+        }
+        if (context_len != 0) {
+            context = mbedtls_calloc(1, context_len);
+            if (context == NULL) {
+                status = PSA_ERROR_INSUFFICIENT_MEMORY;
+                goto error;
+            }
+            status = psa_crypto_driver_pake_get_context(inputs, context,
+                                                        context_len,
+                                                        &actual_context_len);
+            if (status != PSA_SUCCESS) {
+                mbedtls_free(context);
+                goto error;
+            }
+        }
+
+        status = psa_pake_spake2p_setup(operation, &cipher_suite, role,
+                                        user, actual_user_len,
+                                        peer, actual_peer_len,
+                                        context, actual_context_len);
+        mbedtls_free(context);
+        if (status != PSA_SUCCESS) {
+            goto error;
+        }
+
+        mbedtls_free(user); mbedtls_free(peer);
+
+        return PSA_SUCCESS;
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_SPAKE2P */
+#if !defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE) && !defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
     (void) operation;
     (void) inputs;
 #endif
-    { status = PSA_ERROR_NOT_SUPPORTED; }
+    status = PSA_ERROR_NOT_SUPPORTED;
 
 error:
     mbedtls_free(user); mbedtls_free(peer);
@@ -284,10 +547,10 @@ static psa_status_t mbedtls_psa_pake_output_internal(
     size_t *output_length)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t length;
     (void) step; // Unused parameter
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
+    size_t length;
     /*
      * The PSA CRYPTO PAKE and Mbed TLS JPAKE API have a different
      * handling of output sequencing.
@@ -375,14 +638,30 @@ static psa_status_t mbedtls_psa_pake_output_internal(
         }
 
         return PSA_SUCCESS;
-    } else
-#else
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_JPAKE */
+#if defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        if (step == PSA_SPAKE2P_STEP_KEY_SHARE) {
+            ret = mbedtls_spake2p_write_key_share(&operation->ctx.spake2p,
+                                                  output, output_size,
+                                                  output_length,
+                                                  mbedtls_psa_get_random,
+                                                  MBEDTLS_PSA_RANDOM_STATE);
+        } else {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+        if (ret != 0) {
+            return mbedtls_spake2p_to_psa_error(ret);
+        }
+        return PSA_SUCCESS;
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_SPAKE2P */
     (void) step;
     (void) output;
     (void) output_size;
     (void) output_length;
-#endif
-    { return PSA_ERROR_NOT_SUPPORTED; }
+    return PSA_ERROR_NOT_SUPPORTED;
 }
 
 psa_status_t mbedtls_psa_pake_output(mbedtls_psa_pake_operation_t *operation,
@@ -555,6 +834,11 @@ psa_status_t mbedtls_psa_pake_abort(mbedtls_psa_pake_operation_t *operation)
         operation->buffer_length = 0;
         operation->buffer_offset = 0;
         mbedtls_ecjpake_free(&operation->ctx.jpake);
+    }
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        mbedtls_spake2p_free(&operation->ctx.spake2p);
     }
 #endif
 

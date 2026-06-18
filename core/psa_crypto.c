@@ -9070,6 +9070,44 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     return PSA_SUCCESS;
 }
 
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+psa_status_t psa_crypto_driver_pake_get_context_len(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    size_t *context_len)
+{
+    *context_len = inputs->context_len;
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_crypto_driver_pake_get_context(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    uint8_t *context, size_t context_size, size_t *context_len)
+{
+    if (context_size < inputs->context_len) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    if (inputs->context_len != 0) {
+        memcpy(context, inputs->context, inputs->context_len);
+    }
+    *context_len = inputs->context_len;
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_crypto_driver_pake_get_role(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    psa_pake_role_t *role)
+{
+    *role = inputs->role;
+
+    return PSA_SUCCESS;
+}
+#endif /* PSA_WANT_ALG_SPAKE2P_* */
+
 static psa_status_t psa_pake_set_password_key(
     psa_pake_operation_t *operation,
     mbedtls_svc_key_id_t password)
@@ -9093,6 +9131,20 @@ static psa_status_t psa_pake_set_password_key(
 
     type = psa_get_key_type(&slot->attr);
 
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* The only key types compatible with SPAKE2+ are SPAKE2+ keys, and
+         * the key's curve must be the one from the cipher suite. */
+        if (!PSA_KEY_TYPE_IS_SPAKE2P(type) ||
+            PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(type) !=
+            operation->data.inputs.cipher_suite.family ||
+            psa_get_key_bits(&slot->attr) !=
+            operation->data.inputs.cipher_suite.bits) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     if (type != PSA_KEY_TYPE_PASSWORD &&
         type != PSA_KEY_TYPE_PASSWORD_HASH) {
         status = PSA_ERROR_INVALID_ARGUMENT;
@@ -9154,6 +9206,27 @@ psa_status_t psa_pake_setup(
         computation_stage->step = PSA_PAKE_STEP_KEY_SHARE;
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        psa_spake2p_computation_stage_t *computation_stage =
+            &operation->computation_stage.spake2p;
+
+        /* Only PSA_PAKE_CONFIRMED_KEY is implemented for SPAKE2+:
+         * psa_pake_get_shared_key() always requires the key-confirmation
+         * exchange to have completed. */
+        if (cipher_suite->key_confirmation == PSA_PAKE_UNCONFIRMED_KEY) {
+            status = PSA_ERROR_NOT_SUPPORTED;
+            goto exit;
+        }
+        if (cipher_suite->key_confirmation != PSA_PAKE_CONFIRMED_KEY) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+
+        memset(computation_stage, 0, sizeof(*computation_stage));
+        computation_stage->round = PSA_SPAKE2P_KEY_SHARE;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
@@ -9269,6 +9342,25 @@ psa_status_t psa_pake_set_role(
 #if defined(PSA_WANT_ALG_JPAKE)
     if (PSA_ALG_IS_JPAKE(operation->alg)) {
         if (role == PSA_PAKE_ROLE_NONE) {
+            return PSA_SUCCESS;
+        }
+        status = PSA_ERROR_INVALID_ARGUMENT;
+    } else
+#endif
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* The role must be consistent with the password key type set at
+         * psa_pake_setup(): the Prover (client) holds a key pair (w0||w1);
+         * the Verifier (server) holds either the registration record, i.e.
+         * a public key (w0||L), or a key pair from which the record can be
+         * derived. A public key is verification-only, so it cannot be used
+         * for the client role. */
+        psa_key_type_t key_type =
+            psa_get_key_type(&operation->data.inputs.attributes);
+        int is_public = PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type);
+        if ((role == PSA_PAKE_ROLE_CLIENT && !is_public) ||
+            role == PSA_PAKE_ROLE_SERVER) {
+            operation->data.inputs.role = role;
             return PSA_SUCCESS;
         }
         status = PSA_ERROR_INVALID_ARGUMENT;
@@ -9394,6 +9486,9 @@ static psa_status_t psa_pake_complete_inputs(
         return PSA_ERROR_BAD_STATE;
     }
 
+    /* J-PAKE requires both identities. For SPAKE2+ the identities are
+     * optional: an identity that has not been provided is a zero-length
+     * string in the protocol (RFC 9383 Section 3.3). */
     if (PSA_ALG_IS_JPAKE(operation->alg)) {
         if (inputs.user_len == 0 || inputs.peer_len == 0) {
             return PSA_ERROR_BAD_STATE;
@@ -9412,15 +9507,14 @@ static psa_status_t psa_pake_complete_inputs(
     mbedtls_free(inputs.user);
     mbedtls_free(inputs.peer);
 
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    /* The driver has made its own copy of the context. */
+    mbedtls_free(inputs.context);
+#endif
+
     if (status == PSA_SUCCESS) {
-#if defined(PSA_WANT_ALG_JPAKE)
-        if (PSA_ALG_IS_JPAKE(operation->alg)) {
-            operation->stage = PSA_PAKE_OPERATION_STAGE_COMPUTATION;
-        } else
-#endif /* PSA_WANT_ALG_JPAKE */
-        {
-            status = PSA_ERROR_NOT_SUPPORTED;
-        }
+        /* The algorithm was already validated in psa_pake_setup(). */
+        operation->stage = PSA_PAKE_OPERATION_STAGE_COMPUTATION;
     }
     return status;
 }
@@ -9502,6 +9596,67 @@ static psa_status_t psa_jpake_epilogue(
 
 #endif /* PSA_WANT_ALG_JPAKE */
 
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+/* Check that the requested step is valid for the current SPAKE2+ exchange.
+ * is_output is 1 for psa_pake_output(), 0 for psa_pake_input(). Each exchange
+ * (key share, then confirmation) transfers exactly one message in each
+ * direction, in either order, so a step is rejected if it does not match the
+ * current exchange or if that direction has already been done this exchange. */
+static psa_status_t psa_spake2p_prologue(
+    psa_pake_operation_t *operation,
+    psa_pake_step_t step,
+    int is_output)
+{
+    psa_spake2p_computation_stage_t *stage =
+        &operation->computation_stage.spake2p;
+
+    if (stage->round == PSA_SPAKE2P_KEY_SHARE) {
+        if (step != PSA_PAKE_STEP_KEY_SHARE) {
+            return PSA_ERROR_BAD_STATE;
+        }
+    } else if (stage->round == PSA_SPAKE2P_CONFIRM) {
+        if (step != PSA_PAKE_STEP_CONFIRM) {
+            return PSA_ERROR_BAD_STATE;
+        }
+    } else {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    /* Reject a second call in the same direction within this exchange. */
+    if (is_output ? (stage->outputs != 0) : (stage->inputs != 0)) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    return PSA_SUCCESS;
+}
+
+/* Account for a completed input/output and advance the exchange once both
+ * directions of the current exchange (key share, then confirmation) are done.
+ * SPAKE2+ exchanges one message in each direction per exchange, in either
+ * order. */
+static psa_status_t psa_spake2p_epilogue(
+    psa_pake_operation_t *operation,
+    int is_output)
+{
+    psa_spake2p_computation_stage_t *stage =
+        &operation->computation_stage.spake2p;
+
+    if (is_output) {
+        stage->outputs++;
+    } else {
+        stage->inputs++;
+    }
+
+    if (stage->inputs >= 1 && stage->outputs >= 1) {
+        stage->inputs = 0;
+        stage->outputs = 0;
+        stage->round++;
+    }
+
+    return PSA_SUCCESS;
+}
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
+
 psa_status_t psa_pake_output(
     psa_pake_operation_t *operation,
     psa_pake_step_t step,
@@ -9541,6 +9696,16 @@ psa_status_t psa_pake_output(
             &operation->computation_stage.jpake);
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        status = psa_spake2p_prologue(operation, step, 1);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+        driver_step = (step == PSA_PAKE_STEP_KEY_SHARE) ?
+                      PSA_SPAKE2P_STEP_KEY_SHARE : PSA_SPAKE2P_STEP_CONFIRM;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         (void) step;
         status = PSA_ERROR_NOT_SUPPORTED;
@@ -9564,6 +9729,14 @@ psa_status_t psa_pake_output(
         }
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        status = psa_spake2p_epilogue(operation, 1);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
@@ -9723,6 +9896,11 @@ psa_status_t psa_pake_abort(
         if (operation->data.inputs.peer != NULL) {
             mbedtls_free(operation->data.inputs.peer);
         }
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+        if (operation->data.inputs.context != NULL) {
+            mbedtls_free(operation->data.inputs.context);
+        }
+#endif
     }
     memset(operation, 0, sizeof(psa_pake_operation_t));
 

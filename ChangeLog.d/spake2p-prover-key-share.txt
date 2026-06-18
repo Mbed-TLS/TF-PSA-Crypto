@@ -1,0 +1,7 @@
+Features
+   * Add the SPAKE2+ (RFC 9383) Prover setup and key-share output to the PSA
+     PAKE API: psa_pake_setup() now accepts SPAKE2+ key types for the client
+     (Prover) role with PSA_ALG_SPAKE2P_HMAC, and psa_pake_output() produces
+     the
+     PSA_PAKE_STEP_KEY_SHARE message. Supported on the NIST P-256, P-384 and
+     P-521 curves. Resolves part of #9347 (Prover key share).
