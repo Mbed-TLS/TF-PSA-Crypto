@@ -676,6 +676,52 @@ static int spake2p_exchange_key_shares(psa_pake_operation_t *client,
 exit:
     return ok;
 }
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE) && \
+    defined(PSA_WANT_ALG_HKDF)
+/* SPAKE2+ registration (RFC 9383 Section 3.2): derive a SPAKE2+ key pair
+ * (w0 || w1) from an HKDF-SHA-256 operation seeded with the given IKM, salt and
+ * info. Returns the new key id (with DERIVE | EXPORT usage). Only called from a
+ * test case that depends on the required mechanisms being enabled. */
+static int spake2p_derive_key_pair(mbedtls_svc_key_id_t *key, uint32_t bits,
+                                   const uint8_t *ikm, size_t ikm_len)
+{
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_attributes_t a = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t ia = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t ikm_key = MBEDTLS_SVC_KEY_ID_INIT;
+    static const uint8_t salt[] = { 's', 'a', 'l', 't' };
+    static const uint8_t info[] = { 'S', 'P', 'A', 'K', 'E', '2', '+' };
+    int ok = 0;
+
+    /* The shared secret must be supplied as a key object: that is what unlocks
+     * permission to derive into a key with psa_key_derivation_output_key(). */
+    psa_set_key_usage_flags(&ia, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&ia, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    psa_set_key_type(&ia, PSA_KEY_TYPE_DERIVE);
+    PSA_ASSERT(psa_import_key(&ia, ikm, ikm_len, &ikm_key));
+
+    PSA_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_HKDF(PSA_ALG_SHA_256)));
+    PSA_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SALT,
+                                              salt, sizeof(salt)));
+    PSA_ASSERT(psa_key_derivation_input_key(&op,
+                                            PSA_KEY_DERIVATION_INPUT_SECRET,
+                                            ikm_key));
+    PSA_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_INFO,
+                                              info, sizeof(info)));
+
+    psa_set_key_usage_flags(&a, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&a, PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256));
+    psa_set_key_type(&a, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    psa_set_key_bits(&a, bits);
+
+    PSA_ASSERT(psa_key_derivation_output_key(&a, &op, key));
+    ok = 1;
+exit:
+    psa_key_derivation_abort(&op);
+    psa_destroy_key(ikm_key);
+    return ok;
+}
+#endif /* PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE && PSA_WANT_ALG_HKDF */
 #endif /* PSA_WANT_ALG_SOME_SPAKE2P */
 /* END_HEADER */
 
@@ -1429,6 +1475,85 @@ void spake2p_export_public_key(int alg_arg, int bits_arg,
                PSA_ERROR_BUFFER_TOO_SMALL);
 
 exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE:PSA_WANT_ALG_HKDF:PSA_WANT_ALG_SPAKE2P_HMAC:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_HMAC:PSA_WANT_ECC_SECP_R1_256 */
+void spake2p_registration(data_t *ikm, int bits_arg, data_t *expected_kp)
+{
+    /* SPAKE2+ registration (RFC 9383 Section 3.2, issue #9381): derive a key
+     * pair (w0 || w1) with psa_key_derivation_output_key() and check it against
+     * an independently computed known-answer (w0 = HKDF-draw0 mod n,
+     * w1 = HKDF-draw1 mod n). Re-deriving with the same inputs must give the
+     * same key (determinism). */
+    uint32_t bits = (uint32_t) bits_arg;
+    mbedtls_svc_key_id_t kp1 = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t kp2 = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t kp_buf[64], kp_buf2[64];
+    size_t kp_len = 0, kp_len2 = 0;
+    size_t scalar_len = PSA_BITS_TO_BYTES(bits);
+
+    PSA_INIT();
+
+    TEST_ASSERT(spake2p_derive_key_pair(&kp1, bits, ikm->x, ikm->len) == 1);
+
+    /* The key pair is w0 || w1: two ceil(bits/8)-byte scalars. */
+    PSA_ASSERT(psa_export_key(kp1, kp_buf, sizeof(kp_buf), &kp_len));
+    TEST_EQUAL(kp_len, 2 * scalar_len);
+    TEST_MEMORY_COMPARE(kp_buf, kp_len, expected_kp->x, expected_kp->len);
+
+    /* Determinism: the same inputs must derive the same key pair. */
+    TEST_ASSERT(spake2p_derive_key_pair(&kp2, bits, ikm->x, ikm->len) == 1);
+    PSA_ASSERT(psa_export_key(kp2, kp_buf2, sizeof(kp_buf2), &kp_len2));
+    TEST_MEMORY_COMPARE(kp_buf, kp_len, kp_buf2, kp_len2);
+
+exit:
+    psa_destroy_key(kp1);
+    psa_destroy_key(kp2);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE:PSA_WANT_ALG_HKDF:PSA_WANT_ALG_SPAKE2P_HMAC:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_HMAC */
+void spake2p_registration_unsupported_curve(int family_arg, int bits_arg)
+{
+    /* SPAKE2+ registration only supports the short-Weierstrass secp_r1 curves;
+     * deriving into any other family must be rejected (issue #9381). */
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_attributes_t a = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t ia = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t ikm_key = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    static const uint8_t ikm[] = { 'p', 'a', 's', 's', 'w', 'o', 'r', 'd' };
+    static const uint8_t info[] = { 'S', 'P', 'A', 'K', 'E', '2', '+' };
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&ia, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&ia, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    psa_set_key_type(&ia, PSA_KEY_TYPE_DERIVE);
+    PSA_ASSERT(psa_import_key(&ia, ikm, sizeof(ikm), &ikm_key));
+
+    PSA_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_HKDF(PSA_ALG_SHA_256)));
+    PSA_ASSERT(psa_key_derivation_input_key(&op,
+                                            PSA_KEY_DERIVATION_INPUT_SECRET,
+                                            ikm_key));
+    PSA_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_INFO,
+                                              info, sizeof(info)));
+
+    psa_set_key_usage_flags(&a, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&a, PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256));
+    psa_set_key_type(&a, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR((psa_ecc_family_t) family_arg));
+    psa_set_key_bits(&a, (size_t) bits_arg);
+
+    TEST_EQUAL(psa_key_derivation_output_key(&a, &op, &key),
+               PSA_ERROR_NOT_SUPPORTED);
+
+exit:
+    psa_key_derivation_abort(&op);
+    psa_destroy_key(ikm_key);
     psa_destroy_key(key);
     PSA_DONE();
 }

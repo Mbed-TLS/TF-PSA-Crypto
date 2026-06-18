@@ -521,3 +521,16 @@ spake2p_rounds_wrong_password:PSA_ALG_SPAKE2P_MATTER:256:"bb8e1bbcf3c48f62c08db2
 PSA PAKE: SPAKE2+ get_shared_key before confirmation is a state error HMAC P-256
 depends_on:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256
 spake2p_get_shared_key_before_confirmation:PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256):256:"bb8e1bbcf3c48f62c08db243652ae55d3e5586053fca77102994f23ad95491b37e945f34d78785b8a3ef44d0df5a1a97d6b3b460409a345ca7830387a74b1dba":"bb8e1bbcf3c48f62c08db243652ae55d3e5586053fca77102994f23ad95491b304eb7c9db3d9a9eb1f8adab81b5794c1f13ae3e225efbe91ea487425854c7fc00f00bfedcbd09b2400142d40a14f2064ef31dfaa903b91d1faea7093d835966efd"
+# SPAKE2+ registration (RFC 9383 Section 3.2, issue #9381): derive (w0, w1) from
+# an HKDF-SHA-256 operation (IKM = "password", salt = "salt", info = "SPAKE2+").
+# For each scalar ceil(bits/8)+8 = 40 bytes are drawn and reduced mod n
+# (secp256r1 order). The expected key pair w0 || w1 was computed independently
+# with a reference HKDF/Python implementation.
+SPAKE2+ registration: derive key pair via psa_key_derivation_output_key (P-256 HMAC KAT)
+spake2p_registration:"70617373776f7264":256:"60cf5b7e2d564da2f14a716714cbc04b12c989814ee43f49ef285d3341eaf920dfb0d37ec430b191a3c9478c7de3fd362e362c64cb3335499b7430d5cf713c0f"
+
+PSA PAKE: SPAKE2+ registration rejects unsupported curve SECP_K1
+spake2p_registration_unsupported_curve:PSA_ECC_FAMILY_SECP_K1:256
+
+PSA PAKE: SPAKE2+ registration rejects unsupported curve BRAINPOOL_P_R1
+spake2p_registration_unsupported_curve:PSA_ECC_FAMILY_BRAINPOOL_P_R1:256

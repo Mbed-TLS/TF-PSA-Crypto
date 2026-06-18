@@ -6621,6 +6621,96 @@ static psa_status_t psa_generate_derived_ecc_key_montgomery_helper(
 #endif /* MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_DERIVE */
 #endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE */
 
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE)
+/* SPAKE2+ registration (RFC 9383 Section 3.2): derive the Prover key pair
+ * (w0, w1) from a key-derivation operation. For each scalar, draw
+ * ceil(bits/8) + 8 bytes from the operation, interpret as a big-endian integer
+ * and reduce it modulo the group order n; the extra 8 bytes (64 bits) keep the
+ * modular bias negligible. The derived key material is the canonical key-pair
+ * encoding w0 || w1, each ceil(bits/8) bytes big-endian.
+ *
+ * Allocates *data (the caller must zeroize and free it) and returns its length
+ * in *data_len.
+ */
+static psa_status_t psa_generate_derived_spake2p_key(
+    size_t bits, psa_ecc_family_t family,
+    psa_key_derivation_operation_t *operation,
+    uint8_t **data, size_t *data_len)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    mbedtls_ecp_group grp;
+    mbedtls_mpi k;
+    uint8_t draw[MBEDTLS_ECP_MAX_BYTES + 8];
+    size_t scalar_len = PSA_BITS_TO_BYTES(bits);
+    size_t draw_len = scalar_len + 8;
+    mbedtls_ecp_group_id grp_id;
+
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_mpi_init(&k);
+    *data = NULL;
+    *data_len = 0;
+
+    /* Only the short-Weierstrass secp_r1 curves are supported for SPAKE2+. */
+    if (family != PSA_ECC_FAMILY_SECP_R1) {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto cleanup;
+    }
+    grp_id = mbedtls_ecc_group_from_psa(family, bits);
+    if (grp_id == MBEDTLS_ECP_DP_NONE) {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto cleanup;
+    }
+    MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, grp_id));
+    if (draw_len > sizeof(draw)) {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto cleanup;
+    }
+
+    *data = mbedtls_calloc(1, 2 * scalar_len);
+    if (*data == NULL) {
+        status = PSA_ERROR_INSUFFICIENT_MEMORY;
+        goto cleanup;
+    }
+
+    for (size_t i = 0; i < 2; i++) {
+        status = psa_key_derivation_output_bytes(operation, draw, draw_len);
+        if (status != PSA_SUCCESS) {
+            goto cleanup;
+        }
+        /* w{0,1} = (big-endian draw) mod n. */
+        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&k, draw, draw_len));
+        MBEDTLS_MPI_CHK(mbedtls_mpi_mod_mpi(&k, &k, &grp.N));
+        /* Zero is not a valid SPAKE2+ scalar, and importing w0 == 0 or
+         * w1 == 0 is rejected, so keep the derive path consistent. The
+         * reduction yields 0 with probability about 1/n, so this is not
+         * reachable in practice. */
+        if (mbedtls_mpi_cmp_int(&k, 0) == 0) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto cleanup;
+        }
+        MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&k, *data + i * scalar_len,
+                                                 scalar_len));
+    }
+
+    *data_len = 2 * scalar_len;
+    status = PSA_SUCCESS;
+
+cleanup:
+    if (ret != 0 && ret != MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED) {
+        status = mbedtls_to_psa_error(ret);
+    }
+    if (status != PSA_SUCCESS && *data != NULL) {
+        mbedtls_zeroize_and_free(*data, 2 * scalar_len);
+        *data = NULL;
+    }
+    mbedtls_platform_zeroize(draw, sizeof(draw));
+    mbedtls_mpi_free(&k);
+    mbedtls_ecp_group_free(&grp);
+    return status;
+}
+#endif /* PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
+
 static psa_status_t psa_generate_derived_key_internal(
     psa_key_slot_t *slot,
     size_t bits,
@@ -6655,6 +6745,16 @@ static psa_status_t psa_generate_derived_key_internal(
     } else
 #endif /* defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) ||
           defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_DERIVE) */
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE)
+    if (PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(slot->attr.type)) {
+        status = psa_generate_derived_spake2p_key(
+            bits, PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(slot->attr.type),
+            operation, &data, &bytes);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
     if (key_type_is_raw_bytes(slot->attr.type)) {
         if (bits % 8 != 0) {
             return PSA_ERROR_INVALID_ARGUMENT;
@@ -6673,6 +6773,10 @@ static psa_status_t psa_generate_derived_key_internal(
     }
 
     slot->attr.bits = (psa_key_bits_t) bits;
+
+    /* The serialized key material can be longer than ceil(bits/8) (e.g. a
+     * SPAKE2+ key pair is two scalars, w0 || w1); track the actual length. */
+    storage_size = bytes;
 
     if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
         status = psa_driver_wrapper_get_key_buffer_size(&slot->attr,

@@ -16,11 +16,13 @@
 
 #include "psa/crypto.h"
 
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE)
 
 #include "mbedtls/private/ecp.h"
 
-#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY ||
+          PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 
@@ -98,7 +100,8 @@ int psa_pk_status_to_mbedtls(psa_status_t status);
                           fallback_f)
 
 #endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE)
 /** Convert an ECC curve identifier from the Mbed TLS encoding to PSA.
  *
  * \param grpid         An Mbed TLS elliptic curve identifier
@@ -128,5 +131,6 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
  */
 mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
                                                 size_t bits);
-#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY ||
+          PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
 #endif /* TF_PSA_CRYPTO_PSA_UTIL_INTERNAL_H */
