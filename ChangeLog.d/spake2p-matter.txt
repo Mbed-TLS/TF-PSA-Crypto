@@ -1,0 +1,7 @@
+Features
+   * Support the Matter SPAKE2+ ciphersuite (P256-SHA256-HKDF-HMAC-SHA256)
+     through PSA_ALG_SPAKE2P_MATTER. This is the HMAC-SHA-256 / P-256
+     ciphersuite using the older draft-bar-cfrg-spake2plus-02 key schedule
+     (split-digest Kae = Ka || Ke; the shared secret is Ke and the
+     confirmation keys are HKDF-expanded from Ka) rather than the RFC 9383
+     schedule. Resolves Mbed-TLS/mbedtls#9378.

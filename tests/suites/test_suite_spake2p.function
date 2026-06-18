@@ -42,6 +42,7 @@ void spake2p_prover_key_share_kat(int curve_arg, int hash_arg, int mac_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, client_key->x, client_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_user(&cli, prover_id->x, prover_id->len), 0);
@@ -79,6 +80,7 @@ void spake2p_verifier_key_share_kat(int curve_arg, int hash_arg, int mac_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, server_key->x, server_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_user(&srv, verifier_id->x,
@@ -123,6 +125,7 @@ void spake2p_verifier_transcript_hash_kat(int curve_arg, int hash_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, server_key->x, server_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
     /* For the server, set_user is idVerifier and set_peer is idProver. */
@@ -184,6 +187,7 @@ void spake2p_prover_transcript_hash_kat(int curve_arg, int hash_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, client_key->x, client_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
     /* For the client, set_user is idProver and set_peer is idVerifier. */
@@ -244,6 +248,7 @@ void spake2p_verifier_confirm_kat(int curve_arg, int hash_arg, int mac_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, server_key->x, server_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
     /* For the server, set_user is idVerifier and set_peer is idProver. */
@@ -306,6 +311,7 @@ void spake2p_prover_read_confirm_kat(int curve_arg, int hash_arg, int mac_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, client_key->x, client_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
     /* For the client, set_user is idProver and set_peer is idVerifier. */
@@ -380,6 +386,7 @@ void spake2p_prover_confirm_kat(int curve_arg, int hash_arg, int mac_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, client_key->x, client_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
     /* For the client, set_user is idProver and set_peer is idVerifier. */
@@ -449,6 +456,7 @@ void spake2p_shared_key_kat(int curve_arg, int hash_arg, int mac_arg,
 
     /* Prover (client): set_user is idProver, set_peer is idVerifier. */
     TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, client_key->x, client_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_user(&cli, prover_id->x, prover_id->len), 0);
@@ -460,6 +468,7 @@ void spake2p_shared_key_kat(int curve_arg, int hash_arg, int mac_arg,
 
     /* Verifier (server): set_user is idVerifier, set_peer is idProver. */
     TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER, hash, mac,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      curve, server_key->x, server_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
     TEST_EQUAL(mbedtls_spake2p_set_user(&srv, verifier_id->x,
@@ -512,6 +521,89 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_HMAC */
+void spake2p_matter_kat(data_t *context, data_t *prover_id, data_t *verifier_id,
+                        data_t *client_key, data_t *server_key,
+                        data_t *x, data_t *y,
+                        data_t *exp_shareP, data_t *exp_shareV,
+                        data_t *exp_confirmP, data_t *exp_confirmV,
+                        data_t *exp_shared)
+{
+    /* Known-answer test for the Matter / draft-bar-cfrg-spake2plus-02 key
+     * schedule (split digest Kae = Ka || Ke, confirmation keys HKDF-expanded
+     * from Ka, shared secret = Ke). The ciphersuite is HMAC-SHA-256 / P-256. */
+    mbedtls_spake2p_context cli, srv;
+    unsigned char shareP[MBEDTLS_ECP_MAX_PT_LEN];
+    unsigned char shareV[MBEDTLS_ECP_MAX_PT_LEN];
+    unsigned char shared_cli[MBEDTLS_MD_MAX_SIZE];
+    unsigned char shared_srv[MBEDTLS_MD_MAX_SIZE];
+    unsigned char confirmP[MBEDTLS_MD_MAX_SIZE];
+    unsigned char confirmV[MBEDTLS_MD_MAX_SIZE];
+    size_t lenP, lenV, slen_cli, slen_srv, clenP, clenV;
+    uint32_t rng_cli = 0x00c0ffeeu, rng_srv = 0x0badf00du;
+
+    mbedtls_spake2p_init(&cli);
+    mbedtls_spake2p_init(&srv);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT,
+                                     MBEDTLS_MD_SHA256, MBEDTLS_SPAKE2P_MAC_HMAC,
+                                     MBEDTLS_SPAKE2P_KDF_MATTER,
+                                     MBEDTLS_ECP_DP_SECP256R1,
+                                     client_key->x, client_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_user(&cli, prover_id->x, prover_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_peer(&cli, verifier_id->x,
+                                        verifier_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_write_key_share_with_ephemeral(
+                   &cli, x->x, x->len, shareP, sizeof(shareP), &lenP,
+                   spake2p_kat_rng, &rng_cli), 0);
+    TEST_MEMORY_COMPARE(shareP, lenP, exp_shareP->x, exp_shareP->len);
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER,
+                                     MBEDTLS_MD_SHA256, MBEDTLS_SPAKE2P_MAC_HMAC,
+                                     MBEDTLS_SPAKE2P_KDF_MATTER,
+                                     MBEDTLS_ECP_DP_SECP256R1,
+                                     server_key->x, server_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_user(&srv, verifier_id->x,
+                                        verifier_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_peer(&srv, prover_id->x, prover_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_write_key_share_with_ephemeral(
+                   &srv, y->x, y->len, shareV, sizeof(shareV), &lenV,
+                   spake2p_kat_rng, &rng_srv), 0);
+    TEST_MEMORY_COMPARE(shareV, lenV, exp_shareV->x, exp_shareV->len);
+
+    TEST_EQUAL(mbedtls_spake2p_read_key_share(&cli, shareV, lenV,
+                                              spake2p_kat_rng, &rng_cli), 0);
+    TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, shareP, lenP,
+                                              spake2p_kat_rng, &rng_srv), 0);
+
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&cli, confirmP,
+                                             sizeof(confirmP), &clenP), 0);
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&srv, confirmV,
+                                             sizeof(confirmV), &clenV), 0);
+    TEST_MEMORY_COMPARE(confirmP, clenP, exp_confirmP->x, exp_confirmP->len);
+    TEST_MEMORY_COMPARE(confirmV, clenV, exp_confirmV->x, exp_confirmV->len);
+
+    TEST_EQUAL(mbedtls_spake2p_read_confirm(&cli, confirmV, clenV), 0);
+    TEST_EQUAL(mbedtls_spake2p_read_confirm(&srv, confirmP, clenP), 0);
+
+    /* The Matter shared secret is Ke, the second half of Kae (16 bytes). */
+    TEST_EQUAL(mbedtls_spake2p_get_shared_key(&cli, shared_cli,
+                                              sizeof(shared_cli), &slen_cli), 0);
+    TEST_EQUAL(mbedtls_spake2p_get_shared_key(&srv, shared_srv,
+                                              sizeof(shared_srv), &slen_srv), 0);
+    TEST_MEMORY_COMPARE(shared_cli, slen_cli, exp_shared->x, exp_shared->len);
+    TEST_MEMORY_COMPARE(shared_srv, slen_srv, exp_shared->x, exp_shared->len);
+
+exit:
+    mbedtls_spake2p_free(&cli);
+    mbedtls_spake2p_free(&srv);
+    PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
 void spake2p_read_key_share_invalid(data_t *server_key, data_t *bad_share,
                                     int expected_ret)
@@ -526,6 +618,7 @@ void spake2p_read_key_share_invalid(data_t *server_key, data_t *bad_share,
 
     TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER,
                                      MBEDTLS_MD_SHA256, MBEDTLS_SPAKE2P_MAC_HMAC,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      MBEDTLS_ECP_DP_SECP256R1,
                                      server_key->x, server_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, bad_share->x,
@@ -541,17 +634,19 @@ exit:
 
 /* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
 void spake2p_setup_negative(int curve_arg, int hash_arg, int mac_arg,
-                            data_t *key, int expected_ret)
+                            int kdf_arg, data_t *key, int expected_ret)
 {
     /* mbedtls_spake2p_setup() must reject a bad role, an unsupported curve,
-     * or key material of the wrong length. */
+     * an unsupported ciphersuite combination (e.g. the Matter key schedule
+     * outside P-256/SHA-256), or key material of the wrong length. */
     mbedtls_spake2p_context ctx;
 
     mbedtls_spake2p_init(&ctx);
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&ctx, MBEDTLS_SPAKE2P_CLIENT, hash_arg,
-                                     mac_arg, curve_arg, key->x, key->len),
+                                     mac_arg, kdf_arg,
+                                     curve_arg, key->x, key->len),
                expected_ret);
 
 exit:
@@ -572,7 +667,8 @@ void spake2p_setup_negative_server(int curve_arg, int hash_arg, int mac_arg,
     PSA_INIT();
 
     TEST_EQUAL(mbedtls_spake2p_setup(&ctx, MBEDTLS_SPAKE2P_SERVER, hash_arg,
-                                     mac_arg, curve_arg, key->x, key->len),
+                                     mac_arg, MBEDTLS_SPAKE2P_KDF_RFC9383,
+                                     curve_arg, key->x, key->len),
                expected_ret);
 
 exit:
@@ -596,6 +692,7 @@ void spake2p_prover_share_buffer_too_small(data_t *client_key, data_t *x)
 
     TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT,
                                      MBEDTLS_MD_SHA256, MBEDTLS_SPAKE2P_MAC_HMAC,
+                                     MBEDTLS_SPAKE2P_KDF_RFC9383,
                                      MBEDTLS_ECP_DP_SECP256R1,
                                      client_key->x, client_key->len), 0);
     /* P-256 share is 65 bytes; 64 must not fit. */

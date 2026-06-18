@@ -814,9 +814,8 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
 /** SPAKE2+ algorithm variant used by the Matter specification version 1.2.
  *
- * Partially implemented: operation setup and key-share output are
- * available. The remaining protocol steps (key-share input, key
- * confirmation, shared-key extraction) are not implemented yet.
+ * Implemented for the secp_r1 curves (P-256, P-384 and P-521): operation
+ * setup, key-share exchange, key confirmation and shared-key extraction.
  */
 #define PSA_ALG_SPAKE2P_MATTER                  ((psa_algorithm_t) 0x0a000609)
 

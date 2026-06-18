@@ -1966,13 +1966,14 @@ void spake2p_verifier_confirm_psa_kat(data_t *context,
                                       data_t *x, data_t *y,
                                       data_t *exp_confirmV)
 {
-    /* Reproduce the RFC 9383 P-256 HMAC Verifier confirmation MAC (confirmV)
+    /* Reproduce the Matter / draft-02 Verifier confirmation MAC (confirmV)
      * byte-for-byte through psa_pake_output(PSA_PAKE_STEP_CONFIRM), via
-     * PSA_ALG_SPAKE2P_MATTER (the HMAC-SHA-256 P-256 profile). Both shares are
-     * exchanged with the published ephemerals pinned through the
-     * MBEDTLS_TEST_HOOKS injection seam; the server then outputs confirmV. The
-     * Prover-side confirmation check and shared-key export are out of scope of
-     * this slice. */
+     * PSA_ALG_SPAKE2P_MATTER (the HMAC-SHA-256 / P-256 ciphersuite with the
+     * draft-02 split-digest key schedule). Both shares are exchanged with the
+     * deterministic interop ephemerals pinned through the MBEDTLS_TEST_HOOKS
+     * injection seam; the server then outputs confirmV. The Prover-side
+     * confirmation check and shared-key export are out of scope of this
+     * slice. */
     psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
     psa_pake_operation_t client = psa_pake_operation_init_short();
     psa_pake_operation_t server = psa_pake_operation_init_short();

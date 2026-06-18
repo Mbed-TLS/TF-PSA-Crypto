@@ -66,6 +66,19 @@ typedef enum {
 } mbedtls_spake2p_mac_type;
 
 /**
+ * Key-schedule profile used to turn the transcript hash into the confirmation
+ * and shared keys.
+ *
+ * RFC 9383 (Section 3.4) and the older draft-bar-cfrg-spake2plus-02 schedule
+ * used by Matter / connectedhomeip differ in how K_main is consumed. Both are
+ * supported; the ciphersuite (curve, hash, MAC) is otherwise identical.
+ */
+typedef enum {
+    MBEDTLS_SPAKE2P_KDF_RFC9383 = 0, /**< RFC 9383 Section 3.4 key schedule    */
+    MBEDTLS_SPAKE2P_KDF_MATTER,      /**< Matter / draft-02 split-digest schedule */
+} mbedtls_spake2p_kdf_type;
+
+/**
  * SPAKE2+ context structure.
  *
  * The point and scalar names follow RFC 9383: shareP/shareV are the Prover's
@@ -76,6 +89,7 @@ typedef enum {
 typedef struct mbedtls_spake2p_context {
     mbedtls_md_type_t MBEDTLS_PRIVATE(md_type);           /**< Hash to use            */
     mbedtls_spake2p_mac_type MBEDTLS_PRIVATE(mac_type);   /**< Confirmation MAC       */
+    mbedtls_spake2p_kdf_type MBEDTLS_PRIVATE(kdf_type);   /**< Key-schedule profile   */
     mbedtls_ecp_group MBEDTLS_PRIVATE(grp);               /**< Elliptic curve         */
     mbedtls_spake2p_role MBEDTLS_PRIVATE(role);           /**< Client or server?      */
 
@@ -148,6 +162,10 @@ void mbedtls_spake2p_init(mbedtls_spake2p_context *ctx);
  * \param role      #MBEDTLS_SPAKE2P_CLIENT or #MBEDTLS_SPAKE2P_SERVER.
  * \param hash      The hash function identifier, e.g. #MBEDTLS_MD_SHA256.
  * \param mac       The confirmation MAC primitive.
+ * \param kdf       The key-schedule profile. #MBEDTLS_SPAKE2P_KDF_RFC9383 is
+ *                  the RFC 9383 schedule; #MBEDTLS_SPAKE2P_KDF_MATTER selects
+ *                  the draft-02 split-digest schedule used by Matter (only
+ *                  valid with the HMAC-SHA-256 / P-256 ciphersuite).
  * \param curve     The elliptic curve identifier,
  *                  e.g. #MBEDTLS_ECP_DP_SECP256R1.
  * \param key       The password-derived key material (see above).
@@ -160,6 +178,7 @@ int mbedtls_spake2p_setup(mbedtls_spake2p_context *ctx,
                           mbedtls_spake2p_role role,
                           mbedtls_md_type_t hash,
                           mbedtls_spake2p_mac_type mac,
+                          mbedtls_spake2p_kdf_type kdf,
                           mbedtls_ecp_group_id curve,
                           const unsigned char *key,
                           size_t key_len);

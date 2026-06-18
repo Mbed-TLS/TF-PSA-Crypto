@@ -260,6 +260,7 @@ static psa_status_t psa_pake_spake2p_setup(
     psa_algorithm_t alg = cipher_suite->algorithm;
     mbedtls_spake2p_role role;
     mbedtls_spake2p_mac_type mac;
+    mbedtls_spake2p_kdf_type kdf = MBEDTLS_SPAKE2P_KDF_RFC9383;
     mbedtls_md_type_t hash;
     mbedtls_ecp_group_id curve;
     size_t plen;
@@ -282,12 +283,14 @@ static psa_status_t psa_pake_spake2p_setup(
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_CMAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_MATTER)
     if (alg == PSA_ALG_SPAKE2P_MATTER) {
-        /* Matter is the HMAC-SHA-256 profile pinned to P-256. */
+        /* Matter is the HMAC-SHA-256 / P-256 ciphersuite, but with the older
+         * draft-02 key schedule (split digest), not the RFC 9383 one. */
         if (cipher_suite->bits != 256) {
             return PSA_ERROR_NOT_SUPPORTED;
         }
         mac = MBEDTLS_SPAKE2P_MAC_HMAC;
         hash = MBEDTLS_MD_SHA256;
+        kdf = MBEDTLS_SPAKE2P_KDF_MATTER;
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_MATTER */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_HMAC)
@@ -321,7 +324,8 @@ static psa_status_t psa_pake_spake2p_setup(
 
     mbedtls_spake2p_init(&operation->ctx.spake2p);
 
-    ret = mbedtls_spake2p_setup(&operation->ctx.spake2p, role, hash, mac, curve,
+    ret = mbedtls_spake2p_setup(&operation->ctx.spake2p, role, hash, mac, kdf,
+                                curve,
                                 operation->password, operation->password_len);
     if (ret != 0) {
         return mbedtls_spake2p_to_psa_error(ret);

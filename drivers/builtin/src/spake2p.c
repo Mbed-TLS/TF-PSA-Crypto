@@ -238,6 +238,7 @@ int mbedtls_spake2p_setup(mbedtls_spake2p_context *ctx,
                           mbedtls_spake2p_role role,
                           mbedtls_md_type_t hash,
                           mbedtls_spake2p_mac_type mac,
+                          mbedtls_spake2p_kdf_type kdf,
                           mbedtls_ecp_group_id curve,
                           const unsigned char *key,
                           size_t key_len)
@@ -251,6 +252,23 @@ int mbedtls_spake2p_setup(mbedtls_spake2p_context *ctx,
         return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
     }
 
+    if (kdf != MBEDTLS_SPAKE2P_KDF_RFC9383 &&
+        kdf != MBEDTLS_SPAKE2P_KDF_MATTER) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    /* The Matter (draft-02) key schedule is only defined for the HMAC profile
+     * (it splits the hash output and HMACs the confirmation values). */
+    if (kdf == MBEDTLS_SPAKE2P_KDF_MATTER && mac != MBEDTLS_SPAKE2P_MAC_HMAC) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    /* Matter pins its ciphersuite to P256-SHA256-HKDF-HMAC-SHA256; the
+     * draft-02 schedule combined with any other hash or curve is defined by
+     * no specification. */
+    if (kdf == MBEDTLS_SPAKE2P_KDF_MATTER &&
+        (hash != MBEDTLS_MD_SHA256 || curve != MBEDTLS_ECP_DP_SECP256R1)) {
+        return MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
+    }
+
     md_info = mbedtls_md_info_from_type(hash);
     if (md_info == NULL) {
         return MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE;
@@ -259,6 +277,7 @@ int mbedtls_spake2p_setup(mbedtls_spake2p_context *ctx,
     ctx->role = role;
     ctx->md_type = hash;
     ctx->mac_type = mac;
+    ctx->kdf_type = kdf;
     ctx->hash_len = mbedtls_md_get_size(md_info);
     /* The KDF (HKDF) and K_shared always use the ciphersuite hash; only the
      * confirmation MAC and its key length depend on the MAC primitive
@@ -281,6 +300,15 @@ int mbedtls_spake2p_setup(mbedtls_spake2p_context *ctx,
 #endif
         default:
             return MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
+    }
+
+    /* Matter / draft-02 splits the transcript digest Kae into Ka || Ke (two
+     * equal halves). The confirmation keys are HKDF-expanded from Ka and so
+     * are half the hash length each; the shared secret is Ke, the other half.
+     * The confirmation MAC stays the full HMAC-SHA-256 tag. */
+    if (kdf == MBEDTLS_SPAKE2P_KDF_MATTER) {
+        ctx->conf_key_len = ctx->hash_len / 2;
+        ctx->shared_key_len = ctx->hash_len / 2;
     }
 
     if ((ret = spake2p_get_mn(curve, &m_const, &n_const, &clen)) != 0) {
@@ -567,22 +595,38 @@ static int spake2p_derive_keys(mbedtls_spake2p_context *ctx,
     MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&ctx->w0, w0_buf, plen));
     MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, w0_buf, plen));
 
-    /* K_main = Hash(TT) */
+    /* K_main = Hash(TT) (Kae in the Matter / draft-02 naming). */
     MBEDTLS_MPI_CHK(mbedtls_md_finish(&md_ctx, k_main));
 
-    /* K_confirmP || K_confirmV = HKDF(nil, K_main, "ConfirmationKeys") */
-    MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
-                                 k_main, ctx->hash_len,
-                                 "ConfirmationKeys", 16,
-                                 conf, 2 * ctx->conf_key_len));
-    memcpy(ctx->K_confirmP, conf, ctx->conf_key_len);
-    memcpy(ctx->K_confirmV, conf + ctx->conf_key_len, ctx->conf_key_len);
+    if (ctx->kdf_type == MBEDTLS_SPAKE2P_KDF_MATTER) {
+        /* Matter / draft-bar-cfrg-spake2plus-02 key schedule:
+         *   Ka = Kae[0 .. hash_len/2 - 1], Ke = Kae[hash_len/2 .. hash_len - 1]
+         *   Kca || Kcb = HKDF(nil, Ka, "ConfirmationKeys") (each hash_len/2)
+         *   K_shared   = Ke
+         * Kca maps to K_confirmP, Kcb to K_confirmV. */
+        MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
+                                     k_main, ctx->hash_len / 2,
+                                     "ConfirmationKeys", 16,
+                                     conf, 2 * ctx->conf_key_len));
+        memcpy(ctx->K_confirmP, conf, ctx->conf_key_len);
+        memcpy(ctx->K_confirmV, conf + ctx->conf_key_len, ctx->conf_key_len);
 
-    /* K_shared = HKDF(nil, K_main, "SharedKey") */
-    MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
-                                 k_main, ctx->hash_len,
-                                 "SharedKey", 9,
-                                 ctx->K_shared, ctx->shared_key_len));
+        memcpy(ctx->K_shared, k_main + ctx->hash_len / 2, ctx->shared_key_len);
+    } else {
+        /* K_confirmP || K_confirmV = HKDF(nil, K_main, "ConfirmationKeys") */
+        MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
+                                     k_main, ctx->hash_len,
+                                     "ConfirmationKeys", 16,
+                                     conf, 2 * ctx->conf_key_len));
+        memcpy(ctx->K_confirmP, conf, ctx->conf_key_len);
+        memcpy(ctx->K_confirmV, conf + ctx->conf_key_len, ctx->conf_key_len);
+
+        /* K_shared = HKDF(nil, K_main, "SharedKey") */
+        MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
+                                     k_main, ctx->hash_len,
+                                     "SharedKey", 9,
+                                     ctx->K_shared, ctx->shared_key_len));
+    }
 
     ctx->keys_ready = 1;
     ret = 0;
