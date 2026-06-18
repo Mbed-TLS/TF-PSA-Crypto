@@ -1,0 +1,8 @@
+Features
+   * Add the SPAKE2+ (RFC 9383) prover transcript hash to the PSA PAKE API:
+     a CLIENT-role operation now accumulates the transcript TT (RFC 9383
+     Section 3.3) over the fields derivable from the exchanged shares (Context,
+     idProver, idVerifier, M, N, shareP, shareV) across all prover-side calls,
+     and psa_pake_input() rejects an out-of-order PSA_PAKE_STEP_KEY_SHARE on
+     the
+     prover side with PSA_ERROR_BAD_STATE. Resolves Mbed-TLS/mbedtls#9359.

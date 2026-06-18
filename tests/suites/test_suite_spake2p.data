@@ -74,6 +74,22 @@ SPAKE2+ Verifier transcript-prefix hash KAT P-256 HMAC-SHA256 (RFC 9383 Appendix
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256
 spake2p_verifier_transcript_hash_kat:MBEDTLS_ECP_DP_SECP256R1:MBEDTLS_MD_SHA256:MBEDTLS_SPAKE2P_MAC_HMAC:"5350414b45322b2d503235362d5348413235362d484b44462d5348413235362d484d41432d534841323536205465737420566563746f7273":"636c69656e74":"736572766572":"bb8e1bbcf3c48f62c08db243652ae55d3e5586053fca77102994f23ad95491b304eb7c9db3d9a9eb1f8adab81b5794c1f13ae3e225efbe91ea487425854c7fc00f00bfedcbd09b2400142d40a14f2064ef31dfaa903b91d1faea7093d835966efd":"717a72348a182085109c8d3917d6c43d59b224dc6a7fc4f0483232fa6516d8b3":"04ef3bd051bf78a2234ec0df197f7828060fe9856503579bb1733009042c15c0c1de127727f418b5966afadfdd95a6e4591d171056b333dab97a79c7193e341727":"1e2d1d0b0caf8e388cfd9f828de8450e670111dcc971782adbbff684a1e3ee92"
 
+# SPAKE2+ Prover transcript-hash known-answer test (issue #9359).
+#
+# After the prover (client) writes its own share with the fixed RFC 9383
+# Appendix C ephemeral x and reads the verifier's share shareV, the
+# share-derivable prefix of the transcript TT (RFC 9383 Section 3.3:
+# Context, idProver, idVerifier, M, N, shareP, shareV, each length-prefixed) is
+# hashed. The client and server compute the SAME TT, so the expected value is
+# identical to the Verifier transcript KAT above (RFC 9383 Appendix C P-256).
+#
+# Arguments: curve, hash, mac, context, idProver, idVerifier, client key
+# (w0||w1), x, peer shareV, expected Hash(transcript prefix).
+
+SPAKE2+ Prover transcript-prefix hash KAT P-256 HMAC-SHA256 (RFC 9383 Appendix C)
+depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256
+spake2p_prover_transcript_hash_kat:MBEDTLS_ECP_DP_SECP256R1:MBEDTLS_MD_SHA256:MBEDTLS_SPAKE2P_MAC_HMAC:"5350414b45322b2d503235362d5348413235362d484b44462d5348413235362d484d41432d534841323536205465737420566563746f7273":"636c69656e74":"736572766572":"bb8e1bbcf3c48f62c08db243652ae55d3e5586053fca77102994f23ad95491b37e945f34d78785b8a3ef44d0df5a1a97d6b3b460409a345ca7830387a74b1dba":"d1232c8e8693d02368976c174e2088851b8365d0d79a9eee709c6a05a2fad539":"04c0f65da0d11927bdf5d560c69e1d7d939a05b0e88291887d679fcadea75810fb5cc1ca7494db39e82ff2f50665255d76173e09986ab46742c798a9a68437b048":"1e2d1d0b0caf8e388cfd9f828de8450e670111dcc971782adbbff684a1e3ee92"
+
 # Verifier confirmation MAC (confirmV) known-answer tests (issue #9352).
 # Args: curve, hash, mac, context, idProver, idVerifier, server key
 # (w0||L), y, prover share shareP, expected confirmV. Every row is an
