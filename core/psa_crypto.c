@@ -725,15 +725,17 @@ psa_status_t psa_import_key_into_slot(
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
 
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
-        if (PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(type)) {
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC) || \
+        defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
+        if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
             return mbedtls_psa_spake2p_import_key(attributes,
                                                   data, data_length,
                                                   key_buffer, key_buffer_size,
                                                   key_buffer_length,
                                                   bits);
         }
-#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
+#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC) ||
+        * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
     }
 
     return PSA_ERROR_NOT_SUPPORTED;

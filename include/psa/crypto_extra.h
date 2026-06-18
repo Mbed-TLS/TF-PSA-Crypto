@@ -638,9 +638,17 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 #define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE          ((psa_key_type_t) 0x7400)
 #define PSA_KEY_TYPE_SPAKE2P_CURVE_MASK             ((psa_key_type_t) 0x00ff)
 
-/** SPAKE2+ key pair.
+/** SPAKE2+ key pair: the prover-side registration material.
  *
- * Not implemented yet.
+ * The key material consists of the concatenation w0 || w1 of the two
+ * scalars derived at registration (RFC 9383), each encoded as a
+ * fixed-length big-endian integer in the range [1, n-1], where n is the
+ * order of the curve. This is the format accepted by psa_import_key()
+ * and produced by psa_export_key(); psa_export_public_key() outputs the
+ * corresponding verifier registration record w0 || L with L = w1 * P.
+ *
+ * \param curve A value of type ::psa_ecc_family_t that identifies the
+ *              elliptic curve family to be used.
  */
 #define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(curve)            \
     (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | ((curve) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK))
@@ -2064,6 +2072,7 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
 #define PSA_CUSTOM_KEY_FLAG_EXPAND ((uint32_t) 0x40000000u)
 
 /**@}*/
+
 
 #ifdef __cplusplus
 }
