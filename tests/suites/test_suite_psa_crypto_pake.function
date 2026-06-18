@@ -1679,10 +1679,12 @@ void spake2p_prover_key_share_psa_kat(data_t *context,
                                       data_t *client_key,
                                       data_t *x, data_t *exp_shareP)
 {
-    /* PSA_ALG_SPAKE2P_MATTER is the HMAC-SHA-256 profile pinned to P-256, which
-     * is exactly the RFC 9383 P-256 HMAC ciphersuite. This validates the
+    /* PSA_ALG_SPAKE2P_MATTER uses the HMAC-SHA-256 / P-256 primitives with
+     * the draft-02 key schedule, which differs from RFC 9383 only from
+     * Hash(TT) onward; the KEY_SHARE step is schedule-independent, so the
+     * RFC 9383 P-256 HMAC share vector applies as-is. This validates the
      * alg-ID -> ciphersuite mapping and the PSA plumbing by reproducing the
-     * published RFC vector byte-for-byte through psa_pake_output(), with the
+     * published RFC share byte-for-byte through psa_pake_output(), with the
      * published ephemeral pinned via the MBEDTLS_TEST_HOOKS injection seam. */
     psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
     psa_pake_operation_t client = psa_pake_operation_init_short();
@@ -1969,11 +1971,12 @@ void spake2p_verifier_confirm_psa_kat(data_t *context,
     /* Reproduce the Matter / draft-02 Verifier confirmation MAC (confirmV)
      * byte-for-byte through psa_pake_output(PSA_PAKE_STEP_CONFIRM), via
      * PSA_ALG_SPAKE2P_MATTER (the HMAC-SHA-256 / P-256 ciphersuite with the
-     * draft-02 split-digest key schedule). Both shares are exchanged with the
-     * deterministic interop ephemerals pinned through the MBEDTLS_TEST_HOOKS
-     * injection seam; the server then outputs confirmV. The Prover-side
-     * confirmation check and shared-key export are out of scope of this
-     * slice. */
+     * draft-02 split-digest key schedule). The vector is the official
+     * draft-bar-cfrg-spake2plus-02 Appendix B set with A='client',
+     * B='server'. Both shares are exchanged with the published ephemerals
+     * pinned through the MBEDTLS_TEST_HOOKS injection seam; the server then
+     * outputs confirmV. The Prover-side confirmation check and shared-key
+     * export are out of scope of this slice. */
     psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
     psa_pake_operation_t client = psa_pake_operation_init_short();
     psa_pake_operation_t server = psa_pake_operation_init_short();
