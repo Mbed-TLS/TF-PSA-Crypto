@@ -95,7 +95,13 @@
 #define PSA_HAVE_ALG_SOME_RSA_SIGN_OR_VERIFY
 #endif
 
-#if defined(PSA_WANT_ALG_JPAKE)
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+#define PSA_WANT_ALG_SOME_SPAKE2P 1
+#endif
+
+#if defined(PSA_WANT_ALG_JPAKE) || defined(PSA_WANT_ALG_SOME_SPAKE2P)
 #define PSA_WANT_ALG_SOME_PAKE 1
 #endif
 

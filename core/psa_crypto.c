@@ -9721,6 +9721,21 @@ static psa_status_t psa_spake2p_unknown_scalar_len_status(
 }
 
 
+/* Look up the SECP_R1 curve whose key-pair scalars (w0/w1) are scalar_len
+ * bytes long, using the same table as the public-key lookup so the curve set
+ * is defined in one place. */
+static const psa_spake2p_curve_info_t *psa_spake2p_get_curve_from_scalar_len(
+    size_t scalar_len)
+{
+    for (size_t i = 0; i < ARRAY_LENGTH(spake2p_supported_curves); i++) {
+        const psa_spake2p_curve_info_t *info = &spake2p_supported_curves[i];
+        if (info->family == PSA_ECC_FAMILY_SECP_R1 && info->w0_len == scalar_len) {
+            return info;
+        }
+    }
+    return NULL;
+}
+
 static psa_status_t psa_spake2p_import_key(
     const psa_key_attributes_t *attributes,
     const uint8_t *data,
@@ -9733,29 +9748,45 @@ static psa_status_t psa_spake2p_import_key(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_type_t key_type = psa_get_key_type(attributes);
 
-    if (!PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type)) {
+    if (!PSA_KEY_TYPE_IS_SPAKE2P(key_type)) {
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
     psa_ecc_family_t family = PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(key_type);
+    size_t key_bits = 0;
+
+    /* SPAKE2+ over Edwards curves (RFC 9383) is not implemented. */
+    if (family == PSA_ECC_FAMILY_TWISTED_EDWARDS) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
 
     /* Validate the curve family and the data length before the policy
      * checks, so that an unsupported curve is reported as NOT_SUPPORTED
      * independently of the key's algorithm policy. */
-    const psa_spake2p_curve_info_t *spake2_curve_info = psa_spake2p_get_curve_from_data_length(
-        data_length,
-        family);
-
-    if (spake2_curve_info == NULL) {
-        /* SPAKE2+ over Edwards curves (RFC 9383) is not implemented. */
-        if (family == PSA_ECC_FAMILY_TWISTED_EDWARDS) {
-            return PSA_ERROR_NOT_SUPPORTED;
+    const psa_spake2p_curve_info_t *spake2_curve_info = NULL;
+    if (PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type)) {
+        /* Verifier registration record: w0 || L, with L a public point. */
+        spake2_curve_info =
+            psa_spake2p_get_curve_from_data_length(data_length, family);
+        if (spake2_curve_info == NULL) {
+            /* A public key is w0 || L, i.e. 3 * scalar_len + 1 bytes. */
+            if (data_length % 3 != 1) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            return psa_spake2p_unknown_scalar_len_status(family, data_length / 3);
         }
-        /* A public key is w0 || L, i.e. 3 * scalar_len + 1 bytes. */
-        if (data_length % 3 != 1) {
+        key_bits = spake2_curve_info->bits;
+    } else {
+        /* Prover key pair: w0 || w1, two equal-length scalars. */
+        if (family != PSA_ECC_FAMILY_SECP_R1 || (data_length % 2) != 0) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
-        return psa_spake2p_unknown_scalar_len_status(family, data_length / 3);
+        spake2_curve_info =
+            psa_spake2p_get_curve_from_scalar_len(data_length / 2);
+        if (spake2_curve_info == NULL) {
+            return psa_spake2p_unknown_scalar_len_status(family, data_length / 2);
+        }
+        key_bits = spake2_curve_info->bits;
     }
 
     if (key_buffer_size < data_length) {
@@ -9764,80 +9795,101 @@ static psa_status_t psa_spake2p_import_key(
 
     psa_algorithm_t alg = psa_get_key_algorithm(attributes);
 
-    if (!PSA_ALG_IS_SPAKE2P(alg)) {
+    /* A SPAKE2+ key's permitted-algorithm policy must be a SPAKE2+ algorithm,
+     * or PSA_ALG_NONE for a key with no intended algorithm (e.g. a key kept
+     * only in storage). An explicit incompatible policy is rejected. */
+    if (alg != PSA_ALG_NONE && !PSA_ALG_IS_SPAKE2P(alg)) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    if (!PSA_ALG_IS_SPAKE2P_HMAC(alg)) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
+    if (PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type)) {
+        mbedtls_ecp_group grp;
+        mbedtls_ecp_point pt;
 
-    switch (family) {
-        case PSA_ECC_FAMILY_SECP_R1: {
-            mbedtls_ecp_group grp;
-            mbedtls_ecp_point pt;
+        mbedtls_ecp_group_init(&grp);
+        mbedtls_ecp_point_init(&pt);
 
-            mbedtls_ecp_group_init(&grp);
-            mbedtls_ecp_point_init(&pt);
-
-            // Load the ecp group
-            status = mbedtls_to_psa_error(mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            /* w0 is a scalar in the same range as an EC private key:
-             * reject 0 and values >= the group order n. */
-            {
-                mbedtls_mpi w0;
-                mbedtls_mpi_init(&w0);
-                status = mbedtls_to_psa_error(
-                    mbedtls_mpi_read_binary(&w0, data,
-                                            spake2_curve_info->w0_len));
-                if (status == PSA_SUCCESS &&
-                    (mbedtls_mpi_cmp_int(&w0, 0) == 0 ||
-                     mbedtls_mpi_cmp_mpi(&w0, &grp.N) >= 0)) {
-                    status = PSA_ERROR_INVALID_ARGUMENT;
-                }
-                mbedtls_mpi_free(&w0);
-                if (status != PSA_SUCCESS) {
-                    goto exit;
-                }
-            }
-
-            // Load the point
-            status =
-                mbedtls_to_psa_error(mbedtls_ecp_point_read_binary(&grp, &pt,
-                                                                   data + spake2_curve_info->w0_len,
-                                                                   spake2_curve_info->L_len));
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            /* Check that the point is on the curve. */
-            status = mbedtls_to_psa_error(
-                mbedtls_ecp_check_pubkey(&grp, &pt));
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-exit:
-            mbedtls_ecp_point_free(&pt);
-            mbedtls_ecp_group_free(&grp);
-            break;
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+        if (status != PSA_SUCCESS) {
+            goto exit;
         }
-        default:
-            return PSA_ERROR_INVALID_ARGUMENT;
-    }
 
-    if (status != PSA_SUCCESS) {
-        *key_buffer_length = 0;
-        *bits = 0;
-        return status;
+        /* w0 is a scalar in the same range as an EC private key: reject 0
+         * and values >= the group order n (like the key-pair path). */
+        {
+            mbedtls_mpi w0;
+            mbedtls_mpi_init(&w0);
+            status = mbedtls_to_psa_error(
+                mbedtls_mpi_read_binary(&w0, data, spake2_curve_info->w0_len));
+            if (status == PSA_SUCCESS &&
+                (mbedtls_mpi_cmp_int(&w0, 0) == 0 ||
+                 mbedtls_mpi_cmp_mpi(&w0, &grp.N) >= 0)) {
+                status = PSA_ERROR_INVALID_ARGUMENT;
+            }
+            mbedtls_mpi_free(&w0);
+            if (status != PSA_SUCCESS) {
+                goto exit;
+            }
+        }
+
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_point_read_binary(&grp, &pt,
+                                          data + spake2_curve_info->w0_len,
+                                          spake2_curve_info->L_len));
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+
+        /* Check that the point is on the curve. */
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_check_pubkey(&grp, &pt));
+exit:
+        mbedtls_ecp_point_free(&pt);
+        mbedtls_ecp_group_free(&grp);
+        if (status != PSA_SUCCESS) {
+            *key_buffer_length = 0;
+            *bits = 0;
+            return status;
+        }
+    } else {
+        /* w0 and w1 are scalars in the same range as an elliptic curve
+         * private key from the group: reject 0 and values >= the group
+         * order n, like ECC private-key import does. */
+        size_t scalar_len = data_length / 2;
+        mbedtls_ecp_group grp;
+        mbedtls_mpi w;
+
+        mbedtls_ecp_group_init(&grp);
+        mbedtls_mpi_init(&w);
+
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+        for (size_t i = 0; i < 2 && status == PSA_SUCCESS; i++) {
+            status = mbedtls_to_psa_error(
+                mbedtls_mpi_read_binary(&w, data + i * scalar_len,
+                                        scalar_len));
+            if (status == PSA_SUCCESS &&
+                (mbedtls_mpi_cmp_int(&w, 0) == 0 ||
+                 mbedtls_mpi_cmp_mpi(&w, &grp.N) >= 0)) {
+                status = PSA_ERROR_INVALID_ARGUMENT;
+            }
+        }
+
+        mbedtls_mpi_free(&w);
+        mbedtls_ecp_group_free(&grp);
+        if (status != PSA_SUCCESS) {
+            *key_buffer_length = 0;
+            *bits = 0;
+            return status;
+        }
     }
 
     memcpy(key_buffer, data, data_length);
     *key_buffer_length = data_length;
-    *bits = spake2_curve_info->bits;
+    /* The key size is the curve size (like ECC keys), not the length of the
+     * serialized w0||w1 / w0||L material. */
+    *bits = key_bits;
 
     return PSA_SUCCESS;
 }

@@ -1254,3 +1254,43 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P */
+void spake2p_import_export(int alg_arg, int bits_arg, int is_public,
+                           data_t *key_data)
+{
+    psa_algorithm_t alg = alg_arg;
+    size_t bits = (size_t) bits_arg;
+    psa_key_type_t type = is_public ?
+                          PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1) :
+                          PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t got = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t out[PSA_EXPORT_KEY_OUTPUT_SIZE(
+                    PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1), 521)];
+    size_t olen = 0;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, type);
+    PSA_ASSERT(psa_import_key(&attr, key_data->x, key_data->len, &key));
+
+    /* The reported key size is the curve size, not the serialized length. */
+    PSA_ASSERT(psa_get_key_attributes(key, &got));
+    TEST_EQUAL(psa_get_key_bits(&got), bits);
+
+    /* The export-size macro must be large enough, and export must round-trip. */
+    TEST_ASSERT(PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits) >= key_data->len);
+    TEST_ASSERT(sizeof(out) >= key_data->len);
+    PSA_ASSERT(psa_export_key(key, out, sizeof(out), &olen));
+    TEST_MEMORY_COMPARE(out, olen, key_data->x, key_data->len);
+
+exit:
+    psa_reset_key_attributes(&got);
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
