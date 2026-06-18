@@ -1,0 +1,10 @@
+Features
+   * Add the SPAKE2+ (RFC 9383) verifier confirmation output to the PSA PAKE
+     API: once both key shares have been exchanged, the key schedule
+     (K_main, K_confirmP, K_confirmV, K_shared per RFC 9383 Section 3.3-3.4) is
+     derived, and psa_pake_output() now accepts the PSA_PAKE_STEP_CONFIRM
+     message on the verifier (server) side, returning the confirmation MAC
+     confirmV. Supported for the HMAC confirmation profile
+     (PSA_ALG_SPAKE2P_HMAC
+     and PSA_ALG_SPAKE2P_MATTER) over the P-256/P-384/P-521 ciphersuites.
+     Resolves Mbed-TLS/mbedtls#9352.

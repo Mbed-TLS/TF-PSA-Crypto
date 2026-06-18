@@ -2,7 +2,6 @@
 #include "mbedtls/private/spake2p.h"
 #include "spake2p_invasive.h"
 
-#if defined(MBEDTLS_TEST_HOOKS)
 /* Deterministic RNG for the blinding of the constant-time scalar
  * multiplications. The KAT output is a deterministic function of the inputs and
  * does not depend on these bytes, so any stream is fine; a fixed sequence keeps
@@ -16,7 +15,6 @@ static int spake2p_kat_rng(void *p, unsigned char *out, size_t len)
     }
     return 0;
 }
-#endif /* MBEDTLS_TEST_HOOKS */
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -145,11 +143,74 @@ void spake2p_verifier_transcript_hash_kat(int curve_arg, int hash_arg,
                     &srv, tt, sizeof(tt), &tt_len) != 0);
 
     TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, peer_shareP->x,
-                                              peer_shareP->len), 0);
+                                              peer_shareP->len,
+                                              spake2p_kat_rng, &rng_srv), 0);
 
     TEST_EQUAL(mbedtls_spake2p_test_get_transcript_prefix_hash(
                    &srv, tt, sizeof(tt), &tt_len), 0);
     TEST_MEMORY_COMPARE(tt, tt_len, exp_tt_prefix->x, exp_tt_prefix->len);
+
+exit:
+    mbedtls_spake2p_free(&srv);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void spake2p_verifier_confirm_kat(int curve_arg, int hash_arg, int mac_arg,
+                                  data_t *context, data_t *prover_id,
+                                  data_t *verifier_id, data_t *server_key,
+                                  data_t *y, data_t *peer_shareP,
+                                  data_t *exp_confirmV)
+{
+    /* Known-answer test for the Verifier (server) confirmation MAC. After the
+     * verifier writes its own share (shareV, from the fixed ephemeral y) and
+     * reads the prover's share (shareP), the key schedule (RFC 9383 Section
+     * 3.3-3.4) is fully determined, so confirmV = MAC(K_confirmV, shareP) is a
+     * function of the two shares alone. exp_confirmV is the RFC 9383 Appendix C
+     * value. */
+    mbedtls_ecp_group_id curve = curve_arg;
+    mbedtls_md_type_t hash = hash_arg;
+    mbedtls_spake2p_mac_type mac = mac_arg;
+    mbedtls_spake2p_context srv;
+    unsigned char shareV[MBEDTLS_ECP_MAX_PT_LEN];
+    unsigned char confirmV[MBEDTLS_MD_MAX_SIZE];
+    size_t lenV, clenV;
+    uint32_t rng_srv = 0x00c0ffeeu;
+
+    mbedtls_spake2p_init(&srv);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&srv, MBEDTLS_SPAKE2P_SERVER, hash, mac,
+                                     curve, server_key->x, server_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_context(&srv, context->x, context->len), 0);
+    /* For the server, set_user is idVerifier and set_peer is idProver. */
+    TEST_EQUAL(mbedtls_spake2p_set_user(&srv, verifier_id->x,
+                                        verifier_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_peer(&srv, prover_id->x, prover_id->len), 0);
+
+    /* Confirmation is not available until the key schedule is derived, i.e.
+     * before both shares have been exchanged. */
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&srv, confirmV, sizeof(confirmV),
+                                             &clenV),
+               MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_spake2p_write_key_share_with_ephemeral(
+                   &srv, y->x, y->len, shareV, sizeof(shareV), &lenV,
+                   spake2p_kat_rng, &rng_srv), 0);
+
+    /* Still incomplete after our own share alone. */
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&srv, confirmV, sizeof(confirmV),
+                                             &clenV),
+               MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, peer_shareP->x,
+                                              peer_shareP->len,
+                                              spake2p_kat_rng, &rng_srv), 0);
+
+    TEST_EQUAL(mbedtls_spake2p_write_confirm(&srv, confirmV, sizeof(confirmV),
+                                             &clenV), 0);
+    TEST_MEMORY_COMPARE(confirmV, clenV, exp_confirmV->x, exp_confirmV->len);
 
 exit:
     mbedtls_spake2p_free(&srv);
@@ -164,6 +225,7 @@ void spake2p_read_key_share_invalid(data_t *server_key, data_t *bad_share,
     /* read_key_share must reject a peer share that is not a valid SEC1 point
      * on the curve (parse failure or group-membership failure). */
     mbedtls_spake2p_context srv;
+    uint32_t rng_srv = 0x00c0ffeeu;
 
     mbedtls_spake2p_init(&srv);
     PSA_INIT();
@@ -173,7 +235,8 @@ void spake2p_read_key_share_invalid(data_t *server_key, data_t *bad_share,
                                      MBEDTLS_ECP_DP_SECP256R1,
                                      server_key->x, server_key->len), 0);
     TEST_EQUAL(mbedtls_spake2p_read_key_share(&srv, bad_share->x,
-                                              bad_share->len),
+                                              bad_share->len,
+                                              spake2p_kat_rng, &rng_srv),
                expected_ret);
 
 exit:

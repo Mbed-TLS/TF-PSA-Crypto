@@ -1937,6 +1937,93 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SPAKE2P_MATTER:PSA_WANT_ALG_SHA_256:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_TEST_HOOKS */
+void spake2p_verifier_confirm_psa_kat(data_t *context,
+                                      data_t *client_key, data_t *server_key,
+                                      data_t *x, data_t *y,
+                                      data_t *exp_confirmV)
+{
+    /* Reproduce the RFC 9383 P-256 HMAC Verifier confirmation MAC (confirmV)
+     * byte-for-byte through psa_pake_output(PSA_PAKE_STEP_CONFIRM), via
+     * PSA_ALG_SPAKE2P_MATTER (the HMAC-SHA-256 P-256 profile). Both shares are
+     * exchanged with the published ephemerals pinned through the
+     * MBEDTLS_TEST_HOOKS injection seam; the server then outputs confirmV. The
+     * Prover-side confirmation check and shared-key export are out of scope of
+     * this slice. */
+    psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
+    psa_pake_operation_t client = psa_pake_operation_init_short();
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    psa_key_attributes_t ca = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t sa = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t ckey = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t skey = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t shareP[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t shareV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t confirm[PSA_PAKE_OUTPUT_MAX_SIZE];
+    size_t lp = 0, lv = 0, lc = 0;
+
+    PSA_INIT();
+
+    psa_pake_cs_set_algorithm(&cs, PSA_ALG_SPAKE2P_MATTER);
+    psa_pake_cs_set_primitive(&cs, PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                                                      PSA_ECC_FAMILY_SECP_R1, 256));
+
+    psa_set_key_usage_flags(&ca, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&ca, PSA_ALG_SPAKE2P_MATTER);
+    psa_set_key_type(&ca, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&ca, client_key->x, client_key->len, &ckey));
+
+    psa_set_key_usage_flags(&sa, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&sa, PSA_ALG_SPAKE2P_MATTER);
+    psa_set_key_type(&sa, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&sa, server_key->x, server_key->len, &skey));
+
+    PSA_ASSERT(psa_pake_setup(&client, ckey, &cs));
+    PSA_ASSERT(psa_pake_set_role(&client, PSA_PAKE_ROLE_CLIENT));
+    PSA_ASSERT(psa_pake_set_user(&client, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+    PSA_ASSERT(psa_pake_set_peer(&client, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+    PSA_ASSERT(psa_pake_set_context(&client, context->x, context->len));
+
+    PSA_ASSERT(psa_pake_setup(&server, skey, &cs));
+    PSA_ASSERT(psa_pake_set_role(&server, PSA_PAKE_ROLE_SERVER));
+    PSA_ASSERT(psa_pake_set_user(&server, spake2p_prover_server_id,
+                                 sizeof(spake2p_prover_server_id)));
+    PSA_ASSERT(psa_pake_set_peer(&server, spake2p_prover_client_id,
+                                 sizeof(spake2p_prover_client_id)));
+    PSA_ASSERT(psa_pake_set_context(&server, context->x, context->len));
+
+    /* Client KEY_SHARE = shareP, with the published ephemeral x. */
+    mbedtls_spake2p_test_injected_ephemeral = x->x;
+    mbedtls_spake2p_test_injected_ephemeral_len = x->len;
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
+                               shareP, sizeof(shareP), &lp));
+    PSA_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_KEY_SHARE, shareP, lp));
+
+    /* Server KEY_SHARE = shareV, with the published ephemeral y. */
+    mbedtls_spake2p_test_injected_ephemeral = y->x;
+    mbedtls_spake2p_test_injected_ephemeral_len = y->len;
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_KEY_SHARE,
+                               shareV, sizeof(shareV), &lv));
+    PSA_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_KEY_SHARE, shareV, lv));
+
+    /* Verifier confirmation MAC. */
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
+                               confirm, sizeof(confirm), &lc));
+    TEST_MEMORY_COMPARE(confirm, lc, exp_confirmV->x, exp_confirmV->len);
+
+exit:
+    mbedtls_spake2p_test_injected_ephemeral = NULL;
+    mbedtls_spake2p_test_injected_ephemeral_len = 0;
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_pake_abort(&client);
+    psa_pake_abort(&server);
+    PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P */
 void spake2p_setup_key_mismatch(int suite_alg_arg, int bits_arg,
                                 int key_type_arg, int key_alg_arg,
@@ -1967,6 +2054,33 @@ void spake2p_setup_key_mismatch(int suite_alg_arg, int bits_arg,
 exit:
     psa_destroy_key(key);
     psa_pake_abort(&op);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P */
+void spake2p_verifier_confirm_too_early(int alg_arg, int bits_arg,
+                                        data_t *server_key)
+{
+    /* The Verifier must not be able to output a confirmation MAC before the key
+     * shares have been exchanged: psa_pake_output(PSA_PAKE_STEP_CONFIRM) in the
+     * key-share round is a state error. */
+    psa_algorithm_t alg = alg_arg;
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    uint8_t confirm[PSA_PAKE_OUTPUT_MAX_SIZE];
+    size_t lc = 0;
+
+    PSA_INIT();
+
+    TEST_ASSERT(spake2p_setup_server(&server, alg, (uint32_t) bits_arg,
+                                     server_key) == 1);
+
+    TEST_EQUAL(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
+                               confirm, sizeof(confirm), &lc),
+               PSA_ERROR_BAD_STATE);
+
+exit:
+    psa_pake_abort(&server);
     PSA_DONE();
 }
 /* END_CASE */

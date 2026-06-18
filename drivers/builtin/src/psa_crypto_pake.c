@@ -648,6 +648,10 @@ static psa_status_t mbedtls_psa_pake_output_internal(
                                                   output_length,
                                                   mbedtls_psa_get_random,
                                                   MBEDTLS_PSA_RANDOM_STATE);
+        } else if (step == PSA_SPAKE2P_STEP_CONFIRM) {
+            ret = mbedtls_spake2p_write_confirm(&operation->ctx.spake2p,
+                                                output, output_size,
+                                                output_length);
         } else {
             return PSA_ERROR_NOT_SUPPORTED;
         }
@@ -780,7 +784,9 @@ static psa_status_t mbedtls_psa_pake_input_internal(
     if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
         if (step == PSA_SPAKE2P_STEP_KEY_SHARE) {
             ret = mbedtls_spake2p_read_key_share(&operation->ctx.spake2p,
-                                                 input, input_length);
+                                                 input, input_length,
+                                                 mbedtls_psa_get_random,
+                                                 MBEDTLS_PSA_RANDOM_STATE);
         } else {
             return PSA_ERROR_NOT_SUPPORTED;
         }

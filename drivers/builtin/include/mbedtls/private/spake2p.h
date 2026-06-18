@@ -251,15 +251,45 @@ int mbedtls_spake2p_write_key_share(mbedtls_spake2p_context *ctx,
  *                  shares (Context, idProver, idVerifier, M, N, shareP,
  *                  shareV).
  *
+ *                  Once both shares are known, the shared values Z and V, the
+ *                  full transcript TT and the key schedule (K_confirmP,
+ *                  K_confirmV, K_shared) are derived. Deriving Z and V requires
+ *                  elliptic-curve scalar multiplications, so an RNG is needed
+ *                  for the side-channel countermeasures even though no new
+ *                  secret is generated here.
+ *
  * \param ctx       The SPAKE2+ context. This must be set up.
  * \param buf       The buffer holding the peer's share (SEC1 uncompressed).
  * \param len       The length in bytes of \p buf.
+ * \param f_rng     The RNG function to use. This must not be \c NULL.
+ * \param p_rng     The RNG parameter to pass to \p f_rng. May be \c NULL.
  *
  * \return          \c 0 if successful.
  * \return          A negative error code on failure.
  */
 int mbedtls_spake2p_read_key_share(mbedtls_spake2p_context *ctx,
-                                   const unsigned char *buf, size_t len);
+                                   const unsigned char *buf, size_t len,
+                                   int (*f_rng)(void *, unsigned char *, size_t),
+                                   void *p_rng);
+
+/**
+ * \brief           Generate and write this party's confirmation MAC.
+ *
+ *                  For a client this is \c confirmP = MAC(K_confirmP, shareV);
+ *                  for a server it is \c confirmV = MAC(K_confirmV, shareP).
+ *
+ * \param ctx       The SPAKE2+ context. The key schedule must be derived
+ *                  (both key shares exchanged).
+ * \param buf       The buffer to write the confirmation MAC to.
+ * \param len       The size of \p buf in bytes.
+ * \param olen      The address at which to store the number of bytes written.
+ *                  This must not be \c NULL.
+ *
+ * \return          \c 0 if successful.
+ * \return          A negative error code on failure.
+ */
+int mbedtls_spake2p_write_confirm(mbedtls_spake2p_context *ctx,
+                                  unsigned char *buf, size_t len, size_t *olen);
 
 /**
  * \brief           Clear a SPAKE2+ context and free embedded data.

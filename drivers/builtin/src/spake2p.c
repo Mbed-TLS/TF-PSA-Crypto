@@ -15,11 +15,14 @@
  * membership is enforced with mbedtls_ecp_check_pubkey().
  *
  * This slice covers setup, the generation of this party's public key share
- * (write_key_share), reading the peer's key share (read_key_share), and the
- * accumulation of the RFC 9383 Section 3.3 transcript hash TT over the fields
- * that are derivable from the shares (Context, idProver, idVerifier, M, N,
- * shareP, shareV). The shared values Z and V, the confirmation MAC and the
- * key schedule land in subsequent changes.
+ * (write_key_share), reading the peer's key share (read_key_share), the
+ * accumulation of the RFC 9383 Section 3.3 transcript hash TT, the key schedule
+ * that derives K_confirmP / K_confirmV / K_shared from TT (RFC 9383 Section
+ * 3.3-3.4), and the verifier confirmation MAC output (write_confirm).
+ *
+ * Only the HMAC confirmation profile is wired in this slice; the CMAC/Matter
+ * MAC arms, the peer confirmation check (read_confirm) and the shared-key
+ * export (get_shared_key) land in subsequent changes.
  */
 
 #include "tf_psa_crypto_common.h"
@@ -111,6 +114,64 @@ static int spake2p_get_mn(mbedtls_ecp_group_id curve,
         default:
             return MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
     }
+}
+
+/*
+ * HKDF (RFC 5869) with a nil salt, as used by the SPAKE2+ key schedule:
+ * OKM = HKDF-Expand(HKDF-Extract(0, IKM), info, okm_len).
+ * okm_len is bounded by the key schedule (at most 2 * hash_len).
+ */
+static int spake2p_hkdf(const mbedtls_md_info_t *md_info, size_t hash_len,
+                        const unsigned char *ikm, size_t ikm_len,
+                        const char *info, size_t info_len,
+                        unsigned char *okm, size_t okm_len)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    unsigned char salt[MBEDTLS_MD_MAX_SIZE];
+    unsigned char prk[MBEDTLS_MD_MAX_SIZE];
+    unsigned char t[MBEDTLS_MD_MAX_SIZE];
+    unsigned char in[MBEDTLS_MD_MAX_SIZE + 32];
+    size_t done = 0, t_len = 0;
+    unsigned char counter = 0;
+
+    /* HKDF-Extract: a nil salt is HashLen zero bytes (RFC 5869 Section 2.2). */
+    memset(salt, 0, hash_len);
+    ret = mbedtls_md_hmac(md_info, salt, hash_len, ikm, ikm_len, prk);
+    if (ret != 0) {
+        goto exit;
+    }
+
+    /* HKDF-Expand. */
+    while (done < okm_len) {
+        size_t off = 0, n;
+        counter++;
+        if (t_len != 0) {
+            memcpy(in, t, t_len);
+            off = t_len;
+        }
+        memcpy(in + off, info, info_len);
+        off += info_len;
+        in[off++] = counter;
+
+        ret = mbedtls_md_hmac(md_info, prk, hash_len, in, off, t);
+        if (ret != 0) {
+            goto exit;
+        }
+        t_len = hash_len;
+
+        n = (okm_len - done < hash_len) ? okm_len - done : hash_len;
+        memcpy(okm + done, t, n);
+        done += n;
+    }
+
+    ret = 0;
+
+exit:
+    mbedtls_platform_zeroize(salt, sizeof(salt));
+    mbedtls_platform_zeroize(prk, sizeof(prk));
+    mbedtls_platform_zeroize(t, sizeof(t));
+    mbedtls_platform_zeroize(in, sizeof(in));
+    return ret;
 }
 
 /*
@@ -317,7 +378,6 @@ int mbedtls_spake2p_set_peer(mbedtls_spake2p_context *ctx,
     return spake2p_set_buf(&ctx->peer, &ctx->peer_len, peer, len);
 }
 
-#if defined(MBEDTLS_TEST_HOOKS)
 /*
  * Absorb one 8-byte little-endian length-prefixed field into the running
  * transcript hash (the TT encoding of RFC 9383 Section 3.3).
@@ -367,6 +427,7 @@ static int spake2p_tt_update_point(mbedtls_md_context_t *md,
  *
  * idProver/idVerifier are fixed by RFC role, not by which party we are.
  */
+#if defined(MBEDTLS_TEST_HOOKS)
 static int spake2p_update_tt_prefix(mbedtls_spake2p_context *ctx)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -403,6 +464,140 @@ cleanup:
     return ret;
 }
 #endif /* MBEDTLS_TEST_HOOKS */
+
+/*
+ * Derive the SPAKE2+ key schedule once both shares are known (RFC 9383
+ * Section 3.3-3.4): compute the shared values Z and V, finalize the full
+ * transcript TT (10 fields, adding Z, V and w0 to the share-derivable prefix),
+ * and expand K_main into K_confirmP / K_confirmV / K_shared.
+ *
+ * Only the HMAC profile is wired here; the CMAC/Matter MAC arms land in a
+ * later change. shared_key_len, conf_key_len and mac_len are fixed at setup.
+ */
+static int spake2p_derive_keys(mbedtls_spake2p_context *ctx,
+                               int (*f_rng)(void *, unsigned char *, size_t),
+                               void *p_rng)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type(ctx->md_type);
+    mbedtls_ecp_point T, Z, V, mask;
+    mbedtls_mpi one, neg_w0;
+    const mbedtls_ecp_point *Ks, *peer_share;
+    mbedtls_md_context_t md_ctx;
+    size_t plen = mbedtls_mpi_size(&ctx->grp.P);
+    const unsigned char *id_prover, *id_verifier;
+    size_t id_prover_len, id_verifier_len;
+    unsigned char k_main[MBEDTLS_MD_MAX_SIZE];
+    unsigned char conf[2 * MBEDTLS_MD_MAX_SIZE];
+    unsigned char w0_buf[MBEDTLS_ECP_MAX_BYTES];
+
+    mbedtls_ecp_point_init(&T);
+    mbedtls_ecp_point_init(&Z);
+    mbedtls_ecp_point_init(&V);
+    mbedtls_ecp_point_init(&mask);
+    mbedtls_mpi_init(&one);
+    mbedtls_mpi_init(&neg_w0);
+    mbedtls_md_init(&md_ctx);
+
+    MBEDTLS_MPI_CHK(mbedtls_mpi_lset(&one, 1));
+    /* neg_w0 = (-w0) mod n, so (neg_w0)*K = -w0*K for an order-n point K. */
+    MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&neg_w0, &ctx->grp.N, &ctx->w0));
+
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        Ks = &ctx->N;
+        peer_share = &ctx->shareV;
+    } else {
+        Ks = &ctx->M;
+        peer_share = &ctx->shareP;
+    }
+
+    /* T = peer_share - w0*Ks. Compute the secret (-w0)*Ks with the
+     * constant-time mbedtls_ecp_mul() (not the variable-time muladd, which
+     * would leak w0), then add to peer_share with a public-scalar muladd. */
+    MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&ctx->grp, &mask, &neg_w0, Ks,
+                                    f_rng, p_rng));
+    MBEDTLS_MPI_CHK(mbedtls_ecp_muladd(&ctx->grp, &T,
+                                       &one, peer_share, &one, &mask));
+
+    /* Z and V (cofactor h = 1 for secp_r1). */
+    MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&ctx->grp, &Z, &ctx->xy, &T, f_rng, p_rng));
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        /* V = w1 * (shareV - w0*N) */
+        MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&ctx->grp, &V, &ctx->w1, &T,
+                                        f_rng, p_rng));
+    } else {
+        /* V = y * L */
+        MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&ctx->grp, &V, &ctx->xy, &ctx->L,
+                                        f_rng, p_rng));
+    }
+
+    /* Defence in depth (RFC 9383 Section 6): a degenerate shared value means
+     * the peer's share or L drove Z/V to the identity; abort rather than
+     * derive keys from it. */
+    if (mbedtls_ecp_is_zero(&Z) || mbedtls_ecp_is_zero(&V)) {
+        ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+        goto cleanup;
+    }
+
+    /* idProver/idVerifier are fixed by RFC role, not by who we are. */
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        id_prover = ctx->user;   id_prover_len = ctx->user_len;
+        id_verifier = ctx->peer; id_verifier_len = ctx->peer_len;
+    } else {
+        id_prover = ctx->peer;   id_prover_len = ctx->peer_len;
+        id_verifier = ctx->user; id_verifier_len = ctx->user_len;
+    }
+
+    /* TT = 10 length-prefixed fields: Context, idProver, idVerifier, M, N,
+     * shareP, shareV, Z, V, w0. RFC 9383 hashes their concatenation; we absorb
+     * them one field at a time so no full-transcript buffer is required. */
+    MBEDTLS_MPI_CHK(mbedtls_md_setup(&md_ctx, md_info, 0));
+    MBEDTLS_MPI_CHK(mbedtls_md_starts(&md_ctx));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, ctx->context, ctx->context_len));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, id_prover, id_prover_len));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, id_verifier, id_verifier_len));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->M));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->N));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->shareP));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &ctx->shareV));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &Z));
+    MBEDTLS_MPI_CHK(spake2p_tt_update_point(&md_ctx, &ctx->grp, &V));
+    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&ctx->w0, w0_buf, plen));
+    MBEDTLS_MPI_CHK(spake2p_tt_update(&md_ctx, w0_buf, plen));
+
+    /* K_main = Hash(TT) */
+    MBEDTLS_MPI_CHK(mbedtls_md_finish(&md_ctx, k_main));
+
+    /* K_confirmP || K_confirmV = HKDF(nil, K_main, "ConfirmationKeys") */
+    MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
+                                 k_main, ctx->hash_len,
+                                 "ConfirmationKeys", 16,
+                                 conf, 2 * ctx->conf_key_len));
+    memcpy(ctx->K_confirmP, conf, ctx->conf_key_len);
+    memcpy(ctx->K_confirmV, conf + ctx->conf_key_len, ctx->conf_key_len);
+
+    /* K_shared = HKDF(nil, K_main, "SharedKey") */
+    MBEDTLS_MPI_CHK(spake2p_hkdf(md_info, ctx->hash_len,
+                                 k_main, ctx->hash_len,
+                                 "SharedKey", 9,
+                                 ctx->K_shared, ctx->shared_key_len));
+
+    ctx->keys_ready = 1;
+    ret = 0;
+
+cleanup:
+    mbedtls_ecp_point_free(&T);
+    mbedtls_ecp_point_free(&Z);
+    mbedtls_ecp_point_free(&V);
+    mbedtls_ecp_point_free(&mask);
+    mbedtls_mpi_free(&one);
+    mbedtls_mpi_free(&neg_w0);
+    mbedtls_md_free(&md_ctx);
+    mbedtls_platform_zeroize(k_main, sizeof(k_main));
+    mbedtls_platform_zeroize(conf, sizeof(conf));
+    mbedtls_platform_zeroize(w0_buf, sizeof(w0_buf));
+    return ret;
+}
 
 /*
  * Compute and serialize this party's public share from the (already chosen)
@@ -452,11 +647,16 @@ static int spake2p_make_own_share(mbedtls_spake2p_context *ctx,
         ctx->have_shareV = 1;
     }
 
+    if (ctx->have_shareP && ctx->have_shareV) {
 #if defined(MBEDTLS_TEST_HOOKS)
-    if (ctx->have_shareP && ctx->have_shareV && !ctx->tt_prefix_ready) {
-        MBEDTLS_MPI_CHK(spake2p_update_tt_prefix(ctx));
-    }
+        if (!ctx->tt_prefix_ready) {
+            MBEDTLS_MPI_CHK(spake2p_update_tt_prefix(ctx));
+        }
 #endif
+        if (!ctx->keys_ready) {
+            MBEDTLS_MPI_CHK(spake2p_derive_keys(ctx, f_rng, p_rng));
+        }
+    }
 
 cleanup:
     mbedtls_ecp_point_free(&eph);
@@ -525,10 +725,16 @@ cleanup:
 #endif /* MBEDTLS_TEST_HOOKS */
 
 int mbedtls_spake2p_read_key_share(mbedtls_spake2p_context *ctx,
-                                   const unsigned char *buf, size_t len)
+                                   const unsigned char *buf, size_t len,
+                                   int (*f_rng)(void *, unsigned char *, size_t),
+                                   void *p_rng)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_ecp_point *peer;
+
+    if (f_rng == NULL) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
 
     /* The peer's share is the other role's: a client reads shareV, a server
      * reads shareP. */
@@ -544,14 +750,81 @@ int mbedtls_spake2p_read_key_share(mbedtls_spake2p_context *ctx,
         ctx->have_shareP = 1;
     }
 
+    if (ctx->have_shareP && ctx->have_shareV) {
 #if defined(MBEDTLS_TEST_HOOKS)
-    if (ctx->have_shareP && ctx->have_shareV && !ctx->tt_prefix_ready) {
-        MBEDTLS_MPI_CHK(spake2p_update_tt_prefix(ctx));
-    }
+        if (!ctx->tt_prefix_ready) {
+            MBEDTLS_MPI_CHK(spake2p_update_tt_prefix(ctx));
+        }
 #endif
+        if (!ctx->keys_ready) {
+            MBEDTLS_MPI_CHK(spake2p_derive_keys(ctx, f_rng, p_rng));
+        }
+    }
 
 cleanup:
     return ret;
+}
+
+/*
+ * MAC over a key share, used for the confirmation messages.
+ * Only the HMAC profile is wired here (tag length = hash_len); the CMAC arm
+ * lands in a later change.
+ */
+static int spake2p_mac(mbedtls_spake2p_context *ctx,
+                       const unsigned char *key, size_t key_len,
+                       const mbedtls_ecp_point *share,
+                       unsigned char *out, size_t *out_len)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    unsigned char msg[MBEDTLS_ECP_MAX_PT_LEN];
+    size_t msg_len;
+
+    MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&ctx->grp, share,
+                                                   MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                                   &msg_len, msg, sizeof(msg)));
+
+    if (ctx->mac_type == MBEDTLS_SPAKE2P_MAC_HMAC) {
+        const mbedtls_md_info_t *md_info =
+            mbedtls_md_info_from_type(ctx->md_type);
+        MBEDTLS_MPI_CHK(mbedtls_md_hmac(md_info, key, key_len,
+                                        msg, msg_len, out));
+    } else {
+        ret = MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
+        goto cleanup;
+    }
+
+    *out_len = ctx->mac_len;
+    ret = 0;
+
+cleanup:
+    mbedtls_platform_zeroize(msg, sizeof(msg));
+    return ret;
+}
+
+int mbedtls_spake2p_write_confirm(mbedtls_spake2p_context *ctx,
+                                  unsigned char *buf, size_t len, size_t *olen)
+{
+    const unsigned char *own_key;
+    const mbedtls_ecp_point *peer_share;
+
+    if (!ctx->keys_ready) {
+        return MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+    }
+    if (len < ctx->mac_len) {
+        return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
+    }
+
+    /* confirmP = MAC(K_confirmP, shareV); confirmV = MAC(K_confirmV, shareP).
+     * Each party MACs the peer's share with its own confirmation key. */
+    if (ctx->role == MBEDTLS_SPAKE2P_CLIENT) {
+        own_key = ctx->K_confirmP;
+        peer_share = &ctx->shareV;
+    } else {
+        own_key = ctx->K_confirmV;
+        peer_share = &ctx->shareP;
+    }
+
+    return spake2p_mac(ctx, own_key, ctx->conf_key_len, peer_share, buf, olen);
 }
 
 #if defined(MBEDTLS_TEST_HOOKS)
