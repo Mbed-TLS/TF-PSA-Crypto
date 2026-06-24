@@ -4,3 +4,4 @@ Security
      force the shared secret to all-zero by sending a low-order point. This is
      only a problem for protocols that expect contributory behaviour, that is,
      where neither party should be able to force the shared secret.
+     CVE-2026-54434
