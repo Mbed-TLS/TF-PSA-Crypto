@@ -324,6 +324,7 @@ void mac_algorithm(int alg_arg, int classification_flags,
 
     /* Truncated versions */
     for (n = 1; n <= length; n++) {
+        mbedtls_test_set_step(n);
         psa_algorithm_t truncated_alg = PSA_ALG_TRUNCATED_MAC(alg, n);
         mac_algorithm_core(truncated_alg, classification_flags,
                            key_type, key_bits, n);
@@ -355,6 +356,7 @@ void mac_algorithm(int alg_arg, int classification_flags,
 
     /* At-leat-this-length versions */
     for (n = 1; n <= length; n++) {
+        mbedtls_test_set_step(1000 + n);
         psa_algorithm_t policy_alg = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, n);
         mac_algorithm_core(policy_alg, classification_flags | ALG_IS_WILDCARD,
                            key_type, key_bits, n);
@@ -449,6 +451,7 @@ void aead_algorithm(int alg_arg, int classification_flags,
 
     /* Truncated versions */
     for (n = 1; n <= tag_length; n++) {
+        mbedtls_test_set_step(n);
         psa_algorithm_t truncated_alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, n);
         aead_algorithm_core(truncated_alg, classification_flags,
                             key_type, key_bits, n);
@@ -482,6 +485,7 @@ void aead_algorithm(int alg_arg, int classification_flags,
 
     /* At-leat-this-length versions */
     for (n = 1; n <= tag_length; n++) {
+        mbedtls_test_set_step(1000 + n);
         psa_algorithm_t policy_alg = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, n);
         aead_algorithm_core(policy_alg, classification_flags | ALG_IS_WILDCARD,
                             key_type, key_bits, n);
@@ -672,6 +676,7 @@ void key_type(int type_arg, int classification_flags)
     key_type_classification(type, classification_flags);
 
     /* For asymmetric types, check the corresponding pair/public type */
+    mbedtls_test_set_step(1);
     if (classification_flags & KEY_TYPE_IS_PUBLIC_KEY) {
         psa_key_type_t pair_type = PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(type);
         TEST_EQUAL(PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(pair_type), type);
@@ -681,6 +686,8 @@ void key_type(int type_arg, int classification_flags)
                                 | KEY_TYPE_IS_KEY_PAIR);
         TEST_EQUAL(PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type), type);
     }
+
+    mbedtls_test_set_step(2);
     if (classification_flags & KEY_TYPE_IS_KEY_PAIR) {
         psa_key_type_t public_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type);
         TEST_EQUAL(PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(public_type), type);
