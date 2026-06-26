@@ -29,7 +29,7 @@
  * The `bits` attribute of the key indicates the parameter set:
  * 44, 56 or 87.
  */
-#define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x6002)
+#define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
 
 /** Whether the key type is an ML-DSA key (key pair or public key). */
 #define PSA_KEY_TYPE_IS_ML_DSA(type)                                    \
