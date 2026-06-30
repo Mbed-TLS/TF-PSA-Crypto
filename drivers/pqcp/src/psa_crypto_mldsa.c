@@ -418,12 +418,12 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
 cleanup:
     mbedtls_free(public_key);
     psa_status_t alloc_status = tf_psa_crypto_pqcp_alloc_done();
-    if (status != PSA_SUCCESS) {
+    if (status != PSA_SUCCESS || alloc_status != PSA_SUCCESS) {
         mbedtls_zeroize_and_free(operation->key, operation->key_length);
         mld_shake256_release(&operation->shake);
         mbedtls_platform_zeroize(operation, sizeof(*operation));
     }
-    if (status == PSA_SUCCESS) {
+    if (alloc_status != PSA_SUCCESS) {
         return alloc_status;
     } else {
         return status;
