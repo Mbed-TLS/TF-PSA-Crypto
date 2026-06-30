@@ -10,7 +10,6 @@
 
 #include <psa/crypto.h>
 #include "psa_crypto_mldsa.h"
-#include "pqcp_buffer_alloc.h"
 #include "wrap_mldsa_native.h"
 #include <mbedtls/platform_util.h>
 #include <mbedtls/platform.h>

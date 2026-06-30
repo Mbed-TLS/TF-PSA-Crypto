@@ -11,9 +11,9 @@
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE 0
 
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+#include <psa/crypto_values.h>
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
-#include <psa/crypto_values.h>
 
 #if defined(MBEDTLS_THREADING_C)
 #include "threading_internal.h"
