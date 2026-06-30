@@ -52,7 +52,7 @@ void *tf_psa_crypto_pqcp_alloc_push(size_t size)
         return NULL;
     }
 
-    /* Check that there is room. This shouldn't happen if the buffer size
+    /* Check that there is room. This should be the case if the buffer size
      * was configured correctly. */
     if (tf_psa_crypto_pqcp_alloc_used + size > sizeof(tf_psa_crypto_pqcp_alloc_buffer)) {
         tf_psa_crypto_pqcp_alloc_status = PSA_ERROR_INSUFFICIENT_MEMORY;
