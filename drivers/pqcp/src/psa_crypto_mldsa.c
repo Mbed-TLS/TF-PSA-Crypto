@@ -379,7 +379,8 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
     }
 
     /* After this point, we may allocate memory, so we must go through
-     * cleanup. */
+     * cleanup, including calling tf_psa_crypto_pqcp_alloc_done() to release
+     * the buffer allocator's mutex. */
 
     /* The signature process needs the (hash of the) public key at the
      * beginning, and the (expanded) private key at the end (finish step).
@@ -492,6 +493,10 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
         return status;
     }
 
+    /* From this point on, we must not return without calling
+     * tf_psa_crypto_pqcp_alloc_done() to release the buffer allocator's
+     * mutex. */
+
     uint8_t mu[MLDSA_CRHBYTES];
     mld_shake256_finalize(&operation->shake);
     mld_shake256_squeeze(mu, sizeof(mu), &operation->shake);
@@ -537,6 +542,10 @@ psa_status_t tf_psa_crypto_mldsa_verify_finish(
     if (status != PSA_SUCCESS) {
         return status;
     }
+
+    /* From this point on, we must not return without calling
+     * tf_psa_crypto_pqcp_alloc_done() to release the buffer allocator's
+     * mutex. */
 
     uint8_t mu[MLDSA_CRHBYTES];
     mld_shake256_finalize(&operation->shake);
