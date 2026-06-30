@@ -8,6 +8,8 @@
 
 #include "tf_psa_crypto_common.h"
 
+#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE 0
+
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
@@ -17,6 +19,7 @@
 #include "threading_internal.h"
 #endif
 
+#undef TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE
 #define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE MLD_TOTAL_ALLOC_87
 
 #if defined(MBEDTLS_THREADING_C)
