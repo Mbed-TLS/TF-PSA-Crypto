@@ -16,6 +16,11 @@
 
 #include <test/drivers/test_driver.h>
 
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+// For MLD_DEFAULT_ALIGN
+#include "src/common.h"
+#endif
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
