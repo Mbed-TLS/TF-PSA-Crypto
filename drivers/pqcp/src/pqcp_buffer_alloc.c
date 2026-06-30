@@ -30,6 +30,8 @@ psa_status_t tf_psa_crypto_pqcp_alloc_done(void)
     psa_status_t status = tf_psa_crypto_pqcp_alloc_status;
     tf_psa_crypto_pqcp_alloc_status = 0;
     if (tf_psa_crypto_pqcp_alloc_used != 0) {
+        mbedtls_platform_zeroize(tf_psa_crypto_pqcp_alloc_buffer,
+                                 sizeof(tf_psa_crypto_pqcp_alloc_buffer));
         status = PSA_ERROR_BAD_STATE;
         tf_psa_crypto_pqcp_alloc_used = 0;
     }
