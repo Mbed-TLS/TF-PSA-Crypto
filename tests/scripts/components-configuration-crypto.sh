@@ -520,7 +520,6 @@ component_test_pqcp_buffer_alloc () {
     scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
     scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
     scripts/config.py set TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
-    scripts/config.py set MBEDTLS_TEST_HOOKS
 
     cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
@@ -530,22 +529,8 @@ component_test_pqcp_buffer_alloc () {
     ctest
 }
 
-component_test_pqcp_buffer_alloc_no_hooks () {
-    msg "build: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC"
-    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
-    scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
-    scripts/config.py set TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
-
-    cd $OUT_OF_SOURCE_DIR
-    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
-    cmake --build .
-
-    msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC"
-    ctest
-}
-
-component_test_pqcp_buffer_alloc_pthread () {
-    msg "build: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread"
+component_test_pqcp_buffer_alloc_pthread_hooks () {
+    msg "build: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread+hooks"
     scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
     scripts/config.py set TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
     scripts/config.py set TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
@@ -558,6 +543,6 @@ component_test_pqcp_buffer_alloc_pthread () {
     cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
     cmake --build .
 
-    msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread"
+    msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread+hooks"
     ctest
 }

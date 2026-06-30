@@ -112,21 +112,12 @@ Config: mldsa-native using the default allocator
 depends_on:MBEDTLS_PSA_CRYPTO_C:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:!TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
 pass:
 
-Config: mldsa-native using our buffer allocator, no hooks
-depends_on:MBEDTLS_PSA_CRYPTO_C:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:!MBEDTLS_TEST_HOOKS
-pass:
-
-Config: mldsa-native using our buffer allocator, test hooks
-depends_on:MBEDTLS_PSA_CRYPTO_C:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-pass:
-
-
 Config: mldsa-native using our buffer allocator, no threading
 depends_on:MBEDTLS_PSA_CRYPTO_C:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:!MBEDTLS_THREADING_C
 pass:
 
-Config: mldsa-native using our buffer allocator, threading
-depends_on:MBEDTLS_PSA_CRYPTO_C:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_THREADING_C
+Config: mldsa-native using our buffer allocator, threading, hooks for poisoning tests
+depends_on:MBEDTLS_PSA_CRYPTO_C:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_THREADING_C:MBEDTLS_TEST_HOOKS
 pass:
 
 Config: PK export keys on the stack (ECC is the only PK key type)
