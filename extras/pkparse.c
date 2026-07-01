@@ -1230,7 +1230,8 @@ int mbedtls_pk_parse_public_key(mbedtls_pk_context *ctx,
         return ret;
     }
     mbedtls_pk_free(ctx);
-    if (ret != MBEDTLS_ERR_PK_INVALID_PUBKEY) {
+    if ((ret != MBEDTLS_ERR_PK_INVALID_PUBKEY) &&
+        (ret != MBEDTLS_ERR_PK_INVALID_ALG)) {
         return ret;
     }
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */

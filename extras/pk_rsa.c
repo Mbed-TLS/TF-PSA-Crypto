@@ -74,7 +74,7 @@ int mbedtls_pk_rsa_set_pubkey(mbedtls_pk_context *pk, const unsigned char *key, 
 
     status = psa_import_key(&attr, key, key_len, &key_id);
     if (status != PSA_SUCCESS) {
-        return MBEDTLS_ERR_PK_INVALID_PUBKEY;
+        return psa_pk_status_to_mbedtls(status);
     }
 
     status = psa_get_key_attributes(key_id, &attr);
