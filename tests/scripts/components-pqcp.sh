@@ -16,11 +16,8 @@ support_test_pqcp_mldsa_native_upstream_all () {
 # This condition deliberately runs when all.sh sources this file. It hides the
 # component from both `--list-all-components` and explicit component requests on
 # runners whose Python is too old for mldsa-native's generated-test checks.
-if support_test_pqcp_mldsa_native_upstream_all; then
-    component_test_pqcp_mldsa_native_upstream_all () {
-        msg "test: mldsa-native upstream all --opt ALL --examples"
-
-        cd drivers/pqcp/mldsa-native
-        ./scripts/tests all --opt ALL --examples
-    }
-fi
+component_test_pqcp_mldsa_native_upstream_all () {
+    msg "test: mldsa-native upstream all --opt ALL --examples"
+     cd drivers/pqcp/mldsa-native
+    ./scripts/tests all --opt ALL --examples
+}
