@@ -553,8 +553,6 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
                    (ret >= MBEDTLS_ERR_ASN1_BUF_TOO_SMALL)) {
             /* In case of ASN1 error codes add MBEDTLS_ERR_PK_INVALID_PUBKEY. */
             ret = MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PK_INVALID_PUBKEY, ret);
-        } else {
-            ret = MBEDTLS_ERR_PK_INVALID_PUBKEY;
         }
     } else
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
