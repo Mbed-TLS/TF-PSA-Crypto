@@ -601,22 +601,14 @@ exit:
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 void poison_export_public_key(int poison_mode, int64_t poison_bytes, psa_status_t expected_status)
 {
-    uint8_t seed_buf[sizeof(seed_1)];
-    uint8_t *public_key_buf = NULL;
-    TEST_CALLOC(public_key_buf, sizeof(public_key_1));
-
-    memcpy(seed_buf, seed_1, sizeof(seed_1));
-    memcpy(public_key_buf, public_key_1, sizeof(public_key_1));
-
-    data_t seed = { seed_buf, sizeof(seed_1) };
-    data_t public_key = { public_key_buf, sizeof(public_key_1) };
+    data_t seed = { (uint8_t *) seed_1, sizeof(seed_1) };
+    data_t public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
     test_export_public_key(PSA_KEY_TYPE_ML_DSA_KEY_PAIR, 87,
                            &seed, &public_key, expected_status);
 exit:
     poison_cleanup();
-    mbedtls_free(public_key_buf);
 }
 /* END_CASE */
 
@@ -706,25 +698,15 @@ void poison_sign_deterministic_pure(int poison_mode,
                                     int64_t poison_bytes,
                                     psa_status_t expected_status)
 {
-    uint8_t seed_buf[sizeof(seed_1)];
-    uint8_t message_buf[sizeof(message_1)];
-    uint8_t *expected_signature_buf = NULL;
-    TEST_CALLOC(expected_signature_buf, sizeof(signature_1));
-
-    memcpy(seed_buf, seed_1, sizeof(seed_1));
-    memcpy(message_buf, message_1, sizeof(message_1));
-    memcpy(expected_signature_buf, signature_1, sizeof(signature_1));
-
-    data_t seed = { seed_buf, sizeof(seed_1) };
-    data_t message = { message_buf, sizeof(message_1) };
-    data_t expected_signature = { expected_signature_buf, sizeof(signature_1) };
+    data_t seed = { (uint8_t *) seed_1, sizeof(seed_1) };
+    data_t message = { (uint8_t *) message_1, sizeof(message_1) };
+    data_t expected_signature = { (uint8_t *) signature_1, sizeof(signature_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
     test_sign_deterministic_pure(PSA_KEY_TYPE_ML_DSA_KEY_PAIR, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
                                  &seed, &message, &expected_signature, expected_status);
 exit:
     poison_cleanup();
-    mbedtls_free(expected_signature_buf);
 }
 /* END_CASE */
 
@@ -801,28 +783,15 @@ exit:
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 void poison_verify_pure(int poison_mode, int64_t poison_bytes, psa_status_t expected_status)
 {
-    uint8_t message_buf[sizeof(message_1)];
-    uint8_t *public_key_buf = NULL;
-    uint8_t *signature_buf = NULL;
-
-    TEST_CALLOC(public_key_buf, sizeof(public_key_1));
-    TEST_CALLOC(signature_buf, sizeof(signature_1));
-
-    memcpy(message_buf, message_1, sizeof(message_1));
-    memcpy(public_key_buf, public_key_1, sizeof(public_key_1));
-    memcpy(signature_buf, signature_1, sizeof(signature_1));
-
-    data_t message = { message_buf, sizeof(message_1) };
-    data_t public_key = { public_key_buf, sizeof(public_key_1) };
-    data_t signature = { signature_buf, sizeof(signature_1) };
+    data_t message = { (uint8_t *) message_1, sizeof(message_1) };
+    data_t public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) };
+    data_t signature = { (uint8_t *) signature_1, sizeof(signature_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
     test_verify_pure(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
                      &public_key, &message, &signature, expected_status);
 exit:
     poison_cleanup();
-    mbedtls_free(public_key_buf);
-    mbedtls_free(signature_buf);
 }
 /* END_CASE */
 
@@ -857,9 +826,7 @@ exit:
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 void poison_sign_setup(int poison_mode, int64_t poison_bytes, psa_status_t expected_status)
 {
-    uint8_t seed_buf[sizeof(seed_1)];
-    memcpy(seed_buf, seed_1, sizeof(seed_1));
-    data_t seed = { seed_buf, sizeof(seed_1) };
+    data_t seed = { (uint8_t *) seed_1, sizeof(seed_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
     test_sign_setup(PSA_KEY_TYPE_ML_DSA_KEY_PAIR, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
@@ -997,18 +964,9 @@ void poison_sign_deterministic_multipart_finish(int poison_mode,
                                                 int64_t poison_bytes,
                                                 psa_status_t expected_status)
 {
-    uint8_t seed_buf[sizeof(seed_1)];
-    uint8_t message_buf[sizeof(message_1)];
-    uint8_t *expected_signature_buf = NULL;
-    TEST_CALLOC(expected_signature_buf, sizeof(signature_1));
-
-    memcpy(seed_buf, seed_1, sizeof(seed_1));
-    memcpy(message_buf, message_1, sizeof(message_1));
-    memcpy(expected_signature_buf, signature_1, sizeof(signature_1));
-
-    data_t seed = { seed_buf, sizeof(seed_1) };
-    data_t message = { message_buf, sizeof(message_1) };
-    data_t expected_signature = { expected_signature_buf, sizeof(signature_1) };
+    data_t seed = { (uint8_t *) seed_1, sizeof(seed_1) };
+    data_t message = { (uint8_t *) message_1, sizeof(message_1) };
+    data_t expected_signature = { (uint8_t *) signature_1, sizeof(signature_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
     test_sign_deterministic_multipart_finish(PSA_KEY_TYPE_ML_DSA_KEY_PAIR,
@@ -1021,7 +979,6 @@ void poison_sign_deterministic_multipart_finish(int poison_mode,
                                              expected_status);
 exit:
     poison_cleanup();
-    mbedtls_free(expected_signature_buf);
 }
 /* END_CASE */
 
@@ -1122,27 +1079,14 @@ void poison_verify_multipart_finish(int poison_mode,
                                     int64_t poison_bytes,
                                     psa_status_t expected_status)
 {
-    uint8_t message_buf[sizeof(message_1)];
-    uint8_t *public_key_buf = NULL;
-    uint8_t *signature_buf = NULL;
-
-    TEST_CALLOC(public_key_buf, sizeof(public_key_1));
-    TEST_CALLOC(signature_buf, sizeof(signature_1));
-
-    memcpy(message_buf, message_1, sizeof(message_1));
-    memcpy(public_key_buf, public_key_1, sizeof(public_key_1));
-    memcpy(signature_buf, signature_1, sizeof(signature_1));
-
-    data_t message = { message_buf, sizeof(message_1) };
-    data_t public_key = { public_key_buf, sizeof(public_key_1) };
-    data_t signature = { signature_buf, sizeof(signature_1) };
+    data_t message = { (uint8_t *) message_1, sizeof(message_1) };
+    data_t public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) };
+    data_t signature = { (uint8_t *) signature_1, sizeof(signature_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
     test_verify_multipart_finish(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
                                  &public_key, &public_key, &message, &signature, expected_status);
 exit:
     poison_cleanup();
-    mbedtls_free(public_key_buf);
-    mbedtls_free(signature_buf);
 }
 /* END_CASE */
