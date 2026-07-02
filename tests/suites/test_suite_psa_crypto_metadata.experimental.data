@@ -1,0 +1,14 @@
+# This file tests metadata that is related to incomplete or experimental
+# features. It is separate from test_suite_psa_crypto_metadata.data because
+# data in the main file is picked up by some test case generators
+# (notably `generate_psa_tests.py`), but the data in this file is not.
+
+# MLDSA identifiers are not yet defined in `include/psa/crypto_values.h`,
+# and as a consequence, `generate_psa_tests.py` can't cope with them.
+Key type: ML-DSA public key
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+key_type:PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY:KEY_TYPE_IS_PUBLIC_KEY | KEY_TYPE_IS_ML_DSA
+
+Key type: ML-DSA key pair
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+key_type:PSA_KEY_TYPE_ML_DSA_KEY_PAIR:KEY_TYPE_IS_KEY_PAIR | KEY_TYPE_IS_ML_DSA
