@@ -15,6 +15,12 @@ support_test_pqcp_mldsa_native_upstream_all () {
 
 component_test_pqcp_mldsa_native_upstream_all () {
     msg "test: mldsa-native upstream all --opt ALL --examples --stack"
-     cd drivers/pqcp/mldsa-native
+    cd drivers/pqcp/mldsa-native
     ./scripts/tests all --opt ALL --examples --stack --alloc
+
+    make clean
+
+    msg "test: mldsa-native upstream all --opt ALL --stack with custom heap allocation"
+    ./scripts/tests all --opt ALL --stack --no-examples --no-alloc --no-rng-fail \
+        --cflags='-std=c11 -D_GNU_SOURCE -Itest -DMLD_CONFIG_FILE=\"configs/custom_heap_alloc_config.h\"'
 }
