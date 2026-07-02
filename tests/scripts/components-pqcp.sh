@@ -16,5 +16,5 @@ support_test_pqcp_mldsa_native_upstream_all () {
 component_test_pqcp_mldsa_native_upstream_all () {
     msg "test: mldsa-native upstream all --opt ALL --examples --stack"
      cd drivers/pqcp/mldsa-native
-    ./scripts/tests all --opt ALL --examples --stack
+    ./scripts/tests all --opt ALL --examples --stack --alloc
 }
