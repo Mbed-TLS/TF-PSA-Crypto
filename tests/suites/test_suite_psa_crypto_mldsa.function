@@ -486,7 +486,7 @@ static const uint8_t signature_1[] = {
 
 static psa_status_t poison_setup(int poison_mode, int64_t poison_bytes)
 {
-#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_TEST_HOOKS)
+#if defined(MBEDTLS_TEST_HOOKS)
     TEST_LE_S(0, poison_bytes);
     TEST_LE_U(poison_mode, POISON_ON_UNLOCK);
     if (poison_mode == POISON_ON_LOCK) {
