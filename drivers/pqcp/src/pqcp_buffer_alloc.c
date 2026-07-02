@@ -17,7 +17,7 @@ static psa_status_t tf_psa_crypto_pqcp_alloc_status;
 
 #if defined(MBEDTLS_TEST_HOOKS)
 /* Added on start, subtracted on done*/
-int64_t tf_psa_crypto_pqcp_alloc_poison_bytes;
+ptrdiff_t tf_psa_crypto_pqcp_alloc_poison_bytes;
 #endif /* MBEDTLS_TEST_HOOKS */
 
 psa_status_t tf_psa_crypto_pqcp_alloc_done(void)

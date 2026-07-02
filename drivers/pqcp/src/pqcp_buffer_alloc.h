@@ -55,7 +55,7 @@ void tf_psa_crypto_pqcp_alloc_pop(size_t size);
 #if defined(MBEDTLS_TEST_HOOKS)
 extern size_t tf_psa_crypto_pqcp_alloc_used;
 /* Added on start, subtracted on done */
-extern int64_t tf_psa_crypto_pqcp_alloc_poison_bytes;
+extern ptrdiff_t tf_psa_crypto_pqcp_alloc_poison_bytes;
 #endif
 
 static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
