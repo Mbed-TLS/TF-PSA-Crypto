@@ -41,6 +41,18 @@ component_test_tf_psa_crypto_as_subdirectory () {
     ./cmake_subproject
 }
 
+component_test_tf_psa_crypto_as_subdirectory_custom_dispatch () {
+    msg "build: custom dispatch with cmake 'as-subdirectory' build"
+    cp -r dispatch/include programs/test/cmake_subproject_custom_dispatch/custom
+    cp dispatch/psa_crypto_driver_wrappers_no_static.h programs/test/cmake_subproject_custom_dispatch/custom
+    scripts/generate_driver_wrappers.py programs/test/cmake_subproject_custom_dispatch/custom
+    cd programs/test/cmake_subproject_custom_dispatch
+    # Note: Explicitly generate files as these are turned off in releases
+    cmake -D GEN_FILES=ON .
+    make
+    ./cmake_subproject_custom_dispatch
+}
+
 component_test_tf_psa_crypto_as_package () {
     msg "build: cmake 'as-package' build"
     root_dir="$(pwd)"
@@ -65,6 +77,18 @@ component_test_tf_psa_crypto_cmake_as_package_install () {
     cmake .
     make
     ./cmake_package_install
+}
+
+component_test_tf_psa_crypto_cmake_as_package_install_custom_dispatch () {
+    msg "build: custom dispatch with cmake 'as-installed-package' build"
+    cp -r dispatch/include programs/test/cmake_package_install_custom_dispatch/custom
+    cp dispatch/psa_crypto_driver_wrappers_no_static.h programs/test/cmake_package_install_custom_dispatch/custom
+    scripts/generate_driver_wrappers.py programs/test/cmake_package_install_custom_dispatch/custom
+    cd programs/test/cmake_package_install_custom_dispatch
+    # Note: Explicitly generate files as these are turned off in releases
+    cmake .
+    make
+    ./cmake_package_install_custom_dispatch
 }
 
 component_tf_psa_crypto_build_custom_config_file () {

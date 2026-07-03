@@ -14,6 +14,11 @@
 #   calling CMake in order to avoid target name clashes, via the use of
 #   TF_PSA_CRYPTO_TARGET_PREFIX. The value of this variable is prefixed to the
 #   tfpsacrypto and tfpsacrypto-apidoc targets.
+# - TF_PSA_CRYPTO_DISPATCH_DIR: Optional absolute path to a directory that is
+#   used instead of the built-in `dispatch` directory for the definition of the
+#  `dispatch` (and `dispatch_static` if both static and shared libraries are
+#   enabled) target. This allows combining the TF-PSA-Crypto core with an
+#   out-of-tree implementation of dispatch to cryptographic drivers.
 #
 
 # We specify a minimum requirement of 3.10.2, but for now use 3.5.1 here
@@ -64,6 +69,10 @@ endif()
 
 # Set the project, Mbed TLS and framework root directory.
 set(TF_PSA_CRYPTO_FRAMEWORK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/framework)
+
+if(NOT DEFINED TF_PSA_CRYPTO_DISPATCH_DIR)
+    set(TF_PSA_CRYPTO_DISPATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dispatch)
+endif()
 
 # Put the version numbers into relevant files
 set(version_number_files
@@ -408,10 +417,12 @@ endif()
 # drivers, that are appended in `drivers/CMakeLists.txt`.
 #
 set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
-        # psa_crypto_driver_wrappers.h is generated, so it may be in the build tree.
+        # tf_psa_crypto_config_check.h is generated, so it may be in the build tree.
         ${CMAKE_CURRENT_BINARY_DIR}/core
         ${CMAKE_CURRENT_SOURCE_DIR}/core
-        ${CMAKE_CURRENT_SOURCE_DIR}/dispatch
+        # psa_crypto_driver_wrappers.h is generated, so it may be in the build tree.
+        ${CMAKE_CURRENT_BINARY_DIR}/dispatch
+        ${TF_PSA_CRYPTO_DISPATCH_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/extras
         ${CMAKE_CURRENT_SOURCE_DIR}/platform
         ${CMAKE_CURRENT_SOURCE_DIR}/utilities
@@ -422,10 +433,13 @@ set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
 # set up in `core` depends on the list of available drivers, which is
 # constructed in `drivers/CMakeLists.txt`. This list may include a generated
 # test driver.
+# `dispatch` must be added after `drivers` because the dispatch implementation
+# must know of all drivers.
 #
 add_subdirectory(framework)
 add_subdirectory(include)
-add_subdirectory(drivers)   # must precede core
+add_subdirectory(drivers)   # must precede dispatch and core
+add_subdirectory(${TF_PSA_CRYPTO_DISPATCH_DIR} dispatch)
 add_subdirectory(extras)
 add_subdirectory(platform)
 add_subdirectory(utilities)
@@ -494,6 +508,7 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
                 # so that generated headers in the build tree take precedence.
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include
+                ${TF_PSA_CRYPTO_DISPATCH_DIR}/include
                 ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS})
 
     foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})

@@ -35,6 +35,7 @@ foreach (target IN LISTS target_libraries)
               # so that generated headers in the build tree take precedence.
               ${PROJECT_BINARY_DIR}/include
               ${PROJECT_SOURCE_DIR}/include
+              ${TF_PSA_CRYPTO_DISPATCH_DIR}/include
               ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS}
               ${TF_PSA_CRYPTO_DRIVERS_INCLUDE_DIRS})
     tf_psa_crypto_set_config_files_compile_definitions(${target})

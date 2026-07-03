@@ -29,6 +29,7 @@ foreach (target IN LISTS target_libraries)
               # so that generated headers in the build tree take precedence.
               ${PROJECT_BINARY_DIR}/include
               ${PROJECT_SOURCE_DIR}/include
+              ${TF_PSA_CRYPTO_DISPATCH_DIR}/include
               ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS})
     foreach(driver_target ${TF_PSA_CRYPTO_DRIVER_TARGETS})
         get_target_property(public_includes ${driver_target} INTERFACE_INCLUDE_DIRECTORIES)
@@ -39,6 +40,15 @@ foreach (target IN LISTS target_libraries)
     tf_psa_crypto_set_config_files_compile_definitions(${target})
     if(TF_PSA_CRYPTO_TEST_DRIVER)
         add_dependencies(${target} ${TF_PSA_CRYPTO_TEST_DRIVER_GENERATION_TARGETS})
+        # Note: "tests/include/test" exists solely to provide access to
+        #       "mbedtls/build_info.h". That header is an alias of
+        #       "tf-psa-crypto/build_info.h".
+        #
+        #       It is included in framework headers and C modules because those
+        #       components are also used in the Mbed TLS context.
+        target_include_directories(${target}
+            PRIVATE ${TF_PSA_CRYPTO_FRAMEWORK_DIR}/tests/include
+                    ${PROJECT_SOURCE_DIR}/tests/include/test)
     endif()
 endforeach(target)
 

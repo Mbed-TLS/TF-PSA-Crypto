@@ -1,33 +1,6 @@
 file(GLOB src_crypto "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 
-# The generated file `psa_crypto_driver_wrappers_no_static.c` may exist in the
-# source tree and therefore be picked up by the glob above. Remove it from
-# `src_crypto` if present, then append it using a relative path. This ensures
-# that the build system prefers the file from the build tree over the one in
-# the source tree.
-list(FIND src_crypto
-     "${CMAKE_CURRENT_SOURCE_DIR}/psa_crypto_driver_wrappers_no_static.c"
-     _idx)
-if(NOT _idx EQUAL -1)
-    list(REMOVE_AT src_crypto ${_idx})
-endif()
-list(APPEND src_crypto psa_crypto_driver_wrappers_no_static.c)
-
 if(GEN_FILES)
-    add_custom_command(
-        OUTPUT
-            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h
-            ${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c
-        COMMAND
-            ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
-                ${PROJECT_SOURCE_DIR}/scripts/generate_driver_wrappers.py
-                ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS
-            ${PROJECT_SOURCE_DIR}/scripts/generate_driver_wrappers.py
-            ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
-            ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
-    )
-
     execute_process(
         COMMAND
             ${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}
@@ -52,8 +25,6 @@ if(GEN_FILES)
     add_custom_target(
             ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_files_target
         DEPENDS
-            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
-            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
             ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
         )
 
@@ -61,7 +32,6 @@ if(GEN_FILES)
     # headers by tracing include directives, but if that happens before the
     # generated headers are generated, this process doesn't find them.
     list(APPEND src_crypto
-        "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
         ${TF_PSA_CRYPTO_GENERATED_CONFIG_CHECKS_HEADERS}
     )
 endif(GEN_FILES)
@@ -154,6 +124,7 @@ foreach(target IN LISTS target_libraries)
         # so that generated headers in the build tree take precedence.
         PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/>
                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
+               $<BUILD_INTERFACE:${TF_PSA_CRYPTO_DISPATCH_DIR}/include/>
                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         PRIVATE ${TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS}
                 # Needed to include psa_crypto_driver_wrappers.h
