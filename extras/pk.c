@@ -30,22 +30,22 @@
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
 typedef void (*mbedtls_async_hardware_rsa_callback_t)(int success,
                                                       void *context);
-int samd_mbedtls_rsa_pss_verify_start(
+int mbedtls_async_hardware_rsa_pss_verify_start(
     int hash_bits, const uint8_t *publicKey, size_t publicKeyLength,
     const uint8_t *hash, size_t hashLength, const uint8_t *signature,
     size_t signatureLength, mbedtls_async_hardware_rsa_callback_t callback,
     void *context);
-int samd_mbedtls_rsa_pkcs1_verify_start(
+int mbedtls_async_hardware_rsa_pkcs1_verify_start(
     int hash_bits, const uint8_t *publicKey, size_t publicKeyLength,
     const uint8_t *hash, size_t hashLength, const uint8_t *signature,
     size_t signatureLength, mbedtls_async_hardware_rsa_callback_t callback,
     void *context);
-int samd_mbedtls_rsa_pss_sign_start(
+int mbedtls_async_hardware_rsa_pss_sign_start(
     int hash_bits, const uint8_t *privateKey, size_t privateKeyLength,
     const uint8_t *hash, size_t hashLength, uint8_t *signature,
     size_t signatureLength, mbedtls_async_hardware_rsa_callback_t callback,
     void *context);
-int samd_mbedtls_rsa_pkcs1_sign_start(
+int mbedtls_async_hardware_rsa_pkcs1_sign_start(
     int hash_bits, const uint8_t *privateKey, size_t privateKeyLength,
     const uint8_t *hash, size_t hashLength, uint8_t *signature,
     size_t signatureLength, mbedtls_async_hardware_rsa_callback_t callback,
@@ -1395,11 +1395,11 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
         state->done = 0;
         state->success = 0;
         int submitted = type == MBEDTLS_PK_SIGALG_RSA_PSS ?
-            samd_mbedtls_rsa_pss_verify_start(
+            mbedtls_async_hardware_rsa_pss_verify_start(
                 hash_bits, ctx->pub_raw, ctx->pub_raw_len, hash, hash_len,
                 sig, sig_len, mbedtls_async_hardware_rsa_verify_complete,
                 state) :
-            samd_mbedtls_rsa_pkcs1_verify_start(
+            mbedtls_async_hardware_rsa_pkcs1_verify_start(
                 hash_bits, ctx->pub_raw, ctx->pub_raw_len, hash, hash_len,
                 sig, sig_len, mbedtls_async_hardware_rsa_verify_complete,
                 state);
@@ -1615,11 +1615,11 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
         state->done = 0;
         state->success = 0;
         int submitted = pk_type == MBEDTLS_PK_SIGALG_RSA_PSS ?
-            samd_mbedtls_rsa_pss_sign_start(
+            mbedtls_async_hardware_rsa_pss_sign_start(
                 hash_bits, state->private_key, state->private_key_length,
                 hash, hash_len, state->signature, state->signature_length,
                 mbedtls_async_hardware_rsa_sign_complete, state) :
-            samd_mbedtls_rsa_pkcs1_sign_start(
+            mbedtls_async_hardware_rsa_pkcs1_sign_start(
                 hash_bits, state->private_key, state->private_key_length,
                 hash, hash_len, state->signature, state->signature_length,
                 mbedtls_async_hardware_rsa_sign_complete, state);

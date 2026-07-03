@@ -508,24 +508,24 @@ struct psa_sign_hash_interruptible_operation_s {
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || defined(MBEDTLS_ASYNC_HARDWARE_RSA)
-    unsigned int MBEDTLS_PRIVATE(samd_started) : 1;
-    unsigned int MBEDTLS_PRIVATE(samd_done) : 1;
-    unsigned int MBEDTLS_PRIVATE(samd_success) : 1;
-    uint16_t MBEDTLS_PRIVATE(samd_key_bits);
+    unsigned int MBEDTLS_PRIVATE(async_hardware_started) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_done) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_success) : 1;
+    uint16_t MBEDTLS_PRIVATE(async_hardware_key_bits);
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    uint8_t MBEDTLS_PRIVATE(samd_private_key)[66];
-    uint8_t MBEDTLS_PRIVATE(samd_hash)[64];
-    uint8_t MBEDTLS_PRIVATE(samd_signature)[132];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_private_key)[66];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_hash)[64];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_signature)[132];
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
-    uint8_t *MBEDTLS_PRIVATE(samd_rsa_private_key);
-    size_t MBEDTLS_PRIVATE(samd_rsa_private_key_length);
-    uint8_t MBEDTLS_PRIVATE(samd_rsa_hash)[64];
-    uint16_t MBEDTLS_PRIVATE(samd_rsa_hash_length);
-    uint16_t MBEDTLS_PRIVATE(samd_rsa_signature_length);
-    uint16_t MBEDTLS_PRIVATE(samd_rsa_hash_bits);
-    uint8_t MBEDTLS_PRIVATE(samd_rsa_pkcs1);
+    uint8_t *MBEDTLS_PRIVATE(async_hardware_rsa_private_key);
+    size_t MBEDTLS_PRIVATE(async_hardware_rsa_private_key_length);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_rsa_hash)[64];
+    uint16_t MBEDTLS_PRIVATE(async_hardware_rsa_hash_length);
+    uint16_t MBEDTLS_PRIVATE(async_hardware_rsa_signature_length);
+    uint16_t MBEDTLS_PRIVATE(async_hardware_rsa_hash_bits);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_rsa_pkcs1);
 #endif
 #endif
 };
@@ -566,13 +566,13 @@ struct psa_verify_hash_interruptible_operation_s {
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    unsigned int MBEDTLS_PRIVATE(samd_started) : 1;
-    unsigned int MBEDTLS_PRIVATE(samd_done) : 1;
-    unsigned int MBEDTLS_PRIVATE(samd_success) : 1;
-    uint16_t MBEDTLS_PRIVATE(samd_key_bits);
-    uint8_t MBEDTLS_PRIVATE(samd_public_key)[97];
-    uint8_t MBEDTLS_PRIVATE(samd_hash)[48];
-    uint8_t MBEDTLS_PRIVATE(samd_signature)[96];
+    unsigned int MBEDTLS_PRIVATE(async_hardware_started) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_done) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_success) : 1;
+    uint16_t MBEDTLS_PRIVATE(async_hardware_key_bits);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_public_key)[97];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_hash)[48];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_signature)[96];
 #endif
 #endif
 };
@@ -618,12 +618,12 @@ struct psa_key_agreement_iop_s {
     psa_key_attributes_t MBEDTLS_PRIVATE(attributes);
     unsigned int MBEDTLS_PRIVATE(error_occurred) : 1;
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
-    unsigned int MBEDTLS_PRIVATE(samd_started) : 1;
-    unsigned int MBEDTLS_PRIVATE(samd_done) : 1;
-    unsigned int MBEDTLS_PRIVATE(samd_success) : 1;
-    uint8_t MBEDTLS_PRIVATE(samd_private_scalar)[66];
-    uint8_t MBEDTLS_PRIVATE(samd_peer_public_key)[133];
-    uint8_t MBEDTLS_PRIVATE(samd_shared_secret)[66];
+    unsigned int MBEDTLS_PRIVATE(async_hardware_started) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_done) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_success) : 1;
+    uint8_t MBEDTLS_PRIVATE(async_hardware_private_scalar)[66];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_peer_public_key)[133];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_shared_secret)[66];
 #endif
 #endif
 };

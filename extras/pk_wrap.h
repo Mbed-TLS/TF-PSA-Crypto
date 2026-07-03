@@ -30,9 +30,9 @@ typedef struct {
     void *op;
     mbedtls_svc_key_id_t pub_id;
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    unsigned char samd_in_progress;
-    unsigned char samd_done;
-    unsigned char samd_success;
+    unsigned char async_hardware_in_progress;
+    unsigned char async_hardware_done;
+    unsigned char async_hardware_success;
 #endif
 } mbedtls_pk_psa_restartable_ctx_t;
 

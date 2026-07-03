@@ -34,7 +34,7 @@
 #include <string.h>
 
 #if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
-static size_t samd_mbedtls_ecdsa_curve_bits(const mbedtls_pk_context *pk)
+static size_t mbedtls_async_hardware_ecdsa_curve_bits(const mbedtls_pk_context *pk)
 {
     if (pk->bits == 256 || pk->bits == 384 || pk->bits == 521) {
         return pk->bits;
@@ -57,21 +57,21 @@ static size_t samd_mbedtls_ecdsa_curve_bits(const mbedtls_pk_context *pk)
 #endif
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-typedef void (*samd_mbedtls_async_callback_t)(int success, void *context);
-int samd_mbedtls_ecdsa_p256_verify_start(
+typedef void (*mbedtls_async_hardware_callback_t)(int success, void *context);
+int mbedtls_async_hardware_ecdsa_p256_verify_start(
     const uint8_t publicKey[65], const uint8_t hash[32],
-    const uint8_t signature[64], samd_mbedtls_async_callback_t callback,
+    const uint8_t signature[64], mbedtls_async_hardware_callback_t callback,
     void *context);
-int samd_mbedtls_ecdsa_p384_verify_start(
+int mbedtls_async_hardware_ecdsa_p384_verify_start(
     const uint8_t publicKey[97], const uint8_t hash[48],
-    const uint8_t signature[96], samd_mbedtls_async_callback_t callback,
+    const uint8_t signature[96], mbedtls_async_hardware_callback_t callback,
     void *context);
-int samd_mbedtls_ecdsa_p521_verify_start(
+int mbedtls_async_hardware_ecdsa_p521_verify_start(
     const uint8_t publicKey[133], const uint8_t hash[64],
-    const uint8_t signature[132], samd_mbedtls_async_callback_t callback,
+    const uint8_t signature[132], mbedtls_async_hardware_callback_t callback,
     void *context);
 
-static int samd_mbedtls_ecdsa_normalize_hash(mbedtls_md_type_t md_alg,
+static int mbedtls_async_hardware_ecdsa_normalize_hash(mbedtls_md_type_t md_alg,
                                              const unsigned char *hash,
                                              size_t hash_len,
                                              size_t expected_hash_len,
@@ -91,15 +91,15 @@ static int samd_mbedtls_ecdsa_normalize_hash(mbedtls_md_type_t md_alg,
     return 1;
 }
 
-static void samd_pk_ecdsa_complete(int success, void *context)
+static void async_hardware_pk_ecdsa_complete(int success, void *context)
 {
     mbedtls_pk_psa_restartable_ctx_t *rs_ctx = context;
     if (rs_ctx == NULL) {
         return;
     }
 
-    rs_ctx->samd_success = success != 0;
-    rs_ctx->samd_done = 1;
+    rs_ctx->async_hardware_success = success != 0;
+    rs_ctx->async_hardware_done = 1;
 }
 #endif
 
@@ -483,7 +483,7 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    size_t curve_bits = samd_mbedtls_ecdsa_curve_bits(pk);
+    size_t curve_bits = mbedtls_async_hardware_ecdsa_curve_bits(pk);
 
     ret = mbedtls_ecdsa_der_to_raw(curve_bits, sig, sig_len,
                                    raw_sig, sizeof(raw_sig), &raw_sig_len);
@@ -504,43 +504,43 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
          (curve_bits == 521 && pk->pub_raw_len == 133 &&
           raw_sig_len == 132)) &&
         pk->pub_raw[0] == 0x04u &&
-        samd_mbedtls_ecdsa_normalize_hash(md_alg, hash, hash_len,
+        mbedtls_async_hardware_ecdsa_normalize_hash(md_alg, hash, hash_len,
                                           expected_hash_len,
                                           normalized_hash) != 0) {
-        if (rs_ctx->samd_in_progress != 0) {
-            if (rs_ctx->samd_done == 0) {
+        if (rs_ctx->async_hardware_in_progress != 0) {
+            if (rs_ctx->async_hardware_done == 0) {
                 return MBEDTLS_ERR_ECP_IN_PROGRESS;
             }
 
-            rs_ctx->samd_in_progress = 0;
-            rs_ctx->samd_done = 0;
-            if (rs_ctx->samd_success == 0) {
-                rs_ctx->samd_success = 0;
+            rs_ctx->async_hardware_in_progress = 0;
+            rs_ctx->async_hardware_done = 0;
+            if (rs_ctx->async_hardware_success == 0) {
+                rs_ctx->async_hardware_success = 0;
                 return MBEDTLS_ERR_ECP_VERIFY_FAILED;
             }
 
-            rs_ctx->samd_success = 0;
+            rs_ctx->async_hardware_success = 0;
             return 0;
         }
 
-        rs_ctx->samd_in_progress = 1;
-        rs_ctx->samd_done = 0;
-        rs_ctx->samd_success = 0;
+        rs_ctx->async_hardware_in_progress = 1;
+        rs_ctx->async_hardware_done = 0;
+        rs_ctx->async_hardware_success = 0;
         if (((curve_bits == 256) ?
-             samd_mbedtls_ecdsa_p256_verify_start(
+             mbedtls_async_hardware_ecdsa_p256_verify_start(
                  pk->pub_raw, normalized_hash, raw_sig,
-                 samd_pk_ecdsa_complete,
+                 async_hardware_pk_ecdsa_complete,
                  rs_ctx) :
              (curve_bits == 384) ?
-             samd_mbedtls_ecdsa_p384_verify_start(
+             mbedtls_async_hardware_ecdsa_p384_verify_start(
                  pk->pub_raw, normalized_hash, raw_sig,
-                 samd_pk_ecdsa_complete,
+                 async_hardware_pk_ecdsa_complete,
                  rs_ctx) :
-             samd_mbedtls_ecdsa_p521_verify_start(
+             mbedtls_async_hardware_ecdsa_p521_verify_start(
                  pk->pub_raw, normalized_hash, raw_sig,
-                 samd_pk_ecdsa_complete,
+                 async_hardware_pk_ecdsa_complete,
                  rs_ctx)) == 0) {
-            rs_ctx->samd_in_progress = 0;
+            rs_ctx->async_hardware_in_progress = 0;
             return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
         }
 

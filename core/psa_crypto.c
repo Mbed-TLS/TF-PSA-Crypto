@@ -3665,12 +3665,12 @@ uint32_t psa_sign_hash_get_num_ops(
 {
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID) {
-        return operation->samd_started ? 1 : 0;
+        return operation->async_hardware_started ? 1 : 0;
     }
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_RSA_SIGN_DRIVER_ID) {
-        return operation->samd_started ? 1 : 0;
+        return operation->async_hardware_started ? 1 : 0;
     }
 #endif
 
@@ -3682,7 +3682,7 @@ uint32_t psa_verify_hash_get_num_ops(
 {
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_VERIFY_DRIVER_ID) {
-        return operation->samd_started ? 1 : 0;
+        return operation->async_hardware_started ? 1 : 0;
     }
 #endif
 
@@ -3690,34 +3690,34 @@ uint32_t psa_verify_hash_get_num_ops(
 }
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-typedef void (*samd_mbedtls_ecdsa_async_callback_t)(int success,
+typedef void (*mbedtls_async_hardware_ecdsa_async_callback_t)(int success,
                                                      void *context);
-extern int samd_mbedtls_ecdsa_p256_sign_start(
+extern int mbedtls_async_hardware_ecdsa_p256_sign_start(
     const uint8_t private_key[32], const uint8_t hash[32],
-    uint8_t signature[64], samd_mbedtls_ecdsa_async_callback_t callback,
+    uint8_t signature[64], mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdsa_p384_sign_start(
+extern int mbedtls_async_hardware_ecdsa_p384_sign_start(
     const uint8_t private_key[48], const uint8_t hash[48],
-    uint8_t signature[96], samd_mbedtls_ecdsa_async_callback_t callback,
+    uint8_t signature[96], mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdsa_p521_sign_start(
+extern int mbedtls_async_hardware_ecdsa_p521_sign_start(
     const uint8_t private_key[66], const uint8_t hash[64],
-    uint8_t signature[132], samd_mbedtls_ecdsa_async_callback_t callback,
+    uint8_t signature[132], mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdsa_p256_verify_start(
+extern int mbedtls_async_hardware_ecdsa_p256_verify_start(
     const uint8_t public_key[65], const uint8_t hash[32],
-    const uint8_t signature[64], samd_mbedtls_ecdsa_async_callback_t callback,
+    const uint8_t signature[64], mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdsa_p384_verify_start(
+extern int mbedtls_async_hardware_ecdsa_p384_verify_start(
     const uint8_t public_key[97], const uint8_t hash[48],
-    const uint8_t signature[96], samd_mbedtls_ecdsa_async_callback_t callback,
+    const uint8_t signature[96], mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdsa_p521_verify_start(
+extern int mbedtls_async_hardware_ecdsa_p521_verify_start(
     const uint8_t public_key[133], const uint8_t hash[64],
-    const uint8_t signature[132], samd_mbedtls_ecdsa_async_callback_t callback,
+    const uint8_t signature[132], mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
 
-static void samd_psa_ecdsa_zeroize(void *buffer, size_t length)
+static void psa_async_hardware_ecdsa_zeroize(void *buffer, size_t length)
 {
     if (buffer == NULL) {
         return;
@@ -3729,7 +3729,7 @@ static void samd_psa_ecdsa_zeroize(void *buffer, size_t length)
     }
 }
 
-static int samd_psa_ecdsa_key_supported(
+static int psa_async_hardware_ecdsa_key_supported(
     const psa_key_attributes_t *attributes)
 {
     psa_key_type_t key_type = psa_get_key_type(attributes);
@@ -3739,22 +3739,22 @@ static int samd_psa_ecdsa_key_supported(
            (key_bits == 256 || key_bits == 384 || key_bits == 521);
 }
 
-static size_t samd_psa_ecdsa_coordinate_length(size_t key_bits)
+static size_t psa_async_hardware_ecdsa_coordinate_length(size_t key_bits)
 {
     return (key_bits + 7u) / 8u;
 }
 
-static size_t samd_psa_ecdsa_public_key_length(size_t key_bits)
+static size_t psa_async_hardware_ecdsa_public_key_length(size_t key_bits)
 {
-    return samd_psa_ecdsa_coordinate_length(key_bits) * 2u + 1u;
+    return psa_async_hardware_ecdsa_coordinate_length(key_bits) * 2u + 1u;
 }
 
-static size_t samd_psa_ecdsa_signature_length(size_t key_bits)
+static size_t psa_async_hardware_ecdsa_signature_length(size_t key_bits)
 {
-    return samd_psa_ecdsa_coordinate_length(key_bits) * 2u;
+    return psa_async_hardware_ecdsa_coordinate_length(key_bits) * 2u;
 }
 
-static int samd_psa_ecdsa_hash_alg_supported(size_t key_bits,
+static int psa_async_hardware_ecdsa_hash_alg_supported(size_t key_bits,
                                               psa_algorithm_t alg,
                                               size_t hash_length)
 {
@@ -3770,7 +3770,7 @@ static int samd_psa_ecdsa_hash_alg_supported(size_t key_bits,
              hash_length == 64));
 }
 
-static void samd_psa_ecdsa_sign_callback(int success, void *context)
+static void psa_async_hardware_ecdsa_sign_callback(int success, void *context)
 {
     psa_sign_hash_interruptible_operation_t *operation =
         (psa_sign_hash_interruptible_operation_t *) context;
@@ -3778,11 +3778,11 @@ static void samd_psa_ecdsa_sign_callback(int success, void *context)
         return;
     }
 
-    operation->samd_success = success != 0;
-    operation->samd_done = 1;
+    operation->async_hardware_success = success != 0;
+    operation->async_hardware_done = 1;
 }
 
-static void samd_psa_ecdsa_verify_callback(int success, void *context)
+static void psa_async_hardware_ecdsa_verify_callback(int success, void *context)
 {
     psa_verify_hash_interruptible_operation_t *operation =
         (psa_verify_hash_interruptible_operation_t *) context;
@@ -3790,66 +3790,66 @@ static void samd_psa_ecdsa_verify_callback(int success, void *context)
         return;
     }
 
-    operation->samd_success = success != 0;
-    operation->samd_done = 1;
+    operation->async_hardware_success = success != 0;
+    operation->async_hardware_done = 1;
 }
 
-static void samd_psa_ecdsa_sign_clear(
+static void psa_async_hardware_ecdsa_sign_clear(
     psa_sign_hash_interruptible_operation_t *operation)
 {
     if (operation == NULL) {
         return;
     }
 
-    samd_psa_ecdsa_zeroize(operation->samd_private_key,
-                            sizeof(operation->samd_private_key));
-    samd_psa_ecdsa_zeroize(operation->samd_hash,
-                            sizeof(operation->samd_hash));
-    samd_psa_ecdsa_zeroize(operation->samd_signature,
-                            sizeof(operation->samd_signature));
-    operation->samd_started = 0;
-    operation->samd_done = 0;
-    operation->samd_success = 0;
-    operation->samd_key_bits = 0;
+    psa_async_hardware_ecdsa_zeroize(operation->async_hardware_private_key,
+                            sizeof(operation->async_hardware_private_key));
+    psa_async_hardware_ecdsa_zeroize(operation->async_hardware_hash,
+                            sizeof(operation->async_hardware_hash));
+    psa_async_hardware_ecdsa_zeroize(operation->async_hardware_signature,
+                            sizeof(operation->async_hardware_signature));
+    operation->async_hardware_started = 0;
+    operation->async_hardware_done = 0;
+    operation->async_hardware_success = 0;
+    operation->async_hardware_key_bits = 0;
 }
 
-static void samd_psa_ecdsa_verify_clear(
+static void psa_async_hardware_ecdsa_verify_clear(
     psa_verify_hash_interruptible_operation_t *operation)
 {
     if (operation == NULL) {
         return;
     }
 
-    samd_psa_ecdsa_zeroize(operation->samd_public_key,
-                            sizeof(operation->samd_public_key));
-    samd_psa_ecdsa_zeroize(operation->samd_hash,
-                            sizeof(operation->samd_hash));
-    samd_psa_ecdsa_zeroize(operation->samd_signature,
-                            sizeof(operation->samd_signature));
-    operation->samd_started = 0;
-    operation->samd_done = 0;
-    operation->samd_success = 0;
-    operation->samd_key_bits = 0;
+    psa_async_hardware_ecdsa_zeroize(operation->async_hardware_public_key,
+                            sizeof(operation->async_hardware_public_key));
+    psa_async_hardware_ecdsa_zeroize(operation->async_hardware_hash,
+                            sizeof(operation->async_hardware_hash));
+    psa_async_hardware_ecdsa_zeroize(operation->async_hardware_signature,
+                            sizeof(operation->async_hardware_signature));
+    operation->async_hardware_started = 0;
+    operation->async_hardware_done = 0;
+    operation->async_hardware_success = 0;
+    operation->async_hardware_key_bits = 0;
 }
 #endif
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
 #if !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-typedef void (*samd_mbedtls_ecdsa_async_callback_t)(int success,
+typedef void (*mbedtls_async_hardware_ecdsa_async_callback_t)(int success,
                                                      void *context);
 #endif
-extern int samd_mbedtls_rsa_pss_sign_start(
+extern int mbedtls_async_hardware_rsa_pss_sign_start(
     int hash_bits, const uint8_t *private_key, size_t private_key_length,
     const uint8_t *hash, size_t hash_length, uint8_t *signature,
-    size_t signature_length, samd_mbedtls_ecdsa_async_callback_t callback,
+    size_t signature_length, mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
-extern int samd_mbedtls_rsa_pkcs1_sign_start(
+extern int mbedtls_async_hardware_rsa_pkcs1_sign_start(
     int hash_bits, const uint8_t *private_key, size_t private_key_length,
     const uint8_t *hash, size_t hash_length, uint8_t *signature,
-    size_t signature_length, samd_mbedtls_ecdsa_async_callback_t callback,
+    size_t signature_length, mbedtls_async_hardware_ecdsa_async_callback_t callback,
     void *context);
 
-static int samd_psa_rsa_hash_bits(psa_algorithm_t alg,
+static int psa_async_hardware_rsa_hash_bits(psa_algorithm_t alg,
                                   size_t hash_length)
 {
     if (!PSA_ALG_IS_RSA_PSS(alg) &&
@@ -3868,7 +3868,7 @@ static int samd_psa_rsa_hash_bits(psa_algorithm_t alg,
     }
 }
 
-static int samd_psa_rsa_key_supported(const psa_key_attributes_t *attributes)
+static int psa_async_hardware_rsa_key_supported(const psa_key_attributes_t *attributes)
 {
     size_t key_bits = psa_get_key_bits(attributes);
     return PSA_KEY_TYPE_IS_RSA(psa_get_key_type(attributes)) &&
@@ -3876,13 +3876,13 @@ static int samd_psa_rsa_key_supported(const psa_key_attributes_t *attributes)
            (key_bits % 32u) == 0u;
 }
 
-static size_t samd_psa_rsa_signature_length(
+static size_t psa_async_hardware_rsa_signature_length(
     const psa_key_attributes_t *attributes)
 {
     return PSA_BITS_TO_BYTES(psa_get_key_bits(attributes));
 }
 
-static void samd_psa_rsa_sign_callback(int success, void *context)
+static void psa_async_hardware_rsa_sign_callback(int success, void *context)
 {
     psa_sign_hash_interruptible_operation_t *operation =
         (psa_sign_hash_interruptible_operation_t *) context;
@@ -3890,34 +3890,34 @@ static void samd_psa_rsa_sign_callback(int success, void *context)
         return;
     }
 
-    operation->samd_success = success != 0;
-    operation->samd_done = 1;
+    operation->async_hardware_success = success != 0;
+    operation->async_hardware_done = 1;
 }
 
-static void samd_psa_rsa_sign_clear(
+static void psa_async_hardware_rsa_sign_clear(
     psa_sign_hash_interruptible_operation_t *operation)
 {
     if (operation == NULL) {
         return;
     }
 
-    if (operation->samd_rsa_private_key != NULL) {
-        mbedtls_platform_zeroize(operation->samd_rsa_private_key,
-                                 operation->samd_rsa_private_key_length);
-        mbedtls_free(operation->samd_rsa_private_key);
-        operation->samd_rsa_private_key = NULL;
+    if (operation->async_hardware_rsa_private_key != NULL) {
+        mbedtls_platform_zeroize(operation->async_hardware_rsa_private_key,
+                                 operation->async_hardware_rsa_private_key_length);
+        mbedtls_free(operation->async_hardware_rsa_private_key);
+        operation->async_hardware_rsa_private_key = NULL;
     }
-    operation->samd_rsa_private_key_length = 0;
-    mbedtls_platform_zeroize(operation->samd_rsa_hash,
-                             sizeof(operation->samd_rsa_hash));
-    operation->samd_rsa_hash_length = 0;
-    operation->samd_rsa_signature_length = 0;
-    operation->samd_rsa_hash_bits = 0;
-    operation->samd_rsa_pkcs1 = 0;
-    operation->samd_started = 0;
-    operation->samd_done = 0;
-    operation->samd_success = 0;
-    operation->samd_key_bits = 0;
+    operation->async_hardware_rsa_private_key_length = 0;
+    mbedtls_platform_zeroize(operation->async_hardware_rsa_hash,
+                             sizeof(operation->async_hardware_rsa_hash));
+    operation->async_hardware_rsa_hash_length = 0;
+    operation->async_hardware_rsa_signature_length = 0;
+    operation->async_hardware_rsa_hash_bits = 0;
+    operation->async_hardware_rsa_pkcs1 = 0;
+    operation->async_hardware_started = 0;
+    operation->async_hardware_done = 0;
+    operation->async_hardware_success = 0;
+    operation->async_hardware_key_bits = 0;
 }
 #endif
 
@@ -3935,14 +3935,14 @@ static psa_status_t psa_sign_hash_abort_internal(
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID) {
-        samd_psa_ecdsa_sign_clear(operation);
+        psa_async_hardware_ecdsa_sign_clear(operation);
         operation->id = 0;
         return PSA_SUCCESS;
     }
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_RSA_SIGN_DRIVER_ID) {
-        samd_psa_rsa_sign_clear(operation);
+        psa_async_hardware_rsa_sign_clear(operation);
         operation->id = 0;
         return PSA_SUCCESS;
     }
@@ -4008,23 +4008,23 @@ psa_status_t psa_sign_hash_start(
     operation->num_ops = 0;
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    size_t samd_key_bits = psa_get_key_bits(&slot->attr);
-    size_t samd_coordinate_len = samd_psa_ecdsa_coordinate_length(samd_key_bits);
-    size_t samd_signature_len = samd_psa_ecdsa_signature_length(samd_key_bits);
-    if (samd_psa_ecdsa_key_supported(&slot->attr) &&
+    size_t async_hardware_key_bits = psa_get_key_bits(&slot->attr);
+    size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(async_hardware_key_bits);
+    size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(async_hardware_key_bits);
+    if (psa_async_hardware_ecdsa_key_supported(&slot->attr) &&
         PSA_ALG_IS_RANDOMIZED_ECDSA(alg) &&
-        samd_psa_ecdsa_hash_alg_supported(samd_key_bits, alg, hash_length) &&
-        slot->key.bytes == samd_coordinate_len &&
-        samd_coordinate_len <= sizeof(operation->samd_private_key) &&
-        hash_length <= sizeof(operation->samd_hash) &&
-        samd_signature_len <= sizeof(operation->samd_signature)) {
-        memcpy(operation->samd_private_key, slot->key.data, samd_coordinate_len);
-        memcpy(operation->samd_hash, hash, hash_length);
-        operation->samd_key_bits = (uint16_t) samd_key_bits;
+        psa_async_hardware_ecdsa_hash_alg_supported(async_hardware_key_bits, alg, hash_length) &&
+        slot->key.bytes == async_hardware_coordinate_len &&
+        async_hardware_coordinate_len <= sizeof(operation->async_hardware_private_key) &&
+        hash_length <= sizeof(operation->async_hardware_hash) &&
+        async_hardware_signature_len <= sizeof(operation->async_hardware_signature)) {
+        memcpy(operation->async_hardware_private_key, slot->key.data, async_hardware_coordinate_len);
+        memcpy(operation->async_hardware_hash, hash, hash_length);
+        operation->async_hardware_key_bits = (uint16_t) async_hardware_key_bits;
         operation->id = MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID;
-        operation->samd_started = 0;
-        operation->samd_done = 0;
-        operation->samd_success = 0;
+        operation->async_hardware_started = 0;
+        operation->async_hardware_done = 0;
+        operation->async_hardware_success = 0;
         status = PSA_SUCCESS;
         goto exit;
     }
@@ -4032,34 +4032,34 @@ psa_status_t psa_sign_hash_start(
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     {
-        int samd_hash_bits = samd_psa_rsa_hash_bits(alg, hash_length);
-        size_t samd_signature_len = samd_psa_rsa_signature_length(&slot->attr);
-        if (samd_psa_rsa_key_supported(&slot->attr) &&
-            samd_hash_bits != 0 &&
-            hash_length <= sizeof(operation->samd_rsa_hash) &&
-            samd_signature_len <= UINT16_MAX &&
+        int async_hardware_hash_bits = psa_async_hardware_rsa_hash_bits(alg, hash_length);
+        size_t async_hardware_signature_len = psa_async_hardware_rsa_signature_length(&slot->attr);
+        if (psa_async_hardware_rsa_key_supported(&slot->attr) &&
+            async_hardware_hash_bits != 0 &&
+            hash_length <= sizeof(operation->async_hardware_rsa_hash) &&
+            async_hardware_signature_len <= UINT16_MAX &&
             slot->key.bytes != 0) {
-            operation->samd_rsa_private_key =
+            operation->async_hardware_rsa_private_key =
                 mbedtls_calloc(1, slot->key.bytes);
-            if (operation->samd_rsa_private_key == NULL) {
+            if (operation->async_hardware_rsa_private_key == NULL) {
                 status = PSA_ERROR_INSUFFICIENT_MEMORY;
                 goto exit;
             }
-            memcpy(operation->samd_rsa_private_key, slot->key.data,
+            memcpy(operation->async_hardware_rsa_private_key, slot->key.data,
                    slot->key.bytes);
-            operation->samd_rsa_private_key_length = slot->key.bytes;
-            memcpy(operation->samd_rsa_hash, hash, hash_length);
-            operation->samd_rsa_hash_length = (uint16_t) hash_length;
-            operation->samd_rsa_signature_length =
-                (uint16_t) samd_signature_len;
-            operation->samd_rsa_hash_bits = (uint16_t) samd_hash_bits;
-            operation->samd_rsa_pkcs1 =
+            operation->async_hardware_rsa_private_key_length = slot->key.bytes;
+            memcpy(operation->async_hardware_rsa_hash, hash, hash_length);
+            operation->async_hardware_rsa_hash_length = (uint16_t) hash_length;
+            operation->async_hardware_rsa_signature_length =
+                (uint16_t) async_hardware_signature_len;
+            operation->async_hardware_rsa_hash_bits = (uint16_t) async_hardware_hash_bits;
+            operation->async_hardware_rsa_pkcs1 =
                 PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) ? 1u : 0u;
-            operation->samd_key_bits = (uint16_t) psa_get_key_bits(&slot->attr);
+            operation->async_hardware_key_bits = (uint16_t) psa_get_key_bits(&slot->attr);
             operation->id = MBEDTLS_ASYNC_HARDWARE_RSA_SIGN_DRIVER_ID;
-            operation->samd_started = 0;
-            operation->samd_done = 0;
-            operation->samd_success = 0;
+            operation->async_hardware_started = 0;
+            operation->async_hardware_done = 0;
+            operation->async_hardware_success = 0;
             status = PSA_SUCCESS;
             goto exit;
         }
@@ -4123,99 +4123,99 @@ psa_status_t psa_sign_hash_complete(
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID) {
-        size_t samd_coordinate_len = (operation->samd_key_bits + 7u) / 8u;
-        size_t samd_signature_len = samd_coordinate_len * 2u;
-        if (signature_size < samd_signature_len) {
+        size_t async_hardware_coordinate_len = (operation->async_hardware_key_bits + 7u) / 8u;
+        size_t async_hardware_signature_len = async_hardware_coordinate_len * 2u;
+        if (signature_size < async_hardware_signature_len) {
             status = PSA_ERROR_BUFFER_TOO_SMALL;
             goto exit;
         }
-        if (!operation->samd_started) {
-            operation->samd_started = 1;
-            if (!((samd_coordinate_len == 32u) ?
-                  samd_mbedtls_ecdsa_p256_sign_start(
-                      operation->samd_private_key, operation->samd_hash,
-                      operation->samd_signature,
-                      samd_psa_ecdsa_sign_callback, operation) :
-                  (samd_coordinate_len == 48u) ?
-                  samd_mbedtls_ecdsa_p384_sign_start(
-                      operation->samd_private_key, operation->samd_hash,
-                      operation->samd_signature,
-                      samd_psa_ecdsa_sign_callback, operation) :
-                  (samd_coordinate_len == 66u) ?
-                  samd_mbedtls_ecdsa_p521_sign_start(
-                      operation->samd_private_key, operation->samd_hash,
-                      operation->samd_signature,
-                      samd_psa_ecdsa_sign_callback, operation) :
+        if (!operation->async_hardware_started) {
+            operation->async_hardware_started = 1;
+            if (!((async_hardware_coordinate_len == 32u) ?
+                  mbedtls_async_hardware_ecdsa_p256_sign_start(
+                      operation->async_hardware_private_key, operation->async_hardware_hash,
+                      operation->async_hardware_signature,
+                      psa_async_hardware_ecdsa_sign_callback, operation) :
+                  (async_hardware_coordinate_len == 48u) ?
+                  mbedtls_async_hardware_ecdsa_p384_sign_start(
+                      operation->async_hardware_private_key, operation->async_hardware_hash,
+                      operation->async_hardware_signature,
+                      psa_async_hardware_ecdsa_sign_callback, operation) :
+                  (async_hardware_coordinate_len == 66u) ?
+                  mbedtls_async_hardware_ecdsa_p521_sign_start(
+                      operation->async_hardware_private_key, operation->async_hardware_hash,
+                      operation->async_hardware_signature,
+                      psa_async_hardware_ecdsa_sign_callback, operation) :
                   0)) {
-                samd_psa_ecdsa_sign_clear(operation);
+                psa_async_hardware_ecdsa_sign_clear(operation);
                 status = PSA_ERROR_HARDWARE_FAILURE;
                 goto exit;
             }
             status = PSA_OPERATION_INCOMPLETE;
             goto exit;
         }
-        if (!operation->samd_done) {
+        if (!operation->async_hardware_done) {
             status = PSA_OPERATION_INCOMPLETE;
             goto exit;
         }
-        if (!operation->samd_success) {
-            samd_psa_ecdsa_sign_clear(operation);
+        if (!operation->async_hardware_success) {
+            psa_async_hardware_ecdsa_sign_clear(operation);
             status = PSA_ERROR_HARDWARE_FAILURE;
             goto exit;
         }
-        memcpy(signature, operation->samd_signature, samd_signature_len);
-        *signature_length = samd_signature_len;
-        samd_psa_ecdsa_sign_clear(operation);
+        memcpy(signature, operation->async_hardware_signature, async_hardware_signature_len);
+        *signature_length = async_hardware_signature_len;
+        psa_async_hardware_ecdsa_sign_clear(operation);
         status = PSA_SUCCESS;
         goto exit;
     }
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_RSA_SIGN_DRIVER_ID) {
-        if (signature_size < operation->samd_rsa_signature_length) {
+        if (signature_size < operation->async_hardware_rsa_signature_length) {
             status = PSA_ERROR_BUFFER_TOO_SMALL;
             goto exit;
         }
-        if (!operation->samd_started) {
-            operation->samd_started = 1;
-            int submitted = operation->samd_rsa_pkcs1 != 0 ?
-                samd_mbedtls_rsa_pkcs1_sign_start(
-                    operation->samd_rsa_hash_bits,
-                    operation->samd_rsa_private_key,
-                    operation->samd_rsa_private_key_length,
-                    operation->samd_rsa_hash,
-                    operation->samd_rsa_hash_length,
+        if (!operation->async_hardware_started) {
+            operation->async_hardware_started = 1;
+            int submitted = operation->async_hardware_rsa_pkcs1 != 0 ?
+                mbedtls_async_hardware_rsa_pkcs1_sign_start(
+                    operation->async_hardware_rsa_hash_bits,
+                    operation->async_hardware_rsa_private_key,
+                    operation->async_hardware_rsa_private_key_length,
+                    operation->async_hardware_rsa_hash,
+                    operation->async_hardware_rsa_hash_length,
                     signature,
-                    operation->samd_rsa_signature_length,
-                    samd_psa_rsa_sign_callback, operation) :
-                samd_mbedtls_rsa_pss_sign_start(
-                    operation->samd_rsa_hash_bits,
-                    operation->samd_rsa_private_key,
-                    operation->samd_rsa_private_key_length,
-                    operation->samd_rsa_hash,
-                    operation->samd_rsa_hash_length,
+                    operation->async_hardware_rsa_signature_length,
+                    psa_async_hardware_rsa_sign_callback, operation) :
+                mbedtls_async_hardware_rsa_pss_sign_start(
+                    operation->async_hardware_rsa_hash_bits,
+                    operation->async_hardware_rsa_private_key,
+                    operation->async_hardware_rsa_private_key_length,
+                    operation->async_hardware_rsa_hash,
+                    operation->async_hardware_rsa_hash_length,
                     signature,
-                    operation->samd_rsa_signature_length,
-                    samd_psa_rsa_sign_callback, operation);
+                    operation->async_hardware_rsa_signature_length,
+                    psa_async_hardware_rsa_sign_callback, operation);
             if (!submitted) {
-                samd_psa_rsa_sign_clear(operation);
+                psa_async_hardware_rsa_sign_clear(operation);
                 status = PSA_ERROR_HARDWARE_FAILURE;
                 goto exit;
             }
             status = PSA_OPERATION_INCOMPLETE;
             goto exit;
         }
-        if (!operation->samd_done) {
+        if (!operation->async_hardware_done) {
             status = PSA_OPERATION_INCOMPLETE;
             goto exit;
         }
-        if (!operation->samd_success) {
-            samd_psa_rsa_sign_clear(operation);
+        if (!operation->async_hardware_success) {
+            psa_async_hardware_rsa_sign_clear(operation);
             status = PSA_ERROR_HARDWARE_FAILURE;
             goto exit;
         }
-        *signature_length = operation->samd_rsa_signature_length;
-        samd_psa_rsa_sign_clear(operation);
+        *signature_length = operation->async_hardware_rsa_signature_length;
+        psa_async_hardware_rsa_sign_clear(operation);
         status = PSA_SUCCESS;
         goto exit;
     }
@@ -4279,7 +4279,7 @@ static psa_status_t psa_verify_hash_abort_internal(
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_VERIFY_DRIVER_ID) {
-        samd_psa_ecdsa_verify_clear(operation);
+        psa_async_hardware_ecdsa_verify_clear(operation);
         operation->id = 0;
         return PSA_SUCCESS;
     }
@@ -4344,26 +4344,26 @@ psa_status_t psa_verify_hash_start(
     operation->num_ops = 0;
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    size_t samd_key_bits = psa_get_key_bits(&slot->attr);
-    size_t samd_public_key_len = samd_psa_ecdsa_public_key_length(samd_key_bits);
-    size_t samd_coordinate_len = samd_psa_ecdsa_coordinate_length(samd_key_bits);
-    size_t samd_signature_len = samd_psa_ecdsa_signature_length(samd_key_bits);
-    if (samd_psa_ecdsa_key_supported(&slot->attr) &&
-        samd_psa_ecdsa_hash_alg_supported(samd_key_bits, alg, hash_length) &&
-        slot->key.bytes == samd_public_key_len &&
-        signature_length == samd_signature_len &&
-        samd_public_key_len <= sizeof(operation->samd_public_key) &&
-        hash_length <= sizeof(operation->samd_hash) &&
-        samd_signature_len <= sizeof(operation->samd_signature)) {
-        (void) samd_coordinate_len;
-        memcpy(operation->samd_public_key, slot->key.data, samd_public_key_len);
-        memcpy(operation->samd_hash, hash, hash_length);
-        memcpy(operation->samd_signature, signature, samd_signature_len);
-        operation->samd_key_bits = (uint16_t) samd_key_bits;
+    size_t async_hardware_key_bits = psa_get_key_bits(&slot->attr);
+    size_t async_hardware_public_key_len = psa_async_hardware_ecdsa_public_key_length(async_hardware_key_bits);
+    size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(async_hardware_key_bits);
+    size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(async_hardware_key_bits);
+    if (psa_async_hardware_ecdsa_key_supported(&slot->attr) &&
+        psa_async_hardware_ecdsa_hash_alg_supported(async_hardware_key_bits, alg, hash_length) &&
+        slot->key.bytes == async_hardware_public_key_len &&
+        signature_length == async_hardware_signature_len &&
+        async_hardware_public_key_len <= sizeof(operation->async_hardware_public_key) &&
+        hash_length <= sizeof(operation->async_hardware_hash) &&
+        async_hardware_signature_len <= sizeof(operation->async_hardware_signature)) {
+        (void) async_hardware_coordinate_len;
+        memcpy(operation->async_hardware_public_key, slot->key.data, async_hardware_public_key_len);
+        memcpy(operation->async_hardware_hash, hash, hash_length);
+        memcpy(operation->async_hardware_signature, signature, async_hardware_signature_len);
+        operation->async_hardware_key_bits = (uint16_t) async_hardware_key_bits;
         operation->id = MBEDTLS_ASYNC_HARDWARE_ECDSA_VERIFY_DRIVER_ID;
-        operation->samd_started = 0;
-        operation->samd_done = 0;
-        operation->samd_success = 0;
+        operation->async_hardware_started = 0;
+        operation->async_hardware_done = 0;
+        operation->async_hardware_success = 0;
         status = PSA_SUCCESS;
         goto exit;
     }
@@ -4412,43 +4412,43 @@ psa_status_t psa_verify_hash_complete(
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_VERIFY_DRIVER_ID) {
-        if (!operation->samd_started) {
-            size_t samd_coordinate_len =
-                (operation->samd_key_bits + 7u) / 8u;
-            operation->samd_started = 1;
-            if (!((samd_coordinate_len == 32u) ?
-                  samd_mbedtls_ecdsa_p256_verify_start(
-                      operation->samd_public_key, operation->samd_hash,
-                      operation->samd_signature,
-                      samd_psa_ecdsa_verify_callback, operation) :
-                  (samd_coordinate_len == 48u) ?
-                  samd_mbedtls_ecdsa_p384_verify_start(
-                      operation->samd_public_key, operation->samd_hash,
-                      operation->samd_signature,
-                      samd_psa_ecdsa_verify_callback, operation) :
-                  (samd_coordinate_len == 66u) ?
-                  samd_mbedtls_ecdsa_p521_verify_start(
-                      operation->samd_public_key, operation->samd_hash,
-                      operation->samd_signature,
-                      samd_psa_ecdsa_verify_callback, operation) :
+        if (!operation->async_hardware_started) {
+            size_t async_hardware_coordinate_len =
+                (operation->async_hardware_key_bits + 7u) / 8u;
+            operation->async_hardware_started = 1;
+            if (!((async_hardware_coordinate_len == 32u) ?
+                  mbedtls_async_hardware_ecdsa_p256_verify_start(
+                      operation->async_hardware_public_key, operation->async_hardware_hash,
+                      operation->async_hardware_signature,
+                      psa_async_hardware_ecdsa_verify_callback, operation) :
+                  (async_hardware_coordinate_len == 48u) ?
+                  mbedtls_async_hardware_ecdsa_p384_verify_start(
+                      operation->async_hardware_public_key, operation->async_hardware_hash,
+                      operation->async_hardware_signature,
+                      psa_async_hardware_ecdsa_verify_callback, operation) :
+                  (async_hardware_coordinate_len == 66u) ?
+                  mbedtls_async_hardware_ecdsa_p521_verify_start(
+                      operation->async_hardware_public_key, operation->async_hardware_hash,
+                      operation->async_hardware_signature,
+                      psa_async_hardware_ecdsa_verify_callback, operation) :
                   0)) {
-                samd_psa_ecdsa_verify_clear(operation);
+                psa_async_hardware_ecdsa_verify_clear(operation);
                 status = PSA_ERROR_HARDWARE_FAILURE;
                 goto exit;
             }
             status = PSA_OPERATION_INCOMPLETE;
             goto exit;
         }
-        if (!operation->samd_done) {
+        if (!operation->async_hardware_done) {
             status = PSA_OPERATION_INCOMPLETE;
             goto exit;
         }
-        if (!operation->samd_success) {
-            samd_psa_ecdsa_verify_clear(operation);
+        if (!operation->async_hardware_success) {
+            psa_async_hardware_ecdsa_verify_clear(operation);
             status = PSA_ERROR_INVALID_SIGNATURE;
             goto exit;
         }
-        samd_psa_ecdsa_verify_clear(operation);
+        psa_async_hardware_ecdsa_verify_clear(operation);
         status = PSA_SUCCESS;
         goto exit;
     }
@@ -8455,27 +8455,27 @@ exit:
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
 #define MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID 0x53494f45u
-typedef void (*samd_mbedtls_async_callback_t)(int success, void *context);
-extern int samd_mbedtls_ecdh_p256_start(
+typedef void (*mbedtls_async_hardware_callback_t)(int success, void *context);
+extern int mbedtls_async_hardware_ecdh_p256_start(
     const uint8_t private_scalar[32],
     const uint8_t peer_public_key[65],
     uint8_t shared_secret[32],
-    samd_mbedtls_async_callback_t callback,
+    mbedtls_async_hardware_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdh_p384_start(
+extern int mbedtls_async_hardware_ecdh_p384_start(
     const uint8_t private_scalar[48],
     const uint8_t peer_public_key[97],
     uint8_t shared_secret[48],
-    samd_mbedtls_async_callback_t callback,
+    mbedtls_async_hardware_callback_t callback,
     void *context);
-extern int samd_mbedtls_ecdh_p521_start(
+extern int mbedtls_async_hardware_ecdh_p521_start(
     const uint8_t private_scalar[66],
     const uint8_t peer_public_key[133],
     uint8_t shared_secret[66],
-    samd_mbedtls_async_callback_t callback,
+    mbedtls_async_hardware_callback_t callback,
     void *context);
 
-static void samd_psa_ecdh_complete(int success, void *context)
+static void psa_async_hardware_ecdh_complete(int success, void *context)
 {
     psa_key_agreement_iop_t *operation =
         (psa_key_agreement_iop_t *) context;
@@ -8484,11 +8484,11 @@ static void samd_psa_ecdh_complete(int success, void *context)
         return;
     }
 
-    operation->samd_success = success != 0;
-    operation->samd_done = 1;
+    operation->async_hardware_success = success != 0;
+    operation->async_hardware_done = 1;
 }
 
-static int samd_psa_ecdh_supported(
+static int psa_async_hardware_ecdh_supported(
     const psa_key_slot_t *slot,
     const uint8_t *peer_key,
     size_t peer_key_length,
@@ -8506,17 +8506,17 @@ static int samd_psa_ecdh_supported(
            peer_key[0] == 0x04;
 }
 
-static void samd_psa_ecdh_clear(psa_key_agreement_iop_t *operation)
+static void psa_async_hardware_ecdh_clear(psa_key_agreement_iop_t *operation)
 {
-    mbedtls_platform_zeroize(operation->samd_private_scalar,
-                             sizeof(operation->samd_private_scalar));
-    mbedtls_platform_zeroize(operation->samd_peer_public_key,
-                             sizeof(operation->samd_peer_public_key));
-    mbedtls_platform_zeroize(operation->samd_shared_secret,
-                             sizeof(operation->samd_shared_secret));
-    operation->samd_started = 0;
-    operation->samd_done = 0;
-    operation->samd_success = 0;
+    mbedtls_platform_zeroize(operation->async_hardware_private_scalar,
+                             sizeof(operation->async_hardware_private_scalar));
+    mbedtls_platform_zeroize(operation->async_hardware_peer_public_key,
+                             sizeof(operation->async_hardware_peer_public_key));
+    mbedtls_platform_zeroize(operation->async_hardware_shared_secret,
+                             sizeof(operation->async_hardware_shared_secret));
+    operation->async_hardware_started = 0;
+    operation->async_hardware_done = 0;
+    operation->async_hardware_success = 0;
 }
 #endif
 
@@ -8663,7 +8663,7 @@ static psa_status_t psa_key_agreement_iop_abort_internal(psa_key_agreement_iop_t
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID) {
-        samd_psa_ecdh_clear(operation);
+        psa_async_hardware_ecdh_clear(operation);
         operation->id = 0;
         return PSA_SUCCESS;
     }
@@ -8739,16 +8739,16 @@ psa_status_t psa_key_agreement_iop_setup(
     operation->num_ops = 0;
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
-    if (samd_psa_ecdh_supported(slot, peer_key, peer_key_length, alg)) {
-        size_t samd_coordinate_len = (psa_get_key_bits(&slot->attr) + 7u) / 8u;
-        size_t samd_public_key_len = samd_coordinate_len * 2u + 1u;
+    if (psa_async_hardware_ecdh_supported(slot, peer_key, peer_key_length, alg)) {
+        size_t async_hardware_coordinate_len = (psa_get_key_bits(&slot->attr) + 7u) / 8u;
+        size_t async_hardware_public_key_len = async_hardware_coordinate_len * 2u + 1u;
         operation->id = MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID;
-        memcpy(operation->samd_private_scalar, slot->key.data,
-               samd_coordinate_len);
-        memcpy(operation->samd_peer_public_key, peer_key, samd_public_key_len);
-        operation->samd_started = 0;
-        operation->samd_done = 0;
-        operation->samd_success = 0;
+        memcpy(operation->async_hardware_private_scalar, slot->key.data,
+               async_hardware_coordinate_len);
+        memcpy(operation->async_hardware_peer_public_key, peer_key, async_hardware_public_key_len);
+        operation->async_hardware_started = 0;
+        operation->async_hardware_done = 0;
+        operation->async_hardware_success = 0;
         status = PSA_SUCCESS;
         goto exit;
     }
@@ -8803,31 +8803,31 @@ psa_status_t psa_key_agreement_iop_complete(
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID) {
         psa_status_t status;
-        size_t samd_coordinate_len =
+        size_t async_hardware_coordinate_len =
             (psa_get_key_bits(&operation->attributes) + 7u) / 8u;
 
-        if (!operation->samd_started) {
-            operation->samd_started = 1;
-            if (!((samd_coordinate_len == 32u) ?
-                  samd_mbedtls_ecdh_p256_start(
-                      operation->samd_private_scalar,
-                      operation->samd_peer_public_key,
-                      operation->samd_shared_secret,
-                      samd_psa_ecdh_complete,
+        if (!operation->async_hardware_started) {
+            operation->async_hardware_started = 1;
+            if (!((async_hardware_coordinate_len == 32u) ?
+                  mbedtls_async_hardware_ecdh_p256_start(
+                      operation->async_hardware_private_scalar,
+                      operation->async_hardware_peer_public_key,
+                      operation->async_hardware_shared_secret,
+                      psa_async_hardware_ecdh_complete,
                       operation) :
-                  (samd_coordinate_len == 48u) ?
-                  samd_mbedtls_ecdh_p384_start(
-                      operation->samd_private_scalar,
-                      operation->samd_peer_public_key,
-                      operation->samd_shared_secret,
-                      samd_psa_ecdh_complete,
+                  (async_hardware_coordinate_len == 48u) ?
+                  mbedtls_async_hardware_ecdh_p384_start(
+                      operation->async_hardware_private_scalar,
+                      operation->async_hardware_peer_public_key,
+                      operation->async_hardware_shared_secret,
+                      psa_async_hardware_ecdh_complete,
                       operation) :
-                  (samd_coordinate_len == 66u) ?
-                  samd_mbedtls_ecdh_p521_start(
-                      operation->samd_private_scalar,
-                      operation->samd_peer_public_key,
-                      operation->samd_shared_secret,
-                      samd_psa_ecdh_complete,
+                  (async_hardware_coordinate_len == 66u) ?
+                  mbedtls_async_hardware_ecdh_p521_start(
+                      operation->async_hardware_private_scalar,
+                      operation->async_hardware_peer_public_key,
+                      operation->async_hardware_shared_secret,
+                      psa_async_hardware_ecdh_complete,
                       operation) :
                   0)) {
                 operation->error_occurred = 1;
@@ -8837,14 +8837,14 @@ psa_status_t psa_key_agreement_iop_complete(
             return PSA_OPERATION_INCOMPLETE;
         }
 
-        if (!operation->samd_done) {
+        if (!operation->async_hardware_done) {
             return PSA_OPERATION_INCOMPLETE;
         }
 
-        status = operation->samd_success
+        status = operation->async_hardware_success
                      ? psa_import_key(&operation->attributes,
-                                      operation->samd_shared_secret,
-                                      samd_coordinate_len,
+                                      operation->async_hardware_shared_secret,
+                                      async_hardware_coordinate_len,
                                       key)
                      : PSA_ERROR_HARDWARE_FAILURE;
 
