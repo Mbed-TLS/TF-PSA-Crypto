@@ -39,6 +39,10 @@ int samd_mbedtls_ecdsa_p256_verify_start(
     const uint8_t publicKey[65], const uint8_t hash[32],
     const uint8_t signature[64], samd_mbedtls_async_callback_t callback,
     void *context);
+int samd_mbedtls_ecdsa_p384_verify_start(
+    const uint8_t publicKey[97], const uint8_t hash[48],
+    const uint8_t signature[96], samd_mbedtls_async_callback_t callback,
+    void *context);
 
 static void samd_pk_ecdsa_complete(int success, void *context)
 {
@@ -439,10 +443,14 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     }
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    if (pk->ec_family == PSA_ECC_FAMILY_SECP_R1 && pk->bits == 256 &&
-        md_alg == MBEDTLS_MD_SHA256 && hash_len == 32 &&
-        pk->pub_raw_len == 65 && pk->pub_raw[0] == 0x04u &&
-        raw_sig_len == 64) {
+    if (pk->ec_family == PSA_ECC_FAMILY_SECP_R1 &&
+        ((pk->bits == 256 && md_alg == MBEDTLS_MD_SHA256 &&
+          hash_len == 32 && pk->pub_raw_len == 65 &&
+          raw_sig_len == 64) ||
+         (pk->bits == 384 && md_alg == MBEDTLS_MD_SHA384 &&
+          hash_len == 48 && pk->pub_raw_len == 97 &&
+          raw_sig_len == 96)) &&
+        pk->pub_raw[0] == 0x04u) {
         if (rs_ctx->samd_in_progress != 0) {
             if (rs_ctx->samd_done == 0) {
                 return MBEDTLS_ERR_ECP_IN_PROGRESS;
@@ -462,9 +470,13 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         rs_ctx->samd_in_progress = 1;
         rs_ctx->samd_done = 0;
         rs_ctx->samd_success = 0;
-        if (samd_mbedtls_ecdsa_p256_verify_start(
-                pk->pub_raw, hash, raw_sig, samd_pk_ecdsa_complete,
-                rs_ctx) == 0) {
+        if (((pk->bits == 256) ?
+             samd_mbedtls_ecdsa_p256_verify_start(
+                 pk->pub_raw, hash, raw_sig, samd_pk_ecdsa_complete,
+                 rs_ctx) :
+             samd_mbedtls_ecdsa_p384_verify_start(
+                 pk->pub_raw, hash, raw_sig, samd_pk_ecdsa_complete,
+                 rs_ctx)) == 0) {
             rs_ctx->samd_in_progress = 0;
             return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
         }
@@ -475,7 +487,8 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     /*
      * The async hardware profile is intentionally narrow. If ECDSA hardware
      * acceleration is enabled but this signature cannot use the exact
-     * P-256/SHA-256/raw-public-key path above, fail closed instead of falling
+     * P-256/SHA-256 or P-384/SHA-384 raw-public-key path above, fail closed
+     * instead of falling
      * through to PSA/software verification.
      */
     return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
