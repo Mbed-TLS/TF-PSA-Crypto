@@ -197,6 +197,9 @@ int mbedtls_pk_wrap_psa(mbedtls_pk_context *ctx,
     ctx->pk_info = info;
     ctx->psa_type = type;
     ctx->bits = bits;
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    ctx->ec_family = PSA_KEY_TYPE_ECC_GET_FAMILY(type);
+    #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
     return 0;
 }

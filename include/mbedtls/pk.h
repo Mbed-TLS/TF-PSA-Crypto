@@ -102,6 +102,8 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
 /**
  * \brief           Public key container
+ *  This struct is verified by validate_pk_context all changes made to it also
+ *  need to be reflected there.
  */
 typedef struct mbedtls_pk_context {
     /* Public key information. */

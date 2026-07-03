@@ -58,6 +58,9 @@ int mbedtls_pk_ecc_set_key(mbedtls_pk_context *pk, unsigned char *key, size_t ke
     psa_set_key_usage_flags(&attributes, flags);
 
     status = psa_import_key(&attributes, key, key_len, &pk->priv_id);
+    if (status == 0) {
+        status = mbedtls_pk_set_pubkey_from_prv(pk);
+    }
     return psa_pk_status_to_mbedtls(status);
 }
 

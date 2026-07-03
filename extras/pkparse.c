@@ -1020,6 +1020,8 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
                                                               pem.buf,
                                                               pem.buflen)) != 0) {
             mbedtls_pk_free(pk);
+        } else {
+            ret = mbedtls_pk_set_pubkey_from_prv(pk);
         }
 
         mbedtls_pem_free(&pem);
@@ -1042,6 +1044,8 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
         if ((ret = mbedtls_pk_parse_key_pkcs8_encrypted_der(pk, pem.buf, pem.buflen,
                                                             pwd, pwdlen)) != 0) {
             mbedtls_pk_free(pk);
+        } else {
+            ret = mbedtls_pk_set_pubkey_from_prv(pk);
         }
 
         mbedtls_pem_free(&pem);
@@ -1079,7 +1083,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
     }
 
     if (ret == 0) {
-        return 0;
+        return mbedtls_pk_set_pubkey_from_prv(pk);
     }
 
     mbedtls_pk_free(pk);
@@ -1092,7 +1096,8 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
 
     ret = mbedtls_pk_parse_key_pkcs8_unencrypted_der(pk, key, keylen);
     if (ret == 0) {
-        return 0;
+        ret = mbedtls_pk_set_pubkey_from_prv(pk);
+        return ret;
     }
 
     mbedtls_pk_free(pk);
