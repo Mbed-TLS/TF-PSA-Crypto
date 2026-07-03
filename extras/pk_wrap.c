@@ -36,7 +36,7 @@
 #if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
 static size_t samd_mbedtls_ecdsa_curve_bits(const mbedtls_pk_context *pk)
 {
-    if (pk->bits == 256 || pk->bits == 384) {
+    if (pk->bits == 256 || pk->bits == 384 || pk->bits == 521) {
         return pk->bits;
     }
 
@@ -46,6 +46,10 @@ static size_t samd_mbedtls_ecdsa_curve_bits(const mbedtls_pk_context *pk)
 
     if (pk->pub_raw_len == 97 && pk->pub_raw[0] == 0x04u) {
         return 384;
+    }
+
+    if (pk->pub_raw_len == 133 && pk->pub_raw[0] == 0x04u) {
+        return 521;
     }
 
     return pk->bits;
@@ -62,25 +66,28 @@ int samd_mbedtls_ecdsa_p384_verify_start(
     const uint8_t publicKey[97], const uint8_t hash[48],
     const uint8_t signature[96], samd_mbedtls_async_callback_t callback,
     void *context);
+int samd_mbedtls_ecdsa_p521_verify_start(
+    const uint8_t publicKey[133], const uint8_t hash[64],
+    const uint8_t signature[132], samd_mbedtls_async_callback_t callback,
+    void *context);
 
 static int samd_mbedtls_ecdsa_normalize_hash(mbedtls_md_type_t md_alg,
                                              const unsigned char *hash,
                                              size_t hash_len,
-                                             size_t curve_len,
+                                             size_t expected_hash_len,
                                              unsigned char *normalized_hash)
 {
     if ((md_alg != MBEDTLS_MD_SHA256 || hash_len != 32) &&
-        (md_alg != MBEDTLS_MD_SHA384 || hash_len != 48)) {
+        (md_alg != MBEDTLS_MD_SHA384 || hash_len != 48) &&
+        (md_alg != MBEDTLS_MD_SHA512 || hash_len != 64)) {
         return 0;
     }
 
-    memset(normalized_hash, 0, curve_len);
-    if (hash_len >= curve_len) {
-        memcpy(normalized_hash, hash, curve_len);
-    } else {
-        memcpy(normalized_hash + (curve_len - hash_len), hash, hash_len);
+    if (hash_len != expected_hash_len) {
+        return 0;
     }
 
+    memcpy(normalized_hash, hash, expected_hash_len);
     return 1;
 }
 
@@ -485,16 +492,20 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     }
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-    unsigned char normalized_hash[48];
-    size_t curve_len = curve_bits / 8u;
+    unsigned char normalized_hash[64];
+    size_t curve_len = (curve_bits + 7u) / 8u;
+    size_t expected_hash_len = (curve_bits == 521) ? 64u : curve_len;
 
     if (pk->ec_family == PSA_ECC_FAMILY_SECP_R1 &&
         ((curve_bits == 256 && pk->pub_raw_len == 65 &&
           raw_sig_len == 64) ||
          (curve_bits == 384 && pk->pub_raw_len == 97 &&
-          raw_sig_len == 96)) &&
+          raw_sig_len == 96) ||
+         (curve_bits == 521 && pk->pub_raw_len == 133 &&
+          raw_sig_len == 132)) &&
         pk->pub_raw[0] == 0x04u &&
-        samd_mbedtls_ecdsa_normalize_hash(md_alg, hash, hash_len, curve_len,
+        samd_mbedtls_ecdsa_normalize_hash(md_alg, hash, hash_len,
+                                          expected_hash_len,
                                           normalized_hash) != 0) {
         if (rs_ctx->samd_in_progress != 0) {
             if (rs_ctx->samd_done == 0) {
@@ -520,7 +531,12 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
                  pk->pub_raw, normalized_hash, raw_sig,
                  samd_pk_ecdsa_complete,
                  rs_ctx) :
+             (curve_bits == 384) ?
              samd_mbedtls_ecdsa_p384_verify_start(
+                 pk->pub_raw, normalized_hash, raw_sig,
+                 samd_pk_ecdsa_complete,
+                 rs_ctx) :
+             samd_mbedtls_ecdsa_p521_verify_start(
                  pk->pub_raw, normalized_hash, raw_sig,
                  samd_pk_ecdsa_complete,
                  rs_ctx)) == 0) {

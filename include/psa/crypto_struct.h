@@ -507,14 +507,25 @@ struct psa_sign_hash_interruptible_operation_s {
     unsigned int MBEDTLS_PRIVATE(error_occurred) : 1;
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     unsigned int MBEDTLS_PRIVATE(samd_started) : 1;
     unsigned int MBEDTLS_PRIVATE(samd_done) : 1;
     unsigned int MBEDTLS_PRIVATE(samd_success) : 1;
     uint16_t MBEDTLS_PRIVATE(samd_key_bits);
-    uint8_t MBEDTLS_PRIVATE(samd_private_key)[48];
-    uint8_t MBEDTLS_PRIVATE(samd_hash)[48];
-    uint8_t MBEDTLS_PRIVATE(samd_signature)[96];
+#endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+    uint8_t MBEDTLS_PRIVATE(samd_private_key)[66];
+    uint8_t MBEDTLS_PRIVATE(samd_hash)[64];
+    uint8_t MBEDTLS_PRIVATE(samd_signature)[132];
+#endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+    uint8_t *MBEDTLS_PRIVATE(samd_rsa_private_key);
+    size_t MBEDTLS_PRIVATE(samd_rsa_private_key_length);
+    uint8_t MBEDTLS_PRIVATE(samd_rsa_hash)[64];
+    uint16_t MBEDTLS_PRIVATE(samd_rsa_hash_length);
+    uint16_t MBEDTLS_PRIVATE(samd_rsa_signature_length);
+    uint16_t MBEDTLS_PRIVATE(samd_rsa_hash_bits);
+    uint8_t MBEDTLS_PRIVATE(samd_rsa_pkcs1);
 #endif
 #endif
 };
@@ -522,12 +533,7 @@ struct psa_sign_hash_interruptible_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
 #else
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
-#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT \
-    { 0, { 0 }, 0, 0, 0, 0, 0, 0, { 0 }, { 0 }, { 0 } }
-#else
 #define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
-#endif
 #endif
 
 static inline struct psa_sign_hash_interruptible_operation_s
@@ -615,9 +621,9 @@ struct psa_key_agreement_iop_s {
     unsigned int MBEDTLS_PRIVATE(samd_started) : 1;
     unsigned int MBEDTLS_PRIVATE(samd_done) : 1;
     unsigned int MBEDTLS_PRIVATE(samd_success) : 1;
-    uint8_t MBEDTLS_PRIVATE(samd_private_scalar)[48];
-    uint8_t MBEDTLS_PRIVATE(samd_peer_public_key)[97];
-    uint8_t MBEDTLS_PRIVATE(samd_shared_secret)[48];
+    uint8_t MBEDTLS_PRIVATE(samd_private_scalar)[66];
+    uint8_t MBEDTLS_PRIVATE(samd_peer_public_key)[133];
+    uint8_t MBEDTLS_PRIVATE(samd_shared_secret)[66];
 #endif
 #endif
 };

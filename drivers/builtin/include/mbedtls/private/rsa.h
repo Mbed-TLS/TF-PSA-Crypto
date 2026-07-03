@@ -628,6 +628,12 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign(mbedtls_rsa_context *ctx,
                                       const unsigned char *hash,
                                       unsigned char *sig);
 
+int mbedtls_rsa_rsassa_pkcs1_v15_encode(mbedtls_rsa_context *ctx,
+                                         mbedtls_md_type_t md_alg,
+                                         unsigned int hashlen,
+                                         const unsigned char *hash,
+                                         unsigned char *encoded);
+
 #if defined(MBEDTLS_PKCS1_V21)
 /**
  * \brief          This function performs a PKCS#1 v2.1 PSS signature
@@ -680,6 +686,11 @@ int mbedtls_rsa_rsassa_pss_sign_ext(mbedtls_rsa_context *ctx,
                                     const unsigned char *hash,
                                     int saltlen,
                                     unsigned char *sig);
+
+int mbedtls_rsa_rsassa_pss_encode_ext_with_salt(
+    mbedtls_rsa_context *ctx, mbedtls_md_type_t md_alg,
+    unsigned int hashlen, const unsigned char *hash, int saltlen,
+    const unsigned char *salt, size_t salt_available, unsigned char *encoded);
 
 #endif /* MBEDTLS_PKCS1_V21 */
 
