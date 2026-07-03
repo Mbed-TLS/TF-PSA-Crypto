@@ -18,12 +18,44 @@
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/private/error_common.h"
+#include "mbedtls/private/rsa.h"
 
 #include "psa_util_internal.h"
 #include "mbedtls/psa_util.h"
 
 #include <limits.h>
 #include <stdint.h>
+
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+typedef void (*mbedtls_async_hardware_rsa_callback_t)(int success,
+                                                      void *context);
+int samd_mbedtls_rsa_pss_verify_start(
+    int sha384, const uint8_t *publicKey, size_t publicKeyLength,
+    const uint8_t *hash, size_t hashLength, const uint8_t *signature,
+    size_t signatureLength, mbedtls_async_hardware_rsa_callback_t callback,
+    void *context);
+
+typedef struct {
+    unsigned char in_progress;
+    unsigned char done;
+    unsigned char success;
+} mbedtls_async_hardware_rsa_verify_state;
+
+static mbedtls_async_hardware_rsa_verify_state
+    mbedtls_async_hardware_rsa_verify = { 0, 0, 0 };
+
+static void mbedtls_async_hardware_rsa_verify_complete(int success,
+                                                       void *context)
+{
+    mbedtls_async_hardware_rsa_verify_state *state = context;
+    if (state == NULL || state != &mbedtls_async_hardware_rsa_verify) {
+        return;
+    }
+
+    state->success = success != 0;
+    state->done = 1;
+}
+#endif
 
 #if !defined(PK_EXPORT_KEYS_ON_THE_STACK)
 #include "mbedtls/platform.h" // for calloc/free
@@ -489,6 +521,24 @@ int mbedtls_pk_can_do_psa(const mbedtls_pk_context *pk, psa_algorithm_t alg,
     int want_private = ((usage & (PSA_KEY_USAGE_SIGN_HASH |
                                   PSA_KEY_USAGE_DECRYPT |
                                   PSA_KEY_USAGE_DERIVE)) != 0);
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+    if (!has_public && !has_private && usage == PSA_KEY_USAGE_VERIFY_HASH) {
+        mbedtls_pk_type_t pk_type = mbedtls_pk_get_type(pk);
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+        if ((pk_type == MBEDTLS_PK_ECKEY || pk_type == MBEDTLS_PK_ECDSA) &&
+            PSA_ALG_IS_ECDSA(alg) &&
+            pk->ec_family != PSA_ECC_FAMILY_MONTGOMERY) {
+            has_public = 1;
+        }
+#endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+        if ((pk_type == MBEDTLS_PK_RSA || pk_type == MBEDTLS_PK_RSASSA_PSS) &&
+            PSA_ALG_IS_RSA_PSS(alg)) {
+            has_public = 1;
+        }
+#endif
+    }
+#endif
     if ((!has_public && !has_private) ||
         (want_private && !has_private)) {
         return 0;
@@ -1238,6 +1288,48 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
     if (md_alg == MBEDTLS_MD_NONE && UINT_MAX < hash_len) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
+#endif
+
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+    if (md_alg == MBEDTLS_MD_SHA256 || md_alg == MBEDTLS_MD_SHA384) {
+        mbedtls_async_hardware_rsa_verify_state *state =
+            &mbedtls_async_hardware_rsa_verify;
+        size_t rsa_len = mbedtls_pk_get_len(ctx);
+
+        if (sig == NULL || sig_len != rsa_len) {
+            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
+        }
+
+        if (state->in_progress != 0) {
+            if (state->done == 0) {
+                return MBEDTLS_ERR_ECP_IN_PROGRESS;
+            }
+
+            int success = state->success != 0;
+            state->in_progress = 0;
+            state->done = 0;
+            state->success = 0;
+            if (success) {
+                return 0;
+            }
+            return MBEDTLS_ERR_RSA_VERIFY_FAILED;
+        }
+
+        state->in_progress = 1;
+        state->done = 0;
+        state->success = 0;
+        if (samd_mbedtls_rsa_pss_verify_start(
+                md_alg == MBEDTLS_MD_SHA384, ctx->pub_raw, ctx->pub_raw_len,
+                hash, hash_len, sig, sig_len,
+                mbedtls_async_hardware_rsa_verify_complete, state) == 0) {
+            state->in_progress = 0;
+            return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
+        }
+
+        return MBEDTLS_ERR_ECP_IN_PROGRESS;
+    }
+
+    return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
 #endif
 
     size_t signature_length;

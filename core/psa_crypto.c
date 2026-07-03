@@ -3207,6 +3207,12 @@ static psa_status_t psa_verify_internal(mbedtls_svc_key_id_t key,
         goto exit;
     }
 #endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+    if (PSA_KEY_TYPE_IS_RSA(slot->attr.type) && PSA_ALG_IS_RSA_PSS(alg)) {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+#endif
 
     if (input_is_message) {
         status = psa_driver_wrapper_verify_message(

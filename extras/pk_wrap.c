@@ -33,6 +33,25 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
+static size_t samd_mbedtls_ecdsa_curve_bits(const mbedtls_pk_context *pk)
+{
+    if (pk->bits == 256 || pk->bits == 384) {
+        return pk->bits;
+    }
+
+    if (pk->pub_raw_len == 65 && pk->pub_raw[0] == 0x04u) {
+        return 256;
+    }
+
+    if (pk->pub_raw_len == 97 && pk->pub_raw[0] == 0x04u) {
+        return 384;
+    }
+
+    return pk->bits;
+}
+#endif
+
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 typedef void (*samd_mbedtls_async_callback_t)(int success, void *context);
 int samd_mbedtls_ecdsa_p256_verify_start(
@@ -43,6 +62,27 @@ int samd_mbedtls_ecdsa_p384_verify_start(
     const uint8_t publicKey[97], const uint8_t hash[48],
     const uint8_t signature[96], samd_mbedtls_async_callback_t callback,
     void *context);
+
+static int samd_mbedtls_ecdsa_normalize_hash(mbedtls_md_type_t md_alg,
+                                             const unsigned char *hash,
+                                             size_t hash_len,
+                                             size_t curve_len,
+                                             unsigned char *normalized_hash)
+{
+    if ((md_alg != MBEDTLS_MD_SHA256 || hash_len != 32) &&
+        (md_alg != MBEDTLS_MD_SHA384 || hash_len != 48)) {
+        return 0;
+    }
+
+    memset(normalized_hash, 0, curve_len);
+    if (hash_len >= curve_len) {
+        memcpy(normalized_hash, hash, curve_len);
+    } else {
+        memcpy(normalized_hash + (curve_len - hash_len), hash, hash_len);
+    }
+
+    return 1;
+}
 
 static void samd_pk_ecdsa_complete(int success, void *context)
 {
@@ -436,21 +476,26 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
 
-    ret = mbedtls_ecdsa_der_to_raw(pk->bits, sig, sig_len,
+    size_t curve_bits = samd_mbedtls_ecdsa_curve_bits(pk);
+
+    ret = mbedtls_ecdsa_der_to_raw(curve_bits, sig, sig_len,
                                    raw_sig, sizeof(raw_sig), &raw_sig_len);
     if (ret != 0) {
         return ret;
     }
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+    unsigned char normalized_hash[48];
+    size_t curve_len = curve_bits / 8u;
+
     if (pk->ec_family == PSA_ECC_FAMILY_SECP_R1 &&
-        ((pk->bits == 256 && md_alg == MBEDTLS_MD_SHA256 &&
-          hash_len == 32 && pk->pub_raw_len == 65 &&
+        ((curve_bits == 256 && pk->pub_raw_len == 65 &&
           raw_sig_len == 64) ||
-         (pk->bits == 384 && md_alg == MBEDTLS_MD_SHA384 &&
-          hash_len == 48 && pk->pub_raw_len == 97 &&
+         (curve_bits == 384 && pk->pub_raw_len == 97 &&
           raw_sig_len == 96)) &&
-        pk->pub_raw[0] == 0x04u) {
+        pk->pub_raw[0] == 0x04u &&
+        samd_mbedtls_ecdsa_normalize_hash(md_alg, hash, hash_len, curve_len,
+                                          normalized_hash) != 0) {
         if (rs_ctx->samd_in_progress != 0) {
             if (rs_ctx->samd_done == 0) {
                 return MBEDTLS_ERR_ECP_IN_PROGRESS;
@@ -470,12 +515,14 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
         rs_ctx->samd_in_progress = 1;
         rs_ctx->samd_done = 0;
         rs_ctx->samd_success = 0;
-        if (((pk->bits == 256) ?
+        if (((curve_bits == 256) ?
              samd_mbedtls_ecdsa_p256_verify_start(
-                 pk->pub_raw, hash, raw_sig, samd_pk_ecdsa_complete,
+                 pk->pub_raw, normalized_hash, raw_sig,
+                 samd_pk_ecdsa_complete,
                  rs_ctx) :
              samd_mbedtls_ecdsa_p384_verify_start(
-                 pk->pub_raw, hash, raw_sig, samd_pk_ecdsa_complete,
+                 pk->pub_raw, normalized_hash, raw_sig,
+                 samd_pk_ecdsa_complete,
                  rs_ctx)) == 0) {
             rs_ctx->samd_in_progress = 0;
             return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
@@ -487,7 +534,7 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     /*
      * The async hardware profile is intentionally narrow. If ECDSA hardware
      * acceleration is enabled but this signature cannot use the exact
-     * P-256/SHA-256 or P-384/SHA-384 raw-public-key path above, fail closed
+     * P-256/P-384 raw-public-key path above, fail closed
      * instead of falling
      * through to PSA/software verification.
      */

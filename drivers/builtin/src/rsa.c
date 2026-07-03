@@ -2220,11 +2220,6 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t siglen;
-    unsigned char *p;
-    unsigned char *hash_start;
-    unsigned char result[MBEDTLS_MD_MAX_SIZE];
-    unsigned int hlen;
-    size_t observed_salt_len, msb;
     unsigned char buf[MBEDTLS_MPI_MAX_SIZE] = { 0 };
 
     if ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL) {
@@ -2243,6 +2238,44 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
         return ret;
     }
 
+    return mbedtls_rsa_rsassa_pss_verify_ext_from_encoded(ctx,
+                                                          md_alg,
+                                                          hashlen,
+                                                          hash,
+                                                          mgf1_hash_id,
+                                                          expected_salt_len,
+                                                          buf);
+}
+
+int mbedtls_rsa_rsassa_pss_verify_ext_from_encoded(
+    mbedtls_rsa_context *ctx,
+    mbedtls_md_type_t md_alg,
+    unsigned int hashlen,
+    const unsigned char *hash,
+    mbedtls_md_type_t mgf1_hash_id,
+    int expected_salt_len,
+    const unsigned char *encoded)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    size_t siglen;
+    unsigned char *p;
+    unsigned char *hash_start;
+    unsigned char result[MBEDTLS_MD_MAX_SIZE];
+    unsigned int hlen;
+    size_t observed_salt_len, msb;
+    unsigned char buf[MBEDTLS_MPI_MAX_SIZE] = { 0 };
+
+    if ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    siglen = ctx->len;
+
+    if (siglen < 16 || siglen > sizeof(buf) || encoded == NULL) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    memcpy(buf, encoded, siglen);
     p = buf;
 
     if (buf[siglen - 1] != 0xBC) {

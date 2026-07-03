@@ -783,6 +783,39 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
                                       const unsigned char *sig);
 
 /**
+ * \brief          This function performs the EMSA-PSS verification step over
+ *                 an already decoded RSA encoded message.
+ *
+ * \note           This is the padding/hash verification half of
+ *                 mbedtls_rsa_rsassa_pss_verify_ext(). It is intended for
+ *                 asynchronous hardware integrations where the RSA public
+ *                 operation is performed by a provider and Mbed TLS remains
+ *                 responsible for the RSASSA-PSS encoding checks.
+ *
+ * \param ctx      The initialized RSA public key context to use.
+ * \param md_alg   The message-digest algorithm used to hash the original data.
+ * \param hashlen  The length of the message digest or raw data in Bytes.
+ * \param hash     The buffer holding the message digest or raw data.
+ * \param mgf1_hash_id      The message digest algorithm used for MGF1.
+ * \param expected_salt_len The expected salt length, or
+ *                          #MBEDTLS_RSA_SALT_LEN_ANY to accept any salt length.
+ * \param encoded  The decoded encoded message produced by the RSA public
+ *                 operation. This must be a readable buffer of length
+ *                 \c ctx->len Bytes.
+ *
+ * \return         \c 0 if the encoded message is a valid PSS encoding.
+ * \return         An \c MBEDTLS_ERR_RSA_XXX error code on failure.
+ */
+int mbedtls_rsa_rsassa_pss_verify_ext_from_encoded(
+    mbedtls_rsa_context *ctx,
+    mbedtls_md_type_t md_alg,
+    unsigned int hashlen,
+    const unsigned char *hash,
+    mbedtls_md_type_t mgf1_hash_id,
+    int expected_salt_len,
+    const unsigned char *encoded);
+
+/**
  * \brief          This function copies the components of an RSA context.
  *
  * \param dst      The destination context. This must be initialized.
