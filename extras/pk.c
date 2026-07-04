@@ -1344,8 +1344,11 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
         return MBEDTLS_ERR_PK_TYPE_MISMATCH;
     }
 
-    if (type != MBEDTLS_PK_SIGALG_RSA_PSS &&
-        type != MBEDTLS_PK_SIGALG_RSA_PKCS1V15) {
+    if (type != MBEDTLS_PK_SIGALG_RSA_PSS
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+        && type != MBEDTLS_PK_SIGALG_RSA_PKCS1V15
+#endif
+        ) {
         return mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
     }
 
@@ -1556,10 +1559,13 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
     if (psa_md_alg == 0) {
         return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
+    size_t rsa_hash_len = hash_len == 0 ? mbedtls_md_get_size_from_type(md_alg) :
+                          hash_len;
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     {
-        int hash_bits = mbedtls_async_hardware_rsa_hash_bits(md_alg, hash_len);
+        int hash_bits = mbedtls_async_hardware_rsa_hash_bits(md_alg,
+                                                             rsa_hash_len);
         mbedtls_async_hardware_rsa_sign_state *state =
             &mbedtls_async_hardware_rsa_sign;
         size_t rsa_len = mbedtls_pk_get_len(ctx);
@@ -1618,11 +1624,11 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
         int submitted = pk_type == MBEDTLS_PK_SIGALG_RSA_PSS ?
             mbedtls_async_hardware_rsa_pss_sign_start(
                 hash_bits, state->private_key, state->private_key_length,
-                hash, hash_len, state->signature, state->signature_length,
+                hash, rsa_hash_len, state->signature, state->signature_length,
                 mbedtls_async_hardware_rsa_sign_complete, state) :
             mbedtls_async_hardware_rsa_pkcs1_sign_start(
                 hash_bits, state->private_key, state->private_key_length,
-                hash, hash_len, state->signature, state->signature_length,
+                hash, rsa_hash_len, state->signature, state->signature_length,
                 mbedtls_async_hardware_rsa_sign_complete, state);
         if (submitted == 0) {
             mbedtls_async_hardware_rsa_sign_clear();
@@ -1641,17 +1647,17 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
              * performing a signature, but they are encoded differently. Instead of
              * extracting the proper one from the wrapped key policy, just try both. */
             status = psa_sign_hash(ctx->priv_id, PSA_ALG_RSA_PSS(psa_md_alg),
-                                   hash, hash_len,
+                                   hash, rsa_hash_len,
                                    sig, sig_size, sig_len);
             if (status == PSA_ERROR_NOT_PERMITTED) {
                 status = psa_sign_hash(ctx->priv_id, PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg),
-                                       hash, hash_len,
+                                       hash, rsa_hash_len,
                                        sig, sig_size, sig_len);
             }
         } else {
             status = psa_sign_hash(ctx->priv_id,
                                    PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
-                                   hash, hash_len, sig, sig_size, sig_len);
+                                   hash, rsa_hash_len, sig, sig_size, sig_len);
         }
         return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
     }
@@ -1660,7 +1666,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
                                        pk_type == MBEDTLS_PK_SIGALG_RSA_PSS ?
                                        PSA_ALG_RSA_PSS(psa_md_alg) :
                                        PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
-                                       ctx, hash, hash_len,
+                                       ctx, hash, rsa_hash_len,
                                        sig, sig_size, sig_len);
 #endif
 #else
