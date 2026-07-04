@@ -1410,7 +1410,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
 
         return MBEDTLS_ERR_ECP_IN_PROGRESS;
     }
-#endif
+#else
 
     size_t signature_length;
     psa_status_t status = PSA_ERROR_DATA_CORRUPT;
@@ -1456,6 +1456,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,
     }
 
     return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
+#endif
 #else
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
@@ -1630,7 +1631,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
 
         return MBEDTLS_ERR_ECP_IN_PROGRESS;
     }
-#endif
+#else
 
     if (mbedtls_pk_get_type(ctx) == MBEDTLS_PK_OPAQUE) {
         psa_status_t status;
@@ -1661,6 +1662,7 @@ int mbedtls_pk_sign_ext(mbedtls_pk_sigalg_t pk_type,
                                        PSA_ALG_RSA_PKCS1V15_SIGN(psa_md_alg),
                                        ctx, hash, hash_len,
                                        sig, sig_size, sig_len);
+#endif
 #else
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
 #endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */

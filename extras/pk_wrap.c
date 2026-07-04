@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && defined(PSA_HAVE_ALG_ECDSA_VERIFY)
 static size_t mbedtls_async_hardware_ecdsa_curve_bits(const mbedtls_pk_context *pk)
 {
     if (pk->bits == 256 || pk->bits == 384 || pk->bits == 521) {
@@ -56,7 +56,7 @@ static size_t mbedtls_async_hardware_ecdsa_curve_bits(const mbedtls_pk_context *
 }
 #endif
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ECP_RESTARTABLE) && defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 typedef void (*mbedtls_async_hardware_callback_t)(int success, void *context);
 int mbedtls_async_hardware_ecdsa_p256_verify_start(
     const uint8_t publicKey[65], const uint8_t hash[32],
@@ -217,7 +217,7 @@ static int eckey_can_do(mbedtls_pk_type_t type)
            type == MBEDTLS_PK_ECDSA;
 }
 
-#if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
+#if defined(PSA_HAVE_ALG_ECDSA_VERIFY) && !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 /* Common helper for ECDSA verify using PSA functions. */
 static int ecdsa_verify_psa(unsigned char *key, size_t key_len,
                             psa_ecc_family_t curve, size_t curve_bits,
@@ -282,7 +282,9 @@ cleanup:
 
     return ret;
 }
+#endif
 
+#if defined(PSA_HAVE_ALG_ECDSA_VERIFY)
 static int ecdsa_opaque_verify_wrap(mbedtls_pk_context *pk,
                                     mbedtls_md_type_t md_alg,
                                     const unsigned char *hash, size_t hash_len,
@@ -347,7 +349,7 @@ static int ecdsa_verify_wrap(mbedtls_pk_context *pk,
 }
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
+#if defined(PSA_HAVE_ALG_ECDSA_SIGN) && !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 /* Common helper for ECDSA sign using PSA functions.
  * Instead of extracting key's properties in order to check which kind of ECDSA
  * signature it supports, we try both deterministic and non-deterministic.
@@ -389,7 +391,9 @@ done:
 
     return ret;
 }
+#endif
 
+#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
 static int ecdsa_opaque_sign_wrap(mbedtls_pk_context *pk,
                                   mbedtls_md_type_t md_alg,
                                   const unsigned char *hash, size_t hash_len,
@@ -472,9 +476,6 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
                                 void *_rs_ctx)
 {
     mbedtls_pk_psa_restartable_ctx_t *rs_ctx = _rs_ctx;
-    psa_verify_hash_interruptible_operation_t *op;
-    psa_status_t status_tmp = PSA_ERROR_CORRUPTION_DETECTED;
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     unsigned char raw_sig[PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE];
     size_t raw_sig_len;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -555,7 +556,10 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
      * through to PSA/software verification.
      */
     return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
-#endif
+#else
+    psa_verify_hash_interruptible_operation_t *op;
+    psa_status_t status_tmp = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     op = rs_ctx->op;
 
@@ -592,6 +596,7 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     status = (status != PSA_SUCCESS) ? status : status_tmp;
 
     return PSA_PK_TO_MBEDTLS_ERR(status);
+#endif
 }
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 

@@ -1405,7 +1405,8 @@ psa_status_t psa_export_key(mbedtls_svc_key_id_t key,
                                            slot->key.data, slot->key.bytes,
                                            data, data_size, data_length);
 
-#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
+#if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 exit:
 #endif
     unlock_status = psa_unregister_read_under_mutex(slot);
@@ -3241,7 +3242,9 @@ static psa_status_t psa_verify_internal(mbedtls_svc_key_id_t key,
             signature, signature_length);
     }
 
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || defined(MBEDTLS_ASYNC_HARDWARE_RSA)
 exit:
+#endif
     unlock_status = psa_unregister_read_under_mutex(slot);
 
     return (status == PSA_SUCCESS) ? unlock_status : status;
@@ -4033,11 +4036,12 @@ psa_status_t psa_sign_hash_start(
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     {
         int async_hardware_hash_bits = psa_async_hardware_rsa_hash_bits(alg, hash_length);
-        size_t async_hardware_signature_len = psa_async_hardware_rsa_signature_length(&slot->attr);
+        size_t async_hardware_rsa_signature_len =
+            psa_async_hardware_rsa_signature_length(&slot->attr);
         if (psa_async_hardware_rsa_key_supported(&slot->attr) &&
             async_hardware_hash_bits != 0 &&
             hash_length <= sizeof(operation->async_hardware_rsa_hash) &&
-            async_hardware_signature_len <= UINT16_MAX &&
+            async_hardware_rsa_signature_len <= UINT16_MAX &&
             slot->key.bytes != 0) {
             operation->async_hardware_rsa_private_key =
                 mbedtls_calloc(1, slot->key.bytes);
@@ -4051,7 +4055,7 @@ psa_status_t psa_sign_hash_start(
             memcpy(operation->async_hardware_rsa_hash, hash, hash_length);
             operation->async_hardware_rsa_hash_length = (uint16_t) hash_length;
             operation->async_hardware_rsa_signature_length =
-                (uint16_t) async_hardware_signature_len;
+                (uint16_t) async_hardware_rsa_signature_len;
             operation->async_hardware_rsa_hash_bits = (uint16_t) async_hardware_hash_bits;
             operation->async_hardware_rsa_pkcs1 =
                 PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) ? 1u : 0u;
@@ -4069,12 +4073,12 @@ psa_status_t psa_sign_hash_start(
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || defined(MBEDTLS_ASYNC_HARDWARE_RSA)
     status = PSA_ERROR_NOT_SUPPORTED;
     goto exit;
-#endif
-
+#else
     status = psa_driver_wrapper_sign_hash_start(operation, &slot->attr,
                                                 slot->key.data,
                                                 slot->key.bytes, alg,
                                                 hash, hash_length);
+#endif
 exit:
 
     if (status != PSA_SUCCESS) {
@@ -4370,13 +4374,13 @@ psa_status_t psa_verify_hash_start(
 
     status = PSA_ERROR_NOT_SUPPORTED;
     goto exit;
-#endif
-
+#else
     status = psa_driver_wrapper_verify_hash_start(operation, &slot->attr,
                                                   slot->key.data,
                                                   slot->key.bytes,
                                                   alg, hash, hash_length,
                                                   signature, signature_length);
+#endif
 #if !defined(MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS)
 exit:
 #endif
@@ -8453,7 +8457,9 @@ exit:
     return (status == PSA_SUCCESS) ? unlock_status : status;
 }
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDH) &&      \
+    defined(MBEDTLS_ECP_RESTARTABLE) &&          \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
 #define MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID 0x53494f45u
 typedef void (*mbedtls_async_hardware_callback_t)(int success, void *context);
 extern int mbedtls_async_hardware_ecdh_p256_start(
@@ -8517,6 +8523,7 @@ static void psa_async_hardware_ecdh_clear(psa_key_agreement_iop_t *operation)
     operation->async_hardware_started = 0;
     operation->async_hardware_done = 0;
     operation->async_hardware_success = 0;
+    operation->async_hardware_key_bits = 0;
 }
 #endif
 
@@ -8746,6 +8753,8 @@ psa_status_t psa_key_agreement_iop_setup(
         memcpy(operation->async_hardware_private_scalar, slot->key.data,
                async_hardware_coordinate_len);
         memcpy(operation->async_hardware_peer_public_key, peer_key, async_hardware_public_key_len);
+        operation->async_hardware_key_bits =
+            (uint16_t) psa_get_key_bits(&slot->attr);
         operation->async_hardware_started = 0;
         operation->async_hardware_done = 0;
         operation->async_hardware_success = 0;
@@ -8804,7 +8813,7 @@ psa_status_t psa_key_agreement_iop_complete(
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID) {
         psa_status_t status;
         size_t async_hardware_coordinate_len =
-            (psa_get_key_bits(&operation->attributes) + 7u) / 8u;
+            (operation->async_hardware_key_bits + 7u) / 8u;
 
         if (!operation->async_hardware_started) {
             operation->async_hardware_started = 1;
