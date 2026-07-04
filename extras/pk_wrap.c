@@ -551,9 +551,8 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     /*
      * The async hardware profile is intentionally narrow. If ECDSA hardware
      * acceleration is enabled but this signature cannot use the exact
-     * P-256/P-384 raw-public-key path above, fail closed
-     * instead of falling
-     * through to PSA/software verification.
+     * P-256/P-384/P-521 raw-public-key path above, fail closed instead of
+     * falling through to PSA/software verification.
      */
     return MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
 #else

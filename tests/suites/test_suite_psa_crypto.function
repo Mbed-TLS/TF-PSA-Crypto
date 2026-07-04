@@ -145,7 +145,7 @@ int mbedtls_async_hardware_ecdsa_p384_sign_start(
     uint8_t signature[96], async_hardware_test_callback_t callback,
     void *context);
 int mbedtls_async_hardware_ecdsa_p521_sign_start(
-    const uint8_t private_key[66], const uint8_t hash[66],
+    const uint8_t private_key[66], const uint8_t hash[64],
     uint8_t signature[132], async_hardware_test_callback_t callback,
     void *context);
 int mbedtls_async_hardware_ecdsa_p256_verify_start(
@@ -157,7 +157,7 @@ int mbedtls_async_hardware_ecdsa_p384_verify_start(
     const uint8_t signature[96], async_hardware_test_callback_t callback,
     void *context);
 int mbedtls_async_hardware_ecdsa_p521_verify_start(
-    const uint8_t public_key[133], const uint8_t hash[66],
+    const uint8_t public_key[133], const uint8_t hash[64],
     const uint8_t signature[132], async_hardware_test_callback_t callback,
     void *context);
 
@@ -186,7 +186,7 @@ int mbedtls_async_hardware_ecdsa_p384_sign_start(
 }
 
 int mbedtls_async_hardware_ecdsa_p521_sign_start(
-    const uint8_t private_key[66], const uint8_t hash[66],
+    const uint8_t private_key[66], const uint8_t hash[64],
     uint8_t signature[132], async_hardware_test_callback_t callback,
     void *context)
 {
@@ -222,7 +222,7 @@ int mbedtls_async_hardware_ecdsa_p384_verify_start(
 }
 
 int mbedtls_async_hardware_ecdsa_p521_verify_start(
-    const uint8_t public_key[133], const uint8_t hash[66],
+    const uint8_t public_key[133], const uint8_t hash[64],
     const uint8_t signature[132], async_hardware_test_callback_t callback,
     void *context)
 {
