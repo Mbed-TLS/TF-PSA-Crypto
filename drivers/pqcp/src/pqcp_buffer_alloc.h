@@ -40,6 +40,8 @@ void *tf_psa_crypto_pqcp_alloc_push(size_t size);
 void tf_psa_crypto_pqcp_alloc_pop(size_t size);
 
 #define TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC(v, T, N) \
+    MBEDTLS_STATIC_ASSERT(TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE % MLD_DEFAULT_ALIGN == 0, \
+                          "TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE is not a multiple of MLD_DEFAULT_ALIGN"); \
     T *(v) = NULL; \
     do { \
         /* Verify that the allocation would fit in the buffer by itself, avoiding overflows \

@@ -17,8 +17,6 @@
 #include <test/drivers/test_driver.h>
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
-// For MLD_DEFAULT_ALIGN
-#include "src/common.h"
 static int alloc_mutex_held;
 #define PQCP_INIT() \
     do { \
@@ -60,11 +58,6 @@ void smoke_87(data_t *seed)
     size_t signature_length = SIZE_MAX;
     uint8_t message[14] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "This is a test";
     const size_t message_length = sizeof(message);
-
-#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
-    /* Alignment sanity check*/
-    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE % MLD_DEFAULT_ALIGN, 0);
-#endif
 
     /* Sanity checks on the test data */
     TEST_EQUAL(seed->len, MLDSA_SEEDBYTES);
