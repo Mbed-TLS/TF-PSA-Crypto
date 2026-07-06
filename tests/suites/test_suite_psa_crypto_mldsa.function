@@ -492,19 +492,21 @@ static const uint8_t signature_1[] = {
 
 static psa_status_t poison_setup(int poison_mode, int64_t poison_bytes)
 {
-#if defined(MBEDTLS_TEST_HOOKS)
     TEST_LE_S(0, poison_bytes);
     TEST_LE_U(poison_mode, POISON_ON_UNLOCK);
-    if (poison_mode == POISON_ON_LOCK) {
-        tf_psa_crypto_pqcp_alloc_poison_bytes = poison_bytes;
-    } else if (poison_mode == POISON_ON_UNLOCK) {
-        tf_psa_crypto_pqcp_alloc_poison_bytes = -poison_bytes;
-        tf_psa_crypto_pqcp_alloc_used += poison_bytes;
-    } else
+    switch (poison_mode) {
+#if defined(MBEDTLS_TEST_HOOKS)
+        case POISON_ON_LOCK:
+            tf_psa_crypto_pqcp_alloc_poison_bytes = poison_bytes;
+            break;
+        case POISON_ON_UNLOCK:
+            tf_psa_crypto_pqcp_alloc_poison_bytes = -poison_bytes;
+            tf_psa_crypto_pqcp_alloc_used += poison_bytes;
+            break;
 #endif
-    {
-        (void) poison_mode;
-        TEST_EQUAL(poison_bytes, 0);
+        default:
+            TEST_EQUAL(poison_bytes, 0);
+            break;
     }
     return PSA_SUCCESS;
 exit:
