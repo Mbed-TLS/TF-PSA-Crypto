@@ -796,8 +796,16 @@ void poison_verify_pure(int poison_mode, int64_t poison_bytes, psa_status_t expe
     data_t signature = { (uint8_t *) signature_1, sizeof(signature_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
+
+    mbedtls_test_set_step(1);
     test_verify_pure(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
                      &public_key, &message, &signature, expected_status);
+
+    mbedtls_test_set_step(2);
+    public_key.len -= 1;
+    test_verify_pure(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
+                     &public_key, &message, &signature, PSA_ERROR_INVALID_ARGUMENT);
+
 exit:
     poison_cleanup();
 }
@@ -1089,11 +1097,19 @@ void poison_verify_multipart_finish(int poison_mode,
 {
     data_t message = { (uint8_t *) message_1, sizeof(message_1) };
     data_t public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) };
+    data_t truncated_public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) - 1 };
     data_t signature = { (uint8_t *) signature_1, sizeof(signature_1) };
 
     PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
+
+    mbedtls_test_set_step(1);
     test_verify_multipart_finish(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
                                  &public_key, &public_key, &message, &signature, expected_status);
+
+    mbedtls_test_set_step(2);
+    test_verify_multipart_finish(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87, PSA_ALG_DETERMINISTIC_ML_DSA,
+                                 &public_key, &truncated_public_key, &message, &signature,
+                                 PSA_ERROR_INVALID_ARGUMENT);
 exit:
     poison_cleanup();
 }
