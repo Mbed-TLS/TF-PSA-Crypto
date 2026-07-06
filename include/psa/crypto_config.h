@@ -2077,10 +2077,27 @@
  *          notice.
  *
  * Module:  drivers/pqcp/src/pqcp_buffer_alloc.c
+ * Requires: TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE
  *
  * Uncomment to have mldsa-native allocate large objects from a global buffer
  */
 //#define TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
+
+/**
+ * \def TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE
+ *
+ * The size of the global buffer used by mldsa-native for large allocations.
+ * You may reduce this value to save RAM, eg. if you only need to support
+ * verification of MLDSA signatures you may use MLD_TOTAL_ALLOC_87_VERIFY
+ *
+ * \warning This option is experimental. It may change or be removed without
+ *          notice.
+ *
+ * Module:  drivers/pqcp/src/pqcp_buffer_alloc.c
+ *
+ * Uncomment to have mldsa-native allocate large objects from a global buffer
+ */
+//#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE MLD_TOTAL_ALLOC_87
 
 /** \} name SECTION: Builtin drivers */
 
