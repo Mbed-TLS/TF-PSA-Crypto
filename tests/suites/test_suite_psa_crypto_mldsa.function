@@ -12,7 +12,13 @@
 #include <psa_crypto_mldsa.h>
 
 enum poison_mode {
+    /* Add poison_bytes to tf_psa_crypto_pqcp_alloc_used after tf_psa_crypto_pqcp_alloc_start(),
+     * subtract the same before tf_psa_crypto_pqcp_alloc_done()
+     * Requires MBEDTLS_TEST_HOOKS */
     POISON_ON_LOCK,
+    /* Add poison_bytes to tf_psa_crypto_pqcp_alloc_used after poison_setup() and tf_psa_crypto_pqcp_alloc_done(),
+     * subtract the same before tf_psa_crypto_pqcp_alloc_start()
+     * Requires MBEDTLS_TEST_HOOKS */
     POISON_ON_UNLOCK,
 };
 
