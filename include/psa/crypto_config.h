@@ -2078,6 +2078,8 @@
  *
  * Module:  drivers/pqcp/src/pqcp_buffer_alloc.c
  *
+ * Requires: TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+ *
  * Uncomment to have mldsa-native allocate large objects from a global buffer
  */
 //#define TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
@@ -2085,7 +2087,9 @@
 /**
  * \def TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE
  *
- * The size of the global buffer used by mldsa-native for large allocations.
+ * The size of the global buffer used by mldsa-native for large allocations
+ * when #TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC is enabled.
+ * This has no effect when #TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC is disabled.
  * The default value is generally suitable for most applications, but it can
  * be overridden to reduce RAM usage if your application does not use all of
  * the supported MLDSA operations (sign, verify, export_public_key).
@@ -2098,6 +2102,8 @@
  *          notice.
  *
  * Module:  drivers/pqcp/src/pqcp_buffer_alloc.c
+ *
+ * Requires: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
  *
  * Uncomment to override the default buffer size used by TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
  */
