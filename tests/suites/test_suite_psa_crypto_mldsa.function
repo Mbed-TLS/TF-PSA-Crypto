@@ -12,12 +12,26 @@
 #include <psa_crypto_mldsa.h>
 
 enum poison_mode {
-    /* Add poison_bytes to tf_psa_crypto_pqcp_alloc_used after tf_psa_crypto_pqcp_alloc_start(),
-     * subtract the same before tf_psa_crypto_pqcp_alloc_done()
+    /* Makes a phantom allocation consuming poison_bytes for the duration of any mldsa operation.
+     * The phantom allocation is freed before the we check for leaked allocations, so it is not
+     * reported by the allocator.
+     *
      * Requires MBEDTLS_TEST_HOOKS */
     POISON_ON_LOCK,
-    /* Add poison_bytes to tf_psa_crypto_pqcp_alloc_used after poison_setup() and tf_psa_crypto_pqcp_alloc_done(),
-     * subtract the same before tf_psa_crypto_pqcp_alloc_start()
+
+    /* Makes a phantom allocation consuming poison_bytes whenever an mldsa operation is *not* in
+     * progress. This allocation is freed before the operation starts, and is reinstated after the
+     * operation ends.
+     *
+     * This can be used to verify that the mldsa operation properly initializes
+     * the allocator, even in cases where using POISON_ON_LOCK would cause a failure earlier,
+     * before we reach the tested function.
+     *
+     * Eg. in poison_sign_deterministic_multipart_finish() with MLD_CONFIG_REDUCE_RAM enabled,
+     * tf_psa_crypto_mldsa_sign_setup() will use more memory than tf_psa_crypto_mldsa_sign_finish(),
+     * so a sufficiently large POISON_ON_LOCK allocation would cause an early failure,
+     * before we reach the method being tested.
+     *
      * Requires MBEDTLS_TEST_HOOKS */
     POISON_ON_UNLOCK,
 };
