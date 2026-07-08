@@ -8,7 +8,7 @@
 
 #include <tf-psa-crypto/build_info.h>
 
-#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
 //#include "pqcp-config.h"
 #include "wrap_mldsa_native.h"

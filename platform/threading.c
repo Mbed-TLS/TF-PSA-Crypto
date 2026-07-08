@@ -268,7 +268,10 @@ void mbedtls_threading_set_alt(
     mbedtls_mutex_init(&mbedtls_threading_key_slot_mutex);
     mbedtls_mutex_init(&mbedtls_threading_psa_globaldata_mutex);
     mbedtls_mutex_init(&mbedtls_threading_psa_rngdata_mutex);
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) && defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+    mbedtls_mutex_init(&mbedtls_threading_pqcp_buffer_alloc_mutex);
 #endif
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 }
 
 /*
@@ -286,7 +289,10 @@ void mbedtls_threading_free_alt(void)
     mbedtls_mutex_free(&mbedtls_threading_key_slot_mutex);
     mbedtls_mutex_free(&mbedtls_threading_psa_globaldata_mutex);
     mbedtls_mutex_free(&mbedtls_threading_psa_rngdata_mutex);
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) && defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+    mbedtls_mutex_free(&mbedtls_threading_pqcp_buffer_alloc_mutex);
 #endif
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 }
 #endif /* MBEDTLS_THREADING_ALT */
 
@@ -306,6 +312,9 @@ mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex MUTEX_INIT;
 mbedtls_threading_mutex_t mbedtls_threading_key_slot_mutex MUTEX_INIT;
 mbedtls_threading_mutex_t mbedtls_threading_psa_globaldata_mutex MUTEX_INIT;
 mbedtls_threading_mutex_t mbedtls_threading_psa_rngdata_mutex MUTEX_INIT;
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) && defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+mbedtls_threading_mutex_t mbedtls_threading_pqcp_buffer_alloc_mutex MUTEX_INIT;
 #endif
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 #endif /* MBEDTLS_THREADING_C */
