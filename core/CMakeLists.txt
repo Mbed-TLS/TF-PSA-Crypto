@@ -115,6 +115,11 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY)
         ${target_objects})
     tf_psa_crypto_set_base_compile_options(${tfpsacrypto_static_target})
     tf_psa_crypto_set_extra_compile_options(${tfpsacrypto_static_target})
+    if(CMAKE_COMPILER_IS_GNU OR CMAKE_COMPILER_IS_CLANG)
+        target_compile_options(${tfpsacrypto_static_target} PRIVATE
+            -ffunction-sections
+            -fdata-sections)
+    endif()
     set_target_properties(${tfpsacrypto_static_target} PROPERTIES OUTPUT_NAME tfpsacrypto)
     target_link_libraries(${tfpsacrypto_static_target} PUBLIC ${libs})
 
@@ -138,6 +143,11 @@ if(USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
         ${target_objects})
     tf_psa_crypto_set_base_compile_options(${tfpsacrypto_target})
     tf_psa_crypto_set_extra_compile_options(${tfpsacrypto_target})
+    if(CMAKE_COMPILER_IS_GNU OR CMAKE_COMPILER_IS_CLANG)
+        target_compile_options(${tfpsacrypto_target} PRIVATE
+            -ffunction-sections
+            -fdata-sections)
+    endif()
     set_target_properties(${tfpsacrypto_target} PROPERTIES VERSION ${TF_PSA_CRYPTO_VERSION} SOVERSION ${TF_PSA_CRYPTO_SOVERSION})
     target_link_libraries(${tfpsacrypto_target} PUBLIC ${libs})
 
