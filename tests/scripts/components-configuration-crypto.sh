@@ -607,7 +607,7 @@ component_build_psa_crypto_spm () {
     # Check that if a symbol is renamed by crypto_spe.h, the non-renamed
     # version is not present.
     echo "Checking for renamed symbols in the library"
-    check_renamed_symbols framework/tests/include/spe/crypto_spe.h library/libmbedcrypto.a
+    check_renamed_symbols framework/tests/include/spe/crypto_spe.h core/libtfpsacrypto.a
 }
 
 component_test_no_rsa_key_pair_generation () {
@@ -1019,7 +1019,7 @@ component_test_tfm_config_no_p256m () {
     CFLAGS="-I$PWD/framework/tests/include/spe" cmake -D CMAKE_BUILD_TYPE:String=Release .
     cmake --build .
     # Check that p256m was not built
-    not grep p256_ecdsa_ library/libmbedcrypto.a
+    not grep p256_ecdsa_ core/libtfpsacrypto.a
 
     # In "config-tfm.h" we disabled CIPHER_C tweaking TF-M's configuration
     # files, so we want to ensure that it has not be re-enabled accidentally.
