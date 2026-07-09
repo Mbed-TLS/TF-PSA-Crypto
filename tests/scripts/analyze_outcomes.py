@@ -15,7 +15,7 @@ import typing
 import scripts_path # pylint: disable=unused-import
 from mbedtls_framework import outcome_analysis
 
-import tf_psa_crypto_test_case_info
+from project_knowledge import tf_psa_crypto_test_case_info
 
 
 class CoverageTask(outcome_analysis.CoverageTask):
@@ -66,6 +66,22 @@ class CoverageTask(outcome_analysis.CoverageTask):
     # Tests that are not covered for a tracked reason, and that
     # were also not covered by Mbed TLS testing as of Mbed TLS 4.1.0.
     UNCOVERED_TESTS = {
+        'test_suite_config.crypto_combinations': [
+            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
+            'Config: built-in SHA3: no SHAKE',
+            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
+            'Config: built-in SHA3: no hash',
+            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
+            'Config: no built-in AEAD',
+            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
+            'Config: no built-in MAC',
+            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
+            'Config: no built-in cipher',
+            # We don't support any signature algorithm that isn't either
+            # hash-then-sign or sign-short-message (raw RSA PKCS#1v1.5).
+            # So we don't have built-in multipart signature entry points.
+            'Config: some built-in multipart signature',
+        ],
         'test_suite_config.psa_boolean': [
             # We don't test with HMAC disabled.
             # https://github.com/Mbed-TLS/mbedtls/issues/9591

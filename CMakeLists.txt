@@ -37,7 +37,7 @@ cmake_policy(SET CMP0011 NEW)
 # is deprecated and will be removed in future versions.
 cmake_policy(SET CMP0012 NEW)
 
-set(TF_PSA_CRYPTO_VERSION 1.1.0)
+set(TF_PSA_CRYPTO_VERSION 1.2.0)
 set(TF_PSA_CRYPTO_SOVERSION 2)
 
 if(TEST_CPP)
@@ -71,12 +71,12 @@ set(version_number_files
         doxygen/tfpsacrypto.doxyfile)
 foreach(file ${version_number_files})
     configure_file(${file}.in
-                   ${PROJECT_SOURCE_DIR}/${file})
+                   ${PROJECT_BINARY_DIR}/${file})
 endforeach(file)
 
 ADD_CUSTOM_TARGET(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc
     COMMAND doxygen tfpsacrypto.doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doxygen)
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/doxygen)
 
 option(ENABLE_PROGRAMS "Build TF-PSA-Crypto programs." ON)
 
