@@ -877,7 +877,6 @@ component_test_everest_curve25519_only () {
     ctest
 }
 
-# Check that the specified libraries exist and are empty.
 component_test_crypto_for_psa_service () {
   msg "build: make, config for PSA crypto service"
   scripts/config.py set MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
