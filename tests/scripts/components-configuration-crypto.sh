@@ -560,11 +560,36 @@ component_test_crypto_with_static_key_slots() {
 }
 
 # check_renamed_symbols HEADER LIB
-# Check that if HEADER contains '#define MACRO ...' then MACRO is not a symbol
-# name in LIB.
+# Check that symbols renamed by HEADER are not present in LIB.
 check_renamed_symbols () {
-    ! nm "$2" | sed 's/.* //' |
-      grep -x -F "$(sed -n 's/^ *# *define  *\([A-Z_a-z][0-9A-Z_a-z]*\)..*/\1/p' "$1")"
+    header=$1
+    lib=$2
+
+    if [ ! -f "$header" ]; then
+        echo "Missing header: $header" >&2
+        return 1
+    fi
+
+    if [ ! -f "$lib" ]; then
+        echo "Missing library: $lib" >&2
+        return 1
+    fi
+
+    # First sed extracts macro names from lines such as:
+    #   #define psa_crypto_init tfm_crypto_init
+    # Second sed extracts the symbol name from nm output by keeping the text
+    # after the last space.
+    unrenamed_symbols=$(
+        comm -12 \
+            <(sed -n 's/^[[:space:]]*#[[:space:]]*define[[:space:]]\{1,\}\([_[:alpha:]][_[:alnum:]]*\).*/\1/p' "$header" | sort -u) \
+            <(nm "$lib" | sed 's/.* //' | sort -u)
+    )
+
+    if [ -n "$unrenamed_symbols" ]; then
+        echo "Unexpected unrenamed symbols found in $lib:" >&2
+        echo "$unrenamed_symbols" | sed 's/^/  /' >&2
+        return 1
+    fi
 }
 
 component_build_psa_crypto_spm () {
