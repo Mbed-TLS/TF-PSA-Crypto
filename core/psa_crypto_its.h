@@ -59,8 +59,8 @@ struct psa_storage_info_t {
  * \retval      #PSA_ERROR_NOT_SUPPORTED         The operation failed because one or more of the flags provided in `create_flags` is not supported or is not valid
  * \retval      #PSA_ERROR_INSUFFICIENT_STORAGE  The operation failed because there was insufficient space on the storage medium
  * \retval      #PSA_ERROR_STORAGE_FAILURE       The operation failed because the physical storage has failed (Fatal error)
- * \retval      #PSA_ERROR_INVALID_ARGUMENT      The operation failed because one of the provided pointers(`p_data`)
- *                                               is invalid, for example is `NULL` or references memory the caller cannot access
+ * \retval      #PSA_ERROR_INVALID_ARGUMENT      The operation failed because `uid` is 0, or one of the provided pointers (`p_data`) is invalid,
+ *                                               for example is `NULL` or references memory the caller cannot access.
  */
 psa_status_t psa_its_set(psa_storage_uid_t uid,
                          uint32_t data_length,
