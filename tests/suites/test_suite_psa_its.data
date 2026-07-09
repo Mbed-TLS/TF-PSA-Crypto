@@ -29,7 +29,7 @@ Multiple files
 set_multiple:1:5
 
 Set UID 0
-set_fail:0:"40414243444546474849":PSA_ERROR_INVALID_HANDLE
+set_fail:0:"40414243444546474849":PSA_ERROR_INVALID_ARGUMENT
 
 Non-existent file
 nonexistent:1:0
