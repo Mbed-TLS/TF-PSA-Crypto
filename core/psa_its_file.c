@@ -79,6 +79,10 @@ static psa_status_t psa_its_read_file(psa_storage_uid_t uid,
     psa_its_file_header_t header;
     size_t n;
 
+    if (uid == 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     *p_stream = NULL;
     psa_its_fill_filename(uid, filename);
     *p_stream = fopen(filename, "rb");
@@ -239,6 +243,11 @@ psa_status_t psa_its_remove(psa_storage_uid_t uid)
 {
     char filename[PSA_ITS_STORAGE_FILENAME_LENGTH];
     FILE *stream;
+
+    if (uid == 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     psa_its_fill_filename(uid, filename);
     stream = fopen(filename, "rb");
     if (stream == NULL) {
