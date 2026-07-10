@@ -3739,7 +3739,7 @@ uint32_t psa_verify_hash_get_num_ops(
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
     defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
 typedef void (*mbedtls_async_hardware_ecdsa_async_callback_t)(int success,
-                                                     void *context);
+                                                              void *context);
 extern int mbedtls_async_hardware_ecdsa_p256_sign_start(
     const uint8_t private_key[32], const uint8_t hash[32],
     uint8_t signature[64], mbedtls_async_hardware_ecdsa_async_callback_t callback,
@@ -3805,13 +3805,13 @@ static size_t psa_async_hardware_ecdsa_signature_length(size_t key_bits)
 }
 
 static int psa_async_hardware_ecdsa_hash_alg_supported(size_t key_bits,
-                                              psa_algorithm_t alg,
-                                              size_t hash_length)
+                                                       psa_algorithm_t alg,
+                                                       size_t hash_length)
 {
     return PSA_ALG_IS_ECDSA(alg) &&
            ((key_bits == 256 &&
              PSA_ALG_SIGN_GET_HASH(alg) == PSA_ALG_SHA_256 &&
-            hash_length == 32) ||
+             hash_length == 32) ||
             (key_bits == 384 &&
              PSA_ALG_SIGN_GET_HASH(alg) == PSA_ALG_SHA_384 &&
              hash_length == 48) ||
@@ -3854,11 +3854,11 @@ static void psa_async_hardware_ecdsa_sign_clear(
     }
 
     psa_async_hardware_ecdsa_zeroize(operation->async_hardware_private_key,
-                            sizeof(operation->async_hardware_private_key));
+                                     sizeof(operation->async_hardware_private_key));
     psa_async_hardware_ecdsa_zeroize(operation->async_hardware_hash,
-                            sizeof(operation->async_hardware_hash));
+                                     sizeof(operation->async_hardware_hash));
     psa_async_hardware_ecdsa_zeroize(operation->async_hardware_signature,
-                            sizeof(operation->async_hardware_signature));
+                                     sizeof(operation->async_hardware_signature));
     operation->async_hardware_started = 0;
     operation->async_hardware_done = 0;
     operation->async_hardware_success = 0;
@@ -3874,11 +3874,11 @@ static void psa_async_hardware_ecdsa_verify_clear(
     }
 
     psa_async_hardware_ecdsa_zeroize(operation->async_hardware_public_key,
-                            sizeof(operation->async_hardware_public_key));
+                                     sizeof(operation->async_hardware_public_key));
     psa_async_hardware_ecdsa_zeroize(operation->async_hardware_hash,
-                            sizeof(operation->async_hardware_hash));
+                                     sizeof(operation->async_hardware_hash));
     psa_async_hardware_ecdsa_zeroize(operation->async_hardware_signature,
-                            sizeof(operation->async_hardware_signature));
+                                     sizeof(operation->async_hardware_signature));
     operation->async_hardware_started = 0;
     operation->async_hardware_done = 0;
     operation->async_hardware_success = 0;
@@ -3891,7 +3891,7 @@ static void psa_async_hardware_ecdsa_verify_clear(
 #if !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) && \
     !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
 typedef void (*mbedtls_async_hardware_ecdsa_async_callback_t)(int success,
-                                                     void *context);
+                                                              void *context);
 #endif
 extern int mbedtls_async_hardware_rsa_pss_sign_start(
     int hash_bits, const uint8_t *private_key, size_t private_key_length,
@@ -3905,7 +3905,7 @@ extern int mbedtls_async_hardware_rsa_pkcs1_sign_start(
     void *context);
 
 static int psa_async_hardware_rsa_hash_bits(psa_algorithm_t alg,
-                                  size_t hash_length)
+                                            size_t hash_length)
 {
     if (!PSA_ALG_IS_RSA_PSS(alg) &&
         !PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg)) {
@@ -4066,8 +4066,10 @@ psa_status_t psa_sign_hash_start(
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
     defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
     size_t async_hardware_key_bits = psa_get_key_bits(&slot->attr);
-    size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(async_hardware_key_bits);
-    size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(async_hardware_key_bits);
+    size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(
+        async_hardware_key_bits);
+    size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(
+        async_hardware_key_bits);
     if (psa_async_hardware_ecdsa_key_supported(&slot->attr) &&
         PSA_ALG_IS_RANDOMIZED_ECDSA(alg) &&
         psa_async_hardware_ecdsa_hash_alg_supported(async_hardware_key_bits, alg, hash_length) &&
@@ -4075,7 +4077,8 @@ psa_status_t psa_sign_hash_start(
         async_hardware_coordinate_len <= sizeof(operation->async_hardware_private_key) &&
         hash_length <= sizeof(operation->async_hardware_hash) &&
         async_hardware_signature_len <= sizeof(operation->async_hardware_signature)) {
-        memcpy(operation->async_hardware_private_key, slot->key.data, async_hardware_coordinate_len);
+        memcpy(operation->async_hardware_private_key, slot->key.data,
+               async_hardware_coordinate_len);
         memcpy(operation->async_hardware_hash, hash, hash_length);
         operation->async_hardware_key_bits = (uint16_t) async_hardware_key_bits;
         operation->id = MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID;
@@ -4134,8 +4137,8 @@ psa_status_t psa_sign_hash_start(
 #endif
 
 #if (!defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) && \
-     !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN) && \
-     !defined(MBEDTLS_ASYNC_HARDWARE_RSA)) || \
+    !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN) && \
+    !defined(MBEDTLS_ASYNC_HARDWARE_RSA)) || \
     defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_HYBRID)
     status = psa_driver_wrapper_sign_hash_start(operation, &slot->attr,
                                                 slot->key.data,
@@ -4247,24 +4250,24 @@ psa_status_t psa_sign_hash_complete(
         if (!operation->async_hardware_started) {
             operation->async_hardware_started = 1;
             int submitted = operation->async_hardware_rsa_pkcs1 != 0 ?
-                mbedtls_async_hardware_rsa_pkcs1_sign_start(
-                    operation->async_hardware_rsa_hash_bits,
-                    operation->async_hardware_rsa_private_key,
-                    operation->async_hardware_rsa_private_key_length,
-                    operation->async_hardware_rsa_hash,
-                    operation->async_hardware_rsa_hash_length,
-                    signature,
-                    operation->async_hardware_rsa_signature_length,
-                    psa_async_hardware_rsa_sign_callback, operation) :
-                mbedtls_async_hardware_rsa_pss_sign_start(
-                    operation->async_hardware_rsa_hash_bits,
-                    operation->async_hardware_rsa_private_key,
-                    operation->async_hardware_rsa_private_key_length,
-                    operation->async_hardware_rsa_hash,
-                    operation->async_hardware_rsa_hash_length,
-                    signature,
-                    operation->async_hardware_rsa_signature_length,
-                    psa_async_hardware_rsa_sign_callback, operation);
+                            mbedtls_async_hardware_rsa_pkcs1_sign_start(
+                operation->async_hardware_rsa_hash_bits,
+                operation->async_hardware_rsa_private_key,
+                operation->async_hardware_rsa_private_key_length,
+                operation->async_hardware_rsa_hash,
+                operation->async_hardware_rsa_hash_length,
+                signature,
+                operation->async_hardware_rsa_signature_length,
+                psa_async_hardware_rsa_sign_callback, operation) :
+                            mbedtls_async_hardware_rsa_pss_sign_start(
+                operation->async_hardware_rsa_hash_bits,
+                operation->async_hardware_rsa_private_key,
+                operation->async_hardware_rsa_private_key_length,
+                operation->async_hardware_rsa_hash,
+                operation->async_hardware_rsa_hash_length,
+                signature,
+                operation->async_hardware_rsa_signature_length,
+                psa_async_hardware_rsa_sign_callback, operation);
             if (!submitted) {
                 psa_async_hardware_rsa_sign_clear(operation);
                 status = PSA_ERROR_HARDWARE_FAILURE;
@@ -4410,9 +4413,12 @@ psa_status_t psa_verify_hash_start(
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
     size_t async_hardware_key_bits = psa_get_key_bits(&slot->attr);
-    size_t async_hardware_public_key_len = psa_async_hardware_ecdsa_public_key_length(async_hardware_key_bits);
-    size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(async_hardware_key_bits);
-    size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(async_hardware_key_bits);
+    size_t async_hardware_public_key_len = psa_async_hardware_ecdsa_public_key_length(
+        async_hardware_key_bits);
+    size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(
+        async_hardware_key_bits);
+    size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(
+        async_hardware_key_bits);
     if (psa_async_hardware_ecdsa_key_supported(&slot->attr) &&
         psa_async_hardware_ecdsa_hash_alg_supported(async_hardware_key_bits, alg, hash_length) &&
         slot->key.bytes == async_hardware_public_key_len &&
@@ -8565,7 +8571,7 @@ static int psa_async_hardware_ecdh_supported(
     size_t coordinate_len = (key_bits + 7u) / 8u;
     return alg == PSA_ALG_ECDH &&
            psa_get_key_type(&slot->attr) ==
-               PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1) &&
+           PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1) &&
            (key_bits == 256 || key_bits == 384 || key_bits == 521) &&
            slot->key.bytes == coordinate_len &&
            peer_key != NULL &&

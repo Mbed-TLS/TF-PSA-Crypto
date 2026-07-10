@@ -629,10 +629,10 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign(mbedtls_rsa_context *ctx,
                                       unsigned char *sig);
 
 int mbedtls_rsa_rsassa_pkcs1_v15_encode(mbedtls_rsa_context *ctx,
-                                         mbedtls_md_type_t md_alg,
-                                         unsigned int hashlen,
-                                         const unsigned char *hash,
-                                         unsigned char *encoded);
+                                        mbedtls_md_type_t md_alg,
+                                        unsigned int hashlen,
+                                        const unsigned char *hash,
+                                        unsigned char *encoded);
 
 #if defined(MBEDTLS_PKCS1_V21)
 /**

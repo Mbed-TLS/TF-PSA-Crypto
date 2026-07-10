@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 /** Resolve standardized prime-curve parameters for an async hardware request. */
-const mbedtls_psa_async_crypto_prime_curve_t*
+const mbedtls_psa_async_crypto_prime_curve_t *
 mbedtls_psa_async_crypto_resolve_prime_curve(psa_key_type_t key_type, size_t key_bits);
 
 #ifdef __cplusplus

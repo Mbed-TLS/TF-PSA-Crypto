@@ -6,8 +6,8 @@
 #endif
 
 #if (defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_OFF) +                                                  \
-     defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_SOFTWARE_ONLY) +                                        \
-     defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_HYBRID)) > 1
+    defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_SOFTWARE_ONLY) +                                        \
+    defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_HYBRID)) > 1
 #error "Select at most one PSA crypto override: off, software-only, or hybrid"
 #endif
 

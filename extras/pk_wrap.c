@@ -73,10 +73,10 @@ int mbedtls_async_hardware_ecdsa_p521_verify_start(
     void *context);
 
 static int mbedtls_async_hardware_ecdsa_normalize_hash(mbedtls_md_type_t md_alg,
-                                             const unsigned char *hash,
-                                             size_t hash_len,
-                                             size_t expected_hash_len,
-                                             unsigned char *normalized_hash)
+                                                       const unsigned char *hash,
+                                                       size_t hash_len,
+                                                       size_t expected_hash_len,
+                                                       unsigned char *normalized_hash)
 {
     if ((md_alg != MBEDTLS_MD_SHA256 || hash_len != 32) &&
         (md_alg != MBEDTLS_MD_SHA384 || hash_len != 48) &&
@@ -509,8 +509,8 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
           raw_sig_len == 132)) &&
         pk->pub_raw[0] == 0x04u &&
         mbedtls_async_hardware_ecdsa_normalize_hash(md_alg, hash, hash_len,
-                                          expected_hash_len,
-                                          normalized_hash) != 0) {
+                                                    expected_hash_len,
+                                                    normalized_hash) != 0) {
         if (rs_ctx->async_hardware_in_progress != 0) {
             if (rs_ctx->async_hardware_done == 0) {
                 return MBEDTLS_ERR_ECP_IN_PROGRESS;

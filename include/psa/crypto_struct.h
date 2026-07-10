@@ -536,7 +536,7 @@ struct psa_sign_hash_interruptible_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
 #elif (defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
-       defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)) && \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)) && \
     defined(MBEDTLS_ASYNC_HARDWARE_RSA)
 #define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT                    \
     { 0, { 0 }, 0, 0, 0, 0, 0, 0, { 0 }, { 0 }, { 0 }, 0, 0, { 0 }, \
