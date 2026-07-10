@@ -3645,8 +3645,11 @@ exit:
 
 static uint32_t psa_interruptible_max_ops = PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED;
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
 #define MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID 0x53494753u
+#endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 #define MBEDTLS_ASYNC_HARDWARE_ECDSA_VERIFY_DRIVER_ID 0x53494756u
 #endif
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
@@ -3666,7 +3669,8 @@ uint32_t psa_interruptible_get_max_ops(void)
 uint32_t psa_sign_hash_get_num_ops(
     const psa_sign_hash_interruptible_operation_t *operation)
 {
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID) {
         return operation->async_hardware_started ? 1 : 0;
     }
@@ -3692,7 +3696,8 @@ uint32_t psa_verify_hash_get_num_ops(
     return operation->num_ops;
 }
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
 typedef void (*mbedtls_async_hardware_ecdsa_async_callback_t)(int success,
                                                      void *context);
 extern int mbedtls_async_hardware_ecdsa_p256_sign_start(
@@ -3747,10 +3752,12 @@ static size_t psa_async_hardware_ecdsa_coordinate_length(size_t key_bits)
     return (key_bits + 7u) / 8u;
 }
 
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 static size_t psa_async_hardware_ecdsa_public_key_length(size_t key_bits)
 {
     return psa_async_hardware_ecdsa_coordinate_length(key_bits) * 2u + 1u;
 }
+#endif
 
 static size_t psa_async_hardware_ecdsa_signature_length(size_t key_bits)
 {
@@ -3785,6 +3792,7 @@ static void psa_async_hardware_ecdsa_sign_callback(int success, void *context)
     operation->async_hardware_done = 1;
 }
 
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 static void psa_async_hardware_ecdsa_verify_callback(int success, void *context)
 {
     psa_verify_hash_interruptible_operation_t *operation =
@@ -3796,6 +3804,7 @@ static void psa_async_hardware_ecdsa_verify_callback(int success, void *context)
     operation->async_hardware_success = success != 0;
     operation->async_hardware_done = 1;
 }
+#endif
 
 static void psa_async_hardware_ecdsa_sign_clear(
     psa_sign_hash_interruptible_operation_t *operation)
@@ -3816,6 +3825,7 @@ static void psa_async_hardware_ecdsa_sign_clear(
     operation->async_hardware_key_bits = 0;
 }
 
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
 static void psa_async_hardware_ecdsa_verify_clear(
     psa_verify_hash_interruptible_operation_t *operation)
 {
@@ -3835,9 +3845,11 @@ static void psa_async_hardware_ecdsa_verify_clear(
     operation->async_hardware_key_bits = 0;
 }
 #endif
+#endif
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
-#if !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) && \
+    !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
 typedef void (*mbedtls_async_hardware_ecdsa_async_callback_t)(int success,
                                                      void *context);
 #endif
@@ -3936,7 +3948,8 @@ static psa_status_t psa_sign_hash_abort_internal(
 
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID) {
         psa_async_hardware_ecdsa_sign_clear(operation);
         operation->id = 0;
@@ -4010,7 +4023,8 @@ psa_status_t psa_sign_hash_start(
     /* Ensure ops count gets reset, in case of operation re-use. */
     operation->num_ops = 0;
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
     size_t async_hardware_key_bits = psa_get_key_bits(&slot->attr);
     size_t async_hardware_coordinate_len = psa_async_hardware_ecdsa_coordinate_length(async_hardware_key_bits);
     size_t async_hardware_signature_len = psa_async_hardware_ecdsa_signature_length(async_hardware_key_bits);
@@ -4070,10 +4084,19 @@ psa_status_t psa_sign_hash_start(
     }
 #endif
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+#if !defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_HYBRID)
     status = PSA_ERROR_NOT_SUPPORTED;
     goto exit;
-#else
+#endif
+#endif
+
+#if (!defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) && \
+     !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN) && \
+     !defined(MBEDTLS_ASYNC_HARDWARE_RSA)) || \
+    defined(MBEDTLS_PSA_ASYNC_CRYPTO_MODE_HYBRID)
     status = psa_driver_wrapper_sign_hash_start(operation, &slot->attr,
                                                 slot->key.data,
                                                 slot->key.bytes, alg,
@@ -4125,7 +4148,8 @@ psa_status_t psa_sign_hash_complete(
 
     LOCAL_OUTPUT_ALLOC(signature_external, signature_size, signature);
 
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN_DRIVER_ID) {
         size_t async_hardware_coordinate_len = (operation->async_hardware_key_bits + 7u) / 8u;
         size_t async_hardware_signature_len = async_hardware_coordinate_len * 2u;

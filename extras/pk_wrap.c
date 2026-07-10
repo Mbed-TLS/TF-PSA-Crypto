@@ -349,7 +349,9 @@ static int ecdsa_verify_wrap(mbedtls_pk_context *pk,
 }
 #endif /* PSA_HAVE_ALG_ECDSA_VERIFY */
 
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN) && !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
+    !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) && \
+    !defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
 /* Common helper for ECDSA sign using PSA functions.
  * Instead of extracting key's properties in order to check which kind of ECDSA
  * signature it supports, we try both deterministic and non-deterministic.
@@ -400,7 +402,8 @@ static int ecdsa_opaque_sign_wrap(mbedtls_pk_context *pk,
                                   unsigned char *sig, size_t sig_size,
                                   size_t *sig_len)
 {
-#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
     ((void) pk);
     ((void) md_alg);
     ((void) hash);
