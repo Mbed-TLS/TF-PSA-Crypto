@@ -1,0 +1,237 @@
+/* BEGIN_HEADER */
+
+#include <mbedtls/psa_crypto_async_provider.h>
+#include <string.h>
+
+typedef struct {
+    mbedtls_psa_async_crypto_capability_t capabilities;
+    psa_status_t start_status;
+    int calls;
+    mbedtls_psa_async_crypto_hardware_completion_t completion;
+} async_provider_test_context_t;
+
+static mbedtls_psa_async_crypto_capability_t
+async_provider_test_get_capabilities(void *context)
+{
+    async_provider_test_context_t *test_context = context;
+    return test_context->capabilities;
+}
+
+static psa_status_t async_provider_test_hash(
+    void *context,
+    const mbedtls_psa_async_crypto_request_t *request,
+    mbedtls_psa_async_crypto_hardware_completion_t *completion)
+{
+    async_provider_test_context_t *test_context = context;
+    test_context->calls++;
+    test_context->completion = *completion;
+
+    if (request->operation != MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_HASH ||
+        request->alg != PSA_ALG_SHA_256) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    return test_context->start_status;
+}
+
+static const mbedtls_psa_async_crypto_hardware_functions_t
+    async_provider_test_functions = {
+        async_provider_test_get_capabilities,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        async_provider_test_hash,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+    };
+
+static void async_provider_test_make_hash_request(
+    mbedtls_psa_async_crypto_request_t *request,
+    uint8_t *input,
+    size_t input_length,
+    uint8_t *output,
+    size_t output_length)
+{
+    memset(request, 0, sizeof(*request));
+    request->operation = MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_HASH;
+    request->alg = PSA_ALG_SHA_256;
+    request->input.data = input;
+    request->input.length = input_length;
+    request->output.data = output;
+    request->output.length = output_length;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES */
+
+/* BEGIN_CASE */
+void bind_unbind_provider(void)
+{
+    mbedtls_psa_async_crypto_provider_t first_provider;
+    mbedtls_psa_async_crypto_provider_t second_provider;
+
+    mbedtls_psa_async_crypto_provider_init(&first_provider, NULL);
+    mbedtls_psa_async_crypto_provider_init(&second_provider, NULL);
+
+    TEST_EQUAL(mbedtls_psa_async_crypto_bound_provider(), NULL);
+    TEST_EQUAL(mbedtls_psa_async_crypto_bind_provider(NULL),
+               PSA_ERROR_INVALID_ARGUMENT);
+    PSA_ASSERT(mbedtls_psa_async_crypto_bind_provider(&first_provider));
+    TEST_EQUAL(mbedtls_psa_async_crypto_bound_provider(), &first_provider);
+    PSA_ASSERT(mbedtls_psa_async_crypto_bind_provider(&first_provider));
+    TEST_EQUAL(mbedtls_psa_async_crypto_bind_provider(&second_provider),
+               PSA_ERROR_ALREADY_EXISTS);
+    TEST_EQUAL(mbedtls_psa_async_crypto_unbind_provider(&second_provider),
+               PSA_ERROR_DOES_NOT_EXIST);
+    PSA_ASSERT(mbedtls_psa_async_crypto_unbind_provider(&first_provider));
+    TEST_EQUAL(mbedtls_psa_async_crypto_bound_provider(), NULL);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void provider_start_without_hardware(void)
+{
+    mbedtls_psa_async_crypto_provider_t provider;
+    mbedtls_psa_async_crypto_operation_t operation =
+        MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INIT;
+    mbedtls_psa_async_crypto_request_t request;
+    uint8_t input[1] = { 0 };
+    uint8_t output[32] = { 0 };
+
+    mbedtls_psa_async_crypto_provider_init(&provider, NULL);
+    async_provider_test_make_hash_request(&request, input, sizeof(input),
+                                          output, sizeof(output));
+
+    TEST_EQUAL(mbedtls_psa_async_crypto_start(&provider, &operation, &request),
+               PSA_ERROR_NOT_SUPPORTED);
+    TEST_EQUAL(operation.state,
+               MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INACTIVE);
+    TEST_EQUAL(mbedtls_psa_async_crypto_get_num_ops(&operation), 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void provider_hash_complete(void)
+{
+    async_provider_test_context_t context = {
+        MBEDTLS_PSA_ASYNC_CRYPTO_CAPABILITY_SHA_256,
+        PSA_OPERATION_INCOMPLETE,
+        0,
+        { NULL, NULL },
+    };
+    const mbedtls_psa_async_crypto_hardware_t hardware = {
+        &async_provider_test_functions,
+        &context,
+    };
+    mbedtls_psa_async_crypto_provider_t provider;
+    mbedtls_psa_async_crypto_operation_t operation =
+        MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INIT;
+    mbedtls_psa_async_crypto_request_t request;
+    uint8_t input[1] = { 0 };
+    uint8_t output[32] = { 0 };
+
+    mbedtls_psa_async_crypto_provider_init(&provider, &hardware);
+    async_provider_test_make_hash_request(&request, input, sizeof(input),
+                                          output, sizeof(output));
+
+#if MBEDTLS_PSA_ASYNC_CRYPTO_HARDWARE_ENABLED
+    PSA_ASSERT(mbedtls_psa_async_crypto_start(&provider, &operation, &request));
+    TEST_EQUAL(operation.state,
+               MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_IN_PROGRESS);
+    TEST_EQUAL(context.calls, 1);
+    TEST_ASSERT(context.completion.callback != NULL);
+    TEST_EQUAL(mbedtls_psa_async_crypto_complete(&provider, &operation),
+               PSA_OPERATION_INCOMPLETE);
+    context.completion.callback(PSA_SUCCESS, context.completion.context);
+    PSA_ASSERT(mbedtls_psa_async_crypto_complete(&provider, &operation));
+    TEST_EQUAL(operation.state,
+               MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INACTIVE);
+    TEST_EQUAL(mbedtls_psa_async_crypto_get_num_ops(&operation), 1);
+#else
+    TEST_EQUAL(mbedtls_psa_async_crypto_start(&provider, &operation, &request),
+               PSA_ERROR_NOT_SUPPORTED);
+#endif
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void provider_rejects_missing_capability(void)
+{
+    async_provider_test_context_t context = {
+        MBEDTLS_PSA_ASYNC_CRYPTO_CAPABILITY_RANDOM,
+        PSA_SUCCESS,
+        0,
+        { NULL, NULL },
+    };
+    const mbedtls_psa_async_crypto_hardware_t hardware = {
+        &async_provider_test_functions,
+        &context,
+    };
+    mbedtls_psa_async_crypto_provider_t provider;
+    mbedtls_psa_async_crypto_operation_t operation =
+        MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INIT;
+    mbedtls_psa_async_crypto_request_t request;
+    uint8_t input[1] = { 0 };
+    uint8_t output[32] = { 0 };
+
+    mbedtls_psa_async_crypto_provider_init(&provider, &hardware);
+    async_provider_test_make_hash_request(&request, input, sizeof(input),
+                                          output, sizeof(output));
+
+    TEST_EQUAL(mbedtls_psa_async_crypto_start(&provider, &operation, &request),
+               PSA_ERROR_NOT_SUPPORTED);
+    TEST_EQUAL(context.calls, 0);
+    TEST_EQUAL(operation.state,
+               MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INACTIVE);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void provider_abort_in_progress_operation(void)
+{
+    async_provider_test_context_t context = {
+        MBEDTLS_PSA_ASYNC_CRYPTO_CAPABILITY_SHA_256,
+        PSA_OPERATION_INCOMPLETE,
+        0,
+        { NULL, NULL },
+    };
+    const mbedtls_psa_async_crypto_hardware_t hardware = {
+        &async_provider_test_functions,
+        &context,
+    };
+    mbedtls_psa_async_crypto_provider_t provider;
+    mbedtls_psa_async_crypto_operation_t operation =
+        MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INIT;
+    mbedtls_psa_async_crypto_request_t request;
+    uint8_t input[1] = { 0 };
+    uint8_t output[32] = { 0 };
+
+    mbedtls_psa_async_crypto_provider_init(&provider, &hardware);
+    async_provider_test_make_hash_request(&request, input, sizeof(input),
+                                          output, sizeof(output));
+
+#if MBEDTLS_PSA_ASYNC_CRYPTO_HARDWARE_ENABLED
+    PSA_ASSERT(mbedtls_psa_async_crypto_start(&provider, &operation, &request));
+    PSA_ASSERT(mbedtls_psa_async_crypto_abort(&provider, &operation));
+    TEST_EQUAL(operation.state,
+               MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INACTIVE);
+    TEST_EQUAL(mbedtls_psa_async_crypto_complete(&provider, &operation),
+               PSA_ERROR_BAD_STATE);
+    context.completion.callback(PSA_SUCCESS, context.completion.context);
+    TEST_EQUAL(operation.state,
+               MBEDTLS_PSA_ASYNC_CRYPTO_OPERATION_INACTIVE);
+#else
+    TEST_EQUAL(mbedtls_psa_async_crypto_start(&provider, &operation, &request),
+               PSA_ERROR_NOT_SUPPORTED);
+#endif
+}
+/* END_CASE */

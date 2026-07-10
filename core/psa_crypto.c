@@ -1546,6 +1546,15 @@ static psa_status_t psa_export_public_key_iop_abort_internal(psa_export_public_k
         return PSA_SUCCESS;
     }
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    if (operation->id == MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID) {
+        status = mbedtls_psa_async_crypto_transparent_export_public_key_iop_abort(
+            &operation->async_crypto_ctx);
+        operation->id = 0;
+        return status;
+    }
+#endif
+
     status = mbedtls_psa_ecp_export_public_key_iop_abort(&operation->ctx);
 
     memset(&operation->ctx, 0, sizeof(operation->ctx));
@@ -1562,6 +1571,12 @@ uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *oper
     (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \
     defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \
     defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY))
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    if (operation->id == MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID) {
+        return mbedtls_psa_async_crypto_transparent_export_public_key_iop_get_num_ops(
+            &operation->async_crypto_ctx);
+    }
+#endif
     return operation->num_ops;
 #else
     (void) operation;
@@ -1587,9 +1602,6 @@ psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operat
         return PSA_ERROR_BAD_STATE;
     }
 
-    /* We only support the builtin/Mbed TLS driver for now. */
-    operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
-
     operation->num_ops = 0;
 
     status = psa_get_and_lock_transparent_key_slot_with_policy(key, &slot,
@@ -1612,6 +1624,20 @@ psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operat
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
+
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    status = mbedtls_psa_async_crypto_transparent_export_public_key_iop_setup(
+        &operation->async_crypto_ctx, slot->key.data, slot->key.bytes, &key_attributes);
+    if (status == PSA_SUCCESS) {
+        operation->id = MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID;
+        goto exit;
+    }
+    if (status != PSA_ERROR_NOT_SUPPORTED) {
+        goto exit;
+    }
+#endif
+
+    operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
 
     status = mbedtls_psa_ecp_export_public_key_iop_setup(&operation->ctx, slot->key.data,
                                                          slot->key.bytes, &key_attributes);
@@ -1645,6 +1671,20 @@ psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *ope
     if (operation->id == 0 || operation->error_occurred) {
         return PSA_ERROR_BAD_STATE;
     }
+
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    if (operation->id == MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID) {
+        status = mbedtls_psa_async_crypto_transparent_export_public_key_iop_complete(
+            &operation->async_crypto_ctx, data, data_size, data_length);
+        if (status != PSA_OPERATION_INCOMPLETE) {
+            psa_export_public_key_iop_abort_internal(operation);
+            if (status != PSA_SUCCESS) {
+                operation->error_occurred = 1;
+            }
+        }
+        return status;
+    }
+#endif
 
     status = mbedtls_psa_ecp_export_public_key_iop_complete(&operation->ctx, data, data_size,
                                                             data_length);
@@ -4263,11 +4303,8 @@ exit:
                                    *signature_length);
     }
 
-    if (status != PSA_OPERATION_INCOMPLETE) {
-        if (status != PSA_SUCCESS) {
-            operation->error_occurred = 1;
-        }
-
+    if (status != PSA_OPERATION_INCOMPLETE && status != PSA_SUCCESS) {
+        operation->error_occurred = 1;
         psa_sign_hash_abort_internal(operation);
     }
 
@@ -8692,6 +8729,15 @@ static psa_status_t psa_key_agreement_iop_abort_internal(psa_key_agreement_iop_t
         return PSA_SUCCESS;
     }
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    if (operation->id == MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID) {
+        status = mbedtls_psa_async_crypto_transparent_key_agreement_abort(
+            &operation->async_crypto_ctx);
+        operation->id = 0;
+        return status;
+    }
+#endif
+
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID) {
         psa_async_hardware_ecdh_clear(operation);
@@ -8713,6 +8759,12 @@ uint32_t psa_key_agreement_iop_get_num_ops(
 {
 #if defined(MBEDTLS_ECP_RESTARTABLE) && \
     defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    if (operation->id == MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID) {
+        return mbedtls_psa_async_crypto_transparent_key_agreement_get_num_ops(
+            &operation->async_crypto_ctx);
+    }
+#endif
     return operation->num_ops;
 #else
     (void) operation;
@@ -8790,6 +8842,19 @@ psa_status_t psa_key_agreement_iop_setup(
     goto exit;
 #endif
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    status = mbedtls_psa_async_crypto_transparent_key_agreement_setup(
+        &operation->async_crypto_ctx, &slot->attr, slot->key.data, slot->key.bytes,
+        peer_key, peer_key_length);
+    if (status == PSA_SUCCESS) {
+        operation->id = MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID;
+        goto exit;
+    }
+    if (status != PSA_ERROR_NOT_SUPPORTED) {
+        goto exit;
+    }
+#endif
+
     /* To be removed later when driver dispatch is added. */
     operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
 
@@ -8832,6 +8897,27 @@ psa_status_t psa_key_agreement_iop_complete(
     if (operation->id == 0 || operation->error_occurred) {
         return PSA_ERROR_BAD_STATE;
     }
+
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    if (operation->id == MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID) {
+        psa_status_t status;
+        uint8_t intermediate_key[PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE];
+        size_t key_len = 0;
+
+        status = mbedtls_psa_async_crypto_transparent_key_agreement_complete(
+            &operation->async_crypto_ctx, intermediate_key, sizeof(intermediate_key),
+            &key_len);
+        if (status == PSA_SUCCESS) {
+            status = psa_import_key(&operation->attributes, intermediate_key, key_len, key);
+        }
+        if (status != PSA_OPERATION_INCOMPLETE) {
+            operation->error_occurred = 1;
+            psa_key_agreement_iop_abort_internal(operation);
+        }
+        mbedtls_platform_zeroize(intermediate_key, sizeof(intermediate_key));
+        return status;
+    }
+#endif
 
 #if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
     if (operation->id == MBEDTLS_ASYNC_HARDWARE_ECDH_DRIVER_ID) {

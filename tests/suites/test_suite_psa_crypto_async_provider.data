@@ -1,0 +1,14 @@
+Async provider bind and unbind
+bind_unbind_provider:
+
+Async provider rejects start without hardware
+provider_start_without_hardware:
+
+Async provider hash completion
+provider_hash_complete:
+
+Async provider rejects missing capability
+provider_rejects_missing_capability:
+
+Async provider abort resets operation
+provider_abort_in_progress_operation:

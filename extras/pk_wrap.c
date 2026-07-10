@@ -20,6 +20,7 @@
 
 #include "psa_util_internal.h"
 #include "psa/crypto.h"
+
 #include "mbedtls/psa_util.h"
 
 #if defined(PSA_HAVE_ALG_SOME_ECDSA)
@@ -488,7 +489,6 @@ static int eckey_verify_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg
     }
 
     size_t curve_bits = mbedtls_async_hardware_ecdsa_curve_bits(pk);
-
     ret = mbedtls_ecdsa_der_to_raw(curve_bits, sig, sig_len,
                                    raw_sig, sizeof(raw_sig), &raw_sig_len);
     if (ret != 0) {
@@ -634,14 +634,15 @@ static int eckey_sign_rs_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
         return MBEDTLS_ERR_ECP_IN_PROGRESS;
     }
 
-    tmp_status = psa_sign_hash_abort(op);
-    status = (status != PSA_SUCCESS) ? status : tmp_status;
-
     if (status != PSA_SUCCESS) {
+        tmp_status = psa_sign_hash_abort(op);
+        (void) tmp_status;
         return PSA_PK_TO_MBEDTLS_ERR(status);
     }
 
-    return mbedtls_ecdsa_raw_to_der(pk->bits, sig, *sig_len, sig, sig_size, sig_len);
+    status = mbedtls_ecdsa_raw_to_der(pk->bits, sig, *sig_len, sig, sig_size, sig_len);
+    tmp_status = psa_sign_hash_abort(op);
+    return status != 0 ? status : PSA_PK_TO_MBEDTLS_ERR(tmp_status);
 }
 #endif /* PSA_HAVE_ALG_ECDSA_SIGN */
 #endif /* MBEDTLS_ECP_RESTARTABLE */
