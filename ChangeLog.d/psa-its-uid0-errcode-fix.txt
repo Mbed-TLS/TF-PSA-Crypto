@@ -1,3 +1,0 @@
-Bugfix
-   * Fix PSA ITS file storage to reject UID 0 with the status required by the
-     PSA Storage API. Fixes #826.
