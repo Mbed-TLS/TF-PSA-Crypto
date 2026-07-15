@@ -625,7 +625,8 @@
     (defined(PSA_WANT_ALG_ECB_NO_PADDING) && !defined(MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING)) || \
     (defined(PSA_WANT_ALG_CBC_NO_PADDING) && !defined(MBEDTLS_PSA_ACCEL_ALG_CBC_NO_PADDING)) || \
     (defined(PSA_WANT_ALG_CBC_PKCS7) && !defined(MBEDTLS_PSA_ACCEL_ALG_CBC_PKCS7)) || \
-    (defined(PSA_WANT_ALG_CMAC) && !defined(MBEDTLS_PSA_ACCEL_ALG_CMAC))
+    (defined(PSA_WANT_ALG_CMAC) && !defined(MBEDTLS_PSA_ACCEL_ALG_CMAC)) || \
+    (defined(PSA_WANT_ALG_XTS) && !defined(MBEDTLS_PSA_ACCEL_ALG_XTS))
 #define PSA_HAVE_SOFT_BLOCK_MODE 1
 #endif
 
@@ -729,18 +730,13 @@
 #endif
 #endif /* PSA_WANT_ALG_OFB */
 
-/* Placeholder for future support of XTS through the PSA API.
- * For now, this appeases check_names.py by ensuring that
- * MBEDTLS_CIPHER_MODE_XTS is defined somewhere, as it would
- * otherwise not be defined in any headers.
- */
-#if 0
+#if defined(PSA_WANT_ALG_XTS)
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_XTS) || \
-    defined(PSA_HAVE_SOFT_BLOCK_CIPHER)
+    defined(PSA_HAVE_SOFT_KEY_TYPE_AES)
 #define MBEDTLS_PSA_BUILTIN_ALG_XTS 1
 #define MBEDTLS_CIPHER_MODE_XTS
 #endif
-#endif
+#endif /* PSA_WANT_ALG_XTS */
 
 #if defined(PSA_WANT_ALG_ECB_NO_PADDING) &&     \
     !defined(MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING)

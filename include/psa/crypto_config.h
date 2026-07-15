@@ -88,6 +88,7 @@
 #define PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS       1
 #define PSA_WANT_ALG_SHAKE128                   1
 #define PSA_WANT_ALG_SHAKE256                   1
+#define PSA_WANT_ALG_XTS                        1
 
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_256         1
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_384         1
