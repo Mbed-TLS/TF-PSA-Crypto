@@ -1479,6 +1479,18 @@ psa_status_t psa_export_public_key_internal(
         return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_EXPORT) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
+    } else if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC)
+        return mbedtls_psa_spake2p_export_public_key(attributes,
+                                                     key_buffer,
+                                                     key_buffer_size,
+                                                     data,
+                                                     data_size,
+                                                     data_length);
+#else
+        /* We don't know how to convert a SPAKE2+ key pair to public. */
+        return PSA_ERROR_NOT_SUPPORTED;
+#endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC) */
     } else {
         (void) key_buffer;
         (void) key_buffer_size;

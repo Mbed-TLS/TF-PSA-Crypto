@@ -43,4 +43,34 @@ psa_status_t mbedtls_psa_spake2p_import_key(
     uint8_t *key_buffer, size_t key_buffer_size,
     size_t *key_buffer_length, size_t *bits);
 
+/** Export a SPAKE2+ public key from a key pair.
+ *
+ * \note The signature of this function is that of a PSA driver
+ *       export_public_key entry point. This function behaves as an
+ *       export_public_key entry point as defined in the PSA driver interface
+ *       specification for transparent drivers.
+ *
+ * \param[in]  attributes       The attributes of the key to use.
+ * \param[in]  key_buffer       The buffer containing the key material of a
+ *                              SPAKE2+ key pair (w0 || w1).
+ * \param[in]  key_buffer_size  Size of the \p key_buffer buffer in bytes.
+ * \param[out] data             Buffer where the public key
+ *                              (verifier registration record w0 || L) is to
+ *                              be written.
+ * \param[in]  data_size        Size of the \p data buffer in bytes.
+ * \param[out] data_length      On success, the number of bytes that make up
+ *                              the public key data.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success. The content of \p data is a SPAKE2+ public key.
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ */
+psa_status_t mbedtls_psa_spake2p_export_public_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    uint8_t *data, size_t data_size, size_t *data_length);
+
 #endif /* TF_PSA_CRYPTO_PSA_CRYPTO_SPAKE2P_H */
