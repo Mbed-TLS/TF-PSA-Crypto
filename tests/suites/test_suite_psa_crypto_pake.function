@@ -590,12 +590,13 @@ static const uint8_t spake2p_prover_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't'
 static const uint8_t spake2p_prover_server_id[] = { 's', 'e', 'r', 'v', 'e', 'r' };
 
 /* Set up a SPAKE2+ Prover (client) operation from the given key pair
- * (w0||w1), with the RFC 9383 Appendix C identities and, if context is
- * non-NULL, the given context. Returns 1 on success, 0 on failure. */
+ * (w0||w1), with the RFC 9383 Appendix C identities (unless set_identities
+ * is 0, leaving both identities at their zero-length default) and, if context
+ * is non-NULL, the given context. Returns 1 on success, 0 on failure. */
 static int spake2p_setup_client(psa_pake_operation_t *client,
                                 psa_algorithm_t alg, uint32_t bits,
                                 const data_t *client_key,
-                                const data_t *context)
+                                const data_t *context, int set_identities)
 {
     psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
     psa_key_attributes_t ca = PSA_KEY_ATTRIBUTES_INIT;
@@ -613,10 +614,12 @@ static int spake2p_setup_client(psa_pake_operation_t *client,
 
     PSA_ASSERT(psa_pake_setup(client, ckey, &cs));
     PSA_ASSERT(psa_pake_set_role(client, PSA_PAKE_ROLE_CLIENT));
-    PSA_ASSERT(psa_pake_set_user(client, spake2p_prover_client_id,
-                                 sizeof(spake2p_prover_client_id)));
-    PSA_ASSERT(psa_pake_set_peer(client, spake2p_prover_server_id,
-                                 sizeof(spake2p_prover_server_id)));
+    if (set_identities) {
+        PSA_ASSERT(psa_pake_set_user(client, spake2p_prover_client_id,
+                                     sizeof(spake2p_prover_client_id)));
+        PSA_ASSERT(psa_pake_set_peer(client, spake2p_prover_server_id,
+                                     sizeof(spake2p_prover_server_id)));
+    }
     if (context != NULL) {
         PSA_ASSERT(psa_pake_set_context(client, context->x, context->len));
     }
@@ -628,15 +631,15 @@ exit:
 }
 
 /* Set up a SPAKE2+ Verifier (server) operation from the given server key,
- * with the RFC 9383 Appendix C identities and, if context is non-NULL, the
- * given context. The key is normally the public-key registration record
+ * with the RFC 9383 Appendix C identities (unless set_identities is 0) and,
+ * if context is non-NULL, the given context. The key is normally the public-key registration record
  * (w0||L, 3*ceil(bits/8)+1 bytes); a key pair (w0||w1, 2*ceil(bits/8) bytes,
  * recognized by its length) is imported as a SPAKE2P key pair instead.
  * Returns 1 on success, 0 on failure. */
 static int spake2p_setup_server(psa_pake_operation_t *server,
                                 psa_algorithm_t alg, uint32_t bits,
                                 const data_t *server_key,
-                                const data_t *context)
+                                const data_t *context, int set_identities)
 {
     psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
     psa_key_attributes_t sa = PSA_KEY_ATTRIBUTES_INIT;
@@ -660,11 +663,14 @@ static int spake2p_setup_server(psa_pake_operation_t *server,
 
     PSA_ASSERT(psa_pake_setup(server, skey, &cs));
     PSA_ASSERT(psa_pake_set_role(server, PSA_PAKE_ROLE_SERVER));
-    /* The server's own identity is the Verifier, its peer is the Prover. */
-    PSA_ASSERT(psa_pake_set_user(server, spake2p_prover_server_id,
-                                 sizeof(spake2p_prover_server_id)));
-    PSA_ASSERT(psa_pake_set_peer(server, spake2p_prover_client_id,
-                                 sizeof(spake2p_prover_client_id)));
+    if (set_identities) {
+        /* The server's own identity is the Verifier, its peer is the
+         * Prover. */
+        PSA_ASSERT(psa_pake_set_user(server, spake2p_prover_server_id,
+                                     sizeof(spake2p_prover_server_id)));
+        PSA_ASSERT(psa_pake_set_peer(server, spake2p_prover_client_id,
+                                     sizeof(spake2p_prover_client_id)));
+    }
     if (context != NULL) {
         PSA_ASSERT(psa_pake_set_context(server, context->x, context->len));
     }
@@ -1777,7 +1783,7 @@ void spake2p_prover_key_share_format(int alg_arg, int bits_arg,
                (size_t) expected_len);
 
     TEST_ASSERT(spake2p_setup_client(&client, alg, (uint32_t) bits_arg,
-                                     client_key, NULL) == 1);
+                                     client_key, NULL, 1) == 1);
 
     PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
                                shareP, sizeof(shareP), &lp));
@@ -1809,7 +1815,7 @@ void spake2p_prover_key_share_buffer_too_small(int alg_arg, int bits_arg,
 
     TEST_ASSERT(share_len > 1);
     TEST_ASSERT(spake2p_setup_client(&client, alg, (uint32_t) bits_arg,
-                                     client_key, NULL) == 1);
+                                     client_key, NULL, 1) == 1);
 
     TEST_EQUAL(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
                                shareP, share_len - 1, &lp),
@@ -1840,7 +1846,7 @@ void spake2p_prover_key_share_psa_kat(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, PSA_ALG_SPAKE2P_MATTER, 256,
-                                     client_key, context) == 1);
+                                     client_key, context, 1) == 1);
 
     /* Client KEY_SHARE = shareP, with the published ephemeral x. */
     mbedtls_spake2p_test_injected_ephemeral = x->x;
@@ -2014,7 +2020,7 @@ void spake2p_verifier_key_share_format(int alg_arg, int bits_arg,
                (size_t) expected_len);
 
     TEST_ASSERT(spake2p_setup_server(&server, alg, (uint32_t) bits_arg,
-                                     server_key, NULL) == 1);
+                                     server_key, NULL, 1) == 1);
 
     PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_KEY_SHARE,
                                shareV, sizeof(shareV), &lv));
@@ -2045,7 +2051,7 @@ void spake2p_verifier_key_share_invalid(int alg_arg, int bits_arg,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_server(&server, alg, (uint32_t) bits_arg,
-                                     server_key) == 1);
+                                     server_key, NULL, 1) == 1);
 
     TEST_EQUAL(psa_pake_input(&server, PSA_PAKE_STEP_KEY_SHARE,
                               bad_share->x, bad_share->len),
@@ -2106,7 +2112,6 @@ void spake2p_verifier_confirm_psa_kat(data_t *context,
      * pinned through the MBEDTLS_TEST_HOOKS injection seam; the server then
      * outputs confirmV. The Prover-side confirmation check and shared-key
      * export are out of scope of this slice. */
-    psa_pake_cipher_suite_t cs = psa_pake_cipher_suite_init();
     psa_pake_operation_t client = psa_pake_operation_init_short();
     psa_pake_operation_t server = psa_pake_operation_init_short();
     uint8_t shareP[PSA_PAKE_OUTPUT_MAX_SIZE];
@@ -2117,10 +2122,10 @@ void spake2p_verifier_confirm_psa_kat(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, PSA_ALG_SPAKE2P_MATTER, 256,
-                                     client_key, context) == 1);
+                                     client_key, context, 1) == 1);
 
     TEST_ASSERT(spake2p_setup_server(&server, PSA_ALG_SPAKE2P_MATTER, 256,
-                                     server_key, context) == 1);
+                                     server_key, context, 1) == 1);
 
     /* Client KEY_SHARE = shareP, with the published ephemeral x. */
     mbedtls_spake2p_test_injected_ephemeral = x->x;
@@ -2174,10 +2179,10 @@ void spake2p_prover_confirm_psa_kat(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, alg, 256,
-                                     client_key, context) == 1);
+                                     client_key, context, 1) == 1);
 
     TEST_ASSERT(spake2p_setup_server(&server, alg, 256,
-                                     server_key, context) == 1);
+                                     server_key, context, 1) == 1);
 
     /* Client KEY_SHARE = shareP, with the published ephemeral x. */
     mbedtls_spake2p_test_injected_ephemeral = x->x;
@@ -2228,7 +2233,7 @@ void spake2p_prover_confirm_input_psa_kat(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, alg, 256,
-                                     client_key, context) == 1);
+                                     client_key, context, 1) == 1);
 
     /* Client KEY_SHARE = shareP, with the published ephemeral x. */
     mbedtls_spake2p_test_injected_ephemeral = x->x;
@@ -2270,7 +2275,7 @@ void spake2p_prover_confirm_input_tampered(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, alg, 256,
-                                     client_key, context) == 1);
+                                     client_key, context, 1) == 1);
 
     mbedtls_spake2p_test_injected_ephemeral = x->x;
     mbedtls_spake2p_test_injected_ephemeral_len = x->len;
@@ -2315,7 +2320,7 @@ void spake2p_verifier_confirm_input_psa_kat(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_server(&server, alg, 256,
-                                     server_key, context) == 1);
+                                     server_key, context, 1) == 1);
 
     /* Server KEY_SHARE = shareV, with the published ephemeral y. */
     mbedtls_spake2p_test_injected_ephemeral = y->x;
@@ -2357,7 +2362,7 @@ void spake2p_verifier_confirm_input_tampered(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_server(&server, alg, 256,
-                                     server_key, context) == 1);
+                                     server_key, context, 1) == 1);
 
     mbedtls_spake2p_test_injected_ephemeral = y->x;
     mbedtls_spake2p_test_injected_ephemeral_len = y->len;
@@ -2431,7 +2436,7 @@ void spake2p_verifier_confirm_too_early(int alg_arg, int bits_arg,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_server(&server, alg, (uint32_t) bits_arg,
-                                     server_key, NULL) == 1);
+                                     server_key, NULL, 1) == 1);
 
     TEST_EQUAL(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
                                confirm, sizeof(confirm), &lc),
@@ -2458,7 +2463,7 @@ void spake2p_prover_confirm_output_too_early(int alg_arg, int bits_arg,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, alg, (uint32_t) bits_arg,
-                                     client_key, NULL) == 1);
+                                     client_key, NULL, 1) == 1);
 
     TEST_EQUAL(psa_pake_output(&client, PSA_PAKE_STEP_CONFIRM,
                                confirm, sizeof(confirm), &lc),
@@ -2490,7 +2495,7 @@ void spake2p_prover_input_confirm_too_early(int alg_arg, int bits_arg,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, alg, (uint32_t) bits_arg,
-                                     client_key, NULL) == 1);
+                                     client_key, NULL, 1) == 1);
 
     TEST_EQUAL(psa_pake_input(&client, PSA_PAKE_STEP_CONFIRM,
                               confirm, confirm_len),
@@ -2518,7 +2523,7 @@ void spake2p_prover_second_input_key_share(data_t *context,
     PSA_INIT();
 
     TEST_ASSERT(spake2p_setup_client(&client, PSA_ALG_SPAKE2P_MATTER, 256,
-                                     client_key, context) == 1);
+                                     client_key, context, 1) == 1);
 
     /* Client KEY_SHARE = shareP, with the published ephemeral x. */
     mbedtls_spake2p_test_injected_ephemeral = x->x;
@@ -2568,8 +2573,8 @@ void spake2p_rounds(int alg_arg, int bits_arg,
 
     PSA_INIT();
 
-    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL));
-    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL));
+    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL, 1));
+    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL, 1));
 
     /* KEY_SHARE round with real, randomly generated ephemerals. */
     TEST_ASSERT(spake2p_exchange_key_shares(&client, &server));
@@ -2643,8 +2648,8 @@ void spake2p_rounds_wrong_password(int alg_arg, int bits_arg,
 
     PSA_INIT();
 
-    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL));
-    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL));
+    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL, 1));
+    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL, 1));
 
     /* Key-share exchange succeeds even with a mismatched password. */
     TEST_ASSERT(spake2p_exchange_key_shares(&client, &server));
@@ -2701,8 +2706,8 @@ void spake2p_get_shared_key_before_confirmation(int alg_arg, int bits_arg,
 
     /* After the key-share exchange only (no confirmation step at all),
      * neither side may obtain the shared key. */
-    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key));
-    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key));
+    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL, 1));
+    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL, 1));
     TEST_ASSERT(spake2p_exchange_key_shares(&client, &server));
     TEST_EQUAL(psa_pake_get_shared_key(&client, &ka, &shared),
                PSA_ERROR_BAD_STATE);
@@ -2712,8 +2717,8 @@ void spake2p_get_shared_key_before_confirmation(int alg_arg, int bits_arg,
     /* Mid-confirmation: the client has received and verified confirmV but
      * has not yet sent confirmP, so the confirmation exchange is not
      * complete and the shared key must still be withheld. */
-    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key));
-    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key));
+    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL, 1));
+    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL, 1));
     TEST_ASSERT(spake2p_exchange_key_shares(&client, &server));
     PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
                                confirmV, sizeof(confirmV), &lcv));
@@ -2723,6 +2728,63 @@ void spake2p_get_shared_key_before_confirmation(int alg_arg, int bits_arg,
 
 exit:
     psa_destroy_key(shared);
+    psa_pake_abort(&client);
+    psa_pake_abort(&server);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P:PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY:PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC:PSA_WANT_ALG_HMAC:PSA_WANT_KEY_TYPE_HMAC:PSA_WANT_ALG_SHA_256 */
+void spake2p_rounds_empty_identities(int alg_arg, int bits_arg,
+                                     data_t *client_key, data_t *server_key)
+{
+    /* End-to-end SPAKE2+ exchange without calling psa_pake_set_user() or
+     * psa_pake_set_peer(): per the PSA PAKE specification, an identity that is
+     * not provided defaults to the zero-length string, which RFC 9383
+     * Section 3.3 encodes in the transcript with an 8-byte zero length prefix.
+     * Both sides must agree on the shared key exactly as in the
+     * identity-carrying exchange. */
+    psa_algorithm_t alg = alg_arg;
+    uint32_t bits = (uint32_t) bits_arg;
+    psa_pake_operation_t client = psa_pake_operation_init_short();
+    psa_pake_operation_t server = psa_pake_operation_init_short();
+    psa_key_attributes_t ka = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t shared_c = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t shared_s = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t confirmP[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t confirmV[PSA_PAKE_OUTPUT_MAX_SIZE];
+    uint8_t exp_c[128];
+    uint8_t exp_s[128];
+    size_t lcp = 0, lcv = 0, ec = 0, es = 0;
+
+    PSA_INIT();
+
+    TEST_ASSERT(spake2p_setup_client(&client, alg, bits, client_key, NULL, 0));
+    TEST_ASSERT(spake2p_setup_server(&server, alg, bits, server_key, NULL, 0));
+
+    TEST_ASSERT(spake2p_exchange_key_shares(&client, &server));
+
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_CONFIRM,
+                               confirmP, sizeof(confirmP), &lcp));
+    PSA_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_CONFIRM,
+                               confirmV, sizeof(confirmV), &lcv));
+    PSA_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_CONFIRM, confirmV, lcv));
+    PSA_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_CONFIRM, confirmP, lcp));
+
+    psa_set_key_usage_flags(&ka, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&ka, PSA_ALG_HMAC(PSA_ALG_SHA_256));
+    psa_set_key_type(&ka, PSA_KEY_TYPE_HMAC);
+    PSA_ASSERT(psa_pake_get_shared_key(&client, &ka, &shared_c));
+    PSA_ASSERT(psa_pake_get_shared_key(&server, &ka, &shared_s));
+
+    PSA_ASSERT(psa_export_key(shared_c, exp_c, sizeof(exp_c), &ec));
+    PSA_ASSERT(psa_export_key(shared_s, exp_s, sizeof(exp_s), &es));
+    TEST_ASSERT(ec > 0);
+    TEST_MEMORY_COMPARE(exp_c, ec, exp_s, es);
+
+exit:
+    psa_destroy_key(shared_c);
+    psa_destroy_key(shared_s);
     psa_pake_abort(&client);
     psa_pake_abort(&server);
     PSA_DONE();
