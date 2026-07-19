@@ -1294,3 +1294,45 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_SOME_SPAKE2P */
+void spake2p_export_public_key(int alg_arg, int bits_arg,
+                               data_t *key_pair_data,
+                               data_t *expected_public_key)
+{
+    psa_algorithm_t alg = alg_arg;
+    size_t bits = (size_t) bits_arg;
+    psa_key_type_t type = PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t out[PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE(
+                    PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1), 521)];
+    size_t olen = 0;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, type);
+    PSA_ASSERT(psa_import_key(&attr, key_pair_data->x, key_pair_data->len,
+                              &key));
+
+    /* Exporting the public part of a key pair w0 || w1 computes the verifier
+     * registration record w0 || L with L = w1 * P (RFC 9383). */
+    TEST_ASSERT(PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE(type, bits) >=
+                expected_public_key->len);
+    TEST_ASSERT(sizeof(out) >= expected_public_key->len);
+    PSA_ASSERT(psa_export_public_key(key, out, sizeof(out), &olen));
+    TEST_MEMORY_COMPARE(out, olen,
+                        expected_public_key->x, expected_public_key->len);
+
+    /* A too-small output buffer must be reported as such. */
+    TEST_EQUAL(psa_export_public_key(key, out, expected_public_key->len - 1,
+                                     &olen),
+               PSA_ERROR_BUFFER_TOO_SMALL);
+
+exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */

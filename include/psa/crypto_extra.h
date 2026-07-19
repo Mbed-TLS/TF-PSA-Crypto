@@ -2137,6 +2137,7 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
 
 
 
+
 #ifdef __cplusplus
 }
 #endif

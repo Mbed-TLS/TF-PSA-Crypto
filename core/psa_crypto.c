@@ -1432,6 +1432,14 @@ exit:
     return (status == PSA_SUCCESS) ? unlock_status : status;
 }
 
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT)
+/* Defined in the SPAKE2+ key management section below. */
+static psa_status_t psa_spake2p_export_public_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    uint8_t *data, size_t data_size, size_t *data_length);
+#endif
+
 psa_status_t psa_export_public_key_internal(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer,
@@ -1489,6 +1497,18 @@ psa_status_t psa_export_public_key_internal(
         return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_EXPORT) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
+    } else if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT)
+        return psa_spake2p_export_public_key(attributes,
+                                             key_buffer,
+                                             key_buffer_size,
+                                             data,
+                                             data_size,
+                                             data_length);
+#else
+        /* We don't know how to convert a SPAKE2+ key pair to public. */
+        return PSA_ERROR_NOT_SUPPORTED;
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT) */
     } else {
         (void) key_buffer;
         (void) key_buffer_size;
@@ -9892,6 +9912,86 @@ exit:
     *bits = key_bits;
 
     return PSA_SUCCESS;
+}
+
+static psa_status_t psa_spake2p_export_public_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer,
+    size_t key_buffer_size,
+    uint8_t *data,
+    size_t data_size,
+    size_t *data_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_type_t key_type = psa_get_key_type(attributes);
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_point L;
+    mbedtls_mpi w1;
+    size_t point_length = 0;
+
+    /* The key material is w0 || w1, two equal-length SECP_R1 scalars, as
+     * validated at import. */
+    if (!PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(key_type) ||
+        PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(key_type) != PSA_ECC_FAMILY_SECP_R1 ||
+        (key_buffer_size % 2) != 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    size_t scalar_len = key_buffer_size / 2;
+    const psa_spake2p_curve_info_t *spake2_curve_info =
+        psa_spake2p_get_curve_from_scalar_len(scalar_len);
+    if (spake2_curve_info == NULL) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (data_size < spake2_curve_info->w0_len + spake2_curve_info->L_len) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_ecp_point_init(&L);
+    mbedtls_mpi_init(&w1);
+
+    status = mbedtls_to_psa_error(
+        mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    /* The public key (verifier registration record) is w0 || L with
+     * L = w1 * P, P the group generator (RFC 9383), L uncompressed. */
+    status = mbedtls_to_psa_error(
+        mbedtls_mpi_read_binary(&w1, key_buffer + scalar_len, scalar_len));
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = mbedtls_to_psa_error(
+        mbedtls_ecp_mul(&grp, &L, &w1, &grp.G,
+                        mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE));
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    memcpy(data, key_buffer, scalar_len);
+    status = mbedtls_to_psa_error(
+        mbedtls_ecp_point_write_binary(&grp, &L, MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                       &point_length,
+                                       data + scalar_len,
+                                       data_size - scalar_len));
+    if (status != PSA_SUCCESS) {
+        memset(data, 0, data_size);
+        goto exit;
+    }
+
+    *data_length = scalar_len + point_length;
+
+exit:
+    /* w1 is secret key material: mbedtls_mpi_free() zeroizes it. */
+    mbedtls_mpi_free(&w1);
+    mbedtls_ecp_point_free(&L);
+    mbedtls_ecp_group_free(&grp);
+    return status;
 }
 
 #endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) ||
