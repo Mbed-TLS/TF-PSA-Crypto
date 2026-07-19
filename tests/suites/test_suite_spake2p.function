@@ -633,8 +633,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
-void spake2p_setup_negative(int curve_arg, int hash_arg, int mac_arg,
-                            int kdf_arg, data_t *key, int expected_ret)
+void spake2p_setup_negative(int role_arg, int curve_arg, int hash_arg,
+                            int mac_arg, int kdf_arg, data_t *key, int expected_ret)
 {
     /* mbedtls_spake2p_setup() must reject a bad role, an unsupported curve,
      * an unsupported ciphersuite combination (e.g. the Matter key schedule
@@ -644,7 +644,7 @@ void spake2p_setup_negative(int curve_arg, int hash_arg, int mac_arg,
     mbedtls_spake2p_init(&ctx);
     PSA_INIT();
 
-    TEST_EQUAL(mbedtls_spake2p_setup(&ctx, MBEDTLS_SPAKE2P_CLIENT, hash_arg,
+    TEST_EQUAL(mbedtls_spake2p_setup(&ctx, role_arg, hash_arg,
                                      mac_arg, kdf_arg,
                                      curve_arg, key->x, key->len),
                expected_ret);
