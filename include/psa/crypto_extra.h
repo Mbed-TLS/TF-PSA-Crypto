@@ -643,50 +643,81 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
 #define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE        ((psa_key_type_t) 0x4400)
 #define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE          ((psa_key_type_t) 0x7400)
+#define PSA_KEY_TYPE_SPAKE2P_CURVE_MASK             ((psa_key_type_t) 0x00ff)
 
-/** SPAKE2+ key pair.
+/** SPAKE2+ key pair: the prover-side registration material.
  *
- * Not implemented yet.
+ * The key material consists of the concatenation w0 || w1 of the two
+ * scalars derived at registration (RFC 9383), each encoded as a
+ * fixed-length big-endian integer in the range [1, n-1], where n is the
+ * order of the curve. This is the format accepted by psa_import_key()
+ * and produced by psa_export_key(); psa_export_public_key() outputs the
+ * corresponding verifier registration record w0 || L with L = w1 * P.
+ *
+ * \param curve A value of type ::psa_ecc_family_t that identifies the
+ *              elliptic curve family to be used.
  */
 #define PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(curve)            \
-    (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | (curve))
+    (PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE | ((curve) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK))
 
 /** SPAKE2+ public key.
  *
- * Not implemented yet.
+ * The key material of a SPAKE2+ public key is the SPAKE2+ registration
+ * record \c w0 || \c L defined by RFC 9383: the scalar \c w0 encoded as
+ * a big-endian byte string of ceiling(m/8) bytes, where m is the bit
+ * size of the curve order, followed by the point \c L = \c w1 * \c G in
+ * uncompressed representation (`0x04 || x || y`). This is the format
+ * accepted by psa_import_key() and produced by psa_export_key().
+ *
+ * Only SECP_R1 curves are currently supported.
  */
 #define PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(curve)          \
-    (PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE | (curve))
+    (PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE | ((curve) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK))
 
 /** Whether a key type is a SPAKE2+ key pair type. */
 #define PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(type)          \
-    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+    (((type) & ~PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) ==         \
      PSA_KEY_TYPE_SPAKE2P_KEY_PAIR_BASE)
 
 /** Whether a key type is a SPAKE2+ public key type. */
 #define PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(type)        \
-    (((type) & ~PSA_KEY_TYPE_ECC_CURVE_MASK) ==         \
+    (((type) & ~PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) ==         \
      PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
 
 /** Whether a key type is a SPAKE2+ key pair or public key type. */
 #define PSA_KEY_TYPE_IS_SPAKE2P(type)                   \
     ((PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) &       \
-      ~PSA_KEY_TYPE_ECC_CURVE_MASK) == PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+      ~PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) == PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY_BASE)
+
+/** Extract the ECC curve family from a SPAKE2+ key type.
+ *
+ * \param type A SPAKE2+ key type (key pair or public key).
+ *
+ * \return The elliptic curve family id (a \c PSA_ECC_FAMILY_xxx value).
+ */
+#define PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(type) \
+    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_SPAKE2P(type) ? \
+                         ((type) & PSA_KEY_TYPE_SPAKE2P_CURVE_MASK) : \
+                         0))
 
 #define PSA_ALG_SPAKE2P_HMAC_BASE               ((psa_algorithm_t) 0x0a000400)
 
-/** SPAKE2+ algorithm using HMAC for key confirmation.
+/** SPAKE2+ algorithm using HMAC for key confirmation, per RFC 9383.
  *
- * Not implemented yet.
+ * Partially implemented: operation setup and key-share output are
+ * available. The remaining protocol steps (key-share input, key
+ * confirmation, shared-key extraction) are not implemented yet.
  */
 #define PSA_ALG_SPAKE2P_HMAC(hash_alg)                                  \
     (PSA_ALG_SPAKE2P_HMAC_BASE | ((hash_alg) & (PSA_ALG_HASH_MASK)))
 #define PSA_ALG_IS_SPAKE2P_HMAC(alg)                                    \
     (((alg) & (~(PSA_ALG_HASH_MASK))) == PSA_ALG_SPAKE2P_HMAC_BASE)
 
-/** SPAKE2+ algorithm using CMAC for key confirmation.
+/** SPAKE2+ algorithm using CMAC for key confirmation, per RFC 9383.
  *
- * Not implemented yet.
+ * Partially implemented: operation setup and key-share output are
+ * available. The remaining protocol steps (key-share input, key
+ * confirmation, shared-key extraction) are not implemented yet.
  */
 #define PSA_ALG_SPAKE2P_CMAC_BASE               ((psa_algorithm_t) 0x0a000500)
 #define PSA_ALG_SPAKE2P_CMAC(hash_alg)                          \
@@ -696,7 +727,9 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
 /** SPAKE2+ algorithm variant used by the Matter specification version 1.2.
  *
- * Not implemented yet.
+ * Partially implemented: operation setup and key-share output are
+ * available. The remaining protocol steps (key-share input, key
+ * confirmation, shared-key extraction) are not implemented yet.
  */
 #define PSA_ALG_SPAKE2P_MATTER                  ((psa_algorithm_t) 0x0a000609)
 
@@ -952,15 +985,24 @@ typedef uint32_t psa_pake_primitive_t;
  *                      recognized, or the parameters are incompatible,
  *                      return 0.
  */
-#define PSA_PAKE_OUTPUT_SIZE(alg, primitive, output_step)               \
-    (PSA_ALG_IS_JPAKE(alg) &&                                           \
-     primitive == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,      \
-                                     PSA_ECC_FAMILY_SECP_R1, 256) ?    \
-     (                                                                 \
-         output_step == PSA_PAKE_STEP_KEY_SHARE ? 65 :                   \
-         output_step == PSA_PAKE_STEP_ZK_PUBLIC ? 65 :                   \
-         32                                                              \
-     ) :                                                               \
+#define PSA_PAKE_OUTPUT_SIZE(alg, primitive, output_step)                 \
+    (PSA_ALG_IS_JPAKE(alg) &&                                             \
+     (primitive) == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,       \
+                                       PSA_ECC_FAMILY_SECP_R1, 256) ?     \
+     (                                                                    \
+         (output_step) == PSA_PAKE_STEP_KEY_SHARE ? 65 :                  \
+         (output_step) == PSA_PAKE_STEP_ZK_PUBLIC ? 65 :                  \
+         32                                                               \
+     ) :                                                                  \
+     PSA_ALG_IS_SPAKE2P(alg) ?                                            \
+     (                                                                    \
+         (output_step) == PSA_PAKE_STEP_KEY_SHARE ?                       \
+         (2 * ((((primitive) & 0xFFFF) + 7) / 8) + 1) :                   \
+         (output_step) == PSA_PAKE_STEP_CONFIRM ?                         \
+         (PSA_ALG_IS_SPAKE2P_CMAC(alg) ? 16 :                            \
+          PSA_HASH_LENGTH(PSA_ALG_GET_HASH(alg))) :                       \
+         0                                                                \
+     ) :                                                                  \
      0)
 
 /** A sufficient input buffer size for psa_pake_input().
@@ -982,15 +1024,24 @@ typedef uint32_t psa_pake_primitive_t;
  *                      the input type or PAKE algorithm is not recognized, or
  *                      the parameters are incompatible, return 0.
  */
-#define PSA_PAKE_INPUT_SIZE(alg, primitive, input_step)                 \
-    (PSA_ALG_IS_JPAKE(alg) &&                                           \
-     primitive == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,      \
-                                     PSA_ECC_FAMILY_SECP_R1, 256) ?    \
-     (                                                                 \
-         input_step == PSA_PAKE_STEP_KEY_SHARE ? 65 :                    \
-         input_step == PSA_PAKE_STEP_ZK_PUBLIC ? 65 :                    \
-         32                                                              \
-     ) :                                                               \
+#define PSA_PAKE_INPUT_SIZE(alg, primitive, input_step)                   \
+    (PSA_ALG_IS_JPAKE(alg) &&                                             \
+     (primitive) == PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,       \
+                                       PSA_ECC_FAMILY_SECP_R1, 256) ?     \
+     (                                                                    \
+         (input_step) == PSA_PAKE_STEP_KEY_SHARE ? 65 :                   \
+         (input_step) == PSA_PAKE_STEP_ZK_PUBLIC ? 65 :                   \
+         32                                                               \
+     ) :                                                                  \
+     PSA_ALG_IS_SPAKE2P(alg) ?                                            \
+     (                                                                    \
+         (input_step) == PSA_PAKE_STEP_KEY_SHARE ?                        \
+         (2 * ((((primitive) & 0xFFFF) + 7) / 8) + 1) :                   \
+         (input_step) == PSA_PAKE_STEP_CONFIRM ?                          \
+         (PSA_ALG_IS_SPAKE2P_CMAC(alg) ? 16 :                            \
+          PSA_HASH_LENGTH(PSA_ALG_GET_HASH(alg))) :                       \
+         0                                                                \
+     ) :                                                                  \
      0)
 
 /** Output buffer size for psa_pake_output() for any of the supported PAKE
@@ -1003,7 +1054,9 @@ typedef uint32_t psa_pake_primitive_t;
  *
  * See also #PSA_PAKE_OUTPUT_SIZE(\p alg, \p primitive, \p output_step).
  */
-#define PSA_PAKE_OUTPUT_MAX_SIZE 65
+/* The largest output is a SPAKE2+ P-521 uncompressed key share
+ * (2 * 66 + 1 = 133 bytes). */
+#define PSA_PAKE_OUTPUT_MAX_SIZE 133
 
 /** Input buffer size for psa_pake_input() for any of the supported PAKE
  * algorithm and primitive suites and input step.
@@ -1015,7 +1068,9 @@ typedef uint32_t psa_pake_primitive_t;
  *
  * See also #PSA_PAKE_INPUT_SIZE(\p alg, \p primitive, \p output_step).
  */
-#define PSA_PAKE_INPUT_MAX_SIZE 65
+/* The largest input is a SPAKE2+ P-521 uncompressed key share
+ * (2 * 66 + 1 = 133 bytes). */
+#define PSA_PAKE_INPUT_MAX_SIZE 133
 
 /** Returns a suitable initializer for a PAKE cipher suite object of type
  * psa_pake_cipher_suite_t.
@@ -1074,6 +1129,13 @@ struct psa_crypto_driver_pake_inputs_s {
     size_t MBEDTLS_PRIVATE(peer_len);
     psa_key_attributes_t MBEDTLS_PRIVATE(attributes);
     struct psa_pake_cipher_suite_s MBEDTLS_PRIVATE(cipher_suite);
+    #if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+    uint8_t *MBEDTLS_PRIVATE(context);
+    size_t MBEDTLS_PRIVATE(context_len);
+    psa_pake_role_t MBEDTLS_PRIVATE(role);
+    #endif
 };
 
 typedef enum psa_crypto_driver_pake_step {
@@ -1089,7 +1151,9 @@ typedef enum psa_crypto_driver_pake_step {
     PSA_JPAKE_X2S_STEP_ZK_PROOF   = 9,  /* Round 2: output Schnorr NIZKP proof for the X2S key (our key) */
     PSA_JPAKE_X4S_STEP_KEY_SHARE  = 10, /* Round 2: input X4S key (from peer) */
     PSA_JPAKE_X4S_STEP_ZK_PUBLIC  = 11, /* Round 2: input Schnorr NIZKP public key for the X4S key (from peer) */
-    PSA_JPAKE_X4S_STEP_ZK_PROOF   = 12  /* Round 2: input Schnorr NIZKP proof for the X4S key (from peer) */
+    PSA_JPAKE_X4S_STEP_ZK_PROOF   = 12, /* Round 2: input Schnorr NIZKP proof for the X4S key (from peer) */
+    PSA_SPAKE2P_STEP_KEY_SHARE    = 13, /* SPAKE2+: input/output public key share (shareP/shareV) */
+    PSA_SPAKE2P_STEP_CONFIRM      = 14  /* SPAKE2+: input/output key confirmation MAC (confirmP/confirmV) */
 } psa_crypto_driver_pake_step_t;
 
 typedef enum psa_jpake_round {
@@ -1121,6 +1185,24 @@ struct psa_jpake_computation_stage_s {
 #define PSA_JPAKE_EXPECTED_OUTPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
                                            ((round) == PSA_JPAKE_FIRST ? 2 : 1))
 
+/* SPAKE2+ has two message exchanges: the public key share (KEY_SHARE) and the
+ * key confirmation MAC (CONFIRM). Each is exchanged exactly once in each
+ * direction. */
+typedef enum psa_spake2p_round {
+    PSA_SPAKE2P_KEY_SHARE = 0,
+    PSA_SPAKE2P_CONFIRM   = 1,
+    PSA_SPAKE2P_FINISHED  = 2
+} psa_spake2p_round_t;
+
+struct psa_spake2p_computation_stage_s {
+    /* The SPAKE2+ exchange we are currently on. */
+    psa_spake2p_round_t MBEDTLS_PRIVATE(round);
+    /* The number of completed inputs so far this exchange. */
+    uint8_t MBEDTLS_PRIVATE(inputs);
+    /* The number of completed outputs so far this exchange. */
+    uint8_t MBEDTLS_PRIVATE(outputs);
+};
+
 struct psa_pake_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
     mbedtls_psa_client_handle_t handle;
@@ -1144,6 +1226,11 @@ struct psa_pake_operation_s {
         uint8_t MBEDTLS_PRIVATE(dummy);
 #if defined(PSA_WANT_ALG_JPAKE)
         struct psa_jpake_computation_stage_s MBEDTLS_PRIVATE(jpake);
+#endif
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+        defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+        defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+        struct psa_spake2p_computation_stage_s MBEDTLS_PRIVATE(spake2p);
 #endif
     } MBEDTLS_PRIVATE(computation_stage);
     union {
@@ -1297,6 +1384,8 @@ typedef struct psa_crypto_driver_pake_inputs_s psa_crypto_driver_pake_inputs_t;
 /** The type of computation stage for J-PAKE operations. */
 typedef struct psa_jpake_computation_stage_s psa_jpake_computation_stage_t;
 
+typedef struct psa_spake2p_computation_stage_s psa_spake2p_computation_stage_t;
+
 /** Return an initial value for a PAKE operation object.
  */
 static psa_pake_operation_t psa_pake_operation_init(void);
@@ -1408,6 +1497,55 @@ psa_status_t psa_crypto_driver_pake_get_peer(
 psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     const psa_crypto_driver_pake_inputs_t *inputs,
     psa_pake_cipher_suite_t *cipher_suite);
+
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+/** Get the length of the SPAKE2+ context string in bytes from given inputs.
+ *
+ * The context is optional, so a length of \c 0 is a valid result.
+ *
+ * \param[in]  inputs           Operation inputs.
+ * \param[out] context_len      Context length.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ */
+psa_status_t psa_crypto_driver_pake_get_context_len(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    size_t *context_len);
+
+/** Get the SPAKE2+ context string from given inputs.
+ *
+ * \param[in]  inputs           Operation inputs.
+ * \param[out] context          Return buffer for the context.
+ * \param      context_size     Size of \p context in bytes.
+ * \param[out] context_len      Actual size of the context in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         The size of \p context is too small.
+ */
+psa_status_t psa_crypto_driver_pake_get_context(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    uint8_t *context, size_t context_size, size_t *context_len);
+
+/** Get the role set with psa_pake_set_role() from given inputs.
+ *
+ * The role is optional: if psa_pake_set_role() has not been called,
+ * the result is #PSA_PAKE_ROLE_NONE.
+ *
+ * \param[in]  inputs           Operation inputs.
+ * \param[out] role             Operation role.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ */
+psa_status_t psa_crypto_driver_pake_get_role(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    psa_pake_role_t *role);
+#endif /* PSA_WANT_ALG_SPAKE2P_* */
 
 /** Setup a password-authenticated key exchange.
  *
@@ -1655,8 +1793,10 @@ psa_status_t psa_pake_set_role(psa_pake_operation_t *operation,
  *                              called yet). It must be an operation for which
  *                              the context hasn't been specified
  *                              (psa_pake_set_context() hasn't been called yet).
- * \param[in] context           The context to set.
- * \param context_len           The length of \p context in bytes.
+ * \param[in] context           The context to set. May be \c NULL if
+ *                              \p context_len is 0.
+ * \param context_len           The length of \p context in bytes. May be 0
+ *                              to set an explicitly empty context.
  *
  * \retval #PSA_SUCCESS
  *         Success.
@@ -2018,6 +2158,9 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
     const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;
     return v;
 }
+
+
+
 
 #ifdef __cplusplus
 }

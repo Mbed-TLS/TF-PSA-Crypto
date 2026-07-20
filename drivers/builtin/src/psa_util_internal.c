@@ -24,7 +24,8 @@
     defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
 #include <mbedtls/private/rsa.h>
 #endif
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) || \
+    defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
 #include <mbedtls/private/ecp.h>
 #endif
 #if defined(MBEDTLS_PK_C)
@@ -159,7 +160,8 @@ int psa_pk_status_to_mbedtls(psa_status_t status)
 /* Key management */
 /****************************************************************/
 
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) || \
+    defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
 psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
                                           size_t *bits)
 {

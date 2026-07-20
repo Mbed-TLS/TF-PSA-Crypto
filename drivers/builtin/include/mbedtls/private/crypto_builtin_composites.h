@@ -194,6 +194,17 @@ typedef struct {
 #define MBEDTLS_PSA_BUILTIN_PAKE  1
 #endif
 
+/* SPAKE2+ operation definitions */
+
+#include "mbedtls/private/spake2p.h"
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_HMAC) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_CMAC) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SPAKE2P_MATTER)
+#define MBEDTLS_PSA_BUILTIN_PAKE  1
+#define MBEDTLS_PSA_BUILTIN_SPAKE2P 1
+#endif
+
 /* Note: the format for mbedtls_ecjpake_read/write function has an extra
  * length byte for each step, plus an extra 3 bytes for ECParameters in the
  * server's 2nd round. */
@@ -210,11 +221,14 @@ typedef struct {
     size_t MBEDTLS_PRIVATE(buffer_length);
     size_t MBEDTLS_PRIVATE(buffer_offset);
 #endif
-    /* Context structure for the Mbed TLS EC-JPAKE implementation. */
+    /* Context structure for the Mbed TLS EC-JPAKE / SPAKE2+ implementation. */
     union {
         unsigned int MBEDTLS_PRIVATE(dummy);
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
         mbedtls_ecjpake_context MBEDTLS_PRIVATE(jpake);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_SPAKE2P)
+        mbedtls_spake2p_context MBEDTLS_PRIVATE(spake2p);
 #endif
     } MBEDTLS_PRIVATE(ctx);
 

@@ -1,0 +1,110 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/spake2p.h"
+#include "spake2p_invasive.h"
+
+#if defined(MBEDTLS_TEST_HOOKS)
+/* Deterministic RNG for the blinding of the constant-time scalar
+ * multiplications. The KAT output is a deterministic function of the inputs and
+ * does not depend on these bytes, so any stream is fine; a fixed sequence keeps
+ * the test reproducible. */
+static int spake2p_kat_rng(void *p, unsigned char *out, size_t len)
+{
+    uint32_t *state = (uint32_t *) p;
+    for (size_t i = 0; i < len; i++) {
+        *state = *state * 1103515245u + 12345u;
+        out[i] = (unsigned char) (*state >> 16);
+    }
+    return 0;
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_SPAKE2P_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void spake2p_prover_key_share_kat(int curve_arg, int hash_arg, int mac_arg,
+                                  data_t *context, data_t *prover_id,
+                                  data_t *verifier_id, data_t *client_key,
+                                  data_t *x, data_t *exp_shareP)
+{
+    /* Known-answer test for the Prover side of write_key_share:
+     * shareP = x*P + w0*M with the RFC 9383 fixed ephemeral x. */
+    mbedtls_ecp_group_id curve = curve_arg;
+    mbedtls_md_type_t hash = hash_arg;
+    mbedtls_spake2p_mac_type mac = mac_arg;
+    mbedtls_spake2p_context cli;
+    unsigned char shareP[MBEDTLS_ECP_MAX_PT_LEN];
+    size_t lenP;
+    uint32_t rng_cli = 0x00c0ffeeu;
+
+    mbedtls_spake2p_init(&cli);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT, hash, mac,
+                                     curve, client_key->x, client_key->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_context(&cli, context->x, context->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_user(&cli, prover_id->x, prover_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_set_peer(&cli, verifier_id->x,
+                                        verifier_id->len), 0);
+    TEST_EQUAL(mbedtls_spake2p_write_key_share_with_ephemeral(
+                   &cli, x->x, x->len, shareP, sizeof(shareP), &lenP,
+                   spake2p_kat_rng, &rng_cli), 0);
+    TEST_MEMORY_COMPARE(shareP, lenP, exp_shareP->x, exp_shareP->len);
+
+exit:
+    mbedtls_spake2p_free(&cli);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256 */
+void spake2p_setup_negative(int curve_arg, int hash_arg, int mac_arg,
+                            data_t *key, int expected_ret)
+{
+    /* mbedtls_spake2p_setup() must reject a bad role, an unsupported curve,
+     * or key material of the wrong length. */
+    mbedtls_spake2p_context ctx;
+
+    mbedtls_spake2p_init(&ctx);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&ctx, MBEDTLS_SPAKE2P_CLIENT, hash_arg,
+                                     mac_arg, curve_arg, key->x, key->len),
+               expected_ret);
+
+exit:
+    mbedtls_spake2p_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED:PSA_WANT_ALG_SHA_256:MBEDTLS_TEST_HOOKS */
+void spake2p_prover_share_buffer_too_small(data_t *client_key, data_t *x)
+{
+    /* An output buffer shorter than the SEC1 share must be rejected, never
+     * silently truncated. */
+    mbedtls_spake2p_context cli;
+    unsigned char shareP[MBEDTLS_ECP_MAX_PT_LEN];
+    size_t lenP;
+    uint32_t rng_cli = 0x00c0ffeeu;
+
+    mbedtls_spake2p_init(&cli);
+    PSA_INIT();
+
+    TEST_EQUAL(mbedtls_spake2p_setup(&cli, MBEDTLS_SPAKE2P_CLIENT,
+                                     MBEDTLS_MD_SHA256, MBEDTLS_SPAKE2P_MAC_HMAC,
+                                     MBEDTLS_ECP_DP_SECP256R1,
+                                     client_key->x, client_key->len), 0);
+    /* P-256 share is 65 bytes; 64 must not fit. */
+    TEST_ASSERT(mbedtls_spake2p_write_key_share_with_ephemeral(
+                    &cli, x->x, x->len, shareP, 64, &lenP,
+                    spake2p_kat_rng, &rng_cli) != 0);
+
+exit:
+    mbedtls_spake2p_free(&cli);
+    PSA_DONE();
+}
+/* END_CASE */

@@ -1,0 +1,8 @@
+Features
+   * Add support for importing and exporting SPAKE2+ key pairs
+     (key type PSA_KEY_TYPE_SPAKE2P_KEY_PAIR) through psa_import_key() and
+     psa_export_key(). The prover key pair is the concatenation w0 || w1 of
+     two equal-length secp256r1/secp384r1/secp521r1 scalars in the range
+     [1, n-1]. psa_export_public_key() computes the corresponding verifier
+     registration record w0 || L with L = w1 * P. Resolves Mbed-
+     TLS/mbedtls#9343.

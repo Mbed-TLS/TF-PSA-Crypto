@@ -656,6 +656,16 @@ psa_status_t psa_copy_key_material_into_slot(psa_key_slot_t *slot,
     return PSA_SUCCESS;
 }
 
+#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+/* Defined in the SPAKE2+ key management section below. */
+static psa_status_t psa_spake2p_import_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *data, size_t data_length,
+    uint8_t *key_buffer, size_t key_buffer_size,
+    size_t *key_buffer_length, size_t *bits);
+#endif
+
 psa_status_t psa_import_key_into_slot(
     const psa_key_attributes_t *attributes,
     const uint8_t *data, size_t data_length,
@@ -724,6 +734,18 @@ psa_status_t psa_import_key_into_slot(
 #endif /* (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT) &&
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
+
+#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
+        defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+        if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
+            return psa_spake2p_import_key(attributes,
+                                          data, data_length,
+                                          key_buffer, key_buffer_size,
+                                          key_buffer_length,
+                                          bits);
+        }
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) ||
+        * defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
     }
 
     return PSA_ERROR_NOT_SUPPORTED;
@@ -1349,7 +1371,8 @@ psa_status_t psa_export_key_internal(
     if (key_type_is_raw_bytes(type) ||
         PSA_KEY_TYPE_IS_RSA(type)   ||
         PSA_KEY_TYPE_IS_ECC(type)   ||
-        PSA_KEY_TYPE_IS_DH(type)) {
+        PSA_KEY_TYPE_IS_DH(type)    ||
+        PSA_KEY_TYPE_IS_SPAKE2P(type)) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
@@ -1409,6 +1432,14 @@ exit:
     return (status == PSA_SUCCESS) ? unlock_status : status;
 }
 
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT)
+/* Defined in the SPAKE2+ key management section below. */
+static psa_status_t psa_spake2p_export_public_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    uint8_t *data, size_t data_size, size_t *data_length);
+#endif
+
 psa_status_t psa_export_public_key_internal(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer,
@@ -1421,7 +1452,7 @@ psa_status_t psa_export_public_key_internal(
 
     if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) &&
         (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type) ||
-         PSA_KEY_TYPE_IS_DH(type))) {
+         PSA_KEY_TYPE_IS_DH(type) || PSA_KEY_TYPE_IS_SPAKE2P(type))) {
         /* Exporting public -> public */
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
@@ -1466,6 +1497,18 @@ psa_status_t psa_export_public_key_internal(
         return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_EXPORT) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
+    } else if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT)
+        return psa_spake2p_export_public_key(attributes,
+                                             key_buffer,
+                                             key_buffer_size,
+                                             data,
+                                             data_size,
+                                             data_length);
+#else
+        /* We don't know how to convert a SPAKE2+ key pair to public. */
+        return PSA_ERROR_NOT_SUPPORTED;
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT) */
     } else {
         (void) key_buffer;
         (void) key_buffer_size;
@@ -9038,6 +9081,44 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     return PSA_SUCCESS;
 }
 
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+psa_status_t psa_crypto_driver_pake_get_context_len(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    size_t *context_len)
+{
+    *context_len = inputs->context_len;
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_crypto_driver_pake_get_context(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    uint8_t *context, size_t context_size, size_t *context_len)
+{
+    if (context_size < inputs->context_len) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    if (inputs->context_len != 0) {
+        memcpy(context, inputs->context, inputs->context_len);
+    }
+    *context_len = inputs->context_len;
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_crypto_driver_pake_get_role(
+    const psa_crypto_driver_pake_inputs_t *inputs,
+    psa_pake_role_t *role)
+{
+    *role = inputs->role;
+
+    return PSA_SUCCESS;
+}
+#endif /* PSA_WANT_ALG_SPAKE2P_* */
+
 static psa_status_t psa_pake_set_password_key(
     psa_pake_operation_t *operation,
     mbedtls_svc_key_id_t password)
@@ -9061,6 +9142,20 @@ static psa_status_t psa_pake_set_password_key(
 
     type = psa_get_key_type(&slot->attr);
 
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* The only key types compatible with SPAKE2+ are SPAKE2+ keys, and
+         * the key's curve must be the one from the cipher suite. */
+        if (!PSA_KEY_TYPE_IS_SPAKE2P(type) ||
+            PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(type) !=
+            operation->data.inputs.cipher_suite.family ||
+            psa_get_key_bits(&slot->attr) !=
+            operation->data.inputs.cipher_suite.bits) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     if (type != PSA_KEY_TYPE_PASSWORD &&
         type != PSA_KEY_TYPE_PASSWORD_HASH) {
         status = PSA_ERROR_INVALID_ARGUMENT;
@@ -9122,6 +9217,27 @@ psa_status_t psa_pake_setup(
         computation_stage->step = PSA_PAKE_STEP_KEY_SHARE;
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        psa_spake2p_computation_stage_t *computation_stage =
+            &operation->computation_stage.spake2p;
+
+        /* Only PSA_PAKE_CONFIRMED_KEY is implemented for SPAKE2+:
+         * psa_pake_get_shared_key() always requires the key-confirmation
+         * exchange to have completed. */
+        if (cipher_suite->key_confirmation == PSA_PAKE_UNCONFIRMED_KEY) {
+            status = PSA_ERROR_NOT_SUPPORTED;
+            goto exit;
+        }
+        if (cipher_suite->key_confirmation != PSA_PAKE_CONFIRMED_KEY) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+
+        memset(computation_stage, 0, sizeof(*computation_stage));
+        computation_stage->round = PSA_SPAKE2P_KEY_SHARE;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
@@ -9242,6 +9358,25 @@ psa_status_t psa_pake_set_role(
         status = PSA_ERROR_INVALID_ARGUMENT;
     } else
 #endif
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* The role must be consistent with the password key type set at
+         * psa_pake_setup(): the Prover (client) holds a key pair (w0||w1);
+         * the Verifier (server) holds either the registration record, i.e.
+         * a public key (w0||L), or a key pair from which the record can be
+         * derived. A public key is verification-only, so it cannot be used
+         * for the client role. */
+        psa_key_type_t key_type =
+            psa_get_key_type(&operation->data.inputs.attributes);
+        int is_public = PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type);
+        if ((role == PSA_PAKE_ROLE_CLIENT && !is_public) ||
+            role == PSA_PAKE_ROLE_SERVER) {
+            operation->data.inputs.role = role;
+            return PSA_SUCCESS;
+        }
+        status = PSA_ERROR_INVALID_ARGUMENT;
+    } else
+#endif
     {
         (void) role;
         status = PSA_ERROR_NOT_SUPPORTED;
@@ -9254,12 +9389,71 @@ exit:
 
 psa_status_t psa_pake_set_context(
     psa_pake_operation_t *operation,
-    const uint8_t *context, size_t context_len)
+    const uint8_t *context_external, size_t context_len)
 {
-    (void) operation;
-    (void) context;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    if (operation->stage != PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+#if defined(PSA_WANT_ALG_JPAKE)
+    (void) context_external;
     (void) context_len;
-    return PSA_ERROR_NOT_SUPPORTED;
+    if (PSA_ALG_IS_JPAKE(operation->alg)) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    } else
+#endif
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+    defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        if (operation->data.inputs.context != NULL) {
+            status = PSA_ERROR_BAD_STATE;
+            goto exit;
+        }
+
+        if (context_external == NULL && context_len != 0) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+
+        LOCAL_INPUT_DECLARE(context_external, context);
+
+        LOCAL_INPUT_ALLOC(context_external, context_len, context);
+
+        /* RFC 9383 allows the context to be empty. Allocate at least one
+         * byte so that an explicitly empty context is recorded and a
+         * repeated call is detected as a bad state. */
+        operation->data.inputs.context =
+            mbedtls_calloc(1, context_len == 0 ? 1 : context_len);
+        if (operation->data.inputs.context == NULL) {
+            status = PSA_ERROR_INSUFFICIENT_MEMORY;
+            LOCAL_INPUT_FREE(context_external, context);
+            goto exit;
+        }
+
+        if (context_len != 0) {
+            memcpy(operation->data.inputs.context, context, context_len);
+        }
+        operation->data.inputs.context_len = context_len;
+
+        status = PSA_SUCCESS;
+        LOCAL_INPUT_FREE(context_external, context);
+    } else
+#endif
+    {
+        (void) context_external;
+        (void) context_len;
+        status = PSA_ERROR_NOT_SUPPORTED;
+    }
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_pake_abort(operation);
+    }
+    return status;
 }
 
 /* Auxiliary function to convert core computation stage to single driver step. */
@@ -9303,6 +9497,9 @@ static psa_status_t psa_pake_complete_inputs(
         return PSA_ERROR_BAD_STATE;
     }
 
+    /* J-PAKE requires both identities. For SPAKE2+ the identities are
+     * optional: an identity that has not been provided is a zero-length
+     * string in the protocol (RFC 9383 Section 3.3). */
     if (PSA_ALG_IS_JPAKE(operation->alg)) {
         if (inputs.user_len == 0 || inputs.peer_len == 0) {
             return PSA_ERROR_BAD_STATE;
@@ -9321,15 +9518,14 @@ static psa_status_t psa_pake_complete_inputs(
     mbedtls_free(inputs.user);
     mbedtls_free(inputs.peer);
 
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    /* The driver has made its own copy of the context. */
+    mbedtls_free(inputs.context);
+#endif
+
     if (status == PSA_SUCCESS) {
-#if defined(PSA_WANT_ALG_JPAKE)
-        if (PSA_ALG_IS_JPAKE(operation->alg)) {
-            operation->stage = PSA_PAKE_OPERATION_STAGE_COMPUTATION;
-        } else
-#endif /* PSA_WANT_ALG_JPAKE */
-        {
-            status = PSA_ERROR_NOT_SUPPORTED;
-        }
+        /* The algorithm was already validated in psa_pake_setup(). */
+        operation->stage = PSA_PAKE_OPERATION_STAGE_COMPUTATION;
     }
     return status;
 }
@@ -9411,6 +9607,67 @@ static psa_status_t psa_jpake_epilogue(
 
 #endif /* PSA_WANT_ALG_JPAKE */
 
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+/* Check that the requested step is valid for the current SPAKE2+ exchange.
+ * is_output is 1 for psa_pake_output(), 0 for psa_pake_input(). Each exchange
+ * (key share, then confirmation) transfers exactly one message in each
+ * direction, in either order, so a step is rejected if it does not match the
+ * current exchange or if that direction has already been done this exchange. */
+static psa_status_t psa_spake2p_prologue(
+    psa_pake_operation_t *operation,
+    psa_pake_step_t step,
+    int is_output)
+{
+    psa_spake2p_computation_stage_t *stage =
+        &operation->computation_stage.spake2p;
+
+    if (stage->round == PSA_SPAKE2P_KEY_SHARE) {
+        if (step != PSA_PAKE_STEP_KEY_SHARE) {
+            return PSA_ERROR_BAD_STATE;
+        }
+    } else if (stage->round == PSA_SPAKE2P_CONFIRM) {
+        if (step != PSA_PAKE_STEP_CONFIRM) {
+            return PSA_ERROR_BAD_STATE;
+        }
+    } else {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    /* Reject a second call in the same direction within this exchange. */
+    if (is_output ? (stage->outputs != 0) : (stage->inputs != 0)) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    return PSA_SUCCESS;
+}
+
+/* Account for a completed input/output and advance the exchange once both
+ * directions of the current exchange (key share, then confirmation) are done.
+ * SPAKE2+ exchanges one message in each direction per exchange, in either
+ * order. */
+static psa_status_t psa_spake2p_epilogue(
+    psa_pake_operation_t *operation,
+    int is_output)
+{
+    psa_spake2p_computation_stage_t *stage =
+        &operation->computation_stage.spake2p;
+
+    if (is_output) {
+        stage->outputs++;
+    } else {
+        stage->inputs++;
+    }
+
+    if (stage->inputs >= 1 && stage->outputs >= 1) {
+        stage->inputs = 0;
+        stage->outputs = 0;
+        stage->round++;
+    }
+
+    return PSA_SUCCESS;
+}
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
+
 psa_status_t psa_pake_output(
     psa_pake_operation_t *operation,
     psa_pake_step_t step,
@@ -9450,6 +9707,16 @@ psa_status_t psa_pake_output(
             &operation->computation_stage.jpake);
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        status = psa_spake2p_prologue(operation, step, 1);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+        driver_step = (step == PSA_PAKE_STEP_KEY_SHARE) ?
+                      PSA_SPAKE2P_STEP_KEY_SHARE : PSA_SPAKE2P_STEP_CONFIRM;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         (void) step;
         status = PSA_ERROR_NOT_SUPPORTED;
@@ -9473,6 +9740,14 @@ psa_status_t psa_pake_output(
         }
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        status = psa_spake2p_epilogue(operation, 1);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
@@ -9632,12 +9907,343 @@ psa_status_t psa_pake_abort(
         if (operation->data.inputs.peer != NULL) {
             mbedtls_free(operation->data.inputs.peer);
         }
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+        if (operation->data.inputs.context != NULL) {
+            mbedtls_free(operation->data.inputs.context);
+        }
+#endif
     }
     memset(operation, 0, sizeof(psa_pake_operation_t));
 
     return status;
 }
+
 #endif /* PSA_WANT_ALG_SOME_PAKE */
+
+
+/****************************************************************/
+/* SPAKE2+ key management */
+/****************************************************************/
+
+/* SPAKE2+ key import/export is available whenever one of the SPAKE2+ key
+ * types is enabled, even in a configuration without any PAKE algorithm
+ * (for example a build that only provisions or transports registration
+ * records), so this section must not depend on PSA_WANT_ALG_SOME_PAKE. */
+#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
+    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+
+typedef struct {
+    psa_ecc_family_t family;
+    size_t w0_len;
+    size_t L_len;
+    mbedtls_ecp_group_id grp_id;
+    size_t bits;
+} psa_spake2p_curve_info_t;
+
+static const psa_spake2p_curve_info_t spake2p_supported_curves[] =
+{
+#if defined(PSA_WANT_ECC_SECP_R1_256)
+    { PSA_ECC_FAMILY_SECP_R1, 32, 65, MBEDTLS_ECP_DP_SECP256R1, 256 },
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_384)
+    { PSA_ECC_FAMILY_SECP_R1, 48, 97, MBEDTLS_ECP_DP_SECP384R1, 384 },
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_521)
+    { PSA_ECC_FAMILY_SECP_R1, 66, 133, MBEDTLS_ECP_DP_SECP521R1, 521 },
+#endif
+    /* Sentinel so that the array is never empty. Family 0 is not a valid
+     * PSA ECC family, so this entry never matches a lookup. */
+    { 0, 0, 0, MBEDTLS_ECP_DP_NONE, 0 },
+};
+
+/* Look up the curve whose public-key encoding (w0 || L) for this family is
+ * data_length bytes long. The table is the single source of truth. */
+static const psa_spake2p_curve_info_t *psa_spake2p_get_curve_from_data_length(
+    const size_t data_length,
+    const psa_ecc_family_t family)
+{
+    for (size_t i = 0; i < ARRAY_LENGTH(spake2p_supported_curves); i++) {
+        const psa_spake2p_curve_info_t *info = &spake2p_supported_curves[i];
+        if (info->family == family &&
+            info->w0_len + info->L_len == data_length) {
+            return info;
+        }
+    }
+    return NULL;
+}
+
+/* Determine the status for a scalar length that does not match any curve
+ * enabled in the build: a length that belongs to a curve that this
+ * implementation knows about, but which is not enabled, is reported as
+ * NOT_SUPPORTED; any other length is a malformed encoding, hence
+ * INVALID_ARGUMENT. */
+static psa_status_t psa_spake2p_unknown_scalar_len_status(
+    const psa_ecc_family_t family,
+    const size_t scalar_len)
+{
+    if (family == PSA_ECC_FAMILY_SECP_R1 &&
+        (scalar_len == 32 || scalar_len == 48 || scalar_len == 66)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    return PSA_ERROR_INVALID_ARGUMENT;
+}
+
+
+/* Look up the SECP_R1 curve whose key-pair scalars (w0/w1) are scalar_len
+ * bytes long, using the same table as the public-key lookup so the curve set
+ * is defined in one place. */
+static const psa_spake2p_curve_info_t *psa_spake2p_get_curve_from_scalar_len(
+    size_t scalar_len)
+{
+    for (size_t i = 0; i < ARRAY_LENGTH(spake2p_supported_curves); i++) {
+        const psa_spake2p_curve_info_t *info = &spake2p_supported_curves[i];
+        if (info->family == PSA_ECC_FAMILY_SECP_R1 && info->w0_len == scalar_len) {
+            return info;
+        }
+    }
+    return NULL;
+}
+
+static psa_status_t psa_spake2p_import_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *data,
+    size_t data_length,
+    uint8_t *key_buffer,
+    size_t key_buffer_size,
+    size_t *key_buffer_length,
+    size_t *bits)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_type_t key_type = psa_get_key_type(attributes);
+
+    if (!PSA_KEY_TYPE_IS_SPAKE2P(key_type)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    psa_ecc_family_t family = PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(key_type);
+    size_t key_bits = 0;
+
+    /* SPAKE2+ over Edwards curves (RFC 9383) is not implemented. */
+    if (family == PSA_ECC_FAMILY_TWISTED_EDWARDS) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    /* Validate the curve family and the data length before the policy
+     * checks, so that an unsupported curve is reported as NOT_SUPPORTED
+     * independently of the key's algorithm policy. */
+    const psa_spake2p_curve_info_t *spake2_curve_info = NULL;
+    if (PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type)) {
+        /* Verifier registration record: w0 || L, with L a public point. */
+        spake2_curve_info =
+            psa_spake2p_get_curve_from_data_length(data_length, family);
+        if (spake2_curve_info == NULL) {
+            /* A public key is w0 || L, i.e. 3 * scalar_len + 1 bytes. */
+            if (data_length % 3 != 1) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            return psa_spake2p_unknown_scalar_len_status(family, data_length / 3);
+        }
+        key_bits = spake2_curve_info->bits;
+    } else {
+        /* Prover key pair: w0 || w1, two equal-length scalars. */
+        if (family != PSA_ECC_FAMILY_SECP_R1 || (data_length % 2) != 0) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        spake2_curve_info =
+            psa_spake2p_get_curve_from_scalar_len(data_length / 2);
+        if (spake2_curve_info == NULL) {
+            return psa_spake2p_unknown_scalar_len_status(family, data_length / 2);
+        }
+        key_bits = spake2_curve_info->bits;
+    }
+
+    if (key_buffer_size < data_length) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    psa_algorithm_t alg = psa_get_key_algorithm(attributes);
+
+    /* A SPAKE2+ key's permitted-algorithm policy must be a SPAKE2+ algorithm,
+     * or PSA_ALG_NONE for a key with no intended algorithm (e.g. a key kept
+     * only in storage). An explicit incompatible policy is rejected. */
+    if (alg != PSA_ALG_NONE && !PSA_ALG_IS_SPAKE2P(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type)) {
+        mbedtls_ecp_group grp;
+        mbedtls_ecp_point pt;
+
+        mbedtls_ecp_group_init(&grp);
+        mbedtls_ecp_point_init(&pt);
+
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+
+        /* w0 is a scalar in the same range as an EC private key: reject 0
+         * and values >= the group order n (like the key-pair path). */
+        {
+            mbedtls_mpi w0;
+            mbedtls_mpi_init(&w0);
+            status = mbedtls_to_psa_error(
+                mbedtls_mpi_read_binary(&w0, data, spake2_curve_info->w0_len));
+            if (status == PSA_SUCCESS &&
+                (mbedtls_mpi_cmp_int(&w0, 0) == 0 ||
+                 mbedtls_mpi_cmp_mpi(&w0, &grp.N) >= 0)) {
+                status = PSA_ERROR_INVALID_ARGUMENT;
+            }
+            mbedtls_mpi_free(&w0);
+            if (status != PSA_SUCCESS) {
+                goto exit;
+            }
+        }
+
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_point_read_binary(&grp, &pt,
+                                          data + spake2_curve_info->w0_len,
+                                          spake2_curve_info->L_len));
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+
+        /* Check that the point is on the curve. */
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_check_pubkey(&grp, &pt));
+exit:
+        mbedtls_ecp_point_free(&pt);
+        mbedtls_ecp_group_free(&grp);
+        if (status != PSA_SUCCESS) {
+            *key_buffer_length = 0;
+            *bits = 0;
+            return status;
+        }
+    } else {
+        /* w0 and w1 are scalars in the same range as an elliptic curve
+         * private key from the group: reject 0 and values >= the group
+         * order n, like ECC private-key import does. */
+        size_t scalar_len = data_length / 2;
+        mbedtls_ecp_group grp;
+        mbedtls_mpi w;
+
+        mbedtls_ecp_group_init(&grp);
+        mbedtls_mpi_init(&w);
+
+        status = mbedtls_to_psa_error(
+            mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+        for (size_t i = 0; i < 2 && status == PSA_SUCCESS; i++) {
+            status = mbedtls_to_psa_error(
+                mbedtls_mpi_read_binary(&w, data + i * scalar_len,
+                                        scalar_len));
+            if (status == PSA_SUCCESS &&
+                (mbedtls_mpi_cmp_int(&w, 0) == 0 ||
+                 mbedtls_mpi_cmp_mpi(&w, &grp.N) >= 0)) {
+                status = PSA_ERROR_INVALID_ARGUMENT;
+            }
+        }
+
+        mbedtls_mpi_free(&w);
+        mbedtls_ecp_group_free(&grp);
+        if (status != PSA_SUCCESS) {
+            *key_buffer_length = 0;
+            *bits = 0;
+            return status;
+        }
+    }
+
+    memcpy(key_buffer, data, data_length);
+    *key_buffer_length = data_length;
+    /* The key size is the curve size (like ECC keys), not the length of the
+     * serialized w0||w1 / w0||L material. */
+    *bits = key_bits;
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_spake2p_export_public_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer,
+    size_t key_buffer_size,
+    uint8_t *data,
+    size_t data_size,
+    size_t *data_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_type_t key_type = psa_get_key_type(attributes);
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_point L;
+    mbedtls_mpi w1;
+    size_t point_length = 0;
+
+    /* The key material is w0 || w1, two equal-length SECP_R1 scalars, as
+     * validated at import. */
+    if (!PSA_KEY_TYPE_IS_SPAKE2P_KEY_PAIR(key_type) ||
+        PSA_KEY_TYPE_SPAKE2P_GET_FAMILY(key_type) != PSA_ECC_FAMILY_SECP_R1 ||
+        (key_buffer_size % 2) != 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    size_t scalar_len = key_buffer_size / 2;
+    const psa_spake2p_curve_info_t *spake2_curve_info =
+        psa_spake2p_get_curve_from_scalar_len(scalar_len);
+    if (spake2_curve_info == NULL) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (data_size < spake2_curve_info->w0_len + spake2_curve_info->L_len) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_ecp_point_init(&L);
+    mbedtls_mpi_init(&w1);
+
+    status = mbedtls_to_psa_error(
+        mbedtls_ecp_group_load(&grp, spake2_curve_info->grp_id));
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    /* The public key (verifier registration record) is w0 || L with
+     * L = w1 * P, P the group generator (RFC 9383), L uncompressed. */
+    status = mbedtls_to_psa_error(
+        mbedtls_mpi_read_binary(&w1, key_buffer + scalar_len, scalar_len));
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = mbedtls_to_psa_error(
+        mbedtls_ecp_mul(&grp, &L, &w1, &grp.G,
+                        mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE));
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    memcpy(data, key_buffer, scalar_len);
+    status = mbedtls_to_psa_error(
+        mbedtls_ecp_point_write_binary(&grp, &L, MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                       &point_length,
+                                       data + scalar_len,
+                                       data_size - scalar_len));
+    if (status != PSA_SUCCESS) {
+        memset(data, 0, data_size);
+        goto exit;
+    }
+
+    *data_length = scalar_len + point_length;
+
+exit:
+    /* w1 is secret key material: mbedtls_mpi_free() zeroizes it. */
+    mbedtls_mpi_free(&w1);
+    mbedtls_ecp_point_free(&L);
+    mbedtls_ecp_group_free(&grp);
+    return status;
+}
+
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) ||
+        * defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
 
 /* Memory copying test hooks. These are called before input copy, after input
  * copy, before output copy and after output copy, respectively.
