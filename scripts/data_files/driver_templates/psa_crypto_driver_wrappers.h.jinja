@@ -1369,6 +1369,20 @@ static inline psa_status_t psa_driver_wrapper_cipher_encrypt(
     size_t output_size,
     size_t *output_length )
 {
+{% with entry_point = "cipher_encrypt" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+iv,
+iv_length,
+input,
+input_length,
+output,
+output_size,
+output_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -1379,22 +1393,9 @@ static inline psa_status_t psa_driver_wrapper_cipher_encrypt(
             /* Key is stored in the slot in export representation, so
              * cycle through all known transparent accelerators */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
-#if defined(PSA_CRYPTO_DRIVER_TEST)
-            status = mbedtls_test_transparent_cipher_encrypt( attributes,
-                                                              key_buffer,
-                                                              key_buffer_size,
-                                                              alg,
-                                                              iv,
-                                                              iv_length,
-                                                              input,
-                                                              input_length,
-                                                              output,
-                                                              output_size,
-                                                              output_length );
-            /* Declared with fallback == true */
-            if( status != PSA_ERROR_NOT_SUPPORTED )
-                return( status );
-#endif /* PSA_CRYPTO_DRIVER_TEST */
+{% with nest_indent=12 %}
+{% include "OS-template-transparent.jinja" -%}
+{% endwith -%}
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
 #if defined(MBEDTLS_PSA_BUILTIN_CIPHER)
@@ -1446,6 +1447,7 @@ static inline psa_status_t psa_driver_wrapper_cipher_encrypt(
             (void)output_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_cipher_decrypt(
@@ -1459,6 +1461,18 @@ static inline psa_status_t psa_driver_wrapper_cipher_decrypt(
     size_t output_size,
     size_t *output_length )
 {
+{% with entry_point = "cipher_decrypt" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer,
+key_buffer_size,
+alg,
+input,
+input_length,
+output,
+output_size,
+output_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -1469,20 +1483,9 @@ static inline psa_status_t psa_driver_wrapper_cipher_decrypt(
             /* Key is stored in the slot in export representation, so
              * cycle through all known transparent accelerators */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
-#if defined(PSA_CRYPTO_DRIVER_TEST)
-            status = mbedtls_test_transparent_cipher_decrypt( attributes,
-                                                              key_buffer,
-                                                              key_buffer_size,
-                                                              alg,
-                                                              input,
-                                                              input_length,
-                                                              output,
-                                                              output_size,
-                                                              output_length );
-            /* Declared with fallback == true */
-            if( status != PSA_ERROR_NOT_SUPPORTED )
-                return( status );
-#endif /* PSA_CRYPTO_DRIVER_TEST */
+{% with nest_indent=12 %}
+{% include "OS-template-transparent.jinja" -%}
+{% endwith -%}
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
 #if defined(MBEDTLS_PSA_BUILTIN_CIPHER)
@@ -1528,6 +1531,7 @@ static inline psa_status_t psa_driver_wrapper_cipher_decrypt(
             (void)output_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_cipher_encrypt_setup(
@@ -2174,6 +2178,15 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
     const uint8_t *plaintext, size_t plaintext_length,
     uint8_t *ciphertext, size_t ciphertext_size, size_t *ciphertext_length )
 {
+{% with entry_point = "aead_encrypt" -%}
+{% macro entry_point_param(driver) -%}
+attributes, key_buffer, key_buffer_size,
+alg,
+nonce, nonce_length,
+additional_data, additional_data_length,
+plaintext, plaintext_length,
+ciphertext, ciphertext_size, ciphertext_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -2185,18 +2198,9 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
              * cycle through all known transparent accelerators */
 
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
-#if defined(PSA_CRYPTO_DRIVER_TEST)
-            status = mbedtls_test_transparent_aead_encrypt(
-                         attributes, key_buffer, key_buffer_size,
-                         alg,
-                         nonce, nonce_length,
-                         additional_data, additional_data_length,
-                         plaintext, plaintext_length,
-                         ciphertext, ciphertext_size, ciphertext_length );
-            /* Declared with fallback == true */
-            if( status != PSA_ERROR_NOT_SUPPORTED )
-                return( status );
-#endif /* PSA_CRYPTO_DRIVER_TEST */
+{% with nest_indent=12 %}
+{% include "OS-template-transparent.jinja" -%}
+{% endwith -%}
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
             /* Fell through, meaning no accelerator supports this operation */
@@ -2225,6 +2229,7 @@ static inline psa_status_t psa_driver_wrapper_aead_encrypt(
             (void) ciphertext; (void) ciphertext_size; (void) ciphertext_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_aead_decrypt(
@@ -2236,6 +2241,15 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
     const uint8_t *ciphertext, size_t ciphertext_length,
     uint8_t *plaintext, size_t plaintext_size, size_t *plaintext_length )
 {
+{% with entry_point = "aead_decrypt" -%}
+{% macro entry_point_param(driver) -%}
+attributes, key_buffer, key_buffer_size,
+alg,
+nonce, nonce_length,
+additional_data, additional_data_length,
+ciphertext, ciphertext_length,
+plaintext, plaintext_size, plaintext_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -2247,18 +2261,9 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
              * cycle through all known transparent accelerators */
 
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
-#if defined(PSA_CRYPTO_DRIVER_TEST)
-            status = mbedtls_test_transparent_aead_decrypt(
-                        attributes, key_buffer, key_buffer_size,
-                        alg,
-                        nonce, nonce_length,
-                        additional_data, additional_data_length,
-                        ciphertext, ciphertext_length,
-                        plaintext, plaintext_size, plaintext_length );
-            /* Declared with fallback == true */
-            if( status != PSA_ERROR_NOT_SUPPORTED )
-                return( status );
-#endif /* PSA_CRYPTO_DRIVER_TEST */
+{% with nest_indent=12 %}
+{% include "OS-template-transparent.jinja" -%}
+{% endwith -%}
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
             /* Fell through, meaning no accelerator supports this operation */
@@ -2287,6 +2292,7 @@ static inline psa_status_t psa_driver_wrapper_aead_decrypt(
             (void) plaintext; (void) plaintext_size; (void) plaintext_length;
             return( PSA_ERROR_INVALID_ARGUMENT );
     }
+{% endwith %}
 }
 
 static inline psa_status_t psa_driver_wrapper_aead_encrypt_setup(

@@ -44,6 +44,12 @@
             "entry_points": ["hash_update", "hash_finish", "hash_abort"],
             "fallback": false,
             "multipart_handler": "case"
+        },
+        {
+            "_comment": "The Mbed TLS transparent driver supports cipher and aead operations",
+            "mbedtls/c_condition": "defined(PSA_CRYPTO_DRIVER_TEST)",
+            "entry_points": ["cipher_encrypt", "cipher_decrypt", "aead_encrypt", "aead_decrypt"],
+            "fallback": true
         }
     ]
 }
