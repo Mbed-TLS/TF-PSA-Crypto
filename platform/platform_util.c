@@ -291,10 +291,26 @@ int mbedtls_platform_get_entropy(psa_driver_get_entropy_flags_t flags,
 
 /*
  * Test for Linux getrandom() support.
- * Since there is no wrapper in the libc yet, use the generic syscall wrapper
- * available in GNU libc and compatible libc's (eg uClibc).
+ * Prefer the libc wrapper when sys/random.h is available. This includes
+ * libcs such as musl which provide getrandom() but not __GLIBC__.
  */
-#if ((defined(__linux__) && defined(__GLIBC__)) || defined(__midipix__))
+#if defined(__linux__) && defined(__has_include)
+#if __has_include(<sys/random.h>)
+#define MBEDTLS_PLATFORM_HAS_SYS_RANDOM_H
+#endif
+#endif
+
+#if defined(MBEDTLS_PLATFORM_HAS_SYS_RANDOM_H)
+#include <errno.h>
+#include <sys/random.h>
+#define HAVE_GETRANDOM
+
+static int getrandom_wrapper(void *buf, size_t buflen, unsigned int flags)
+{
+    return (int) getrandom(buf, buflen, flags);
+}
+#elif ((defined(__linux__) && defined(__GLIBC__)) || defined(__midipix__))
+/* Use the generic syscall wrapper when the libc has no getrandom() wrapper. */
 #include <unistd.h>
 #include <sys/syscall.h>
 #if defined(SYS_getrandom)
@@ -312,7 +328,9 @@ static int getrandom_wrapper(void *buf, size_t buflen, unsigned int flags)
     return (int) syscall(SYS_getrandom, buf, buflen, flags);
 }
 #endif /* SYS_getrandom */
-#endif /* __linux__ || __midipix__ */
+#endif /* getrandom() wrapper or generic syscall wrapper */
+
+#undef MBEDTLS_PLATFORM_HAS_SYS_RANDOM_H
 
 #if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <sys/param.h>
