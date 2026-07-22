@@ -112,12 +112,14 @@ MBEDTLS_STATIC_ASSERT(
     TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE <= PSA_MLDSA_SIGNATURE_MAX_SIZE,
     "PSA and mldsa-native disagree on the maximum ML-DSA signature size");
 
-static psa_status_t pqcp_to_psa_error(int ret)
+static psa_status_t pqcp_to_psa_error(int ret, psa_status_t default_error)
 {
     if (ret == 0) {
         return PSA_SUCCESS;
     } else if (ret == MLD_ERR_OUT_OF_MEMORY) {
         return PSA_ERROR_INSUFFICIENT_MEMORY;
+    } else if (ret == MLD_ERR_FAIL) {
+        return default_error;
     } else {
         /* MLD_ERR_RNG_FAIL is intentionally not mapped: we don't install
          * mldsa-native's RNG callback (mu is computed on our side for
@@ -172,7 +174,7 @@ cleanup:
     if (status != PSA_SUCCESS) {
         return status;
     } else {
-        return pqcp_to_psa_error(ret);
+        return pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
     }
 }
 
@@ -231,7 +233,7 @@ static psa_status_t sign_from_seed(
 
 cleanup:
     mbedtls_platform_zeroize(secret, sizeof(secret));
-    return pqcp_to_psa_error(ret);
+    return pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
 }
 
 psa_status_t tf_psa_crypto_mldsa_sign_message(
@@ -322,17 +324,11 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
                                                 NULL, 0,
                                                 key_buffer);
 
-    status = tf_psa_crypto_pqcp_alloc_done();
-    if (status != PSA_SUCCESS) {
-        return status;
-    } else if (ret == 0) {
-        return PSA_SUCCESS;
+    psa_status_t alloc_status = tf_psa_crypto_pqcp_alloc_done();
+    if (alloc_status != PSA_SUCCESS) {
+        return alloc_status;
     } else {
-        /* At the time of writing, invalid signature is the only possible
-         * error condition. But this will change when we update mldsa-native
-         * with support for heap allocation of intermediate values.
-         */
-        return PSA_ERROR_INVALID_SIGNATURE;
+        return pqcp_to_psa_error(ret, PSA_ERROR_INVALID_SIGNATURE);
     }
 }
 
@@ -453,7 +449,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_setup(
                                                           operation->key,
                                                           key_buffer);
     if (ret != 0) {
-        status = pqcp_to_psa_error(ret);
+        status = pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
         goto cleanup;
     }
 
@@ -572,7 +568,7 @@ psa_status_t tf_psa_crypto_mldsa_sign_finish(
     if (abort_status != PSA_SUCCESS) {
         return abort_status;
     }
-    return pqcp_to_psa_error(ret);
+    return pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
 }
 
 psa_status_t tf_psa_crypto_mldsa_verify_finish(
@@ -619,12 +615,7 @@ psa_status_t tf_psa_crypto_mldsa_verify_finish(
     if (abort_status != PSA_SUCCESS) {
         return abort_status;
     }
-
-    if (ret == MLD_ERR_FAIL) {
-        return PSA_ERROR_INVALID_SIGNATURE;
-    } else {
-        return pqcp_to_psa_error(ret);
-    }
+    return pqcp_to_psa_error(ret, PSA_ERROR_INVALID_SIGNATURE);
 }
 
 psa_status_t tf_psa_crypto_mldsa_abort(
