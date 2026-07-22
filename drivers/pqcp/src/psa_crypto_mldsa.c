@@ -178,6 +178,46 @@ cleanup:
     }
 }
 
+static psa_status_t export_public_from_expanded(
+    size_t bits,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    uint8_t *data, size_t data_size, size_t *data_length)
+{
+    if (bits != 87) {
+        /* Other parameter sets are not supported yet. */
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (key_buffer_size != SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    const uint8_t *sk = key_buffer + SEED_SIZE;
+
+    size_t public_key_length = MLDSA87_PUBLICKEYBYTES;
+    if (data_size < public_key_length) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    int ret = tf_psa_crypto_pqcp_mldsa87_pk_from_sk(data, sk);
+    status = pqcp_to_psa_error(ret, PSA_ERROR_INVALID_ARGUMENT);
+    if (status == PSA_SUCCESS) {
+        *data_length = public_key_length;
+    }
+
+    psa_status_t alloc_status = tf_psa_crypto_pqcp_alloc_done();
+    if (alloc_status != PSA_SUCCESS) {
+        return alloc_status;
+    } else {
+        return status;
+    }
+}
+
 psa_status_t tf_psa_crypto_mldsa_export_public_key(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
@@ -189,9 +229,15 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
-    return seed_to_public_key(psa_get_key_bits(attributes),
-                              key_buffer, key_buffer_size,
-                              data, data_size, data_length);
+    if (key_buffer_size == SEED_SIZE) {
+        return seed_to_public_key(psa_get_key_bits(attributes),
+                                  key_buffer, key_buffer_size,
+                                  data, data_size, data_length);
+    } else {
+        return export_public_from_expanded(psa_get_key_bits(attributes),
+                                           key_buffer, key_buffer_size,
+                                           data, data_size, data_length);
+    }
 }
 
 static int sign_from_expanded(
