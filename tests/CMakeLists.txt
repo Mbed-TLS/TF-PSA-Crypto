@@ -304,13 +304,6 @@ function(tf_psa_crypto_add_test_suite suite_name)
     # Request C11, which is needed for memory poisoning tests
     set_target_properties(test_suite_${data_name} PROPERTIES C_STANDARD 11)
 
-    if(${data_name} MATCHES "^pqcp_")
-        # Invasive test that accesses mldsa-native directly
-        target_include_directories(test_suite_${data_name}
-            PRIVATE ${PROJECT_SOURCE_DIR}/drivers/pqcp/mldsa-native/mldsa
-        )
-    endif()
-
     if(${data_name} MATCHES ${SKIP_TEST_SUITES_REGEX})
         message(STATUS "The test suite ${data_name} will not be executed.")
     else()
