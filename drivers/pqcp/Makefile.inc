@@ -1,6 +1,0 @@
-THIRDPARTY_INCLUDES += -I$(THIRDPARTY_DIR)/pqcp/include
-THIRDPARTY_PRIVATE_INCLUDES += -I$(THIRDPARTY_DIR)/pqcp/src
-THIRDPARTY_PRIVATE_INCLUDES += -I$(THIRDPARTY_DIR)/pqcp/mldsa-native/mldsa
-
-THIRDPARTY_CRYPTO_OBJECTS += $(patsubst %.c,%.o,$(wildcard $(THIRDPARTY_DIR)/pqcp/src/*.c))
-
