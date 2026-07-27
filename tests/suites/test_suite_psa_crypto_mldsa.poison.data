@@ -58,11 +58,15 @@ MLDSA-87 verify: poison on unlock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
 poison_verify_pure:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
-# The setup step only requires MLD_TOTAL_ALLOC_87_KEYPAIR bytes of buffer memory, the signature generation happens in finish()
+# With the private key in seed format, the setup step requires
+# MLD_TOTAL_ALLOC_87_KEYPAIR bytes of buffer memory to expand the key.
+# The signature itself happens in finish().
 MLDSA-87 sign setup: seed, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
 poison_sign_setup:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
 
+# With the private key in joined format, the setup step does not require
+# any buffer memory. The signature itself happens in finish().
 MLDSA-87 sign setup: joined, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
 poison_sign_setup:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
@@ -71,9 +75,9 @@ MLDSA-87 sign setup: seed, poison on lock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
 poison_sign_setup:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
 
-MLDSA-87 sign setup: joined, poison on lock, full buffer
+MLDSA-87 sign setup: joined, poison on lock, full buffer (success)
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_setup:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+poison_sign_setup:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
 MLDSA-87 sign setup: seed, poison on unlock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
