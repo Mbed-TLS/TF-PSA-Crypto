@@ -656,8 +656,7 @@ psa_status_t psa_copy_key_material_into_slot(psa_key_slot_t *slot,
     return PSA_SUCCESS;
 }
 
-#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
-    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
 /* Defined in the SPAKE2+ key management section below. */
 static psa_status_t psa_spake2p_import_key(
     const psa_key_attributes_t *attributes,
@@ -735,17 +734,15 @@ psa_status_t psa_import_key_into_slot(
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
 
-#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
-        defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
-        if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
+        if (PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(type)) {
             return psa_spake2p_import_key(attributes,
                                           data, data_length,
                                           key_buffer, key_buffer_size,
                                           key_buffer_length,
                                           bits);
         }
-#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) ||
-        * defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
     }
 
     return PSA_ERROR_NOT_SUPPORTED;
@@ -9672,8 +9669,7 @@ psa_status_t psa_pake_abort(
  * types is enabled, even in a configuration without any PAKE algorithm
  * (for example a build that only provisions or transports registration
  * records), so this section must not depend on PSA_WANT_ALG_SOME_PAKE. */
-#if (defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) || \
-    defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY))
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY)
 
 typedef struct {
     psa_ecc_family_t family;
@@ -9853,8 +9849,7 @@ exit:
     return PSA_SUCCESS;
 }
 
-#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT) ||
-        * defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
+#endif /* defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) */
 
 /* Memory copying test hooks. These are called before input copy, after input
  * copy, before output copy and after output copy, respectively.

@@ -146,6 +146,8 @@
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT    1
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE  1
 //#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_DERIVE    1 /* Not supported */
+
+//#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC 1 /* Not supported */
 /** \} name SECTION Cryptographic mechanism selection (PSA API) */
 
 /**
