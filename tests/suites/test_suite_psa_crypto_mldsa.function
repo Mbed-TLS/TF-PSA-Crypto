@@ -544,7 +544,7 @@ static void poison_cleanup(void)
 
 /* BEGIN_CASE */
 void export_public_key(int type_arg, int bits_arg,
-                       data_t *seed,
+                       data_t *private_key,
                        data_t *expected_public_key,
                        psa_status_t expected_status)
 {
@@ -561,7 +561,7 @@ void export_public_key(int type_arg, int bits_arg,
     TEST_CALLOC(public_key, public_key_size);
     size_t public_key_length = SIZE_MAX;
     TEST_EQUAL(tf_psa_crypto_mldsa_export_public_key(&attributes,
-                                                     seed->x, seed->len,
+                                                     private_key->x, private_key->len,
                                                      public_key,
                                                      public_key_size,
                                                      &public_key_length),
@@ -581,7 +581,7 @@ void export_public_key(int type_arg, int bits_arg,
     TEST_CALLOC(public_key, public_key_size);
     public_key_length = SIZE_MAX;
     TEST_EQUAL(tf_psa_crypto_mldsa_export_public_key(&attributes,
-                                                     seed->x, seed->len,
+                                                     private_key->x, private_key->len,
                                                      public_key,
                                                      public_key_size,
                                                      &public_key_length),
@@ -602,7 +602,7 @@ void export_public_key(int type_arg, int bits_arg,
         TEST_CALLOC(public_key, public_key_size);
         public_key_length = SIZE_MAX;
         TEST_EQUAL(tf_psa_crypto_mldsa_export_public_key(&attributes,
-                                                         seed->x, seed->len,
+                                                         private_key->x, private_key->len,
                                                          public_key,
                                                          public_key_size,
                                                          &public_key_length),
@@ -636,7 +636,7 @@ exit:
 
 /* BEGIN_CASE */
 void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
-                             data_t *seed,
+                             data_t *private_key,
                              data_t *message,
                              data_t *expected_signature,
                              psa_status_t expected_status)
@@ -654,7 +654,7 @@ void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
     TEST_CALLOC(signature, signature_size);
     size_t signature_length = SIZE_MAX;
     TEST_EQUAL(tf_psa_crypto_mldsa_sign_message(&attributes,
-                                                seed->x, seed->len,
+                                                private_key->x, private_key->len,
                                                 alg_arg,
                                                 message->x, message->len,
                                                 signature, signature_size,
@@ -675,7 +675,7 @@ void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
     TEST_CALLOC(signature, signature_size);
     signature_length = SIZE_MAX;
     TEST_EQUAL(tf_psa_crypto_mldsa_sign_message(&attributes,
-                                                seed->x, seed->len,
+                                                private_key->x, private_key->len,
                                                 alg_arg,
                                                 message->x, message->len,
                                                 signature, signature_size,
@@ -696,7 +696,7 @@ void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
         TEST_CALLOC(signature, signature_size);
         signature_length = SIZE_MAX;
         TEST_EQUAL(tf_psa_crypto_mldsa_sign_message(&attributes,
-                                                    seed->x, seed->len,
+                                                    private_key->x, private_key->len,
                                                     alg_arg,
                                                     message->x, message->len,
                                                     signature, signature_size,
@@ -827,7 +827,7 @@ exit:
 
 /* BEGIN_CASE */
 void sign_setup(int type_arg, int bits_arg, int alg_arg,
-                data_t *seed,
+                data_t *private_key,
                 psa_status_t expected_status)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -841,7 +841,7 @@ void sign_setup(int type_arg, int bits_arg, int alg_arg,
 
     TEST_EQUAL(tf_psa_crypto_mldsa_sign_setup(&operation,
                                               &attributes,
-                                              seed->x, seed->len,
+                                              private_key->x, private_key->len,
                                               alg_arg),
                expected_status);
 
@@ -896,7 +896,7 @@ exit:
 
 /* BEGIN_CASE */
 void sign_deterministic_multipart(
-    int type, int bits, int alg, data_t *seed,
+    int type, int bits, int alg, data_t *private_key,
     int n_chunks, data_t *chunk1, data_t *chunk2, data_t *chunk3,
     data_t *expected_signature, int expected_finish_status)
 {
@@ -915,7 +915,7 @@ void sign_deterministic_multipart(
 
     PSA_ASSERT(tf_psa_crypto_mldsa_sign_setup(&operation,
                                               &attributes,
-                                              seed->x, seed->len,
+                                              private_key->x, private_key->len,
                                               alg));
     if (n_chunks >= 1) {
         PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
@@ -930,7 +930,7 @@ void sign_deterministic_multipart(
                                               chunk3->x, chunk3->len));
     }
     TEST_EQUAL(tf_psa_crypto_mldsa_sign_finish(&operation,
-                                               seed->x, seed->len,
+                                               private_key->x, private_key->len,
                                                signature, signature_size,
                                                &signature_length),
                expected_finish_status);
