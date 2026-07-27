@@ -838,7 +838,7 @@ static data_t private_key_data(int pkf)
             break;
     }
 
-exit: ;
+exit:;
     data_t data = { .x = (uint8_t *) x, .len = len };
     return data;
 }
@@ -960,7 +960,9 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
-void poison_export_public_key(int pkf, int poison_mode, int64_t poison_bytes, psa_status_t expected_status)
+void poison_export_public_key(int pkf,
+                              int poison_mode, int64_t poison_bytes,
+                              psa_status_t expected_status)
 {
     data_t private_key = private_key_data(pkf);
     data_t public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) };
@@ -1056,8 +1058,7 @@ exit:
 
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 void poison_sign_deterministic_pure(int pkf,
-                                    int poison_mode,
-                                    int64_t poison_bytes,
+                                    int poison_mode, int64_t poison_bytes,
                                     psa_status_t expected_status)
 {
     data_t private_key = private_key_data(pkf);
@@ -1143,7 +1144,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
-void poison_verify_pure(int poison_mode, int64_t poison_bytes, psa_status_t expected_status)
+void poison_verify_pure(int poison_mode, int64_t poison_bytes,
+                        psa_status_t expected_status)
 {
     data_t message = { (uint8_t *) message_1, sizeof(message_1) };
     data_t public_key = { (uint8_t *) public_key_1, sizeof(public_key_1) };
@@ -1334,8 +1336,7 @@ exit:
 
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 void poison_sign_deterministic_multipart_finish(int pkf,
-                                                int poison_mode,
-                                                int64_t poison_bytes,
+                                                int poison_mode, int64_t poison_bytes,
                                                 psa_status_t expected_status)
 {
     data_t private_key = private_key_data(pkf);
@@ -1449,8 +1450,7 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
-void poison_verify_multipart_finish(int poison_mode,
-                                    int64_t poison_bytes,
+void poison_verify_multipart_finish(int poison_mode, int64_t poison_bytes,
                                     psa_status_t expected_status)
 {
     data_t message = { (uint8_t *) message_1, sizeof(message_1) };
