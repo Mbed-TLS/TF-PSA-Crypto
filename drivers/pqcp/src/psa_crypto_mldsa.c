@@ -319,9 +319,10 @@ psa_status_t tf_psa_crypto_mldsa_sign_message(
                                 message, message_length,
                                 signature, signature_length);
     } else if (key_buffer_size == SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
-        status = sign_from_expanded(key_buffer + SEED_SIZE,
-                                    message, message_length,
-                                    signature, signature_length);
+        status = pqcp_to_psa_error(sign_from_expanded(key_buffer + SEED_SIZE,
+                                                      message, message_length,
+                                                      signature, signature_length),
+                                   PSA_ERROR_HARDWARE_FAILURE);
     } else {
         status = PSA_ERROR_INVALID_ARGUMENT;
     }
