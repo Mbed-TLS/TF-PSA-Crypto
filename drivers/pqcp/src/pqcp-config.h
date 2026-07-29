@@ -63,6 +63,13 @@
 /* Disable SUPERCOP interface. We don't care about that. */
 #define MLD_CONFIG_NO_SUPERCOP
 
+#include "pqcp_buffer_alloc.h"
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+#define MLD_CONFIG_CUSTOM_ALLOC_FREE
+#define MLD_CUSTOM_ALLOC TF_PSA_CRYPTO_PQCP_CUSTOM_ALLOC
+#define MLD_CUSTOM_FREE TF_PSA_CRYPTO_PQCP_CUSTOM_FREE
+#endif /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+
 #endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 #endif  /* tf-psa-crypto/private/pqcp-config.h */

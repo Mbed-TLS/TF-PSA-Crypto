@@ -8,6 +8,9 @@ At any point in time, we have a number of maintained branches, currently consist
 - The [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development) branch:
   This branch was used to prepare version 1.0.0 of TF-PSA-Crypto and continues to host
   development for future versions.
+- [`tf-psa-crypto-1.1`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/tf-psa-crypto-1.1)
+ maintained until March 2029, see
+  <https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/tag/v1.1.1>.
 
 We use [Semantic Versioning](https://semver.org/). In particular, we maintain
 API compatibility in the `main` branch across minor version changes (e.g.
@@ -19,11 +22,12 @@ We will make regular LTS releases on an 18-month cycle, each of which will have
 a 3 year support lifetime. The release date of the first 1.x LTS is yet to be
 determined.
 
-Mbed TLS currently maintains one LTS branch: [`mbedtls-3.6`](https://github.com/Mbed-TLS/mbedtls/tree/mbedtls-3.6).
+Mbed TLS currently maintains the LTS branch [`mbedtls-3.6`](https://github.com/Mbed-TLS/mbedtls/tree/mbedtls-3.6).
 This branch contains the implementation of the PSA Cryptography API prior to the
 Mbed TLS repository split. Any relevant bug fixes made in the TF-PSA-Crypto
 development branch should be backported to this branch to ensure proper
-maintenance.
+maintenance. This does not apply to Mbed TLS LTS branches created after
+the repository split, such as mbedtls-4.1.
 
 ## Backwards Compatibility for application code
 
@@ -93,3 +97,13 @@ increase code size for a security fix.)
 
 For contributors, see the [Backwards Compatibility section of
 CONTRIBUTING](CONTRIBUTING.md#backwards-compatibility).
+
+## Current Branches
+
+The following branches are currently maintained:
+
+- [main](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/main)
+- [`development`](https://github.com/Mbed-TLS/TF-PSA-Crypto/)
+- [`tf-psa-crypto-1.1`](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/tf-psa-crypto-1.1)
+ maintained until March 2029, see
+  <https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/tag/v1.1.1>.

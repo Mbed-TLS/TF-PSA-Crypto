@@ -1,3 +1,0 @@
-Bugfix
-   * Fix CMake failure on Windows because of a native directory separator.
-     Fixes Mbed-TLS/mbedtls#10502.

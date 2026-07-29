@@ -14,6 +14,29 @@
 
 #include <wrap_mldsa_native.h>
 
+#include <test/drivers/test_driver.h>
+
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+static int alloc_mutex_held;
+#define PQCP_INIT() \
+    do { \
+        TEST_EQUAL(tf_psa_crypto_pqcp_alloc_start(), PSA_SUCCESS); \
+        alloc_mutex_held = 1; \
+    } while (0)
+#define PQCP_DONE() \
+    do { \
+        if (alloc_mutex_held) { \
+            mbedtls_test_equal("tf_psa_crypto_pqcp_alloc_done() == PSA_SUCCESS", __LINE__, __FILE__, \
+                               (unsigned long long) (tf_psa_crypto_pqcp_alloc_done()), \
+                               (unsigned long long) (PSA_SUCCESS)); \
+            alloc_mutex_held = 0; \
+        } \
+    } while (0)
+#else
+#define PQCP_INIT()
+#define PQCP_DONE()
+#endif
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -43,6 +66,9 @@ void smoke_87(data_t *seed)
     TEST_CALLOC(public_key, public_key_length);
     TEST_CALLOC(signature, signature_size);
 
+    /* Grab the allocator mutex */
+    PQCP_INIT();
+
     /* Calculate the expanded key pair from the seed */
     TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_keypair_internal(
                    public_key, secret_key,
@@ -62,6 +88,7 @@ void smoke_87(data_t *seed)
                    NULL, 0, public_key), 0);
 
 exit:
+    PQCP_DONE();
     mbedtls_free(secret_key);
     mbedtls_free(public_key);
     mbedtls_free(signature);
@@ -84,6 +111,9 @@ void key_pair_from_seed_87(data_t *seed,
     TEST_CALLOC(secret_key, secret_key_length);
     TEST_CALLOC(public_key, public_key_length);
 
+    /* Grab the allocator mutex */
+    PQCP_INIT();
+
     /* Calculate the expanded key pair from the seed */
     TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_keypair_internal(public_key,
                                                            secret_key,
@@ -95,6 +125,7 @@ void key_pair_from_seed_87(data_t *seed,
 
 
 exit:
+    PQCP_DONE();
     mbedtls_free(secret_key);
     mbedtls_free(public_key);
 }
@@ -117,6 +148,9 @@ void sign_deterministic_pure_87(data_t *private_key,
     TEST_EQUAL(private_key->len, MLDSA_SECRETKEYBYTES(87));
     TEST_EQUAL(signature_size, MLDSA_BYTES(87));
 
+    /* Grab the allocator mutex */
+    PQCP_INIT();
+
     /* Calculate and check the deterministic signature */
     size_t signature_length = SIZE_MAX;
     TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_signature_internal(signature,
@@ -131,6 +165,7 @@ void sign_deterministic_pure_87(data_t *private_key,
                         expected_signature->x, expected_signature->len);
 
 exit:
+    PQCP_DONE();
     mbedtls_free(signature);
 
 }
@@ -145,6 +180,9 @@ void verify_pure_87(data_t *public_key, data_t *message, data_t *signature)
     /* Sanity checks on the test data that we pass to the function under test */
     TEST_EQUAL(public_key->len, MLDSA_PUBLICKEYBYTES(87));
     TEST_EQUAL(signature->len, MLDSA_BYTES(87));
+
+    /* Grab the allocator mutex */
+    PQCP_INIT();
 
     /* Verify the signature */
     TEST_CALLOC(candidate, candidate_size);
@@ -186,6 +224,81 @@ void verify_pure_87(data_t *public_key, data_t *message, data_t *signature)
     candidate = NULL;
 
 exit:
+    PQCP_DONE();
     mbedtls_free(candidate);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_CRYPTO_DRIVER_TEST */
+void shake_driver_calls(int expected)
+{
+    uint8_t seed[32];
+    memset(seed, 's', sizeof(seed));
+    uint8_t *secret_key = NULL;
+    const size_t secret_key_length = MLDSA_SECRETKEYBYTES(87);
+    uint8_t *public_key = NULL;
+    const size_t public_key_length = MLDSA_PUBLICKEYBYTES(87);
+    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
+    const size_t prefix_length = sizeof(prefix);
+    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
+    uint8_t *signature = NULL;
+    const size_t signature_size = MLDSA_BYTES(87);
+    size_t signature_length = SIZE_MAX;
+    uint8_t message[14] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "This is a test";
+    const size_t message_length = sizeof(message);
+
+    PSA_INIT();
+
+    TEST_CALLOC(secret_key, secret_key_length);
+    TEST_CALLOC(public_key, public_key_length);
+    TEST_CALLOC(signature, signature_size);
+
+    mbedtls_test_driver_xof_hooks = mbedtls_test_driver_xof_hooks_init();
+
+    /* Grab the allocator mutex */
+    PQCP_INIT();
+
+    /* Calculate the expanded key pair from the seed */
+    mbedtls_test_driver_xof_hooks.hits = 0;
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_keypair_internal(
+                   public_key, secret_key, seed), 0);
+    if (expected) {
+        TEST_ASSERT(mbedtls_test_driver_xof_hooks.hits != 0);
+    } else {
+        TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits, 0);
+    }
+
+    /* Calculate a deterministic signature */
+    mbedtls_test_driver_xof_hooks.hits = 0;
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_signature_internal(
+                   signature, &signature_length,
+                   message, message_length,
+                   prefix, prefix_length, rnd, secret_key, 0), 0);
+    TEST_EQUAL(signature_length, MLDSA_BYTES(87));
+    if (expected) {
+        TEST_ASSERT(mbedtls_test_driver_xof_hooks.hits != 0);
+    } else {
+        TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits, 0);
+    }
+
+    /* Verify the signature */
+    mbedtls_test_driver_xof_hooks.hits = 0;
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(
+                   signature, signature_length,
+                   message, message_length,
+                   NULL, 0, public_key), 0);
+    if (expected) {
+        TEST_ASSERT(mbedtls_test_driver_xof_hooks.hits != 0);
+    } else {
+        TEST_EQUAL(mbedtls_test_driver_xof_hooks.hits, 0);
+    }
+
+exit:
+    PQCP_DONE();
+    PSA_DONE();
+    mbedtls_test_driver_xof_hooks = mbedtls_test_driver_xof_hooks_init();
+    mbedtls_free(secret_key);
+    mbedtls_free(public_key);
+    mbedtls_free(signature);
 }
 /* END_CASE */

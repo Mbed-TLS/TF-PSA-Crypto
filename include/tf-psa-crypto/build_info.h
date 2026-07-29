@@ -25,7 +25,7 @@
  * Major, Minor, Patchlevel
  */
 #define TF_PSA_CRYPTO_VERSION_MAJOR  1
-#define TF_PSA_CRYPTO_VERSION_MINOR  0
+#define TF_PSA_CRYPTO_VERSION_MINOR  2
 #define TF_PSA_CRYPTO_VERSION_PATCH  0
 
 /**
@@ -33,9 +33,9 @@
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define TF_PSA_CRYPTO_VERSION_NUMBER        0x01000000
-#define TF_PSA_CRYPTO_VERSION_STRING        "1.0.0"
-#define TF_PSA_CRYPTO_VERSION_STRING_FULL   "TF-PSA-Crypto 1.0.0"
+#define TF_PSA_CRYPTO_VERSION_NUMBER         0x01020000
+#define TF_PSA_CRYPTO_VERSION_STRING         "1.2.0"
+#define TF_PSA_CRYPTO_VERSION_STRING_FULL    "TF-PSA-Crypto 1.2.0"
 
 /* Macros for build-time platform detection */
 

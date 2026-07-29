@@ -1,3 +1,162 @@
+= TF-PSA-Crypto 1.2.0 branch released 2026-07-07
+
+Security
+   * Fix a side channel in RSA PKCS#1 v1.5 decryption: error handling in the
+     library would reveal through timing the difference between success,
+     invalid padding, or output too large for buffer, giving rise to a
+     Bleichenbacher attack. Note that while the library now handles sensitive
+     errors in constant-time, RSA PKCS#1 v1.5 decryption remains inherently
+     dangerous, should be avoided when possible, and otherwise requires great
+     care in application code. Found by zhengg. CVE-2026-50587
+   * Added advice about compiler options in SECURITY.md.
+   * Reject ChaCha20 operations that would make the 32-bit block counter wrap
+     around, which could otherwise reuse keystream and compromise
+     confidentiality. Reported by jiliang. CVE-2026-50584
+   * Fix a side channel in ECC computations that allows a powerful local
+     attacker (typically, untrusted OS attacking a secure enclave) to fully
+     recover long-term secret keys. Found and reported by Alejandro Cabrera
+     Aldaya from Tampere University. CVE-2026-54435
+   * In configurations with MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED (non-default),
+     when doing ECDH key agreement with x25519, it was possible for the peer to
+     force the shared secret to all-zero by sending a low-order point. This is
+     only a problem for protocols that expect contributory behaviour, that is,
+     where neither party should be able to force the shared secret.
+     CVE-2026-54434
+   * Fix timing side channel in RSA key generation, prime generation and
+     primality testing, on platforms where division is not constant-time. At
+     this point this side channel is not known to be exploitable. Reported by
+     Bhargava Shastry, Ethereum Foundation.
+   * Fix a 1-byte buffer overread when parsing a malformed ECC public key
+     in the PK module. CVE-2026-50583
+
+Bugfix
+   * Fix a problem in library/alignment.h where the Zephyr Project use
+     a pre-defined macro '__packed' which collides with the IAR keyword
+     '__packed', causing the typedefs of unaligned types to remain aligned.
+     Fixes mbedtls issue #10334
+   * Doxygen documentation `apidoc` is now built into CMake's binary folder,
+     not in-tree. Fixes #381.
+   * Fixed a bug which prevented the inclusion of standard C library header
+     files from the user provided configuration file. Fixes #784.
+
+= TF-PSA-Crypto 1.1.0 branch released 2026-03-31
+
+Removals
+   * The undocumented ability to load persistent keys outside the user key ID
+     range has been removed. (This does not affect
+     MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS.)
+   * The headers no longer define 'inline' as a macro. This was done on Arm
+     Compiler 5 and MSVC. The compiler versions that needed this definition are
+     no longer supported since TF-PSA-Crypto 1.0.
+
+Features
+   * The automatic computation of MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE has
+     been improved to take into account the following key types:
+     asymmetric keys, ciphers, AEADs, CMAC and HMAC.
+   * mbedtls_pk_write_pubkey_psa() is introduced to allow exporting the public
+     key from a PK context in a format that can easily be imported into PSA.
+   * Implement SHAKE (PSA_ALG_SHAKE128, PSA_ALG_SHAKE256).
+   * The device for reading entropy on platforms without a dedicated system
+     call can now be configured with MBEDTLS_PLATFORM_DEV_RANDOM or
+     mbedtls_platform_dev_random.
+   * Applications can use the new functions psa_random_reseed() to
+     request an immediate reseed of the PSA random generator, or
+     psa_random_deplete() to force a reseed on the next random generator call.
+   * Applications can call psa_random_set_prediction_resistance() to toggle
+     prediction resistance in the PSA random generator.
+
+Security
+   * The default device for reading entropy on platforms without a dedicated
+     system call is now /dev/random instead of /dev/urandom. This is safer
+     on Linux in case the application runs early after the kernel boots,
+     but may block needlessly on Linux <= 5.6. Reported by supers1ngular
+     (BayLibre).
+   * Fix missing validation of the peer's key in key agreement operations using
+     PSA_ALG_FFDH: low-order elements were not rejected as they should be. This
+     is a problem for protocols using FFDH that expect contributory behaviour,
+     that is, where neither party should be able to force the shared secret
+     into a small set. Reported independently by Eva Crystal (0xiviel) and
++    another reporter.
+   * Add tag length validation in mbedtls_ccm_finish() to prevent
+     out-of-bounds reads and mitigate potential application buffer
+     overflows where applications relied on the library to enforce
+     tag length constraints.
+     Reported by Eva Crystal (0xiviel).
+   * Fix a buffer overflow in psa_export_public_key() for FFDH keys when the
+     output buffer is too small. Found by Haruto Kimura (Stella).
+   * If an application called psa_crypto_init() then fork() and continued to
+     use cryptography APIs (possibly indirectly, e.g. for TLS), the random
+     generator states were duplicated. Fix this by forcing a RNG reseed in
+     the child process. CVE-2026-25835
+   * Applications running in environments where the application state is
+     cloned (for example due to resuming a frozen system state multiple
+     times, or due to cloning a virtual machine image) should arrange to
+     reseed the random generator using one of the new functions
+     psa_random_reseed() or psa_random_deplete(). CVE-2026-25835
+
+Bugfix
+   * Appease GCC 14.3's array bounds checker by inserting checks in mbedtls_xor
+     that bail before the byte-at-a-time loop when the array size is a constant
+     (using MBEDTLS_HAS_BUILTIN) and an exact multiple of the larger loop size.
+   * CMake now installs headers to `CMAKE_INSTALL_INCLUDEDIR` instead of the
+     hard-coded `include` directory.
+   * Fix CMake package version that was inconsistent with the product version.
+     Fixes #553.
+   * Fix CMake failure on Windows because of a native directory separator.
+     Fixes Mbed-TLS/mbedtls#10502.
+   * Partially fix a performance regression in RSA operations introduced by a
+     security fix in 1.0, by improving the performance of RSA private key
+     operations when MBEDTLS_RSA_NO_CRT is disabled, which is the default.
+   * Fix compilation errors in `aesce.c` in some Visual Studio builds.
+     Fixes #548.
+   * Interruptible operations (ECDH key agreement, ECC key generation) were not
+     actually interruptible (always completed in one go) in builds with ECDSA
+     disabled.
+   * Built-in SHA3 was included in the build even when SHA3 had a PSA
+     accelerator. Fix this. Fixes #542.
+   * Fix a bug that caused GCM tag calculations to fail, so that data was
+     correctly encrypted but could not be authenticated. The bug was only
+     observed with GCC 10.0 to 14.2 inclusive, when compiling with -O3, and
+     running without AESNI or AESCE.
+     Fixes #665.
+   * Fix a build failure with dietlibc.
+   * Some functions in PK were using large buffers (around 2KB in the default
+     configuration) on the stack, which was a problem in environments with a
+     small stack. Those buffers are now allocated on the heap, except in
+     configurations where ECC is the only supported key type in PK, making PK
+     still independent of the heap in such configurations (if the ECC driver
+     itself is not using the heap). Fixes #476.
+
+Changes
+   * ChaCha20 size and performance: add a Neon implementation of ChaCha20 for
+     Thumb2 and 32 and 64-bit Arm, for Armv7 onwards. At default settings,
+     this improves performance by around 2x to 2.7x on Aarch64.
+   * Add a new function, mbedtls_pk_get_key_type(), which returns the PSA
+     key type corresponding to the type of the key represented by the
+     given PK object.
+   * Running the unit tests now requires a heap (possibly from
+     MBEDTLS_MEMORY_BUFFER_ALLOC_C). They now use less stack (almost
+     5000 bytes less).
+   * Static assertions in the library (`MBEDTLS_STATIC_ASSERT`) are now
+     always enabled, using indirect methods in pre-C11 compilers. This change
+     also fixes warnings in pedantic mode with GCC or Clang on some platforms.
+   * Tweak the detection of Unix-like platforms, which makes more system
+     interfaces (timing, threading) available on Haiku, QNX and Midipix.
+   * On MinGW, always use a standard-compliant printf function family.
+   * Non-driver files have been moved out of `drivers/builtin/src` into three
+     new directories at the root of the repository:
+     - `extras`: modules implemented on top of the PSA Cryptography API, or
+       providing functionality beyond it (for example, the LMS stateful hash
+       implementation currently).
+     - `platform`: modules implementing the platform abstraction layer.
+     - `utilities`: utility modules used by the built-in drivers, the PSA
+       Cryptography API implementation, modules in `extras`, and potentially
+       by security protocols such as TLS.
+   * A new directory `dispatch` has been added at the root of the repository
+     to eventually host all code that dispatches cryptographic operations to
+     drivers, such as `psa_crypto_driver_wrappers_no_static.c`. For the time
+     being, it only contains `psa_crypto_driver_wrappers_no_static.h`.
+
 = TF-PSA-Crypto 1.0.0 branch released 2025-10-15
 
 API changes

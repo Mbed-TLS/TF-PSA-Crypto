@@ -11,6 +11,15 @@
 #include "psa/crypto.h"
 #include "psa_crypto_invasive.h"
 
+/* While we have an ML-DSA driver but no API support yet */
+#include "psa_crypto_mldsa.h"
+#if !defined(PSA_ALG_HASH_ML_DSA)
+/* While we the library doesn't support anything about HashML-DSA yet */
+#define PSA_ALG_IS_HASH_ML_DSA(alg) 0
+#define PSA_ALG_IS_DETERMINISTIC_HASH_ML_DSA(alg) 0
+#define PSA_ALG_IS_HEDGED_HASH_ML_DSA(alg) 0
+#endif
+
 /* Flags for algorithm classification macros. There is a flag for every
  * algorithm classification macro PSA_ALG_IS_xxx except for the
  * category test macros, which are hard-coded in each
@@ -24,10 +33,10 @@
 #define ALG_IS_RSA_PSS                  (1u << 5)
 #define ALG_IS_RSA_PSS_ANY_SALT         (1u << 6)
 #define ALG_IS_RSA_PSS_STANDARD_SALT    (1u << 7)
-#define ALG_IS_DSA                      (1u << 8)
-#define ALG_DSA_IS_DETERMINISTIC        (1u << 9)
-#define ALG_IS_DETERMINISTIC_DSA        (1u << 10)
-#define ALG_IS_RANDOMIZED_DSA           (1u << 11)
+#define ALG_IS_ML_DSA                   (1u << 8)
+#define ALG_IS_HASH_ML_DSA              (1u << 9)
+#define ALG_IS_DETERMINISTIC_HASH_ML_DSA (1u << 10)
+#define ALG_IS_HEDGED_HASH_ML_DSA       (1u << 11)
 #define ALG_IS_ECDSA                    (1u << 12)
 #define ALG_ECDSA_IS_DETERMINISTIC      (1u << 13)
 #define ALG_IS_DETERMINISTIC_ECDSA      (1u << 14)
@@ -57,7 +66,7 @@
 #define KEY_TYPE_IS_PUBLIC_KEY          (1u << 2)
 #define KEY_TYPE_IS_KEY_PAIR            (1u << 3)
 #define KEY_TYPE_IS_RSA                 (1u << 4)
-#define KEY_TYPE_IS_DSA                 (1u << 5)
+#define KEY_TYPE_IS_ML_DSA              (1u << 5)
 #define KEY_TYPE_IS_ECC                 (1u << 6)
 #define KEY_TYPE_IS_DH                  (1u << 7)
 #define KEY_TYPE_FLAG_MASK_PLUS_ONE     (1u << 8)   /* must be last! */
@@ -127,11 +136,10 @@ static void algorithm_classification(psa_algorithm_t alg, unsigned flags)
     TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PSS, alg, flags);
     TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PSS_ANY_SALT, alg, flags);
     TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PSS_STANDARD_SALT, alg, flags);
-    TEST_CLASSIFICATION_MACRO(1, ALG_IS_DSA, alg, flags);
-    TEST_CLASSIFICATION_MACRO(PSA_ALG_IS_DSA(alg),
-                              ALG_DSA_IS_DETERMINISTIC, alg, flags);
-    TEST_CLASSIFICATION_MACRO(1, ALG_IS_DETERMINISTIC_DSA, alg, flags);
-    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RANDOMIZED_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_ML_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HASH_ML_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_DETERMINISTIC_HASH_ML_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HEDGED_HASH_ML_DSA, alg, flags);
     TEST_CLASSIFICATION_MACRO(1, ALG_IS_ECDSA, alg, flags);
     TEST_CLASSIFICATION_MACRO(PSA_ALG_IS_ECDSA(alg),
                               ALG_ECDSA_IS_DETERMINISTIC, alg, flags);
@@ -165,7 +173,7 @@ static void key_type_classification(psa_key_type_t type, unsigned flags)
     TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_PUBLIC_KEY, type, flags);
     TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_KEY_PAIR, type, flags);
     TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_RSA, type, flags);
-    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_DSA, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_ML_DSA, type, flags);
     TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_ECC, type, flags);
     TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_DH, type, flags);
     TEST_EQUAL(classification_flags_tested, KEY_TYPE_FLAG_MASK_PLUS_ONE - 1);
@@ -257,8 +265,10 @@ void hash_algorithm(int alg_arg, int length_arg)
     psa_algorithm_t hmac_alg = PSA_ALG_HMAC(alg);
     psa_algorithm_t rsa_pkcs1v15_sign_alg = PSA_ALG_RSA_PKCS1V15_SIGN(alg);
     psa_algorithm_t rsa_pss_alg = PSA_ALG_RSA_PSS(alg);
-    psa_algorithm_t dsa_alg = PSA_ALG_DSA(alg);
-    psa_algorithm_t deterministic_dsa_alg = PSA_ALG_DETERMINISTIC_DSA(alg);
+#if defined(PSA_ALG_HASH_ML_DSA)
+    psa_algorithm_t hash_ml_dsa_alg = PSA_ALG_HASH_ML_DSA(alg);
+    psa_algorithm_t deterministic_hash_ml_dsa_alg = PSA_ALG_DETERMINISTIC_HASH_ML_DSA(alg);
+#endif
     psa_algorithm_t ecdsa_alg = PSA_ALG_ECDSA(alg);
     psa_algorithm_t deterministic_ecdsa_alg = PSA_ALG_DETERMINISTIC_ECDSA(alg);
     psa_algorithm_t rsa_oaep_alg = PSA_ALG_RSA_OAEP(alg);
@@ -281,8 +291,10 @@ void hash_algorithm(int alg_arg, int length_arg)
     TEST_EQUAL(PSA_ALG_HMAC_GET_HASH(hmac_alg), alg);
     TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(rsa_pkcs1v15_sign_alg), alg);
     TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(rsa_pss_alg), alg);
-    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(dsa_alg), alg);
-    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(deterministic_dsa_alg), alg);
+#if defined(PSA_ALG_HASH_ML_DSA)
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(hash_ml_dsa_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(deterministic_hash_ml_dsa_alg), alg);
+#endif
     TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(ecdsa_alg), alg);
     TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(deterministic_ecdsa_alg), alg);
     TEST_EQUAL(PSA_ALG_RSA_OAEP_GET_HASH(rsa_oaep_alg), alg);
@@ -312,6 +324,7 @@ void mac_algorithm(int alg_arg, int classification_flags,
 
     /* Truncated versions */
     for (n = 1; n <= length; n++) {
+        mbedtls_test_set_step(n);
         psa_algorithm_t truncated_alg = PSA_ALG_TRUNCATED_MAC(alg, n);
         mac_algorithm_core(truncated_alg, classification_flags,
                            key_type, key_bits, n);
@@ -343,6 +356,7 @@ void mac_algorithm(int alg_arg, int classification_flags,
 
     /* At-leat-this-length versions */
     for (n = 1; n <= length; n++) {
+        mbedtls_test_set_step(1000 + n);
         psa_algorithm_t policy_alg = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, n);
         mac_algorithm_core(policy_alg, classification_flags | ALG_IS_WILDCARD,
                            key_type, key_bits, n);
@@ -437,6 +451,7 @@ void aead_algorithm(int alg_arg, int classification_flags,
 
     /* Truncated versions */
     for (n = 1; n <= tag_length; n++) {
+        mbedtls_test_set_step(n);
         psa_algorithm_t truncated_alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, n);
         aead_algorithm_core(truncated_alg, classification_flags,
                             key_type, key_bits, n);
@@ -470,6 +485,7 @@ void aead_algorithm(int alg_arg, int classification_flags,
 
     /* At-leat-this-length versions */
     for (n = 1; n <= tag_length; n++) {
+        mbedtls_test_set_step(1000 + n);
         psa_algorithm_t policy_alg = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, n);
         aead_algorithm_core(policy_alg, classification_flags | ALG_IS_WILDCARD,
                             key_type, key_bits, n);
@@ -660,6 +676,7 @@ void key_type(int type_arg, int classification_flags)
     key_type_classification(type, classification_flags);
 
     /* For asymmetric types, check the corresponding pair/public type */
+    mbedtls_test_set_step(1);
     if (classification_flags & KEY_TYPE_IS_PUBLIC_KEY) {
         psa_key_type_t pair_type = PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(type);
         TEST_EQUAL(PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(pair_type), type);
@@ -669,6 +686,8 @@ void key_type(int type_arg, int classification_flags)
                                 | KEY_TYPE_IS_KEY_PAIR);
         TEST_EQUAL(PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type), type);
     }
+
+    mbedtls_test_set_step(2);
     if (classification_flags & KEY_TYPE_IS_KEY_PAIR) {
         psa_key_type_t public_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type);
         TEST_EQUAL(PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(public_type), type);

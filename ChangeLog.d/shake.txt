@@ -1,2 +1,0 @@
-Features
-   * Implement SHAKE (PSA_ALG_SHAKE128, PSA_ALG_SHAKE256).
