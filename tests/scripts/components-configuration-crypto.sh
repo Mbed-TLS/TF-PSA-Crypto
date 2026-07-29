@@ -652,54 +652,6 @@ component_test_psa_external_rng_use_psa_crypto () {
     ctest
 }
 
-component_full_no_pkparse_pkwrite () {
-    msg "build: full without pkparse and pkwrite"
-
-    scripts/config.py full
-    scripts/config.py unset MBEDTLS_PK_PARSE_C
-    scripts/config.py unset MBEDTLS_PK_WRITE_C
-
-    CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
-    cmake --build .
-
-    # Ensure that PK_[PARSE|WRITE]_C were not re-enabled accidentally (additive config).
-    if [ -f ${TF_PSA_CRYPTO_ROOT_DIR}/extras/pkparse.c ]; then
-        not grep mbedtls_pk_parse_key ${CMAKE_EXTRAS_BUILD_DIR}/pkparse.c.o
-        not grep mbedtls_pk_write_key_der ${CMAKE_EXTRAS_BUILD_DIR}/pkwrite.c.o
-    else
-        not grep mbedtls_pk_parse_key ${CMAKE_BUILTIN_BUILD_DIR}/pkparse.c.o
-        not grep mbedtls_pk_write_key_der ${CMAKE_BUILTIN_BUILD_DIR}/pkwrite.c.o
-    fi
-
-    msg "test: full without pkparse and pkwrite"
-    ctest
-}
-
-component_full_no_pkwrite () {
-    msg "build: full without pkwrite"
-
-    # Using "full" config here instead of "crypto_full" as in "component_full_no_pkparse_pkwrite"
-    # because here we would like to run "test_suite_debug" test cases.
-    scripts/config.py full
-    scripts/config.py unset MBEDTLS_PK_WRITE_C
-    # Disable modules that depend on PK_WRITE_C
-    scripts/config.py unset MBEDTLS_X509_CRT_WRITE_C
-    scripts/config.py unset MBEDTLS_X509_CSR_WRITE_C
-
-    CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
-    make
-
-    # Ensure that PK_WRITE_C was not re-enabled accidentally (additive config).
-    if [ -f ${TF_PSA_CRYPTO_ROOT_DIR}/extras/pkwrite.c ]; then
-        not grep mbedtls_pk_write_key_der ${CMAKE_EXTRAS_BUILD_DIR}/pkwrite.c.o
-    else
-        not grep mbedtls_pk_write_key_der ${CMAKE_BUILTIN_BUILD_DIR}/pkwrite.c.o
-    fi
-
-    msg "test: full without pkwrite"
-    make test
-}
-
 component_test_crypto_full_md_light_only () {
     msg "build: crypto_full with only the light subset of MD"
     scripts/config.py full
