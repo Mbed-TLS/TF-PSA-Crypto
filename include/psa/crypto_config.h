@@ -2009,41 +2009,6 @@
 /* RSA OPTIONS */
 //#define MBEDTLS_RSA_GEN_KEY_MIN_BITS            1024 /**<  Minimum RSA key size that can be generated in bits (Minimum possible value is 128 bits) */
 
-/**
- * \def TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
- *
- * Enable mldsa-native from the PQCP (post-quantum code package) driver.
- * This is an integration of https://github.com/pq-code-package/mldsa-native
- * in TF-PSA-Crypto.
- *
- * \warning This option is experimental. It may change or be removed without
- *          notice.
- *
- * Module:  drivers/pqcp/src/wrap_mldsa_native.c
- *
- * Uncomment to include mldsa-native in libtfpsacrypto.
- */
-//#define TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
-
-/**
- * \def TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
- *
- * Enable mldsa-native from the PQCP (post-quantum code package) driver
- * for the security level 87.
- * This is an integration of https://github.com/pq-code-package/mldsa-native
- * in TF-PSA-Crypto.
- *
- * \warning This option is experimental. It may change or be removed without
- *          notice.
- *
- * Requires: TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
- *
- * Module:  drivers/pqcp/src/wrap_mldsa_native.c
- *
- * Uncomment to include MLDSA-87 from mldsa-native in libtfpsacrypto.
- */
-//#define TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
-
 /** \} name SECTION: Builtin drivers */
 
 /* Do not enable except for testing. Will be removed in a future minor version.
