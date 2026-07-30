@@ -2497,22 +2497,15 @@ psa_status_t psa_xof_set_context(psa_xof_operation_t *operation,
     }
 
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    LOCAL_INPUT_DECLARE(context_external, context);
 
     operation->has_context = 1;
 
-    LOCAL_INPUT_ALLOC(context_external, context_length, context);
     status = psa_driver_wrapper_xof_set_context(operation,
                                                 context, context_length);
-    // Label otherwise unused when MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS is enabled
-    goto exit;
 
-exit:
     if (status != PSA_SUCCESS) {
         psa_xof_abort(operation);
     }
-
-    LOCAL_INPUT_FREE(context_external, context);
     return status;
 }
 
