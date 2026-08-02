@@ -1,0 +1,5 @@
+Features
+   * Add support for the PSA key-wrapping API psa_wrap_key() and
+     psa_unwrap_key() with the NIST AES key-wrap algorithms PSA_ALG_KW
+     (RFC 3394) and PSA_ALG_KWP (RFC 5649). AES is currently the only
+     supported wrapping key type.

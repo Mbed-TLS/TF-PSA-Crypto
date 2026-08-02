@@ -1409,6 +1409,159 @@ exit:
     return (status == PSA_SUCCESS) ? unlock_status : status;
 }
 
+psa_status_t psa_wrap_key(mbedtls_svc_key_id_t wrapping_key,
+                          psa_algorithm_t alg,
+                          mbedtls_svc_key_id_t key,
+                          uint8_t *data_external,
+                          size_t data_size,
+                          size_t *data_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *wrapping_slot = NULL;
+    psa_key_slot_t *key_slot = NULL;
+    LOCAL_OUTPUT_DECLARE(data_external, data);
+
+    *data_length = 0;
+
+    if (!PSA_ALG_IS_KEY_WRAP(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (data_size == 0) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    /* Lock target key to wrap. This enforces PSA_KEY_USAGE_EXPORT. */
+    status = psa_get_and_lock_key_slot_with_policy(
+        key, &key_slot, PSA_KEY_USAGE_EXPORT, PSA_ALG_NONE);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    /* Load the wrapping key. This enforces the PSA_KEY_USAGE_WRAP flag and
+     * that the key policy permits alg. */
+    status = psa_get_and_lock_key_slot_with_policy(
+        wrapping_key, &wrapping_slot, PSA_KEY_USAGE_WRAP, alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    LOCAL_OUTPUT_ALLOC(data_external, data_size, data);
+
+    status = psa_driver_wrapper_key_wrap(&wrapping_slot->attr,
+                                         wrapping_slot->key.data,
+                                         wrapping_slot->key.bytes,
+                                         &key_slot->attr,
+                                         key_slot->key.data,
+                                         key_slot->key.bytes,
+                                         alg,
+                                         data, data_size, data_length);
+
+exit:
+    if (wrapping_slot != NULL) {
+        unlock_status = psa_unregister_read_under_mutex(wrapping_slot);
+        if (status == PSA_SUCCESS) {
+            status = unlock_status;
+        }
+    }
+
+    if (key_slot != NULL) {
+        unlock_status = psa_unregister_read_under_mutex(key_slot);
+        if (status == PSA_SUCCESS) {
+            status = unlock_status;
+        }
+    }
+
+    if (status != PSA_SUCCESS) {
+        *data_length = 0;
+    }
+
+    LOCAL_OUTPUT_FREE(data_external, data);
+
+    return status;
+}
+
+psa_status_t psa_unwrap_key(const psa_key_attributes_t *attributes,
+                            mbedtls_svc_key_id_t wrapping_key,
+                            psa_algorithm_t alg,
+                            const uint8_t *data_external,
+                            size_t data_length,
+                            mbedtls_svc_key_id_t *key)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *wrapping_slot = NULL;
+    uint8_t *key_data = NULL;
+    size_t key_data_size = 0;
+    size_t key_length = 0;
+    LOCAL_INPUT_DECLARE(data_external, data);
+
+    *key = MBEDTLS_SVC_KEY_ID_INIT;
+
+    if (!PSA_ALG_IS_KEY_WRAP(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (data_length == 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    /* Load the wrapping key. This enforces the PSA_KEY_USAGE_UNWRAP flag and
+     * that the key policy permits alg. */
+    status = psa_get_and_lock_key_slot_with_policy(
+        wrapping_key, &wrapping_slot, PSA_KEY_USAGE_UNWRAP, alg);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    key_data_size = data_length;
+    key_data = mbedtls_calloc(1, key_data_size);
+    if (key_data == NULL) {
+        status = PSA_ERROR_INSUFFICIENT_MEMORY;
+        goto exit;
+    }
+
+    LOCAL_INPUT_ALLOC(data_external, data_length, data);
+
+    status = psa_driver_wrapper_key_unwrap(&wrapping_slot->attr,
+                                           wrapping_slot->key.data,
+                                           wrapping_slot->key.bytes,
+                                           alg, data, data_length,
+                                           key_data, key_data_size, &key_length);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    /* The wrapping key is no longer needed; release it before creating the
+     * new key. */
+    unlock_status = psa_unregister_read_under_mutex(wrapping_slot);
+    wrapping_slot = NULL;
+    if (unlock_status != PSA_SUCCESS) {
+        status = unlock_status;
+        goto exit;
+    }
+
+    status = psa_import_key(attributes, key_data, key_length, key);
+
+exit:
+    if (wrapping_slot != NULL) {
+        unlock_status = psa_unregister_read_under_mutex(wrapping_slot);
+        if (status == PSA_SUCCESS) {
+            status = unlock_status;
+        }
+    }
+
+    if (key_data != NULL) {
+        mbedtls_platform_zeroize(key_data, key_data_size);
+        mbedtls_free(key_data);
+    }
+
+    LOCAL_INPUT_FREE(data_external, data);
+
+    return status;
+}
+
 psa_status_t psa_export_public_key_internal(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer,
@@ -1712,6 +1865,8 @@ static psa_status_t psa_validate_key_policy(const psa_key_policy_t *policy)
                            PSA_KEY_USAGE_SIGN_HASH |
                            PSA_KEY_USAGE_VERIFY_HASH |
                            PSA_KEY_USAGE_VERIFY_DERIVATION |
+                           PSA_KEY_USAGE_WRAP |
+                           PSA_KEY_USAGE_UNWRAP |
                            PSA_KEY_USAGE_DERIVE)) != 0) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
