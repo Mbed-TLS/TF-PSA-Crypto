@@ -466,3 +466,52 @@ exit:
     PSA_DONE();
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void key_wrap_fail(int key_type_arg, data_t *key_data,
+                   int alg_arg, int expected_status_arg)
+{
+    psa_status_t expected_status = expected_status_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_key_attributes_t wrapping_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t target_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t target_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t padlen = (key_data->len % 8 != 0) ? 8 - (key_data->len % 8) : 0;
+    int result_size = key_data->len + 8 + padlen;
+    size_t result_length;
+    uint8_t *result = NULL;
+
+    PSA_INIT();
+
+    TEST_CALLOC(result, result_size);
+
+    psa_set_key_usage_flags(&wrapping_attributes,
+                            PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP);
+    psa_set_key_algorithm(&wrapping_attributes, alg);
+    psa_set_key_type(&wrapping_attributes, key_type);
+    PSA_ASSERT(psa_import_key(&wrapping_attributes,
+                              key_data->x, key_data->len,
+                              &wrapping_key_id));
+
+    psa_set_key_usage_flags(&target_attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&target_attributes, PSA_ALG_NONE);
+    psa_set_key_type(&target_attributes, PSA_KEY_TYPE_RAW_DATA);
+    PSA_ASSERT(psa_import_key(&target_attributes,
+                              key_data->x, key_data->len,
+                              &target_key_id));
+
+    TEST_STATUS(expected_status,
+                psa_wrap_key(wrapping_key_id, alg, target_key_id,
+                             result, result_size, &result_length));
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(target_key_id);
+    psa_reset_key_attributes(&wrapping_attributes);
+    psa_reset_key_attributes(&target_attributes);
+    PSA_DONE();
+}
+/* END_CASE */
