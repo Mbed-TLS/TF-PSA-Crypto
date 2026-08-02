@@ -47,6 +47,12 @@
 #define PSA_WANT_ALG_ECB_NO_PADDING 1
 #endif
 
+/* PSA key wrapping (KW/KWP) is built on top of AES in ECB mode */
+#if defined(PSA_WANT_ALG_KW) || defined(PSA_WANT_ALG_KWP)
+#define PSA_WANT_ALG_ECB_NO_PADDING 1
+#define PSA_WANT_KEY_TYPE_AES 1
+#endif
+
 /* If MLDSA needs our SHAKE, make sure it's enabled. */
 #if defined(MBEDTLS_PSA_CRYPTO_C) &&            \
     !defined(TF_PSA_CRYPTO_PQCP_OWN_SHAKE) &&   \
