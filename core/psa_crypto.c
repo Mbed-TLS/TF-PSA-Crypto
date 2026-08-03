@@ -656,6 +656,37 @@ psa_status_t psa_copy_key_material_into_slot(psa_key_slot_t *slot,
     return PSA_SUCCESS;
 }
 
+#if defined(PSA_WANT_ALG_XTS) && defined(PSA_WANT_KEY_TYPE_AES)
+/** Halve *key_bits for AES-XTS key size validation.
+ *
+ * \param[in,out] key_bits  On entry, the size of the key material in bits.
+ *                          On success, halved to the size of each of the
+ *                          two AES keys. Unchanged on failure.
+ *
+ * \retval #PSA_SUCCESS
+ *         The size was 256 or 512; \p key_bits has been halved.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         Any other size, including 384 (XTS-AES-192 is not standardized).
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The size is 512 but MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH is enabled.
+ */
+static psa_status_t psa_xts_adjust_key_bits(size_t *key_bits)
+{
+    if (*key_bits != 256 && *key_bits != 512) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    if (*key_bits == 512) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+#endif /* MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
+
+    *key_bits /= 2;
+    return PSA_SUCCESS;
+}
+#endif /* PSA_WANT_ALG_XTS && PSA_WANT_KEY_TYPE_AES */
+
 psa_status_t psa_import_key_into_slot(
     const psa_key_attributes_t *attributes,
     const uint8_t *data, size_t data_length,
@@ -664,6 +695,7 @@ psa_status_t psa_import_key_into_slot(
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_type_t type = attributes->type;
+    size_t key_bits;
 
     /* zero-length keys are never supported. */
     if (data_length == 0) {
@@ -672,9 +704,21 @@ psa_status_t psa_import_key_into_slot(
 
     if (key_type_is_raw_bytes(type)) {
         *bits = PSA_BYTES_TO_BITS(data_length);
+        key_bits = *bits;
+
+#if defined(PSA_WANT_ALG_XTS) && defined(PSA_WANT_KEY_TYPE_AES)
+        /* An AES-XTS key is double-length; halve for the size validation. */
+        if (psa_get_key_type(attributes) == PSA_KEY_TYPE_AES &&
+            psa_get_key_algorithm(attributes) == PSA_ALG_XTS) {
+            status = psa_xts_adjust_key_bits(&key_bits);
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+        }
+#endif /* PSA_WANT_ALG_XTS && PSA_WANT_KEY_TYPE_AES */
 
         status = psa_validate_unstructured_key_bit_size(attributes->type,
-                                                        *bits);
+                                                        key_bits);
         if (status != PSA_SUCCESS) {
             return status;
         }
@@ -8458,6 +8502,7 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
     psa_status_t status;
     psa_key_slot_t *slot = NULL;
     size_t key_buffer_size;
+    size_t key_bits;
 
     *key = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -8493,8 +8538,21 @@ psa_status_t psa_generate_key_custom(const psa_key_attributes_t *attributes,
     if (slot->key.bytes == 0) {
         if (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime) ==
             PSA_KEY_LOCATION_LOCAL_STORAGE) {
+            key_bits = attributes->bits;
+
+#if defined(PSA_WANT_ALG_XTS) && defined(PSA_WANT_KEY_TYPE_AES)
+            /* An AES-XTS key is double-length; halve for the size validation. */
+            if (psa_get_key_type(attributes) == PSA_KEY_TYPE_AES &&
+                psa_get_key_algorithm(attributes) == PSA_ALG_XTS) {
+                status = psa_xts_adjust_key_bits(&key_bits);
+                if (status != PSA_SUCCESS) {
+                    goto exit;
+                }
+            }
+#endif /* PSA_WANT_ALG_XTS && PSA_WANT_KEY_TYPE_AES */
+
             status = psa_validate_key_type_and_size_for_key_generation(
-                attributes->type, attributes->bits);
+                attributes->type, key_bits);
             if (status != PSA_SUCCESS) {
                 goto exit;
             }
