@@ -41,7 +41,8 @@ enum poison_mode {
     POISON_ON_UNLOCK,
 };
 
-#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_TEST_HOOKS) && \
+    defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
 static const uint8_t seed_1[] = {
     0x54, 0x68, 0x65, 0x72, 0x65, 0x20, 0x77, 0x61, 0x73, 0x20, 0x6f, 0x6e, 0x63, 0x65, 0x20, 0x75,
     0x70, 0x6f, 0x6e, 0x20, 0x61, 0x20, 0x74, 0x69, 0x6d, 0x65, 0x20, 0x61, 0x20, 0x2e, 0x2e, 0x2e
@@ -848,7 +849,6 @@ static psa_status_t poison_setup(int poison_mode, int64_t poison_bytes)
     TEST_LE_S(0, poison_bytes);
     TEST_LE_U(poison_mode, POISON_ON_UNLOCK);
     switch (poison_mode) {
-#if defined(MBEDTLS_TEST_HOOKS)
         case POISON_ON_LOCK:
             tf_psa_crypto_pqcp_alloc_poison_bytes = poison_bytes;
             break;
@@ -856,7 +856,6 @@ static psa_status_t poison_setup(int poison_mode, int64_t poison_bytes)
             tf_psa_crypto_pqcp_alloc_poison_bytes = -poison_bytes;
             tf_psa_crypto_pqcp_alloc_used += poison_bytes;
             break;
-#endif
         default:
             TEST_EQUAL(poison_bytes, 0);
             break;
@@ -868,12 +867,13 @@ exit:
 
 static void poison_cleanup(void)
 {
-#if defined(MBEDTLS_TEST_HOOKS)
     tf_psa_crypto_pqcp_alloc_used = 0;
     tf_psa_crypto_pqcp_alloc_poison_bytes = 0;
-#endif
 }
-#endif
+
+#endif /* defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) &&
+          defined(MBEDTLS_TEST_HOOKS) &&
+          defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED) */
 
 /* END_HEADER */
 
@@ -959,7 +959,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
 void poison_export_public_key(int pkf,
                               int poison_mode, int64_t poison_bytes,
                               psa_status_t expected_status)
@@ -1056,7 +1056,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
 void poison_sign_deterministic_pure(int pkf,
                                     int poison_mode, int64_t poison_bytes,
                                     psa_status_t expected_status)
@@ -1143,7 +1143,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
 void poison_verify_pure(int poison_mode, int64_t poison_bytes,
                         psa_status_t expected_status)
 {
@@ -1195,7 +1195,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
 void poison_sign_setup(int pkf,
                        int poison_mode, int64_t poison_bytes,
                        psa_status_t expected_status)
@@ -1334,7 +1334,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
 void poison_sign_deterministic_multipart_finish(int pkf,
                                                 int poison_mode, int64_t poison_bytes,
                                                 psa_status_t expected_status)
@@ -1449,7 +1449,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
 void poison_verify_multipart_finish(int poison_mode, int64_t poison_bytes,
                                     psa_status_t expected_status)
 {
