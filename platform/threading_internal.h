@@ -68,7 +68,11 @@ extern mbedtls_threading_mutex_t mbedtls_threading_psa_globaldata_mutex;
  * This mutex must be held when reading or writing to the PSA
  * global_data rng_state or rng struct members. */
 extern mbedtls_threading_mutex_t mbedtls_threading_psa_rngdata_mutex;
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) && defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+extern mbedtls_threading_mutex_t mbedtls_threading_pqcp_buffer_alloc_mutex;
 #endif
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 #endif /* MBEDTLS_THREADING_C */
 
