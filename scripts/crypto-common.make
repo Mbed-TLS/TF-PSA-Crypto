@@ -51,7 +51,6 @@ THIRDPARTY_PRIVATE_INCLUDES =
 ifeq (,$(BUILDING_LIBTESTDRIVER1))
 include $(TF_PSA_CRYPTO_PATH)/drivers/everest/Makefile.inc
 include $(TF_PSA_CRYPTO_PATH)/drivers/p256-m/Makefile.inc
-include $(TF_PSA_CRYPTO_PATH)/drivers/pqcp/Makefile.inc
 endif
 
 # Directories with headers of public interfaces of TF-PSA-Crypto
