@@ -2501,7 +2501,7 @@ psa_status_t psa_xof_set_context(psa_xof_operation_t *operation,
     operation->has_context = 1;
 
     status = psa_driver_wrapper_xof_set_context(operation,
-                                                context, context_length);
+                                                context_external, context_length);
 
     if (status != PSA_SUCCESS) {
         psa_xof_abort(operation);
