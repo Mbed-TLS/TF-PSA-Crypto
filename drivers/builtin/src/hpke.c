@@ -9,7 +9,7 @@
   * This implementation is based on the following standards: https://datatracker.ietf.org/doc/rfc9180/ 
   * 
   */
- 
+
 #define PSA_HPKE_C
 #if defined(PSA_HPKE_C)
 
@@ -276,7 +276,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                               psa_hpke_context_t *ctx)
 {
     if (params->PSA_HPKE_MODE != PSA_HPKE_MODE_BASE) {
-        printf("only base mode supported");
         return PSA_HPKE_ERR_NOT_SUPPORTED;
     }
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -300,7 +299,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
 
     status = mbedtls_mpi_lset(&ctx->sequence_number, 0);
     if (status != PSA_SUCCESS) {
-        printf("mbedtls_mpi_lset failed for sequence number");
         mbedtls_mpi_free(&ctx->sequence_number);
         mbedtls_mpi_free(&ctx->max_value);
         return status;
@@ -311,7 +309,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
     size_t pos = 8*params->PSA_HPKE_AEAD_NN;
     status = mbedtls_mpi_set_bit(&temp, pos, 1);
     if (status != PSA_SUCCESS) {
-        printf("mbedtls_mpi_set_bit failed for temp: %d\n", status);
         mbedtls_mpi_free(&ctx->sequence_number);
         mbedtls_mpi_free(&ctx->max_value);
         mbedtls_mpi_free(&temp);
@@ -319,7 +316,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
     }
     mbedtls_mpi_sub_int(&ctx->max_value, &temp, 1); //max_value=temp-1
     if (status != PSA_SUCCESS) {
-        printf("mbedtls_mpi_sub_int failed for max_value: %d\n", status);
         mbedtls_mpi_free(&ctx->sequence_number);
         mbedtls_mpi_free(&ctx->max_value);
         mbedtls_mpi_free(&temp);
@@ -330,7 +326,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
     // Initialize the embedded arrays to zero
     unsigned char *base_nonce = mbedtls_calloc(params->PSA_HPKE_AEAD_NN, 1);
     if (base_nonce == NULL) {
-        printf("Memory allocation failed for base_nonce\n");
         return PSA_HPKE_INSUFFICIENT_MEMORY;
     }
     ctx->base_nonce = base_nonce;
@@ -338,7 +333,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
 
     unsigned char *exporter_secret = mbedtls_calloc(params->PSA_HPKE_KDF_NH, 1);
     if (exporter_secret == NULL) {
-        printf("Memory allocation failed for exporter_secret\n");
         return PSA_HPKE_INSUFFICIENT_MEMORY;
     }
     ctx->exporter_secret = exporter_secret;
@@ -358,7 +352,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                                     info_hash,
                                                     params->PSA_HPKE_KDF_NH);
     if (status != PSA_SUCCESS) {
-        printf("psa_hpke_hkdf_labeledExtract failed for info: %d\n", status);
         goto cleanup;
     }
 
@@ -375,7 +368,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                                     psk_hash,
                                                     params->PSA_HPKE_KDF_NH);
     if (status != PSA_SUCCESS) {
-        printf("psa_hpke_hkdf_labeledExtract failed for psk_id: %d\n", status);
         goto cleanup;
     }
 
@@ -404,7 +396,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                                 secret,
                                                 params->PSA_HPKE_KDF_NH);
     if (status != PSA_SUCCESS) {
-        printf("psa_hpke_hkdf_labeledExtract failed for secret: %d\n", status);
         goto cleanup;
     }
 
@@ -423,7 +414,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                                 key,  
                                                 params->PSA_HPKE_AEAD_NK);
     if (status != PSA_SUCCESS) {
-        printf("psa_hpke_hkdf_labeledExpand for key failed: %d\n", status);
         goto cleanup;
     }
 
@@ -443,7 +433,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                                     params->PSA_HPKE_AEAD_NN);
                                                    
     if (status != PSA_SUCCESS) {
-        printf("psa_hpke_hkdf_labeledExpand failed for base_nonce: %d\n", status);
         goto cleanup;
     }
 
@@ -461,7 +450,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
                                                     ctx->exporter_secret,
                                                     params->PSA_HPKE_KDF_NH);
     if (status != PSA_SUCCESS) {
-        printf("psa_hpke_hkdf_labeledExpand failed for exporter_secret: %d\n", status);
         goto cleanup;
     }
 
@@ -473,7 +461,6 @@ psa_status_t psa_hpke_create_hpke_context(psa_hpke_params *params,enum PSA_HPKE_
     status = psa_import_key(&aead_attr, key, params->PSA_HPKE_AEAD_NK, &ctx->aead_key_id);
     psa_reset_key_attributes(&aead_attr);
     if (status != PSA_SUCCESS) {
-        printf("psa_import_key failed for AEAD key: %d\n", status);
         goto cleanup;
     }
 
@@ -1058,15 +1045,12 @@ psa_status_t  psa_hpke_encap_with_senderKeys(psa_hpke_params *params,
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     if (shared_secret == NULL) {
-        printf("shared secret has not been allocated.\n");
         return PSA_HPKE_INVALID_ARGUMENT;
     }
     if(pubkey_bytes_R == NULL){
-        printf("public key has not been allocated.\n");
         return PSA_HPKE_INVALID_ARGUMENT;
     }
     if(enc == NULL){
-        printf("enc has not been allocated.\n");
         return PSA_HPKE_INVALID_ARGUMENT;
     }
 

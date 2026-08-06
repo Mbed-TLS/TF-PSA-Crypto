@@ -7,9 +7,7 @@ Features
 
 Changes
    * When PSA_WANT_ALG_HPKE is enabled, automatically request the dependent
-     PSA mechanisms (ECDH with Montgomery-255, HKDF/HKDF-Extract/
-     HKDF-Expand, HMAC-SHA-256, AES, and GCM) so HPKE prerequisites are
-     configured consistently.
+     algorithms mechanisms so HPKE prerequisites are configured.
    * Rework HPKE-related built-in selection in
      drivers/builtin/include/mbedtls/private/
      crypto_adjust_config_enable_builtins.h to use the generic accelerator
