@@ -53,6 +53,9 @@ massif-*
 # Generated documentation:
 /apidoc
 
+# Release artifacts from prepare_release.py
+/release-artifacts/
+
 # PSA Crypto compliance test repo, cloned by test_psa_compliance.py
 /psa-arch-tests
 
