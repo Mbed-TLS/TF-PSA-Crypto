@@ -778,6 +778,7 @@
 #define PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION  ((psa_algorithm_t) 0x07000000)
 #define PSA_ALG_CATEGORY_KEY_DERIVATION         ((psa_algorithm_t) 0x08000000)
 #define PSA_ALG_CATEGORY_KEY_AGREEMENT          ((psa_algorithm_t) 0x09000000)
+#define PSA_ALG_CATEGORY_KEY_WRAP               ((psa_algorithm_t) 0x0b000000)
 #define PSA_ALG_CATEGORY_XOF                    ((psa_algorithm_t) 0x0d000000)
 
 /** Whether an algorithm is vendor-defined.
@@ -831,6 +832,17 @@
  */
 #define PSA_ALG_IS_AEAD(alg)                                            \
     (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_AEAD)
+
+/** Whether the specified algorithm is a key-wrapping algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a key-wrapping algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \p alg is not a supported
+ *         algorithm identifier.
+ */
+#define PSA_ALG_IS_KEY_WRAP(alg)                                        \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_KEY_WRAP)
 
 /** Whether the specified algorithm is an asymmetric signature algorithm,
  * also known as public-key signature algorithm.
@@ -1422,6 +1434,32 @@
 #define PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(aead_alg, min_tag_length) \
     (PSA_ALG_AEAD_WITH_SHORTENED_TAG(aead_alg, min_tag_length) |            \
      PSA_ALG_AEAD_AT_LEAST_THIS_LENGTH_FLAG)
+
+/** A key-wrapping algorithm based on the NIST Key Wrap (KW) mode of a block
+ * cipher.
+ *
+ * KW is defined for block ciphers that have a 128-bit block size. The
+ * underlying block cipher is determined by the key type. Keys to be wrapped
+ * must have a length equal to a multiple of the 'semi-block' size for the
+ * block cipher, that is, a multiple of 8 bytes. To wrap keys that are not a
+ * multiple of the semi-block size, #PSA_ALG_KWP can be used.
+ *
+ * This is the NIST Key Wrap algorithm, as defined in NIST SP 800-38F. A
+ * definition of AES-KW is also found in RFC 3394.
+ */
+#define PSA_ALG_KW                              ((psa_algorithm_t) 0x0b400100)
+
+/** A key-wrapping algorithm based on the NIST Key Wrap with Padding (KWP)
+ * mode of a block cipher.
+ *
+ * KWP is defined for block ciphers that have a 128-bit block size. The
+ * underlying block cipher is determined by the key type. This algorithm can
+ * wrap a key of any length.
+ *
+ * This is the NIST Key Wrap with Padding algorithm, as defined in NIST
+ * SP 800-38F. A definition of AES-KWP is also found in RFC 5649.
+ */
+#define PSA_ALG_KWP                             ((psa_algorithm_t) 0x0bc00200)
 
 #define PSA_ALG_RSA_PKCS1V15_SIGN_BASE          ((psa_algorithm_t) 0x06000200)
 /** RSA PKCS#1 v1.5 signature with hashing.
@@ -2695,6 +2733,20 @@ static inline int mbedtls_svc_key_id_is_null(mbedtls_svc_key_id_t key)
  * psa_key_derivation_verify_key() at the end of the operation.
  */
 #define PSA_KEY_USAGE_VERIFY_DERIVATION         ((psa_key_usage_t) 0x00008000)
+
+/** Permission to wrap another key with the key.
+ *
+ * This flag is required to use the key in a key-wrapping operation with
+ * psa_wrap_key().
+ */
+#define PSA_KEY_USAGE_WRAP                      ((psa_key_usage_t) 0x00010000)
+
+/** Permission to unwrap another key with the key.
+ *
+ * This flag is required to use the key in a key-unwrapping operation with
+ * psa_unwrap_key().
+ */
+#define PSA_KEY_USAGE_UNWRAP                    ((psa_key_usage_t) 0x00020000)
 
 /**@}*/
 

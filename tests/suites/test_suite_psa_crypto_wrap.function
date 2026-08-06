@@ -1,0 +1,371 @@
+/* BEGIN_HEADER */
+#include "psa/crypto.h"
+static int setup_psa_key(psa_key_usage_t usage,
+                         psa_algorithm_t alg,
+                         psa_key_type_t key_type,
+                         mbedtls_svc_key_id_t *key_id,
+                         const data_t *key)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    return psa_import_key(&attributes, key->x, key->len, key_id);
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:PSA_WANT_KEY_TYPE_AES
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void wrap_unwrap(int alg_arg, int key_type_arg,
+                 data_t *wrapping_key, data_t *key_data, data_t *expected)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t target_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t unwrapped_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t unwrap_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *wrapped = NULL;
+    uint8_t *recovered = NULL;
+    size_t wrapped_length = 0;
+    size_t recovered_length = 0;
+
+    PSA_INIT();
+
+    TEST_CALLOC(wrapped, expected->len);
+    TEST_CALLOC(recovered, key_data->len);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP,
+                             alg, key_type,
+                             &wrapping_key_id, wrapping_key));
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_EXPORT,
+                             PSA_ALG_NONE, PSA_KEY_TYPE_RAW_DATA,
+                             &target_key_id, key_data));
+
+    /* Wrap and check against the known-answer test vector. */
+    PSA_ASSERT(psa_wrap_key(wrapping_key_id, alg, target_key_id,
+                            wrapped, expected->len, &wrapped_length));
+    ASSERT_COMPARE(wrapped, wrapped_length, expected->x, expected->len);
+
+    /* Unwrap into a new key and verify it matches the original material. */
+    psa_set_key_usage_flags(&unwrap_attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_type(&unwrap_attributes, PSA_KEY_TYPE_RAW_DATA);
+    PSA_ASSERT(psa_unwrap_key(&unwrap_attributes, wrapping_key_id, alg,
+                              wrapped, wrapped_length, &unwrapped_key_id));
+    PSA_ASSERT(psa_export_key(unwrapped_key_id, recovered, key_data->len,
+                              &recovered_length));
+    ASSERT_COMPARE(recovered, recovered_length, key_data->x, key_data->len);
+
+exit:
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(target_key_id);
+    psa_destroy_key(unwrapped_key_id);
+    mbedtls_free(wrapped);
+    mbedtls_free(recovered);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void plaintext_lengths(int alg_arg, int key_type_arg, int in_len, int out_len,
+                       int expected_status_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t plaintext_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t *ciphertext = NULL;
+    size_t output_len = out_len;
+    uint8_t key_array[16] = { 0 };
+    data_t wrapping_key = { .len = sizeof(key_array), .x = key_array };
+    data_t plaintext_key = { .len = in_len, .x = NULL };
+    psa_status_t status;
+
+    PSA_INIT();
+
+    TEST_CALLOC(plaintext_key.x, in_len);
+    TEST_CALLOC(ciphertext, output_len);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP,
+                             alg, key_type,
+                             &wrapping_key_id, &wrapping_key));
+    status = setup_psa_key(PSA_KEY_USAGE_EXPORT,
+                           PSA_ALG_NONE, PSA_KEY_TYPE_RAW_DATA,
+                           &plaintext_key_id, &plaintext_key);
+
+    if (status != PSA_SUCCESS) {
+        TEST_EQUAL(status, expected_status);
+        goto exit;
+    }
+
+    TEST_EQUAL(psa_wrap_key(wrapping_key_id, alg, plaintext_key_id,
+                            ciphertext, output_len, &output_len), expected_status);
+
+    if (expected_status == 0) {
+        if (alg == PSA_ALG_KWP) {
+            TEST_ASSERT(output_len == (size_t) in_len + 8 -
+                        (in_len % 8) + 8);
+        } else {
+            TEST_ASSERT(output_len == (size_t) in_len + 8);
+        }
+    } else {
+        TEST_ASSERT(output_len == 0);
+    }
+exit:
+    mbedtls_free(ciphertext);
+    mbedtls_free(plaintext_key.x);
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(plaintext_key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ciphertext_lengths(int alg_arg, int key_type_arg, int in_len, int out_len,
+                        int expected_status_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t plaintext_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char *plaintext = NULL;
+    unsigned char *ciphertext = NULL;
+    size_t output_len = out_len;
+    uint8_t key_array[16] = { 0 };
+    data_t wrapping_key = { .len = sizeof(key_array), .x = key_array };
+    psa_key_attributes_t unwrap_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t status;
+
+    PSA_INIT();
+
+    TEST_CALLOC(plaintext, output_len);
+    TEST_CALLOC(ciphertext, in_len);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP,
+                             alg, key_type,
+                             &wrapping_key_id, &wrapping_key));
+
+    psa_set_key_usage_flags(&unwrap_attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_type(&unwrap_attributes, PSA_KEY_TYPE_RAW_DATA);
+    status = psa_unwrap_key(&unwrap_attributes, wrapping_key_id, alg,
+                            ciphertext, in_len, &plaintext_key_id);
+
+    if (expected_status == 0) {
+        TEST_EQUAL(status, PSA_ERROR_INVALID_SIGNATURE);
+    } else {
+        TEST_EQUAL(status, expected_status);
+    }
+
+    TEST_ASSERT(plaintext_key_id == PSA_KEY_ID_NULL);
+
+exit:
+    mbedtls_free(ciphertext);
+    mbedtls_free(plaintext);
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(plaintext_key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ciphertext_lengths_valid(int alg_arg, int key_type_arg,
+                              data_t *wrapping_key, data_t *wrapped,
+                              int out_len, int expected_status_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t unwrapped_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t unwrap_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *plaintext = NULL;
+    size_t output_len = out_len;
+    size_t plaintext_len = 0;
+
+    PSA_INIT();
+
+    TEST_CALLOC(plaintext, output_len);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP,
+                             alg, key_type,
+                             &wrapping_key_id, wrapping_key));
+
+    /* Unwrap must succeed so that the resulting key can be exported: the
+     * export is what actually checks the caller's output buffer size. */
+    psa_set_key_usage_flags(&unwrap_attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_type(&unwrap_attributes, PSA_KEY_TYPE_RAW_DATA);
+    PSA_ASSERT(psa_unwrap_key(&unwrap_attributes, wrapping_key_id, alg,
+                              wrapped->x, wrapped->len, &unwrapped_key_id));
+
+    /* Exporting into a buffer that is too small (or NULL) fails without
+     * producing any output. */
+    TEST_EQUAL(psa_export_key(unwrapped_key_id, plaintext, output_len,
+                              &plaintext_len), expected_status);
+    TEST_EQUAL(plaintext_len, 0);
+
+exit:
+    mbedtls_free(plaintext);
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(unwrapped_key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void wrap(int alg_arg, int key_type_arg,
+          data_t *key, data_t *msg,
+          data_t *expected_result)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t target_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t result_length, padlen;
+
+    padlen = (msg->len % 8 != 0) ? 8 - (msg->len % 8) : 0;
+    int result_size = msg->len + 8 + padlen;
+    uint8_t *result = NULL;
+
+    PSA_INIT();
+
+    TEST_CALLOC(result, result_size);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP,
+                             alg, key_type,
+                             &wrapping_key_id, key));
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_EXPORT,
+                             PSA_ALG_NONE, PSA_KEY_TYPE_RAW_DATA,
+                             &target_key_id, msg));
+
+    PSA_ASSERT(psa_wrap_key(wrapping_key_id, alg, target_key_id,
+                            result, result_size, &result_length));
+
+    TEST_EQUAL(result_length, expected_result->len);
+
+    TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,
+                        result_length);
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(target_key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void unwrap(int alg_arg, int key_type_arg,
+            data_t *key, data_t *msg,
+            data_t *expected_result, int expected_status_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t unwrapped_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t unwrap_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *result = NULL;
+    int result_size = msg->len - 8;
+    size_t result_len;
+    psa_status_t status;
+
+    PSA_INIT();
+
+    TEST_CALLOC(result, result_size);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_WRAP | PSA_KEY_USAGE_UNWRAP,
+                             alg, key_type,
+                             &wrapping_key_id, key));
+
+    psa_set_key_usage_flags(&unwrap_attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_type(&unwrap_attributes, PSA_KEY_TYPE_RAW_DATA);
+    status = psa_unwrap_key(&unwrap_attributes, wrapping_key_id, alg,
+                            msg->x, msg->len, &unwrapped_key_id);
+
+    if (expected_status == 0) {
+        PSA_ASSERT(psa_export_key(unwrapped_key_id, result, result_size,
+                                  &result_len));
+        TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result, result_len);
+    } else {
+        TEST_EQUAL(status, expected_status);
+        TEST_ASSERT(unwrapped_key_id == PSA_KEY_ID_NULL);
+    }
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(unwrapped_key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void wrap_key_policy(int alg_arg, int key_alg_arg, int key_type_arg, int key_usage_arg, int target_usage_arg, data_t *wrapping_key, data_t *key_data, int expected_status_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t key_alg = key_alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    psa_key_usage_t wrapping_key_usage = key_usage_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_usage_t target_key_usage = target_usage_arg;
+    mbedtls_svc_key_id_t target_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t output[64];
+    size_t output_length = 0;
+
+    PSA_INIT();
+    PSA_ASSERT(setup_psa_key(wrapping_key_usage,
+                             key_alg, key_type,
+                             &wrapping_key_id, wrapping_key));
+    PSA_ASSERT(setup_psa_key(target_key_usage,
+                             PSA_ALG_NONE, PSA_KEY_TYPE_RAW_DATA,
+                             &target_key_id, key_data));
+
+    TEST_EQUAL(psa_wrap_key(wrapping_key_id, alg, target_key_id,
+                            output, sizeof(output), &output_length), expected_status);
+    TEST_EQUAL(output_length, 0);
+
+exit:
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(target_key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void unwrap_key_policy(int alg_arg, int key_alg_arg, int key_type_arg, int key_usage_arg, data_t *wrapping_key, data_t *wrapped, int expected_status_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t key_alg = key_alg_arg;
+    psa_key_type_t key_type = key_type_arg;
+    psa_status_t expected_status = expected_status_arg;
+    psa_key_usage_t wrapping_key_usage = key_usage_arg;
+    mbedtls_svc_key_id_t wrapping_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t unwrapped_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+
+    PSA_ASSERT(setup_psa_key(wrapping_key_usage, key_alg, key_type,
+                             &wrapping_key_id, wrapping_key));
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+    TEST_EQUAL(psa_unwrap_key(&attributes, wrapping_key_id, alg,
+                              wrapped->x, wrapped->len, &unwrapped_key_id),
+               expected_status);
+
+exit:
+    psa_destroy_key(wrapping_key_id);
+    psa_destroy_key(unwrapped_key_id);
+    PSA_DONE();
+}
+/* END_CASE */

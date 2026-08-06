@@ -990,6 +990,45 @@
     ((PSA_EXPORT_KEY_PAIR_MAX_SIZE > PSA_EXPORT_PUBLIC_KEY_MAX_SIZE) ? \
      PSA_EXPORT_KEY_PAIR_MAX_SIZE : PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
 
+/** Sufficient output buffer size for psa_wrap_key().
+ *
+ * The wrapped output is the exported key material, padded up to a multiple of
+ * the 8-byte semi-block size, plus one extra semi-block for the integrity
+ * check value. This is valid for both #PSA_ALG_KW and #PSA_ALG_KWP.
+ *
+ * \warning This macro may evaluate its arguments multiple times or
+ *          zero times, so you should not pass arguments that contain
+ *          side effects.
+ *
+ * \param wrap_key_type A supported key-wrapping key type.
+ * \param alg           A supported key-wrapping algorithm.
+ * \param key_type      The type of the key being wrapped.
+ * \param key_bits      The size of the key being wrapped, in bits.
+ *
+ * \return If the parameters are valid and supported, return a buffer size in
+ *         bytes that guarantees that psa_wrap_key() will not fail with
+ *         #PSA_ERROR_BUFFER_TOO_SMALL.
+ *         If the parameters are a valid combination that is not supported,
+ *         return either a sensible size or 0.
+ *         If the parameters are not valid, the return value is unspecified.
+ */
+#define PSA_WRAP_KEY_OUTPUT_SIZE(wrap_key_type, alg, key_type, key_bits) \
+    (PSA_ALG_IS_KEY_WRAP(alg) ? \
+     (PSA_ROUND_UP_TO_MULTIPLE(8, PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, key_bits)) + 8) : \
+     0u)
+
+/** Sufficient buffer size for wrapping any asymmetric key pair.
+ *
+ * This macro expands to a compile-time constant integer. This value is a
+ * sufficient buffer size when calling psa_wrap_key() to wrap any asymmetric
+ * key pair supported by the implementation, regardless of the exact key type
+ * and key size.
+ *
+ * See also #PSA_WRAP_KEY_OUTPUT_SIZE().
+ */
+#define PSA_WRAP_KEY_PAIR_MAX_SIZE \
+    (PSA_ROUND_UP_TO_MULTIPLE(8, PSA_EXPORT_KEY_PAIR_MAX_SIZE) + 8)
+
 /** Sufficient output buffer size for psa_raw_key_agreement().
  *
  * This macro returns a compile-time constant if its arguments are

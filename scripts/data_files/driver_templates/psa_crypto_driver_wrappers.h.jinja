@@ -19,6 +19,7 @@
 #include "psa_crypto_mac.h"
 #include "psa_crypto_pake.h"
 #include "psa_crypto_rsa.h"
+#include "psa_crypto_wrap.h"
 
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 #include "psa_crypto_mldsa.h"
@@ -1830,6 +1831,104 @@ static inline psa_status_t psa_driver_wrapper_cipher_abort(
 
     (void)status;
     return( PSA_ERROR_INVALID_ARGUMENT );
+}
+
+/*
+ * Key wrapping functions
+ */
+static inline psa_status_t psa_driver_wrapper_key_wrap(
+    const psa_key_attributes_t *wrapping_key_attributes,
+    const uint8_t *wrapping_key_buffer,
+    size_t wrapping_key_buffer_size,
+    const psa_key_attributes_t *key_attributes,
+    const uint8_t *key_buffer,
+    size_t key_buffer_size,
+    psa_algorithm_t alg,
+    uint8_t *output,
+    size_t output_size,
+    size_t *output_length )
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_location_t location =
+        PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(wrapping_key_attributes) );
+
+    switch( location )
+    {
+        case PSA_KEY_LOCATION_LOCAL_STORAGE:
+#if defined(MBEDTLS_PSA_BUILTIN_CIPHER)
+            return( mbedtls_psa_key_wrap( wrapping_key_attributes,
+                                          wrapping_key_buffer,
+                                          wrapping_key_buffer_size,
+                                          key_attributes,
+                                          key_buffer,
+                                          key_buffer_size,
+                                          alg,
+                                          output,
+                                          output_size,
+                                          output_length ) );
+#else
+            return( PSA_ERROR_NOT_SUPPORTED );
+#endif /* MBEDTLS_PSA_BUILTIN_CIPHER */
+
+        default:
+            (void)status;
+            (void)wrapping_key_buffer;
+            (void)wrapping_key_buffer_size;
+            (void)key_attributes;
+            (void)key_buffer;
+            (void)key_buffer_size;
+            (void)alg;
+            (void)output;
+            (void)output_size;
+            (void)output_length;
+            return( PSA_ERROR_INVALID_ARGUMENT );
+    }
+}
+
+static inline psa_status_t psa_driver_wrapper_key_unwrap(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer,
+    size_t key_buffer_size,
+    psa_algorithm_t alg,
+    const uint8_t *input,
+    size_t input_length,
+    uint8_t *output,
+    size_t output_size,
+    size_t *output_length )
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_location_t location =
+        PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
+
+    switch( location )
+    {
+        case PSA_KEY_LOCATION_LOCAL_STORAGE:
+#if defined(MBEDTLS_PSA_BUILTIN_CIPHER)
+            return( mbedtls_psa_key_unwrap( attributes,
+                                            key_buffer,
+                                            key_buffer_size,
+                                            alg,
+                                            input,
+                                            input_length,
+                                            output,
+                                            output_size,
+                                            output_length ) );
+#else
+            return( PSA_ERROR_NOT_SUPPORTED );
+#endif /* MBEDTLS_PSA_BUILTIN_CIPHER */
+
+        default:
+            (void)status;
+            (void)key_buffer;
+            (void)key_buffer_size;
+            (void)alg;
+            (void)input;
+            (void)input_length;
+            (void)output;
+            (void)output_size;
+            (void)output_length;
+            return( PSA_ERROR_INVALID_ARGUMENT );
+    }
 }
 
 /*
