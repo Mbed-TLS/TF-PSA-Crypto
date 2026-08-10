@@ -1,0 +1,103 @@
+/* BEGIN_HEADER */
+#include "tf-psa-crypto/private/blake2.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
+void blake2s(data_t *key, data_t *src, data_t *hash)
+{
+    tf_psa_crypto_blake2s_context ctx;
+    unsigned char output[32];
+    size_t outlen = hash->len;
+
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, outlen, key->x, key->len), 0);
+    tf_psa_crypto_blake2s_update(&ctx, src->x, src->len);
+    TEST_EQUAL(tf_psa_crypto_blake2s_finish(&ctx, output, outlen), 0);
+    TEST_MEMORY_COMPARE(output, outlen, hash->x, hash->len);
+
+exit:
+    tf_psa_crypto_blake2s_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
+void blake2b(data_t *key, data_t *src, data_t *hash)
+{
+    tf_psa_crypto_blake2b_context ctx;
+    unsigned char output[64];
+    size_t outlen = hash->len;
+
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, outlen, key->x, key->len), 0);
+    tf_psa_crypto_blake2b_update(&ctx, src->x, src->len);
+    TEST_EQUAL(tf_psa_crypto_blake2b_finish(&ctx, output, outlen), 0);
+    TEST_MEMORY_COMPARE(output, outlen, hash->x, hash->len);
+
+exit:
+    tf_psa_crypto_blake2b_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
+void blake2s_negative()
+{
+    tf_psa_crypto_blake2s_context ctx;
+    unsigned char key[33] = { 0 };
+    unsigned char output[32];
+
+    /* outlen == 0 */
+    TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, 0, NULL, 0),
+               TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA);
+
+    /* outlen > 32 */
+    TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, 33, NULL, 0),
+               TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA);
+
+    /* keylen > 32 */
+    TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, 32, key, 33),
+               TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA);
+
+    /* finish() with an output buffer smaller than outlen */
+    TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, 32, NULL, 0), 0);
+    TEST_EQUAL(tf_psa_crypto_blake2s_finish(&ctx, output, 31),
+               TF_PSA_CRYPTO_ERR_BUFFER_TOO_SMALL);
+
+exit:
+    tf_psa_crypto_blake2s_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
+void blake2b_negative()
+{
+    tf_psa_crypto_blake2b_context ctx;
+    unsigned char key[65] = { 0 };
+    unsigned char output[64];
+
+    /* outlen == 0 */
+    TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, 0, NULL, 0),
+               TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA);
+
+    /* outlen > 64 */
+    TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, 65, NULL, 0),
+               TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA);
+
+    /* keylen > 64 */
+    TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, 64, key, 65),
+               TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA);
+
+    /* finish() with an output buffer smaller than outlen */
+    TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, 64, NULL, 0), 0);
+    TEST_EQUAL(tf_psa_crypto_blake2b_finish(&ctx, output, 63),
+               TF_PSA_CRYPTO_ERR_BUFFER_TOO_SMALL);
+
+exit:
+    tf_psa_crypto_blake2b_free(&ctx);
+}
+/* END_CASE */
