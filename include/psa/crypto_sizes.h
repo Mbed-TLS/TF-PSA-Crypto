@@ -50,21 +50,23 @@
  * \return The hash size for the specified hash algorithm.
  *         If the hash algorithm is not recognized, return 0.
  */
-#define PSA_HASH_LENGTH(alg)                                        \
-    (                                                               \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_MD5 ? 16u :           \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_RIPEMD160 ? 20u :     \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_1 ? 20u :         \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_224 ? 28u :       \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_256 ? 32u :       \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_384 ? 48u :       \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512 ? 64u :       \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_224 ? 28u :   \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_256 ? 32u :   \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_224 ? 28u :      \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_256 ? 32u :      \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_384 ? 48u :      \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_512 ? 64u :      \
+#define PSA_HASH_LENGTH(alg)                                          \
+    (                                                                 \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_MD5 ? 16u :             \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_RIPEMD160 ? 20u :       \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_1 ? 20u :           \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_224 ? 28u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_256 ? 32u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_384 ? 48u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512 ? 64u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_224 ? 28u :     \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_256 ? 32u :     \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_224 ? 28u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_256 ? 32u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_384 ? 48u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_512 ? 64u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_BLAKE2S_HASH256 ? 32u : \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_BLAKE2B_HASH512 ? 64u : \
         0u)
 
 /** The input block size of a hash algorithm, in bytes.
@@ -82,21 +84,23 @@
  *              An implementation can return either 0 or the correct size for a
  *              hash algorithm that it recognizes, but does not support.
  */
-#define PSA_HASH_BLOCK_LENGTH(alg)                                  \
-    (                                                               \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_MD5 ? 64u :           \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_RIPEMD160 ? 64u :     \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_1 ? 64u :         \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_224 ? 64u :       \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_256 ? 64u :       \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_384 ? 128u :      \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512 ? 128u :      \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_224 ? 128u :  \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_256 ? 128u :  \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_224 ? 144u :     \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_256 ? 136u :     \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_384 ? 104u :     \
-        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_512 ? 72u :      \
+#define PSA_HASH_BLOCK_LENGTH(alg)                                     \
+    (                                                                  \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_MD5 ? 64u :              \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_RIPEMD160 ? 64u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_1 ? 64u :            \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_224 ? 64u :          \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_256 ? 64u :          \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_384 ? 128u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512 ? 128u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_224 ? 128u :     \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA_512_256 ? 128u :     \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_224 ? 144u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_256 ? 136u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_384 ? 104u :        \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_SHA3_512 ? 72u :         \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_BLAKE2S_HASH256 ? 64u :  \
+        PSA_ALG_HMAC_GET_HASH(alg) == PSA_ALG_BLAKE2B_HASH512 ? 128u : \
         0u)
 
 /** \def PSA_HASH_MAX_SIZE
@@ -119,6 +123,8 @@
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 128u
 #elif defined(PSA_WANT_ALG_SHA_384)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 128u
+#elif defined(PSA_WANT_ALG_BLAKE2B_HASH512)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 128u
 #elif defined(PSA_WANT_ALG_SHA3_384)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 104u
 #elif defined(PSA_WANT_ALG_SHA3_512)
@@ -127,15 +133,19 @@
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
 #elif defined(PSA_WANT_ALG_SHA_224)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
+#elif defined(PSA_WANT_ALG_BLAKE2S_HASH256)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
 #else /* SHA-1 or smaller */
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
 #endif
 
-#if defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA3_512)
+#if defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA3_512) || \
+    defined(PSA_WANT_ALG_BLAKE2B_HASH512)
 #define PSA_HASH_MAX_SIZE 64u
 #elif defined(PSA_WANT_ALG_SHA_384) || defined(PSA_WANT_ALG_SHA3_384)
 #define PSA_HASH_MAX_SIZE 48u
-#elif defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA3_256)
+#elif defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_BLAKE2S_HASH256)
 #define PSA_HASH_MAX_SIZE 32u
 #elif defined(PSA_WANT_ALG_SHA_224) || defined(PSA_WANT_ALG_SHA3_224)
 #define PSA_HASH_MAX_SIZE 28u
