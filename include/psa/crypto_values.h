@@ -947,6 +947,20 @@
  * has the same output size and a (theoretically) higher security strength.
  */
 #define PSA_ALG_SHAKE256_512                    ((psa_algorithm_t) 0x02000015)
+/** The BLAKE2s cryptographic hash with 256 bits of output (BLAKE2s-256). */
+#define PSA_ALG_BLAKE2S_HASH256                 ((psa_algorithm_t) 0x0200001C)
+/** The BLAKE2b cryptographic hash with 512 bits of output (BLAKE2b-512). */
+#define PSA_ALG_BLAKE2B_HASH512                 ((psa_algorithm_t) 0x0200001E)
+
+/** Whether the specified algorithm is a BLAKE2 hash algorithm.
+ *
+ * \param alg An algorithm identifier: a value of type psa_algorithm_t.
+ *
+ * \return 1 if alg is a BLAKE2 hash algorithm, 0 otherwise.
+ */
+#define PSA_ALG_IS_BLAKE2_HASH(alg)     \
+    ((alg) == PSA_ALG_BLAKE2S_HASH256) || \
+    ((alg) == PSA_ALG_BLAKE2B_HASH512)
 
 /** In a hash-and-sign algorithm policy, allow any hash algorithm.
  *
