@@ -103,7 +103,7 @@ static int pkcs5_parse_pbkdf2_params(const mbedtls_asn1_buf *params,
     return 0;
 }
 
-int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
+int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params,
                             const unsigned char *pwd,  size_t pwdlen,
                             const unsigned char *data, size_t datalen,
                             unsigned char *output, size_t output_size,
@@ -118,7 +118,6 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
     const mbedtls_cipher_info_t *cipher_info;
     mbedtls_cipher_type_t cipher_alg;
     mbedtls_cipher_context_t cipher_ctx;
-    unsigned int padlen = 0;
 
     p = pbe_params->p;
     end = p + pbe_params->len;
@@ -176,17 +175,8 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
         return MBEDTLS_ERR_PKCS5_INVALID_FORMAT;
     }
 
-    if (mode == MBEDTLS_PKCS5_DECRYPT) {
-        if (output_size < datalen) {
-            return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
-        }
-    }
-
-    if (mode == MBEDTLS_PKCS5_ENCRYPT) {
-        padlen = cipher_info->block_size - (datalen % cipher_info->block_size);
-        if (output_size < (datalen + padlen)) {
-            return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
-        }
+    if (output_size < datalen) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
     }
 
     mbedtls_cipher_init(&cipher_ctx);
@@ -204,7 +194,7 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
     }
 
     if ((ret = mbedtls_cipher_setkey(&cipher_ctx, key, 8 * keylen,
-                                     (mbedtls_operation_t) mode)) != 0) {
+                                     MBEDTLS_DECRYPT)) != 0) {
         goto exit;
     }
 
