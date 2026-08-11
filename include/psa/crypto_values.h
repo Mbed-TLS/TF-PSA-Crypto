@@ -1444,6 +1444,10 @@
  * (PKCS#1: RSA Cryptography Specifications) under the name
  * RSASSA-PKCS1-v1_5.
  *
+ * \note                PSA_ALG_BLAKE2S_HASH256 and PSA_ALG_BLAKE2B_HASH512 are
+ *                      not specified with PSA_ALG_RSA_PKCS1V15_SIGN due to the
+ *                      lack of a standard OID for these hash algorithms.
+ *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
  *                      This includes #PSA_ALG_ANY_HASH
