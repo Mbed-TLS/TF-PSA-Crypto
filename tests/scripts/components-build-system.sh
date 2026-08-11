@@ -164,6 +164,25 @@ component_tf_psa_crypto_build_config_name () {
     rm -f include/psa/crypto_config_full.h
 }
 
+component_tf_psa_crypto_build_config_options () {
+    msg "build: cmake with a base config, TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DTF_PSA_CRYPTO_CONFIG_FILE=configs/crypto-config-symmetric-only.h \
+          -DTF_PSA_CRYPTO_CONFIG_UNSET=PSA_WANT_ALG_RIPEMD160 \
+          '-DTF_PSA_CRYPTO_CONFIG_SET=PSA_WANT_ALG_XTS;PSA_WANT_ALG_SHA_256=2' \
+          "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build . --target tfpsacrypto
+
+    grep -E '^#define PSA_WANT_ALG_SHA_256[[:space:]]+2$' \
+         include/psa/crypto_config.h
+    grep -E '^#define PSA_WANT_ALG_XTS[[:space:]]+1$' \
+         include/psa/crypto_config.h
+    not grep -q '^#define PSA_WANT_ALG_RIPEMD160' include/psa/crypto_config.h
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
 component_tf_psa_crypto_install_with_destdir () {
     msg "install: cmake tf-psa-crypto with DESTDIR staging"
     TF_PSA_CRYPTO_ROOT_DIR="$PWD"
