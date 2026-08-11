@@ -1,0 +1,5 @@
+Features
+   * Add the `TF_PSA_CRYPTO_CONFIG_SET` and `TF_PSA_CRYPTO_CONFIG_UNSET`
+     CMake options for customizing compile-time configurations, including
+     configurations based on a custom `TF_PSA_CRYPTO_CONFIG_FILE`. Fixes
+     Mbed-TLS/mbedtls#10838.
