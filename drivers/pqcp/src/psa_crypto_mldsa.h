@@ -61,9 +61,11 @@
 /** Export the public key of an ML-DSA key pair.
  *
  * \param[in] attributes        The key attributes.
- * \param[in] key_buffer        The key material. This must be a key pair
- *                              in the standard representation, i.e.
- *                              just the 32-byte seed.
+ * \param[in] key_buffer        The key material. This may be either:
+ *                              * a key pair in the standard representation,
+ *                                i.e. just the 32-byte seed; or
+ *                              * the concatenation of the 32-byte seed and the
+ *                                standard expanded private key format.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param[out] data             On success, the exported key.
  * \param data_size             The size of \p data, in bytes.
@@ -76,6 +78,8 @@
  *         The key type or size registered in \p attributes is not supported.
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The key material is invalid.
+ *         Note that this function is not guaranteed to detect all cases
+ *         of invalid or inconsistent keys.
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
  *         \p data_size is too small.
  */
@@ -87,9 +91,11 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
 /** Sign a message using pure-ML-DSA (without pre-hashing).
  *
  * \param[in] attributes        The key attributes.
- * \param[in] key_buffer        The key material. This must be a key pair
- *                              in the standard representation, i.e.
- *                              just the 32-byte seed.
+ * \param[in] key_buffer        The key material. This may be either:
+ *                              * a key pair in the standard representation,
+ *                                i.e. just the 32-byte seed; or
+ *                              * the concatenation of the 32-byte seed and the
+ *                                standard expanded private key format.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param alg                   The algorithm:
  *                              #PSA_ALG_ML_DSA (not implemented yet) or
@@ -109,6 +115,8 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The key material is invalid, or the key type is invalid for the
  *         given algorithm.
+ *         Note that this function is not guaranteed to detect all cases
+ *         of invalid or inconsistent keys.
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
  *         \p signature_size is too small.
  */
@@ -155,9 +163,11 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
  * \param operation             An operation structure. It must not
  *                              be in use.
  * \param[in] attributes        The key attributes.
- * \param[in] key_buffer        The key material. This must be a key pair
- *                              in the standard representation, i.e.
- *                              just the 32-byte seed.
+ * \param[in] key_buffer        The key material. This may be either:
+ *                              * a key pair in the standard representation,
+ *                                i.e. just the 32-byte seed; or
+ *                              * the concatenation of the 32-byte seed and the
+ *                                standard expanded private key format.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param alg                   The algorithm:
  *                              #PSA_ALG_ML_DSA (not implemented yet) or
@@ -171,6 +181,8 @@ psa_status_t tf_psa_crypto_mldsa_verify_message(
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The key material is invalid, or the key type is invalid for the
  *         given algorithm.
+ *         Note that this function is not guaranteed to detect all cases
+ *         of invalid or inconsistent keys.
  */
 psa_status_t tf_psa_crypto_mldsa_sign_setup(
     tf_psa_crypto_mldsa_operation_t *operation,
@@ -229,7 +241,8 @@ psa_status_t tf_psa_crypto_mldsa_update(
  * \param operation             An operation structure. It must have
  *                              been set up for signing and not finished
  *                              or aborted yet.
- * \param[in] key_buffer        The key material. This must be the same seed
+ * \param[in] key_buffer        The key material. This must be the same key
+ *                              (in the same representation) that was
  *                              passed to tf_psa_crypto_mldsa_sign_setup().
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  * \param[out] signature        On success, the exported key.

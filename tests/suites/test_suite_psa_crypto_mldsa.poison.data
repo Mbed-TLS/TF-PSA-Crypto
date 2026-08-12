@@ -1,26 +1,50 @@
-MLDSA-87 export public key: poison on lock, sufficient memory
+MLDSA-87 export public key: seed, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_export_public_key:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
+poison_export_public_key:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
 
-MLDSA-87 export public key: poison on lock, full buffer
+MLDSA-87 export public key: joined, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_export_public_key:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+poison_export_public_key:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
 
-MLDSA-87 export public key: poison on unlock, full buffer
+MLDSA-87 export public key: seed, poison on lock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_export_public_key:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+poison_export_public_key:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
 
-MLDSA-87 sign deterministic: poison on lock, sufficient memory
-depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_deterministic_pure:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
+MLDSA-87 export public key: joined, poison on lock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_export_public_key:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
 
-MLDSA-87 sign deterministic: poison on lock, full buffer
-depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_deterministic_pure:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+MLDSA-87 export public key: seed, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_export_public_key:PKF_SEED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
-MLDSA-87 sign deterministic: poison on unlock, full buffer
+MLDSA-87 export public key: joined, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_export_public_key:PKF_JOINED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 sign deterministic: seed, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_deterministic_pure:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+poison_sign_deterministic_pure:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
+
+MLDSA-87 sign deterministic: joined, poison on lock, sufficient memory
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_pure:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
+
+MLDSA-87 sign deterministic: seed, poison on lock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_pure:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+
+MLDSA-87 sign deterministic: joined, poison on lock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_pure:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+
+MLDSA-87 sign deterministic: seed, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_pure:PKF_SEED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 sign deterministic: joined, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_pure:PKF_JOINED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
 MLDSA-87 verify: poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
@@ -34,32 +58,60 @@ MLDSA-87 verify: poison on unlock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
 poison_verify_pure:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
-# The setup step only requires MLD_TOTAL_ALLOC_87_KEYPAIR bytes of buffer memory, the signature generation happens in finish()
-MLDSA-87 sign setup: poison on lock, sufficient memory
+# With the private key in seed format, the setup step requires
+# MLD_TOTAL_ALLOC_87_KEYPAIR bytes of buffer memory to expand the key.
+# The signature itself happens in finish().
+MLDSA-87 sign setup: seed, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_setup:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
+poison_sign_setup:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
 
-MLDSA-87 sign setup: poison on lock, full buffer
+# With the private key in joined format, the setup step does not require
+# any buffer memory. The signature itself happens in finish().
+MLDSA-87 sign setup: joined, poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_setup:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+poison_sign_setup:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
 
-MLDSA-87 sign setup: poison on unlock, full buffer
+MLDSA-87 sign setup: seed, poison on lock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_setup:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+poison_sign_setup:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
 
-MLDSA-87 sign deterministic multipart finish: poison on lock, sufficient memory
+MLDSA-87 sign setup: joined, poison on lock, full buffer (success)
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_deterministic_multipart_finish:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
+poison_sign_setup:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 sign setup: seed, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_setup:PKF_SEED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 sign setup: joined, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_setup:PKF_JOINED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 sign deterministic multipart finish: seed, poison on lock, sufficient memory
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_multipart_finish:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
+
+MLDSA-87 sign deterministic multipart finish: joined, poison on lock, sufficient memory
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_multipart_finish:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
 
 # We don't test with full-buffer poisoning, because it would cause a failure in tf_psa_crypto_mldsa_sign_setup(), before the test gets to finish()
 # MLD_CONFIG_REDUCE_RAM makes keypair() take more memory than sign(), so we must disable this test.
-MLDSA-87 sign deterministic multipart finish: poison on lock, insufficient memory
+MLDSA-87 sign deterministic multipart finish: seed, poison on lock, insufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:!MLD_CONFIG_REDUCE_RAM
-poison_sign_deterministic_multipart_finish:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_ERROR_INSUFFICIENT_MEMORY
+poison_sign_deterministic_multipart_finish:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_ERROR_INSUFFICIENT_MEMORY
 
-MLDSA-87 sign deterministic multipart finish: poison on unlock, full buffer
+MLDSA-87 sign deterministic multipart finish: joined, poison on lock, insufficient memory
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:!MLD_CONFIG_REDUCE_RAM
+poison_sign_deterministic_multipart_finish:PKF_JOINED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_ERROR_INSUFFICIENT_MEMORY
+
+MLDSA-87 sign deterministic multipart finish: seed, poison on unlock, full buffer
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
-poison_sign_deterministic_multipart_finish:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+poison_sign_deterministic_multipart_finish:PKF_SEED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 sign deterministic multipart finish: joined, poison on unlock, full buffer
+depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
+poison_sign_deterministic_multipart_finish:PKF_JOINED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
 MLDSA-87 verify multipart finish: poison on lock, sufficient memory
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS
