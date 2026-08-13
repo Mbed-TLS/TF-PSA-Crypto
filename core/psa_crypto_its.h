@@ -107,7 +107,7 @@ psa_status_t psa_its_get(psa_storage_uid_t uid,
  * \retval      #PSA_ERROR_DOES_NOT_EXIST    The operation failed because the provided uid value was not found in the storage
  * \retval      #PSA_ERROR_DATA_CORRUPT      The operation failed because stored data has been corrupted
  * \retval      #PSA_ERROR_INVALID_ARGUMENT  The operation failed because \p uid is 0,
- *                                           or one of the provided pointers (`p_data`) is invalid,
+ *                                           or the provided pointer (`p_info`) is invalid,
  *                                           for example is `NULL` or references memory the caller cannot access.
  */
 psa_status_t psa_its_get_info(psa_storage_uid_t uid,
