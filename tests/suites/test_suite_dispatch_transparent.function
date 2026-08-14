@@ -25,6 +25,59 @@
  * END_DEPENDENCIES */
 
 /* BEGIN_CASE */
+void generate_key(int type, int bits,
+                  int allow_shorter)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
+    size_t output_size = PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits);
+    size_t output_length1 = SIZE_MAX;
+    size_t output_length2 = SIZE_MAX;
+    uint8_t *output1 = NULL;
+    uint8_t *output2 = NULL;
+    uint8_t *zero = NULL;
+
+    PSA_INIT();
+    TEST_CALLOC(output1, output_size);
+    TEST_CALLOC(output2, output_size);
+    TEST_CALLOC(zero, output_size);
+
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+
+    /* Generate a key */
+    PSA_ASSERT(psa_driver_wrapper_generate_key(&attributes,
+                                               &custom, NULL, 0,
+                                               output1, output_size,
+                                               &output_length1));
+    TEST_LE_U(output_length1, output_size);
+    TEST_LE_U(output_size - allow_shorter, output_length1);
+    TEST_ASSERT(memcmp(output1, zero, output_length1));
+
+    /* Generate another key */
+    PSA_ASSERT(psa_driver_wrapper_generate_key(&attributes,
+                                               &custom, NULL, 0,
+                                               output2, output_size,
+                                               &output_length2));
+    TEST_LE_U(output_length2, output_size);
+    TEST_LE_U(output_size - allow_shorter, output_length2);
+    TEST_ASSERT(memcmp(output2, zero, output_length2));
+
+    /* Check that successive calls produce different keys */
+    if (output_length1 == output_length2) {
+        TEST_ASSERT(memcmp(output1, output2, output_length1));
+    }
+
+exit:
+    mbedtls_free(output1);
+    mbedtls_free(output2);
+    mbedtls_free(zero);
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void export_public_key(int type_arg, int bits_arg,
                        data_t *key_buffer,
                        data_t *expected_public_key,
