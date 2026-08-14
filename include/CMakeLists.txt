@@ -1,15 +1,34 @@
 option(INSTALL_TF_PSA_CRYPTO_HEADERS "Install TF PSA Crypto headers." ON)
 
-# Generate a build-tree configuration when transformations are requested.
-if(TF_PSA_CRYPTO_CONFIG_NAME OR TF_PSA_CRYPTO_CONFIG_SET OR
-   TF_PSA_CRYPTO_CONFIG_UNSET)
-    if(TF_PSA_CRYPTO_CONFIG_FILE)
-        set(TF_PSA_CRYPTO_BASE_CONFIG_FILE "${TF_PSA_CRYPTO_CONFIG_FILE}")
+# Generate a build-tree configuration when a base or transformations are requested.
+if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "" OR
+   NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "" OR
+   NOT "${TF_PSA_CRYPTO_CONFIG_SET}" STREQUAL "" OR
+   NOT "${TF_PSA_CRYPTO_CONFIG_UNSET}" STREQUAL "")
+    if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
+        message(FATAL_ERROR
+            "TF_PSA_CRYPTO_CONFIG_BASE_FILE, TF_PSA_CRYPTO_CONFIG_NAME, "
+            "TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET are not "
+            "supported in an in-tree build.")
+    endif()
+
+    if((NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "" OR
+        NOT "${TF_PSA_CRYPTO_CONFIG_SET}" STREQUAL "" OR
+        NOT "${TF_PSA_CRYPTO_CONFIG_UNSET}" STREQUAL "") AND
+       "${TF_PSA_CRYPTO_PYTHON_EXECUTABLE}" STREQUAL "")
+        message(FATAL_ERROR
+            "Python 3 is required to generate a TF-PSA-Crypto configuration file.")
+    endif()
+
+    if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "")
+        set(TF_PSA_CRYPTO_BASE_CONFIG_FILE
+            "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
         if(NOT EXISTS "${TF_PSA_CRYPTO_BASE_CONFIG_FILE}")
-            file(RELATIVE_PATH TF_PSA_CRYPTO_CONFIG_FILE_RELATIVE
-                 "${PROJECT_BINARY_DIR}" "${TF_PSA_CRYPTO_CONFIG_FILE}")
+            file(RELATIVE_PATH TF_PSA_CRYPTO_CONFIG_BASE_FILE_RELATIVE
+                 "${PROJECT_BINARY_DIR}"
+                 "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
             set(TF_PSA_CRYPTO_BASE_CONFIG_FILE
-                "${PROJECT_SOURCE_DIR}/${TF_PSA_CRYPTO_CONFIG_FILE_RELATIVE}")
+                "${PROJECT_SOURCE_DIR}/${TF_PSA_CRYPTO_CONFIG_BASE_FILE_RELATIVE}")
         endif()
     else()
         set(TF_PSA_CRYPTO_BASE_CONFIG_FILE
@@ -20,19 +39,11 @@ if(TF_PSA_CRYPTO_CONFIG_NAME OR TF_PSA_CRYPTO_CONFIG_SET OR
             "TF-PSA-Crypto configuration file not found: ${TF_PSA_CRYPTO_BASE_CONFIG_FILE}")
     endif()
 
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/psa)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/psa")
     set(TF_PSA_CRYPTO_GENERATED_CONFIG_FILE
         "${CMAKE_CURRENT_BINARY_DIR}/psa/crypto_config.h")
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E copy
-                "${TF_PSA_CRYPTO_BASE_CONFIG_FILE}"
-                "${TF_PSA_CRYPTO_GENERATED_CONFIG_FILE}"
-        RESULT_VARIABLE result
-    )
-    if(result)
-        message(FATAL_ERROR
-            "Failed to copy the TF-PSA-Crypto base configuration file")
-    endif()
+    configure_file("${TF_PSA_CRYPTO_BASE_CONFIG_FILE}"
+                   "${TF_PSA_CRYPTO_GENERATED_CONFIG_FILE}" COPYONLY)
 
     function(tf_psa_crypto_configure_generated_file)
         execute_process(
@@ -49,7 +60,7 @@ if(TF_PSA_CRYPTO_CONFIG_NAME OR TF_PSA_CRYPTO_CONFIG_SET OR
         endif()
     endfunction(tf_psa_crypto_configure_generated_file)
 
-    if(TF_PSA_CRYPTO_CONFIG_NAME)
+    if(NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "")
         tf_psa_crypto_configure_generated_file("${TF_PSA_CRYPTO_CONFIG_NAME}")
     endif()
     foreach(option IN LISTS TF_PSA_CRYPTO_CONFIG_UNSET)
@@ -67,9 +78,9 @@ if(TF_PSA_CRYPTO_CONFIG_NAME OR TF_PSA_CRYPTO_CONFIG_SET OR
         endif()
     endforeach(option)
 
-    set(TF_PSA_CRYPTO_CONFIG_FILE "${TF_PSA_CRYPTO_GENERATED_CONFIG_FILE}")
-    set(TF_PSA_CRYPTO_CONFIG_FILE "${TF_PSA_CRYPTO_GENERATED_CONFIG_FILE}"
-        PARENT_SCOPE)
+    set(TF_PSA_CRYPTO_CONFIG_FILE
+        "$<BUILD_INTERFACE:${TF_PSA_CRYPTO_GENERATED_CONFIG_FILE}>$<INSTALL_INTERFACE:psa/crypto_config.h>")
+    set(TF_PSA_CRYPTO_CONFIG_FILE "${TF_PSA_CRYPTO_CONFIG_FILE}" PARENT_SCOPE)
     set(TF_PSA_CRYPTO_CONFIG_TRANSFORMED ON)
     set(TF_PSA_CRYPTO_CONFIG_TRANSFORMED ON PARENT_SCOPE)
 endif()
