@@ -283,6 +283,29 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
     }
 }
 
+psa_status_t tf_psa_crypto_mldsa_generate_key(
+    const psa_key_attributes_t *attributes,
+    uint8_t *seed, size_t seed_size, size_t *seed_length)
+{
+    *seed_length = 0;           /* Safe default */
+
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (psa_get_key_bits(attributes) != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (seed_size < SEED_SIZE) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    psa_status_t status = psa_generate_random(seed, SEED_SIZE);
+    if (status == PSA_SUCCESS) {
+        *seed_length = SEED_SIZE;
+    }
+    return status;
+}
+
 static int sign_from_expanded(
     const uint8_t *secret,
     const uint8_t *message, size_t message_length,

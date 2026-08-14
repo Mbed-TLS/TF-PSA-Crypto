@@ -87,6 +87,21 @@ void generate_key(int type, int bits,
     uint8_t *zero = NULL;
     uint8_t *public = NULL;
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+    /* Hack alert: at the time of writing, PSA_EXPORT_KEY_OUTPUT_SIZE
+     * doesn't support ML-DSA yet. It returns the size of a symmetric
+     * key of the size given by `bits` (e.g. 11 for bits=87).
+     * Same for the public key below.
+     */
+    if (type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        if (output_size < 32) {
+            output_size = 32;
+        } else {
+            TEST_FAIL("Now that PSA_EXPORT_KEY_OUTPUT_SIZE() supports ML-DSA, remove this hack.");
+        }
+    }
+#endif
+
     PSA_INIT();
     TEST_CALLOC(output1, output_size);
     TEST_CALLOC(output2, output_size);
@@ -107,6 +122,13 @@ void generate_key(int type, int bits,
     if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
         psa_key_type_t public_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type);
         size_t public_size = PSA_EXPORT_KEY_OUTPUT_SIZE(public_type, bits);
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        /* Hack alert: as above, the generic size macro doesn't know about
+         * ML-DSA yet. */
+        if (type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+            public_size = TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(bits);
+        }
+#endif
         size_t public_length = SIZE_MAX;
         TEST_CALLOC(public, public_size);
         PSA_ASSERT(psa_driver_wrapper_export_public_key(&attributes,
