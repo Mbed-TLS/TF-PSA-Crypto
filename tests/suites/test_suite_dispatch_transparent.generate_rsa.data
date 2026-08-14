@@ -1,0 +1,23 @@
+# Separate data file for RSA key generation, which is slow.
+
+# RSA private keys have a variable size since the format requires
+# stripping leading zeros from numbers that are essentially pseudorandom
+# (dP, dQ, U).
+# PSA_KEY_EXPORT_RSA_KEY_PAIR_MAX_SIZE is a generous overapproximation,
+# so we expect the generated key to be more than a handful of bytes smaller.
+
+generate_key: RSA-min key pair, default e
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE
+generate_key:PSA_KEY_TYPE_RSA_KEY_PAIR:PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS:0:"":40
+
+generate_key: RSA-min key pair, e=3
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE
+generate_key:PSA_KEY_TYPE_RSA_KEY_PAIR:PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS:0:"03":40
+
+generate_key: RSA-min key pair, e=65521
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE
+generate_key:PSA_KEY_TYPE_RSA_KEY_PAIR:PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS:0:"fff1":40
+
+generate_key: RSA-min key pair, e=65537
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE
+generate_key:PSA_KEY_TYPE_RSA_KEY_PAIR:PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS:0:"010001":40
