@@ -18,6 +18,53 @@
  * defined unconditionally. */
 #include "psa_crypto_mldsa.h"
 
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+static int check_rsa_public_exponent(
+    const uint8_t *expected_e, size_t expected_e_length,
+    const uint8_t *public, size_t public_length)
+{
+    const uint8_t default_e[3] = { 0x01, 0x00, 0x01 };
+    int ok = 0;
+
+    if (expected_e_length == 0) {
+        expected_e = default_e;
+        expected_e_length = sizeof(default_e);
+    }
+    /* For simplicity, we don't support values of e might need a multi-byte
+     * length encoding in ASN.1. */
+    TEST_LE_U(expected_e_length, 0x7e);
+    /* Strip leading zeros */
+    for (; expected_e_length > 0; expected_e++) {
+        if (*expected_e != 0) {
+            break;
+        }
+    }
+
+    /* We assume that the public key has the expected ASN.1 format.
+     * We only test the value of the public exponent.
+     * This is the end of the byte string.
+     * We also check that the public exponent has the expected ASN.1
+     * type, length, and possible leading zero.
+     */
+    TEST_LE_U(3 + expected_e_length, public_length);
+    const uint8_t *e_start = public + public_length - expected_e_length;
+    TEST_MEMORY_COMPARE(e_start, expected_e_length,
+                        expected_e, expected_e_length);
+    if (expected_e[0] >= 0x80) {
+        --e_start;
+        ++expected_e_length;
+        TEST_EQUAL(e_start[0], 0);
+    }
+    TEST_EQUAL(e_start[-1], expected_e_length);
+    TEST_EQUAL(e_start[-2], 0x02);
+
+    ok = 1;
+
+exit:
+    return ok;
+}
+#endif
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -26,16 +73,19 @@
 
 /* BEGIN_CASE */
 void generate_key(int type, int bits,
+                  int custom_flags_arg, data_t *custom_data,
                   int allow_shorter)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
+    custom.flags = custom_flags_arg;
     size_t output_size = PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits);
     size_t output_length1 = SIZE_MAX;
     size_t output_length2 = SIZE_MAX;
     uint8_t *output1 = NULL;
     uint8_t *output2 = NULL;
     uint8_t *zero = NULL;
+    uint8_t *public = NULL;
 
     PSA_INIT();
     TEST_CALLOC(output1, output_size);
@@ -47,16 +97,36 @@ void generate_key(int type, int bits,
 
     /* Generate a key */
     PSA_ASSERT(psa_driver_wrapper_generate_key(&attributes,
-                                               &custom, NULL, 0,
+                                               &custom, custom_data->x, custom_data->len,
                                                output1, output_size,
                                                &output_length1));
     TEST_LE_U(output_length1, output_size);
     TEST_LE_U(output_size - allow_shorter, output_length1);
     TEST_ASSERT(memcmp(output1, zero, output_length1));
 
+    if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        psa_key_type_t public_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type);
+        size_t public_size = PSA_EXPORT_KEY_OUTPUT_SIZE(public_type, bits);
+        size_t public_length = SIZE_MAX;
+        TEST_CALLOC(public, public_size);
+        PSA_ASSERT(psa_driver_wrapper_export_public_key(&attributes,
+                                                        output1, output_length1,
+                                                        public, public_size,
+                                                        &public_length));
+
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+        if (type == PSA_KEY_TYPE_RSA_KEY_PAIR) {
+            if (!check_rsa_public_exponent(custom_data->x, custom_data->len,
+                                           public, public_length)) {
+                goto exit;
+            }
+        }
+#endif
+    }
+
     /* Generate another key */
     PSA_ASSERT(psa_driver_wrapper_generate_key(&attributes,
-                                               &custom, NULL, 0,
+                                               &custom, custom_data->x, custom_data->len,
                                                output2, output_size,
                                                &output_length2));
     TEST_LE_U(output_length2, output_size);
@@ -72,6 +142,7 @@ exit:
     mbedtls_free(output1);
     mbedtls_free(output2);
     mbedtls_free(zero);
+    mbedtls_free(public);
     psa_reset_key_attributes(&attributes);
     PSA_DONE();
 }
