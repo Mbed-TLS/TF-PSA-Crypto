@@ -165,22 +165,90 @@ component_tf_psa_crypto_build_config_name () {
 }
 
 component_tf_psa_crypto_build_config_options () {
-    msg "build: cmake with a base config, TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET"
+    msg "configure: cmake with TF_PSA_CRYPTO_CONFIG_BASE_FILE only"
     cd "$OUT_OF_SOURCE_DIR"
-    cmake -DTF_PSA_CRYPTO_CONFIG_FILE=configs/crypto-config-symmetric-only.h \
-          -DTF_PSA_CRYPTO_CONFIG_UNSET=PSA_WANT_ALG_RIPEMD160 \
-          '-DTF_PSA_CRYPTO_CONFIG_SET=PSA_WANT_ALG_XTS;PSA_WANT_ALG_SHA_256=2' \
+    cmake -DTF_PSA_CRYPTO_CONFIG_BASE_FILE=configs/crypto-config-symmetric-only.h \
           "$TF_PSA_CRYPTO_ROOT_DIR"
-    cmake --build . --target tfpsacrypto
-
-    grep -E '^#define PSA_WANT_ALG_SHA_256[[:space:]]+2$' \
-         include/psa/crypto_config.h
-    grep -E '^#define PSA_WANT_ALG_XTS[[:space:]]+1$' \
-         include/psa/crypto_config.h
-    not grep -q '^#define PSA_WANT_ALG_RIPEMD160' include/psa/crypto_config.h
+    cmp "$TF_PSA_CRYPTO_ROOT_DIR/configs/crypto-config-symmetric-only.h" \
+        include/psa/crypto_config.h
 
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    msg "configure: reject TF_PSA_CRYPTO_CONFIG_FILE with transformations"
+    not cmake -DTF_PSA_CRYPTO_CONFIG_FILE=configs/crypto-config-symmetric-only.h \
+              -DTF_PSA_CRYPTO_CONFIG_SET=PSA_WANT_ALG_SHA_256 \
+              "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    msg "configure: reject a missing base configuration"
+    not cmake -DTF_PSA_CRYPTO_CONFIG_BASE_FILE=configs/does-not-exist.h \
+              "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    msg "configure: cmake with a false-like option name"
+    cmake -DTF_PSA_CRYPTO_CONFIG_SET=NO "$TF_PSA_CRYPTO_ROOT_DIR"
+    grep '^#define NO$' include/psa/crypto_config.h
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    msg "build: cmake with a base config, TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET"
+    cp "$TF_PSA_CRYPTO_ROOT_DIR/configs/crypto-config-symmetric-only.h" \
+       base_config.before
+    cmake -DTF_PSA_CRYPTO_CONFIG_BASE_FILE=configs/crypto-config-symmetric-only.h \
+          -DTF_PSA_CRYPTO_CONFIG_UNSET=PSA_WANT_ALG_RIPEMD160 \
+          '-DTF_PSA_CRYPTO_CONFIG_SET=PSA_WANT_KEY_TYPE_RAW_DATA;PSA_WANT_ALG_SHA_256=2' \
+          "$TF_PSA_CRYPTO_ROOT_DIR"
+
+    grep -E '^#define PSA_WANT_ALG_SHA_256[[:space:]]+2$' \
+         include/psa/crypto_config.h
+    grep -E '^#define PSA_WANT_KEY_TYPE_RAW_DATA[[:space:]]+1$' \
+         include/psa/crypto_config.h
+    not grep -q '^#define PSA_WANT_ALG_RIPEMD160' include/psa/crypto_config.h
+    cmp base_config.before \
+        "$TF_PSA_CRYPTO_ROOT_DIR/configs/crypto-config-symmetric-only.h"
+
+    msg "install: generated configuration works from the installed package"
+    install_dir="$OUT_OF_SOURCE_DIR/install"
+    cmake -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF \
+          -DCMAKE_INSTALL_PREFIX="$install_dir" .
+    cmake --build . --target install
+    cmp include/psa/crypto_config.h \
+        "$install_dir/include/psa/crypto_config.h"
+
+    mv include include.moved
+    mkdir consumer
+    cat >consumer/CMakeLists.txt <<EOF
+cmake_minimum_required(VERSION 3.10)
+project(consumer C)
+find_package(TF-PSA-Crypto REQUIRED CONFIG)
+add_executable(consumer
+    "$TF_PSA_CRYPTO_ROOT_DIR/programs/test/cmake_package_install/cmake_package_install.c")
+target_link_libraries(consumer PRIVATE TF-PSA-Crypto::tfpsacrypto)
+EOF
+    cmake -S consumer -B consumer-build \
+          -DCMAKE_PREFIX_PATH="$install_dir"
+    cmake --build consumer-build
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+
+    msg "configure: reject transformations in an in-tree build"
+    not cmake -DTF_PSA_CRYPTO_CONFIG_SET=NO .
+    rm -rf CMakeCache.txt CMakeFiles
 }
 
 component_tf_psa_crypto_install_with_destdir () {
