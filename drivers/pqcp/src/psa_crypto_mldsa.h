@@ -12,6 +12,36 @@
 
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
+/** Expand a seed into a joined format: the concatenation of the 32-byte seed
+ * and the standard expanded private key format.
+ *
+ * \param bits                  The ML-DSA parameter set (44, 56 or 87).
+ * \param[in] standard_key      The seed to expand.
+ * \param standard_key_length   The length of \p seed, in bytes. This must be
+ *                              #TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE.
+ * \param[out] custom_key       On success, the key in joined format.
+ *                              The pointers \p custom_key and \p standard_key
+ *                              may be equal, but no other overlap between
+ *                              the buffers is supported.
+ * \param custom_key_size       The size of the \p custom_key buffer in bytes.
+ *                              This must be at least
+ *                              #TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(\p bits).
+ * \param[out] custom_key_length The length of the output, in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The value of \p bits is not supported.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         \p standard_key_length is invalid.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         \p custom_key_size is too small.
+ */
+psa_status_t tf_psa_crypto_mldsa_expand_private_key(
+    size_t bits,
+    const uint8_t *standard_key, size_t standard_key_length,
+    uint8_t *custom_key, size_t custom_key_size, size_t *custom_key_length);
+
 /** Export the public key of an ML-DSA key pair.
  *
  * \param[in] attributes        The key attributes.
