@@ -106,6 +106,8 @@ static inline psa_algorithm_t psa_get_key_enrollment_algorithm(
 
 /**@}*/
 
+/** \addtogroup initialization */
+
 /**
  * \brief Library deinitialization.
  *
@@ -156,15 +158,6 @@ typedef struct mbedtls_psa_stats_s {
  *       may not expose this function.
  */
 void mbedtls_psa_get_stats(mbedtls_psa_stats_t *stats);
-
-/** \addtogroup attributes
- * @{
- */
-
-/** PAKE operation stages. */
-#define PSA_PAKE_OPERATION_STAGE_SETUP 0
-#define PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS 1
-#define PSA_PAKE_OPERATION_STAGE_COMPUTATION 2
 
 /**@}*/
 
@@ -930,8 +923,6 @@ typedef uint32_t psa_pake_primitive_t;
  */
 #define PSA_PAKE_STEP_CONFIRM                   ((psa_pake_step_t) 0x04)
 
-/**@}*/
-
 /** A sufficient output buffer size for psa_pake_output().
  *
  * If the size of the output buffer is at least this large, it is guaranteed
@@ -1116,6 +1107,11 @@ struct psa_jpake_computation_stage_s {
     psa_pake_step_t MBEDTLS_PRIVATE(step);
 };
 
+/* PAKE operation stages. */
+#define PSA_PAKE_OPERATION_STAGE_SETUP 0
+#define PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS 1
+#define PSA_PAKE_OPERATION_STAGE_COMPUTATION 2
+
 #define PSA_JPAKE_EXPECTED_INPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
                                           ((round) == PSA_JPAKE_FIRST ? 2 : 1))
 #define PSA_JPAKE_EXPECTED_OUTPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
@@ -1152,10 +1148,6 @@ struct psa_pake_operation_s {
     } MBEDTLS_PRIVATE(data);
 #endif
 };
-
-/** \addtogroup pake
- * @{
- */
 
 /** The type of the data structure for PAKE cipher suites.
  *
@@ -1948,8 +1940,6 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
  */
 psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 
-/**@}*/
-
 static inline psa_algorithm_t psa_pake_cs_get_algorithm(
     const psa_pake_cipher_suite_t *cipher_suite)
 {
@@ -2018,6 +2008,8 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
     const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;
     return v;
 }
+
+/**@}*/
 
 #ifdef __cplusplus
 }
