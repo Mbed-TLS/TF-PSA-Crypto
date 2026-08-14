@@ -901,6 +901,76 @@ void size_macros()
 /* END_CASE */
 
 /* BEGIN_CASE */
+void expand_private_key(int bits,
+                        data_t *input, int alias,
+                        data_t *expected_output, int delta,
+                        psa_status_t expected_status)
+{
+    uint8_t *input_copy = NULL;
+    uint8_t *output = NULL;
+    size_t output_size = expected_output->len + delta;
+    size_t output_length = SIZE_MAX;
+
+    PSA_INIT();
+
+    if (alias && input->len > output_size) {
+        TEST_CALLOC(output, input->len);
+    } else {
+        TEST_CALLOC(output, output_size);
+    }
+    if (alias && input->len != 0) {
+        memcpy(output, input->x, input->len);
+    }
+
+    TEST_CALLOC(input_copy, input->len);
+    if (input->len != 0) {
+        memcpy(input_copy, input->x, input->len);
+    }
+    uint8_t *input_pointer = alias ? output : input->x;
+
+    TEST_EQUAL(tf_psa_crypto_mldsa_expand_private_key(
+                   bits,
+                   input_pointer, input->len,
+                   output, output_size, &output_length),
+               expected_status);
+
+    if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
+                            output, output_length);
+    } else {
+        TEST_EQUAL(output_length, 0);
+    }
+
+    /* Check that the input is intact (we don't want it to be cleared
+     * on error, whether it's aliased to the output or not.) */
+    TEST_MEMORY_COMPARE(input_pointer, input->len,
+                        input_copy, input->len);
+
+exit:
+    mbedtls_free(input_copy);
+    mbedtls_free(output);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+void poison_expand_private_key(int alias, int delta,
+                               int poison_mode, int64_t poison_bytes,
+                               psa_status_t expected_status)
+{
+    data_t private_key = private_key_data(PKF_SEED);
+    data_t joined_key = private_key_data(PKF_JOINED);
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
+    test_expand_private_key(87, &private_key, alias,
+                            &joined_key, delta, expected_status);
+
+exit:
+    poison_cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void export_public_key(int type_arg, int bits_arg,
                        data_t *private_key,
                        data_t *expected_public_key,

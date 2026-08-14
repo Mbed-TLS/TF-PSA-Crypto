@@ -125,6 +125,57 @@ static psa_status_t pqcp_to_psa_error(int ret, psa_status_t default_error)
     }
 }
 
+psa_status_t tf_psa_crypto_mldsa_expand_private_key(
+    size_t bits,
+    const uint8_t *standard_key, size_t standard_key_length,
+    uint8_t *custom_key, size_t custom_key_size, size_t *custom_key_length)
+{
+    *custom_key_length = 0;
+
+    if (standard_key_length != SEED_SIZE) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (bits != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (custom_key_size < SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+    size_t output_length = SEED_SIZE + MLDSA87_SECRETKEYBYTES;
+
+    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+    /* Beyond this point, we must go through the cleanup code. */
+    uint8_t public[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+
+    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public,
+                                                          custom_key + SEED_SIZE,
+                                                          standard_key);
+
+    status = tf_psa_crypto_pqcp_alloc_done();
+    if (status == PSA_SUCCESS) {
+        status = pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
+    }
+    if (status == PSA_SUCCESS) {
+        /* This function is guaranteed to support
+         * custom_key == standard_key, but no other overlap. */
+        if (custom_key != standard_key) {
+            memcpy(custom_key, standard_key, SEED_SIZE);
+        }
+        *custom_key_length = output_length;
+    } else {
+        /* We haven't touched the first SEED_SIZE bytes of the output buffer,
+         * and we don't want to change it in case it aliases the
+         * input buffer. */
+        mbedtls_platform_zeroize(custom_key + SEED_SIZE,
+                                 output_length - SEED_SIZE);
+    }
+    return status;
+}
+
 static psa_status_t seed_to_public_key(
     size_t bits,
     const uint8_t *key_buffer, size_t key_buffer_size,
