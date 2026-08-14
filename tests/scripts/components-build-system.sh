@@ -239,9 +239,11 @@ add_executable(consumer
     "$TF_PSA_CRYPTO_ROOT_DIR/programs/test/cmake_package_install/cmake_package_install.c")
 target_link_libraries(consumer PRIVATE TF-PSA-Crypto::tfpsacrypto)
 EOF
-    cmake -S consumer -B consumer-build \
-          -DCMAKE_PREFIX_PATH="$install_dir"
-    cmake --build consumer-build
+    mkdir consumer-build
+    cd consumer-build
+    cmake -DCMAKE_PREFIX_PATH="$install_dir" ../consumer
+    cmake --build .
+    cd ..
 
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
