@@ -299,15 +299,16 @@ psa_status_t tf_psa_crypto_mldsa_generate_key_custom(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
-    if (custom->flags != 0) {
+    if ((custom->flags & ~(PSA_CUSTOM_KEY_FLAG_EXPAND)) != 0) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
+    int expand = !!(custom->flags & PSA_CUSTOM_KEY_FLAG_EXPAND);
     if (custom_data_length != 0) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
     (void) custom_data;
 
-    size_t prv_len = SEED_SIZE;
+    size_t prv_len = SEED_SIZE + (expand ? MLDSA87_SECRETKEYBYTES : 0);
     if (key_buffer_size < prv_len) {
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
@@ -319,9 +320,39 @@ psa_status_t tf_psa_crypto_mldsa_generate_key_custom(
         return status;
     }
 
+    if (!expand) {
+        goto exit;
+    }
+
+    status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+    /* Beyond this point, we must go through the cleanup code. */
+
+    uint8_t public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    uint8_t *expanded_private_key = key_buffer + SEED_SIZE;
+    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public_key,
+                                                          expanded_private_key,
+                                                          key_buffer);
+
+    status = tf_psa_crypto_pqcp_alloc_done();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+    status = pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+exit:
+    /* No memory wiping needed, because any sensitive content is a
+     * freshly generated key that is either returned as an output on
+     * success, or will not be used on error. */
     *key_buffer_length = prv_len;
     return PSA_SUCCESS;
 }
+
 
 static int sign_from_expanded(
     const uint8_t *secret,

@@ -94,10 +94,13 @@ void generate_key(int type, int bits,
      * Same for the public key below.
      */
     if (type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
-        if (output_size < 32) {
-            output_size = 32;
-        } else {
+        if (output_size >= TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE) {
             TEST_FAIL("Now that PSA_EXPORT_KEY_OUTPUT_SIZE() supports ML-DSA, remove this hack.");
+        }
+        if (custom_flags_arg & PSA_CUSTOM_KEY_FLAG_EXPAND) {
+            output_size = TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(bits);
+        } else {
+            output_size = TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE;
         }
     }
 #endif
