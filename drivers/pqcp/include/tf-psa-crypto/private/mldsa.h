@@ -22,6 +22,11 @@
  * rather than in a public header, because ML-DSA is not yet supported
  * through the API. In particular, the size macros in <psa/crypto_sizes.h>
  * do not yet take ML-DSA into account.
+ * through the API. Notably:
+ *
+ * - The size macros in <psa/crypto_sizes.h> do not take ML-DSA into account.
+ * - generate_psa_tests.py must not generate ML-DSA test cases until
+ *   ML-DSA is reachable through the API.
  */
 
 /** The type of an ML-DSA key pair.
