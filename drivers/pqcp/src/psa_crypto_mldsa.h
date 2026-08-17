@@ -21,6 +21,10 @@
  *                              * the concatenation of the 32-byte seed and the
  *                                standard expanded private key format.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ *                              This must be at least
+ *                              #TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(\c bits)
+ *                              where \c bits is the ML-DSA parameter set
+ *                              equal to psa_get_key_bits(\p attributes).
  * \param[out] data             On success, the exported key.
  * \param data_size             The size of \p data, in bytes.
  * \param[out] data_length      On success, the length of the data written

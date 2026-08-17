@@ -26,7 +26,7 @@
 
 /** The type of an ML-DSA key pair.
  *
- * It is represented as just the 32-byte seed.
+ * By default, it is represented as just the 32-byte seed.
  *
  * The `bits` attribute of the key indicates the parameter set:
  * 44, 56 or 87.
@@ -39,6 +39,46 @@
  * 44, 56 or 87.
  */
 #define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
+
+/** The size of an ML-DSA key pair in the PSA representation,
+ * which is just the seed.
+ */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE 32u
+
+/** The size of an ML-DSA key pair in the joined representation:
+ * the concatenation of the 32-byte seed with the standard ML-DSA
+ * expanded key format.
+ *
+ * \param bits  The ML-DSA parameter set (44, 56 or 87).
+ * \return      The size of the join key representation in bytes.
+ *              Unpecified if \p bits is not supported.
+ */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(bits)      \
+    (32u +                                                          \
+     ((bits) == 44 ? 2560u :                                        \
+      (bits) == 65 ? 4032u :                                        \
+      (bits) == 87 ? 4896u :                                        \
+      0u))
+
+/** The maximum size of an ML-DSA key pair in the joined representation. */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_MAX_SIZE    \
+    TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(87)
+
+/** The size of an ML-DSA public key.
+ *
+ * \param bits  The ML-DSA parameter set (44, 56 or 87).
+ * \return      The size of the public key in bytes.
+ *              Unpecified if \p bits is not supported.
+ */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(bits)              \
+    ((bits) == 44 ? 1312u :                                         \
+     (bits) == 65 ? 1952u :                                         \
+     (bits) == 87 ? 2592u :                                         \
+     0u)
+
+/** The maximum size of an ML-DSA public key. */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE    \
+    TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87)
 
 /** Whether the key type is an ML-DSA key (key pair or public key). */
 #define PSA_KEY_TYPE_IS_ML_DSA(type)                                    \

@@ -101,16 +101,8 @@ static inline void mld_shake256_release(tf_psa_crypto_mldsa_shake256_t *state)
 MBEDTLS_STATIC_ASSERT(MLDSA87_BYTES == PSA_MLDSA_SIGNATURE_SIZE(87),
                       "PSA and mldsa-native disagree on the ML-DSA-87 signature size");
 
-/* For now, hard-coded values for MLDSA-87 */
-#define TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
-#define TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE MLDSA87_PUBLICKEYBYTES
-#define TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE MLDSA87_BYTES
-
-/* Check that what the API adversises as a sufficient output buffer for
- * sign_message() is enough for the largest signature we might write. */
-MBEDTLS_STATIC_ASSERT(
-    TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE <= PSA_MLDSA_SIGNATURE_MAX_SIZE,
-    "PSA and mldsa-native disagree on the maximum ML-DSA signature size");
+/* For now, hard-coded value for MLDSA-87 */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
 
 static psa_status_t pqcp_to_psa_error(int ret, psa_status_t default_error)
 {
@@ -157,7 +149,7 @@ static psa_status_t seed_to_public_key(
         return status;
     }
     /* Beyond this point, we must go through the cleanup code. */
-    uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
+    uint8_t secret[TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE];
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(data,
                                                           secret,
@@ -263,8 +255,8 @@ static psa_status_t sign_from_seed(
     const uint8_t *message, size_t message_length,
     uint8_t *signature, size_t *signature_length)
 {
-    uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
-    uint8_t public[TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    uint8_t secret[TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE];
+    uint8_t public[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public,
                                                           secret,

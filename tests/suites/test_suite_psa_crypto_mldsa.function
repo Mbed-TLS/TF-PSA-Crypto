@@ -882,6 +882,25 @@ static void poison_cleanup(void)
  * END_DEPENDENCIES */
 
 /* BEGIN_CASE */
+void size_macros()
+{
+    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE, MLDSA_SEEDBYTES);
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
+    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87),
+               MLDSA87_PUBLICKEYBYTES);
+    TEST_LE_U(TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87),
+              TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE);
+    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(87),
+               MLDSA_SEEDBYTES + MLDSA87_SECRETKEYBYTES);
+    TEST_LE_U(TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(87),
+              TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_MAX_SIZE);
+    TEST_EQUAL(PSA_MLDSA_SIGNATURE_SIZE(87), MLDSA87_BYTES);
+#endif
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void export_public_key(int type_arg, int bits_arg,
                        data_t *private_key,
                        data_t *expected_public_key,
