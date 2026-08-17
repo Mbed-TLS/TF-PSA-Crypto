@@ -147,7 +147,6 @@ component_tf_psa_crypto_build_config_name () {
     cd "$OUT_OF_SOURCE_DIR"
     cmake -DCMAKE_INSTALL_PREFIX="$OUT_OF_SOURCE_DIR/install_full" -DTF_PSA_CRYPTO_CONFIG_NAME=full "$TF_PSA_CRYPTO_ROOT_DIR"
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
-    echo '#error "cmake -DTF_PSA_CRYPTO_CONFIG_NAME=full does not work"' > "$CRYPTO_CONFIG_H"
     cmake --build "$OUT_OF_SOURCE_DIR" --target tfpsacrypto
 
     # Restore the default config file in the source tree as we need a sane
@@ -232,7 +231,7 @@ component_tf_psa_crypto_build_config_options () {
     mv include include.moved
     mkdir consumer
     cat >consumer/CMakeLists.txt <<EOF
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5.1)
 project(consumer C)
 find_package(TF-PSA-Crypto REQUIRED CONFIG)
 add_executable(consumer
