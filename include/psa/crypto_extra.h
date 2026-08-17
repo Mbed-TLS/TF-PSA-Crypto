@@ -2011,6 +2011,41 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
 
 /**@}*/
 
+/** \addtogroup key_derivation */
+
+/** Flag to request storing a key in an expanded representation internally.
+ *
+ * This flag can be used in the
+ * struct psa_custom_key_parameters_s::flags \c custom
+ * parameter of psa_generate_key_custom() and
+ * psa_key_derivation_output_key_custom(), to request that the key be
+ * stored in a different format internally.
+ *
+ * If this flag is set when creating a key of a supported type, the key
+ * is stored in RAM in an expanded format that takes more room, but
+ * allows computations to be faster. The expanded format may also
+ * allow computations not to use the heap.
+ *
+ * This flag is supported for the following key formats:
+ * - ML-DSA, which is not yet accessible through the library interface.
+ *
+ * This flag does not affect the observable behavior of any public function
+ * of the library.
+ *
+ * It is unspecified whether this flag affects the persistent key storage
+ * format, or whether this flag affects persistent keys after they have
+ * been reloaded.
+ *
+ * \note This flag is experimental.
+ *       Its semantics may change without notice.
+ *       Its value may change without notice.
+ *       It may be removed without notice.
+ *       The set of supported key types may change without notice.
+ */
+#define PSA_CUSTOM_KEY_FLAG_EXPAND ((uint32_t) 0x40000000u)
+
+/**@}*/
+
 #ifdef __cplusplus
 }
 #endif
