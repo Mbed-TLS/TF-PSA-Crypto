@@ -12,6 +12,8 @@
 #include "psa/crypto.h"
 #include "psa/crypto_driver_common.h"
 
+#include "tf-psa-crypto/private/mldsa.h"
+
 psa_status_t psa_driver_wrapper_export_public_key(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
