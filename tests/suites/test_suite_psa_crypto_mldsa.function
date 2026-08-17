@@ -1065,30 +1065,31 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void generate_key(int type, int bits, int output_size_arg,
-                  psa_status_t expected_status)
+void generate_key(int type, int bits,
+                  int custom_flags_arg, data_t *custom_data,
+                  int output_size_arg,
+                  int expected_output_length, psa_status_t expected_status)
 {
     size_t output_size = output_size_arg;
     size_t output_length = SIZE_MAX;
     uint8_t *output = NULL;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
+    custom.flags = custom_flags_arg;
 
     PSA_INIT();
     TEST_CALLOC(output, output_size);
 
     psa_set_key_type(&attributes, type);
     psa_set_key_bits(&attributes, bits);
-    psa_status_t status = tf_psa_crypto_mldsa_generate_key(&attributes,
-                                                           output, output_size,
-                                                           &output_length);
+    psa_status_t status = tf_psa_crypto_mldsa_generate_key_custom(
+        &attributes,
+        &custom, custom_data->x, custom_data->len,
+        output, output_size,
+        &output_length);
 
-    if (expected_status == PSA_SUCCESS) {
-        TEST_EQUAL(PSA_SUCCESS, expected_status);
-        TEST_EQUAL(output_length, 32);
-    } else {
-        TEST_EQUAL(status, expected_status);
-        TEST_EQUAL(output_length, 0);
-    }
+    TEST_EQUAL(status, expected_status);
+    TEST_EQUAL(output_length, expected_output_length);
 
 exit:
     mbedtls_free(output);

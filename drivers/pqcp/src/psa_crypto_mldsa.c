@@ -283,11 +283,14 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
     }
 }
 
-psa_status_t tf_psa_crypto_mldsa_generate_key(
+psa_status_t tf_psa_crypto_mldsa_generate_key_custom(
     const psa_key_attributes_t *attributes,
-    uint8_t *seed, size_t seed_size, size_t *seed_length)
+    const psa_custom_key_parameters_t *custom,
+    const uint8_t *custom_data, size_t custom_data_length,
+    uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
-    *seed_length = 0;           /* Safe default */
+    /* Safe default */
+    *key_buffer_length = 0;
 
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
         return PSA_ERROR_NOT_SUPPORTED;
@@ -295,15 +298,29 @@ psa_status_t tf_psa_crypto_mldsa_generate_key(
     if (psa_get_key_bits(attributes) != 87) {
         return PSA_ERROR_NOT_SUPPORTED;
     }
-    if (seed_size < SEED_SIZE) {
+
+    if (custom->flags != 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (custom_data_length != 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    (void) custom_data;
+
+    size_t prv_len = SEED_SIZE;
+    if (key_buffer_size < prv_len) {
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
-    psa_status_t status = psa_generate_random(seed, SEED_SIZE);
-    if (status == PSA_SUCCESS) {
-        *seed_length = SEED_SIZE;
+    psa_status_t status = psa_generate_random(key_buffer, SEED_SIZE);
+    /* Now private_key contains the new seed. We don't need to zeroize
+     * the seed on failure since it's just been randomly generated. */
+    if (status != PSA_SUCCESS) {
+        return status;
     }
-    return status;
+
+    *key_buffer_length = prv_len;
+    return PSA_SUCCESS;
 }
 
 static int sign_from_expanded(

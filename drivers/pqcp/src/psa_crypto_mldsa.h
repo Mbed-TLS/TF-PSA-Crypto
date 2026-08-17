@@ -76,35 +76,52 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
     const uint8_t *key_buffer, size_t key_buffer_size,
     uint8_t *data, size_t data_size, size_t *data_length);
 
-/** Generate a random ML-DSA key pair in the PSA standard format.
- *
- * \note You can use tf_psa_crypto_mldsa_generate_expanded_key_pair()
- *       to directly obtain the private key in joined format (seed
- *       concatenated with the standard epxanded format) and the public key.
+/** Generate a random ML-DSA key pair.
  *
  * \param[in] attributes        The key attributes.
  *                              The key type must be
  *                              #PSA_KEY_TYPE_ML_DSA_KEY_PAIR,
  *                              and the bit-size must be one of the supported
- *                              parameter sets (currently: only 67).
- * \param[out] seed             The private key in the PSA standard format,
- *                              i.e. the 32-byte seed:
- * \param seed_size             The size of \p seed, in bytes.
- * \param[out] seed_length      On success, the length of the data written
- *                              to \p seed.
+ *                              parameter sets (currently: only 87).
+ * \param[in] custom            Customization parameters for the key generation.
+ *                              This must be #PSA_CUSTOM_KEY_PARAMETERS_INIT
+ *                              except for the following fields:
+ *                              - psa_custom_key_parameters_s::flags:
+ *                                  - \c 0 to write the key in the
+ *                                    PSA standard format, i.e. the
+ *                                    32-byte seed.
+ *                                  - #PSA_CUSTOM_KEY_FLAG_EXPAND
+ *                                    to write they key in the joined format,
+ *                                    which is the concatenation of the
+ *                                    32-byte seed and the standard expanded
+ *                                    private key format.
+ * \param[in] custom_data       Ignored.
+ * \param custom_data_length    Must be 0.
+ * \param[out] key_buffer       The private key in the chosen format.
+ * \param key_buffer_size       The size of \p key_buffer, in bytes.
+ * \param[out] key_buffer_length  On success, the length of the data written
+ *                              to \p key_buffer.
  *
  * \retval #PSA_SUCCESS
  *         Success.
  * \retval #PSA_ERROR_NOT_SUPPORTED
  *         The key type or size registered in \p attributes is not supported.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         \p custom or \p custom_data_length is invalid.
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
  *         Random generator failure.
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
- *         \p seed_size is too small.
+ *         \p key_buffer_size is too small.
+ *         It must be at least #TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE bytes when
+ *         the chosen format is the seed, and at least
+ *         #TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(`attributes->bits`)
+ *         when the chosen format is the joined format.
  */
-psa_status_t tf_psa_crypto_mldsa_generate_key(
+psa_status_t tf_psa_crypto_mldsa_generate_key_custom(
     const psa_key_attributes_t *attributes,
-    uint8_t *seed, size_t seed_size, size_t *seed_length);
+    const psa_custom_key_parameters_t *custom,
+    const uint8_t *custom_data, size_t custom_data_length,
+    uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length);
 
 /** Sign a message using pure-ML-DSA (without pre-hashing).
  *
