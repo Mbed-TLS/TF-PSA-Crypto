@@ -8,6 +8,7 @@
 #define TF_PSA_CRYPTO_PSA_CRYPTO_MLDSA_H
 
 #include <psa/crypto.h>
+#include <tf-psa-crypto/private/mldsa.h>
 
 /* Define macros for key types and algorithms here in a private header,
  * rather than in a public header, because ML-DSA is not yet supported
