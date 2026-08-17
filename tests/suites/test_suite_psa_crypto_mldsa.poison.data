@@ -52,6 +52,30 @@ poison_export_public_key:PKF_SEED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFF
 MLDSA-87 export public key: joined, poison on unlock, full buffer
 poison_export_public_key:PKF_JOINED:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
 
+MLDSA-87 generate key: seed, poison on lock, sufficient memory
+poison_generate_key:87:0:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
+
+MLDSA-87 generate key: seed, buffer too small, poison on lock, sufficient memory
+poison_generate_key:87:0:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_ERROR_BUFFER_TOO_SMALL
+
+# No "full buffer" test cases for seed output because the buffer is not used
+# when only generating a seed.
+
+MLDSA-87 generate key: joined, poison on lock, sufficient memory
+poison_generate_key:87:PSA_CUSTOM_KEY_FLAG_EXPAND:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_SUCCESS
+
+MLDSA-87 generate key: joined, poison on lock, full buffer
+poison_generate_key:87:PSA_CUSTOM_KEY_FLAG_EXPAND:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_INSUFFICIENT_MEMORY
+
+MLDSA-87 generate key: joined, poison on unlock, full buffer
+poison_generate_key:87:PSA_CUSTOM_KEY_FLAG_EXPAND:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_SUCCESS
+
+MLDSA-87 generate key: joined, buffer too small,poison on lock, sufficient memory
+poison_generate_key:87:PSA_CUSTOM_KEY_FLAG_EXPAND:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_KEYPAIR:PSA_ERROR_BUFFER_TOO_SMALL
+
+MLDSA-87 generate key: joined, buffer too small,poison on unlock, full buffer
+poison_generate_key:87:PSA_CUSTOM_KEY_FLAG_EXPAND:POISON_ON_UNLOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE:PSA_ERROR_BUFFER_TOO_SMALL
+
 MLDSA-87 sign deterministic: seed, poison on lock, sufficient memory
 poison_sign_deterministic_pure:PKF_SEED:POISON_ON_LOCK:TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE-MLD_TOTAL_ALLOC_87_SIGN:PSA_SUCCESS
 

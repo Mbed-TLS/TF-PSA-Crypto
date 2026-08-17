@@ -1097,9 +1097,32 @@ exit:
 }
 /* END_CASE */
 
-/* No poison_generate_key because we know that
- * tf_psa_crypto_mldsa_generate_key() doesn't call any mldsa-native function
- * or otherwise use the global buffer. */
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_HOOKS:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+void poison_generate_key(int bits,
+                         int custom_flags_arg,
+                         int poison_mode, int64_t poison_bytes,
+                         psa_status_t expected_status)
+{
+    data_t empty = { NULL, 0 };
+    size_t output_size = (custom_flags_arg & PSA_CUSTOM_KEY_FLAG_EXPAND ?
+                          TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(bits) :
+                          32);
+    if (expected_status == PSA_ERROR_BUFFER_TOO_SMALL) {
+        --output_size;
+    }
+    size_t expected_output_length = (expected_status == PSA_SUCCESS ?
+                                     output_size :
+                                     0);
+
+    PSA_ASSERT(poison_setup(poison_mode, poison_bytes));
+    test_generate_key(PSA_KEY_TYPE_ML_DSA_KEY_PAIR, 87,
+                      custom_flags_arg, &empty,
+                      output_size,
+                      expected_output_length, expected_status);
+exit:
+    poison_cleanup();
+}
+/* END_CASE */
 
 /* BEGIN_CASE */
 void sign_deterministic_pure(int type_arg, int bits_arg, int alg_arg,
