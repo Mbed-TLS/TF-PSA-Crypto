@@ -2444,6 +2444,8 @@
 /* *INDENT-OFF* (https://github.com/ARM-software/psa-arch-tests/issues/337) */
 #define PSA_KEY_ID_NULL                         ((psa_key_id_t)0)
 /* *INDENT-ON* */
+
+#if !defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
 /** The minimum value for a key identifier chosen by the application.
  */
 #define PSA_KEY_ID_USER_MIN                     ((psa_key_id_t) 0x00000001)
@@ -2456,7 +2458,7 @@
 /** The maximum value for a key identifier chosen by the implementation.
  */
 #define PSA_KEY_ID_VENDOR_MAX                   ((psa_key_id_t) 0x7fffffff)
-
+#endif /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 
 #if !defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
 

@@ -1085,6 +1085,43 @@
 #define MBEDTLS_PSA_CRYPTO_C
 
 /**
+ * \def MBEDTLS_PSA_CRYPTO_NO_KEY_STORE
+ *
+ * Implement most of the PSA Crypto API without a key store.
+ * Key IDs are pointers instead of references.
+ * This reduces the code size, but is incompatible with some features and
+ * turns many cases of API misuse into memory corruption.
+ *
+ * \note This option is experimental.
+ *       It may be removed without notice.
+ *       Its effect may change without notice.
+ *
+ * \note Here are some known limitations of this option.
+ *       - It is incompatible with persistent keys
+ *         (#MBEDTLS_PSA_CRYPTO_STORAGE_C).
+ *       - It is incompatible with built-in keys
+ *         (#MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS).
+ *       - It is incompatible with tracking key owners
+ *         (#MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER).
+ *       - The type psa_key_id_t is still an unsigned integer type, but
+ *         it may be larger than the standard 32 bits.
+ *       - Forged key identifiers cannot be detected.
+ *       - Any attempt to use a destroyed key is a memory violation.
+ *         This includes calling psa_destroy_key() twice on the same key.
+ *       - It requires heap memory.
+ *
+ * \warning This option is dangerous!
+ *          Many cases of API misuse, which would normally be detected
+ *          at runtime, instead cause memory corruption.
+ *
+ * Module:  core/psa_crypto.c
+ *
+ * Requires: - MBEDTLS_PSA_CRYPTO_C
+ *           - calloc() and free()
+ */
+//#define MBEDTLS_PSA_CRYPTO_NO_KEY_STORE
+
+/**
  * \def MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
  *
  * Assume all buffers passed to PSA functions are owned exclusively by the

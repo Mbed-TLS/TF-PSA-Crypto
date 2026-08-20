@@ -104,6 +104,19 @@ static size_t tiny_key_slice_length(size_t slice_idx)
 #define MAX_VOLATILE_KEYS MBEDTLS_PSA_KEY_SLOT_COUNT
 #endif
 
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+/* These constants are used in test data, but they are not defined by the
+ * library when `MBEDTLS_PSA_CRYPTO_NO_KEY_STORE` is enabled.
+ * The test framework requires us to give them a value even if no test case
+ * that is actually executed uses that value.
+ */
+#define PSA_KEY_ID_USER_MIN 42
+#define PSA_KEY_ID_USER_MAX 42
+#define PSA_KEY_ID_VENDOR_MIN 42
+#define PSA_KEY_ID_VENDOR_MAX 42
+
+#endif /* defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE) */
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -111,7 +124,7 @@ static size_t tiny_key_slice_length(size_t slice_idx)
  * END_DEPENDENCIES
  */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 void transient_slot_lifecycle(int owner_id_arg,
                               int usage_arg, int alg_arg,
                               int type_arg, data_t *key_data,
@@ -711,7 +724,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MAX_VOLATILE_KEYS */
+/* BEGIN_CASE depends_on:MAX_VOLATILE_KEYS:!MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 /*
  * 1. Fill the key store with volatile keys.
  * 2. Check that attempting to create another volatile key fails without
