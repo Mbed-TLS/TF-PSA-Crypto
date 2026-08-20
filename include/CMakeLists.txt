@@ -1,15 +1,17 @@
 option(INSTALL_TF_PSA_CRYPTO_HEADERS "Install TF PSA Crypto headers." ON)
 
 # Generate a build-tree configuration when a base or transformations are requested.
-if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "" OR
+if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE}" STREQUAL "" OR
+   NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "" OR
    NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "" OR
    NOT "${TF_PSA_CRYPTO_CONFIG_SET}" STREQUAL "" OR
    NOT "${TF_PSA_CRYPTO_CONFIG_UNSET}" STREQUAL "")
     if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
         message(FATAL_ERROR
+            "TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE, "
             "TF_PSA_CRYPTO_CONFIG_BASE_FILE, TF_PSA_CRYPTO_CONFIG_NAME, "
-            "TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET are not "
-            "supported in an in-tree build.")
+            "TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET "
+            "are not supported in an in-tree build.")
     endif()
 
     if((NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "" OR
@@ -20,29 +22,26 @@ if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "" OR
             "Python 3 is required to generate a TF-PSA-Crypto configuration file.")
     endif()
 
-    if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "")
-        set(TF_PSA_CRYPTO_BASE_CONFIG_FILE
-            "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
-        if(NOT EXISTS "${TF_PSA_CRYPTO_BASE_CONFIG_FILE}")
-            file(RELATIVE_PATH TF_PSA_CRYPTO_CONFIG_BASE_FILE_RELATIVE
-                 "${PROJECT_BINARY_DIR}"
-                 "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
-            set(TF_PSA_CRYPTO_BASE_CONFIG_FILE
-                "${PROJECT_SOURCE_DIR}/${TF_PSA_CRYPTO_CONFIG_BASE_FILE_RELATIVE}")
-        endif()
-    else()
-        set(TF_PSA_CRYPTO_BASE_CONFIG_FILE
+    if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE}" STREQUAL "")
+        set(TF_PSA_CRYPTO_CONFIG_BASE_FILE
+            "${TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE}")
+    elseif("${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "")
+        set(TF_PSA_CRYPTO_CONFIG_BASE_FILE
             "${PROJECT_SOURCE_DIR}/include/psa/crypto_config.h")
     endif()
-    if(NOT EXISTS "${TF_PSA_CRYPTO_BASE_CONFIG_FILE}")
+    get_filename_component(TF_PSA_CRYPTO_CONFIG_BASE_FILE
+        "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" ABSOLUTE
+        BASE_DIR "${PROJECT_SOURCE_DIR}")
+    if(NOT EXISTS "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
         message(FATAL_ERROR
-            "TF-PSA-Crypto configuration file not found: ${TF_PSA_CRYPTO_BASE_CONFIG_FILE}")
+            "TF-PSA-Crypto configuration file not found: "
+            "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
     endif()
 
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/psa")
     set(TF_PSA_CRYPTO_GENERATED_CONFIG_FILE
         "${CMAKE_CURRENT_BINARY_DIR}/psa/crypto_config.h")
-    configure_file("${TF_PSA_CRYPTO_BASE_CONFIG_FILE}"
+    configure_file("${TF_PSA_CRYPTO_CONFIG_BASE_FILE}"
                    "${TF_PSA_CRYPTO_GENERATED_CONFIG_FILE}" COPYONLY)
 
     function(tf_psa_crypto_configure_generated_file)
