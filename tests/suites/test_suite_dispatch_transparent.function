@@ -30,8 +30,9 @@ static int check_rsa_public_exponent(
         expected_e = default_e;
         expected_e_length = sizeof(default_e);
     }
-    /* For simplicity, we don't support values of e might need a multi-byte
-     * length encoding in ASN.1. */
+    /* For simplicity, we don't support values of e that might need a multi-byte
+     * length encoding in ASN.1 (more than 0x7f digits in base 256, or exactly
+     * 0x7f where the most significant bit is 1). */
     TEST_LE_U(expected_e_length, 0x7e);
     /* Strip leading zeros */
     while (expected_e_length > 0 && expected_e[0] == 0) {
@@ -39,9 +40,10 @@ static int check_rsa_public_exponent(
         --expected_e_length;
     }
 
-    /* We assume that the public key has the expected ASN.1 format.
-     * We only test the value of the public exponent.
-     * This is the end of the byte string.
+    /* We assume that the public key has the expected ASN.1 DER format
+     * described in PKCS#1 (RFC 8017 §A.1.1).
+     * We only test the value of the public exponent, which is an INTEGER,
+     * the last element of the SEQUENCE.
      * We also check that the public exponent has the expected ASN.1
      * type, length, and possible leading zero.
      */
@@ -71,6 +73,16 @@ exit:
  * END_DEPENDENCIES */
 
 /* BEGIN_CASE */
+/* Generate a key. We can't fully validate the randomness, but at least do
+ * some sanity checks.
+ *
+ * One thing we check is the size of the key representation. The check is based
+ * on PSA_EXPORT_KEY_OUTPUT_SIZE(). For key types where this is exact, pass
+ * `allow_shorter=0`. For key types where this is an approximation, or
+ * where the representation size is variable, the key representation may be
+ * anywhere between `PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits) - allow_shorter`
+ * and `PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits)` inclusive.
+ */
 void generate_key(int type, int bits,
                   int custom_flags_arg, data_t *custom_data,
                   int allow_shorter)
