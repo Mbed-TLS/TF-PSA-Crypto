@@ -34,10 +34,9 @@ static int check_rsa_public_exponent(
      * length encoding in ASN.1. */
     TEST_LE_U(expected_e_length, 0x7e);
     /* Strip leading zeros */
-    for (; expected_e_length > 0; expected_e++) {
-        if (*expected_e != 0) {
-            break;
-        }
+    while (expected_e_length > 0 && expected_e[0] == 0) {
+        ++expected_e;
+        --expected_e_length;
     }
 
     /* We assume that the public key has the expected ASN.1 format.
