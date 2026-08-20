@@ -51,17 +51,17 @@ expand_private_key:87:"546865726520776173206f6e63652075706f6e20612074696d6520612
 
 # A standard size that we don't support. Our implementation returns
 # NOT_SUPPORTED, but INVALID_ARGUMENT would be plausible as well.
-MLDSA-87 expand private key: bits==44 (not supported)
+MLDSA-87 expand private key: bits=44 (not supported)
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 expand_private_key:44:"546865726520776173206f6e63652075706f6e20612074696d652061202e2e2e":0:"":0:PSA_ERROR_NOT_SUPPORTED
 
-MLDSA-87 expand private key: bits==56 (not supported)
+MLDSA-87 expand private key: bits=56 (not supported)
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
-expand_private_key:44:"546865726520776173206f6e63652075706f6e20612074696d652061202e2e2e":0:"":0:PSA_ERROR_NOT_SUPPORTED
+expand_private_key:56:"546865726520776173206f6e63652075706f6e20612074696d652061202e2e2e":0:"":0:PSA_ERROR_NOT_SUPPORTED
 
 # Not a standard size. Our implementation returns NOT_SUPPORTED, but
 # INVALID_ARGUMENT would be plausible as well.
-MLDSA-87 expand private key: bits==86 (not supported)
+MLDSA-87 expand private key: bits=86 (not supported)
 depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 expand_private_key:86:"546865726520776173206f6e63652075706f6e20612074696d652061202e2e2e":0:"":0:PSA_ERROR_NOT_SUPPORTED
 
