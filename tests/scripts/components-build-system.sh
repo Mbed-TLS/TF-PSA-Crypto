@@ -173,6 +173,19 @@ component_tf_psa_crypto_build_config_options () {
 
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
+    launch_dir="$OUT_OF_SOURCE_DIR.launch"
+    mkdir "$launch_dir"
+    cd "$launch_dir"
+
+    msg "configure: resolve a relative base config from the source tree"
+    cmake -H"$TF_PSA_CRYPTO_ROOT_DIR" -B"$OUT_OF_SOURCE_DIR" \
+        -DTF_PSA_CRYPTO_CONFIG_BASE_FILE=configs/crypto-config-symmetric-only.h \
+        -DTF_PSA_CRYPTO_CONFIG_SET=PSA_WANT_ALG_MD5
+    grep '^#define PSA_WANT_ALG_MD5' \
+        "$OUT_OF_SOURCE_DIR/include/psa/crypto_config.h"
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR" "$launch_dir"
     mkdir "$OUT_OF_SOURCE_DIR"
     cd "$OUT_OF_SOURCE_DIR"
 
@@ -198,6 +211,21 @@ component_tf_psa_crypto_build_config_options () {
     msg "configure: cmake with a false-like option name"
     cmake -DTF_PSA_CRYPTO_CONFIG_SET=NO "$TF_PSA_CRYPTO_ROOT_DIR"
     grep '^#define NO$' include/psa/crypto_config.h
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf "$OUT_OF_SOURCE_DIR"
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+
+    msg "configure: apply transformations to an overridden base config"
+    cmake \
+        -DTF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE="$TF_PSA_CRYPTO_ROOT_DIR/configs/crypto-config-symmetric-only.h" \
+        -DTF_PSA_CRYPTO_CONFIG_UNSET=PSA_WANT_ALG_RIPEMD160 \
+        "$TF_PSA_CRYPTO_ROOT_DIR"
+    not grep -q '^#define PSA_WANT_ALG_RIPEMD160' \
+        include/psa/crypto_config.h
+    not grep -q '^#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC' \
+        include/psa/crypto_config.h
 
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"

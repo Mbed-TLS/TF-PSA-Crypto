@@ -155,20 +155,23 @@ endif()
 # Make configuration file options into PATHs
 set(TF_PSA_CRYPTO_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto config file (overrides default).")
 set(TF_PSA_CRYPTO_USER_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto user config file (appended to default).")
-set(TF_PSA_CRYPTO_CONFIG_BASE_FILE "" CACHE FILEPATH "TF-PSA-Crypto config to copy and optionally transform.")
+set(TF_PSA_CRYPTO_CONFIG_BASE_FILE "" CACHE STRING "TF-PSA-Crypto config to copy and optionally transform.")
 set(TF_PSA_CRYPTO_CONFIG_NAME "" CACHE STRING "Named TF-PSA-Crypto configuration (see config.py).")
 set(TF_PSA_CRYPTO_CONFIG_SET "" CACHE STRING "Options to set, separated by semicolons (OPTION or OPTION=VALUE).")
 set(TF_PSA_CRYPTO_CONFIG_UNSET "" CACHE STRING "Options to unset, separated by semicolons.")
 
 if(NOT "${TF_PSA_CRYPTO_CONFIG_FILE}" STREQUAL "" AND
    (NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "" OR
+    NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE}" STREQUAL "" OR
     NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "" OR
     NOT "${TF_PSA_CRYPTO_CONFIG_SET}" STREQUAL "" OR
     NOT "${TF_PSA_CRYPTO_CONFIG_UNSET}" STREQUAL ""))
     message(FATAL_ERROR
         "TF_PSA_CRYPTO_CONFIG_FILE cannot be combined with "
-        "TF_PSA_CRYPTO_CONFIG_BASE_FILE, TF_PSA_CRYPTO_CONFIG_NAME, "
-        "TF_PSA_CRYPTO_CONFIG_SET or TF_PSA_CRYPTO_CONFIG_UNSET.")
+        "TF_PSA_CRYPTO_CONFIG_BASE_FILE, "
+        "TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE, "
+        "TF_PSA_CRYPTO_CONFIG_NAME, TF_PSA_CRYPTO_CONFIG_SET or "
+        "TF_PSA_CRYPTO_CONFIG_UNSET.")
 endif()
 
 # Create a symbolic link from ${base_name} in the binary directory
