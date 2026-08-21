@@ -29,13 +29,16 @@ if(NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE}" STREQUAL "" OR
         set(TF_PSA_CRYPTO_CONFIG_BASE_FILE
             "${PROJECT_SOURCE_DIR}/include/psa/crypto_config.h")
     endif()
-    get_filename_component(TF_PSA_CRYPTO_CONFIG_BASE_FILE
-        "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" ABSOLUTE
-        BASE_DIR "${PROJECT_SOURCE_DIR}")
+    if(NOT EXISTS "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
+        file(RELATIVE_PATH TF_PSA_CRYPTO_CONFIG_BASE_FILE_RELATIVE
+             "${PROJECT_BINARY_DIR}"
+             "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
+        set(TF_PSA_CRYPTO_CONFIG_BASE_FILE
+            "${PROJECT_SOURCE_DIR}/${TF_PSA_CRYPTO_CONFIG_BASE_FILE_RELATIVE}")
+    endif()
     if(NOT EXISTS "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
         message(FATAL_ERROR
-            "TF-PSA-Crypto configuration file not found: "
-            "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
+            "TF-PSA-Crypto configuration file not found: ${TF_PSA_CRYPTO_CONFIG_BASE_FILE}")
     endif()
 
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/psa")

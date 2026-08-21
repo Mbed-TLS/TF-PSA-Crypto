@@ -170,7 +170,7 @@ endif()
 # Make configuration file options into PATHs
 set(TF_PSA_CRYPTO_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto config file (overrides default).")
 set(TF_PSA_CRYPTO_USER_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto user config file (appended to default).")
-set(TF_PSA_CRYPTO_CONFIG_BASE_FILE "" CACHE STRING "TF-PSA-Crypto config to copy and optionally transform.")
+set(TF_PSA_CRYPTO_CONFIG_BASE_FILE "" CACHE FILEPATH "TF-PSA-Crypto config to copy and optionally transform.")
 set(TF_PSA_CRYPTO_CONFIG_NAME "" CACHE STRING "Named TF-PSA-Crypto configuration (see config.py).")
 set(TF_PSA_CRYPTO_CONFIG_SET "" CACHE STRING "Options to set, separated by semicolons (OPTION or OPTION=VALUE).")
 set(TF_PSA_CRYPTO_CONFIG_UNSET "" CACHE STRING "Options to unset, separated by semicolons.")

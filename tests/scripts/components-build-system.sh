@@ -173,13 +173,13 @@ component_tf_psa_crypto_build_config_options () {
 
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
     rm -rf "$OUT_OF_SOURCE_DIR"
-    launch_dir="$OUT_OF_SOURCE_DIR.launch"
+    launch_dir="$TF_PSA_CRYPTO_ROOT_DIR/cmake-config-launch"
     mkdir "$launch_dir"
     cd "$launch_dir"
 
-    msg "configure: resolve a relative base config from the source tree"
+    msg "configure: resolve a base config relative to the launch directory"
     cmake -H"$TF_PSA_CRYPTO_ROOT_DIR" -B"$OUT_OF_SOURCE_DIR" \
-        -DTF_PSA_CRYPTO_CONFIG_BASE_FILE=configs/crypto-config-symmetric-only.h \
+        -DTF_PSA_CRYPTO_CONFIG_BASE_FILE=../configs/crypto-config-symmetric-only.h \
         -DTF_PSA_CRYPTO_CONFIG_SET=PSA_WANT_ALG_MD5
     grep '^#define PSA_WANT_ALG_MD5' \
         "$OUT_OF_SOURCE_DIR/include/psa/crypto_config.h"
