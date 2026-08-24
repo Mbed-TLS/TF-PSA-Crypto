@@ -3159,6 +3159,13 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
     size_t *shared_secret_length
  )
 {
+{% with entry_point = "key_agreement" -%}
+{% macro entry_point_param(driver) -%}
+attributes,
+key_buffer, key_buffer_size, alg, peer_key,
+peer_key_length, shared_secret, shared_secret_size,
+shared_secret_length
+{% endmacro %}
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_location_t location =
         PSA_KEY_LIFETIME_GET_LOCATION( psa_get_key_lifetime(attributes) );
@@ -3169,15 +3176,9 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
             /* Key is stored in the slot in export representation, so
              * cycle through all known transparent accelerators */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
-#if defined(PSA_CRYPTO_DRIVER_TEST)
-            status =
-                mbedtls_test_transparent_key_agreement( attributes,
-                        key_buffer, key_buffer_size, alg, peer_key,
-                        peer_key_length, shared_secret, shared_secret_size,
-                        shared_secret_length );
-            if( status != PSA_ERROR_NOT_SUPPORTED )
-                return( status );
-#endif /* PSA_CRYPTO_DRIVER_TEST */
+{% with nest_indent=12 %}
+{% include "OS-template-transparent.jinja" -%}
+{% endwith -%}
 #if defined(MBEDTLS_PSA_P256M_DRIVER_ENABLED)
             if( PSA_KEY_TYPE_IS_ECC( psa_get_key_type(attributes) ) &&
                 PSA_ALG_IS_ECDH(alg) &&
@@ -3210,6 +3211,7 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
                                                     shared_secret_size,
                                                     shared_secret_length );
             return( status );
+
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
         case PSA_CRYPTO_TEST_DRIVER_LOCATION:
@@ -3232,6 +3234,7 @@ static inline psa_status_t psa_driver_wrapper_key_agreement(
             return( PSA_ERROR_NOT_SUPPORTED );
 
     }
+{% endwith -%}
 }
 
 static inline psa_status_t psa_driver_wrapper_pake_setup(

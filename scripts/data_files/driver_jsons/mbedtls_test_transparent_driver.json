@@ -56,6 +56,12 @@
             "mbedtls/c_condition": "defined(PSA_CRYPTO_DRIVER_TEST)",
             "entry_points": ["signature_sign_message", "signature_verify_message", "signature_sign_hash", "signature_verify_hash"],
             "fallback": true
+        },
+        {
+            "_comment": "The Mbed TLS transparent driver supports key agreement operation",
+            "mbedtls/c_condition": "defined(PSA_CRYPTO_DRIVER_TEST)",
+            "entry_points": ["key_agreement"],
+            "fallback": true
         }
     ]
 }
