@@ -11,6 +11,7 @@
 #ifndef TF_PSA_CRYPTO_SM3_INTERNAL_H
 #define TF_PSA_CRYPTO_SM3_INTERNAL_H
 #include "mbedtls/private_access.h"
+#include "mbedtls/platform_util.h"
 
 #include "tf-psa-crypto/build_info.h"
 #include "tf-psa-crypto/private/sm3_types.h"
@@ -37,5 +38,12 @@ void tf_psa_crypto_sm3_finish(
 /** Run the SM3 checkup routine. */
 int tf_psa_crypto_sm3_self_test(int verbose);
 #endif /* MBEDTLS_SELF_TEST */
+
+/** Wipe an SM3 operation. */
+static inline void tf_psa_crypto_sm3_reset(
+    tf_psa_crypto_sm3_operation_t *operation)
+{
+    mbedtls_platform_zeroize(operation, sizeof(*operation));
+}
 
 #endif /* TF_PSA_CRYPTO_SM3_INTERNAL_H */
