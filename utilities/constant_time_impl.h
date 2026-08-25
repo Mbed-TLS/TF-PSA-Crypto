@@ -47,6 +47,34 @@
 #endif
 #endif
 
+/* Force inlining of the constant-time primitives where an assembly path is
+ * in use.
+ *
+ * At -Os the compiler leaves these out of line even though the asm bodies are
+ * a handful of instructions, so every use pays a call. Measured on
+ * mbedtls_mpi_core_sub(), which calls mbedtls_ct_uint_lt() twice per limb:
+ *
+ *   arm-none-eabi-gcc -mthumb -mcpu=cortex-m4 -Os : 2 calls, not inlined
+ *   arm-none-eabi-gcc -mthumb -mcpu=cortex-m4 -O2 : 0 calls, inlined
+ *   arm-none-eabi-gcc -marm   -mcpu=arm7tdmi  -Os : 2 calls, not inlined
+ *   x86-64 gcc and clang                  -Os/-O2 : 0 calls, always inlined
+ *
+ * x86-64 inlines regardless, which is presumably why this has gone unnoticed.
+ * Cost on the Arm thumb -Os measurement: +8 bytes of .text for the whole
+ * translation unit.
+ *
+ * Deliberately NOT applied to the generic C fallback, which is much larger:
+ * there the same change costs +396 bytes on the same measurement, which is a
+ * size/speed trade-off rather than a clear win. Reaching the first branch
+ * implies __GNUC__, because MBEDTLS_CT_ASM above requires it.
+ */
+#if defined(MBEDTLS_CT_ARM_ASM) || defined(MBEDTLS_CT_AARCH64_ASM) || \
+    defined(MBEDTLS_CT_X86_64_ASM) || defined(MBEDTLS_CT_X86_ASM)
+#define MBEDTLS_CT_INLINE static inline __attribute__((always_inline))
+#else
+#define MBEDTLS_CT_INLINE static inline
+#endif
+
 #define MBEDTLS_CT_SIZE (sizeof(mbedtls_ct_uint_t) * 8)
 
 
@@ -113,7 +141,7 @@ static inline mbedtls_ct_uint_t mbedtls_ct_compiler_opaque(mbedtls_ct_uint_t x)
 #endif
 
 /* Convert a number into a condition in constant time. */
-static inline mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
+MBEDTLS_CT_INLINE mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
 {
     /*
      * Define mask-generation code that, as far as possible, will not use branches or conditional instructions.
@@ -198,9 +226,9 @@ static inline mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
 #endif
 }
 
-static inline mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
-                                              mbedtls_ct_uint_t if1,
-                                              mbedtls_ct_uint_t if0)
+MBEDTLS_CT_INLINE mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
+                                                  mbedtls_ct_uint_t if1,
+                                                  mbedtls_ct_uint_t if0)
 {
 #if defined(MBEDTLS_CT_AARCH64_ASM) && (defined(MBEDTLS_CT_SIZE_32) || defined(MBEDTLS_CT_SIZE_64))
     asm volatile ("and %x[if1], %x[if1], %x[condition]            \n\t"
@@ -264,7 +292,8 @@ static inline mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
 #endif
 }
 
-static inline mbedtls_ct_condition_t mbedtls_ct_uint_lt(mbedtls_ct_uint_t x, mbedtls_ct_uint_t y)
+MBEDTLS_CT_INLINE mbedtls_ct_condition_t mbedtls_ct_uint_lt(mbedtls_ct_uint_t x,
+                                                            mbedtls_ct_uint_t y)
 {
 #if defined(MBEDTLS_CT_AARCH64_ASM) && (defined(MBEDTLS_CT_SIZE_32) || defined(MBEDTLS_CT_SIZE_64))
     uint64_t s1;
