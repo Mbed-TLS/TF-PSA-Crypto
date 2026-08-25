@@ -32,14 +32,14 @@
  * By default, it is represented as just the 32-byte seed.
  *
  * The `bits` attribute of the key indicates the parameter set:
- * 44, 56 or 87.
+ * 44, 65 or 87.
  */
 #define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
 
 /** The type of an ML-DSA public key.
  *
  * The `bits` attribute of the key indicates the parameter set:
- * 44, 56 or 87.
+ * 44, 65 or 87.
  */
 #define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
 
@@ -52,7 +52,7 @@
  * the concatenation of the 32-byte seed with the standard ML-DSA
  * expanded key format.
  *
- * \param bits  The ML-DSA parameter set (44, 56 or 87).
+ * \param bits  The ML-DSA parameter set (44, 65 or 87).
  * \return      The size of the join key representation in bytes.
  *              Unpecified if \p bits is not supported.
  */
@@ -69,7 +69,7 @@
 
 /** The size of an ML-DSA public key.
  *
- * \param bits  The ML-DSA parameter set (44, 56 or 87).
+ * \param bits  The ML-DSA parameter set (44, 65 or 87).
  * \return      The size of the public key in bytes.
  *              Unpecified if \p bits is not supported.
  */

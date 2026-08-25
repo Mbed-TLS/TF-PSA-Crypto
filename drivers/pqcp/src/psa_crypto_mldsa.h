@@ -15,7 +15,7 @@
 /** Expand a seed into a joined format: the concatenation of the 32-byte seed
  * and the standard expanded private key format.
  *
- * \param bits                  The ML-DSA parameter set (44, 56 or 87).
+ * \param bits                  The ML-DSA parameter set (44, 65 or 87).
  * \param[in] standard_key      The seed to expand.
  * \param standard_key_length   The length of \p seed, in bytes. This must be
  *                              #TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE.
