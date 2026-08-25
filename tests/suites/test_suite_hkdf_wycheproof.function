@@ -1,0 +1,86 @@
+/* BEGIN_HEADER */
+#include "psa/crypto.h"
+
+/* Project Wycheproof HKDF harness, with one .data file per hash.
+ * Columns:
+ *   valid                  -> mbedtls_hkdf_derive          <hash>:ikm:salt:info:okm
+ *   invalid + SizeTooLarge -> mbedtls_hkdf_size_too_large   <hash>:ikm:salt:info:size
+ */
+
+static psa_status_t wp_hkdf_setup(psa_key_derivation_operation_t* op,
+    psa_algorithm_t hash,
+    data_t* ikm, data_t* salt, data_t* info)
+{
+    psa_status_t s;
+    if ((s = psa_key_derivation_setup(op, PSA_ALG_HKDF(hash))) != PSA_SUCCESS) {
+        return s;
+    }
+    if (salt->len != 0) {
+        if ((s = psa_key_derivation_input_bytes(op, PSA_KEY_DERIVATION_INPUT_SALT,
+                 salt->x, salt->len))
+            != PSA_SUCCESS) {
+            return s;
+        }
+    }
+    if ((s = psa_key_derivation_input_bytes(op, PSA_KEY_DERIVATION_INPUT_SECRET,
+             ikm->x, ikm->len))
+        != PSA_SUCCESS) {
+        return s;
+    }
+    return psa_key_derivation_input_bytes(op, PSA_KEY_DERIVATION_INPUT_INFO,
+        info->x, info->len);
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:PSA_WANT_ALG_HKDF
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: HKDF(ikm, salt, info) returns okm. */
+/* BEGIN_CASE */
+void mbedtls_hkdf_derive(int hash_arg, data_t* ikm, data_t* salt,
+    data_t* info, data_t* okm)
+{
+    psa_algorithm_t hash = (psa_algorithm_t)hash_arg;
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    unsigned char* output = NULL;
+
+    PSA_INIT();
+    TEST_CALLOC(output, okm->len == 0 ? 1 : okm->len);
+
+    PSA_ASSERT(wp_hkdf_setup(&op, hash, ikm, salt, info));
+    PSA_ASSERT(psa_key_derivation_output_bytes(&op, output, okm->len));
+    TEST_MEMORY_COMPARE(output, okm->len, okm->x, okm->len);
+
+exit:
+    psa_key_derivation_abort(&op);
+    mbedtls_free(output);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector: requesting more than 255*HashLen output bytes must fail (HKDF's
+ * maximum output length, RFC 5869 section 2.3). */
+/* BEGIN_CASE */
+void mbedtls_hkdf_size_too_large(int hash_arg, data_t* ikm, data_t* salt,
+    data_t* info, int size)
+{
+    psa_algorithm_t hash = (psa_algorithm_t)hash_arg;
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    unsigned char* output = NULL;
+
+    PSA_INIT();
+    TEST_ASSERT(size > 0);
+    TEST_CALLOC(output, (size_t)size);
+
+    PSA_ASSERT(wp_hkdf_setup(&op, hash, ikm, salt, info));
+    TEST_EQUAL(PSA_ERROR_INSUFFICIENT_DATA,
+        psa_key_derivation_output_bytes(&op, output, (size_t)size));
+
+exit:
+    psa_key_derivation_abort(&op);
+    mbedtls_free(output);
+    PSA_DONE();
+}
+/* END_CASE */

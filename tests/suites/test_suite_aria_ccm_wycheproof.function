@@ -1,0 +1,75 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/ccm.h"
+#include <string.h>
+
+/* Project Wycheproof ARIA-CCM harness.
+ * Columns: key:iv:aad:msg:ct:tag.
+ *   valid   -> mbedtls_aria_ccm_enc_dec
+ *   invalid -> mbedtls_aria_ccm_dec_invalid  (ModifiedTag / InvalidNonceSize /
+ *              Invalid/InsecureTagSize / CVE-2017-18330)
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CCM_C:MBEDTLS_CCM_GCM_CAN_ARIA
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: encryption returns (ct, tag), decryption recovers msg. */
+/* BEGIN_CASE */
+void mbedtls_aria_ccm_enc_dec(data_t* key, data_t* iv, data_t* aad,
+    data_t* msg, data_t* ct, data_t* tag)
+{
+    mbedtls_ccm_context ctx;
+    unsigned char* output = NULL;
+    unsigned char tag_output[16];
+
+    mbedtls_ccm_init(&ctx);
+    memset(tag_output, 0, sizeof(tag_output));
+
+    TEST_LE_U(tag->len, sizeof(tag_output));
+    TEST_EQUAL(msg->len, ct->len);
+    TEST_CALLOC(output, msg->len == 0 ? 1 : msg->len);
+
+    TEST_EQUAL(0, mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_ARIA, key->x, key->len * 8));
+
+    TEST_EQUAL(0, mbedtls_ccm_encrypt_and_tag(&ctx, msg->len, iv->x, iv->len, aad->x, aad->len, msg->x, output, tag_output, tag->len));
+    TEST_MEMORY_COMPARE(output, msg->len, ct->x, ct->len);
+    TEST_MEMORY_COMPARE(tag_output, tag->len, tag->x, tag->len);
+
+    memset(output, 0, msg->len == 0 ? 1 : msg->len);
+    TEST_EQUAL(0, mbedtls_ccm_auth_decrypt(&ctx, ct->len, iv->x, iv->len, aad->x, aad->len, ct->x, output, tag->x, tag->len));
+    TEST_MEMORY_COMPARE(output, ct->len, msg->x, msg->len);
+
+exit:
+    mbedtls_ccm_free(&ctx);
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* Invalid vector: authenticated decryption must not recover the plaintext. */
+/* BEGIN_CASE */
+void mbedtls_aria_ccm_dec_invalid(data_t* key, data_t* iv, data_t* aad,
+    data_t* msg, data_t* ct, data_t* tag)
+{
+    mbedtls_ccm_context ctx;
+    unsigned char* output = NULL;
+    int ret;
+
+    mbedtls_ccm_init(&ctx);
+    TEST_CALLOC(output, ct->len == 0 ? 1 : ct->len);
+
+    TEST_EQUAL(0, mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_ARIA, key->x, key->len * 8));
+
+    ret = mbedtls_ccm_auth_decrypt(&ctx, ct->len, iv->x, iv->len,
+        aad->x, aad->len, ct->x, output,
+        tag->x, tag->len);
+    if (ret == 0) {
+        TEST_ASSERT(ct->len != msg->len || (msg->len != 0 && memcmp(output, msg->x, msg->len) != 0));
+    }
+
+exit:
+    mbedtls_ccm_free(&ctx);
+    mbedtls_free(output);
+}
+/* END_CASE */
