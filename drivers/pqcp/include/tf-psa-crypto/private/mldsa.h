@@ -20,8 +20,6 @@
 
 /* Define macros for key types and algorithms here in a private header,
  * rather than in a public header, because ML-DSA is not yet supported
- * through the API. In particular, the size macros in <psa/crypto_sizes.h>
- * do not yet take ML-DSA into account.
  * through the API. Notably:
  *
  * - The size macros in <psa/crypto_sizes.h> do not take ML-DSA into account.
