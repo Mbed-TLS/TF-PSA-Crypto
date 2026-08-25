@@ -36,6 +36,7 @@
 #include "mbedtls/private/sha256.h"
 #include "mbedtls/private/sha512.h"
 #include "mbedtls/private/sha3.h"
+#include "tf-psa-crypto/private/sm3_types.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_RIPEMD160) || \
@@ -47,7 +48,8 @@
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_224) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_256) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
-    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
 #define MBEDTLS_PSA_BUILTIN_HASH
 #endif
 
@@ -74,6 +76,9 @@ typedef struct {
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_SOME_HASH)
         mbedtls_sha3_context sha3;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
+        tf_psa_crypto_sm3_operation_t sm3;
 #endif
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_hash_operation_t;
