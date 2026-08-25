@@ -21,6 +21,12 @@
 extern "C" {
 #endif
 
+/** The state of an SM3 hash operation. */
+typedef struct {
+    uint64_t total;             /*!< The number of Bytes processed. */
+    uint32_t state[8];          /*!< The intermediate digest state. */
+    uint8_t buffer[64];         /*!< The data block being processed. */
+} tf_psa_crypto_sm3_operation_t;
 
 #ifdef __cplusplus
 }
