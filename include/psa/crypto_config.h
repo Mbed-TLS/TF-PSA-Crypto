@@ -1292,7 +1292,7 @@
  *
  * The storage directory is determined when the library is built. By default,
  * files are stored in the process's current working directory. To select a
- * different directory, define PSA_ITS_STORAGE_PREFIX as a string containing
+ * different directory, define #PSA_ITS_STORAGE_PREFIX as a string containing
  * the directory path, including a trailing directory separator.
  *
  * Module:  core/psa_its_file.c
