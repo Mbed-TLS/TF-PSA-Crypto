@@ -1287,6 +1287,14 @@
  * Enable the emulation of the Platform Security Architecture
  * Internal Trusted Storage (PSA ITS) over files.
  *
+ * This implementation does not support concurrent access by multiple
+ * processes. Each process must use a separate storage directory.
+ *
+ * The storage directory is determined when the library is built. By default,
+ * files are stored in the process's current working directory. To select a
+ * different directory, define PSA_ITS_STORAGE_PREFIX as a string containing
+ * the directory path, including a trailing directory separator.
+ *
  * Module:  core/psa_its_file.c
  *
  * Requires: MBEDTLS_FS_IO
