@@ -182,10 +182,10 @@ Changes since [1.0.0](#mbed-crypto-1.0.0):
 
 Assumption: C stdio, allowing names containing lowercase letters, digits and underscores, of length up to 23.
 
-An undocumented build-time configuration value `PSA_ITS_STORAGE_PREFIX` allows storing the key files in a directory other than the current directory. This value is simply prepended to the file name (so it must end with a directory separator to put the keys in a different directory).
+The build-time configuration value `MBEDTLS_PSA_ITS_STORAGE_PREFIX` allows storing the key files in a directory other than the current directory. This value is simply prepended to the file name (so it must end with a directory separator to put the keys in a different directory).
 
-* `PSA_ITS_STORAGE_PREFIX "tempfile.psa_its"`: used as a temporary file. Must be writable. May be overwritten or deleted if present.
-* `sprintf(PSA_ITS_STORAGE_PREFIX "%016llx.psa_its", key_id)`: a key or non-key file. The `key_id` in the name is the 64-bit file identifier, which is the [key identifier](#key-names-for-mbed-tls-2.25.0) for a key file or some reserved identifier for a non-key file (currently: only the [nonvolatile random seed](#nonvolatile-random-seed-file-format-for-1.0.0)). The contents of the file are:
+* `MBEDTLS_PSA_ITS_STORAGE_PREFIX "tempfile.psa_its"`: used as a temporary file. Must be writable. May be overwritten or deleted if present.
+* `sprintf(MBEDTLS_PSA_ITS_STORAGE_PREFIX "%016llx.psa_its", key_id)`: a key or non-key file. The `key_id` in the name is the 64-bit file identifier, which is the [key identifier](#key-names-for-mbed-tls-2.25.0) for a key file or some reserved identifier for a non-key file (currently: only the [nonvolatile random seed](#nonvolatile-random-seed-file-format-for-1.0.0)). The contents of the file are:
     * Magic header (8 bytes): `"PSA\0ITS\0"`
     * File contents.
 
@@ -389,10 +389,10 @@ This is a library integration, so there is no owner. The key file identifier is 
 
 Assumption: C stdio, allowing names containing lowercase letters, digits and underscores, of length up to 23.
 
-An undocumented build-time configuration value `PSA_ITS_STORAGE_PREFIX` allows storing the key files in a directory other than the current directory. This value is simply prepended to the file name (so it must end with a directory separator to put the keys in a different directory).
+The build-time configuration value `MBEDTLS_PSA_ITS_STORAGE_PREFIX` allows storing the key files in a directory other than the current directory. This value is simply prepended to the file name (so it must end with a directory separator to put the keys in a different directory).
 
-* `PSA_ITS_STORAGE_PREFIX "tempfile.psa_its"`: used as a temporary file. Must be writable. May be overwritten or deleted if present.
-* `sprintf(PSA_ITS_STORAGE_PREFIX "%016llx.psa_its", key_id)`: a key or non-key file. The `key_id` in the name is the 64-bit file identifier, which is the [key identifier](#key-names-for-mbed-tls-2.25.0) for a key file or some reserved identifier for a [non-key file](#non-key-files-on-mbed-tls-2.25.0). The contents of the file are:
+* `MBEDTLS_PSA_ITS_STORAGE_PREFIX "tempfile.psa_its"`: used as a temporary file. Must be writable. May be overwritten or deleted if present.
+* `sprintf(MBEDTLS_PSA_ITS_STORAGE_PREFIX "%016llx.psa_its", key_id)`: a key or non-key file. The `key_id` in the name is the 64-bit file identifier, which is the [key identifier](#key-names-for-mbed-tls-2.25.0) for a key file or some reserved identifier for a [non-key file](#non-key-files-on-mbed-tls-2.25.0). The contents of the file are:
     * Magic header (8 bytes): `"PSA\0ITS\0"`
     * File contents.
 

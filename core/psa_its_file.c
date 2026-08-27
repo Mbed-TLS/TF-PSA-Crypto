@@ -23,19 +23,26 @@
 #include <stdio.h>
 #include <string.h>
 
-#if !defined(PSA_ITS_STORAGE_PREFIX)
-#define PSA_ITS_STORAGE_PREFIX ""
+#if !defined(MBEDTLS_PSA_ITS_STORAGE_PREFIX)
+/* PSA_ITS_STORAGE_PREFIX was the undocumented name of this option before
+ * MBEDTLS_PSA_ITS_STORAGE_PREFIX was introduced. Keep accepting it for
+ * compatibility with existing configurations. */
+#if defined(PSA_ITS_STORAGE_PREFIX)
+#define MBEDTLS_PSA_ITS_STORAGE_PREFIX PSA_ITS_STORAGE_PREFIX
+#else
+#define MBEDTLS_PSA_ITS_STORAGE_PREFIX ""
+#endif
 #endif
 
 #define PSA_ITS_STORAGE_FILENAME_PATTERN "%08x%08x"
 #define PSA_ITS_STORAGE_SUFFIX ".psa_its"
 #define PSA_ITS_STORAGE_FILENAME_LENGTH         \
-    (sizeof(PSA_ITS_STORAGE_PREFIX) - 1 +    /*prefix without terminating 0*/ \
+    (sizeof(MBEDTLS_PSA_ITS_STORAGE_PREFIX) - 1 + /*prefix without null*/ \
      16 +  /*UID (64-bit number in hex)*/                               \
      sizeof(PSA_ITS_STORAGE_SUFFIX) - 1 +    /*suffix without terminating 0*/ \
      1 /*terminating null byte*/)
 #define PSA_ITS_STORAGE_TEMP \
-    PSA_ITS_STORAGE_PREFIX "tempfile" PSA_ITS_STORAGE_SUFFIX
+    MBEDTLS_PSA_ITS_STORAGE_PREFIX "tempfile" PSA_ITS_STORAGE_SUFFIX
 
 /* The maximum value of psa_storage_info_t.size */
 #define PSA_ITS_MAX_SIZE 0xffffffff
@@ -65,7 +72,7 @@ static void psa_its_fill_filename(psa_storage_uid_t uid, char *filename)
      * long long support in snprintf. */
     mbedtls_snprintf(filename, PSA_ITS_STORAGE_FILENAME_LENGTH,
                      "%s" PSA_ITS_STORAGE_FILENAME_PATTERN "%s",
-                     PSA_ITS_STORAGE_PREFIX,
+                     MBEDTLS_PSA_ITS_STORAGE_PREFIX,
                      (unsigned) (uid >> 32),
                      (unsigned) (uid & 0xffffffff),
                      PSA_ITS_STORAGE_SUFFIX);
