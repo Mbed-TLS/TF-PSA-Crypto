@@ -24,11 +24,11 @@
 #include <string.h>
 
 #if !defined(MBEDTLS_PSA_ITS_STORAGE_PREFIX)
-/* PSA_ITS_STORAGE_PREFIX was the undocumented name of this option before
+/* PSA_ITS_STORAGE_PREFIX was the undocumented name of this option before //no-check-names
  * MBEDTLS_PSA_ITS_STORAGE_PREFIX was introduced. Keep accepting it for
  * compatibility with existing configurations. */
-#if defined(PSA_ITS_STORAGE_PREFIX)
-#define MBEDTLS_PSA_ITS_STORAGE_PREFIX PSA_ITS_STORAGE_PREFIX
+#if defined(PSA_ITS_STORAGE_PREFIX) //no-check-names
+#define MBEDTLS_PSA_ITS_STORAGE_PREFIX PSA_ITS_STORAGE_PREFIX //no-check-names
 #else
 #define MBEDTLS_PSA_ITS_STORAGE_PREFIX ""
 #endif
