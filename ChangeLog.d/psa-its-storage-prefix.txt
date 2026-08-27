@@ -1,0 +1,4 @@
+Features
+   * Allow applications using file-based PSA ITS to configure the storage
+     directory with MBEDTLS_PSA_ITS_STORAGE_PREFIX. This allows each process
+     to use a separate directory where concurrent access is not supported.
