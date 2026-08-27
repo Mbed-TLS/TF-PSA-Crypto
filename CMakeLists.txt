@@ -152,16 +152,27 @@ if(NOT TF_PSA_CRYPTO_AS_SUBPROJECT)
         FORCE)
 endif()
 
-# Make TF_PSA_CRYPTO_CONFIG_FILE and TF_PSA_CRYPTO_USER_CONFIG_FILE into PATHs
+# Make configuration file options into PATHs
 set(TF_PSA_CRYPTO_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto config file (overrides default).")
 set(TF_PSA_CRYPTO_USER_CONFIG_FILE "" CACHE FILEPATH "TF-PSA-Crypto user config file (appended to default).")
-set(TF_PSA_CRYPTO_CONFIG_NAME "" CACHE STRING "Name of the configuration to use (see config.py documentation)")
+set(TF_PSA_CRYPTO_CONFIG_BASE_FILE "" CACHE FILEPATH "TF-PSA-Crypto config to copy and optionally transform.")
+set(TF_PSA_CRYPTO_CONFIG_NAME "" CACHE STRING "Named TF-PSA-Crypto configuration (see config.py).")
+set(TF_PSA_CRYPTO_CONFIG_SET "" CACHE STRING "Options to set, separated by semicolons (OPTION or OPTION=VALUE).")
+set(TF_PSA_CRYPTO_CONFIG_UNSET "" CACHE STRING "Options to unset, separated by semicolons.")
 
-if(NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "")
-    if(NOT "${TF_PSA_CRYPTO_CONFIG_FILE}" STREQUAL "")
-        message(FATAL_ERROR "TF_PSA_CRYPTO_CONFIG_NAME and TF_PSA_CRYPTO_CONFIG_FILE are incompatible.")
-    endif()
-endif(NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "")
+if(NOT "${TF_PSA_CRYPTO_CONFIG_FILE}" STREQUAL "" AND
+   (NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE}" STREQUAL "" OR
+    NOT "${TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE}" STREQUAL "" OR
+    NOT "${TF_PSA_CRYPTO_CONFIG_NAME}" STREQUAL "" OR
+    NOT "${TF_PSA_CRYPTO_CONFIG_SET}" STREQUAL "" OR
+    NOT "${TF_PSA_CRYPTO_CONFIG_UNSET}" STREQUAL ""))
+    message(FATAL_ERROR
+        "TF_PSA_CRYPTO_CONFIG_FILE cannot be combined with "
+        "TF_PSA_CRYPTO_CONFIG_BASE_FILE, "
+        "TF_PSA_CRYPTO_CONFIG_BASE_FILE_OVERRIDE, "
+        "TF_PSA_CRYPTO_CONFIG_NAME, TF_PSA_CRYPTO_CONFIG_SET or "
+        "TF_PSA_CRYPTO_CONFIG_UNSET.")
+endif()
 
 # Create a symbolic link from ${base_name} in the binary directory
 # to the corresponding path in the source directory.
@@ -425,6 +436,10 @@ set(TF_PSA_CRYPTO_PRIVATE_INCLUDE_DIRS
 #
 add_subdirectory(framework)
 add_subdirectory(include)
+if(TF_PSA_CRYPTO_AS_SUBPROJECT AND TF_PSA_CRYPTO_CONFIG_TRANSFORMED)
+    set(TF_PSA_CRYPTO_CONFIG_FILE "${TF_PSA_CRYPTO_CONFIG_FILE}"
+        PARENT_SCOPE)
+endif()
 add_subdirectory(drivers)   # must precede core
 add_subdirectory(extras)
 add_subdirectory(platform)
