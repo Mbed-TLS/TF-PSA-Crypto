@@ -69,10 +69,19 @@
  * there the same change costs +396 bytes on the same measurement, which is a
  * size/speed trade-off rather than a clear win. Reaching the first branch
  * implies __GNUC__, because MBEDTLS_CT_ASM above requires it.
+ *
+ * The conditions below mirror the ones guarding the assembly bodies: the
+ * AArch64 and x86-64 paths cover both limb sizes, while the Arm, x86 and
+ * Xtensa paths are 32-bit only. Testing the architecture alone would apply
+ * the attribute to the generic C fallback whenever one of the 32-bit-only
+ * architectures is built with 64-bit limbs, which MBEDTLS_HAVE_INT64 selects
+ * regardless of pointer width.
  */
-#if defined(MBEDTLS_CT_ARM_ASM) || defined(MBEDTLS_CT_AARCH64_ASM) || \
-    defined(MBEDTLS_CT_X86_64_ASM) || defined(MBEDTLS_CT_X86_ASM) || \
-    defined(MBEDTLS_CT_XTENSA_ASM)
+#if (defined(MBEDTLS_CT_AARCH64_ASM) || defined(MBEDTLS_CT_X86_64_ASM)) && \
+    (defined(MBEDTLS_CT_SIZE_32) || defined(MBEDTLS_CT_SIZE_64))
+#define MBEDTLS_CT_INLINE static inline __attribute__((always_inline))
+#elif (defined(MBEDTLS_CT_ARM_ASM) || defined(MBEDTLS_CT_X86_ASM) || \
+    defined(MBEDTLS_CT_XTENSA_ASM)) && defined(MBEDTLS_CT_SIZE_32)
 #define MBEDTLS_CT_INLINE static inline __attribute__((always_inline))
 #else
 #define MBEDTLS_CT_INLINE static inline
