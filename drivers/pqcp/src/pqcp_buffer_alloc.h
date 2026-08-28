@@ -17,6 +17,8 @@
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
 
+#include <tf-psa-crypto/private/mldsa.h>
+
 #if defined(MBEDTLS_THREADING_C)
 #include "threading_internal.h"
 #endif
@@ -62,11 +64,12 @@ extern ptrdiff_t tf_psa_crypto_pqcp_alloc_poison_bytes;
 /** Gain access to the PQCP global buffer.
  *
  * When you have access to the PQCP global buffer,
- * you may allocate regions in the buffer with
- * tf_psa_crypto_pqcp_alloc_push() and free them them with
- * tf_psa_crypto_pqcp_alloc_pop(). The regions must be managed
- * as a stack, i.e. a `pop()` call frees the last region that was
- * allocated with `push()` and has not been freed yet.
+ * - You may allocate regions in the buffer with
+ *   tf_psa_crypto_pqcp_alloc_push() and free them them with
+ *   tf_psa_crypto_pqcp_alloc_pop(). The regions must be managed
+ *   as a stack, i.e. a `pop()` call frees the last region that was
+ *   allocated with `push()` and has not been freed yet.
+ * - You may store data in ::tf_psa_crypto_pqcp_mldsa_public_key.
  *
  * Once you have finished using the PQCP global buffer,
  * you must call tf_psa_crypto_pqcp_alloc_start().
@@ -76,7 +79,8 @@ extern ptrdiff_t tf_psa_crypto_pqcp_alloc_poison_bytes;
  * it can gain exclusive access to the buffer.
  *
  * \retval #PSA_SUCCESS
- *         The global buffer is available for use.
+ *         The global buffer and ::tf_psa_crypto_pqcp_mldsa_public_key
+ *         are available for use.
  * \retval #PSA_ERROR_BAD_STATE
  *         An error was detected. Note that this function is not guaranteed
  *         to detect invalid usage, such as calling this function while
@@ -106,6 +110,14 @@ static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
  *         to clean up, so a future use of the global buffer should be safe.
  */
 psa_status_t tf_psa_crypto_pqcp_alloc_done(void);
+
+/** A buffer sized for an ML-DSA public key.
+ *
+ * You may use this buffer while you own the PQCP global buffer, i.e.
+ * between calls to tf_psa_crypto_pqcp_alloc_start() and
+ * tf_psa_crypto_pqcp_alloc_done().
+ */
+extern uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
 #else /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 
