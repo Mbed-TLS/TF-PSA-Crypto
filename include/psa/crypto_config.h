@@ -1302,7 +1302,8 @@
  *
  * This implementation does not support concurrent access by multiple
  * processes. Each process must use a separate storage directory. Configure
- * the directory with #MBEDTLS_PSA_ITS_STORAGE_PREFIX.
+ * the directory with #MBEDTLS_PSA_ITS_STORAGE_PREFIX. Multithreaded access
+ * within the same process is however supported.
  *
  * Module:  core/psa_its_file.c
  *
