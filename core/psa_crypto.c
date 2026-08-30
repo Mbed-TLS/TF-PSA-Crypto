@@ -8016,9 +8016,9 @@ psa_status_t psa_key_agreement(mbedtls_svc_key_id_t private_key,
     }
 
     status = psa_import_key(attributes, shared_secret, shared_secret_len, key);
-    
-exit: 
-    mbedtls_platform_zeroize(shared_secret, sizeof(shared_secret)); 
+
+exit:
+    mbedtls_platform_zeroize(shared_secret, sizeof(shared_secret));
 
     return status;
 }

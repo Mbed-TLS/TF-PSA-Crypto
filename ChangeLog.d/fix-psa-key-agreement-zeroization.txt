@@ -2,4 +2,3 @@ Bugfix
    Fix missing zeroization of the shared secret buffer in
    psa_key_agreement(). Fixes #849.
 
-
