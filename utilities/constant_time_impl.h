@@ -72,12 +72,10 @@
  *
  * The conditions below mirror the ones guarding the assembly bodies: the
  * AArch64 and x86-64 paths cover both limb sizes, while the Arm, x86 and
- * Xtensa paths are 32-bit only. Testing the architecture alone would apply the
- * attribute to the generic C fallback on a 32-bit-only architecture built with
- * 64-bit limbs. No configuration reaches that today, because
- * MBEDTLS_HAVE_INT64 and MBEDTLS_HAVE_ASM are mutually exclusive, so 64-bit
- * limbs alongside an assembly path require 64-bit pointers -- and the
- * architectures that implies already have assembly for both sizes. Keeping the
+ * Xtensa paths are 32-bit only. This matters only for a 32-bit architecture
+ * with 64-bit limbs, which no configuration reaches today: bignum.h never
+ * selects 64-bit limbs on these architectures, and check_config rejects an
+ * explicit MBEDTLS_HAVE_INT64 whenever MBEDTLS_HAVE_ASM is on. Keeping the
  * two sets of conditions in step costs nothing and stops them drifting apart.
  */
 #if (defined(MBEDTLS_CT_AARCH64_ASM) || defined(MBEDTLS_CT_X86_64_ASM)) && \
