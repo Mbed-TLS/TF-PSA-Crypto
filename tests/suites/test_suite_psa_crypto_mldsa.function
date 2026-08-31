@@ -11,6 +11,8 @@
 #include <pqcp_buffer_alloc.h>
 #include <psa_crypto_mldsa.h>
 
+#include <test/stack_usage.h>
+
 typedef enum {
     PKF_SEED,
     PKF_JOINED,
@@ -41,8 +43,9 @@ enum poison_mode {
     POISON_ON_UNLOCK,
 };
 
-#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) && defined(MBEDTLS_TEST_HOOKS) && \
-    defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
+#if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC) &&         \
+    defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED) &&     \
+    (defined(MBEDTLS_TEST_HOOKS) || defined(MBEDTLS_TEST_STACK_USAGE))
 static const uint8_t seed_1[] = {
     0x54, 0x68, 0x65, 0x72, 0x65, 0x20, 0x77, 0x61, 0x73, 0x20, 0x6f, 0x6e, 0x63, 0x65, 0x20, 0x75,
     0x70, 0x6f, 0x6e, 0x20, 0x61, 0x20, 0x74, 0x69, 0x6d, 0x65, 0x20, 0x61, 0x20, 0x2e, 0x2e, 0x2e
@@ -1619,5 +1622,179 @@ void poison_verify_multipart_finish(int poison_mode, int64_t poison_bytes,
                                  PSA_ERROR_INVALID_ARGUMENT);
 exit:
     poison_cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC:MBEDTLS_TEST_STACK_USAGE */
+void check_stack_usage(int bits, int pkf)
+{
+
+    /* How much stack space MLDSA functions are allowed to use when
+     * using a global buffer and not storing any copy of the key on
+     * the stack.
+     *
+     * We don't have a precise bound on this value. We do want to ensure
+     * that there is no copy of the private key or public key on the
+     * stack, so this should be less than both MLDSA87_SECRETKEYBYTES and
+     * MLDSA87_PUBLICKEYBYTES, or at least not much higher.
+     */
+    const size_t low_depth = MLDSA87_PUBLICKEYBYTES + 500;
+    /* Additional stack depth when computing a signature. */
+    const size_t sign_depth = 500;
+    /* How much stack space to measure. */
+    size_t max_depth = (low_depth + sign_depth +
+                        MLDSA87_SECRETKEYBYTES + MLDSA87_PUBLICKEYBYTES +
+                        500);
+
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_ML_DSA_KEY_PAIR);
+    psa_set_key_bits(&attributes, bits);
+    psa_key_attributes_t public_attributes = attributes;
+    psa_set_key_type(&public_attributes, PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY);
+    psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
+    unsigned char *private_key = NULL;
+    size_t private_key_size;
+    size_t private_key_length;
+    unsigned char *public_key = NULL;
+    size_t public_key_size = TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(bits);
+    size_t public_key_length;
+    unsigned char *signature = NULL;
+    size_t signature_size = PSA_MLDSA_SIGNATURE_SIZE(bits);
+    size_t signature_length;
+    tf_psa_crypto_mldsa_operation_t operation;
+    memset(&operation, 0, sizeof(operation));
+    unsigned char message[] = { 'a', 'b', 'c' };
+
+    switch (pkf) {
+        case PKF_SEED:
+            private_key_size = TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE;
+            max_depth += MLDSA87_PUBLICKEYBYTES + MLDSA87_SECRETKEYBYTES + 100;
+            break;
+        case PKF_JOINED:
+            private_key_size = TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(bits);
+            custom.flags |= PSA_CUSTOM_KEY_FLAG_EXPAND;
+            break;
+        default:
+            TEST_FAIL("Unsupported private key format");
+    }
+
+    PSA_INIT();
+    TEST_CALLOC(private_key, private_key_size);
+    TEST_CALLOC(public_key, public_key_size);
+    TEST_CALLOC(signature, signature_size);
+
+    /* Key generation */
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_generate_key_custom(
+                   &attributes, &custom, NULL, 0,
+                   private_key, private_key_size, &private_key_length));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    TEST_EQUAL(private_key_size, private_key_length);
+
+    /* Expand private key (not applicable when the private key is not
+     * in expanded form) */
+    if (pkf == PKF_JOINED) {
+        MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+        PSA_ASSERT(tf_psa_crypto_mldsa_expand_private_key(
+                       bits,
+                       private_key, TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE,
+                       private_key, private_key_size, &private_key_length));
+        MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+        MBEDTLS_TEST_STACK_USAGE_STOP();
+        TEST_EQUAL(private_key_size, private_key_length);
+    }
+
+    /* Export public key (has a copy of the expanded private key on
+     * the stack when the input is the seed) */
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_export_public_key(
+                   &attributes,
+                   private_key, private_key_length,
+                   public_key, public_key_size, &public_key_length));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth +
+                                   (pkf == PKF_SEED ? MLDSA87_SECRETKEYBYTES : 0));
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    TEST_EQUAL(public_key_size, public_key_length);
+
+    /* One-shot signature (has a copy of the expanded private key and the
+     * public key on the stack when the input is the seed) */
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_sign_message(
+                   &attributes,
+                   private_key, private_key_length,
+                   PSA_ALG_DETERMINISTIC_ML_DSA,
+                   message, sizeof(message),
+                   signature, signature_size, &signature_length));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth + sign_depth +
+                                   (pkf == PKF_SEED ?
+                                    MLDSA87_SECRETKEYBYTES + MLDSA87_PUBLICKEYBYTES :
+                                    0));
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+
+    /* One-shot verification */
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_verify_message(
+                   &public_attributes,
+                   public_key, public_key_length,
+                   PSA_ALG_DETERMINISTIC_ML_DSA,
+                   message, sizeof(message),
+                   signature, signature_length));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+
+    /* Multipart signature */
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_sign_setup(
+                   &operation,
+                   &attributes,
+                   private_key, private_key_length,
+                   PSA_ALG_DETERMINISTIC_ML_DSA));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_update(
+                   &operation,
+                   message, sizeof(message)));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_sign_finish(
+                   &operation,
+                   private_key, private_key_length,
+                   signature, signature_size, &signature_length));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth + sign_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+
+    /* Multipart verification */
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_verify_setup(
+                   &operation,
+                   &public_attributes,
+                   public_key, public_key_length,
+                   PSA_ALG_DETERMINISTIC_ML_DSA));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_update(
+                   &operation,
+                   message, sizeof(message)));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    MBEDTLS_TEST_STACK_USAGE_START(max_depth);
+    PSA_ASSERT(tf_psa_crypto_mldsa_verify_finish(
+                   &operation,
+                   public_key, public_key_length,
+                   signature, signature_length));
+    MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+
+exit:
+    MBEDTLS_TEST_STACK_USAGE_STOP();
+    tf_psa_crypto_mldsa_abort(&operation);
+    PSA_DONE();
+    mbedtls_free(private_key);
+    mbedtls_free(public_key);
+    mbedtls_free(signature);
 }
 /* END_CASE */
