@@ -74,6 +74,7 @@ void md_to_from_psa()
     MD_PSA(MBEDTLS_MD_SHA3_256, PSA_ALG_SHA3_256);
     MD_PSA(MBEDTLS_MD_SHA3_384, PSA_ALG_SHA3_384);
     MD_PSA(MBEDTLS_MD_SHA3_512, PSA_ALG_SHA3_512);
+    MD_PSA(MBEDTLS_MD_SM3, PSA_ALG_SM3);
 
     /* Don't test for NONE<->NONE as this is not guaranteed */
 }
