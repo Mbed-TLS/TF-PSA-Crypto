@@ -1752,6 +1752,10 @@ void check_stack_usage(int bits, int pkf)
                    PSA_ALG_DETERMINISTIC_ML_DSA));
     MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
     MBEDTLS_TEST_STACK_USAGE_STOP();
+    if (pkf == PKF_JOINED) {
+        /* No observable heap usage */
+        TEST_ASSERT(operation.key == NULL);
+    }
     MBEDTLS_TEST_STACK_USAGE_START(max_depth);
     PSA_ASSERT(tf_psa_crypto_mldsa_update(
                    &operation,
@@ -1775,6 +1779,8 @@ void check_stack_usage(int bits, int pkf)
                    PSA_ALG_DETERMINISTIC_ML_DSA));
     MBEDTLS_TEST_STACK_USAGE_CHECK(low_depth);
     MBEDTLS_TEST_STACK_USAGE_STOP();
+    /* No observable heap usage */
+    TEST_ASSERT(operation.key == NULL);
     MBEDTLS_TEST_STACK_USAGE_START(max_depth);
     PSA_ASSERT(tf_psa_crypto_mldsa_update(
                    &operation,
