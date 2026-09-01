@@ -4,6 +4,7 @@
  * \brief Implementation of Blake2.
  *
  * The code is heavily inspired from RFC 7693.
+ * Only sequential modes are implemented, not parallel ones.
  */
 /*
  *  Copyright The Mbed TLS Contributors
