@@ -959,8 +959,8 @@
  * \return 1 if alg is a BLAKE2 hash algorithm, 0 otherwise.
  */
 #define PSA_ALG_IS_BLAKE2_HASH(alg)     \
-    ((alg) == PSA_ALG_BLAKE2S_HASH256) || \
-    ((alg) == PSA_ALG_BLAKE2B_HASH512)
+    (((alg) == PSA_ALG_BLAKE2S_HASH256) || \
+     ((alg) == PSA_ALG_BLAKE2B_HASH512))
 
 /** In a hash-and-sign algorithm policy, allow any hash algorithm.
  *
