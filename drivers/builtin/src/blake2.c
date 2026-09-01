@@ -68,20 +68,14 @@ int tf_psa_crypto_blake2s_init(tf_psa_crypto_blake2s_context *ctx, size_t outlen
         return TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA;
     }
 
+    memset(ctx, 0, sizeof(*ctx));
+
     for (i = 0; i < 8; i++) {
         ctx->state[i] = blake2s_iv[i];
     }
 
     ctx->state[0] ^= 0x01010000 ^ (keylen << 8) ^ outlen;
-
-    ctx->processed_bytes[0] = 0;
-    ctx->processed_bytes[1] = 0;
-    ctx->buf_idx = 0;
     ctx->outlen = outlen;
-
-    for (i = keylen; i < 64; i++) {
-        ctx->buf[i] = 0;
-    }
 
     if (keylen > 0) {
         tf_psa_crypto_blake2s_update(ctx, key, keylen);
@@ -145,9 +139,9 @@ static void tf_psa_crypto_blake2s_compress(tf_psa_crypto_blake2s_context *ctx, i
 void tf_psa_crypto_blake2s_update(tf_psa_crypto_blake2s_context *ctx,
                                   const uint8_t *in, size_t inlen)
 {
-    size_t i;
+    size_t space_left, to_copy;
 
-    for (i = 0; i < inlen; i++) {
+    while (inlen > 0) {
         if (ctx->buf_idx == 64) {
             ctx->processed_bytes[0] += (uint32_t) ctx->buf_idx;
             // check overflow
@@ -157,14 +151,20 @@ void tf_psa_crypto_blake2s_update(tf_psa_crypto_blake2s_context *ctx,
             tf_psa_crypto_blake2s_compress(ctx, 0);
             ctx->buf_idx = 0;
         }
-        ctx->buf[ctx->buf_idx++] = in[i];
+
+        space_left = sizeof(ctx->buf) - ctx->buf_idx;
+        to_copy = inlen > space_left ? space_left : inlen;
+        memcpy(&ctx->buf[ctx->buf_idx], in, to_copy);
+        inlen -= to_copy;
+        in += to_copy;
+        ctx->buf_idx += to_copy;
     }
 }
 
 int tf_psa_crypto_blake2s_finish(tf_psa_crypto_blake2s_context *ctx,
                                  uint8_t *out, size_t outlen)
 {
-    size_t i;
+    size_t i, pad_size;
 
     if (outlen < ctx->outlen) {
         return TF_PSA_CRYPTO_ERR_BUFFER_TOO_SMALL;
@@ -176,10 +176,8 @@ int tf_psa_crypto_blake2s_finish(tf_psa_crypto_blake2s_context *ctx,
         ctx->processed_bytes[1]++;
     }
 
-    while (ctx->buf_idx < 64) {
-        ctx->buf[ctx->buf_idx++] = 0;
-    }
-
+    pad_size = sizeof(ctx->buf) - ctx->buf_idx;
+    memset(ctx->buf + ctx->buf_idx, 0, pad_size);
     tf_psa_crypto_blake2s_compress(ctx, 1);
 
     // little endian convert and store
@@ -242,20 +240,14 @@ int tf_psa_crypto_blake2b_init(tf_psa_crypto_blake2b_context *ctx, size_t outlen
         return TF_PSA_CRYPTO_ERR_BAD_INPUT_DATA;
     }
 
+    memset(ctx, 0, sizeof(*ctx));
+
     for (i = 0; i < 8; i++) {
         ctx->state[i] = blake2b_iv[i];
     }
 
     ctx->state[0] ^= 0x01010000 ^ (keylen << 8) ^ outlen;
-
-    ctx->processed_bytes[0] = 0;
-    ctx->processed_bytes[1] = 0;
-    ctx->buf_idx = 0;
     ctx->outlen = outlen;
-
-    for (i = keylen; i < 128; i++) {
-        ctx->buf[i] = 0;
-    }
 
     if (keylen > 0) {
         tf_psa_crypto_blake2b_update(ctx, key, keylen);
@@ -319,25 +311,32 @@ static void tf_psa_crypto_blake2b_compress(tf_psa_crypto_blake2b_context *ctx, i
 void tf_psa_crypto_blake2b_update(tf_psa_crypto_blake2b_context *ctx,
                                   const uint8_t *in, size_t inlen)
 {
-    size_t i;
+    size_t space_left, to_copy;
 
-    for (i = 0; i < inlen; i++) {
+    while (inlen > 0) {
         if (ctx->buf_idx == 128) {
-            ctx->processed_bytes[0] += ctx->buf_idx;
+            ctx->processed_bytes[0] += (uint64_t) ctx->buf_idx;
+            // check overflow
             if (ctx->processed_bytes[0] < ctx->buf_idx) {
                 ctx->processed_bytes[1]++;
             }
             tf_psa_crypto_blake2b_compress(ctx, 0);
             ctx->buf_idx = 0;
         }
-        ctx->buf[ctx->buf_idx++] = in[i];
+
+        space_left = sizeof(ctx->buf) - ctx->buf_idx;
+        to_copy = inlen > space_left ? space_left : inlen;
+        memcpy(&ctx->buf[ctx->buf_idx], in, to_copy);
+        inlen -= to_copy;
+        in += to_copy;
+        ctx->buf_idx += to_copy;
     }
 }
 
 int tf_psa_crypto_blake2b_finish(tf_psa_crypto_blake2b_context *ctx,
                                  uint8_t *out, size_t outlen)
 {
-    size_t i;
+    size_t i, pad_size;
 
     if (outlen < ctx->outlen) {
         return TF_PSA_CRYPTO_ERR_BUFFER_TOO_SMALL;
@@ -348,9 +347,8 @@ int tf_psa_crypto_blake2b_finish(tf_psa_crypto_blake2b_context *ctx,
         ctx->processed_bytes[1]++;
     }
 
-    while (ctx->buf_idx < 128) {
-        ctx->buf[ctx->buf_idx++] = 0;
-    }
+    pad_size = sizeof(ctx->buf) - ctx->buf_idx;
+    memset(ctx->buf + ctx->buf_idx, 0, pad_size);
     tf_psa_crypto_blake2b_compress(ctx, 1);
 
     // little endian convert and store
