@@ -1074,6 +1074,12 @@ struct psa_crypto_driver_pake_inputs_s {
     size_t MBEDTLS_PRIVATE(peer_len);
     psa_key_attributes_t MBEDTLS_PRIVATE(attributes);
     struct psa_pake_cipher_suite_s MBEDTLS_PRIVATE(cipher_suite);
+    #if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
+        defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
+        defined(PSA_WANT_ALG_SPAKE2P_MATTER)
+    uint8_t *MBEDTLS_PRIVATE(context);
+    size_t MBEDTLS_PRIVATE(context_len);
+    #endif
 };
 
 typedef enum psa_crypto_driver_pake_step {
