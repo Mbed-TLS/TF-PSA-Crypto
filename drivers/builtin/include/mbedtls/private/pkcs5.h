@@ -31,9 +31,6 @@
 /** Given private key password does not allow for correct decryption. */
 #define MBEDTLS_ERR_PKCS5_PASSWORD_MISMATCH               -0x2e00
 
-#define MBEDTLS_PKCS5_DECRYPT      MBEDTLS_DECRYPT
-#define MBEDTLS_PKCS5_ENCRYPT      MBEDTLS_ENCRYPT
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,7 +52,6 @@ extern "C" {
  *                   password are about 1/255).
  *
  * \param pbe_params the ASN.1 algorithm parameters
- * \param mode       either #MBEDTLS_PKCS5_DECRYPT or #MBEDTLS_PKCS5_ENCRYPT
  * \param pwd        password to use when generating key
  * \param pwdlen     length of password
  * \param data       data to process
@@ -75,7 +71,7 @@ extern "C" {
  *
  * \returns        0 on success, or a MBEDTLS_ERR_XXX code if parsing or decryption fails.
  */
-int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
+int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params,
                             const unsigned char *pwd,  size_t pwdlen,
                             const unsigned char *data, size_t datalen,
                             unsigned char *output, size_t output_size,
