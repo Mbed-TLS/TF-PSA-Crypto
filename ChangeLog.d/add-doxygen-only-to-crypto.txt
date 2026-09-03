@@ -1,0 +1,3 @@
+API changes
+   * Change crypto.h so the functions duplicated in crypto_structs are internal
+     only.
