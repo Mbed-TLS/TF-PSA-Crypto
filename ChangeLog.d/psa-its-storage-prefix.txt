@@ -1,0 +1,8 @@
+Features
+   * Allow applications using file-based PSA ITS to configure the storage
+     directory with MBEDTLS_PSA_ITS_STORAGE_PREFIX. The default remains the
+     current directory. Note that each concurrent process needs a separate
+     directory.
+   * Officially provide a compile-time option MBEDTLS_PSA_ITS_STORAGE_PREFIX
+     to select the directory for persistent keys when using the default
+     file-based backend. 

@@ -1282,10 +1282,28 @@
 //#define MBEDTLS_PSA_DRIVER_GET_ENTROPY
 
 /**
+ * \def MBEDTLS_PSA_ITS_STORAGE_PREFIX
+ *
+ * Set the directory for the file-based PSA ITS implementation.
+ *
+ * The value must be a string containing the directory path, including a
+ * trailing directory separator. By default, files are stored in the process's
+ * current working directory.
+ *
+ * Requires: MBEDTLS_PSA_ITS_FILE_C
+ */
+//#define MBEDTLS_PSA_ITS_STORAGE_PREFIX ""
+
+/**
  * \def MBEDTLS_PSA_ITS_FILE_C
  *
  * Enable the emulation of the Platform Security Architecture
  * Internal Trusted Storage (PSA ITS) over files.
+ *
+ * This implementation does not support concurrent access by multiple
+ * processes. Each process must use a separate storage directory. Configure
+ * the directory with #MBEDTLS_PSA_ITS_STORAGE_PREFIX. Multithreaded access
+ * within the same process is however supported.
  *
  * Module:  core/psa_its_file.c
  *
