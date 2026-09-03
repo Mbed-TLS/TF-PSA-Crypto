@@ -15,10 +15,13 @@
 #ifndef TF_PSA_CRYPTO_TF_PSA_CRYPTO_PLATFORM_REQUIREMENTS_H
 #define TF_PSA_CRYPTO_TF_PSA_CRYPTO_PLATFORM_REQUIREMENTS_H
 
+/* Do not try to use the library extension with ATfE toolchain */
+#if !defined(__GNUC__) || !defined(__clang_major__)
 #ifndef __STDC_WANT_LIB_EXT1__
 /* Ask for the C11 gmtime_s() and memset_s() if available */
 #define __STDC_WANT_LIB_EXT1__ 1
 #endif
+#endif /* !__GNUC__ || !__clang_major__ */
 
 #if !defined(_POSIX_C_SOURCE)
 /* For standards-compliant access to
