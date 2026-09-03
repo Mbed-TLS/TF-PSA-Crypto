@@ -1,0 +1,5 @@
+Bugfix
+   * Fix mbedtls_aes_crypt_xts() producing wrong output for in-place
+     operation (input == output) when the length is not a multiple of
+     16 bytes: the ciphertext-stealing step overwrote part of the input
+     before reading it.
