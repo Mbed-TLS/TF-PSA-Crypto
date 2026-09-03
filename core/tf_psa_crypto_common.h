@@ -37,14 +37,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(__ARM_NEON)
-#include <arm_neon.h>
-#define MBEDTLS_HAVE_NEON_INTRINSICS
-#elif defined(MBEDTLS_PLATFORM_IS_WINDOWS_ON_ARM64)
-#include <arm64_neon.h>
-#define MBEDTLS_HAVE_NEON_INTRINSICS
-#endif
-
 /* Decide whether we're built for a Unix-like platform.
  */
 #if defined(MBEDTLS_TEST_PLATFORM_IS_NOT_UNIXLIKE) //no-check-names
@@ -200,6 +192,8 @@ static inline const unsigned char *mbedtls_buffer_offset_const(
 {
     return p == NULL ? NULL : p + n;
 }
+
+
 
 /* Always inline mbedtls_xor() for similar reasons as mbedtls_xor_no_simd(). */
 #if defined(__IAR_SYSTEMS_ICC__)
@@ -370,6 +364,110 @@ static inline void mbedtls_xor_no_simd(unsigned char *r,
         r[i] = a[i] ^ b[i];
     }
 }
+
+/* Code-size optimised, for when n is not known at compile-time */
+static inline void mbedtls_xor_small_impl_nonconst(uint8_t *r,
+                                                   const uint8_t *a,
+                                                   const uint8_t *b,
+                                                   size_t n)
+{
+    for (unsigned i = 0; i < n; i++) {
+        r[i] = a[i] ^ b[i];
+    }
+}
+
+#if (MBEDTLS_HAS_BUILTIN(__builtin_constant_p) && MBEDTLS_HAS_BUILTIN(__builtin_choose_expr)) \
+    && ((defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 100000)) \
+    || (defined(__clang__) && (__clang_major__ >= 10)))
+
+/*
+ * Code-size optimised, for when n is known at compile-time, for compilers with
+ * support for __builtin_constant_p and __builtin_choose_expr (ie., all recent
+ * gcc and clang)
+ */
+static inline void mbedtls_xor_small_impl_const(uint8_t *r,
+                                                const uint8_t *a,
+                                                const uint8_t *b,
+                                                size_t n)
+{
+    /*
+     * Given that n is known at compile-time, use the first path which can
+     * fully consume the input with no left-over (i.e. input length is a
+     * multiple of the chunk size). All other paths get optimised away.
+     */
+    size_t i = 0;
+#if defined(MBEDTLS_EFFICIENT_UNALIGNED_ACCESS)
+#if defined(MBEDTLS_HAVE_NEON_INTRINSICS) && \
+    (!(defined(MBEDTLS_COMPILER_IS_GCC) && MBEDTLS_GCC_VERSION < 70300))
+    /* Old GCC versions generate a warning here, so disable the NEON path for these compilers */
+    if (n % 16 == 0) {
+        for (; (i + 16) <= n; i += 16) {
+            uint8x16_t v1 = vld1q_u8(a + i);
+            uint8x16_t v2 = vld1q_u8(b + i);
+            uint8x16_t x = veorq_u8(v1, v2);
+            vst1q_u8(r + i, x);
+        }
+        return;
+    }
+#endif
+    if (n % 8 == 0) {
+        for (; (i + 8) <= n; i += 8) {
+            uint64_t x = mbedtls_get_unaligned_uint64(a + i) ^ mbedtls_get_unaligned_uint64(b + i);
+            mbedtls_put_unaligned_uint64(r + i, x);
+        }
+        return;
+    }
+    if (n % 4 == 0) {
+        for (; (i + 4) <= n; i += 4) {
+            uint32_t x = mbedtls_get_unaligned_uint32(a + i) ^ mbedtls_get_unaligned_uint32(b + i);
+            mbedtls_put_unaligned_uint32(r + i, x);
+        }
+        return;
+    }
+#endif // unaligned access
+    for (; i < n; i++) {
+        r[i] = a[i] ^ b[i];
+    }
+}
+
+/*
+ * The not-selected path can't always be optimised away unless this is written
+ * as a macro (rather than static inline).
+ *
+ * __builtin_choose_expr guarantees only one path ends up getting compiled in.
+ * From GCC docs: "it does not evaluate the expression that is not chosen".
+ * In practice "if (__builtin_constant_p)) ..." works too, but relies on
+ * dead-code elimination doing the right thing. This is available everywhere
+ * __builtin_constant_p is available, so may as well make use of it.
+ */
+
+/**
+ * Perform a fast block XOR operation, such that
+ * r[i] = a[i] ^ b[i] where 0 <= i < n
+ *
+ * This variant of mbedtls_xor is optimised for code-size.
+ *
+ * \param   r Pointer to result (buffer of at least \p n bytes). \p r
+ *            may be equal to either \p a or \p b, but behaviour when
+ *            it overlaps in other ways is undefined.
+ * \param   a Pointer to input (buffer of at least \p n bytes)
+ * \param   b Pointer to input (buffer of at least \p n bytes)
+ * \param   n Number of bytes to process.
+ */
+#define MBEDTLS_XOR_SMALL(r, a, b, n) do { \
+        __builtin_choose_expr( \
+            __builtin_constant_p(n), \
+            mbedtls_xor_small_impl_const((r), (a), (b), (n)), \
+            mbedtls_xor_small_impl_nonconst((r), (a), (b), (n)) \
+            ); } while (0)
+
+#else
+
+// best for code-size if n is not known
+#define MBEDTLS_XOR_SMALL mbedtls_xor_small_impl_nonconst
+
+#endif
+
 
 /* Fix MSVC C99 compatible issue
  *      MSVC support __func__ from visual studio 2015( 1900 )
