@@ -22,6 +22,9 @@ int main(void)
 #include <string.h>
 #include <stdlib.h>
 
+#include "psa/crypto.h"
+#include "psa/crypto_extra.h"
+
 #include "mbedtls/private/md5.h"
 #include "mbedtls/private/ripemd160.h"
 #include "mbedtls/private/sha1.h"
@@ -112,7 +115,7 @@ static unsigned long mbedtls_timing_hardclock(void);
     "aes_cbc, aes_cfb128, aes_cfb8, aes_gcm, aes_ccm, aes_xts, chachapoly\n" \
     "aes_cmac, poly1305\n"                                        \
     "ctr_drbg, hmac_drbg\n"                                                  \
-    "rsa, ecdsa, ecdh.\n"
+    "rsa, ecdsa, ecdh, ffdh.\n"
 
 #if defined(MBEDTLS_ERROR_C)
 #define PRINT_ERROR                                                     \
@@ -496,6 +499,349 @@ static int set_ecp_curve(const char *string, mbedtls_ecp_curve_info *curve)
 }
 #endif
 
+#if defined(PSA_WANT_ALG_ECDH) || defined(PSA_WANT_ALG_FFDH)
+/**
+ * Benchmark parameters for a PSA key agreement family.
+ *
+ * Each entry describes one concrete benchmark target, such as an ECDH curve
+ * or an RFC7919 FFDH group.
+ */
+typedef struct {
+    const char *name;
+    psa_key_type_t key_type;
+    size_t key_bits;
+    psa_algorithm_t alg;
+} psa_key_agreement_benchmark_info;
+
+/**
+ * Translate PSA status codes into the benchmark program's error convention.
+ *
+ * The benchmark macros expect an integer return code and already treat
+ * MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED as a "skip" condition.
+ */
+static int psa_status_to_benchmark_ret(psa_status_t status)
+{
+    if (status == PSA_SUCCESS) {
+        return 0;
+    }
+
+    if (status == PSA_ERROR_NOT_SUPPORTED) {
+        return MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED;
+    }
+
+    return (int) status;
+}
+
+/**
+ * Destroy a key used by the PSA benchmark helpers.
+ *
+ * This accepts an uninitialized key id and always resets the caller's handle
+ * after a successful or failed destroy attempt.
+ */
+static int psa_destroy_benchmark_key(mbedtls_svc_key_id_t *key)
+{
+    if (MBEDTLS_SVC_KEY_ID_GET_KEY_ID(*key) == 0) {
+        return 0;
+    }
+
+    int ret = psa_status_to_benchmark_ret(psa_destroy_key(*key));
+    *key = MBEDTLS_SVC_KEY_ID_INIT;
+    return ret;
+}
+
+/**
+ * Generate a key pair for one benchmark entry.
+ *
+ * The generated key must support raw key agreement. The benchmark also exports
+ * the corresponding public key for use as peer input, which PSA allows
+ * without widening the key's usage policy.
+ */
+static int psa_generate_benchmark_key(const psa_key_agreement_benchmark_info *info,
+                                      mbedtls_svc_key_id_t *key)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, info->alg);
+    psa_set_key_type(&attributes, info->key_type);
+    psa_set_key_bits(&attributes, info->key_bits);
+
+    return psa_status_to_benchmark_ret(psa_generate_key(&attributes, key));
+}
+
+/**
+ * Execute one raw PSA key agreement operation for benchmarking.
+ *
+ * When \p generate_private_key is non-zero, this function includes private-key
+ * generation in the measured path. Otherwise it reuses \p private_key so the
+ * timed operation covers only the key agreement call itself.
+ */
+static int psa_raw_key_agreement_benchmark_once(
+    const psa_key_agreement_benchmark_info *info,
+    mbedtls_svc_key_id_t private_key,
+    int generate_private_key,
+    const unsigned char *peer_key,
+    size_t peer_key_length,
+    unsigned char *output,
+    size_t output_size)
+{
+    mbedtls_svc_key_id_t local_private_key = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t output_length;
+    int ret;
+
+    if (generate_private_key) {
+        ret = psa_generate_benchmark_key(info, &local_private_key);
+        if (ret != 0) {
+            return ret;
+        }
+
+        private_key = local_private_key;
+    }
+
+    ret = psa_status_to_benchmark_ret(
+        psa_raw_key_agreement(info->alg, private_key,
+                              peer_key, peer_key_length,
+                              output, output_size, &output_length));
+
+    if (generate_private_key) {
+        int destroy_ret = psa_destroy_benchmark_key(&local_private_key);
+        if (ret == 0) {
+            ret = destroy_ret;
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * Print a benchmark entry as skipped because the primitive is unsupported.
+ */
+static void print_feature_not_supported(const char *title)
+{
+    mbedtls_printf(HEADER_FORMAT, title);
+    mbedtls_printf("Feature Not Supported. Skipping.\n");
+}
+
+/**
+ * Look up a benchmark entry by its command-line name.
+ */
+static int set_psa_key_agreement_name(const char *string,
+                                      const psa_key_agreement_benchmark_info *table,
+                                      const char **name)
+{
+    const psa_key_agreement_benchmark_info *info;
+
+    for (info = table; info->name != NULL; info++) {
+        if (strcmp(string, info->name) == 0) {
+            *name = info->name;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Benchmark a family of PSA key agreement parameters.
+ *
+ * For each entry in \p table, this function:
+ * - generates a server key and exports its public key,
+ * - times an ephemeral client path, where client key generation is included,
+ * - times a static client path, where a pre-generated key is reused,
+ * - prints results using the supplied title prefixes.
+ *
+ * The optional \p name_filter is used by the ECDH command-line path to keep
+ * compatibility with the existing single-curve selection behaviour.
+ */
+static void benchmark_psa_key_agreement(
+    const psa_key_agreement_benchmark_info *table,
+    const char *ephemeral_prefix,
+    const char *static_prefix,
+    const char *name_filter,
+    unsigned char *peer_key,
+    size_t peer_key_size,
+    unsigned char *shared_secret,
+    size_t shared_secret_size)
+{
+    const psa_key_agreement_benchmark_info *info;
+
+    for (info = table; info->name != NULL; info++) {
+        size_t peer_key_length;
+        mbedtls_svc_key_id_t server_key = MBEDTLS_SVC_KEY_ID_INIT;
+        mbedtls_svc_key_id_t client_key = MBEDTLS_SVC_KEY_ID_INIT;
+        char title[TITLE_LEN];
+        int setup_ret;
+
+        if (name_filter != NULL && strcmp(name_filter, info->name) != 0) {
+            continue;
+        }
+
+        /* Generate the peer key once and export its public part for both runs. */
+        setup_ret = psa_generate_benchmark_key(info, &server_key);
+        if (setup_ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED) {
+            mbedtls_snprintf(title, sizeof(title), "%s%s",
+                             ephemeral_prefix, info->name);
+            print_feature_not_supported(title);
+            mbedtls_snprintf(title, sizeof(title), "%s%s",
+                             static_prefix, info->name);
+            print_feature_not_supported(title);
+            continue;
+        } else if (setup_ret != 0) {
+            mbedtls_exit(1);
+        }
+
+        setup_ret = psa_status_to_benchmark_ret(
+            psa_export_public_key(server_key, peer_key, peer_key_size,
+                                  &peer_key_length));
+        if (setup_ret != 0) {
+            (void) psa_destroy_benchmark_key(&server_key);
+            mbedtls_exit(1);
+        }
+
+        mbedtls_snprintf(title, sizeof(title), "%s%s",
+                         ephemeral_prefix, info->name);
+        TIME_PUBLIC(title, "handshake",
+                    ret = psa_raw_key_agreement_benchmark_once(
+                        info, MBEDTLS_SVC_KEY_ID_INIT, 1,
+                        peer_key, peer_key_length,
+                        shared_secret, shared_secret_size));
+
+        /* Reuse a fixed client key so this pass measures agreement only. */
+        setup_ret = psa_generate_benchmark_key(info, &client_key);
+        if (setup_ret != 0) {
+            (void) psa_destroy_benchmark_key(&server_key);
+            mbedtls_exit(1);
+        }
+
+        mbedtls_snprintf(title, sizeof(title), "%s%s",
+                         static_prefix, info->name);
+        TIME_PUBLIC(title, "handshake",
+                    ret = psa_raw_key_agreement_benchmark_once(
+                        info, client_key, 0,
+                        peer_key, peer_key_length,
+                        shared_secret, shared_secret_size));
+
+        setup_ret = psa_destroy_benchmark_key(&client_key);
+        if (setup_ret != 0) {
+            (void) psa_destroy_benchmark_key(&server_key);
+            mbedtls_exit(1);
+        }
+
+        setup_ret = psa_destroy_benchmark_key(&server_key);
+        if (setup_ret != 0) {
+            mbedtls_exit(1);
+        }
+    }
+}
+
+#endif /* PSA_WANT_ALG_ECDH || PSA_WANT_ALG_FFDH */
+
+#if defined(PSA_WANT_ALG_ECDH)
+/** ECDH benchmark targets enabled in the current PSA configuration. */
+static const psa_key_agreement_benchmark_info ecdh_benchmark_table[] = {
+#if defined(PSA_WANT_ECC_SECP_K1_256)
+    { "secp256k1", PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1),
+      256, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_256)
+    { "secp256r1", PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1),
+      256, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_384)
+    { "secp384r1", PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1),
+      384, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_521)
+    { "secp521r1", PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1),
+      521, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
+    { "brainpoolP256r1",
+      PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1),
+      256, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
+    { "brainpoolP384r1",
+      PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1),
+      384, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
+    { "brainpoolP512r1",
+      PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1),
+      512, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_MONTGOMERY_255)
+    { "curve25519", PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY),
+      255, PSA_ALG_ECDH },
+#endif
+#if defined(PSA_WANT_ECC_MONTGOMERY_448)
+    { "curve448", PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY),
+      448, PSA_ALG_ECDH },
+#endif
+    { NULL, 0, 0, 0 }
+};
+
+/**
+ * Benchmark ECDH using ECC-sized scratch buffers.
+ *
+ * Using ECC-specific buffers keeps the ECDH stack usage independent from the
+ * largest enabled FFDH group, which is useful on constrained targets.
+ */
+static void benchmark_psa_ecdh(const char *name_filter)
+{
+    unsigned char peer_key[PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
+    unsigned char shared_secret[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
+
+    benchmark_psa_key_agreement(ecdh_benchmark_table,
+                                "ECDHE-", "ECDH-",
+                                name_filter,
+                                peer_key, sizeof(peer_key),
+                                shared_secret, sizeof(shared_secret));
+}
+#endif
+
+#if defined(PSA_WANT_ALG_FFDH)
+/** FFDH benchmark targets enabled in the current PSA configuration. */
+static const psa_key_agreement_benchmark_info ffdh_benchmark_table[] = {
+#if defined(PSA_WANT_DH_RFC7919_2048)
+    { "2048", PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919),
+      2048, PSA_ALG_FFDH },
+#endif
+#if defined(PSA_WANT_DH_RFC7919_3072)
+    { "3072", PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919),
+      3072, PSA_ALG_FFDH },
+#endif
+#if defined(PSA_WANT_DH_RFC7919_4096)
+    { "4096", PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919),
+      4096, PSA_ALG_FFDH },
+#endif
+#if defined(PSA_WANT_DH_RFC7919_6144)
+    { "6144", PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919),
+      6144, PSA_ALG_FFDH },
+#endif
+#if defined(PSA_WANT_DH_RFC7919_8192)
+    { "8192", PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919),
+      8192, PSA_ALG_FFDH },
+#endif
+    { NULL, 0, 0, 0 }
+};
+
+/**
+ * Benchmark FFDH using group-sized scratch buffers.
+ */
+static void benchmark_psa_ffdh(const char *name_filter)
+{
+    unsigned char peer_key[PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)];
+    unsigned char shared_secret[PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)];
+
+    benchmark_psa_key_agreement(ffdh_benchmark_table,
+                                "FFDHE-", "FFDH-",
+                                name_filter,
+                                peer_key, sizeof(peer_key),
+                                shared_secret, sizeof(shared_secret));
+}
+#endif
+
 unsigned char buf[BUFSIZE];
 
 typedef struct {
@@ -506,7 +852,7 @@ typedef struct {
          aria, camellia, chacha20,
          poly1305,
          ctr_drbg, hmac_drbg,
-         rsa, ecdsa, ecdh;
+         rsa, ecdsa, ecdh, ffdh;
 } todo_list;
 
 
@@ -516,6 +862,12 @@ int main(int argc, char *argv[])
     unsigned char tmp[200];
     char title[TITLE_LEN];
     todo_list todo;
+#if defined(PSA_WANT_ALG_ECDH)
+    const char *selected_ecdh_curve = NULL;
+#endif
+#if defined(PSA_WANT_ALG_FFDH)
+    const char *selected_ffdh_group = NULL;
+#endif
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
     unsigned char alloc_buf[HEAP_SIZE] = { 0 };
 #endif
@@ -591,15 +943,41 @@ int main(int argc, char *argv[])
                 todo.ecdsa = 1;
             } else if (strcmp(argv[i], "ecdh") == 0) {
                 todo.ecdh = 1;
-            }
+            } else if (strcmp(argv[i], "ffdh") == 0) {
+                todo.ffdh = 1;
+            } else {
+                int handled = 0;
+
 #if defined(MBEDTLS_ECP_C)
-            else if (set_ecp_curve(argv[i], single_curve)) {
-                curve_list = single_curve;
-            }
+                if (set_ecp_curve(argv[i], single_curve)) {
+                    curve_list = single_curve;
+#if defined(PSA_WANT_ALG_ECDH)
+                    selected_ecdh_curve = single_curve[0].name;
 #endif
-            else {
-                mbedtls_printf("Unrecognized option: %s\n", argv[i]);
-                mbedtls_printf("Available options: " OPTIONS);
+                    handled = 1;
+                }
+#endif
+
+#if defined(PSA_WANT_ALG_ECDH)
+                if (!handled &&
+                    set_psa_key_agreement_name(argv[i], ecdh_benchmark_table,
+                                               &selected_ecdh_curve)) {
+                    handled = 1;
+                }
+#endif
+
+#if defined(PSA_WANT_ALG_FFDH)
+                if (!handled &&
+                    set_psa_key_agreement_name(argv[i], ffdh_benchmark_table,
+                                               &selected_ffdh_group)) {
+                    handled = 1;
+                }
+#endif
+
+                if (!handled) {
+                    mbedtls_printf("Unrecognized option: %s\n", argv[i]);
+                    mbedtls_printf("Available options: " OPTIONS);
+                }
             }
         }
     }
@@ -611,6 +989,10 @@ int main(int argc, char *argv[])
 #endif
     memset(buf, 0xAA, sizeof(buf));
     memset(tmp, 0xBB, sizeof(tmp));
+
+    if (psa_crypto_init() != PSA_SUCCESS) {
+        mbedtls_exit(1);
+    }
 
     /* Avoid "unused static function" warning in configurations without
      * symmetric crypto. */
@@ -1015,6 +1397,12 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#if defined(PSA_WANT_ALG_FFDH)
+    if (todo.ffdh) {
+        benchmark_psa_ffdh(selected_ffdh_group);
+    }
+#endif
+
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_SHA256_C)
     if (todo.ecdsa) {
         mbedtls_ecdsa_context ecdsa;
@@ -1077,12 +1465,13 @@ int main(int argc, char *argv[])
 
 #if defined(PSA_WANT_ALG_ECDH)
     if (todo.ecdh) {
-        mbedtls_printf("ECDH benchmarking to be re-done based on PSA\n");
+        benchmark_psa_ecdh(selected_ecdh_curve);
     }
 #endif
 
     mbedtls_printf("\n");
 
+    mbedtls_psa_crypto_free();
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
     mbedtls_memory_buffer_alloc_free();
 #endif
