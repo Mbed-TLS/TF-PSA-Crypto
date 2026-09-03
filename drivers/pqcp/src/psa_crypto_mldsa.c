@@ -101,16 +101,8 @@ static inline void mld_shake256_release(tf_psa_crypto_mldsa_shake256_t *state)
 MBEDTLS_STATIC_ASSERT(MLDSA87_BYTES == PSA_MLDSA_SIGNATURE_SIZE(87),
                       "PSA and mldsa-native disagree on the ML-DSA-87 signature size");
 
-/* For now, hard-coded values for MLDSA-87 */
-#define TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
-#define TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE MLDSA87_PUBLICKEYBYTES
-#define TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE MLDSA87_BYTES
-
-/* Check that what the API adversises as a sufficient output buffer for
- * sign_message() is enough for the largest signature we might write. */
-MBEDTLS_STATIC_ASSERT(
-    TF_PSA_CRYPTO_MLDSA_SIGNATURE_MAX_SIZE <= PSA_MLDSA_SIGNATURE_MAX_SIZE,
-    "PSA and mldsa-native disagree on the maximum ML-DSA signature size");
+/* For now, hard-coded value for MLDSA-87 */
+#define TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE MLDSA87_SECRETKEYBYTES
 
 static psa_status_t pqcp_to_psa_error(int ret, psa_status_t default_error)
 {
@@ -131,6 +123,60 @@ static psa_status_t pqcp_to_psa_error(int ret, psa_status_t default_error)
          * in a driver. */
         return PSA_ERROR_HARDWARE_FAILURE;
     }
+}
+
+psa_status_t tf_psa_crypto_mldsa_expand_private_key(
+    size_t bits,
+    const uint8_t *standard_key, size_t standard_key_length,
+    uint8_t *custom_key, size_t custom_key_size, size_t *custom_key_length)
+{
+    *custom_key_length = 0;
+
+    if (standard_key_length != SEED_SIZE) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (bits != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (custom_key_size < SEED_SIZE + MLDSA87_SECRETKEYBYTES) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+    size_t output_length = SEED_SIZE + MLDSA87_SECRETKEYBYTES;
+
+    psa_status_t status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+    /* Beyond this point, we must go through the cleanup code. */
+#if !defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+    uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+#endif
+
+    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(
+        tf_psa_crypto_pqcp_mldsa_public_key,
+        custom_key + SEED_SIZE,
+        standard_key);
+
+    status = tf_psa_crypto_pqcp_alloc_done();
+    if (status == PSA_SUCCESS) {
+        status = pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
+    }
+    if (status == PSA_SUCCESS) {
+        /* This function is guaranteed to support
+         * custom_key == standard_key, but no other overlap. */
+        if (custom_key != standard_key) {
+            memcpy(custom_key, standard_key, SEED_SIZE);
+        }
+        *custom_key_length = output_length;
+    } else {
+        /* We haven't touched the first SEED_SIZE bytes of the output buffer,
+         * and we don't want to change it in case it aliases the
+         * input buffer. */
+        mbedtls_platform_zeroize(custom_key + SEED_SIZE,
+                                 output_length - SEED_SIZE);
+    }
+    return status;
 }
 
 static psa_status_t seed_to_public_key(
@@ -157,7 +203,7 @@ static psa_status_t seed_to_public_key(
         return status;
     }
     /* Beyond this point, we must go through the cleanup code. */
-    uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
+    uint8_t secret[TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE];
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(data,
                                                           secret,
@@ -240,6 +286,81 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
     }
 }
 
+psa_status_t tf_psa_crypto_mldsa_generate_key_custom(
+    const psa_key_attributes_t *attributes,
+    const psa_custom_key_parameters_t *custom,
+    const uint8_t *custom_data, size_t custom_data_length,
+    uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
+{
+    /* Safe default */
+    *key_buffer_length = 0;
+
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    if (psa_get_key_bits(attributes) != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if ((custom->flags & ~(PSA_CUSTOM_KEY_FLAG_EXPAND)) != 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    int expand = !!(custom->flags & PSA_CUSTOM_KEY_FLAG_EXPAND);
+    if (custom_data_length != 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    (void) custom_data;
+
+    size_t prv_len = SEED_SIZE + (expand ? MLDSA87_SECRETKEYBYTES : 0);
+    if (key_buffer_size < prv_len) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    psa_status_t status = psa_generate_random(key_buffer, SEED_SIZE);
+    /* Now private_key contains the new seed. We don't need to zeroize
+     * the seed on failure since it's just been randomly generated. */
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    if (!expand) {
+        goto exit;
+    }
+
+    status = tf_psa_crypto_pqcp_alloc_start();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+    /* Beyond this point, we must go through the cleanup code. */
+
+#if !defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
+    uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+#endif
+
+    uint8_t *expanded_private_key = key_buffer + SEED_SIZE;
+    int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(
+        tf_psa_crypto_pqcp_mldsa_public_key,
+        expanded_private_key,
+        key_buffer);
+
+    status = tf_psa_crypto_pqcp_alloc_done();
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+    status = pqcp_to_psa_error(ret, PSA_ERROR_HARDWARE_FAILURE);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+exit:
+    /* No memory wiping needed, because any sensitive content is a
+     * freshly generated key that is either returned as an output on
+     * success, or will not be used on error. */
+    *key_buffer_length = prv_len;
+    return PSA_SUCCESS;
+}
+
+
 static int sign_from_expanded(
     const uint8_t *secret,
     const uint8_t *message, size_t message_length,
@@ -263,8 +384,8 @@ static psa_status_t sign_from_seed(
     const uint8_t *message, size_t message_length,
     uint8_t *signature, size_t *signature_length)
 {
-    uint8_t secret[TF_PSA_CRYPTO_MLDSA_EXPANDED_SECRET_MAX_SIZE];
-    uint8_t public[TF_PSA_CRYPTO_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    uint8_t secret[TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE];
+    uint8_t public[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public,
                                                           secret,
