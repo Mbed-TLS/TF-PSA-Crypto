@@ -252,6 +252,13 @@ typedef uint8_t psa_key_persistence_t;
  */
 typedef uint32_t psa_key_location_t;
 
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+/** Encoding of key identifiers as seen inside the PSA Crypto implementation.
+ *
+ * A key identifier is a pointer to a key store entry.
+ */
+typedef uintptr_t psa_key_id_t;
+#else
 /** Encoding of identifiers of persistent keys.
  *
  * - Applications may freely choose key identifiers in the range
@@ -266,6 +273,7 @@ typedef uint32_t psa_key_location_t;
  *       consideration to allow backward compatibility.
  */
 typedef uint32_t psa_key_id_t;
+#endif
 
 /** Encoding of key identifiers as seen inside the PSA Crypto implementation.
  *

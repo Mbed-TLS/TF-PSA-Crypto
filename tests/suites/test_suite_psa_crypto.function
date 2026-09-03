@@ -229,6 +229,15 @@ exit:
 
 static int test_operations_on_invalid_key(mbedtls_svc_key_id_t key)
 {
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    /* Accessing key would be a use-after-free, which would trip up
+     * sanitizers such as ASan and Valgrind. We can't reliably detect
+     * Valgrind, so don't try anything. */
+    (void) key;
+    return 1;
+
+#else /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
+
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 0x6964);
 #if defined(MBEDTLS_ECP_RESTARTABLE)
@@ -275,6 +284,7 @@ exit:
     psa_reset_key_attributes(&attributes);
 
     return ok;
+#endif /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 }
 
 #define INPUT_INTEGER 0x10000   /* Out of range of psa_key_type_t */

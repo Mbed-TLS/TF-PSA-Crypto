@@ -511,6 +511,27 @@
 #error "MBEDTLS_PSA_CRYPTO_C defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+#  if defined(MBEDTLS_PSA_CRYPTO_SPM)
+#    error "MBEDTLS_PSA_CRYPTO_NO_KEY_STORE is incompatible with a PSA Crypto server build"
+#  endif
+#  if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+#    error "MBEDTLS_PSA_CRYPTO_NO_KEY_STORE is incompatible with a multi-owner build"
+#  endif
+#  if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
+#    error "MBEDTLS_PSA_CRYPTO_NO_KEY_STORE is incompatible with persistent keys"
+#  endif
+#  if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+#    error "MBEDTLS_PSA_CRYPTO_NO_KEY_STORE is incompatible with built-in keys"
+#  endif
+#  if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+#    error "MBEDTLS_PSA_CRYPTO_NO_KEY_STORE is incompatible with MBEDTLS_PSA_STATIC_KEY_SLOTS"
+#  endif
+#  if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#    error "MBEDTLS_PSA_CRYPTO_NO_KEY_STORE is incompatible with MBEDTLS_PSA_KEY_STORE_DYNAMIC"
+#  endif
+#endif
+
 #if defined(MBEDTLS_PSA_CRYPTO_SPM) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #error "MBEDTLS_PSA_CRYPTO_SPM defined, but not all prerequisites"
 #endif

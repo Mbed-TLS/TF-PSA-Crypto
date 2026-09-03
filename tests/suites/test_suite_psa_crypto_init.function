@@ -7,6 +7,11 @@
 
 static int check_stats(void)
 {
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    return 1;
+
+#else /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
+
     mbedtls_psa_stats_t stats;
     mbedtls_psa_get_stats(&stats);
 
@@ -20,6 +25,7 @@ static int check_stats(void)
 
 exit:
     return 0;
+#endif /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 }
 
 #if defined MBEDTLS_THREADING_PTHREAD
@@ -190,7 +196,7 @@ void validate_module_init_generate_random(int count)
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 void validate_module_init_key_based(int count)
 {
     psa_status_t status;

@@ -27,6 +27,56 @@
 
 
 
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+
+psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
+                                       psa_key_slot_t **p_slot)
+{
+    psa_key_slot_t *slot = (psa_key_slot_t*) key;
+
+    /* Sanity check: detect invalid or already-freed slot pointers,
+     * with a decent probability under non-hostile conditions. */
+    if (slot->attr.id != key) {
+        *p_slot = NULL;
+        return PSA_ERROR_INVALID_HANDLE;
+    }
+
+    *p_slot = slot;
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_reserve_free_key_slot(psa_key_id_t *volatile_key_id,
+                                       psa_key_slot_t **p_slot)
+{
+    *p_slot = mbedtls_calloc(1, sizeof(psa_key_slot_t));
+    if (*p_slot == NULL) {
+        return PSA_ERROR_INSUFFICIENT_MEMORY;
+    }
+
+    *volatile_key_id = (psa_key_id_t) (*p_slot);
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_purge_key(mbedtls_svc_key_id_t key)
+{
+    /* No effect on volatile keys */
+    (void) key;
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime)
+{
+    if (PSA_KEY_LIFETIME_IS_VOLATILE(lifetime)) {
+        return PSA_SUCCESS;
+    } else {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+}
+
+#else /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
+
+
+
 /* Make sure we have distinct ranges of key identifiers for distinct
  * purposes. */
 MBEDTLS_STATIC_ASSERT(PSA_KEY_ID_USER_MIN < PSA_KEY_ID_USER_MAX,
@@ -53,7 +103,6 @@ MBEDTLS_STATIC_ASSERT(PSA_KEY_ID_VENDOR_MIN <= PSA_KEY_ID_VOLATILE_MIN &&
 MBEDTLS_STATIC_ASSERT(PSA_KEY_ID_VOLATILE_MAX < MBEDTLS_PSA_KEY_ID_BUILTIN_MIN ||
                       MBEDTLS_PSA_KEY_ID_BUILTIN_MAX < PSA_KEY_ID_VOLATILE_MIN,
                       "Overlap between builtin key IDs and volatile key IDs");
-
 
 
 #if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
@@ -994,5 +1043,7 @@ void mbedtls_psa_get_stats(mbedtls_psa_stats_t *stats)
         }
     }
 }
+
+#endif /* MBEDTLS_PSA_CRYPTO_NO_KEY_STORE */
 
 #endif /* MBEDTLS_PSA_CRYPTO_C */

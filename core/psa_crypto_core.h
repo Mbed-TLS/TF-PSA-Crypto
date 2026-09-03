@@ -31,6 +31,7 @@ typedef struct {
      * reduces the code size. */
     psa_key_attributes_t attr;
 
+#if !defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
     /*
      * The current state of the key slot, as described in
      * docs/architecture/psa-thread-safety/psa-thread-safety.md.
@@ -51,6 +52,7 @@ typedef struct {
      * PSA_SLOT_FULL.
      */
     psa_key_slot_state_t state;
+#endif
 
 #if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
     /* The index of the slice containing this slot.
@@ -68,6 +70,7 @@ typedef struct {
     uint8_t slice_index;
 #endif /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
 
+#if !defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
     union {
         struct {
             /* The index of the next slot in the free list for this
@@ -119,6 +122,7 @@ typedef struct {
             size_t registered_readers;
         } occupied;
     } var;
+#endif
 
     /* Dynamically allocated key data buffer.
      * Format as specified in psa_export_key(). */
@@ -185,7 +189,12 @@ typedef struct {
  */
 static inline int psa_key_slot_has_readers(const psa_key_slot_t *slot)
 {
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    (void) slot;
+    return 0;
+#else
     return slot->var.occupied.registered_readers > 0;
+#endif
 }
 
 /** Completely wipe a slot in memory, including its policy.

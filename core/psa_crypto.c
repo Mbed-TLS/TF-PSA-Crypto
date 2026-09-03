@@ -1137,6 +1137,7 @@ psa_status_t psa_wipe_key_slot(psa_key_slot_t *slot)
 {
     psa_status_t status = psa_remove_key_data_from_memory(slot);
 
+#if !defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
     /*
      * As the return error code may not be handled in case of multiple errors,
      * do our best to report an unexpected amount of registered readers or
@@ -1175,6 +1176,7 @@ psa_status_t psa_wipe_key_slot(psa_key_slot_t *slot)
             /* The slot's state is invalid. */
             status = PSA_ERROR_CORRUPTION_DETECTED;
     }
+#endif /* !defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE) */
 
 #if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
     size_t slice_index = slot->slice_index;
@@ -1282,6 +1284,13 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
         }
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) */
+
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    /* Without a key store, nobody else is there to take care of
+     * wiping and freeing the data. */
+    psa_wipe_key_slot(slot);
+    mbedtls_zeroize_and_free(slot, sizeof(*slot));
+#endif
 
 exit:
     /* Unregister from reading the slot. If we are the last active reader

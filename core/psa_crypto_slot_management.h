@@ -24,11 +24,17 @@
 
 /** The minimum value for a volatile key identifier.
  */
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+#define PSA_KEY_ID_VOLATILE_MIN ((psa_key_id_t) 1)
+#else
 #define PSA_KEY_ID_VOLATILE_MIN  PSA_KEY_ID_VENDOR_MIN
+#endif
 
 /** The maximum value for a volatile key identifier.
  */
-#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+#define PSA_KEY_ID_VOLATILE_MAX ((psa_key_id_t) -1)
+#elif defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
 #define PSA_KEY_ID_VOLATILE_MAX (MBEDTLS_PSA_KEY_ID_BUILTIN_MIN - 1)
 #else /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
 #define PSA_KEY_ID_VOLATILE_MAX                                 \
@@ -97,7 +103,15 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
  * \retval #PSA_SUCCESS
  *         Currently this function always succeeds.
  */
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+static inline psa_status_t psa_initialize_key_slots(void)
+{
+    /* Nothing to do */
+    return PSA_SUCCESS;
+}
+#else
 psa_status_t psa_initialize_key_slots(void);
+#endif
 
 #if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
 /* Allow test code to customize the key slice length. We use this in tests
@@ -122,7 +136,13 @@ size_t psa_key_slot_volatile_slice_count(void);
  * state and reader count. It should only be called when no slot is in use.
  *
  * This does not affect persistent storage. */
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+static inline void psa_wipe_all_key_slots(void) {
+    /* There's nothing we can do. */
+}
+#else
 void psa_wipe_all_key_slots(void);
+#endif
 
 /** Find a free key slot and reserve it to be filled with a key.
  *
@@ -205,10 +225,16 @@ static inline psa_status_t psa_key_slot_state_transition(
     psa_key_slot_t *slot, psa_key_slot_state_t expected_state,
     psa_key_slot_state_t new_state)
 {
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    (void) slot;
+    (void) expected_state;
+    (void) new_state;
+#else
     if (slot->state != expected_state) {
         return PSA_ERROR_CORRUPTION_DETECTED;
     }
     slot->state = new_state;
+#endif
     return PSA_SUCCESS;
 }
 
@@ -228,11 +254,15 @@ static inline psa_status_t psa_key_slot_state_transition(
  */
 static inline psa_status_t psa_register_read(psa_key_slot_t *slot)
 {
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    (void) slot;
+#else
     if ((slot->state != PSA_SLOT_FULL) ||
         (slot->var.occupied.registered_readers >= SIZE_MAX)) {
         return PSA_ERROR_CORRUPTION_DETECTED;
     }
     slot->var.occupied.registered_readers++;
+#endif
 
     return PSA_SUCCESS;
 }
@@ -261,7 +291,15 @@ static inline psa_status_t psa_register_read(psa_key_slot_t *slot)
  *             PSA_SLOT_PENDING_DELETION.
  *             Or registered_readers was equal to 0.
  */
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+static inline psa_status_t psa_unregister_read(psa_key_slot_t *slot)
+{
+    (void) slot;
+    return PSA_SUCCESS;
+}
+#else
 psa_status_t psa_unregister_read(psa_key_slot_t *slot);
+#endif
 
 /** Wrap a call to psa_unregister_read in the global key slot mutex.
  *
@@ -282,7 +320,15 @@ psa_status_t psa_unregister_read(psa_key_slot_t *slot);
  *             PSA_SLOT_PENDING_DELETION.
  *             Or registered_readers was equal to 0.
  */
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+static inline psa_status_t psa_unregister_read_under_mutex(psa_key_slot_t *slot)
+{
+    (void) slot;
+    return PSA_SUCCESS;
+}
+#else
 psa_status_t psa_unregister_read_under_mutex(psa_key_slot_t *slot);
+#endif
 
 /** Test whether a lifetime designates a key in an external cryptoprocessor.
  *
@@ -323,8 +369,13 @@ psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime);
  */
 static inline int psa_key_id_is_user(psa_key_id_t key_id)
 {
+#if defined(MBEDTLS_PSA_CRYPTO_NO_KEY_STORE)
+    (void) key_id;
+    return 0;
+#else
     return (key_id >= PSA_KEY_ID_USER_MIN) &&
            (key_id <= PSA_KEY_ID_USER_MAX);
+#endif
 }
 
 #endif /* TF_PSA_CRYPTO_PSA_CRYPTO_SLOT_MANAGEMENT_H */
