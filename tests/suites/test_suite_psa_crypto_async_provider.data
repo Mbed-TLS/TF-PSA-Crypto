@@ -1,0 +1,38 @@
+Async provider bind and unbind
+bind_unbind_provider:
+
+Async provider rejects start without hardware
+provider_start_without_hardware:
+
+Async provider hash completion
+provider_hash_complete:
+
+Async provider rejects missing capability
+provider_rejects_missing_capability:
+
+Async provider abort resets operation
+provider_abort_in_progress_operation:
+
+Async provider dispatches every operation kind
+provider_dispatches_operation_matrix:
+
+Async provider accepts callback before hardware start returns
+provider_immediate_callback_completion:
+
+Async provider queues and replays operations in FIFO order
+provider_queues_and_replays_fifo:
+
+Async provider enforces fixed operation capacity
+provider_enforces_capacity:
+
+Async transparent driver helpers use bound provider
+transparent_driver_helpers_use_bound_provider:
+
+Async config mode macros match selected policy
+async_config_mode_macros:
+
+Async prime curve resolver returns supported curves
+prime_curve_resolver_returns_supported_curves:
+
+Async prime curve resolver rejects unsupported inputs
+prime_curve_resolver_rejects_unsupported_inputs:

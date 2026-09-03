@@ -1965,6 +1965,105 @@ int mbedtls_rsa_rsassa_pss_sign_ext(mbedtls_rsa_context *ctx,
     return rsa_rsassa_pss_sign(ctx, f_rng, p_rng, md_alg,
                                hashlen, hash, saltlen, sig);
 }
+
+int mbedtls_rsa_rsassa_pss_encode_ext_with_salt(
+    mbedtls_rsa_context *ctx, mbedtls_md_type_t md_alg,
+    unsigned int hashlen, const unsigned char *hash, int saltlen,
+    const unsigned char *salt_source, size_t salt_available,
+    unsigned char *encoded)
+{
+    size_t olen;
+    unsigned char *p = encoded;
+    const unsigned char *salt = NULL;
+    size_t slen, min_slen, hlen, offset = 0;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    size_t msb;
+    mbedtls_md_type_t hash_id;
+
+    if (ctx == NULL || encoded == NULL ||
+        ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL)) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    if (ctx->padding != MBEDTLS_RSA_PKCS_V21) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+    if ((ctx->hash_id == MBEDTLS_MD_NONE) && (md_alg == MBEDTLS_MD_NONE)) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    olen = ctx->len;
+
+    if (md_alg != MBEDTLS_MD_NONE) {
+        size_t exp_hashlen = mbedtls_md_get_size_from_type(md_alg);
+        if (exp_hashlen == 0 || hashlen != exp_hashlen) {
+            return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+        }
+    }
+
+    hash_id = (mbedtls_md_type_t) ctx->hash_id;
+    if (hash_id == MBEDTLS_MD_NONE) {
+        hash_id = md_alg;
+    }
+    hlen = mbedtls_md_get_size_from_type(hash_id);
+    if (hlen == 0) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    if (saltlen == MBEDTLS_RSA_SALT_LEN_ANY) {
+        min_slen = hlen - 2;
+        if (olen < hlen + min_slen + 2) {
+            return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+        } else if (olen >= hlen + hlen + 2) {
+            slen = hlen;
+        } else {
+            slen = olen - hlen - 2;
+        }
+    } else if ((saltlen < 0) || (saltlen + hlen + 2 > olen)) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    } else {
+        slen = (size_t) saltlen;
+    }
+
+    if (slen != 0 && (salt_source == NULL || salt_available < slen)) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    memset(encoded, 0, olen);
+
+    msb = mbedtls_mpi_bitlen(&ctx->N) - 1;
+    p += olen - hlen - slen - 2;
+    *p++ = 0x01;
+
+    salt = salt_source;
+    if (slen != 0) {
+        memcpy(p, salt, slen);
+    }
+    p += slen;
+
+    ret = hash_mprime(hash, hashlen, salt, slen, p, hash_id);
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (msb % 8 == 0) {
+        offset = 1;
+    }
+
+    ret = mgf_mask(encoded + offset, olen - hlen - 1 - offset, p, hlen,
+                   hash_id);
+    if (ret != 0) {
+        return ret;
+    }
+
+    msb = mbedtls_mpi_bitlen(&ctx->N) - 1;
+    encoded[0] &= 0xFF >> (olen * 8 - msb);
+
+    p += hlen;
+    *p++ = 0xBC;
+
+    return 0;
+}
 #endif /* MBEDTLS_PKCS1_V21 */
 
 #if defined(MBEDTLS_PKCS1_V15)
@@ -2104,6 +2203,25 @@ static int rsa_rsassa_pkcs1_v15_encode(mbedtls_md_type_t md_alg,
     return 0;
 }
 
+int mbedtls_rsa_rsassa_pkcs1_v15_encode(mbedtls_rsa_context *ctx,
+                                        mbedtls_md_type_t md_alg,
+                                        unsigned int hashlen,
+                                        const unsigned char *hash,
+                                        unsigned char *encoded)
+{
+    if (ctx == NULL || encoded == NULL ||
+        ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL)) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    if (ctx->padding != MBEDTLS_RSA_PKCS_V15) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    return rsa_rsassa_pkcs1_v15_encode(md_alg, hashlen, hash,
+                                       ctx->len, encoded);
+}
+
 /*
  * Do an RSA operation to sign the message digest
  */
@@ -2220,11 +2338,6 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t siglen;
-    unsigned char *p;
-    unsigned char *hash_start;
-    unsigned char result[MBEDTLS_MD_MAX_SIZE];
-    unsigned int hlen;
-    size_t observed_salt_len, msb;
     unsigned char buf[MBEDTLS_MPI_MAX_SIZE] = { 0 };
 
     if ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL) {
@@ -2243,6 +2356,44 @@ int mbedtls_rsa_rsassa_pss_verify_ext(mbedtls_rsa_context *ctx,
         return ret;
     }
 
+    return mbedtls_rsa_rsassa_pss_verify_ext_from_encoded(ctx,
+                                                          md_alg,
+                                                          hashlen,
+                                                          hash,
+                                                          mgf1_hash_id,
+                                                          expected_salt_len,
+                                                          buf);
+}
+
+int mbedtls_rsa_rsassa_pss_verify_ext_from_encoded(
+    mbedtls_rsa_context *ctx,
+    mbedtls_md_type_t md_alg,
+    unsigned int hashlen,
+    const unsigned char *hash,
+    mbedtls_md_type_t mgf1_hash_id,
+    int expected_salt_len,
+    const unsigned char *encoded)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    size_t siglen;
+    unsigned char *p;
+    unsigned char *hash_start;
+    unsigned char result[MBEDTLS_MD_MAX_SIZE];
+    unsigned int hlen;
+    size_t observed_salt_len, msb;
+    unsigned char buf[MBEDTLS_MPI_MAX_SIZE] = { 0 };
+
+    if ((md_alg != MBEDTLS_MD_NONE || hashlen != 0) && hash == NULL) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    siglen = ctx->len;
+
+    if (siglen < 16 || siglen > sizeof(buf) || encoded == NULL) {
+        return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+
+    memcpy(buf, encoded, siglen);
     p = buf;
 
     if (buf[siglen - 1] != 0xBC) {
