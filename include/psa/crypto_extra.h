@@ -106,6 +106,8 @@ static inline psa_algorithm_t psa_get_key_enrollment_algorithm(
 
 /**@}*/
 
+/** \addtogroup initialization */
+
 /**
  * \brief Library deinitialization.
  *
@@ -156,15 +158,6 @@ typedef struct mbedtls_psa_stats_s {
  *       may not expose this function.
  */
 void mbedtls_psa_get_stats(mbedtls_psa_stats_t *stats);
-
-/** \addtogroup attributes
- * @{
- */
-
-/** PAKE operation stages. */
-#define PSA_PAKE_OPERATION_STAGE_SETUP 0
-#define PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS 1
-#define PSA_PAKE_OPERATION_STAGE_COMPUTATION 2
 
 /**@}*/
 
@@ -930,8 +923,6 @@ typedef uint32_t psa_pake_primitive_t;
  */
 #define PSA_PAKE_STEP_CONFIRM                   ((psa_pake_step_t) 0x04)
 
-/**@}*/
-
 /** A sufficient output buffer size for psa_pake_output().
  *
  * If the size of the output buffer is at least this large, it is guaranteed
@@ -1116,6 +1107,11 @@ struct psa_jpake_computation_stage_s {
     psa_pake_step_t MBEDTLS_PRIVATE(step);
 };
 
+/* PAKE operation stages. */
+#define PSA_PAKE_OPERATION_STAGE_SETUP 0
+#define PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS 1
+#define PSA_PAKE_OPERATION_STAGE_COMPUTATION 2
+
 #define PSA_JPAKE_EXPECTED_INPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
                                           ((round) == PSA_JPAKE_FIRST ? 2 : 1))
 #define PSA_JPAKE_EXPECTED_OUTPUTS(round) ((round) == PSA_JPAKE_FINISHED ? 0 : \
@@ -1152,10 +1148,6 @@ struct psa_pake_operation_s {
     } MBEDTLS_PRIVATE(data);
 #endif
 };
-
-/** \addtogroup pake
- * @{
- */
 
 /** The type of the data structure for PAKE cipher suites.
  *
@@ -1948,8 +1940,6 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
  */
 psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 
-/**@}*/
-
 static inline psa_algorithm_t psa_pake_cs_get_algorithm(
     const psa_pake_cipher_suite_t *cipher_suite)
 {
@@ -2018,6 +2008,43 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
     const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;
     return v;
 }
+
+/**@}*/
+
+/** \addtogroup key_derivation */
+
+/** Flag to request storing a key in an expanded representation internally.
+ *
+ * This flag can be used in the
+ * struct psa_custom_key_parameters_s::flags \c custom
+ * parameter of psa_generate_key_custom() and
+ * psa_key_derivation_output_key_custom(), to request that the key be
+ * stored in a different format internally.
+ *
+ * If this flag is set when creating a key of a supported type, the key
+ * is stored in RAM in an expanded format that takes more room, but
+ * allows computations to be faster. The expanded format may also
+ * allow computations not to use the heap.
+ *
+ * This flag is supported for the following key formats:
+ * - ML-DSA, which is not yet accessible through the library interface.
+ *
+ * This flag does not affect the observable behavior of any public function
+ * of the library.
+ *
+ * It is unspecified whether this flag affects the persistent key storage
+ * format, or whether this flag affects persistent keys after they have
+ * been reloaded.
+ *
+ * \note This flag is experimental.
+ *       Its semantics may change without notice.
+ *       Its value may change without notice.
+ *       It may be removed without notice.
+ *       The set of supported key types may change without notice.
+ */
+#define PSA_CUSTOM_KEY_FLAG_EXPAND ((uint32_t) 0x40000000u)
+
+/**@}*/
 
 #ifdef __cplusplus
 }
