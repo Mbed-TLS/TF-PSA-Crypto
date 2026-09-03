@@ -1,0 +1,5 @@
+Features
+   * Implement psa_pake_set_context() so a SPAKE2+ operation can store the
+     optional context string passed at the collect-inputs stage. The function
+     returns PSA_ERROR_BAD_STATE for EC-JPAKE, which does not take a context.
+     Resolves Mbed-TLS/mbedtls#9344.
