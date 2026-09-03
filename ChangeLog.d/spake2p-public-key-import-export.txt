@@ -1,0 +1,5 @@
+Features
+   * Add support for importing and exporting SPAKE2+ public keys
+     (key type PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY) through psa_import_key()
+     and psa_export_key(), following the PSA Crypto API encoding for
+     SPAKE2+. Resolves Mbed-TLS/mbedtls#9342.
