@@ -272,6 +272,10 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
         return MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA;
     }
 #endif
+    /* count should be positive integer according to RFC 8018 */
+    if (iteration_count == 0) {
+        return MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA;
+    }
 
     if ((ret = mbedtls_md_hmac_starts(ctx, password, plen)) != 0) {
         return ret;
