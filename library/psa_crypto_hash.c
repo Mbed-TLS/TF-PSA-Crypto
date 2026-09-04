@@ -65,10 +65,6 @@ const mbedtls_md_info_t *mbedtls_md_info_from_psa( psa_algorithm_t alg )
         case PSA_ALG_SHA_512:
             return( &mbedtls_sha512_info );
 #endif
-#if defined(MBEDTLS_SM3_C)
-        case PSA_ALG_SM3:
-            return( &mbedtls_sm3_info );
-#endif
         default:
             return( NULL );
     }
@@ -122,11 +118,6 @@ psa_status_t mbedtls_psa_hash_abort(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_512)
         case PSA_ALG_SHA_512:
             mbedtls_sha512_free( &operation->ctx.sha512 );
-            break;
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
-        case PSA_ALG_SM3:
-            mbedtls_sm3_free( &operation->ctx.sm3 );
             break;
 #endif
         default:
@@ -192,12 +183,6 @@ psa_status_t mbedtls_psa_hash_setup(
             ret = mbedtls_sha512_starts( &operation->ctx.sha512, 0 );
             break;
 #endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
-        case PSA_ALG_SM3:
-            mbedtls_sm3_init( &operation->ctx.sm3 );
-            ret = mbedtls_sm3_starts_ret( &operation->ctx.sm3 );
-            break;
-#endif
         default:
             return( PSA_ALG_IS_HASH( alg ) ?
                     PSA_ERROR_NOT_SUPPORTED :
@@ -260,12 +245,6 @@ psa_status_t mbedtls_psa_hash_clone(
                                   &source_operation->ctx.sha512 );
             break;
 #endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
-        case PSA_ALG_SM3:
-            mbedtls_sm3_clone( &target_operation->ctx.sm3,
-                                  &source_operation->ctx.sm3 );
-            break;
-#endif
         default:
             (void) source_operation;
             (void) target_operation;
@@ -324,12 +303,6 @@ psa_status_t mbedtls_psa_hash_update(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_512)
         case PSA_ALG_SHA_512:
             ret = mbedtls_sha512_update( &operation->ctx.sha512,
-                                             input, input_length );
-            break;
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
-        case PSA_ALG_SM3:
-            ret = mbedtls_sm3_update_ret( &operation->ctx.sm3,
                                              input, input_length );
             break;
 #endif
@@ -402,11 +375,6 @@ psa_status_t mbedtls_psa_hash_finish(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_512)
         case PSA_ALG_SHA_512:
             ret = mbedtls_sha512_finish( &operation->ctx.sha512, hash );
-            break;
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
-        case PSA_ALG_SM3:
-            ret = mbedtls_sm3_finish_ret( &operation->ctx.sm3, hash );
             break;
 #endif
         default:
