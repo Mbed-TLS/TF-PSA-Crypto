@@ -1,0 +1,4 @@
+Bugfixes
+   * Enforce hash length in psa_sign_hash, psa_verify_hash and their
+     interruptible variants for hash-and-sign algorithms, as required
+     by the PSA Crypto API 1.1 specification. Fixes #869.
