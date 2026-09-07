@@ -1060,6 +1060,32 @@
     (((alg) & (PSA_ALG_CATEGORY_MASK | PSA_ALG_MAC_SUBCATEGORY_MASK)) == \
      PSA_ALG_HMAC_BASE)
 
+#define PSA_ALG_BLAKE2_MAC_BASE               ((psa_algorithm_t) 0x03400000)
+
+/** Macro to build an BLAKE2 message-authentication-code algorithm from a
+ *  BLAKE2 hash algorithm.
+ *
+ * \param hash_alg A hash algorithm (PSA_ALG_XXX value such that
+ *                 #PSA_ALG_IS_BLAKE2_HASH(hash_alg) is true.
+ */
+#define PSA_ALG_BLAKE2_MAC(hash_alg)                        \
+    (PSA_ALG_BLAKE2_MAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+#define PSA_ALG_BLAKE2_MAC_GET_HASH(hmac_alg)              \
+    (PSA_ALG_CATEGORY_HASH | ((hmac_alg) & PSA_ALG_HASH_MASK))
+
+/** Whether the specified algorithm is a BLAKE2 MAC algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a BLAKE2 MAC algorithm, 0 otherwise. This macro can
+ *         return either 0 or 1 if \p alg is not a supported algorithm
+ *         identifier.
+ */
+#define PSA_ALG_IS_BLAKE2_MAC(alg)                              \
+    (((alg) & (PSA_ALG_CATEGORY_MASK | PSA_ALG_MAC_SUBCATEGORY_MASK)) == \
+     PSA_ALG_BLAKE2_MAC_BASE)
+
 /* In the encoding of a MAC algorithm, the bits corresponding to
  * PSA_ALG_MAC_TRUNCATION_MASK encode the length to which the MAC is
  * truncated. As an exception, the value 0 means the untruncated algorithm,

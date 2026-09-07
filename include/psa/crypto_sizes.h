@@ -323,6 +323,7 @@
 #define PSA_MAC_LENGTH(key_type, key_bits, alg)                                   \
     (((alg) & PSA_ALG_MAC_TRUNCATION_MASK) ? PSA_MAC_TRUNCATED_LENGTH(alg) :      \
      PSA_ALG_IS_HMAC(alg) ? PSA_HASH_LENGTH(PSA_ALG_HMAC_GET_HASH(alg)) :         \
+     PSA_ALG_IS_BLAKE2_MAC(alg) ? PSA_HASH_LENGTH(PSA_ALG_HMAC_GET_HASH(alg)) :         \
      PSA_ALG_IS_BLOCK_CIPHER_MAC(alg) ? PSA_BLOCK_CIPHER_BLOCK_LENGTH(key_type) : \
      ((void) (key_type), (void) (key_bits), 0u))
 

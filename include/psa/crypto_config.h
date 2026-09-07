@@ -66,6 +66,7 @@
 #define PSA_WANT_ALG_HKDF_EXTRACT               1
 #define PSA_WANT_ALG_HKDF_EXPAND                1
 #define PSA_WANT_ALG_HMAC                       1
+#define PSA_WANT_ALG_BLAKE2_MAC                 1
 #define PSA_WANT_ALG_MD5                        1
 #define PSA_WANT_ALG_OFB                        1
 #define PSA_WANT_ALG_PBKDF2_HMAC                1
