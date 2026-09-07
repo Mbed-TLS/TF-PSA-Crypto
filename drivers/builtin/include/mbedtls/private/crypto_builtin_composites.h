@@ -27,6 +27,9 @@
 #include <psa/crypto_driver_common.h>
 
 #include "mbedtls/private/cmac.h"
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+#include "tf-psa-crypto/private/blake2.h"
+#endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
 #include "mbedtls/private/gcm.h"
 #endif
@@ -56,6 +59,14 @@ typedef struct {
 #define MBEDTLS_PSA_HMAC_OPERATION_INIT { 0, PSA_HASH_OPERATION_INIT, { 0 } }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+typedef struct {
+    union {
+        tf_psa_crypto_blake2s_context s;
+        tf_psa_crypto_blake2b_context b;
+    } ctx;
+} mbedtls_psa_blake2_mac_operation_t;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
 typedef struct {
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
     union {
@@ -63,6 +74,9 @@ typedef struct {
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
         mbedtls_psa_hmac_operation_t MBEDTLS_PRIVATE(hmac);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+        mbedtls_psa_blake2_mac_operation_t blake2_ctx;
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
         mbedtls_cipher_context_t MBEDTLS_PRIVATE(cmac);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */

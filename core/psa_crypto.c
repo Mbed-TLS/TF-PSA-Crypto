@@ -598,7 +598,7 @@ MBEDTLS_STATIC_TESTABLE psa_status_t psa_mac_key_can_do(
     psa_algorithm_t algorithm,
     psa_key_type_t key_type)
 {
-    if (PSA_ALG_IS_HMAC(algorithm)) {
+    if (PSA_ALG_IS_HMAC(algorithm) || PSA_ALG_IS_BLAKE2_MAC(algorithm)) {
         if (key_type == PSA_KEY_TYPE_HMAC) {
             return PSA_SUCCESS;
         }
