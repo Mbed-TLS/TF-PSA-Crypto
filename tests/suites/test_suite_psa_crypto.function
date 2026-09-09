@@ -3527,6 +3527,25 @@ void mac_operation_init()
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_HMAC */
+void builtin_mac_operation_init()
+{
+    mbedtls_psa_mac_operation_t operation;
+
+    /* Reinitialize nonzero storage so this does not depend on stack contents.
+     * The old { 0, { 0 } } initializer can clear only the union's dummy
+     * member, leaving the rest of the HMAC context unchanged. */
+    memset(&operation, 0xa5, sizeof(operation));
+    operation = (mbedtls_psa_mac_operation_t) MBEDTLS_PSA_MAC_OPERATION_INIT;
+
+    /* Check fields beyond dummy, without depending on structure padding. */
+    TEST_EQUAL(operation.alg, 0);
+    TEST_EQUAL(operation.ctx.hmac.hash_ctx.id, 0);
+    TEST_ASSERT(mem_is_char(operation.ctx.hmac.opad, 0,
+                            sizeof(operation.ctx.hmac.opad)));
+}
+/* END_CASE */
+
 /* BEGIN_CASE */
 void mac_setup(int key_type_arg,
                data_t *key,
