@@ -1,0 +1,42 @@
+/* BEGIN_HEADER */
+#include "psa/crypto.h"
+
+/* Project Wycheproof PBKDF2-HMAC harness.
+ * Columns: <hash>:password:salt:iterationCount:dk
+ * All Wycheproof PBKDF2 vectors are valid, tested via mbedtls_pbkdf2_derive(). */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:PSA_WANT_ALG_PBKDF2_HMAC
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: PBKDF2-HMAC(password, salt, iterations) must produce exactly dk. */
+/* BEGIN_CASE */
+void mbedtls_pbkdf2_derive(int hash_arg, data_t* password, data_t* salt,
+    int iterations, data_t* dk)
+{
+    psa_algorithm_t hash = (psa_algorithm_t)hash_arg;
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    unsigned char* output = NULL;
+
+    PSA_INIT();
+    TEST_ASSERT(iterations > 0);
+    TEST_CALLOC(output, dk->len == 0 ? 1 : dk->len);
+
+    PSA_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_PBKDF2_HMAC(hash)));
+    PSA_ASSERT(psa_key_derivation_input_integer(&op, PSA_KEY_DERIVATION_INPUT_COST,
+        (uint64_t)iterations));
+    PSA_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SALT,
+        salt->x, salt->len));
+    PSA_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_PASSWORD,
+        password->x, password->len));
+    PSA_ASSERT(psa_key_derivation_output_bytes(&op, output, dk->len));
+    TEST_MEMORY_COMPARE(output, dk->len, dk->x, dk->len);
+
+exit:
+    psa_key_derivation_abort(&op);
+    mbedtls_free(output);
+    PSA_DONE();
+}
+/* END_CASE */
