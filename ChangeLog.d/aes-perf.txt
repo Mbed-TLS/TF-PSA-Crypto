@@ -1,0 +1,3 @@
+Changes
+   * Improvements to AES-CTR performance. Perf improves around to 2-3x for
+     Arm Neon. Size on gcc improves by up to 900 bytes (gcc).
