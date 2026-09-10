@@ -1,0 +1,4 @@
+Features
+   * Support for Blake2 hash algorithms Blake2s and Blake2p has been added.
+     They are enabled via PSA_WANT_ALG_BLAKE2S_HASH256 and
+     PSA_WANT_ALG_BLAKE2B_HASH512 respectively.

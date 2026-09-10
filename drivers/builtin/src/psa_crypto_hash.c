@@ -78,6 +78,16 @@ psa_status_t mbedtls_psa_hash_abort(
             mbedtls_sha3_free(&operation->ctx.sha3);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case PSA_ALG_BLAKE2S_HASH256:
+            tf_psa_crypto_blake2s_free(&operation->ctx.blake2s);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case PSA_ALG_BLAKE2B_HASH512:
+            tf_psa_crypto_blake2b_free(&operation->ctx.blake2b);
+            break;
+#endif
         default:
             return PSA_ERROR_BAD_STATE;
     }
@@ -163,6 +173,18 @@ psa_status_t mbedtls_psa_hash_setup(
             ret = mbedtls_sha3_starts(&operation->ctx.sha3, MBEDTLS_SHA3_512);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case PSA_ALG_BLAKE2S_HASH256:
+            ret = tf_psa_crypto_blake2s_init(&operation->ctx.blake2s,
+                                             PSA_HASH_LENGTH(PSA_ALG_BLAKE2S_HASH256), NULL, 0);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case PSA_ALG_BLAKE2B_HASH512:
+            ret = tf_psa_crypto_blake2b_init(&operation->ctx.blake2b,
+                                             PSA_HASH_LENGTH(PSA_ALG_BLAKE2B_HASH512), NULL, 0);
+            break;
+#endif
         default:
             return PSA_ALG_IS_HASH(alg) ?
                    PSA_ERROR_NOT_SUPPORTED :
@@ -242,6 +264,18 @@ psa_status_t mbedtls_psa_hash_clone(
                                &source_operation->ctx.sha3);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case PSA_ALG_BLAKE2S_HASH256:
+            tf_psa_crypto_blake2s_clone(&target_operation->ctx.blake2s,
+                                        &source_operation->ctx.blake2s);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case PSA_ALG_BLAKE2B_HASH512:
+            tf_psa_crypto_blake2b_clone(&target_operation->ctx.blake2b,
+                                        &source_operation->ctx.blake2b);
+            break;
+#endif
         default:
             (void) source_operation;
             (void) target_operation;
@@ -318,6 +352,18 @@ psa_status_t mbedtls_psa_hash_update(
     ret = mbedtls_sha3_update(&operation->ctx.sha3,
                               input, input_length);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case PSA_ALG_BLAKE2S_HASH256:
+            tf_psa_crypto_blake2s_update(&operation->ctx.blake2s, input, input_length);
+            ret = 0;
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case PSA_ALG_BLAKE2B_HASH512:
+            tf_psa_crypto_blake2b_update(&operation->ctx.blake2b, input, input_length);
+            ret = 0;
+            break;
 #endif
         default:
             (void) input;
@@ -404,6 +450,16 @@ psa_status_t mbedtls_psa_hash_finish(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_SOME_HASH)
     ret = mbedtls_sha3_finish(&operation->ctx.sha3, hash, hash_size);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case PSA_ALG_BLAKE2S_HASH256:
+            ret = tf_psa_crypto_blake2s_finish(&operation->ctx.blake2s, hash, hash_size);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case PSA_ALG_BLAKE2B_HASH512:
+            ret = tf_psa_crypto_blake2b_finish(&operation->ctx.blake2b, hash, hash_size);
+            break;
 #endif
         default:
             (void) hash;
