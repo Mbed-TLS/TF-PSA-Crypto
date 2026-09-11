@@ -9066,6 +9066,7 @@ psa_status_t psa_crypto_driver_pake_get_cipher_suite(
     return PSA_SUCCESS;
 }
 
+#if defined(PSA_WANT_ALG_JPAKE)
 static psa_status_t psa_pake_set_password_key(
     psa_pake_operation_t *operation,
     mbedtls_svc_key_id_t password)
@@ -9112,6 +9113,7 @@ exit:
     unlock_status = psa_unregister_read_under_mutex(slot);
     return (status == PSA_SUCCESS) ? unlock_status : status;
 }
+#endif /* PSA_WANT_ALG_JPAKE */
 
 psa_status_t psa_pake_setup(
     psa_pake_operation_t *operation,
@@ -9148,16 +9150,26 @@ psa_status_t psa_pake_setup(
 
         memset(computation_stage, 0, sizeof(*computation_stage));
         computation_stage->step = PSA_PAKE_STEP_KEY_SHARE;
+
+        operation->stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
+
+        return psa_pake_set_password_key(operation, password_key);
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* Temporary stub: SPAKE2+ setup will be filled in by a later PR. */
+        (void) password_key;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
+        (void) password_key;
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
 
-    operation->stage = PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS;
-
-    return psa_pake_set_password_key(operation, password_key);
 exit:
     psa_pake_abort(operation);
     return status;
@@ -9269,7 +9281,15 @@ psa_status_t psa_pake_set_role(
         }
         status = PSA_ERROR_INVALID_ARGUMENT;
     } else
-#endif
+#endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* Temporary stub: SPAKE2+ role handling will be filled in by a later PR. */
+        (void) role;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
         (void) role;
         status = PSA_ERROR_NOT_SUPPORTED;
@@ -9355,6 +9375,12 @@ static psa_status_t psa_pake_complete_inputs(
             operation->stage = PSA_PAKE_OPERATION_STAGE_COMPUTATION;
         } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+        if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+            /* Temporary stub: SPAKE2+ computation-stage transition later. */
+            status = PSA_ERROR_NOT_SUPPORTED;
+        } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
         {
             status = PSA_ERROR_NOT_SUPPORTED;
         }
@@ -9447,8 +9473,10 @@ psa_status_t psa_pake_output(
     size_t *output_length)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+#if defined(PSA_WANT_ALG_JPAKE)
     psa_crypto_driver_pake_step_t driver_step = PSA_JPAKE_STEP_INVALID;
     LOCAL_OUTPUT_DECLARE(output_external, output);
+#endif
     *output_length = 0;
 
     if (operation->stage == PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS) {
@@ -9476,38 +9504,44 @@ psa_status_t psa_pake_output(
         }
         driver_step = convert_jpake_computation_stage_to_driver_step(
             &operation->computation_stage.jpake);
-    } else
-#endif /* PSA_WANT_ALG_JPAKE */
-    {
-        (void) step;
-        status = PSA_ERROR_NOT_SUPPORTED;
-        goto exit;
-    }
 
-    LOCAL_OUTPUT_ALLOC(output_external, output_size, output);
+        LOCAL_OUTPUT_ALLOC(output_external, output_size, output);
 
-    status = psa_driver_wrapper_pake_output(operation, driver_step,
-                                            output, output_size, output_length);
+        status = psa_driver_wrapper_pake_output(operation, driver_step,
+                                                output, output_size,
+                                                output_length);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
 
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-#if defined(PSA_WANT_ALG_JPAKE)
-    if (PSA_ALG_IS_JPAKE(operation->alg)) {
         status = psa_jpake_epilogue(operation, PSA_JPAKE_OUTPUT);
         if (status != PSA_SUCCESS) {
             goto exit;
         }
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* Temporary stub: SPAKE2+ output will be filled in by a later PR. */
+        (void) step;
+        (void) output_external;
+        (void) output_size;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
+        (void) step;
+        (void) output_external;
+        (void) output_size;
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
 
 exit:
+#if defined(PSA_WANT_ALG_JPAKE)
     LOCAL_OUTPUT_FREE(output_external, output);
+#endif
     if (status != PSA_SUCCESS) {
         psa_pake_abort(operation);
     }
@@ -9521,11 +9555,13 @@ psa_status_t psa_pake_input(
     size_t input_length)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+#if defined(PSA_WANT_ALG_JPAKE)
     psa_crypto_driver_pake_step_t driver_step = PSA_JPAKE_STEP_INVALID;
+    LOCAL_INPUT_DECLARE(input_external, input);
+#endif
     const size_t max_input_length = (size_t) PSA_PAKE_INPUT_SIZE(operation->alg,
                                                                  operation->primitive,
                                                                  step);
-    LOCAL_INPUT_DECLARE(input_external, input);
 
     if (operation->stage == PSA_PAKE_OPERATION_STAGE_COLLECT_INPUTS) {
         status = psa_pake_complete_inputs(operation);
@@ -9552,37 +9588,40 @@ psa_status_t psa_pake_input(
         }
         driver_step = convert_jpake_computation_stage_to_driver_step(
             &operation->computation_stage.jpake);
-    } else
-#endif /* PSA_WANT_ALG_JPAKE */
-    {
-        (void) step;
-        status = PSA_ERROR_NOT_SUPPORTED;
-        goto exit;
-    }
 
-    LOCAL_INPUT_ALLOC(input_external, input_length, input);
-    status = psa_driver_wrapper_pake_input(operation, driver_step,
-                                           input, input_length);
+        LOCAL_INPUT_ALLOC(input_external, input_length, input);
+        status = psa_driver_wrapper_pake_input(operation, driver_step,
+                                               input, input_length);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
 
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-#if defined(PSA_WANT_ALG_JPAKE)
-    if (PSA_ALG_IS_JPAKE(operation->alg)) {
         status = psa_jpake_epilogue(operation, PSA_JPAKE_INPUT);
         if (status != PSA_SUCCESS) {
             goto exit;
         }
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* Temporary stub: SPAKE2+ input will be filled in by a later PR. */
+        (void) step;
+        (void) input_external;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
+        (void) step;
+        (void) input_external;
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
 
 exit:
+#if defined(PSA_WANT_ALG_JPAKE)
     LOCAL_INPUT_FREE(input_external, input);
+#endif
     if (status != PSA_SUCCESS) {
         psa_pake_abort(operation);
     }
@@ -9595,8 +9634,10 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t abort_status = PSA_ERROR_CORRUPTION_DETECTED;
+#if defined(PSA_WANT_ALG_JPAKE)
     uint8_t shared_key[MBEDTLS_PSA_JPAKE_BUFFER_SIZE];
     size_t shared_key_len = 0;
+#endif
 
     if (operation->stage != PSA_PAKE_OPERATION_STAGE_COMPUTATION) {
         status = PSA_ERROR_BAD_STATE;
@@ -9611,23 +9652,31 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
             status = PSA_ERROR_BAD_STATE;
             goto exit;
         }
+
+        status = psa_driver_wrapper_pake_get_shared_key(operation,
+                                                        shared_key,
+                                                        sizeof(shared_key),
+                                                        &shared_key_len);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+
+        status = psa_import_key(attributes, shared_key, shared_key_len, key);
     } else
 #endif /* PSA_WANT_ALG_JPAKE */
+#if defined(PSA_WANT_ALG_SOME_SPAKE2P)
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+        /* Temporary stub: SPAKE2+ shared-key extraction comes in a later PR. */
+        (void) attributes;
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    } else
+#endif /* PSA_WANT_ALG_SOME_SPAKE2P */
     {
+        (void) attributes;
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
-
-    status = psa_driver_wrapper_pake_get_shared_key(operation,
-                                                    shared_key,
-                                                    sizeof(shared_key),
-                                                    &shared_key_len);
-
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-    status = psa_import_key(attributes, shared_key, shared_key_len, key);
 
 exit:
 
