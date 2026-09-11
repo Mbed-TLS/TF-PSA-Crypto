@@ -810,6 +810,8 @@ component_test_everest_curve25519_only () {
     scripts/config.py unset MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
     scripts/config.py unset MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     scripts/config.py unset PSA_WANT_ALG_JPAKE
+    scripts/config.py unset-all "^PSA_WANT_ALG_SPAKE2P_"
+    scripts/config.py unset-all "^PSA_WANT_KEY_TYPE_SPAKE2P_"
 
     # Disable all curves
     scripts/config.py unset-all "PSA_WANT_ECC_[0-9A-Z_a-z]*$"

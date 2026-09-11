@@ -31,6 +31,11 @@ INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
         re.compile('.*built-in.*'),
         re.compile('Config: mldsa-native.*'),
     ],
+    'test_suite_config.psa_boolean': [
+        # Mbed TLS does not need a matching exemption.
+        'Config: !PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT',
+        'Config: !PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT',
+    ],
     'test_suite_pqcp_mldsa': [
         re.compile('.*SHAKE.*'),
     ],
