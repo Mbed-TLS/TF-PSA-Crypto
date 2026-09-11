@@ -95,13 +95,6 @@
 #define PSA_HAVE_ALG_SOME_RSA_SIGN_OR_VERIFY
 #endif
 
-/* SPAKE2+ registration records embed an ECC point, so without
- * PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY there is nothing useful to build.
- * Requiring ECC here also keeps depends.py's complementary job
- * !PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC consistent: that job unsets
- * ECC_PUBLIC_KEY (and JPAKE), so SPAKE2+/PAKE must not stay enabled
- * and re-pull ECP or leave unused PAKE helpers under -Werror.
- */
 #if (defined(PSA_WANT_ALG_SPAKE2P_HMAC) || \
     defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
     defined(PSA_WANT_ALG_SPAKE2P_MATTER)) && \
