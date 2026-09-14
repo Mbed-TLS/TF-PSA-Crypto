@@ -27,6 +27,7 @@
 #include "psa_crypto_rsa.h"
 #include "psa_crypto_ecp.h"
 #include "psa_crypto_slot_management.h"
+#include "psa_crypto_mldsa.h"
 /* Include internal declarations that are useful for implementing persistently
  * stored keys. */
 #include "psa_crypto_storage.h"
@@ -724,6 +725,17 @@ psa_status_t psa_import_key_into_slot(
 #endif /* (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT) &&
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
+// RKL insert mldsa here
+#if (defined(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY))
+        if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+            return mbedtls_psa_mldsa_import_key(attributes,
+                                                 data, data_length,
+                                                 key_buffer, key_buffer_size,
+                                                 key_buffer_length,
+                                                 bits);
+        }
+#endif /* (PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+        */
     }
 
     return PSA_ERROR_NOT_SUPPORTED;
@@ -1349,7 +1361,8 @@ psa_status_t psa_export_key_internal(
     if (key_type_is_raw_bytes(type) ||
         PSA_KEY_TYPE_IS_RSA(type)   ||
         PSA_KEY_TYPE_IS_ECC(type)   ||
-        PSA_KEY_TYPE_IS_DH(type)) {
+        PSA_KEY_TYPE_IS_DH(type)    ||
+        PSA_KEY_TYPE_IS_ML_DSA(type)){
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
