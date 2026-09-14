@@ -5,4 +5,4 @@ Features
      directory.
    * Officially provide a compile-time option MBEDTLS_PSA_ITS_STORAGE_PREFIX
      to select the directory for persistent keys when using the default
-     file-based backend. 
+     file-based backend.
