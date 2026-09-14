@@ -811,6 +811,17 @@
 #define PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(key_bits)   \
     (PSA_BITS_TO_BYTES(key_bits))
 
+/* Export encoding sizes of a SPAKE2+ key (RFC 9383), where the key size is the
+ * curve bit size m:
+ *  - a key pair is w0 || w1, two m-bit scalars:        2 * ceil(m/8) bytes;
+ *  - a public key is w0 || L, a scalar plus an
+ *    uncompressed point:                               3 * ceil(m/8) + 1 bytes.
+ */
+#define PSA_KEY_EXPORT_SPAKE2P_KEY_PAIR_MAX_SIZE(key_bits)      \
+    (2u * PSA_BITS_TO_BYTES(key_bits))
+#define PSA_KEY_EXPORT_SPAKE2P_PUBLIC_KEY_MAX_SIZE(key_bits)    \
+    (3u * PSA_BITS_TO_BYTES(key_bits) + 1u)
+
 /* Maximum size of the export encoding of an DH key pair.
  *
  * An DH key pair is represented by the secret value.
@@ -867,6 +878,9 @@
      (key_type) == PSA_KEY_TYPE_RSA_PUBLIC_KEY ? PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) ? PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(key_bits) :      \
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
+     PSA_KEY_TYPE_IS_SPAKE2P_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_SPAKE2P_PUBLIC_KEY_MAX_SIZE( \
+         key_bits) : \
+     PSA_KEY_TYPE_IS_SPAKE2P(key_type) ? PSA_KEY_EXPORT_SPAKE2P_KEY_PAIR_MAX_SIZE(key_bits) :       \
      PSA_BITS_TO_BYTES(key_bits)) /*unstructured; FFDH public or private*/
 
 /** Sufficient output buffer size for psa_export_public_key().
@@ -918,6 +932,7 @@
     (PSA_KEY_TYPE_IS_RSA(key_type) ? PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_ECC(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_DH(key_type) ? PSA_BITS_TO_BYTES(key_bits) : \
+     PSA_KEY_TYPE_IS_SPAKE2P(key_type) ? PSA_KEY_EXPORT_SPAKE2P_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      0u)
 
 /** Sufficient buffer size for exporting any asymmetric key pair.
@@ -951,6 +966,13 @@
 #define PSA_EXPORT_KEY_PAIR_MAX_SIZE    \
     PSA_KEY_EXPORT_FFDH_KEY_PAIR_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #endif
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC) && \
+    (PSA_KEY_EXPORT_SPAKE2P_KEY_PAIR_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS) > \
+     PSA_EXPORT_KEY_PAIR_MAX_SIZE)
+#undef PSA_EXPORT_KEY_PAIR_MAX_SIZE
+#define PSA_EXPORT_KEY_PAIR_MAX_SIZE    \
+    PSA_KEY_EXPORT_SPAKE2P_KEY_PAIR_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+#endif
 
 /** Sufficient buffer size for exporting any asymmetric public key.
  *
@@ -983,6 +1005,13 @@
 #undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
 #define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
     PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) && \
+    (PSA_KEY_EXPORT_SPAKE2P_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS) > \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
+    PSA_KEY_EXPORT_SPAKE2P_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
 #endif
 
 /* This is the name that was standardized in PSA Crypto v1.3 */
