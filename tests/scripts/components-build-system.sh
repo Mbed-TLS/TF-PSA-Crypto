@@ -32,6 +32,15 @@ component_test_tf_psa_crypto_out_of_source () {
     make test
 }
 
+component_test_tf_psa_crypto_benchmark_key_agreement () {
+    msg "build/test: benchmark ECDH and FFDH"
+    cd $OUT_OF_SOURCE_DIR
+    cmake -D CMAKE_BUILD_TYPE:String=Check -D GEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build . --target benchmark
+    ./programs/test/benchmark ecdh secp256r1 | grep -q "ECDH-secp256r1"
+    ./programs/test/benchmark ffdh 2048 | grep -q "FFDH-2048"
+}
+
 component_test_tf_psa_crypto_as_subdirectory () {
     msg "build: cmake 'as-subdirectory' build"
     cd programs/test/cmake_subproject
