@@ -1520,6 +1520,27 @@
 #define MBEDTLS_AESCE_C
 
 /**
+ * \def MBEDTLS_AESPPC_C
+ *
+ * Enable AES cryptographic extension support on Power9+ (ppc64le).
+ *
+ * Module:  drivers/builtin/src/aesppc.c
+ * Caller:  drivers/builtin/src/aes.c
+ *
+ * Requires: The AES built-in implementation
+ *
+ * \warning Runtime detection only works on Linux. For non-Linux operating
+ *          system, P9+ (ppc64le) Cryptographic Extensions must be supported by
+ *          the CPU when this option is enabled.
+ *
+ * \note    Minimum compiler versions for this feature when targeting ppc64 with
+ *          ISA 3.0 support.
+ *
+ * This module adds support for the AES ppc64le Cryptographic Extensions on p9+ systems.
+ */
+#define MBEDTLS_AESPPC_C
+
+/**
  * \def MBEDTLS_AES_ROM_TABLES
  *
  * Use precomputed AES tables stored in ROM.
