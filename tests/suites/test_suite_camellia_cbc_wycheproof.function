@@ -1,0 +1,100 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/cipher.h"
+
+/* Project Wycheproof Camellia-CBC/PKCS#7 harness.
+ * Columns: key:iv:msg:ct.
+ *   valid   -> mbedtls_camellia_cbc_enc_dec
+ *   invalid -> mbedtls_camellia_cbc_dec_invalid_padding  (NoPadding / BadPadding)
+ */
+
+static mbedtls_cipher_type_t wp_camellia_cbc_type(size_t key_len)
+{
+    switch (key_len) {
+    case 16:
+        return MBEDTLS_CIPHER_CAMELLIA_128_CBC;
+    case 24:
+        return MBEDTLS_CIPHER_CAMELLIA_192_CBC;
+    case 32:
+        return MBEDTLS_CIPHER_CAMELLIA_256_CBC;
+    default:
+        return MBEDTLS_CIPHER_NONE;
+    }
+}
+
+static int wp_cbc_crypt(mbedtls_operation_t op, data_t* key, data_t* iv,
+    const unsigned char* in, size_t in_len,
+    unsigned char* out, size_t out_size, size_t* out_len)
+{
+    mbedtls_cipher_context_t ctx;
+    const mbedtls_cipher_info_t* info = mbedtls_cipher_info_from_type(wp_camellia_cbc_type(key->len));
+    int ret = MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
+
+    mbedtls_cipher_init(&ctx);
+    if (info == NULL) {
+        goto cleanup;
+    }
+    if (mbedtls_cipher_setup(&ctx, info) != 0 || mbedtls_cipher_setkey(&ctx, key->x, (int)(key->len * 8), op) != 0 || mbedtls_cipher_set_padding_mode(&ctx, MBEDTLS_PADDING_PKCS7) != 0) {
+        goto cleanup;
+    }
+    (void)out_size;
+    ret = mbedtls_cipher_crypt(&ctx, iv->x, iv->len, in, in_len, out, out_len);
+
+cleanup:
+    mbedtls_cipher_free(&ctx);
+    return ret;
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CIPHER_C:MBEDTLS_CAMELLIA_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: encryption returns ct and decryption return msg. */
+/* BEGIN_CASE */
+void mbedtls_camellia_cbc_enc_dec(data_t* key, data_t* iv, data_t* msg, data_t* ct)
+{
+    unsigned char* output = NULL;
+    size_t olen = 0;
+
+    BLOCK_CIPHER_PSA_INIT();
+    TEST_ASSERT(wp_camellia_cbc_type(key->len) != MBEDTLS_CIPHER_NONE);
+
+    TEST_CALLOC(output, msg->len + 16);
+    TEST_EQUAL(0, wp_cbc_crypt(MBEDTLS_ENCRYPT, key, iv, msg->x, msg->len, output, msg->len + 16, &olen));
+    TEST_MEMORY_COMPARE(output, olen, ct->x, ct->len);
+    mbedtls_free(output);
+    output = NULL;
+
+    TEST_CALLOC(output, ct->len == 0 ? 1 : ct->len);
+    TEST_EQUAL(0, wp_cbc_crypt(MBEDTLS_DECRYPT, key, iv, ct->x, ct->len, output, ct->len, &olen));
+    TEST_MEMORY_COMPARE(output, olen, msg->x, msg->len);
+
+exit:
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector: PKCS#7 unpadding of the decrypted block must be rejected */
+/* BEGIN_CASE */
+void mbedtls_camellia_cbc_dec_invalid_padding(data_t* key, data_t* iv, data_t* msg, data_t* ct)
+{
+    unsigned char* output = NULL;
+    size_t olen = 0;
+
+    (void)msg;
+
+    BLOCK_CIPHER_PSA_INIT();
+    TEST_ASSERT(wp_camellia_cbc_type(key->len) != MBEDTLS_CIPHER_NONE);
+    TEST_CALLOC(output, ct->len == 0 ? 1 : ct->len);
+
+    TEST_ASSERT(wp_cbc_crypt(MBEDTLS_DECRYPT, key, iv, ct->x, ct->len,
+                    output, ct->len, &olen)
+        != 0);
+
+exit:
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
