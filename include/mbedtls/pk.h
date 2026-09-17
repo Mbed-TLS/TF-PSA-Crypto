@@ -155,7 +155,10 @@ typedef void mbedtls_pk_restart_ctx;
  *
  * \warning This default algorithm selection might change in the future.
  */
-#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
+#define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_ECDSA(hash_alg)
+#elif defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
 #define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_DETERMINISTIC_ECDSA(hash_alg)
 #else
 #define MBEDTLS_PK_ALG_ECDSA(hash_alg) PSA_ALG_ECDSA(hash_alg)
