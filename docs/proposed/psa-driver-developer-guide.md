@@ -2,11 +2,11 @@ PSA Cryptoprocessor driver developer's guide
 ============================================
 
 **This is a specification of work in progress. The implementation is not yet merged into Mbed TLS.**
-For a description of the current state of drivers Mbed TLS, see our [PSA Cryptoprocessor driver development examples](../psa-driver-example-and-guide.html).
+For a description of the current state of drivers Mbed TLS, see our [PSA Cryptoprocessor driver development examples](../psa-driver-example-and-guide.md).
 
 This document describes how to write drivers of cryptoprocessors such as accelerators and secure elements for the PSA cryptography subsystem of Mbed TLS.
 
-This document focuses on behavior that is specific to Mbed TLS. For a reference of the interface between Mbed TLS and drivers, refer to the [PSA Cryptoprocessor Driver Interface specification](psa-driver-interface.html).
+This document focuses on behavior that is specific to Mbed TLS. For a reference of the interface between Mbed TLS and drivers, refer to the [PSA Cryptoprocessor Driver Interface specification](psa-driver-interface.md).
 
 The interface is not fully implemented in Mbed TLS yet. Please note that the interface may still change: until further notice, we do not guarantee backward compatibility with existing driver code.
 
@@ -25,7 +25,7 @@ There are two types of drivers:
 
 To write a driver, you need to implement some functions with C linkage, and to declare these functions in a **driver description file**. The driver description file declares which functions the driver implements and what cryptographic mechanisms they support. Depending on the driver type, you may also need to define some C types and macros in a header file.
 
-The concrete syntax for a driver description file is JSON. The structure of this JSON file is specified in the section [“Driver description syntax”](psa-driver-interface.html#driver-description-syntax) of the PSA cryptography driver interface specification.
+The concrete syntax for a driver description file is JSON. The structure of this JSON file is specified in the section [“Driver description syntax”](psa-driver-interface.md#driver-description-syntax) of the PSA cryptography driver interface specification.
 
 A driver therefore consists of:
 
@@ -35,7 +35,7 @@ A driver therefore consists of:
 
 ## Driver C interfaces
 
-Mbed TLS calls driver entry points [as specified in the PSA Cryptography Driver Interface specification](psa-driver-interface.html#driver-entry-points) except as otherwise indicated in this section.
+Mbed TLS calls driver entry points [as specified in the PSA Cryptography Driver Interface specification](psa-driver-interface.md#driver-entry-points) except as otherwise indicated in this section.
 
 ## Mbed TLS extensions
 
