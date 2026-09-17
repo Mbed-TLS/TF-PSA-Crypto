@@ -515,7 +515,7 @@ static void try_chdir_if_supported(const char *argv0)
 
 /**
  * \brief Check if the given test case should be filtered out or not.
- * 
+ *
  * \param test_case     The name of the test case to be evaluated.
  * \param filters       Array of filters to be checked against.
  * \param filters_count The number of items in \p filters
