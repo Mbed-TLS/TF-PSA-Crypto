@@ -2114,4 +2114,10 @@
 /* Do not enable except for testing. Will be removed in a future minor version.
  */
 //#define TF_PSA_CRYPTO_ALLOW_REMOVED_MECHANISMS
+
+#if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION) || defined(MBEDTLS_TEST_HOOKS)
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#define MBEDTLS_PLATFORM_TIME_ALT
+#endif /* FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION || MBEDTLS_TEST_HOOKS */
+
 #endif /* PSA_CRYPTO_CONFIG_H */

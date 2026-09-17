@@ -6,21 +6,36 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mbedtls/private/ctr_drbg.h"
+#include "mbedtls/platform.h"
+#if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#include <test/fake_external_rng_for_test.h>
+#endif
 
 #if defined(MBEDTLS_PLATFORM_TIME_ALT)
+/* Fixed wall clock for reproducible runs: 2026-01-15T12:00:00Z. */
 mbedtls_time_t dummy_constant_time(mbedtls_time_t *time)
 {
     (void) time;
-    return 0x5af2a056;
+    return 0x6968d6c0;
 }
 #endif
 
 void dummy_init(void)
 {
+    static int done = 0;
+
+    if (done) {
+        return;
+    }
+    done = 1;
+
 #if defined(MBEDTLS_PLATFORM_TIME_ALT)
     mbedtls_platform_set_time(dummy_constant_time);
 #else
     fprintf(stderr, "Warning: fuzzing without constant time\n");
+#endif
+#if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+    mbedtls_test_enable_insecure_external_rng();
 #endif
 }
 
