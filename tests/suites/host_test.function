@@ -630,7 +630,10 @@ static int execute_tests(int argc, const char **argv)
                 mbedtls_fprintf(stderr, "Too many test filters specified.\n");
                 mbedtls_exit(MBEDTLS_EXIT_FAILURE);
             }
-            arg_index++;
+            if (++arg_index >= argc) {
+                mbedtls_fprintf(stderr, "Missing filter value!\n");
+                mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+            }
             test_case_filters[test_case_filters_count] = argv[arg_index];
             test_case_filters_count++;
         } else {
