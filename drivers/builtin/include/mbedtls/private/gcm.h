@@ -23,12 +23,23 @@
 #include "tf-psa-crypto/build_info.h"
 
 #include "mbedtls/private/cipher.h"
+#include "mbedtls/private/aesce_common.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
 #include "mbedtls/private/block_cipher.h"
 #endif
 
 #include <stdint.h>
+
+/*
+ * MBEDTLS_ONLY_GCM_CIPHER_IS_AES is set if we know at compile-time that we can dispatch directly to
+ * AES for all GCM operations, (because there are no other ciphers that
+ * might use GCM, which is the common case).
+ * This enables a lot of code-size savings.
+ */
+#if defined(MBEDTLS_AES_C) && !defined(MBEDTLS_ARIA_C) && !defined(MBEDTLS_CAMELLIA_C)
+#define MBEDTLS_ONLY_GCM_CIPHER_IS_AES
+#endif
 
 #if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)
 #define MBEDTLS_GCM_ENCRYPT     1
@@ -61,6 +72,12 @@ typedef struct mbedtls_gcm_context {
 #else
     mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher_ctx);    /*!< The cipher context used. */
 #endif
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    uint8_t MBEDTLS_PRIVATE(aesce_H)[32];                    /* constant 1, followed by hash key */
+#if defined(MBEDTLS_AES_C) && (MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0)
+    uint8x16x4_t MBEDTLS_PRIVATE(vghash_4);
+#endif
+#endif
     uint64_t MBEDTLS_PRIVATE(H)[MBEDTLS_GCM_HTABLE_SIZE][2]; /*!< Precalculated HTable. */
     uint64_t MBEDTLS_PRIVATE(len);                           /*!< The total length of the encrypted data. */
     uint64_t MBEDTLS_PRIVATE(add_len);                       /*!< The total length of the additional data. */
@@ -70,7 +87,6 @@ typedef struct mbedtls_gcm_context {
     unsigned char MBEDTLS_PRIVATE(mode);                     /*!< The operation to perform:
                                                                 MBEDTLS_GCM_ENCRYPT or
                                                                 MBEDTLS_GCM_DECRYPT. */
-    unsigned char MBEDTLS_PRIVATE(acceleration);             /*!< The acceleration to use. */
 }
 mbedtls_gcm_context;
 
