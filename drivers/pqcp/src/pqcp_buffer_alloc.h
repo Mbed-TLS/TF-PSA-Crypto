@@ -17,6 +17,8 @@
 
 #if defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
 
+#include <tf-psa-crypto/private/mldsa.h>
+
 #if defined(MBEDTLS_THREADING_C)
 #include "threading_internal.h"
 #endif
@@ -59,6 +61,31 @@ extern size_t tf_psa_crypto_pqcp_alloc_used;
 extern ptrdiff_t tf_psa_crypto_pqcp_alloc_poison_bytes;
 #endif
 
+/** Gain access to the PQCP global buffer.
+ *
+ * When you have access to the PQCP global buffer,
+ * - You may allocate regions in the buffer with
+ *   tf_psa_crypto_pqcp_alloc_push() and free them them with
+ *   tf_psa_crypto_pqcp_alloc_pop(). The regions must be managed
+ *   as a stack, i.e. a `pop()` call frees the last region that was
+ *   allocated with `push()` and has not been freed yet.
+ * - You may store data in ::tf_psa_crypto_pqcp_mldsa_public_key.
+ *
+ * Once you have finished using the PQCP global buffer,
+ * you must call tf_psa_crypto_pqcp_alloc_start().
+ *
+ * This function is thread-safe. If it is called while another
+ * thread holds the PQCP global buffer, this function waits until
+ * it can gain exclusive access to the buffer.
+ *
+ * \retval #PSA_SUCCESS
+ *         The global buffer and ::tf_psa_crypto_pqcp_mldsa_public_key
+ *         are available for use.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         An error was detected. Note that this function is not guaranteed
+ *         to detect invalid usage, such as calling this function while
+ *         the current thread already holds the PQCP global buffer..
+ */
 static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
 {
     TF_PSA_CRYPTO_PQCP_ALLOC_LOCK();
@@ -67,7 +94,30 @@ static inline psa_status_t tf_psa_crypto_pqcp_alloc_start(void)
 #endif
     return PSA_SUCCESS;
 }
+
+/** Release the PQCP global buffer.
+ *
+ * Call this function only after a successful call to
+ * tf_psa_crypto_pqcp_alloc_start() in the same thread.
+ * Any other usage has undefined behavior.
+ *
+ * \retval #PSA_SUCCESS
+ *         The buffer management succeeded.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ *         A sub-allocation in the buffer failed.
+ * \retval #PSA_ERROR_BAD_STATE
+ *         Another error was detected. This function makes a best effort
+ *         to clean up, so a future use of the global buffer should be safe.
+ */
 psa_status_t tf_psa_crypto_pqcp_alloc_done(void);
+
+/** A buffer sized for an ML-DSA public key.
+ *
+ * You may use this buffer while you own the PQCP global buffer, i.e.
+ * between calls to tf_psa_crypto_pqcp_alloc_start() and
+ * tf_psa_crypto_pqcp_alloc_done().
+ */
+extern uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
 #else /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 
