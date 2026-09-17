@@ -1232,14 +1232,18 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
         size_t i;
         unsigned char *prev_output = output - 16;
 
+        /* Copy the remainder of the input for this final round. This must
+         * happen before the stolen ciphertext bytes are written to the
+         * output: for in-place operation (input == output) they alias, and
+         * writing first would feed the stolen ciphertext into this block's
+         * input instead of the remaining input bytes. */
+        mbedtls_xor(tmp, input, t, leftover);
+
         /* Copy ciphertext bytes from the previous block to our output for each
          * byte of ciphertext we won't steal. */
         for (i = 0; i < leftover; i++) {
             output[i] = prev_output[i];
         }
-
-        /* Copy the remainder of the input for this final round. */
-        mbedtls_xor(tmp, input, t, leftover);
 
         /* Copy ciphertext bytes from the previous block for input in this
          * round. */
