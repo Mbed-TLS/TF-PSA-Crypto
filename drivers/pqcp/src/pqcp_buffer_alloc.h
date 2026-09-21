@@ -72,7 +72,7 @@ extern ptrdiff_t tf_psa_crypto_pqcp_alloc_poison_bytes;
  * - You may store data in ::tf_psa_crypto_pqcp_mldsa_public_key.
  *
  * Once you have finished using the PQCP global buffer,
- * you must call tf_psa_crypto_pqcp_alloc_start().
+ * you must call tf_psa_crypto_pqcp_alloc_done().
  *
  * This function is thread-safe. If it is called while another
  * thread holds the PQCP global buffer, this function waits until
