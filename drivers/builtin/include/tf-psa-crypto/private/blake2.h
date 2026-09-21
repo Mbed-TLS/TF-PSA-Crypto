@@ -53,7 +53,7 @@ typedef struct tf_psa_crypto_blake2s_context {
 
 /**
  * \brief          This function initializes a BLAKE2s context and starts a
- *                 new hash or HMAC operation.
+ *                 new hash or MAC operation.
  *
  *                 It must be the first API called before using the context,
  *                 and it must be called again before starting a new
@@ -63,7 +63,7 @@ typedef struct tf_psa_crypto_blake2s_context {
  *                 \c NULL.
  * \param outlen   The desired length of the digest, in bytes. This must be
  *                 greater than \c 0 and at most \c 32.
- * \param key      The key used in case of HMAC operation. This can be \c NULL
+ * \param key      The key used in case of MAC operation. This can be \c NULL
  *                 if \p keylen is \c 0, in which case an unkeyed hash is
  *                 computed. Otherwise this must be a readable buffer of
  *                 length \p keylen bytes.
@@ -96,7 +96,7 @@ void tf_psa_crypto_blake2s_clone(tf_psa_crypto_blake2s_context *dst,
 
 /**
  * \brief          This function feeds an input buffer into an ongoing
- *                 BLAKE2s hash or HMAC operation.
+ *                 BLAKE2s hash or MAC operation.
  *
  *                 It can be called repeatedly to process a message
  *                 incrementally.
@@ -130,13 +130,13 @@ int tf_psa_crypto_blake2s_finish(tf_psa_crypto_blake2s_context *ctx,
                                  uint8_t *out, size_t outlen);
 
 /**
- * \brief          This function calculates the BLAKE2s hash or HMAC of the
+ * \brief          This function calculates the BLAKE2s hash or MAC of the
  *                 given buffer.
  *
  * \param in       The buffer holding the data. This must be a readable
  *                 buffer of length \p inlen bytes.
  * \param inlen    The length of the input data in bytes.
- * \param key      The key used for a keyed HMAC. This may be \c NULL
+ * \param key      The key used for a keyed MAC. This may be \c NULL
  *                 if \p keylen is \c 0, in which case an unkeyed hash is
  *                 computed. Otherwise this must be a readable buffer of
  *                 length \p keylen bytes.
@@ -177,7 +177,7 @@ typedef struct tf_psa_crypto_blake2b_context {
 
 /**
  * \brief          This function initializes a BLAKE2s context and starts a
- *                 new hash or HMAC operation.
+ *                 new hash or MAC operation.
  *
  *                 It must be the first API called before using the context,
  *                 and it must be called again before starting a new
@@ -187,7 +187,7 @@ typedef struct tf_psa_crypto_blake2b_context {
  *                 \c NULL.
  * \param outlen   The desired length of the digest, in bytes. This must be
  *                 greater than \c 0 and at most \c 64.
- * \param key      The key used in case of HMAC operation. This can be \c NULL
+ * \param key      The key used in case of MAC operation. This can be \c NULL
  *                 if \p keylen is \c 0, in which case an unkeyed hash is
  *                 computed. Otherwise this must be a readable buffer of
  *                 length \p keylen bytes.
@@ -223,7 +223,7 @@ void tf_psa_crypto_blake2b_clone(tf_psa_crypto_blake2b_context *dst,
 
 /**
  * \brief          This function feeds an input buffer into an ongoing
- *                 BLAKE2b hash or HMAC operation.
+ *                 BLAKE2b hash or MAC operation.
  *
  *                 It can be called repeatedly to process a message
  *                 incrementally.
@@ -257,13 +257,13 @@ int tf_psa_crypto_blake2b_finish(tf_psa_crypto_blake2b_context *ctx,
                                  uint8_t *out, size_t outlen);
 
 /**
- * \brief          This function calculates the BLAKE2b hash or HMAC of the
+ * \brief          This function calculates the BLAKE2b hash or MAC of the
  *                 given buffer.
  *
  * \param in       The buffer holding the data. This must be a readable
  *                 buffer of length \p inlen bytes.
  * \param inlen    The length of the input data in bytes.
- * \param key      The key used for a keyed HMAC. This may be \c NULL
+ * \param key      The key used for a keyed MAC. This may be \c NULL
  *                 if \p keylen is \c 0, in which case an unkeyed hash is
  *                 computed. Otherwise this must be a readable buffer of
  *                 length \p keylen bytes.

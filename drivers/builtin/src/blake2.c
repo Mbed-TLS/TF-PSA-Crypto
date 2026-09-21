@@ -2,9 +2,11 @@
  * \file blake2.c
  *
  * \brief Implementation of Blake2.
- *
- * The code is heavily inspired from RFC 7693.
- * Only sequential modes are implemented, not parallel ones.
+ * 
+ * Implements sequential BLAKE2s and BLAKE2b as specified in RFC 7693. The RFC
+ * is also where most of the core code of this module comes from.
+ * Tree-hashing parameters and the parallel BLAKE2sp/BLAKE2bp variants
+ * are not supported by this module.
  */
 /*
  *  Copyright The Mbed TLS Contributors
