@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Run the PSA Crypto API compliance test suite.
 
-Clone the repo and check out the commit specified by PSA_ARCH_TEST_REPO and PSA_ARCH_TEST_REF,
-then compile and run the test suite. The clone is stored at <repository root>/psa-arch-tests.
-Known defects in either the test suite or Mbed TLS - identified by their test
-number - are ignored, while unexpected failures AND successes are reported as errors, to help
+Clone the psa-arch-tests repo and check out the specified commit.
+The clone is stored at <repository-root>/psa-arch-tests.
+Check out the commit specified in this script and apply patches if needed.
+The patches are located at <repository-root>/scripts/data_files/psa-arch-tests/ .
+Compile the library and the compliance tests and run the test suite.
+
+This script can specify a list of expected failures.
+Unexpected failures and successes are reported as errors, to help
 keep the list of known defects as up to date as possible.
 """
 
@@ -24,6 +28,9 @@ PSA_ARCH_TESTS_REF = 'v25.02_API1.8_CRYPTO_1.2.1'
 # Test number 2xx corresponds to the files in the folder
 # psa-arch-tests/api-tests/dev_apis/crypto/test_c0xx
 EXPECTED_FAILURES = [
+    # Tests for psa_key_derivation_verify_bytes() and
+    # psa_key_derivation_verify_key(). We don't implement these functions yet.
+    267, 268,
 ] # type: List[int]
 
 if __name__ == '__main__':

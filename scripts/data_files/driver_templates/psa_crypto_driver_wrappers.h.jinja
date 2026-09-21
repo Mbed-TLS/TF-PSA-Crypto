@@ -1196,6 +1196,15 @@ static inline psa_status_t psa_driver_wrapper_generate_key(
             }
 #endif /* PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT */
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+            if (psa_get_key_type(attributes) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+                status = tf_psa_crypto_mldsa_generate_key_custom(
+                    attributes, custom, custom_data, custom_data_length,
+                    key_buffer, key_buffer_size, key_buffer_length);
+                return status;
+            }
+#endif
+
             /* Software fallback */
             status = psa_generate_key_internal(
                 attributes, custom, custom_data, custom_data_length,
