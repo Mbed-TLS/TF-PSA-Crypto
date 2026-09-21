@@ -256,8 +256,9 @@
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 0u
 #endif
 
-// RKL
-#define PSA_VENDOR_ML_DSA_MAX_KEY_BITS  256u
+/* The maximum size of a ML-DSA key.
+* This is a vendor-specific macro. */
+#define PSA_VENDOR_ML_DSA_MAX_KEY_BITS  87u
 
 /** This macro returns the maximum supported length of the PSK for the
  * TLS-1.2 PSK-to-MS key derivation
@@ -829,10 +830,9 @@
 /* Maximum size of the export encoding of an ML-DSA key
  *
  * Only MLDSA-87 is supported. 
- * RKL
  */
 #define PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(key_bits)   \
-    (PSA_BITS_TO_BYTES(key_bits))
+        (key_bits == 87 ? 2592 : 0)
 
 
 
@@ -882,7 +882,7 @@
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
      (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
      PSA_BITS_TO_BYTES(key_bits)) /*unstructured; FFDH public or private*/
-// RKL
+/* Implement branch for ML-DSA key-pairs. */
 
 /** Sufficient output buffer size for psa_export_public_key().
  *
@@ -935,7 +935,6 @@
      PSA_KEY_TYPE_IS_DH(key_type) ? PSA_BITS_TO_BYTES(key_bits) : \
      PSA_KEY_TYPE_IS_ML_DSA(key_type) ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      0u)
-// RKL
 
 /** Sufficient buffer size for exporting any asymmetric key pair.
  *
@@ -944,6 +943,7 @@
  * asymmetric key pair, regardless of the exact key type and key size.
  *
  * See also #PSA_EXPORT_KEY_OUTPUT_SIZE(\p key_type, \p key_bits).
+ * Implement branch for ML-DSA key-pairs.
  */
 #define PSA_EXPORT_KEY_PAIR_MAX_SIZE            1
 
@@ -1001,7 +1001,6 @@
 #define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
     PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #endif
-// RKL
 #if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
     (PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ML_DSA_MAX_KEY_BITS) > \
      PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)

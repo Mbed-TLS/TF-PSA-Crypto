@@ -176,6 +176,19 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
     return status;
 }
 
+static int convert_keysize_to_bits(size_t key_length) 
+{
+    switch (key_length) {
+        #if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
+            case 2592:
+                return 87;
+        #endif
+        /* In future, support ML-DSA-44 and 65 */
+            default:
+                return -1;
+    }
+}
+
 static psa_status_t seed_to_public_key(
     size_t bits,
     const uint8_t *key_buffer, size_t key_buffer_size,
@@ -268,11 +281,8 @@ psa_status_t mbedtls_psa_mldsa_import_key(
     size_t *key_buffer_length, size_t *bits)
 {
 
-    if (*bits != 87) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-
-    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR &&
+        psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
@@ -282,7 +292,7 @@ psa_status_t mbedtls_psa_mldsa_import_key(
 
     memcpy(key_buffer, data, data_length);
     *key_buffer_length = data_length;
-    *bits = PSA_BYTES_TO_BITS(data_length);
+    *bits = convert_keysize_to_bits(data_length);
 
     return PSA_SUCCESS;
 }
@@ -294,8 +304,20 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
 {
     *data_length = 0;           /* Safe default */
 
-    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR &&
+        psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
         return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (psa_get_key_type(attributes) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
+        if (key_buffer_size > data_size) {
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+        memcpy(data, key_buffer, key_buffer_size);
+        memset(data + key_buffer_size, 0,
+               data_size - key_buffer_size);
+        *data_length = key_buffer_size;
+        return PSA_SUCCESS;
     }
 
     if (key_buffer_size == SEED_SIZE) {

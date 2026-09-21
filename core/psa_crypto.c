@@ -336,6 +336,25 @@ static int psa_is_dh_key_size_valid(size_t bits)
           MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY ||
           PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE */
 
+/* Check if the size of an ML-DSA key is valid. 
+ * Only ML-DSA-87 is supported.
+*/
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) || \
+        defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
+static int psa_is_ml_dsa_key_size_valid(size_t bytes)
+{
+    switch (bytes) {
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
+        case 2592:
+            return 1;
+#endif /* PSA_WANT_KEY_TYPE_ML_DSA_87 */
+        default:
+            return 0;
+    }
+}
+#endif /* PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY ||
+          PSA_WANT_KEY_TYPE_ML_DSA_87 */
+
 psa_status_t mbedtls_to_psa_error(int ret)
 {
     /* Only legacy error codes need to be translated.
@@ -725,16 +744,20 @@ psa_status_t psa_import_key_into_slot(
 #endif /* (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT) &&
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
-// RKL insert mldsa here
-#if (defined(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY))
+#if defined(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
+        defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
         if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+            if (psa_is_ml_dsa_key_size_valid(data_length) == 0) {
+                return PSA_ERROR_NOT_SUPPORTED;
+            }
             return mbedtls_psa_mldsa_import_key(attributes,
                                                  data, data_length,
                                                  key_buffer, key_buffer_size,
                                                  key_buffer_length,
                                                  bits);
         }
-#endif /* (PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+#endif /* defined(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) &&
+        * defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
         */
     }
 
@@ -1479,6 +1502,16 @@ psa_status_t psa_export_public_key_internal(
         return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_EXPORT) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
+    } else if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+#if defined(PSA_KEY_TYPE_ML_DSA_KEY_PAIR) || \
+        defined(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+            return tf_psa_crypto_mldsa_export_public_key(attributes,
+                                                  key_buffer,
+                                                  key_buffer_size,
+                                                  data, data_size,
+                                                  data_length);
+#endif /* defined(PSA_KEY_TYPE_ML_DSA_KEY_PAIR) ||
+        * defined(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) */
     } else {
         (void) key_buffer;
         (void) key_buffer_size;
@@ -1830,7 +1863,6 @@ static psa_status_t psa_start_key_creation(
         p_slot);
 #if defined(MBEDTLS_THREADING_C)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
-                              &mbedtls_threading_key_slot_mutex));
 #endif
     if (status != PSA_SUCCESS) {
         return status;
