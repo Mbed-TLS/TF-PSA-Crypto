@@ -3,6 +3,11 @@
  * 
  * \brief Enable configurations for MLDSA-87 support.
  */
+/*
+ *  Copyright The Mbed TLS Contributors
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ */
+
 #ifndef TF_PSA_CRYPTO_PRIVATE_CRYPTO_ADJUST_CONFIG_ENABLE_PQCP_H
 #define TF_PSA_CRYPTO_PRIVATE_CRYPTO_ADJUST_CONFIG_ENABLE_PQCP_H
 
