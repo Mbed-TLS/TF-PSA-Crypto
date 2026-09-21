@@ -83,11 +83,6 @@
 #define TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE    \
     TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87)
 
-/** Whether the key type is an ML-DSA key (key pair or public key). */
-#define PSA_KEY_TYPE_IS_ML_DSA(type)                                    \
-    ((type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ||                        \
-     (type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR)
-
 /** Hedged pure ML-DSA (without pre-hashing). */
 #define PSA_ALG_ML_DSA ((psa_algorithm_t) 0x06004400)
 
