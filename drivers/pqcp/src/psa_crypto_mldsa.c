@@ -179,13 +179,13 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
 static int convert_keysize_to_bits(size_t key_length) 
 {
     switch (key_length) {
-        #if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
-            case 2592:
-                return 87;
-        #endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
+        case 2592:
+            return 87;
+#endif
         /* In future, support ML-DSA-44 and 65 */
-            default:
-                return -1;
+        default:
+            return -1;
     }
 }
 

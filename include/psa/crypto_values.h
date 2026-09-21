@@ -737,13 +737,13 @@
  */
 #define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
 
-/** Whether the key type is an ML-DSA key (key pair or public key). 
- * 
- * Uncomment the second condition after ML-DSA key-pairs are 
+/** Whether the key type is an ML-DSA key (key pair or public key).
+ *
+ * Uncomment the second condition after ML-DSA key-pairs are
  * supported.
 */
 #define PSA_KEY_TYPE_IS_ML_DSA(type)            \
-((type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) 
+    ((type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY)
 // || (type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR)
 
 #define PSA_GET_KEY_TYPE_BLOCK_SIZE_EXPONENT(type)      \

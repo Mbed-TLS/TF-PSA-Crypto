@@ -1,6 +1,6 @@
 /**
  * \file crypto_adjust_config_enable_pqcp.h
- * 
+ *
  * \brief Enable configurations for MLDSA-87 support.
  */
 /*

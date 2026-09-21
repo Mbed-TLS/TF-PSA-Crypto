@@ -55,7 +55,7 @@
  *
  */
 #if !defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
-        !defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+    !defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)
 #define PK_EXPORT_KEYS_ON_THE_STACK
 #endif
 
