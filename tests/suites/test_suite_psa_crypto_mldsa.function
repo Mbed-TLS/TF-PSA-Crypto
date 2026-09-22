@@ -1410,6 +1410,11 @@ void sign_deterministic_multipart(
                                               &attributes,
                                               private_key->x, private_key->len,
                                               alg));
+    if (private_key->len > TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE) {
+        /* No observable heap usage when we have the expanded private key */
+        TEST_ASSERT(operation.key == NULL);
+    }
+
     if (n_chunks >= 1) {
         PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
                                               chunk1->x, chunk1->len));
@@ -1525,6 +1530,9 @@ void verify_multipart(
                                                 &attributes,
                                                 public_key->x, public_key->len,
                                                 alg));
+    /* No observable heap usage when we have the expanded private key */
+    TEST_ASSERT(operation.key == NULL);
+
     if (n_chunks >= 1) {
         PSA_ASSERT(tf_psa_crypto_mldsa_update(&operation,
                                               chunk1->x, chunk1->len));
