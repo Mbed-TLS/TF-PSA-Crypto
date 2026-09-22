@@ -1860,6 +1860,7 @@ static psa_status_t psa_start_key_creation(
         p_slot);
 #if defined(MBEDTLS_THREADING_C)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
+                              &mbedtls_threading_key_slot_mutex));
 #endif
     if (status != PSA_SUCCESS) {
         return status;
