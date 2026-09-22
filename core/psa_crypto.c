@@ -27,7 +27,9 @@
 #include "psa_crypto_rsa.h"
 #include "psa_crypto_ecp.h"
 #include "psa_crypto_slot_management.h"
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 #include "psa_crypto_mldsa.h"
+#endif
 /* Include internal declarations that are useful for implementing persistently
  * stored keys. */
 #include "psa_crypto_storage.h"
