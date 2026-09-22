@@ -119,8 +119,8 @@
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
-#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     0
-#define PSA_WANT_KEY_TYPE_ML_DSA_87             0
+//#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
+//#define PSA_WANT_KEY_TYPE_ML_DSA_87             1
 /*
  * The following symbols extend and deprecate the legacy
  * PSA_WANT_KEY_TYPE_xxx_KEY_PAIR ones. They include the usage of that key in
@@ -168,7 +168,7 @@
  *
  * Enable this module to enable the buffer memory allocator.
  */
-//#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 
 /**
  * \def MBEDTLS_FS_IO
@@ -224,7 +224,7 @@
  *
  * Uncomment this macro to let the buffer allocator print out error messages.
  */
-//#define MBEDTLS_MEMORY_DEBUG
+#define MBEDTLS_MEMORY_DEBUG
 
 /**
  * \def MBEDTLS_MEMORY_BACKTRACE
@@ -236,7 +236,7 @@
  *
  * Uncomment this macro to include backtrace information
  */
-//#define MBEDTLS_MEMORY_BACKTRACE
+#define MBEDTLS_MEMORY_BACKTRACE
 
 /**
  * \def MBEDTLS_PLATFORM_C
@@ -367,7 +367,7 @@
  *
  * Enable this layer to allow use of alternative memory allocators.
  */
-//#define MBEDTLS_PLATFORM_MEMORY
+#define MBEDTLS_PLATFORM_MEMORY
 
 /**
  * \def MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
