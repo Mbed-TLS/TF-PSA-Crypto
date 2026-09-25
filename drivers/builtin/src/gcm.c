@@ -39,11 +39,16 @@
 #include "aesce.h"
 #endif
 
+#if defined(MBEDTLS_AESPPC_C)
+#include "aesppc.h"
+#endif
+
 /* Used to select the acceleration mechanism */
 #define MBEDTLS_GCM_ACC_SMALLTABLE  0
 #define MBEDTLS_GCM_ACC_LARGETABLE  1
 #define MBEDTLS_GCM_ACC_AESNI       2
 #define MBEDTLS_GCM_ACC_AESCE       3
+#define MBEDTLS_GCM_ACC_AESPPC      4
 
 /*
  * Initialize a context
@@ -73,6 +78,12 @@ static inline void gcm_set_acceleration(mbedtls_gcm_context *ctx)
         ctx->acceleration = MBEDTLS_GCM_ACC_AESCE;
     }
 #endif
+
+#if defined(MBEDTLS_AESPPC_HAVE_CODE)
+    if (ppc_crypto_capable() == PPC_CRYPTO_SUPPORT) {
+        ctx->acceleration = MBEDTLS_GCM_ACC_AESPPC;
+    }
+#endif /* MBEDTLS_AESPPC_HAVE_CODE */
 }
 
 static inline void gcm_gen_table_rightshift(uint64_t dst[2], const uint64_t src[2])
@@ -126,6 +137,11 @@ static int gcm_gen_table(mbedtls_gcm_context *ctx)
         case MBEDTLS_GCM_ACC_AESCE:
             return 0;
 #endif
+
+#if defined(MBEDTLS_AESPPC_HAVE_CODE)
+        case MBEDTLS_GCM_ACC_AESPPC:
+            return 0;
+#endif /* MBEDTLS_AESPPC_HAVE_CODE */
 
         default:
             /* 0 corresponds to 0 in GF(2^128) */
@@ -357,6 +373,26 @@ static void gcm_mult(mbedtls_gcm_context *ctx, const unsigned char x[16],
             mbedtls_aesce_gcm_mult(output, x, (uint8_t *) ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2]);
             break;
 #endif
+
+#if defined(MBEDTLS_AESPPC_HAVE_CODE)
+        case MBEDTLS_GCM_ACC_AESPPC:
+            if (ppc_crypto_capable() == PPC_CRYPTO_SUPPORT) {
+                unsigned char h[16];
+                uint64_t hi, lo;
+
+                hi = ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0];
+                lo = ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1];
+
+                /* mbedtls_aesppc_gcm_mult needs big-endian input */
+                MBEDTLS_PUT_UINT32_BE(hi >> 32, h,  0);
+                MBEDTLS_PUT_UINT32_BE(hi,       h,  4);
+                MBEDTLS_PUT_UINT32_BE(lo >> 32, h,  8);
+                MBEDTLS_PUT_UINT32_BE(lo,       h, 12);
+
+                mbedtls_aesppc_gcm_mult(output, x, (unsigned char *) &h);
+            }
+            break;
+#endif /* MBEDTLS_AESPPC_HAVE_CODE */
 
 #if defined(MBEDTLS_GCM_LARGE_TABLE)
         case MBEDTLS_GCM_ACC_LARGETABLE:
@@ -1031,6 +1067,12 @@ int mbedtls_gcm_self_test(int verbose)
             mbedtls_printf("  GCM note: using AESCE.\n");
         } else
 #endif
+
+#if defined(MBEDTLS_AESPPC_HAVE_CODE)
+        if (ppc_crypto_capable() == PPC_CRYPTO_SUPPORT) {
+            mbedtls_printf("  GCM note: using AESPPC.\n");
+        }
+#endif /* MBEDTLS_AESPPC_HAVE_CODE */
 
         mbedtls_printf("  GCM note: built-in implementation.\n");
     }
