@@ -26,22 +26,34 @@ typedef struct {
     size_t L_len;
     mbedtls_ecp_group_id grp_id;
     size_t bits;
+    uint8_t supported;
 } psa_spake2p_curve_info_t;
 
-static const psa_spake2p_curve_info_t spake2p_supported_curves[] =
+static const psa_spake2p_curve_info_t spake2p_known_curves[] =
 {
 #if defined(PSA_WANT_ECC_SECP_R1_256)
-    { PSA_ECC_FAMILY_SECP_R1, 32, 65, MBEDTLS_ECP_DP_SECP256R1, 256 },
+    { PSA_ECC_FAMILY_SECP_R1, 32, 65, MBEDTLS_ECP_DP_SECP256R1, 256, 1 },
+#else
+    { PSA_ECC_FAMILY_SECP_R1, 32, 65, MBEDTLS_ECP_DP_SECP256R1, 256, 0 },
 #endif
 #if defined(PSA_WANT_ECC_SECP_R1_384)
-    { PSA_ECC_FAMILY_SECP_R1, 48, 97, MBEDTLS_ECP_DP_SECP384R1, 384 },
+    { PSA_ECC_FAMILY_SECP_R1, 48, 97, MBEDTLS_ECP_DP_SECP384R1, 384, 1 },
+#else
+    { PSA_ECC_FAMILY_SECP_R1, 48, 97, MBEDTLS_ECP_DP_SECP384R1, 384, 0 },
 #endif
 #if defined(PSA_WANT_ECC_SECP_R1_521)
-    { PSA_ECC_FAMILY_SECP_R1, 66, 133, MBEDTLS_ECP_DP_SECP521R1, 521 },
+    { PSA_ECC_FAMILY_SECP_R1, 66, 133, MBEDTLS_ECP_DP_SECP521R1, 521, 1 },
+#else
+    { PSA_ECC_FAMILY_SECP_R1, 66, 133, MBEDTLS_ECP_DP_SECP521R1, 521, 0 },
+#endif
+#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_25519)
+    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 32, 32, MBEDTLS_ECP_DP_25519, 255, 0 }, /* Twisted Edwards curve is not supported */
+#else
+    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 32, 32, MBEDTLS_ECP_DP_NONE, 255, 0 },
 #endif
     /* Sentinel so that the array is never empty. Family 0 is not a valid
      * PSA ECC family, so this entry never matches a lookup. */
-    { 0, 0, 0, MBEDTLS_ECP_DP_NONE, 0 },
+    { 0, 0, 0, MBEDTLS_ECP_DP_NONE, 0, 0 },
 };
 
 /* Look up the curve whose public-key encoding (w0 || L) for this family is
@@ -50,30 +62,14 @@ static const psa_spake2p_curve_info_t *psa_spake2p_get_curve_from_data_length(
     size_t data_length,
     psa_ecc_family_t family)
 {
-    for (size_t i = 0; i < ARRAY_LENGTH(spake2p_supported_curves); i++) {
-        const psa_spake2p_curve_info_t *info = &spake2p_supported_curves[i];
+    for (size_t i = 0; i < ARRAY_LENGTH(spake2p_known_curves); i++) {
+        const psa_spake2p_curve_info_t *info = &spake2p_known_curves[i];
         if (info->family == family &&
             info->w0_len + info->L_len == data_length) {
             return info;
         }
     }
     return NULL;
-}
-
-/* Determine the status for a scalar length that does not match any curve
- * enabled in the build: a length that belongs to a curve that this
- * implementation knows about, but which is not enabled, is reported as
- * NOT_SUPPORTED; any other length is a malformed encoding, hence
- * INVALID_ARGUMENT. */
-static psa_status_t psa_spake2p_unknown_scalar_len_status(
-    psa_ecc_family_t family,
-    size_t scalar_len)
-{
-    if (family == PSA_ECC_FAMILY_SECP_R1 &&
-        (scalar_len == 32 || scalar_len == 48 || scalar_len == 66)) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-    return PSA_ERROR_INVALID_ARGUMENT;
 }
 
 psa_status_t mbedtls_psa_spake2p_import_key(
@@ -101,15 +97,11 @@ psa_status_t mbedtls_psa_spake2p_import_key(
         psa_spake2p_get_curve_from_data_length(data_length, family);
 
     if (spake2_curve_info == NULL) {
-        /* SPAKE2+ over Edwards curves (RFC 9383) is not implemented. */
-        if (family == PSA_ECC_FAMILY_TWISTED_EDWARDS) {
-            return PSA_ERROR_NOT_SUPPORTED;
-        }
-        /* A public key is w0 || L, i.e. 3 * scalar_len + 1 bytes. */
-        if (data_length % 3 != 1) {
-            return PSA_ERROR_INVALID_ARGUMENT;
-        }
-        return psa_spake2p_unknown_scalar_len_status(family, data_length / 3);
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (spake2_curve_info->supported == 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
     }
 
     if (key_buffer_size < data_length) {

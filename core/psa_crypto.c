@@ -9651,7 +9651,6 @@ psa_status_t psa_pake_abort(
 
     return status;
 }
-
 #endif /* PSA_WANT_ALG_SOME_PAKE */
 
 /* Memory copying test hooks. These are called before input copy, after input
