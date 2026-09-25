@@ -342,7 +342,7 @@ static int psa_is_dh_key_size_valid(size_t bits)
  * Only ML-DSA-87 is supported.
  */
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) || \
-        defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
+    defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
 static int psa_is_ml_dsa_key_size_valid(size_t bytes)
 {
     switch (bytes) {
@@ -752,10 +752,10 @@ psa_status_t psa_import_key_into_slot(
                 return PSA_ERROR_NOT_SUPPORTED;
             }
             return mbedtls_psa_mldsa_import_key(attributes,
-                                                 data, data_length,
-                                                 key_buffer, key_buffer_size,
-                                                 key_buffer_length,
-                                                 bits);
+                                                data, data_length,
+                                                key_buffer, key_buffer_size,
+                                                key_buffer_length,
+                                                bits);
         }
 #endif /* defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) */
     }
@@ -1504,10 +1504,10 @@ psa_status_t psa_export_public_key_internal(
     } else if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
         return tf_psa_crypto_mldsa_export_public_key(attributes,
-                                                key_buffer,
-                                                key_buffer_size,
-                                                data, data_size,
-                                                data_length);
+                                                     key_buffer,
+                                                     key_buffer_size,
+                                                     data, data_size,
+                                                     data_length);
 #else
         return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)*/

@@ -154,9 +154,9 @@
 #include "mbedtls/private/crypto_adjust_config_enable_builtins.h"
 
 #if (defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
-     PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY == 1) || \
+    PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY == 1) || \
     (defined(PSA_WANT_KEY_TYPE_ML_DSA_87) && \
-     PSA_WANT_KEY_TYPE_ML_DSA_87 == 1)
+    PSA_WANT_KEY_TYPE_ML_DSA_87 == 1)
 #include "tf-psa-crypto/private/crypto_adjust_config_enable_pqcp.h"
 #endif
 

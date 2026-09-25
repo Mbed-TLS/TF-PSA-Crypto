@@ -179,7 +179,7 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
     return status;
 }
 
-static int convert_keysize_to_bits(size_t key_length) 
+static int convert_keysize_to_bits(size_t key_length)
 {
     switch (key_length) {
 #if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)

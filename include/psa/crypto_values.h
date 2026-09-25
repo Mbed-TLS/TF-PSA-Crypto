@@ -741,7 +741,7 @@
  *
  * Uncomment the second condition after ML-DSA key-pairs are
  * supported.
-*/
+ */
 #define PSA_KEY_TYPE_IS_ML_DSA(type)            \
     ((type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY)
 // || (type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR)
