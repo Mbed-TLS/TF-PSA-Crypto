@@ -15,6 +15,7 @@
 #include "bignum_internal.h"
 #include "rsa_alt_helpers.h"
 
+#if defined(MBEDTLS_GENPRIME)
 /*
  * Given P, Q and the public exponent E, deduce D.
  * This is essentially a modular inversion.
@@ -68,6 +69,7 @@ cleanup:
 
     return ret;
 }
+#endif /* MBEDTLS_GENPRIME */
 
 int mbedtls_rsa_deduce_crt(const mbedtls_mpi *P, const mbedtls_mpi *Q,
                            const mbedtls_mpi *D, mbedtls_mpi *DP,
