@@ -137,6 +137,9 @@ static void tf_psa_crypto_blake2s_compress(tf_psa_crypto_blake2s_context *ctx, i
     for (i = 0; i < 8; ++i) {
         ctx->state[i] ^= v[i] ^ v[i + 8];
     }
+
+    mbedtls_platform_zeroize(v, sizeof(v));
+    mbedtls_platform_zeroize(m, sizeof(m));
 }
 
 void tf_psa_crypto_blake2s_update(tf_psa_crypto_blake2s_context *ctx,
@@ -309,6 +312,9 @@ static void tf_psa_crypto_blake2b_compress(tf_psa_crypto_blake2b_context *ctx, i
     for (i = 0; i < 8; ++i) {
         ctx->state[i] ^= v[i] ^ v[i + 8];
     }
+
+    mbedtls_platform_zeroize(v, sizeof(v));
+    mbedtls_platform_zeroize(m, sizeof(m));
 }
 
 void tf_psa_crypto_blake2b_update(tf_psa_crypto_blake2b_context *ctx,
