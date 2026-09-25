@@ -1,0 +1,7 @@
+Changes
+   * AES-GCM size and performance improvements. Performance on Arm Neon
+     benefits around 2.4x - 3.6x; scalar improves by 3% - 10%. Size is reduced
+     by up to 700 bytes.
+     If MBEDTLS_AESCE_OPTIMISE_FOR_SIZE is set, Arm Neon performance increase
+     is reduced (up to 35% improvement), but size is reduced
+     by around 750 bytes (clang) or 1400 bytes (gcc).
