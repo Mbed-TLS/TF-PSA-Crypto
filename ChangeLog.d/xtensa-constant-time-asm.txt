@@ -1,0 +1,4 @@
+Features
+   * Add an Xtensa assembly implementation of the constant-time primitives.
+     Xtensa targets previously fell back to the generic C implementation,
+     which is built on compiler barriers.
