@@ -128,6 +128,11 @@
 #define MBEDTLS_MD_SHA3_512_VIA_PSA
 #define MBEDTLS_MD_SOME_PSA
 #endif
+/* SM3 has no legacy MD implementation, so always dispatch it through PSA. */
+#if defined(PSA_WANT_ALG_SM3)
+#define MBEDTLS_MD_SM3_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
 
 #elif defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 
@@ -173,6 +178,10 @@
 #endif
 #if defined(PSA_WANT_ALG_SHA3_512)
 #define MBEDTLS_MD_SHA3_512_VIA_PSA
+#define MBEDTLS_MD_SOME_PSA
+#endif
+#if defined(PSA_WANT_ALG_SM3)
+#define MBEDTLS_MD_SM3_VIA_PSA
 #define MBEDTLS_MD_SOME_PSA
 #endif
 
