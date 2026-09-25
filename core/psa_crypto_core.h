@@ -269,6 +269,9 @@ psa_status_t mbedtls_to_psa_error(int ret);
  */
 int psa_is_ready_for_cipher(void);
 
+/** Whether PSA is ready for a hash operation. */
+int psa_is_ready_for_hash(void);
+
 /** Import a key in binary format.
  *
  * \note The signature of this function is that of a PSA driver
