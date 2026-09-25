@@ -470,3 +470,10 @@ The layout of a transaction file is:
 ## TF-PSA-Crypto 1.0
 
 The dynamic secure element interface `MBEDTLS_PSA_CRYPTO_SE_C` is removed. As a consequence files identifiers 0xfffffe02 through 0xfffffeff are no more used by the secure element driver storage.
+
+## TF-PSA-Crypto 1.3
+
+### Configuration for the file namespace on stdio since TF-PSA-Crypto 1.3.0
+
+
+The [file namespace on stdio for Mbed TLS 2.25.0](#file-namespace-on-stdio-for-mbed-tls-2.25.0) remains applicable. The build-time configuration option for the storage prefix is now `MBEDTLS_PSA_ITS_STORAGE_PREFIX`.
