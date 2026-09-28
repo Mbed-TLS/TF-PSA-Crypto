@@ -52,6 +52,7 @@ static int verify_int(char *str, intmax_t *p_value)
     return 0;
 }
 
+#define TEST_CASE_FILTER_MAX    10
 
 /**
  * \brief       Usage string.
@@ -66,9 +67,14 @@ static int verify_int(char *str, intmax_t *p_value)
     "                           %s\n\n" \
     "   Options:\n" \
     "     -v | --verbose    Display full information about each test\n" \
-    "     -h | --help       Display this information\n\n", \
+    "     -h | --help       Display this information\n" \
+    "     -f | --filter     Execute only test cases containing the provided\n" \
+    "                       filter string. Multiple filters can be provided\n" \
+    "                       up to %d." \
+    "\n", \
     argv[0], \
-    "TESTCASE_FILENAME"
+    "TESTCASE_FILENAME", \
+    TEST_CASE_FILTER_MAX
 
 
 /** A variable-size text buffer. */
@@ -508,6 +514,25 @@ static void try_chdir_if_supported(const char *argv0)
 #endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
+ * \brief Check if the given test case should be filtered out or not.
+ *
+ * \param test_case     The name of the test case to be evaluated.
+ * \param filters       Array of filters to be checked against.
+ * \param filters_count The number of items in \p filters
+ * \return int          1 if the test should be filtered out; 0 otherwise.
+ */
+static int is_test_case_filtered_out(const char *test_case, const char **filters,
+                                     int filters_count)
+{
+    for (int i = 0; i < filters_count; i++) {
+        if (strstr(test_case, filters[i]) != NULL) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/**
  * \brief       Desktop implementation of execute_tests().
  *              Parses command line and executes tests from
  *              supplied or default data file.
@@ -523,6 +548,8 @@ static int execute_tests(int argc, const char **argv)
     const char *default_filename = "DATA_FILE";
     const char *test_filename = NULL;
     const char **test_files = NULL;
+    const char *test_case_filters[TEST_CASE_FILTER_MAX] = { NULL };
+    int test_case_filters_count = 0;
     size_t testfile_count = 0;
     int option_verbose = 0;
     size_t function_id = 0;
@@ -597,6 +624,18 @@ static int execute_tests(int argc, const char **argv)
                    strcmp(next_arg, "-h") == 0) {
             mbedtls_fprintf(stdout, USAGE);
             mbedtls_exit(EXIT_SUCCESS);
+        } else if (strcmp(next_arg, "--filter") == 0 ||
+                   strcmp(next_arg, "-f") == 0) {
+            if (test_case_filters_count >= TEST_CASE_FILTER_MAX) {
+                mbedtls_fprintf(stderr, "Too many test filters specified.\n");
+                mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+            }
+            if (++arg_index >= argc) {
+                mbedtls_fprintf(stderr, "Missing filter value!\n");
+                mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+            }
+            test_case_filters[test_case_filters_count] = argv[arg_index];
+            test_case_filters_count++;
         } else {
             /* Not an option, therefore treat all further arguments as the file
              * list.
@@ -651,6 +690,20 @@ static int execute_tests(int argc, const char **argv)
             if (length == (size_t) -1) {
                 break;
             }
+
+            /* Apply filters on test cases (if any). */
+            if (test_case_filters[0] != NULL) {
+                if (is_test_case_filtered_out(line.content, test_case_filters,
+                                              test_case_filters_count)) {
+                    /* Skip the next 2 lines (i.e. depends_on and the test function) */
+                    length = get_line(file, &line);
+                    if (strncmp(line.content, "depends_on:", 11) == 0) {
+                        length = get_line(file, &line);
+                    }
+                    continue;
+                }
+            }
+
             mbedtls_fprintf(stdout, "%s%.66s",
                             mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", line.content);
