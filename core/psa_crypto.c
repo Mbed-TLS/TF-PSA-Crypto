@@ -1384,7 +1384,7 @@ psa_status_t psa_export_key_internal(
         PSA_KEY_TYPE_IS_RSA(type)   ||
         PSA_KEY_TYPE_IS_ECC(type)   ||
         PSA_KEY_TYPE_IS_DH(type)    ||
-        PSA_KEY_TYPE_IS_ML_DSA(type)){
+        PSA_KEY_TYPE_IS_ML_DSA(type)) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
