@@ -46,11 +46,7 @@ static const psa_spake2p_curve_info_t spake2p_known_curves[] =
 #else
     { PSA_ECC_FAMILY_SECP_R1, 66, 133, MBEDTLS_ECP_DP_SECP521R1, 521, 0 },
 #endif
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_25519)
-    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 32, 32, MBEDTLS_ECP_DP_25519, 255, 0 }, /* Twisted Edwards curve is not supported */
-#else
-    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 32, 32, MBEDTLS_ECP_DP_NONE, 255, 0 },
-#endif
+    { PSA_ECC_FAMILY_TWISTED_EDWARDS, 32, 32, MBEDTLS_ECP_DP_NONE, 255, 0 }, /* Twisted Edwards curve is not supported */
     /* Sentinel so that the array is never empty. Family 0 is not a valid
      * PSA ECC family, so this entry never matches a lookup. */
     { 0, 0, 0, MBEDTLS_ECP_DP_NONE, 0, 0 },
