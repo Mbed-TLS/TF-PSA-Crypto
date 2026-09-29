@@ -6,24 +6,25 @@
 ## SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
 import sys
-from typing import List
+from typing import Iterator
 
 import maintainer_scripts_path # pylint: disable=unused-import
-from mbedtls_framework import test_data_generation
+from mbedtls_framework import test_case, test_data_generation
 from mbedtls_maintainer import mldsa_test_generator
 
 
 class MLDSADispatchGenerator(mldsa_test_generator.DispatchGenerator):
-    """Generate dispatch tests with TF-PSA-Crypto dependencies."""
+    """Generate dispatch tests supported by TF-PSA-Crypto."""
 
-    def multipart_dependencies(self, key: mldsa_test_generator.Key,
-                               type_is_pair: bool) -> List[str]:
-        dependencies = super().multipart_dependencies(key, type_is_pair)
-
-        if type_is_pair:
-            dependencies.append('PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR')
-
-        return dependencies
+    def gen_multipart(
+            self, key: mldsa_test_generator.Key
+    ) -> Iterator[test_case.TestCase]:
+        for generated_test in super().gen_multipart(key):
+            if generated_test.function == 'sign_deterministic_multipart':
+                generated_test.skip_because(
+                    'ML-DSA key-pair is currently unsupported'
+                )
+            yield generated_test
 
 
 class MLDSATestGenerator(test_data_generation.TestGenerator):
