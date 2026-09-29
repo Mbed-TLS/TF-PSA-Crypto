@@ -408,12 +408,16 @@ int mbedtls_asn1_write_integer(unsigned char **p,
     const unsigned char *integer_start = NULL;
 
     // asn1 specifies that the bignum must be encoded in the minimum allowable space, so leading zeros must be removed.
-    while ((number_of_leading_zeros < integer_length)
-           && (integer[number_of_leading_zeros] == 0x0)) {
-        number_of_leading_zeros++;
-    }
-
-    if (integer != NULL) {
+    if (integer == NULL) {
+        if (integer_length > 0) {
+            return MBEDTLS_ERR_ASN1_BAD_INPUT_DATA;
+        }
+        number_of_leading_zeros = 0;
+    } else {
+        while ((number_of_leading_zeros < integer_length)
+               && (integer[number_of_leading_zeros] == 0x0)) {
+            number_of_leading_zeros++;
+        }
         integer_start = integer + number_of_leading_zeros;
     }
 
