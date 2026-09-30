@@ -1457,23 +1457,3 @@ component_test_pqcp_buffer_alloc_pthread_hooks () {
     msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread+hooks"
     ctest
 }
-
-# >>> TEMPORARY COMPONENT <<<
-# This is meant to test the builtin Blake2 module until its functionalities
-# are supported through PSA Crypto API (issue #932). Once that will be done
-# this component can be removed.
-component_test_blake2_builtin_module () {
-        msg "build: enable Blake2 builtin module"
-
-        # Default configuration is fine, we don't need fancy stuff. Just add
-        # the build symbols for Blake2 builtin support to build the code and
-        # tests.
-        cd $OUT_OF_SOURCE_DIR
-        cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
-              -DCMAKE_C_FLAGS="-DMBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 -DMBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512" \
-              "$TF_PSA_CRYPTO_ROOT_DIR"
-        cmake --build .
-
-        msg "test: "
-        ctest -R "blake2"
-}
