@@ -66,6 +66,10 @@ psa_status_t psa_mac_key_can_do(
     psa_algorithm_t algorithm,
     psa_key_type_t key_type);
 
+psa_status_t psa_sign_verify_check_alg(
+    int input_is_message,
+    psa_algorithm_t alg);
+
 psa_status_t psa_crypto_copy_input(const uint8_t *input, size_t input_len,
                                    uint8_t *input_copy, size_t input_copy_len);
 
