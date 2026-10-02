@@ -724,6 +724,32 @@ psa_status_t psa_import_key_into_slot(
 #endif /* (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT) &&
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+        /* ML-DSA public keys are stored as-is: the core only validates
+         * the key data length against the parameter set. */
+        if (type == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
+            if (attributes->bits != 0 && attributes->bits != 87) {
+                /* The parameter set is not supported. */
+                return PSA_ERROR_NOT_SUPPORTED;
+            }
+            if (data_length != PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            /* Copy the key material. */
+            memcpy(key_buffer, data, data_length);
+            *key_buffer_length = data_length;
+            *bits = 87;
+            (void) key_buffer_size;
+
+            return PSA_SUCCESS;
+#else
+            /* Only the parameter set 87 is supported for now. */
+            return PSA_ERROR_NOT_SUPPORTED;
+#endif /* PSA_WANT_KEY_TYPE_ML_DSA_87 */
+        }
+#endif /* PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY */
+
     }
 
     return PSA_ERROR_NOT_SUPPORTED;
@@ -1349,7 +1375,11 @@ psa_status_t psa_export_key_internal(
     if (key_type_is_raw_bytes(type) ||
         PSA_KEY_TYPE_IS_RSA(type)   ||
         PSA_KEY_TYPE_IS_ECC(type)   ||
-        PSA_KEY_TYPE_IS_DH(type)) {
+        PSA_KEY_TYPE_IS_DH(type)
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+        || type == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY
+#endif
+        ) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
@@ -1421,7 +1451,11 @@ psa_status_t psa_export_public_key_internal(
 
     if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) &&
         (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type) ||
-         PSA_KEY_TYPE_IS_DH(type))) {
+         PSA_KEY_TYPE_IS_DH(type)
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+         || type == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY
+#endif
+         )) {
         /* Exporting public -> public */
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,

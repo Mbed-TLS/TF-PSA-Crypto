@@ -4,9 +4,10 @@
  * \brief Macro definitions in the ML-DSA driver.
  *
  * This header is experimental.
- * Its content are likely to be moved to other headers
+ * Some of its content has started moving to other headers
  * (mostly the public headers psa/crypto_values.h and psa/crypto_sizes.h)
- * once ML-DSA is visible through the API.
+ * as ML-DSA becomes visible through the API. The public key type and the
+ * public key export size macros have moved; the rest is still here.
  */
 /*
  *  Copyright The Mbed TLS Contributors
@@ -17,14 +18,16 @@
 #define TF_PSA_CRYPTO_PRIVATE_MLDSA_H
 
 #include <psa/crypto_driver_common.h>
+#include <psa/crypto_values.h>
 
 /* Define macros for key types and algorithms here in a private header,
- * rather than in a public header, because ML-DSA is not yet supported
- * through the API. Notably:
+ * rather than in a public header, because ML-DSA is not fully supported
+ * through the API yet. Notably:
  *
- * - The size macros in <psa/crypto_sizes.h> do not take ML-DSA into account.
- * - generate_psa_tests.py must not generate ML-DSA test cases until
- *   ML-DSA is reachable through the API.
+ * - Only the ML-DSA public key type is visible through the API so far;
+ *   its definition and export size macros live in the public headers.
+ * - generate_psa_tests.py does not generate ML-DSA test cases: the
+ *   generators do not understand that the key size is a parameter set.
  */
 
 /** The type of an ML-DSA key pair.
@@ -35,13 +38,6 @@
  * 44, 65 or 87.
  */
 #define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
-
-/** The type of an ML-DSA public key.
- *
- * The `bits` attribute of the key indicates the parameter set:
- * 44, 65 or 87.
- */
-#define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
 
 /** The size of an ML-DSA key pair in the PSA representation,
  * which is just the seed.

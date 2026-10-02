@@ -534,6 +534,17 @@
 #define PSA_KEY_TYPE_IS_RSA(type)                                       \
     (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) == PSA_KEY_TYPE_RSA_PUBLIC_KEY)
 
+/** ML-DSA public key.
+ *
+ * The size of an ML-DSA key is the parameter set: 44, 65 or 87.
+ * For now, only the parameter set 87 is supported.
+ *
+ * \note The support for ML-DSA is still incomplete. In particular,
+ *       ML-DSA key pairs and ML-DSA signature algorithms are not
+ *       supported through the PSA API yet.
+ */
+#define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY              ((psa_key_type_t) 0x4002)
+
 #define PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE            ((psa_key_type_t) 0x4100)
 #define PSA_KEY_TYPE_ECC_KEY_PAIR_BASE              ((psa_key_type_t) 0x7100)
 #define PSA_KEY_TYPE_ECC_CURVE_MASK                 ((psa_key_type_t) 0x00ff)

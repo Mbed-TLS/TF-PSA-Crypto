@@ -144,6 +144,12 @@
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT    1
 #define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE  1
 //#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_DERIVE    1 /* Not supported */
+
+/* ML-DSA is experimental and disabled by default. Like the other
+ * commented-out options in this file, these symbols are automatically
+ * enabled in the full configuration (scripts/config.py full). */
+//#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1 /* Not supported yet */
+//#define PSA_WANT_KEY_TYPE_ML_DSA_87             1 /* Not supported yet */
 /** \} name SECTION Cryptographic mechanism selection (PSA API) */
 
 /**

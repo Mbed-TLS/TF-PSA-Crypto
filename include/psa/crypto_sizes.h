@@ -823,6 +823,26 @@
 #define PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(key_bits)   \
     (PSA_BITS_TO_BYTES(key_bits))
 
+/* Size of the export encoding of an ML-DSA public key.
+ *
+ * An ML-DSA public key is exported and stored as-is, so this is also
+ * the size of the raw public key.
+ *
+ * \param key_bits  The ML-DSA parameter set (44, 65 or 87).
+ *
+ * \return The public key size in bytes, or 0 if \p key_bits does not
+ *         designate a supported ML-DSA parameter set.
+ */
+#define PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits)             \
+    ((key_bits) == 44 ? 1312u :                                     \
+     (key_bits) == 65 ? 1952u :                                     \
+     (key_bits) == 87 ? 2592u :                                     \
+     0u)
+
+/* Maximum size of the export encoding of an ML-DSA public key. */
+#define PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE       \
+    PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)
+
 /** Sufficient output buffer size for psa_export_key() or
  * psa_export_public_key().
  *
@@ -867,6 +887,7 @@
      (key_type) == PSA_KEY_TYPE_RSA_PUBLIC_KEY ? PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) ? PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(key_bits) :      \
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits) : \
      PSA_BITS_TO_BYTES(key_bits)) /*unstructured; FFDH public or private*/
 
 /** Sufficient output buffer size for psa_export_public_key().
@@ -918,6 +939,7 @@
     (PSA_KEY_TYPE_IS_RSA(key_type) ? PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_ECC(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_DH(key_type) ? PSA_BITS_TO_BYTES(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits) : \
      0u)
 
 /** Sufficient buffer size for exporting any asymmetric key pair.
@@ -983,6 +1005,12 @@
 #undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
 #define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
     PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
+    (PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87) > PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
+    PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)
 #endif
 
 /* This is the name that was standardized in PSA Crypto v1.3 */
