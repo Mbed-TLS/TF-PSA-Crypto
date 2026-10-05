@@ -9,16 +9,35 @@
 /* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
 void blake2s(data_t *key, data_t *src, data_t *hash)
 {
-    tf_psa_crypto_blake2s_context ctx;
+    tf_psa_crypto_blake2s_context ctx, ctx2;
     unsigned char output[32];
     size_t outlen = hash->len;
+    size_t split_len;
 
+    /* Single call to _update(). */
     memset(output, 0x00, sizeof(output));
-
     TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, outlen, key->x, key->len), 0);
     tf_psa_crypto_blake2s_update(&ctx, src->x, src->len);
     TEST_EQUAL(tf_psa_crypto_blake2s_finish(&ctx, output, outlen), 0);
     TEST_MEMORY_COMPARE(output, outlen, hash->x, hash->len);
+
+    /* Multiple calls to _update(). While at it, validate also _clone(). It goes
+     * as follows:
+     * - initialize ctx and update it with the 1st chunk of data
+     * - clone ctx into ctx2
+     * - update ctx2 with the remaining chunk of data
+     * - finalize ctx2
+     * - check the result
+     */
+    for (split_len = 0; split_len <= src->len; split_len++) {
+        memset(output, 0x00, sizeof(output));
+        TEST_EQUAL(tf_psa_crypto_blake2s_init(&ctx, outlen, key->x, key->len), 0);
+        tf_psa_crypto_blake2s_update(&ctx, src->x, split_len);
+        tf_psa_crypto_blake2s_clone(&ctx2, &ctx);
+        tf_psa_crypto_blake2s_update(&ctx2, src->x + split_len, src->len - split_len);
+        TEST_EQUAL(tf_psa_crypto_blake2s_finish(&ctx2, output, outlen), 0);
+        TEST_MEMORY_COMPARE(output, outlen, hash->x, hash->len);
+    }
 
 exit:
     tf_psa_crypto_blake2s_free(&ctx);
@@ -28,16 +47,36 @@ exit:
 /* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
 void blake2b(data_t *key, data_t *src, data_t *hash)
 {
-    tf_psa_crypto_blake2b_context ctx;
+    tf_psa_crypto_blake2b_context ctx, ctx2;
     unsigned char output[64];
     size_t outlen = hash->len;
+    size_t split_len;
 
     memset(output, 0x00, sizeof(output));
 
+    /* Single call to _update(). */
     TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, outlen, key->x, key->len), 0);
     tf_psa_crypto_blake2b_update(&ctx, src->x, src->len);
     TEST_EQUAL(tf_psa_crypto_blake2b_finish(&ctx, output, outlen), 0);
     TEST_MEMORY_COMPARE(output, outlen, hash->x, hash->len);
+
+    /* Multiple calls to _update(). While at it, validate also _clone(). It goes
+     * as follows:
+     * - initialize ctx and update it with the 1st chunk of data
+     * - clone ctx into ctx2
+     * - update ctx2 with the remaining chunk of data
+     * - finalize ctx2
+     * - check the result
+     */
+    for (split_len = 0; split_len <= src->len; split_len++) {
+        memset(output, 0x00, sizeof(output));
+        TEST_EQUAL(tf_psa_crypto_blake2b_init(&ctx, outlen, key->x, key->len), 0);
+        tf_psa_crypto_blake2b_update(&ctx, src->x, split_len);
+        tf_psa_crypto_blake2b_clone(&ctx2, &ctx);
+        tf_psa_crypto_blake2b_update(&ctx2, src->x + split_len, src->len - split_len);
+        TEST_EQUAL(tf_psa_crypto_blake2b_finish(&ctx2, output, outlen), 0);
+        TEST_MEMORY_COMPARE(output, outlen, hash->x, hash->len);
+    }
 
 exit:
     tf_psa_crypto_blake2b_free(&ctx);
