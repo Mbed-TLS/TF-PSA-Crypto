@@ -1457,3 +1457,18 @@ component_test_pqcp_buffer_alloc_pthread_hooks () {
     msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread+hooks"
     ctest
 }
+
+component_tests_pkcs5_with_limited_pbkdf2_iteration_count() {
+    msg "build: crypto with MBEDTLS_PK_DECRYPT_MAX_ITERATIONS = 15k"
+
+    # The default configuration is already fine to test PKCS5. We just need
+    # to tweak the max iteration count.
+    scripts/config.py set MBEDTLS_PK_DECRYPT_MAX_ITERATIONS 15000
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
+
+    msg "test: crypto with MBEDTLS_PK_DECRYPT_MAX_ITERATIONS = 15k"
+    ctest -R "pkcs5-suite"
+}
