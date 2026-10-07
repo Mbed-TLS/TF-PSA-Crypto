@@ -4631,6 +4631,50 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_XTS:PSA_WANT_KEY_TYPE_AES */
+void cipher_xts_split_update(data_t *key_data, data_t *iv, data_t *input,
+                             int first_part_size_arg)
+{
+    /* XTS processes the input of a call as a whole data unit, so a data
+     * unit cannot be continued in a second call. */
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t first_part_size = first_part_size_arg;
+    unsigned char *output = NULL;
+    size_t output_length = 0;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_XTS);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len, &key));
+
+    PSA_ASSERT(psa_cipher_encrypt_setup(&operation, key, PSA_ALG_XTS));
+    PSA_ASSERT(psa_cipher_set_iv(&operation, iv->x, iv->len));
+
+    TEST_ASSERT(first_part_size < input->len);
+    TEST_CALLOC(output, input->len);
+    PSA_ASSERT(psa_cipher_update(&operation, input->x, first_part_size,
+                                 output, input->len, &output_length));
+    TEST_EQUAL(output_length, first_part_size);
+
+    TEST_EQUAL(psa_cipher_update(&operation, input->x + first_part_size,
+                                 input->len - first_part_size,
+                                 output + first_part_size,
+                                 input->len - first_part_size,
+                                 &output_length),
+               PSA_ERROR_NOT_SUPPORTED);
+
+exit:
+    psa_cipher_abort(&operation);
+    mbedtls_free(output);
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE */
 void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
                               data_t *key_data, data_t *iv,
