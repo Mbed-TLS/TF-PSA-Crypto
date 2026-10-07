@@ -1,0 +1,5 @@
+Features
+   * Add support for AES-XTS (PSA_ALG_XTS) through the PSA API, with
+     256-bit (AES-128-XTS) and 512-bit (AES-256-XTS) keys. Each call to
+     psa_cipher_update() processes one complete data unit, so a data unit
+     cannot be split over several calls. Fixes Mbed-TLS/mbedtls#6384.

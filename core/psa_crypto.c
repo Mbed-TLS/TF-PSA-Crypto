@@ -544,7 +544,12 @@ psa_status_t psa_validate_unstructured_key_bit_size(psa_key_type_t type,
             break;
 #if defined(PSA_WANT_KEY_TYPE_AES)
         case PSA_KEY_TYPE_AES:
-            if (bits != 128 && bits != 192 && bits != 256) {
+            if (bits != 128 && bits != 192 && bits != 256
+#if defined(PSA_WANT_ALG_XTS)
+                /* AES-256-XTS uses two 256-bit keys */
+                && bits != 512
+#endif
+                ) {
                 return PSA_ERROR_INVALID_ARGUMENT;
             }
             break;

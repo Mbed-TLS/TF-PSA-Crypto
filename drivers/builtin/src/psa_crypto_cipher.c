@@ -512,6 +512,17 @@ psa_status_t mbedtls_psa_cipher_update(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     size_t expected_output_size;
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_XTS)
+    if (operation->alg == PSA_ALG_XTS) {
+        /* XTS processes the whole input as one data unit, with ciphertext
+         * stealing for a partial last block, so the output is as long as
+         * the input. A data unit is at least one block long. */
+        if (input_length != 0 && input_length < operation->block_length) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        expected_output_size = input_length;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_XTS */
     if (!PSA_ALG_IS_STREAM_CIPHER(operation->alg)) {
         /* Take the unprocessed partial block left over from previous
          * update calls, if any, plus the input to this call. Remove
@@ -552,6 +563,16 @@ psa_status_t mbedtls_psa_cipher_update(
         if (*output_length > output_size) {
             return PSA_ERROR_CORRUPTION_DETECTED;
         }
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_XTS)
+        /* Each call restarts XTS from the IV, so a data unit cannot be
+         * split over several calls. Mark the data unit as complete, so that
+         * mbedtls_cipher_update() rejects more input instead of encrypting
+         * it with the same tweak. */
+        if (status == PSA_SUCCESS && operation->alg == PSA_ALG_XTS) {
+            operation->ctx.cipher.unprocessed_len = operation->block_length;
+        }
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_XTS */
     }
 
     return status;
