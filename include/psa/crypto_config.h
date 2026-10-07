@@ -2009,6 +2009,19 @@
 /* RSA OPTIONS */
 //#define MBEDTLS_RSA_GEN_KEY_MIN_BITS            1024 /**<  Minimum RSA key size that can be generated in bits (Minimum possible value is 128 bits) */
 
+/**
+ * \def MBEDTLS_PK_DECRYPT_MAX_ITERATIONS
+ *
+ * Maximum number of iterations for the PBKDF2 algorithm used when decrypting
+ * PKCS#8 private keys.
+ *
+ * As suggested in NIST SP 800-132 this value should be a compromise between
+ * security (the higher iterations the lower the probabilty an attacker can
+ * guess the key from the password) and computation time (the higher the
+ * iterations the longer it will take to compute the key).
+ */
+#define MBEDTLS_PK_DECRYPT_MAX_ITERATIONS     10000000
+
 /** \} name SECTION: Builtin drivers */
 
 /* Do not enable except for testing. Will be removed in a future minor version.
