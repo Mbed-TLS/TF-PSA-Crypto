@@ -60,6 +60,7 @@ typedef enum {
     MBEDTLS_MD_SHA3_256=0x11,  /**< The SHA3-256 message digest. */
     MBEDTLS_MD_SHA3_384=0x12,  /**< The SHA3-384 message digest. */
     MBEDTLS_MD_SHA3_512=0x13,  /**< The SHA3-512 message digest. */
+    MBEDTLS_MD_SM3=0x14,       /**< The SM3 message digest. */
 } mbedtls_md_type_t;
 
 /* Note: this should always be >= PSA_HASH_MAX_SIZE
@@ -74,7 +75,8 @@ typedef enum {
 #define MBEDTLS_MD_MAX_SIZE         64  /* longest known is SHA512 */
 #elif defined(PSA_WANT_ALG_SHA_384) || defined(PSA_WANT_ALG_SHA3_384)
 #define MBEDTLS_MD_MAX_SIZE         48  /* longest known is SHA384 */
-#elif defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA3_256)
+#elif defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA3_256) || \
+    defined(PSA_WANT_ALG_SM3)
 #define MBEDTLS_MD_MAX_SIZE         32  /* longest known is SHA256 */
 #elif defined(PSA_WANT_ALG_SHA_224) || defined(PSA_WANT_ALG_SHA3_224)
 #define MBEDTLS_MD_MAX_SIZE         28  /* longest known is SHA224 */
