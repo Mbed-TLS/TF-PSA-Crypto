@@ -434,6 +434,7 @@ sign:
                                          f_rng_blind, p_rng_blind, rs_ctx);
 
 cleanup:
+    mbedtls_platform_zeroize(data, sizeof(data));
     mbedtls_hmac_drbg_free(&rng_ctx);
     mbedtls_mpi_free(&h);
 
