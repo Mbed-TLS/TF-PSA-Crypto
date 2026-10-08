@@ -40,6 +40,7 @@
 #include "mbedtls/private/sha256.h"
 #include "mbedtls/private/sha512.h"
 #include "mbedtls/private/sha3.h"
+#include "tf-psa-crypto/private/blake2.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include <psa/crypto.h>
@@ -136,6 +137,18 @@ static const mbedtls_md_info_t mbedtls_sha3_512_info = {
 };
 #endif
 
+#if defined(PSA_WANT_ALG_BLAKE2S_HASH256) || defined(MBEDTLS_PSA_ACCEL_ALG_BLAKE2S_HASH256)
+static const mbedtls_md_info_t mbedtls_blake2s_info = {
+    MD_INFO(MBEDTLS_MD_BLAKE2S, 32, 64)
+};
+#endif
+
+#if defined(PSA_WANT_ALG_BLAKE2B_HASH512) || defined(MBEDTLS_PSA_ACCEL_ALG_BLAKE2B_HASH512)
+static const mbedtls_md_info_t mbedtls_blake2b_info = {
+    MD_INFO(MBEDTLS_MD_BLAKE2B, 64, 128)
+};
+#endif
+
 const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 {
     switch (md_type) {
@@ -182,6 +195,14 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 #if defined(PSA_WANT_ALG_SHA3_512) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return &mbedtls_sha3_512_info;
+#endif
+#if defined(PSA_WANT_ALG_BLAKE2S_HASH256) || defined(MBEDTLS_PSA_ACCEL_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            return &mbedtls_blake2s_info;
+#endif
+#if defined(PSA_WANT_ALG_BLAKE2B_HASH512) || defined(MBEDTLS_PSA_ACCEL_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            return &mbedtls_blake2b_info;
 #endif
         default:
             return NULL;
@@ -243,6 +264,14 @@ static psa_algorithm_t psa_alg_of_md(const mbedtls_md_info_t *info)
 #if defined(MBEDTLS_MD_SHA3_512_VIA_PSA)
         case MBEDTLS_MD_SHA3_512:
             return PSA_ALG_SHA3_512;
+#endif
+#if defined(MBEDTLS_MD_BLAKE2S_VIA_PSA)
+        case MBEDTLS_MD_BLAKE2S:
+            return PSA_ALG_BLAKE2S_HASH256;
+#endif
+#if defined(MBEDTLS_MD_BLAKE2B_VIA_PSA)
+        case MBEDTLS_MD_BLAKE2B:
+            return PSA_ALG_BLAKE2B_HASH512;
 #endif
         default:
             return PSA_ALG_NONE;
@@ -328,6 +357,16 @@ void mbedtls_md_free(mbedtls_md_context_t *ctx)
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
         mbedtls_sha3_free(ctx->md_ctx);
         break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+            case MBEDTLS_MD_BLAKE2S:
+                tf_psa_crypto_blake2s_free(ctx->md_ctx);
+                break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+            case MBEDTLS_MD_BLAKE2B:
+                tf_psa_crypto_blake2b_free(ctx->md_ctx);
+                break;
 #endif
             default:
                 /* Shouldn't happen */
@@ -424,6 +463,16 @@ int mbedtls_md_clone(mbedtls_md_context_t *dst,
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
     mbedtls_sha3_clone(dst->md_ctx, src->md_ctx);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            tf_psa_crypto_blake2s_clone(dst->md_ctx, src->md_ctx);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            tf_psa_crypto_blake2b_clone(dst->md_ctx, src->md_ctx);
+            break;
 #endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
@@ -526,6 +575,26 @@ int mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info
     ALLOC(sha3);
     break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            /* tf_psa_crypto_blake2s has no argument-less init function:
+             * the real initialization happens in mbedtls_md_starts(). */
+            ctx->md_ctx = mbedtls_calloc(1, sizeof(tf_psa_crypto_blake2s_context));
+            if (ctx->md_ctx == NULL) {
+                return MBEDTLS_ERR_MD_ALLOC_FAILED;
+            }
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            /* tf_psa_crypto_blake2b has no argument-less init function:
+             * the real initialization happens in mbedtls_md_starts(). */
+            ctx->md_ctx = mbedtls_calloc(1, sizeof(tf_psa_crypto_blake2b_context));
+            if (ctx->md_ctx == NULL) {
+                return MBEDTLS_ERR_MD_ALLOC_FAILED;
+            }
+            break;
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
@@ -596,6 +665,14 @@ int mbedtls_md_starts(mbedtls_md_context_t *ctx)
         case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3_starts(ctx->md_ctx, MBEDTLS_SHA3_512);
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            return tf_psa_crypto_blake2s_init(ctx->md_ctx, ctx->md_info->size, NULL, 0);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            return tf_psa_crypto_blake2b_init(ctx->md_ctx, ctx->md_info->size, NULL, 0);
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
@@ -662,6 +739,16 @@ int mbedtls_md_update(mbedtls_md_context_t *ctx, const unsigned char *input, siz
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
     return mbedtls_sha3_update(ctx->md_ctx, input, ilen);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            tf_psa_crypto_blake2s_update(ctx->md_ctx, input, ilen);
+            return 0;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            tf_psa_crypto_blake2b_update(ctx->md_ctx, input, ilen);
+            return 0;
 #endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
@@ -732,6 +819,14 @@ int mbedtls_md_finish(mbedtls_md_context_t *ctx, unsigned char *output)
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
     return mbedtls_sha3_finish(ctx->md_ctx, output, ctx->md_info->size);
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            return tf_psa_crypto_blake2s_finish(ctx->md_ctx, output, ctx->md_info->size);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            return tf_psa_crypto_blake2b_finish(ctx->md_ctx, output, ctx->md_info->size);
+#endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
@@ -798,6 +893,14 @@ int mbedtls_md(const mbedtls_md_info_t *md_info, const unsigned char *input, siz
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return mbedtls_sha3(MBEDTLS_SHA3_512, input, ilen, output, md_info->size);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+        case MBEDTLS_MD_BLAKE2S:
+            return tf_psa_crypto_blake2s(input, ilen, NULL, 0, output, md_info->size);
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+        case MBEDTLS_MD_BLAKE2B:
+            return tf_psa_crypto_blake2b(input, ilen, NULL, 0, output, md_info->size);
 #endif
         default:
             return MBEDTLS_ERR_MD_BAD_INPUT_DATA;
@@ -885,6 +988,14 @@ static const int supported_digests[] = {
     MBEDTLS_MD_SHA3_512,
 #endif
 
+#if defined(PSA_WANT_ALG_BLAKE2S_HASH256)
+    MBEDTLS_MD_BLAKE2S,
+#endif
+
+#if defined(PSA_WANT_ALG_BLAKE2B_HASH512)
+    MBEDTLS_MD_BLAKE2B,
+#endif
+
     MBEDTLS_MD_NONE
 };
 
@@ -932,6 +1043,12 @@ static const md_name_entry md_names[] = {
 #endif
 #if defined(PSA_WANT_ALG_SHA3_512)
     { "SHA3-512", MBEDTLS_MD_SHA3_512 },
+#endif
+#if defined(PSA_WANT_ALG_BLAKE2S_HASH256)
+    { "BLAKE2S", MBEDTLS_MD_BLAKE2S },
+#endif
+#if defined(PSA_WANT_ALG_BLAKE2B_HASH512)
+    { "BLAKE2B", MBEDTLS_MD_BLAKE2B },
 #endif
     { NULL, MBEDTLS_MD_NONE },
 };
