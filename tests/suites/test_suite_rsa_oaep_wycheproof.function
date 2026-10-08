@@ -1,0 +1,49 @@
+/* BEGIN_HEADER */
+#include "mbedtls/pk.h"
+#include "psa/crypto.h"
+/* Project Wycheproof RSA-OAEP decryption.
+ * Restricted to mgfSha == sha, since PSA's OAEP always uses MGF1 with the OAEP hash.
+ * Columns: <PSA hash alg>:privPkcs8:ct:label:msg:expected_valid.
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_RSA_OAEP:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_oaep_decrypt(int hash_arg, data_t* pkcs8, data_t* ct,
+    data_t* label, data_t* msg, int expected_valid)
+{
+    mbedtls_pk_context pk;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_algorithm_t alg = PSA_ALG_RSA_OAEP((psa_algorithm_t)hash_arg);
+    unsigned char out[600];
+    size_t olen = 0;
+    psa_status_t status;
+
+    mbedtls_pk_init(&pk);
+    PSA_INIT();
+
+    TEST_EQUAL(0, mbedtls_pk_parse_key(&pk, pkcs8->x, pkcs8->len, NULL, 0));
+    TEST_EQUAL(0, mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_DECRYPT, &attr));
+    psa_set_key_algorithm(&attr, alg);
+    TEST_EQUAL(0, mbedtls_pk_import_into_psa(&pk, &attr, &key_id));
+
+    status = psa_asymmetric_decrypt(key_id, alg, ct->x, ct->len,
+        label->x, label->len, out, sizeof(out), &olen);
+    if (expected_valid) {
+        PSA_ASSERT(status);
+        TEST_MEMORY_COMPARE(out, olen, msg->x, msg->len);
+    } else {
+        TEST_ASSERT(status != PSA_SUCCESS);
+    }
+
+exit:
+    psa_destroy_key(key_id);
+    mbedtls_pk_free(&pk);
+    PSA_DONE();
+}
+/* END_CASE */

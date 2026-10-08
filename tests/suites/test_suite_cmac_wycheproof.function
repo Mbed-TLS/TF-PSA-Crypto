@@ -1,0 +1,101 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/cipher.h"
+#include "mbedtls/private/cmac.h"
+
+/* Project Wycheproof AES-CMAC harness.
+ *   valid                    -> mbedtls_cmac_generate_verify
+ *   invalid + ModifiedTag    -> mbedtls_cmac_verify_modified_tag
+ *   invalid + InvalidKeySize -> mbedtls_cmac_genver_invalid_key_size
+ * The Wycheproof tag may be truncated (tagSize < block size), so only the
+ * leading tag->len bytes of the computed CMAC are compared. */
+
+/* Map an AES key length in bytes to the corresponding CIPHER macro. */
+static mbedtls_cipher_type_t wp_aes_ecb_type(size_t key_len)
+{
+    switch (key_len) {
+    case 16:
+        return MBEDTLS_CIPHER_AES_128_ECB;
+    case 24:
+        return MBEDTLS_CIPHER_AES_192_ECB;
+    case 32:
+        return MBEDTLS_CIPHER_AES_256_ECB;
+    default:
+        return MBEDTLS_CIPHER_NONE;
+    }
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CMAC_C:MBEDTLS_AES_C
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: the CMAC of msg under key must match the (possibly truncated) tag. */
+/* BEGIN_CASE */
+void mbedtls_cmac_generate_verify(data_t* key, data_t* msg, data_t* tag)
+{
+    unsigned char output[16];
+    const mbedtls_cipher_info_t* info = mbedtls_cipher_info_from_type(wp_aes_ecb_type(key->len));
+
+    BLOCK_CIPHER_PSA_INIT();
+    memset(output, 0, sizeof(output));
+
+    TEST_ASSERT(info != NULL);
+    TEST_LE_U(tag->len, sizeof(output));
+
+    TEST_EQUAL(0, mbedtls_cipher_cmac(info, key->x, key->len * 8, msg->x, msg->len, output));
+    TEST_MEMORY_COMPARE(output, tag->len, tag->x, tag->len);
+
+exit:
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector with a modified tag: the recomputed CMAC must differ from it. */
+/* BEGIN_CASE */
+void mbedtls_cmac_verify_modified_tag(data_t* key, data_t* msg, data_t* tag)
+{
+    unsigned char output[16];
+    const mbedtls_cipher_info_t* info = mbedtls_cipher_info_from_type(wp_aes_ecb_type(key->len));
+
+    BLOCK_CIPHER_PSA_INIT();
+    memset(output, 0, sizeof(output));
+
+    TEST_ASSERT(info != NULL);
+    TEST_LE_U(tag->len, sizeof(output));
+
+    TEST_EQUAL(0, mbedtls_cipher_cmac(info, key->x, key->len * 8, msg->x, msg->len, output));
+    TEST_ASSERT(memcmp(output, tag->x, tag->len) != 0);
+
+exit:
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector with an unsupported key size: CMAC setup must reject it.
+ * This test is admittedly artificial: since Mbed TLS already restricts AES-CMAC
+ * to 128/192/256 bit keys, we only compare to AES-128 and check that the key size
+ * is rejected.
+ */
+/* BEGIN_CASE */
+void mbedtls_cmac_genver_invalid_key_size(data_t* key, data_t* msg, data_t* tag)
+{
+    unsigned char output[16];
+    const mbedtls_cipher_info_t* info = mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_128_ECB);
+
+    (void)tag;
+
+    BLOCK_CIPHER_PSA_INIT();
+    memset(output, 0, sizeof(output));
+
+    TEST_ASSERT(info != NULL);
+    TEST_ASSERT(wp_aes_ecb_type(key->len) == MBEDTLS_CIPHER_NONE);
+
+    TEST_ASSERT(mbedtls_cipher_cmac(info, key->x, key->len * 8,
+                    msg->x, msg->len, output)
+        != 0);
+
+exit:
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */

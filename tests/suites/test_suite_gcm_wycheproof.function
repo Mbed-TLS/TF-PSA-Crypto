@@ -1,0 +1,121 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/gcm.h"
+
+/* Project Wycheproof AES-GCM test harness.
+ * Columns: key:iv:aad:pt:ct:tag.
+ *   - valid                  -> mbedtls_gcm_enc_dec
+ *   - invalid + ZeroLengthIv -> mbedtls_gcm_enc_dec_zero_length_iv
+ *   - invalid + ModifiedTag  -> mbedtls_gcm_dec_modified_tag
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: encryption returns (ct, tag), and authenticated decryption must recover
+ * the plaintext. */
+/* BEGIN_CASE */
+void mbedtls_gcm_enc_dec(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_gcm_context ctx;
+    unsigned char* output = NULL;
+    unsigned char tag_output[16];
+    size_t tag_len = tag->len;
+
+    BLOCK_CIPHER_PSA_INIT();
+    mbedtls_gcm_init(&ctx);
+    memset(tag_output, 0, sizeof(tag_output));
+
+    /* GCM tag is at most 16 bytes; ciphertext length equals plaintext length. */
+    TEST_LE_U(tag_len, sizeof(tag_output));
+    TEST_EQUAL(pt->len, ct->len);
+    TEST_CALLOC(output, pt->len == 0 ? 1 : pt->len);
+
+    TEST_EQUAL(0, mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key->x, key->len * 8));
+
+    /* Encrypt: output ciphertext and tag must match the test vector. */
+    TEST_EQUAL(0, mbedtls_gcm_crypt_and_tag(&ctx, MBEDTLS_GCM_ENCRYPT, pt->len, iv->x, iv->len, aad->x, aad->len, pt->x, output, tag_len, tag_output));
+    TEST_MEMORY_COMPARE(output, pt->len, ct->x, ct->len);
+    TEST_MEMORY_COMPARE(tag_output, tag_len, tag->x, tag->len);
+
+    /* Decrypt: must authenticate and recover the plaintext. */
+    memset(output, 0, pt->len == 0 ? 1 : pt->len);
+    TEST_EQUAL(0, mbedtls_gcm_auth_decrypt(&ctx, ct->len, iv->x, iv->len, aad->x, aad->len, tag->x, tag_len, ct->x, output));
+    TEST_MEMORY_COMPARE(output, ct->len, pt->x, pt->len);
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector with a modified authentication tag: authenticated decryption MUST
+ * reject it. */
+/* BEGIN_CASE */
+void mbedtls_gcm_dec_modified_tag(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_gcm_context ctx;
+    unsigned char* output = NULL;
+    size_t tag_len = tag->len;
+
+    (void)pt;
+
+    BLOCK_CIPHER_PSA_INIT();
+    mbedtls_gcm_init(&ctx);
+
+    TEST_CALLOC(output, ct->len == 0 ? 1 : ct->len);
+    TEST_EQUAL(0, mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key->x, key->len * 8));
+
+    TEST_EQUAL(MBEDTLS_ERR_GCM_AUTH_FAILED,
+        mbedtls_gcm_auth_decrypt(&ctx, ct->len, iv->x, iv->len,
+            aad->x, aad->len, tag->x, tag_len,
+            ct->x, output));
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector with a zero-length IV: forbidden by SP 800-38D 5.2.1.1, the GCM API
+ * rejects it with MBEDTLS_ERR_GCM_BAD_INPUT. */
+/* BEGIN_CASE */
+void mbedtls_gcm_enc_dec_zero_length_iv(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_gcm_context ctx;
+    unsigned char* output = NULL;
+    unsigned char tag_output[16];
+    size_t tag_len = tag->len;
+
+    (void)ct;
+    (void)tag;
+
+    BLOCK_CIPHER_PSA_INIT();
+    mbedtls_gcm_init(&ctx);
+    memset(tag_output, 0, sizeof(tag_output));
+
+    /* This harness is only for the zero-length-IV cases. */
+    TEST_EQUAL(iv->len, 0);
+    TEST_LE_U(tag_len, sizeof(tag_output));
+    TEST_CALLOC(output, pt->len == 0 ? 1 : pt->len);
+
+    TEST_EQUAL(0, mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key->x, key->len * 8));
+
+    TEST_EQUAL(MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag(&ctx, MBEDTLS_GCM_ENCRYPT, pt->len,
+            iv->x, iv->len, aad->x, aad->len,
+            pt->x, output, tag_len, tag_output));
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
