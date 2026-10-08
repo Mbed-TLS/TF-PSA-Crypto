@@ -103,6 +103,66 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
                             unsigned char output[16]);
 
 /**
+ * \brief          Internal AES-NI block encryption and decryption
+ *                 This function processes two blocks at once to benefit from
+ *                 instruction-level parallelism.
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
+ *
+ * \param ctx      AES context
+ * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
+ * \param input    Buffer containing two 16-byte input blocks
+ * \param output   Buffer with room for two 16-byte output blocks
+ *
+ * \return         0 on success (cannot fail)
+ */
+int mbedtls_aesni_crypt_ecb_2blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[2 * 16],
+                                    unsigned char output[2 * 16]);
+
+/**
+ * \brief          Internal AES-NI block encryption and decryption
+ *                 This function processes three blocks at once to benefit from
+ *                 instruction-level parallelism.
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
+ *
+ * \param ctx      AES context
+ * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
+ * \param input    Buffer containing three 16-byte input blocks
+ * \param output   Buffer with room for three 16-byte output blocks
+ *
+ * \return         0 on success (cannot fail)
+ */
+int mbedtls_aesni_crypt_ecb_3blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[3 * 16],
+                                    unsigned char output[3 * 16]);
+
+/**
+ * \brief          Internal AES-NI block encryption and decryption
+ *                 This function processes four blocks at once to benefit from
+ *                 instruction-level parallelism.
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
+ *
+ * \param ctx      AES context
+ * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
+ * \param input    Buffer containing four 16-byte input blocks
+ * \param output   Buffer with room for four 16-byte output blocks
+ *
+ * \return         0 on success (cannot fail)
+ */
+int mbedtls_aesni_crypt_ecb_4blocks(mbedtls_aes_context *ctx,
+                                    int mode,
+                                    const unsigned char input[4 * 16],
+                                    unsigned char output[4 * 16]);
+
+/**
  * \brief          Internal GCM multiplication: c = a * b in GF(2^128)
  *
  * \note           This function is only for internal use by other library
