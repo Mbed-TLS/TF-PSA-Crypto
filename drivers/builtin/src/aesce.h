@@ -17,16 +17,11 @@
 #include "tf_psa_crypto_common.h"
 
 #include "mbedtls/private/aes.h"
+#include "mbedtls/private/gcm.h"
+#include "mbedtls/private/aesce_common.h"
 
 
-#if defined(MBEDTLS_AESCE_C) \
-    && defined(MBEDTLS_ARCH_IS_ARMV8_A) && defined(MBEDTLS_HAVE_NEON_INTRINSICS) \
-    && (defined(MBEDTLS_COMPILER_IS_GCC) || defined(__clang__) || defined(MSC_VER))
-
-/* MBEDTLS_AESCE_HAVE_CODE is defined if we have a suitable target platform, and a
- * potentially suitable compiler (compiler version & flags are not checked when defining
- * this). */
-#define MBEDTLS_AESCE_HAVE_CODE
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +51,43 @@ int mbedtls_aesce_has_support_impl(void);
 
 #endif /* defined(__linux__) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY) */
 
+
+
+#if defined MBEDTLS_GCM_C
+
+/**
+ * \brief          Internal GCM multiplication: c = a * b in GF(2^128)
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
+ *
+ * \param c        Result
+ * \param a        First operand
+ * \param b        Second operand
+ *
+ * \note           Both operands and result are bit strings interpreted as
+ *                 elements of GF(2^128) as per the GCM spec.
+ */
+void mbedtls_aesce_gcm_mult(unsigned char c[16],
+                            const unsigned char a[16],
+                            const unsigned char b[16]);
+
+/**
+ * \brief          Initialise data for AES GCM computations.
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
+ *
+ * \param ctx      GCM ctx
+ * \param hash_key Hash key to be used by GCM (ie result of encrypting a block
+ *                 of zeros).
+ */
+void mbedtls_aesce_gcm_gen_table(mbedtls_gcm_context *ctx,
+                                 uint8_t hash_key[16]);
+
+#endif // MBEDTLS_GCM_C
+
+#if defined(MBEDTLS_AES_C)
 /**
  * \brief          Internal AES-ECB block encryption and decryption
  *
@@ -75,35 +107,58 @@ int mbedtls_aesce_crypt_ecb(mbedtls_aes_context *ctx,
                             unsigned char output[16]);
 
 /**
- * \brief          Internal GCM multiplication: c = a * b in GF(2^128)
+ * \brief          Internal AES-GCM encryption and decryption over multiple
+ *                 complete blocks.
  *
- * \note           This function is only for internal use by other library
- *                 functions; you must not call it directly.
- *
- * \param c        Result
- * \param a        First operand
- * \param b        Second operand
- *
- * \note           Both operands and result are bit strings interpreted as
- *                 elements of GF(2^128) as per the GCM spec.
+ * \param aes_ctx  AES context
+ * \param ctx      GCM context
+ * \param input    Input data
+ * \param output   Output data
+ * \param blocks   Number of 16-byte blocks to process
  */
-void mbedtls_aesce_gcm_mult(unsigned char c[16],
-                            const unsigned char a[16],
-                            const unsigned char b[16]);
 
+#if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 0
+
+void mbedtls_aesce_gcm_update_blocks(
+    mbedtls_aes_context *aes_ctx,
+    mbedtls_gcm_context *ctx,
+    const unsigned char *input,
+    unsigned char *output,
+    size_t blocks);
+
+#endif // MBEDTLS_AESCE_OPTIMISE_FOR_SIZE
+
+/**
+ * \brief          Internal AES-GCM partial block encryption and decryption
+ *
+ * \param aes_ctx  AES context
+ * \param ctx      GCM context
+ * \param input    16-byte input block
+ * \param output   16-byte output block
+ * \param offset   Offset within block to start from
+ * \param length   Length in bytes such that \p offset + \p len <= 16
+ */
+void mbedtls_aesce_gcm_update_block_partial(
+    mbedtls_aes_context *aes_ctx,
+    mbedtls_gcm_context *ctx,
+    const uint8_t *input,
+    uint8_t *output,
+    unsigned offset,
+    unsigned length,
+    uint8_t scratch[32]
+    );
 
 #if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
 /**
  * \brief           Internal round key inversion. This function computes
  *                  decryption round keys from the encryption round keys.
+ *                  The two contexts must be different (i.e., cannot
+ *                  operate in-place).
  *
- * \param invkey    Round keys for the equivalent inverse cipher
- * \param fwdkey    Original round keys (for encryption)
- * \param nr        Number of rounds (that is, number of round keys minus one)
+ * \param dst       AES context to write inverse keys to
+ * \param src       AES context to read forward keys from
  */
-void mbedtls_aesce_inverse_key(unsigned char *invkey,
-                               const unsigned char *fwdkey,
-                               int nr);
+void mbedtls_aesce_inverse_key(mbedtls_aes_context *dst, const  mbedtls_aes_context *src);
 #endif /* !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 /**
@@ -111,13 +166,38 @@ void mbedtls_aesce_inverse_key(unsigned char *invkey,
  *
  * \param rk        Destination buffer where the round keys are written
  * \param key       Encryption key
- * \param bits      Key size in bits (must be 128, 192 or 256)
+ * \param key_bit_length
+ *                  Key size in bits (must be 128, 192 or 256)
  *
  * \return          0 if successful, or MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
  */
-int mbedtls_aesce_setkey_enc(unsigned char *rk,
+int mbedtls_aesce_setkey_enc(mbedtls_aes_context *ctx,
+                             unsigned char *rk,
                              const unsigned char *key,
-                             size_t bits);
+                             size_t key_bit_length);
+
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+
+/**
+ * \brief          Internal AES-CTR encrypt mutiple blocks
+ *
+ * \warning        This assumes that the context specifies either 10, 12 or 14
+ *                 rounds and will behave incorrectly if this is not the case.
+ *
+ * \param ctx      AES context
+ * \param blocks   number of complete blocks to process
+ * \param counter  AES-CTR counter
+ * \param input    input stream
+ * \param output   output stream
+ */
+void mbedtls_aesce_encrypt_blocks_ctr(mbedtls_aes_context *ctx,
+                                      size_t blocks,
+                                      unsigned char counter[16],
+                                      const unsigned char *input,
+                                      unsigned char *output);
+#endif // MBEDTLS_CIPHER_MODE_CTR
+
+#endif // MBEDTLS_AES_C
 
 #ifdef __cplusplus
 }

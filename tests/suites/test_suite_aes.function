@@ -58,6 +58,61 @@ exit:
 }
 #endif
 
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+static void check_counter_wrap(unsigned len, uint8_t *ctr, size_t offset)
+{
+    unsigned char input[128];
+    unsigned char output[128];
+    uint8_t expected_ctr[16], ictr[16];
+    unsigned char key[16];
+    unsigned char stream_block[16];
+    mbedtls_aes_context ctx;
+
+    TEST_ASSERT(len <= 128);
+
+    mbedtls_aes_init(&ctx);
+    memset(key, 0, 16);
+    TEST_EQUAL(mbedtls_aes_setkey_enc(&ctx, (unsigned char *) key, 128), 0);
+
+    memcpy(ictr, ctr, 16);
+
+    // number of blocks needed for given len & offset
+    unsigned unused_stream_bytes = (16 - offset) % 16;
+    unsigned required_stream_bytes = len > unused_stream_bytes ? len - unused_stream_bytes : 0;
+    unsigned blocks = (required_stream_bytes + 15u) / 16u;
+
+    // compute expected increment to 128-bit BE counter
+    // first increment the least-significant 64-bits
+    uint64_t l64 = MBEDTLS_GET_UINT64_BE(ctr, 8);
+    int carry = 0;
+    if (l64 > (UINT64_MAX - blocks)) {
+        // check to see if this will overflow the least-significant 64 bits
+        carry = 1;
+    }
+    l64 += blocks;
+    MBEDTLS_PUT_UINT64_BE(l64, expected_ctr, 8);
+    uint64_t h64 = MBEDTLS_GET_UINT64_BE(ctr, 0);
+    // if least-significant 64-bits overflowed, increment most-significant by 1
+    h64 += carry;
+    MBEDTLS_PUT_UINT64_BE(h64, expected_ctr, 0);
+
+    // and expected offset
+    unsigned expected_offset = (len + 16 - unused_stream_bytes) % 16;
+
+    size_t nc_off = offset;
+    memset(input, 0, len);
+    memset(stream_block, 0, 16);
+    TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, len, &nc_off,
+                                     (unsigned char *) ctr, stream_block, input, output), 0);
+
+    TEST_MEMORY_COMPARE(ctr, 16, expected_ctr, 16);
+    TEST_EQUAL(nc_off, expected_offset);
+
+exit:
+    mbedtls_aes_free(&ctx);
+}
+#endif
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -135,6 +190,45 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CTR */
+void aes_encrypt_ctr_carry()
+{
+    uint64_t ctr[2];
+
+    for (unsigned len = 0; len <= 65; len++) {
+        for (unsigned offset = 0; offset < 16; offset++) {
+            for (unsigned w = 0; w <= ((len + 15) / 16) + 1; w++) {
+                // set the counter up to wrap at the 64-bit boundary
+                // after w blocks
+                //
+                // this ensures covering the cases where the carry propagation
+                // happens in the first block, middle, last block,
+                // doesn't happen, etc
+                ctr[0] = 0;
+                ctr[1] = UINT64_MAX - w;
+
+                check_counter_wrap(len, (uint8_t *) ctr, offset);
+            }
+            for (unsigned b = 0; b <= 16; b++) {
+                // aim to exercise all likely points where an implementation
+                // might need to propagate a carry
+                //
+                // set ctr to 16 bytes in the form (MSB to LSB):
+                // 0x00, 0x00 ... 0xff, 0xff
+                // where b [0..16] gives the number of non-zero bytes
+                memset(ctr, 0, 16);
+                for (unsigned i = 0; i < b; i++) {
+                    ((uint8_t *) ctr)[15 - i] = 0xff;
+                }
+                check_counter_wrap(len, (uint8_t *) ctr, offset);
+            }
+        }
+    }
+    goto exit;
+exit:;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CTR */
 void aes_encrypt_ctr_multipart(int length, int step_size)
 {
     unsigned char key[16];
@@ -191,10 +285,15 @@ void aes_encrypt_ctr_multipart(int length, int step_size)
     }
 
     // finally, validate that multiple steps produced same result as single-pass
+    // we only check the bytes of stream_block that are still usable for resumption
+    // (because when computing over complete blocks we don't need to generate a
+    // stream block for resumption).
+    size_t offset = length % 16; // number of used bytes in stream_block
+    size_t tail_len = (16 - offset) % 16; // number of unused bytes
     TEST_MEMORY_COMPARE(output_a, length, output_b, length);
     TEST_MEMORY_COMPARE(ctr_a, sizeof(ctr_a), ctr_b, sizeof(ctr_b));
-    TEST_MEMORY_COMPARE(stream_block_a, sizeof(stream_block_a),
-                        stream_block_b, sizeof(stream_block_b));
+    TEST_MEMORY_COMPARE(&stream_block_a[offset], tail_len,
+                        &stream_block_b[offset], tail_len);
     TEST_EQUAL(nc_off_a, nc_off_b);
 
 exit:
