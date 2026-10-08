@@ -704,6 +704,7 @@ component_test_full_no_cipher () {
     scripts/config.py unset PSA_WANT_ALG_OFB
     scripts/config.py unset PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128
     scripts/config.py unset PSA_WANT_ALG_STREAM_CIPHER
+    scripts/config.py unset PSA_WANT_ALG_XTS
 
     # The following modules directly depends on CIPHER_C
     scripts/config.py unset MBEDTLS_NIST_KW_C
@@ -754,6 +755,7 @@ component_test_full_no_ccm_star_no_tag () {
     scripts/config.py unset MBEDTLS_NIST_KW_C
     scripts/config.py unset PSA_WANT_ALG_CBC_NO_PADDING
     scripts/config.py unset PSA_WANT_ALG_CBC_PKCS7
+    scripts/config.py unset PSA_WANT_ALG_XTS
 
     cmake -D CMAKE_BUILD_TYPE:String=Release .
     cmake --build .
@@ -1218,10 +1220,11 @@ config_block_cipher_no_decrypt () {
     scripts/config.py unset MBEDTLS_NIST_KW_C
 
     # Enable support for cryptographic mechanisms through the PSA API.
-    # Note: XTS, KW are not yet supported via the PSA API in Mbed TLS.
+    # Note: KW is not yet supported via the PSA API in Mbed TLS.
     scripts/config.py unset PSA_WANT_ALG_CBC_NO_PADDING
     scripts/config.py unset PSA_WANT_ALG_CBC_PKCS7
     scripts/config.py unset PSA_WANT_ALG_ECB_NO_PADDING
+    scripts/config.py unset PSA_WANT_ALG_XTS
 }
 
 component_test_block_cipher_no_decrypt_aesni () {

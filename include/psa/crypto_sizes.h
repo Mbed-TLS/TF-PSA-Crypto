@@ -1045,15 +1045,21 @@
  * The resulting value will be the maximum cipher's key length given depending
  * on which ciphers are enabled.
  *
- * Note: max value for AES used below would be doubled if XTS were enabled, but
- *       this mode is currently not supported in Mbed TLS implementation of PSA
- *       APIs.
+ * Note: max value for AES used below is doubled when XTS is enabled.
  */
 #if (defined(PSA_WANT_KEY_TYPE_AES) || defined(PSA_WANT_KEY_TYPE_ARIA) || \
     defined(PSA_WANT_KEY_TYPE_CAMELLIA) || defined(PSA_WANT_KEY_TYPE_CHACHA20))
 #define PSA_CIPHER_MAX_KEY_LENGTH       32u
 #else
 #define PSA_CIPHER_MAX_KEY_LENGTH       0u
+#endif
+
+#if defined(PSA_WANT_ALG_XTS) && defined(PSA_WANT_KEY_TYPE_AES) && \
+    !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#if PSA_CIPHER_MAX_KEY_LENGTH < 64u
+#undef PSA_CIPHER_MAX_KEY_LENGTH
+#define PSA_CIPHER_MAX_KEY_LENGTH       64u
+#endif
 #endif
 
 /** The default IV size for a cipher algorithm, in bytes.
