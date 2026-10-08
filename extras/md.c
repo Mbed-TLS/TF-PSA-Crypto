@@ -252,7 +252,8 @@ static psa_algorithm_t psa_alg_of_md(const mbedtls_md_info_t *info)
 static int md_can_use_psa(const mbedtls_md_info_t *info)
 {
     psa_algorithm_t alg = psa_alg_of_md(info);
-    return alg != PSA_ALG_NONE;
+    (void) alg;
+    return 0;
 }
 #endif /* MBEDTLS_MD_SOME_PSA */
 
