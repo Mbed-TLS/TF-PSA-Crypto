@@ -493,6 +493,10 @@ component_test_psa_assume_exclusive_buffers () {
 component_test_crypto_with_static_key_slots() {
     msg "build: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
     scripts/config.py full
+    # Unset MLDSA as it requires a larger buffer size and is
+    # tested in component_test_crypto_with_static_key_slots_mldsa
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_87
     scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
     # Intentionally set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE to a value that
     # is enough to contain:
@@ -506,6 +510,22 @@ component_test_crypto_with_static_key_slots() {
     scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
 
     msg "test: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
+    CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
+    cmake --build .
+    ctest
+}
+
+component_test_crypto_with_static_key_slots_mldsa() {
+    msg "build: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS for MLDSA"
+    scripts/config.py full
+    scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
+    # Set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE to a value that
+    # supports MLDSA public keys up to 20736 bits (max of MLDSA-87).
+    scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE 2592
+    # Disable the fully dynamic key store (default on)
+    scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
+
+    msg "test: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS for MLDSA"
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     cmake --build .
     ctest
