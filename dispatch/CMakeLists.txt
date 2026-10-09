@@ -16,6 +16,15 @@ if(GEN_FILES)
             ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
     )
 
+    # Single owner of the generator. Both the shared and static dispatch
+    # object libraries list the generated wrapper as a source, so without
+    # this target a parallel build can run the generator twice.
+    add_custom_target(
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_dispatch_target
+        DEPENDS
+            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/psa_crypto_driver_wrappers_no_static.c"
+        )
 
     # List generated headers as sources explicitly. Normally CMake finds
     # headers by tracing include directives, but if that happens before the
@@ -44,6 +53,16 @@ endif(GEN_FILES)
 
 set(tf_psa_crypto_objlib "dispatch")
 include(${PROJECT_SOURCE_DIR}/objlib.cmake)
+
+if(GEN_FILES)
+    # Depend on the generation target so the wrapper is produced once, before
+    # either object library builds. Driver targets already depend on these
+    # dispatch targets, so they wait for the generated header as well.
+    foreach (target IN LISTS target_libraries)
+        add_dependencies(${target}
+            ${TF_PSA_CRYPTO_TARGET_PREFIX}libtfpsacrypto_generated_dispatch_target)
+    endforeach()
+endif(GEN_FILES)
 
 if(INSTALL_TF_PSA_CRYPTO_HEADERS)
     install(DIRECTORY "include/"
