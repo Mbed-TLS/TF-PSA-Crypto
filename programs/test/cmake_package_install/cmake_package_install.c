@@ -8,6 +8,13 @@
 
 #include <psa/crypto.h>
 
+#ifdef TEST_CUSTOM_DISPATCH
+/* Verify that the dispatch implementation is the custom one by linking with
+ * a nonstandard symbol. Real custom dispatch implementations should not have
+ * nonstandard symbols. */
+int verify_custom_dispatch(void);
+#endif
+
 /* The main reason to build this is for testing the CMake build, so the program
  * doesn't need to do very much. It calls a PSA cryptography API to ensure
  * linkage works, but that is all. */
@@ -15,5 +22,9 @@ int main()
 {
     psa_crypto_init();
 
+#ifdef TEST_CUSTOM_DISPATCH
+    return verify_custom_dispatch();
+#else
     return 0;
+#endif
 }
