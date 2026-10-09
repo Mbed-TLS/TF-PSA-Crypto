@@ -95,11 +95,11 @@ component_tf_psa_crypto_build_custom_config_file () {
     # Make a copy of config file
     cp "$CRYPTO_CONFIG_H" include/psa/crypto_config_default.h
 
-    # Build once to get the generated files (for which need an intact config file)
-    msg "build: cmake out-of-source with default config file"
-    cd "$OUT_OF_SOURCE_DIR"
-    cmake "$TF_PSA_CRYPTO_ROOT_DIR"
-    make
+    # Later steps rebuild with GEN_FILES=OFF, which uses the source-tree
+    # copies of generated files. Generate them now, while the config header
+    # is still intact.
+    framework/scripts/make_generated_files.py
+    generated_files=$(framework/scripts/make_generated_files.py --list)
 
     msg "build: cmake out-of-source with -DMBEDTLS_CONFIG_FILE"
     cd "$TF_PSA_CRYPTO_ROOT_DIR"
@@ -132,11 +132,6 @@ component_tf_psa_crypto_build_custom_config_file () {
     # Restore config for the in-tree test
     cp include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
 
-    # Build once to get the generated files (for which need an intact config)
-    msg "build: cmake in-tree with default config file"
-    cmake .
-    make
-
     msg "build: cmake in-tree with -DTF_PSA_CRYPTO_CONFIG_FILE"
     cp include/psa/crypto_config.h crypto_config_custom.h
 
@@ -159,6 +154,7 @@ component_tf_psa_crypto_build_custom_config_file () {
     # Restore default crypto config file and remove generated ones
     mv include/psa/crypto_config_default.h "$CRYPTO_CONFIG_H"
     rm -f crypto_config_custom.h crypto_config_user.h
+    rm -rf $generated_files
 }
 
 component_tf_psa_crypto_build_config_name () {

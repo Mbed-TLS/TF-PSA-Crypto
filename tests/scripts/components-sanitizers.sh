@@ -41,16 +41,22 @@ component_tf_psa_crypto_test_memsan_constant_flow_psa () {
     scripts/config.py full
     scripts/config.py unset MBEDTLS_AESNI_C # memsan doesn't grok asm
     scripts/config.py unset MBEDTLS_HAVE_ASM
-    cd $OUT_OF_SOURCE_DIR
-    cmake -DCMAKE_C_COMPILER=clang -DGEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
-    make
+    # Setting MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN makes generation of some files
+    # fail, so generate them in the source tree first (as in a release) and
+    # then build with GEN_FILES=OFF.
+    framework/scripts/make_generated_files.py
+    generated_files=$(framework/scripts/make_generated_files.py --list)
 
-    $TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN
+    scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN
+    cd $OUT_OF_SOURCE_DIR
     cmake -DCMAKE_C_COMPILER=clang -DGEN_FILES=OFF -DCMAKE_BUILD_TYPE:String=MemSan "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites (Msan + constant flow)"
     make test
+
+    cd "$TF_PSA_CRYPTO_ROOT_DIR"
+    rm -rf $generated_files
 }
 
 component_release_tf_psa_crypto_test_valgrind_constant_flow_no_asm () {
