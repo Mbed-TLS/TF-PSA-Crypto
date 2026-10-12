@@ -26,12 +26,20 @@ if(TF_PSA_CRYPTO_DISPATCH_DIR)
 endif()
 
 execute_process(
-    COMMAND "${CMAKE_COMMAND}" ${tf_psa_crypto_cmake_args})
+    COMMAND "${CMAKE_COMMAND}" ${tf_psa_crypto_cmake_args}
+    RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Configuring TF-PSA-Crypto failed: ${result}")
+endif()
 
 execute_process(
     COMMAND "${CMAKE_COMMAND}"
         --build "${TF-PSA-Crypto_BINARY_DIR}"
-        --target install)
+        --target install
+    RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Building and installing TF-PSA-Crypto failed: ${result}")
+endif()
 
 #
 # Locate the package.
