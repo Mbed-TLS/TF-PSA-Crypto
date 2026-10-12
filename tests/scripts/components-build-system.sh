@@ -51,9 +51,16 @@ component_test_tf_psa_crypto_as_subdirectory_custom_dispatch () {
     cp programs/test/cmake_subproject/custom.CMakeLists.txt \
         programs/test/cmake_subproject/custom/CMakeLists.txt
     scripts/generate_driver_wrappers.py programs/test/cmake_subproject/custom
+    # Hide the in-tree dispatch directory so that any remaining reference to
+    # it fails the build. The EXIT trap restores it even if the build fails.
+    mv dispatch dispatch.bak
+    trap 'mv "$TF_PSA_CRYPTO_ROOT_DIR/dispatch.bak" "$TF_PSA_CRYPTO_ROOT_DIR/dispatch"' EXIT
     cd programs/test/cmake_subproject
-    # Note: Explicitly generate files as these are turned off in releases
-    cmake -D GEN_FILES=ON -DTF_PSA_CRYPTO_DISPATCH_DIR="$PWD/custom" .
+    # Note: Explicitly generate files as these are turned off in releases.
+    # Tests and programs are disabled because generating their data files
+    # requires the in-tree dispatch headers.
+    cmake -D GEN_FILES=ON -D ENABLE_TESTING=OFF -D ENABLE_PROGRAMS=OFF \
+        -DTF_PSA_CRYPTO_DISPATCH_DIR="$PWD/custom" .
     make
     ./cmake_subproject
 }
@@ -94,6 +101,10 @@ component_test_tf_psa_crypto_cmake_as_package_install_custom_dispatch () {
     cp programs/test/cmake_package_install/custom.CMakeLists.txt \
         programs/test/cmake_package_install/custom/CMakeLists.txt
     scripts/generate_driver_wrappers.py programs/test/cmake_package_install/custom
+    # Hide the in-tree dispatch directory so that any remaining reference to
+    # it fails the build. The EXIT trap restores it even if the build fails.
+    mv dispatch dispatch.bak
+    trap 'mv "$TF_PSA_CRYPTO_ROOT_DIR/dispatch.bak" "$TF_PSA_CRYPTO_ROOT_DIR/dispatch"' EXIT
     cd programs/test/cmake_package_install
     cmake -DTF_PSA_CRYPTO_DISPATCH_DIR="$PWD/custom" .
     make
