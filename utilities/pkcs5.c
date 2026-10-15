@@ -72,6 +72,13 @@ static int pkcs5_parse_pbkdf2_params(const mbedtls_asn1_buf *params,
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PKCS5_INVALID_FORMAT, ret);
     }
 
+    /* RFC 8018 section 4.2 requires iterationCount to be at least 1.
+     * Accepting 0 would derive the key from a single HMAC block, letting the
+     * producer of the EncryptedPrivateKeyInfo weaken the KDF cost. */
+    if (*iterations < 1) {
+        return MBEDTLS_ERR_PKCS5_INVALID_FORMAT;
+    }
+
     if (p == end) {
         return 0;
     }
@@ -173,9 +180,14 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
     }
 
     /*
-     * The value of keylen from pkcs5_parse_pbkdf2_params() is ignored
-     * since it is optional and we don't know if it was set or not
+     * The keyLength parameter is optional (0 = absent), but when present
+     * RFC 8018 section A.2 requires it to equal the encryption scheme's
+     * key length; a mismatch means the parameters are malformed.
      */
+    if (keylen != 0 &&
+        keylen != (int) mbedtls_cipher_info_get_key_bitlen(cipher_info) / 8) {
+        return MBEDTLS_ERR_PKCS5_INVALID_FORMAT;
+    }
     keylen = (int) mbedtls_cipher_info_get_key_bitlen(cipher_info) / 8;
 
     if (enc_scheme_params.tag != MBEDTLS_ASN1_OCTET_STRING ||
