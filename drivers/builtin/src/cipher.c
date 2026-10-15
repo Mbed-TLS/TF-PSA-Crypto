@@ -250,7 +250,11 @@ int mbedtls_cipher_set_iv(mbedtls_cipher_context_t *ctx,
     }
 
 #if defined(MBEDTLS_CHACHA20_C)
-    if (((mbedtls_cipher_type_t) ctx->cipher_info->type) == MBEDTLS_CIPHER_CHACHA20) {
+    if (MBEDTLS_CT_SPEC_RISKY_BOOL(ctx->cipher_info->type ==
+                                   MBEDTLS_CIPHER_CHACHA20)) {
+        MBEDTLS_CT_NULLIFY_IF_SPECULATING_EQ(ctx,
+                                             ctx->cipher_info->type,
+                                             MBEDTLS_CIPHER_CHACHA20);
         /* Even though the actual_iv_size is overwritten with a correct value
          * of 12 from the cipher info, return an error to indicate that
          * the input iv_len is wrong. */
@@ -273,7 +277,11 @@ int mbedtls_cipher_set_iv(mbedtls_cipher_context_t *ctx,
 #endif
 
 #if defined(MBEDTLS_GCM_C)
-    if (MBEDTLS_MODE_GCM == ((mbedtls_cipher_mode_t) ctx->cipher_info->mode)) {
+    if (MBEDTLS_CT_SPEC_RISKY_BOOL(MBEDTLS_MODE_GCM ==
+                                   ctx->cipher_info->mode)) {
+        MBEDTLS_CT_NULLIFY_IF_SPECULATING_EQ(ctx,
+                                             MBEDTLS_MODE_GCM,
+                                             ctx->cipher_info->mode);
         return mbedtls_gcm_starts((mbedtls_gcm_context *) ctx->cipher_ctx,
                                   ctx->operation,
                                   iv, iv_len);
@@ -338,14 +346,22 @@ int mbedtls_cipher_update_ad(mbedtls_cipher_context_t *ctx,
     }
 
 #if defined(MBEDTLS_GCM_C)
-    if (MBEDTLS_MODE_GCM == ((mbedtls_cipher_mode_t) ctx->cipher_info->mode)) {
+    if (MBEDTLS_CT_SPEC_RISKY_BOOL(MBEDTLS_MODE_GCM ==
+                                   ctx->cipher_info->mode)) {
+        MBEDTLS_CT_NULLIFY_IF_SPECULATING_EQ(ctx,
+                                             MBEDTLS_MODE_GCM,
+                                             ctx->cipher_info->mode);
         return mbedtls_gcm_update_ad((mbedtls_gcm_context *) ctx->cipher_ctx,
                                      ad, ad_len);
     }
 #endif
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-    if (MBEDTLS_CIPHER_CHACHA20_POLY1305 == ((mbedtls_cipher_type_t) ctx->cipher_info->type)) {
+    if (MBEDTLS_CT_SPEC_RISKY_BOOL(MBEDTLS_CIPHER_CHACHA20_POLY1305 ==
+                                   ctx->cipher_info->type)) {
+        MBEDTLS_CT_NULLIFY_IF_SPECULATING_EQ(ctx,
+                                             MBEDTLS_CIPHER_CHACHA20_POLY1305,
+                                             ctx->cipher_info->type);
         int result;
         mbedtls_chachapoly_mode_t mode;
 
@@ -402,7 +418,11 @@ int mbedtls_cipher_update(mbedtls_cipher_context_t *ctx, const unsigned char *in
     }
 
 #if defined(MBEDTLS_GCM_C)
-    if (((mbedtls_cipher_mode_t) ctx->cipher_info->mode) == MBEDTLS_MODE_GCM) {
+    if (MBEDTLS_CT_SPEC_RISKY_BOOL(MBEDTLS_MODE_GCM ==
+                                   ctx->cipher_info->mode)) {
+        MBEDTLS_CT_NULLIFY_IF_SPECULATING_EQ(ctx,
+                                             MBEDTLS_MODE_GCM,
+                                             ctx->cipher_info->mode);
         return mbedtls_gcm_update((mbedtls_gcm_context *) ctx->cipher_ctx,
                                   input, ilen,
                                   output, ilen, olen);
@@ -422,11 +442,18 @@ int mbedtls_cipher_update(mbedtls_cipher_context_t *ctx, const unsigned char *in
 #endif
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-    if (((mbedtls_cipher_type_t) ctx->cipher_info->type) == MBEDTLS_CIPHER_CHACHA20_POLY1305) {
+    if (MBEDTLS_CT_SPEC_RISKY_BOOL(MBEDTLS_CIPHER_CHACHA20_POLY1305 ==
+                                   ctx->cipher_info->type)) {
+        MBEDTLS_CT_NULLIFY_IF_SPECULATING_EQ(ctx,
+                                             MBEDTLS_CIPHER_CHACHA20_POLY1305,
+                                             ctx->cipher_info->type);
         *olen = ilen;
         return mbedtls_chachapoly_update((mbedtls_chachapoly_context *) ctx->cipher_ctx,
                                          ilen, input, output);
     }
+    MBEDTLS_CT_NULLIFY_IF_SPECULATING_NE(ctx,
+                                         MBEDTLS_CIPHER_CHACHA20_POLY1305,
+                                         ctx->cipher_info->type);
 #endif
 
     if (input == output &&
