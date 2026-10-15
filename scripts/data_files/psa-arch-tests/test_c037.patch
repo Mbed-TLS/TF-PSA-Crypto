@@ -1,0 +1,15 @@
+diff --git a/api-tests/dev_apis/crypto/test_c037/test_data.h b/api-tests/dev_apis/crypto/test_c037/test_data.h
+index 33c92a8..66331fe 100644
+--- a/api-tests/dev_apis/crypto/test_c037/test_data.h
++++ b/api-tests/dev_apis/crypto/test_c037/test_data.h
+@@ -288,8 +288,8 @@ static const test_data check1[] = {
+     .iv_length              = 16,
+     .input                  = ciphertext_1,
+     .input_length           = 5,
+-    .output                 = NULL,
+-    .output_size            = 0,
++    .output                 = expected_output,
++    .output_size            = 5,
+     .expected_output        = NULL,
+     .expected_output_length = 0,
+     .expected_status        = PSA_ERROR_INVALID_ARGUMENT
