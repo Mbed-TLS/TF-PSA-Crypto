@@ -20,4 +20,7 @@
 #define MBEDTLS_PSA_ACCEL_ALG_SHAKE128
 #define MBEDTLS_PSA_ACCEL_ALG_SHAKE256
 
+#define MBEDTLS_PSA_ACCEL_ALG_BLAKE2S_HASH256
+#define MBEDTLS_PSA_ACCEL_ALG_BLAKE2B_HASH512
+
 #include "user-config-test-driver-extension.h"
