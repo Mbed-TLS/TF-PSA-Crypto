@@ -1,0 +1,119 @@
+/* BEGIN_HEADER */
+#include "mbedtls/pk.h"
+#include "psa/crypto.h"
+
+/* Project Wycheproof ECDH harnesses, with one .data file per curve.
+ * Columns: <PSA_ECC_FAMILY_*>:bits:privScalar:peerPoint:shared:result
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:PSA_WANT_ALG_ECDH
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mbedtls_ecdh_compute(int family, int bits, data_t* priv, data_t* peer,
+    data_t* shared, int result)
+{
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    unsigned char out[PSA_BITS_TO_BYTES(521)];
+    size_t olen = 0;
+    psa_status_t status;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attr, PSA_ALG_ECDH);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR((psa_ecc_family_t)family));
+    psa_set_key_bits(&attr, (size_t)bits);
+    PSA_ASSERT(psa_import_key(&attr, priv->x, priv->len, &key));
+
+    status = psa_raw_key_agreement(PSA_ALG_ECDH, key, peer->x, peer->len,
+        out, sizeof(out), &olen);
+
+    if (result == 2) {
+        /* Valid tests, the output MAC must match the test vector. */
+        PSA_ASSERT(status);
+        TEST_MEMORY_COMPARE(out, olen, shared->x, shared->len);
+    } else if (result == 1) {
+        /* Acceptable tests, if the operation succeeds the output MAC must match the test vector. */
+        if (status == PSA_SUCCESS) {
+            TEST_MEMORY_COMPARE(out, olen, shared->x, shared->len);
+        }
+    } else {
+        /* Invalid tests, the operation must fail. */
+        TEST_ASSERT(status != PSA_SUCCESS);
+    }
+
+exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C */
+void mbedtls_ecdh_compute_der(int family, int bits, data_t* priv,
+    data_t* peer_der, data_t* shared, int result)
+{
+    mbedtls_pk_context pk;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t peer = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t peer_attr = PSA_KEY_ATTRIBUTES_INIT;
+    unsigned char point[PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE(
+        PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1), 521)];
+    unsigned char out[PSA_BITS_TO_BYTES(521)];
+    size_t point_len = 0, olen = 0;
+    psa_status_t status;
+
+    mbedtls_pk_init(&pk);
+    PSA_INIT();
+
+    /* Use `mbedtls_pk_*` to test the DER parser. */
+    if (mbedtls_pk_parse_public_key(&pk, peer_der->x, peer_der->len) != 0) {
+        TEST_ASSERT(result != 2);
+        goto exit;
+    }
+
+    /* Import into PSA to validate the point and exercise the PSA API. */
+    if (mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_VERIFY_HASH,
+            &peer_attr)
+            != 0
+        || mbedtls_pk_import_into_psa(&pk, &peer_attr, &peer) != PSA_SUCCESS || psa_export_public_key(peer, point, sizeof(point), &point_len) != PSA_SUCCESS) {
+        TEST_ASSERT(result != 2);
+        goto exit;
+    }
+
+    /* Finally, the operation, which must succeed for valid tests, must fail for
+     * invalid ones (that haven't been rejected already), and acceptable tests must
+     * match the shared secret _if_ the operation succeeds.
+     */
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attr, PSA_ALG_ECDH);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR((psa_ecc_family_t)family));
+    psa_set_key_bits(&attr, (size_t)bits);
+    PSA_ASSERT(psa_import_key(&attr, priv->x, priv->len, &key));
+
+    status = psa_raw_key_agreement(PSA_ALG_ECDH, key, point, point_len,
+        out, sizeof(out), &olen);
+
+    if (result == 2) {
+        PSA_ASSERT(status);
+        TEST_MEMORY_COMPARE(out, olen, shared->x, shared->len);
+    } else if (result == 1) {
+        if (status == PSA_SUCCESS) {
+            TEST_MEMORY_COMPARE(out, olen, shared->x, shared->len);
+        }
+    } else {
+        TEST_ASSERT(status != PSA_SUCCESS);
+    }
+
+exit:
+    mbedtls_pk_free(&pk);
+    psa_destroy_key(key);
+    psa_destroy_key(peer);
+    PSA_DONE();
+}
+/* END_CASE */

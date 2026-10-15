@@ -1,0 +1,127 @@
+/* BEGIN_HEADER */
+#include "mbedtls/nist_kw.h"
+#include <string.h>
+
+/* Project Wycheproof AES Key Wrap (NIST KW / KWP) test harness.
+ * Columns: mode:key:msg:ct
+ *   - valid   -> wycheproof_nist_kw_valid           (wrap returns ct, unwrap recovers msg)
+ *   - invalid -> wycheproof_nist_kw_unwrap_invalid  (unwrap must not recover msg)
+ */
+
+static int setup_psa_key(int usage,
+    int alg,
+    int key_type,
+    mbedtls_svc_key_id_t* key_id,
+    const data_t* key)
+{
+    int ok = 1;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, key_id));
+    ok = PSA_SUCCESS;
+exit:
+    return ok;
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_NIST_KW_C:PSA_WANT_KEY_TYPE_AES
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: wrapping return ct, unwrapping returns msg. */
+/* BEGIN_CASE */
+void wycheproof_nist_kw_valid(int mode, data_t* key, data_t* msg, data_t* ct)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char* wrapped = NULL;
+    unsigned char* unwrapped = NULL;
+    size_t wrapped_len = 0, unwrapped_len = 0;
+    /* Unwrap output is at most (ciphertext - 8 bytes), see nist_kw.h. */
+    size_t pt_size = (ct->len > 8) ? ct->len - 8 : 1;
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+        PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES,
+        &key_id, key));
+
+    /* Wrap: compare to the ciphertext. */
+    TEST_CALLOC(wrapped, ct->len == 0 ? 1 : ct->len);
+    PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len,
+        wrapped, ct->len, &wrapped_len));
+    TEST_MEMORY_COMPARE(wrapped, wrapped_len, ct->x, ct->len);
+
+    /* Unwrap: must authenticate and recover the original msg. */
+    TEST_CALLOC(unwrapped, pt_size);
+    PSA_ASSERT(mbedtls_nist_kw_unwrap(key_id, mode, ct->x, ct->len,
+        unwrapped, pt_size, &unwrapped_len));
+    TEST_MEMORY_COMPARE(unwrapped, unwrapped_len, msg->x, msg->len);
+
+exit:
+    mbedtls_free(wrapped);
+    mbedtls_free(unwrapped);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector: unwrapping an invalid ciphertext must not release the original
+ * message.
+ */
+/* BEGIN_CASE */
+void wycheproof_nist_kw_unwrap_invalid(int mode, data_t* key, data_t* msg, data_t* ct)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char* out = NULL;
+    size_t out_len = 0;
+    size_t out_size = (ct->len > 8) ? ct->len - 8 : 1;
+    int ret;
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_DECRYPT, PSA_ALG_ECB_NO_PADDING,
+        PSA_KEY_TYPE_AES, &key_id, key));
+    TEST_CALLOC(out, out_size);
+
+    ret = mbedtls_nist_kw_unwrap(key_id, mode, ct->x, ct->len,
+        out, out_size, &out_len);
+
+    if (ret == 0) {
+        /* Unwrap accepted it: acceptable if it did not recover the message. */
+        TEST_ASSERT(out_len != msg->len || (msg->len != 0 && memcmp(out, msg->x, msg->len) != 0));
+    }
+
+exit:
+    mbedtls_free(out);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void wycheproof_nist_kw_acceptable(int mode, data_t* key, data_t* msg, data_t* ct)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char* out = NULL;
+    size_t out_len = 0;
+    size_t out_size = (ct->len > 8) ? ct->len - 8 : 1;
+    int ret;
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_DECRYPT, PSA_ALG_ECB_NO_PADDING,
+        PSA_KEY_TYPE_AES, &key_id, key));
+    TEST_CALLOC(out, out_size);
+
+    ret = mbedtls_nist_kw_unwrap(key_id, mode, ct->x, ct->len,
+        out, out_size, &out_len);
+
+    if (ret == 0) {
+        TEST_MEMORY_COMPARE(out, out_len, msg->x, msg->len);
+    }
+
+exit:
+    mbedtls_free(out);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */

@@ -1,0 +1,83 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/gcm.h"
+#include <string.h>
+
+/* Project Wycheproof ARIA-GCM test harness.
+ * Columns: key:iv:aad:pt:ct:tag
+ *   - valid   -> mbedtls_aria_gcm_enc_dec
+ *   - invalid -> mbedtls_aria_gcm_dec_invalid   (ModifiedTag / ZeroLengthIv)
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_ARIA
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: encryption returns (ct, tag), and authenticated
+ * decryption must recover the plaintext after correctly validating the MAC tag. */
+/* BEGIN_CASE */
+void mbedtls_aria_gcm_enc_dec(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_gcm_context ctx;
+    unsigned char* output = NULL;
+    unsigned char tag_output[16];
+    size_t tag_len = tag->len;
+
+    BLOCK_CIPHER_PSA_INIT();
+    mbedtls_gcm_init(&ctx);
+    memset(tag_output, 0, sizeof(tag_output));
+
+    TEST_LE_U(tag_len, sizeof(tag_output));
+    TEST_EQUAL(pt->len, ct->len);
+    TEST_CALLOC(output, pt->len == 0 ? 1 : pt->len);
+
+    TEST_EQUAL(0, mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_ARIA, key->x, key->len * 8));
+
+    /* Encrypt: output ciphertext and tag must match the test vector. */
+    TEST_EQUAL(0, mbedtls_gcm_crypt_and_tag(&ctx, MBEDTLS_GCM_ENCRYPT, pt->len, iv->x, iv->len, aad->x, aad->len, pt->x, output, tag_len, tag_output));
+    TEST_MEMORY_COMPARE(output, pt->len, ct->x, ct->len);
+    TEST_MEMORY_COMPARE(tag_output, tag_len, tag->x, tag->len);
+
+    /* Decrypt: must authenticate and recover the plaintext. */
+    memset(output, 0, pt->len == 0 ? 1 : pt->len);
+    TEST_EQUAL(0, mbedtls_gcm_auth_decrypt(&ctx, ct->len, iv->x, iv->len, aad->x, aad->len, tag->x, tag_len, ct->x, output));
+    TEST_MEMORY_COMPARE(output, ct->len, pt->x, pt->len);
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector (ModifiedTag or ZeroLengthIv): authenticated decryption must NOT recover the plaintext. */
+/* BEGIN_CASE */
+void mbedtls_aria_gcm_dec_invalid(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_gcm_context ctx;
+    unsigned char* output = NULL;
+    size_t tag_len = tag->len;
+    int ret;
+
+    BLOCK_CIPHER_PSA_INIT();
+    mbedtls_gcm_init(&ctx);
+
+    TEST_CALLOC(output, ct->len == 0 ? 1 : ct->len);
+    TEST_EQUAL(0, mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_ARIA, key->x, key->len * 8));
+
+    ret = mbedtls_gcm_auth_decrypt(&ctx, ct->len, iv->x, iv->len,
+        aad->x, aad->len, tag->x, tag_len,
+        ct->x, output);
+    if (ret == 0) {
+        TEST_ASSERT(ct->len != pt->len || (pt->len != 0 && memcmp(output, pt->x, pt->len) != 0));
+    }
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    mbedtls_free(output);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
