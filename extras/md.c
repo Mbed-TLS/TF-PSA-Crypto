@@ -136,6 +136,12 @@ static const mbedtls_md_info_t mbedtls_sha3_512_info = {
 };
 #endif
 
+#if defined(PSA_WANT_ALG_SM3)
+static const mbedtls_md_info_t mbedtls_sm3_info = {
+    MD_INFO(MBEDTLS_MD_SM3, 32, 64)
+};
+#endif
+
 const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 {
     switch (md_type) {
@@ -182,6 +188,10 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type)
 #if defined(PSA_WANT_ALG_SHA3_512) || defined(MBEDTLS_PSA_ACCEL_ALG_SHA3_512)
         case MBEDTLS_MD_SHA3_512:
             return &mbedtls_sha3_512_info;
+#endif
+#if defined(PSA_WANT_ALG_SM3)
+        case MBEDTLS_MD_SM3:
+            return &mbedtls_sm3_info;
 #endif
         default:
             return NULL;
@@ -243,6 +253,10 @@ static psa_algorithm_t psa_alg_of_md(const mbedtls_md_info_t *info)
 #if defined(MBEDTLS_MD_SHA3_512_VIA_PSA)
         case MBEDTLS_MD_SHA3_512:
             return PSA_ALG_SHA3_512;
+#endif
+#if defined(MBEDTLS_MD_SM3_VIA_PSA)
+        case MBEDTLS_MD_SM3:
+            return PSA_ALG_SM3;
 #endif
         default:
             return PSA_ALG_NONE;
@@ -885,6 +899,10 @@ static const int supported_digests[] = {
     MBEDTLS_MD_SHA3_512,
 #endif
 
+#if defined(PSA_WANT_ALG_SM3)
+    MBEDTLS_MD_SM3,
+#endif
+
     MBEDTLS_MD_NONE
 };
 
@@ -932,6 +950,9 @@ static const md_name_entry md_names[] = {
 #endif
 #if defined(PSA_WANT_ALG_SHA3_512)
     { "SHA3-512", MBEDTLS_MD_SHA3_512 },
+#endif
+#if defined(PSA_WANT_ALG_SM3)
+    { "SM3", MBEDTLS_MD_SM3 },
 #endif
     { NULL, MBEDTLS_MD_NONE },
 };

@@ -1,0 +1,5 @@
+SM3 Selftest
+sm3_selftest:
+
+SM3 update rejects invalid inputs without changing state
+sm3_update_error_paths:
