@@ -320,6 +320,12 @@ typedef struct mbedtls_cipher_context_t {
     /** Number of Bytes that have not been processed yet. */
     size_t MBEDTLS_PRIVATE(unprocessed_len);
 
+#if defined(MBEDTLS_CIPHER_MODE_XTS)
+    /** Whether a data unit has been processed; XTS never buffers, so
+     * unprocessed_len stays 0. */
+    unsigned char MBEDTLS_PRIVATE(xts_unit_done);
+#endif /* MBEDTLS_CIPHER_MODE_XTS */
+
     /** Current IV or NONCE_COUNTER for CTR-mode, data unit (or sector) number
      * for XTS-mode. */
     unsigned char MBEDTLS_PRIVATE(iv)[MBEDTLS_MAX_IV_LENGTH];

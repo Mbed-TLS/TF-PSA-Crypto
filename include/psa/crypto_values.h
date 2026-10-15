@@ -1234,6 +1234,15 @@
  * XTS is a cipher mode which is built from a block cipher. It requires at
  * least one full block of input, but beyond this minimum the input
  * does not need to be a whole number of blocks.
+ *
+ * The underlying block cipher is determined by the key type. The key is
+ * the concatenation of two keys of equal size for that cipher.
+ *
+ * \note Mbed TLS only supports XTS with AES: a 256-bit key for
+ *       AES-128-XTS or a 512-bit key for AES-256-XTS.
+ *
+ * \note The input to a cipher operation is a single XTS data unit,
+ *       passed in a single call to #psa_cipher_update().
  */
 #define PSA_ALG_XTS                             ((psa_algorithm_t) 0x0440ff00)
 

@@ -322,6 +322,10 @@ int mbedtls_cipher_reset(mbedtls_cipher_context_t *ctx)
 
     ctx->unprocessed_len = 0;
 
+#if defined(MBEDTLS_CIPHER_MODE_XTS)
+    ctx->xts_unit_done = 0;
+#endif
+
     return 0;
 }
 
@@ -564,7 +568,7 @@ int mbedtls_cipher_update(mbedtls_cipher_context_t *ctx, const unsigned char *in
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
     if (((mbedtls_cipher_mode_t) ctx->cipher_info->mode) == MBEDTLS_MODE_XTS) {
-        if (ctx->unprocessed_len > 0) {
+        if (ctx->xts_unit_done) {
             /* We can only process an entire data unit at a time. */
             return MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE;
         }
@@ -580,6 +584,7 @@ int mbedtls_cipher_update(mbedtls_cipher_context_t *ctx, const unsigned char *in
         }
 
         *olen = ilen;
+        ctx->xts_unit_done = 1;
 
         return 0;
     }

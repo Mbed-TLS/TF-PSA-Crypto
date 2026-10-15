@@ -4632,6 +4632,69 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void cipher_xts_update_sequence(int alg_arg, int key_type_arg,
+                                data_t *key_data, data_t *iv,
+                                data_t *first_input,
+                                int first_output_size_arg,
+                                int first_expected_status_arg,
+                                data_t *second_input,
+                                int second_expected_status_arg)
+{
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_type_t key_type = key_type_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_status_t status;
+    psa_status_t first_expected_status = first_expected_status_arg;
+    psa_status_t second_expected_status = second_expected_status_arg;
+    unsigned char *output = NULL;
+    size_t output_buffer_size = first_output_size_arg;
+    size_t output_length = 0;
+    size_t total_length = 0;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len, &key));
+
+    TEST_CALLOC(output, output_buffer_size);
+
+    PSA_ASSERT(psa_cipher_encrypt_setup(&operation, key, alg));
+    PSA_ASSERT(psa_cipher_set_iv(&operation, iv->x, iv->len));
+
+    status = psa_cipher_update(&operation, first_input->x, first_input->len,
+                               output, output_buffer_size, &output_length);
+    TEST_EQUAL(status, first_expected_status);
+    if (status == PSA_SUCCESS) {
+        TEST_EQUAL(output_length, first_input->len);
+        total_length = output_length;
+    }
+
+    output_length = 1; /* a no-op second update must write 0 */
+    status = psa_cipher_update(&operation, second_input->x, second_input->len,
+                               output + total_length,
+                               output_buffer_size - total_length, &output_length);
+    TEST_EQUAL(status, second_expected_status);
+    if (status == PSA_SUCCESS) {
+        TEST_EQUAL(output_length, 0);
+        PSA_ASSERT(psa_cipher_finish(&operation, output + total_length,
+                                     output_buffer_size - total_length,
+                                     &output_length));
+    }
+
+exit:
+    psa_cipher_abort(&operation);
+    mbedtls_free(output);
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void cipher_decrypt_multipart(int alg_arg, int key_type_arg,
                               data_t *key_data, data_t *iv,
                               data_t *input,
