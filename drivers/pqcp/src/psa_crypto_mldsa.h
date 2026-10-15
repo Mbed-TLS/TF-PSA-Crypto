@@ -12,6 +12,41 @@
 
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 
+/* Define macros for key types and algorithms here in a private header,
+ * rather than in a public header, because ML-DSA is not yet supported
+ * through the API. In particular, the size macros in <psa/crypto_sizes.h>
+ * do not yet take ML-DSA into account.
+ */
+
+/** The type of an ML-DSA key pair.
+ *
+ * It is represented as just the 32-byte seed.
+ *
+ * The `bits` attribute of the key indicates the parameter set:
+ * 44, 56 or 87.
+ */
+#define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
+
+/** Hedged pure ML-DSA (without pre-hashing). */
+#define PSA_ALG_ML_DSA ((psa_algorithm_t) 0x06004400)
+
+/** Deterministic pure ML-DSA (without pre-hashing). */
+#define PSA_ALG_DETERMINISTIC_ML_DSA ((psa_algorithm_t) 0x06004500)
+
+/** Whether the given algorithm is a pure ML-DSA algorithm
+ * (without pre-hashing).
+ */
+#define PSA_ALG_IS_ML_DSA(alg)                \
+    ((alg) == PSA_ALG_DETERMINISTIC_ML_DSA || \
+     (alg) == PSA_ALG_ML_DSA)
+
+#define PSA_MLDSA_SIGNATURE_SIZE(bits)          \
+    ((bits) == 44 ? 2420u :                     \
+     (bits) == 65 ? 3309u :                     \
+     (bits) == 87 ? 4627u :                     \
+     0u)
+#define PSA_MLDSA_SIGNATURE_MAX_SIZE (PSA_MLDSA_SIGNATURE_SIZE(87))
+
 /** Expand a seed into a joined format: the concatenation of the 32-byte seed
  * and the standard expanded private key format.
  *
@@ -41,6 +76,35 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
     size_t bits,
     const uint8_t *standard_key, size_t standard_key_length,
     uint8_t *custom_key, size_t custom_key_size, size_t *custom_key_length);
+
+/**
+ * \brief Import MLDSA key.
+ *
+ * \note The signature of the function is that of a PSA driver import_key
+ *       entry point.
+ *
+ * \param[in]  attributes       The attributes for the key to import.
+ * \param[in]  data             The buffer containing the key data in import
+ *                              format.
+ * \param[in]  data_length      Size of the \p data buffer in bytes.
+ * \param[out] key_buffer       The buffer containing the key data in output
+ *                              format.
+ * \param[in]  key_buffer_size  Size of the \p key_buffer buffer in bytes. This
+ *                              size is greater or equal to \p data_length.
+ * \param[out] key_buffer_length  The length of the data written in \p
+ *                                key_buffer in bytes.
+ * \param[out] bits             The key size in number of bits.
+ *
+ * \retval #PSA_SUCCESS
+ *         The key was generated successfully.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         The size of \p key_buffer is too small.
+ */
+psa_status_t mbedtls_psa_mldsa_import_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *data, size_t data_length,
+    uint8_t *key_buffer, size_t key_buffer_size,
+    size_t *key_buffer_length, size_t *bits);
 
 /** Export the public key of an ML-DSA key pair.
  *
