@@ -294,6 +294,10 @@ psa_status_t mbedtls_psa_spake2p_export_public_key(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
+    if (spake2_curve_info->supported == 0) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
     if (data_size < spake2_curve_info->w0_len + spake2_curve_info->L_len) {
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
