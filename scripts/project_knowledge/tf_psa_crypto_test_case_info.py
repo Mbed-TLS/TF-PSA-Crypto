@@ -36,7 +36,7 @@ INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
     ],
     'test_suite_psa_crypto': [
         'PSA generate key: RSA, key pair size does not fit in static key buffer',
-        'PSA generate key: RSA, key pair size fits in static buffer',
+        'PSA generate key: RSA, key pair size fits in static key buffer',
     ],
     'test_suite_psa_crypto_storage_format.misc': [
         'PSA storage read: key larger than MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE',
