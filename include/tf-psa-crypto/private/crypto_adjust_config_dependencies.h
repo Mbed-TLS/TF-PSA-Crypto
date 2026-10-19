@@ -19,25 +19,18 @@
 #define TF_PSA_CRYPTO_PRIVATE_CRYPTO_ADJUST_CONFIG_DEPENDENCIES_H
 
 /* Generic implementations of some key derivation algorithms based on HMAC */
-#if (defined(PSA_WANT_ALG_TLS12_PRF) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_TLS12_PRF)) || \
-    (defined(PSA_WANT_ALG_TLS12_PSK_TO_MS) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_TLS12_PSK_TO_MS)) || \
-    (defined(PSA_WANT_ALG_HKDF) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF)) || \
-    (defined(PSA_WANT_ALG_HKDF_EXTRACT) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF_EXTRACT)) || \
-    (defined(PSA_WANT_ALG_HKDF_EXPAND) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF_EXPAND)) || \
-    (defined(PSA_WANT_ALG_PBKDF2_HMAC) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_PBKDF2_HMAC))
+#if (PSA_WANT_ALG_TLS12_PRF && !defined(MBEDTLS_PSA_ACCEL_ALG_TLS12_PRF)) ||             \
+    (PSA_WANT_ALG_TLS12_PSK_TO_MS && !defined(MBEDTLS_PSA_ACCEL_ALG_TLS12_PSK_TO_MS)) || \
+    (PSA_WANT_ALG_HKDF && !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF)) ||                       \
+    (PSA_WANT_ALG_HKDF_EXTRACT && !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF_EXTRACT)) ||       \
+    (PSA_WANT_ALG_HKDF_EXPAND && !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF_EXPAND)) ||         \
+    (PSA_WANT_ALG_PBKDF2_HMAC && !defined(MBEDTLS_PSA_ACCEL_ALG_PBKDF2_HMAC))
 #define PSA_WANT_ALG_HMAC 1
 #define PSA_WANT_KEY_TYPE_HMAC 1
 #endif
 
 /* Generic implementation of some key derivation algorithms based on CMAC */
-#if (defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128) && \
-    !defined(MBEDTLS_PSA_ACCEL_ALG_PBKDF2_AES_CMAC_PRF_128))
+#if (PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128 && !defined(MBEDTLS_PSA_ACCEL_ALG_PBKDF2_AES_CMAC_PRF_128))
 #define PSA_WANT_KEY_TYPE_AES 1
 #define PSA_WANT_ALG_CMAC 1
 #endif
