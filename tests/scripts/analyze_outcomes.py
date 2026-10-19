@@ -111,6 +111,8 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # https://github.com/Mbed-TLS/mbedtls/issues/9590
             'Config: !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT',
             'Config: !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT',
+            'Config: !PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT',
+            'Config: !PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT',
             # Algorithm declared but not supported.
             'Config: PSA_WANT_ALG_CBC_MAC',
             # Algorithm declared but not supported.
@@ -174,6 +176,10 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # We don't test this unusual, but sensible configuration.
             # https://github.com/Mbed-TLS/mbedtls/issues/9592
             re.compile(r'.*ECDSA.*only deterministic supported'),
+            # No CI config enables SPAKE2P while disabling these curves.
+            'PSA import SPAKE2P public key bad (P-521 not enabled)',
+            'PSA import SPAKE2P_HMAC key pair P-384 not supported (curve disabled)',
+            'PSA import SPAKE2P_HMAC public key P-384 not supported (curve disabled)',
         ],
         'test_suite_psa_crypto_metadata': [
             # Algorithms declared but not supported.
