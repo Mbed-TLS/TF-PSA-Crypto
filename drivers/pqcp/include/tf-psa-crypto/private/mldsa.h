@@ -36,13 +36,6 @@
  */
 #define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
 
-/** The type of an ML-DSA public key.
- *
- * The `bits` attribute of the key indicates the parameter set:
- * 44, 65 or 87.
- */
-#define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
-
 /** The size of an ML-DSA key pair in the PSA representation,
  * which is just the seed.
  */
@@ -82,11 +75,6 @@
 /** The maximum size of an ML-DSA public key. */
 #define TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE    \
     TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87)
-
-/** Whether the key type is an ML-DSA key (key pair or public key). */
-#define PSA_KEY_TYPE_IS_ML_DSA(type)                                    \
-    ((type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ||                        \
-     (type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR)
 
 /** Hedged pure ML-DSA (without pre-hashing). */
 #define PSA_ALG_ML_DSA ((psa_algorithm_t) 0x06004400)
