@@ -78,14 +78,20 @@ static psa_status_t psa_hmac_setup_internal(
     for (i = 0; i < key_length; i++) {
         ipad[i] ^= 0x36;
     }
-    memset(ipad + key_length, 0x36, block_size - key_length);
+
+    if (key_length < block_size) {
+        memset(ipad + key_length, 0x36, block_size - key_length);
+    }
 
     /* Copy the key material from ipad to opad, flipping the requisite bits,
      * and filling the rest of opad with the requisite constant. */
     for (i = 0; i < key_length; i++) {
         hmac->opad[i] = ipad[i] ^ 0x36 ^ 0x5C;
     }
-    memset(hmac->opad + key_length, 0x5C, block_size - key_length);
+
+    if (key_length < block_size) {
+        memset(hmac->opad + key_length, 0x5C, block_size - key_length);
+    }
 
     status = psa_hash_setup(&hmac->hash_ctx, hash_alg);
     if (status != PSA_SUCCESS) {
