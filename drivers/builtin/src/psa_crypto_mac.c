@@ -15,6 +15,7 @@
 #include "psa_crypto_cipher.h"
 #include "psa_crypto_mac.h"
 #include <mbedtls/md.h>
+#include "tf-psa-crypto/private/blake2.h"
 
 #include <mbedtls/private/error_common.h>
 #include "mbedtls/constant_time.h"
@@ -153,6 +154,111 @@ exit:
 }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+static psa_status_t psa_blake2_mac_setup_internal(
+    mbedtls_psa_blake2_mac_operation_t *op,
+    const uint8_t *key,
+    size_t key_length,
+    psa_algorithm_t hash_alg)
+{
+    int ret;
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+    if (hash_alg == PSA_ALG_BLAKE2S_HASH256) {
+        ret = tf_psa_crypto_blake2s_init(&op->ctx.s,
+                                         PSA_HASH_LENGTH(hash_alg),
+                                         key, key_length);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+    if (hash_alg == PSA_ALG_BLAKE2B_HASH512) {
+        ret = tf_psa_crypto_blake2b_init(&op->ctx.b,
+                                         PSA_HASH_LENGTH(hash_alg),
+                                         key, key_length);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
+    {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    if (ret != 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_blake2_mac_update_internal(mbedtls_psa_blake2_mac_operation_t *op,
+                                                   psa_algorithm_t alg,
+                                                   const uint8_t *data,
+                                                   size_t data_length)
+{
+    psa_algorithm_t hash_alg = PSA_ALG_BLAKE2_MAC_GET_HASH(alg);
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+    if (hash_alg == PSA_ALG_BLAKE2S_HASH256) {
+        tf_psa_crypto_blake2s_update(&op->ctx.s, data, data_length);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+    if(hash_alg == PSA_ALG_BLAKE2B_HASH512) {
+        tf_psa_crypto_blake2b_update(&op->ctx.b, data, data_length);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
+    {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_blake2_mac_finish_internal(mbedtls_psa_blake2_mac_operation_t *op,
+                                                   psa_algorithm_t alg,
+                                                   uint8_t *mac,
+                                                   size_t mac_size)
+{
+    psa_algorithm_t hash_alg = PSA_ALG_BLAKE2_MAC_GET_HASH(alg);
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+    if (hash_alg == PSA_ALG_BLAKE2S_HASH256) {
+        tf_psa_crypto_blake2s_finish(&op->ctx.s, mac, mac_size);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+    if(hash_alg == PSA_ALG_BLAKE2B_HASH512) {
+        tf_psa_crypto_blake2b_finish(&op->ctx.b, mac, mac_size);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
+    {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_blake2_mac_abort_internal(mbedtls_psa_blake2_mac_operation_t *op,
+                                                  psa_algorithm_t alg)
+{
+    psa_algorithm_t hash_alg = PSA_ALG_BLAKE2_MAC_GET_HASH(alg);
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256)
+    if (hash_alg == PSA_ALG_BLAKE2S_HASH256) {
+        tf_psa_crypto_blake2s_free(&op->ctx.s);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256 */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512)
+    if(hash_alg == PSA_ALG_BLAKE2B_HASH512) {
+        tf_psa_crypto_blake2b_free(&op->ctx.b);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512 */
+    {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    return PSA_SUCCESS;
+}
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
+
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC)
 static psa_status_t cmac_setup(mbedtls_psa_mac_operation_t *operation,
                                const psa_key_attributes_t *attributes,
@@ -203,6 +309,12 @@ static psa_status_t mac_init(
         status = PSA_SUCCESS;
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+    if (PSA_ALG_IS_BLAKE2_MAC(operation->alg)) {
+        /* Nothing to do here */
+        status = PSA_SUCCESS;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
     if (PSA_ALG_IS_HMAC(operation->alg)) {
         /* We'll set up the hash operation later in psa_hmac_setup_internal. */
@@ -234,6 +346,11 @@ psa_status_t mbedtls_psa_mac_abort(mbedtls_psa_mac_operation_t *operation)
         mbedtls_cipher_free(&operation->ctx.cmac);
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+    if (PSA_ALG_IS_BLAKE2_MAC(operation->alg)) {
+        psa_blake2_mac_abort_internal(&operation->ctx.blake2_ctx, operation->alg);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
     if (PSA_ALG_IS_HMAC(operation->alg)) {
         psa_hmac_abort_internal(&operation->ctx.hmac);
@@ -292,6 +409,14 @@ static psa_status_t psa_mac_setup(mbedtls_psa_mac_operation_t *operation,
                                          PSA_ALG_HMAC_GET_HASH(alg));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+    if (PSA_ALG_IS_BLAKE2_MAC(alg)) {
+        status = psa_blake2_mac_setup_internal(&operation->ctx.blake2_ctx,
+                                               key_buffer,
+                                               key_buffer_size,
+                                               PSA_ALG_HMAC_GET_HASH(alg));
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
     {
         (void) attributes;
         (void) key_buffer;
@@ -344,6 +469,13 @@ psa_status_t mbedtls_psa_mac_update(
                                        input, input_length));
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+    if (PSA_ALG_IS_BLAKE2_MAC(operation->alg)) {
+        return psa_blake2_mac_update_internal(&operation->ctx.blake2_ctx,
+                                              operation->alg,
+                                              input, input_length);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
     if (PSA_ALG_IS_HMAC(operation->alg)) {
         return psa_hmac_update_internal(&operation->ctx.hmac,
@@ -374,6 +506,13 @@ static psa_status_t psa_mac_finish_internal(
         return mbedtls_to_psa_error(ret);
     } else
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC)
+    if (PSA_ALG_IS_BLAKE2_MAC(operation->alg)) {
+        return psa_blake2_mac_finish_internal(&operation->ctx.blake2_ctx,
+                                              operation->alg,
+                                              mac, mac_size);
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_BLAKE2_MAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
     if (PSA_ALG_IS_HMAC(operation->alg)) {
         return psa_hmac_finish_internal(&operation->ctx.hmac,
