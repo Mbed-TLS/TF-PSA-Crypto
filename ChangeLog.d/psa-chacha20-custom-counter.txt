@@ -1,0 +1,4 @@
+Features
+   * ChaCha20: support setting an arbitrary initial counter via
+     psa_cipher_set_iv() using a 16-byte IV
+     (4-byte little-endian counter + 12-byte nonce).
