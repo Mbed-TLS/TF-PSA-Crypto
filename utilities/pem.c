@@ -184,17 +184,25 @@ static int pem_check_pkcs_padding(unsigned char *input, size_t input_len, size_t
     }
     size_t pad_len = input[input_len - 1];
     size_t i;
+    unsigned char diff = 0;
+    unsigned char pad_byte = (unsigned char) pad_len;
 
-    if (pad_len > input_len) {
+    /* Validate the padding in constant time. Early-returning on the first
+     * mismatching byte (or branching on pad_len) leaks the position of the
+     * first difference through timing, which for CBC-encrypted PEM blobs
+     * without a MAC is a Vaudenay-style padding oracle. */
+    if (pad_len < 1 || pad_len > input_len) {
         return MBEDTLS_ERR_PEM_PASSWORD_MISMATCH;
     }
 
     *data_len = input_len - pad_len;
 
     for (i = *data_len; i < input_len; i++) {
-        if (input[i] != pad_len) {
-            return MBEDTLS_ERR_PEM_PASSWORD_MISMATCH;
-        }
+        diff |= input[i] ^ pad_byte;
+    }
+
+    if (diff != 0) {
+        return MBEDTLS_ERR_PEM_PASSWORD_MISMATCH;
     }
 
     return 0;
