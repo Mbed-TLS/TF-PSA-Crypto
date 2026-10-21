@@ -113,8 +113,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'Config: !PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT',
             # Algorithm declared but not supported.
             'Config: PSA_WANT_ALG_CBC_MAC',
-            # Algorithm declared but not supported.
-            'Config: PSA_WANT_ALG_XTS',
             # More granularity of key pair type enablement macros
             # than we care to test.
             # https://github.com/Mbed-TLS/mbedtls/issues/9590
@@ -181,7 +179,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'Asymmetric signature: Ed25519ph',
             'Asymmetric signature: Ed448ph',
             'Asymmetric signature: pure EdDSA',
-            'Cipher: XTS',
             'MAC: CBC_MAC-3DES',
             'MAC: CBC_MAC-AES-128',
             'MAC: CBC_MAC-AES-192',
