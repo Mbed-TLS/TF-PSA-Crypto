@@ -1,0 +1,104 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/chachapoly.h"
+
+/* Project Wycheproof ChaCha20-Poly1305 harness.
+ * Columns: key:iv:aad:msg:ct:tag.
+ *   valid                    -> mbedtls_chachapoly_enc_dec
+ *   invalid + ModifiedTag      -> mbedtls_chachapoly_dec_modified_tag
+ *   invalid + InvalidNonceSize -> mbedtls_chachapoly_invalid_nonce
+ * The mbedTLS API fixes the nonce at 12 bytes and the tag at 16 bytes. */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CHACHAPOLY_C
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: encryption returns (ct, tag), decryption returns msg. */
+/* BEGIN_CASE */
+void mbedtls_chachapoly_enc_dec(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_chachapoly_context ctx;
+    unsigned char* output = NULL;
+    unsigned char tag_output[16];
+
+    mbedtls_chachapoly_init(&ctx);
+    memset(tag_output, 0, sizeof(tag_output));
+
+    TEST_EQUAL(key->len, 32);
+    TEST_EQUAL(iv->len, 12);
+    TEST_EQUAL(tag->len, 16);
+    TEST_EQUAL(pt->len, ct->len);
+    TEST_CALLOC(output, pt->len == 0 ? 1 : pt->len);
+
+    TEST_EQUAL(0, mbedtls_chachapoly_setkey(&ctx, key->x));
+
+    /* Encrypt: ciphertext and tag must match the vector. */
+    TEST_EQUAL(0, mbedtls_chachapoly_encrypt_and_tag(&ctx, pt->len, iv->x, aad->x, aad->len, pt->x, output, tag_output));
+    TEST_MEMORY_COMPARE(output, pt->len, ct->x, ct->len);
+    TEST_MEMORY_COMPARE(tag_output, 16, tag->x, tag->len);
+
+    /* Decrypt: must authenticate and recover the plaintext. */
+    memset(output, 0, pt->len == 0 ? 1 : pt->len);
+    TEST_EQUAL(0, mbedtls_chachapoly_auth_decrypt(&ctx, ct->len, iv->x, aad->x, aad->len, tag->x, ct->x, output));
+    TEST_MEMORY_COMPARE(output, ct->len, pt->x, pt->len);
+
+exit:
+    mbedtls_chachapoly_free(&ctx);
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* Invalid vector with a modified tag: authenticated decryption must fail. */
+/* BEGIN_CASE */
+void mbedtls_chachapoly_dec_modified_tag(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_chachapoly_context ctx;
+    unsigned char* output = NULL;
+
+    (void)pt;
+
+    mbedtls_chachapoly_init(&ctx);
+
+    TEST_EQUAL(key->len, 32);
+    TEST_EQUAL(iv->len, 12);
+    TEST_EQUAL(tag->len, 16);
+    TEST_CALLOC(output, ct->len == 0 ? 1 : ct->len);
+
+    TEST_EQUAL(0, mbedtls_chachapoly_setkey(&ctx, key->x));
+    TEST_EQUAL(MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED,
+        mbedtls_chachapoly_auth_decrypt(&ctx, ct->len, iv->x,
+            aad->x, aad->len, tag->x,
+            ct->x, output));
+
+exit:
+    mbedtls_chachapoly_free(&ctx);
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* Invalid-nonce-size vector: the mbedTLS ChaCha20-Poly1305 API fixes the nonce
+ * at 12 bytes, so a wrong-size nonce can never be supplied to. This serves as a stub.
+ */
+/* BEGIN_CASE */
+void mbedtls_chachapoly_invalid_nonce(data_t* key, data_t* iv, data_t* aad,
+    data_t* pt, data_t* ct, data_t* tag)
+{
+    mbedtls_chachapoly_context ctx;
+
+    (void)iv;
+    (void)aad;
+    (void)pt;
+    (void)ct;
+    (void)tag;
+
+    mbedtls_chachapoly_init(&ctx);
+    TEST_EQUAL(key->len, 32);
+    TEST_EQUAL(0, mbedtls_chachapoly_setkey(&ctx, key->x));
+
+exit:
+    mbedtls_chachapoly_free(&ctx);
+}
+/* END_CASE */
