@@ -1,4 +1,6 @@
 file(GLOB src_crypto "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+file(GLOB driver_jsons
+     "${PROJECT_SOURCE_DIR}/scripts/data_files/driver_jsons/*.json")
 
 # The generated file `psa_crypto_driver_wrappers_no_static.c` may exist in the
 # source tree and therefore be picked up by the glob above. Remove it from
@@ -26,6 +28,7 @@ if(GEN_FILES)
             ${PROJECT_SOURCE_DIR}/scripts/generate_driver_wrappers.py
             ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers.h.jinja
             ${PROJECT_SOURCE_DIR}/scripts/data_files/driver_templates/psa_crypto_driver_wrappers_no_static.c.jinja
+            ${driver_jsons}
     )
 
     execute_process(
