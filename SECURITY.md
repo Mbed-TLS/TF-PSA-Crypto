@@ -138,14 +138,12 @@ even remote. The attacks can result in key recovery.
 
 **Workarounds:**
 
-- Turn on hardware acceleration for AES. This is supported only on selected
-  architectures and currently only available for AES. See configuration options
-  `TF_PSA_CRYPTO_AESCE_C` and `TF_PSA_CRYPTO_AESNI_C` for details. For GCM, the
-  implementation must also use hardware acceleration for GHASH to avoid its
-  software lookup tables.
+- Turn on hardware acceleration for AES and GCM. This is supported only on
+  selected architectures. See configuration options `TF_PSA_CRYPTO_AESCE_C` and
+  `TF_PSA_CRYPTO_AESNI_C` for details.
 - Add a secure alternative implementation (typically hardware acceleration) for
-  the vulnerable cipher. See the [PSA Cryptography Driver Interface](
-  docs/proposed/psa-driver-interface.md) for more information.
+  the vulnerable cipher and GHASH when using GCM. See the [PSA Cryptography
+  Driver Interface](docs/proposed/psa-driver-interface.md) for more information.
 - Use cryptographic mechanisms that are not based on block ciphers. In
   particular, for authenticated encryption, use ChaCha20/Poly1305 instead of
   block cipher modes. For random generation, use HMAC\_DRBG instead of CTR\_DRBG.
