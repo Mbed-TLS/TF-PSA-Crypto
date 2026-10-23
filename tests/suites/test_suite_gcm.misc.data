@@ -12,3 +12,19 @@ gcm_add_len_too_long:
 GCM - Input length too long
 depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
 gcm_input_len_too_long:
+
+GCM - Output buffer is the input buffer
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_update_overlap:0:0:0
+
+GCM - Output buffer starts inside the input buffer
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_update_overlap:0:1:MBEDTLS_ERR_GCM_BAD_INPUT
+
+GCM - Output buffer starts right after the input buffer
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_update_overlap:0:16:0
+
+GCM - Input and output buffers in separate objects
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_update_separate_buffers:
