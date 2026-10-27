@@ -138,8 +138,7 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params,
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PKCS5_INVALID_FORMAT, ret);
     }
 
-    // Only PBKDF2 supported at the moment
-    //
+    /* Only PBKDF2 supported at the moment */
     if (MBEDTLS_OID_CMP(MBEDTLS_OID_PKCS5_PBKDF2, &kdf_alg_oid) != 0) {
         return MBEDTLS_ERR_PKCS5_FEATURE_UNAVAILABLE;
     }
@@ -247,8 +246,7 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
         return ret;
     }
     while (key_length) {
-        // U1 ends up in work
-        //
+        /* U1 ends up in work */
         if ((ret = mbedtls_md_hmac_update(ctx, salt, slen)) != 0) {
             goto cleanup;
         }
@@ -268,8 +266,7 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
         memcpy(md1, work, md_size);
 
         for (i = 1; i < iteration_count; i++) {
-            // U2 ends up in md1
-            //
+            /* U2 ends up in md1 */
             if ((ret = mbedtls_md_hmac_update(ctx, md1, md_size)) != 0) {
                 goto cleanup;
             }
@@ -282,8 +279,7 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
                 goto cleanup;
             }
 
-            // U1 xor U2
-            //
+            /* U1 xor U2 */
             mbedtls_xor(work, work, md1, md_size);
         }
 
