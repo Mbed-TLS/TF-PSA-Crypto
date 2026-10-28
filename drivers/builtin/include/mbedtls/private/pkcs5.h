@@ -58,11 +58,8 @@ extern "C" {
  * \param output     Output buffer.
  *                   On success, it contains the decrypted data.
  *                   On failure, the content is indetermidate.
- *                   For decryption, there must be enough room for \p datalen
- *                   bytes.
  * \param output_size size of output buffer.
- *                    This must be big enough to accommodate for output plus
- *                    padding data.
+ *                    There must be enough room for \p datalen bytes.
  * \param output_len On success, length of actual data written to the output buffer.
  *
  * \returns        0 on success, or a MBEDTLS_ERR_XXX code if parsing or decryption fails.
