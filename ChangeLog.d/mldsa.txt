@@ -1,0 +1,7 @@
+Features
+   * A limited subset of ML-DSA is available from the driver dispatch layer:
+     key generation, export public key, one-shot sign and verify,
+     multipart sign and verify. Only pureML-DSA-87 is supported for now.
+     This interface is experimental and may change without notice.
+     See TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED for more information.
+     ML-DSA is not yet exposed to applications.

@@ -18,11 +18,171 @@
  * defined unconditionally. */
 #include "psa_crypto_mldsa.h"
 
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+static int check_rsa_public_exponent(
+    const uint8_t *expected_e, size_t expected_e_length,
+    const uint8_t *public, size_t public_length)
+{
+    const uint8_t default_e[3] = { 0x01, 0x00, 0x01 };
+    int ok = 0;
+
+    if (expected_e_length == 0) {
+        expected_e = default_e;
+        expected_e_length = sizeof(default_e);
+    }
+    /* For simplicity, we don't support values of e that might need a multi-byte
+     * length encoding in ASN.1 (more than 0x7f digits in base 256, or exactly
+     * 0x7f where the most significant bit is 1). */
+    TEST_LE_U(expected_e_length, 0x7e);
+    /* Strip leading zeros */
+    while (expected_e_length > 0 && expected_e[0] == 0) {
+        ++expected_e;
+        --expected_e_length;
+    }
+
+    /* We assume that the public key has the expected ASN.1 DER format
+     * described in PKCS#1 (RFC 8017 §A.1.1).
+     * We only test the value of the public exponent, which is an INTEGER,
+     * the last element of the SEQUENCE.
+     * We also check that the public exponent has the expected ASN.1
+     * type, length, and possible leading zero.
+     */
+    TEST_LE_U(3 + expected_e_length, public_length);
+    const uint8_t *e_start = public + public_length - expected_e_length;
+    TEST_MEMORY_COMPARE(e_start, expected_e_length,
+                        expected_e, expected_e_length);
+    if (expected_e[0] >= 0x80) {
+        --e_start;
+        ++expected_e_length;
+        TEST_EQUAL(e_start[0], 0);
+    }
+    TEST_EQUAL(e_start[-1], expected_e_length);
+    TEST_EQUAL(e_start[-2], 0x02);
+
+    ok = 1;
+
+exit:
+    return ok;
+}
+#endif
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
  * depends_on:MBEDTLS_PSA_CRYPTO_C
  * END_DEPENDENCIES */
+
+/* BEGIN_CASE */
+/* Generate a key. We can't fully validate the randomness, but at least do
+ * some sanity checks.
+ *
+ * One thing we check is the size of the key representation. The check is based
+ * on PSA_EXPORT_KEY_OUTPUT_SIZE(). For key types where this is exact, pass
+ * `allow_shorter=0`. For key types where this is an approximation, or
+ * where the representation size is variable, the key representation may be
+ * anywhere between `PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits) - allow_shorter`
+ * and `PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits)` inclusive.
+ */
+void generate_key(int type, int bits,
+                  int custom_flags_arg, data_t *custom_data,
+                  int allow_shorter)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
+    custom.flags = custom_flags_arg;
+    size_t output_size = PSA_EXPORT_KEY_OUTPUT_SIZE(type, bits);
+    size_t output_length1 = SIZE_MAX;
+    size_t output_length2 = SIZE_MAX;
+    uint8_t *output1 = NULL;
+    uint8_t *output2 = NULL;
+    uint8_t *zero = NULL;
+    uint8_t *public = NULL;
+
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+    /* Hack alert: at the time of writing, PSA_EXPORT_KEY_OUTPUT_SIZE
+     * doesn't support ML-DSA yet. It returns the size of a symmetric
+     * key of the size given by `bits` (e.g. 11 for bits=87).
+     * Same for the public key below.
+     */
+    if (type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        if (output_size >= TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE) {
+            TEST_FAIL("Now that PSA_EXPORT_KEY_OUTPUT_SIZE() supports ML-DSA, remove this hack.");
+        }
+        if (custom_flags_arg & PSA_CUSTOM_KEY_FLAG_EXPAND) {
+            output_size = TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(bits);
+        } else {
+            output_size = TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE;
+        }
+    }
+#endif
+
+    PSA_INIT();
+    TEST_CALLOC(output1, output_size);
+    TEST_CALLOC(output2, output_size);
+    TEST_CALLOC(zero, output_size);
+
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+
+    /* Generate a key */
+    PSA_ASSERT(psa_driver_wrapper_generate_key(&attributes,
+                                               &custom, custom_data->x, custom_data->len,
+                                               output1, output_size,
+                                               &output_length1));
+    TEST_LE_U(output_length1, output_size);
+    TEST_LE_U(output_size - allow_shorter, output_length1);
+    TEST_ASSERT(memcmp(output1, zero, output_length1));
+
+    if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        psa_key_type_t public_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type);
+        size_t public_size = PSA_EXPORT_KEY_OUTPUT_SIZE(public_type, bits);
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+        /* Hack alert: as above, the generic size macro doesn't know about
+         * ML-DSA yet. */
+        if (type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+            public_size = TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(bits);
+        }
+#endif
+        size_t public_length = SIZE_MAX;
+        TEST_CALLOC(public, public_size);
+        PSA_ASSERT(psa_driver_wrapper_export_public_key(&attributes,
+                                                        output1, output_length1,
+                                                        public, public_size,
+                                                        &public_length));
+
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+        if (type == PSA_KEY_TYPE_RSA_KEY_PAIR) {
+            if (!check_rsa_public_exponent(custom_data->x, custom_data->len,
+                                           public, public_length)) {
+                goto exit;
+            }
+        }
+#endif
+    }
+
+    /* Generate another key */
+    PSA_ASSERT(psa_driver_wrapper_generate_key(&attributes,
+                                               &custom, custom_data->x, custom_data->len,
+                                               output2, output_size,
+                                               &output_length2));
+    TEST_LE_U(output_length2, output_size);
+    TEST_LE_U(output_size - allow_shorter, output_length2);
+    TEST_ASSERT(memcmp(output2, zero, output_length2));
+
+    /* Check that successive calls produce different keys */
+    if (output_length1 == output_length2) {
+        TEST_ASSERT(memcmp(output1, output2, output_length1));
+    }
+
+exit:
+    mbedtls_free(output1);
+    mbedtls_free(output2);
+    mbedtls_free(zero);
+    mbedtls_free(public);
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+}
+/* END_CASE */
 
 /* BEGIN_CASE */
 void export_public_key(int type_arg, int bits_arg,

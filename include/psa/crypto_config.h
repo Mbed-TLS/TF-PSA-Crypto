@@ -2016,10 +2016,26 @@
  * This is an integration of https://github.com/pq-code-package/mldsa-native
  * in TF-PSA-Crypto.
  *
+ * This option enables the following components:
+ * - mldsa-native is included in the build. Its interface is only declared
+ *   in private headers.
+ * - A PSA driver for ML-DSA is included in the build. Its interface is
+ *   only declared in private headers.
+ * - The PSA driver dispatch layer supports ML-DSA with transparent keys
+ *   (key generation, export public key, one-shot sign and verify,
+ *   multipart sign and verify).
+ *
+ * For now, only pureML-DSA-87 (without prehashing) is supported.
+ *
+ * \note You must enable at least one parameter set.
+ *       The following parameter set is supported:
+ *       #TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED.
+ *
  * \warning This option is experimental. It may change or be removed without
  *          notice.
  *
  * Module:  drivers/pqcp/src/wrap_mldsa_native.c
+ *          drivers/pqcp/src/psa_crypto_mldsa.c
  *
  * Uncomment to include mldsa-native in libtfpsacrypto.
  */

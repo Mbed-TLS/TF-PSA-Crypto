@@ -14,6 +14,7 @@
 static MLD_ALIGN uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
 MBEDTLS_STATIC_TESTABLE size_t tf_psa_crypto_pqcp_alloc_used;
 static psa_status_t tf_psa_crypto_pqcp_alloc_status;
+uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
 
 #if defined(MBEDTLS_TEST_HOOKS)
 /* Added on start, subtracted on done*/
@@ -35,6 +36,12 @@ psa_status_t tf_psa_crypto_pqcp_alloc_done(void)
         status = PSA_ERROR_BAD_STATE;
         tf_psa_crypto_pqcp_alloc_used = 0;
     }
+    /* Erase the public key buffer. This isn't strictly required since
+     * it isn't supposed to contain sensitive data, but this ensures
+     * no cross-contamination if code using this function forgets
+     * to initialize the buffer. */
+    memset(tf_psa_crypto_pqcp_mldsa_public_key, 0,
+           sizeof(tf_psa_crypto_pqcp_mldsa_public_key));
 #if defined(MBEDTLS_TEST_HOOKS)
     if (tf_psa_crypto_pqcp_alloc_poison_bytes < 0) {
         tf_psa_crypto_pqcp_alloc_used -= tf_psa_crypto_pqcp_alloc_poison_bytes;

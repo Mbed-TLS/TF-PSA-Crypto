@@ -594,5 +594,11 @@
 #error "PSA_WANT_ECC_SECP_R1_192 and PSA_WANT_ECC_SECP_K1_192 are no longer supported"
 #endif
 
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+#if !defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
+#error "TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED is enabled, but no MLDSA parameter set"
+#endif
+#endif
+
 /* *INDENT-ON* */
 #endif /* TF_PSA_CRYPTO_TF_PSA_CRYPTO_CHECK_CONFIG_H */
