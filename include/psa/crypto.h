@@ -4668,7 +4668,7 @@ typedef struct psa_verify_hash_interruptible_operation_s psa_verify_hash_interru
  *
  * \note                        For keys in local storage when no accelerator
  *                              driver applies, please see also the
- *                              documentation for \c psa_interruptible_set_max_ops(),
+ *                              documentation for \c psa_iop_set_max_ops(),
  *                              which is the internal implementation in these
  *                              cases.
  *
@@ -4688,14 +4688,14 @@ typedef struct psa_verify_hash_interruptible_operation_s psa_verify_hash_interru
  *                              #PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED, where 0
  *                              is the least amount of work done per call.
  */
-void psa_interruptible_set_max_ops(uint32_t max_ops);
+void psa_iop_set_max_ops(uint32_t max_ops);
 
 /**
  * \brief                       Get the maximum number of ops allowed to be
  *                              executed by an interruptible function in a
  *                              single call. This will return the last
  *                              value set by
- *                              \c psa_interruptible_set_max_ops() or
+ *                              \c psa_iop_set_max_ops() or
  *                              #PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED if
  *                              that function has never been called.
  *
@@ -4707,7 +4707,27 @@ void psa_interruptible_set_max_ops(uint32_t max_ops);
  *                              executed by an interruptible function in a
  *                              single call.
  */
-uint32_t psa_interruptible_get_max_ops(void);
+uint32_t psa_iop_get_max_ops(void);
+
+/** Deprecated: use psa_iop_set_max_ops() instead.
+ *
+ * This function is provided for backward compatibility. It behaves exactly
+ * like psa_iop_set_max_ops().
+ */
+MBEDTLS_DEPRECATED static inline void psa_interruptible_set_max_ops(uint32_t max_ops)
+{
+    psa_iop_set_max_ops(max_ops);
+}
+
+/** Deprecated: use psa_iop_get_max_ops() instead.
+ *
+ * This function is provided for backward compatibility. It behaves exactly
+ * like psa_iop_get_max_ops().
+ */
+MBEDTLS_DEPRECATED static inline uint32_t psa_interruptible_get_max_ops(void)
+{
+    return psa_iop_get_max_ops();
+}
 
 /**
  * \brief                       Get the number of ops that a hash signing
@@ -4727,7 +4747,7 @@ uint32_t psa_interruptible_get_max_ops(void);
  *
  *                              This is a helper provided to help you tune the
  *                              value passed to \c
- *                              psa_interruptible_set_max_ops().
+ *                              psa_iop_set_max_ops().
  *
  * \param operation             The \c psa_sign_hash_interruptible_operation_t
  *                              to use. This must be initialized first.
@@ -4753,7 +4773,7 @@ uint32_t psa_sign_hash_get_num_ops(
  *
  *                              This is a helper provided to help you tune the
  *                              value passed to \c
- *                              psa_interruptible_set_max_ops().
+ *                              psa_iop_set_max_ops().
  *
  * \param operation             The \c
  *                              psa_verify_hash_interruptible_operation_t to
@@ -4780,7 +4800,7 @@ uint32_t psa_verify_hash_get_num_ops(
  *                              \c psa_sign_hash() but
  *                              \c psa_sign_hash_complete() can return early and
  *                              resume according to the limit set with \c
- *                              psa_interruptible_set_max_ops() to reduce the
+ *                              psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function call.
  *
  * \note                        Users should call \c psa_sign_hash_complete()
@@ -4856,7 +4876,7 @@ psa_status_t psa_sign_hash_start(
  *                              psa_sign_hash_start() is equivalent to
  *                              \c psa_sign_hash() but this function can return
  *                              early and resume according to the limit set with
- *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              \c psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function call.
  *
  * \note                        Users should call this function on the same
@@ -4898,7 +4918,7 @@ psa_status_t psa_sign_hash_start(
  *
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of \c
- *         psa_interruptible_set_max_ops(). There is still work to be done.
+ *         psa_iop_set_max_ops(). There is still work to be done.
  *         Call this function again with the same operation object.
  *
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
@@ -4989,7 +5009,7 @@ psa_status_t psa_sign_hash_abort(
  *                              \c psa_verify_hash() but \c
  *                              psa_verify_hash_complete() can return early and
  *                              resume according to the limit set with \c
- *                              psa_interruptible_set_max_ops() to reduce the
+ *                              psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function.
  *
  * \note                        Users should call \c psa_verify_hash_complete()
@@ -5070,7 +5090,7 @@ psa_status_t psa_verify_hash_start(
  *                              psa_verify_hash_start() is equivalent to
  *                              \c psa_verify_hash() but this function can
  *                              return early and resume according to the limit
- *                              set with \c psa_interruptible_set_max_ops() to
+ *                              set with \c psa_iop_set_max_ops() to
  *                              reduce the maximum time spent in a function
  *                              call.
  *
@@ -5098,7 +5118,7 @@ psa_status_t psa_verify_hash_start(
  *
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of \c
- *         psa_interruptible_set_max_ops(). There is still work to be done.
+ *         psa_iop_set_max_ops(). There is still work to be done.
  *         Call this function again with the same operation object.
  *
  * \retval #PSA_ERROR_INVALID_HANDLE \emptydescription
@@ -5226,7 +5246,7 @@ typedef struct psa_key_agreement_iop_s psa_key_agreement_iop_t;
  *
  *                              This is a helper provided to help you tune the
  *                              value passed to \c
- *                              psa_interruptible_set_max_ops().
+ *                              psa_iop_set_max_ops().
  *
  * \param operation             The \c psa_key_agreement_iop_t to use. This must
  *                              be initialized first.
@@ -5257,7 +5277,7 @@ uint32_t psa_key_agreement_iop_get_num_ops(psa_key_agreement_iop_t *operation);
  *                              to \c psa_raw_key_agreement() but \c
  *                              psa_key_agreement_iop_complete() can return
  *                              early and resume according to the limit set with
- *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              \c psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function.
  *
  * \note                        Users should call
@@ -5417,7 +5437,7 @@ psa_status_t psa_key_agreement_iop_setup(
  *                              \c psa_raw_key_agreement() but this
  *                              function can return early and resume according
  *                              to the limit set with \c
- *                              psa_interruptible_set_max_ops() to reduce the
+ *                              psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function call.
  *
  * \note                        Users should call this function on the same
@@ -5450,7 +5470,7 @@ psa_status_t psa_key_agreement_iop_setup(
  *
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of \c
- *         psa_interruptible_set_max_ops(). There is still work to be done.
+ *         psa_iop_set_max_ops(). There is still work to be done.
  *         Call this function again with the same operation object.
  *
  * \retval #PSA_ERROR_ALREADY_EXISTS
@@ -5574,7 +5594,7 @@ typedef struct psa_generate_key_iop_s psa_generate_key_iop_t;
  *                              interface stability promises.
  *                              This is a helper provided to help you tune the
  *                              value passed to \c
- *                              psa_interruptible_set_max_ops().
+ *                              psa_iop_set_max_ops().
  *
  * \param operation             The \c psa_generate_key_iop_t to use. This must
  *                              be initialized first.
@@ -5599,7 +5619,7 @@ uint32_t psa_generate_key_iop_get_num_ops(psa_generate_key_iop_t *operation);
  *                              to \c psa_generate_key() but \c
  *                              psa_generate_key_iop_complete() can return
  *                              early and resume according to the limit set with
- *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              \c psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function.
  *
  * \note                        Users should call
@@ -5712,7 +5732,7 @@ psa_status_t psa_generate_key_iop_setup(
  *                              \c psa_generate_key() but this
  *                              function can return early and resume according
  *                              to the limit set with \c
- *                              psa_interruptible_set_max_ops() to reduce the
+ *                              psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function call.
  *
  * \note                        Users should call this function on the same
@@ -5745,7 +5765,7 @@ psa_status_t psa_generate_key_iop_setup(
  *
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of \c
- *         psa_interruptible_set_max_ops(). There is still work to be done.
+ *         psa_iop_set_max_ops(). There is still work to be done.
  *         Call this function again with the same operation object.
  *
  * \retval #PSA_ERROR_ALREADY_EXISTS
@@ -5864,7 +5884,7 @@ typedef struct psa_export_public_key_iop_s psa_export_public_key_iop_t;
  *                              interface stability promises.
  *                              This is a helper provided to help you tune the
  *                              value passed to
- *                              \c psa_interruptible_set_max_ops().
+ *                              \c psa_iop_set_max_ops().
  *
  * \param operation             The \c psa_export_public_key_iop_t to use. This must
  *                              be initialized first.
@@ -5891,7 +5911,7 @@ uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *oper
  *                              to \c psa_export_public_key() but
  *                               \c psa_export_public_key_iop_complete() can return
  *                              early and resume according to the limit set with
- *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              \c psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function.
  *
  * \note                        Users should call
@@ -5966,7 +5986,7 @@ psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operat
  *                              \c psa_export_public_key() but this
  *                              function can return early and resume according
  *                              to the limit set with
- *                              \c psa_interruptible_set_max_ops() to reduce the
+ *                              \c psa_iop_set_max_ops() to reduce the
  *                              maximum time spent in a function call.
  *
  * \note                        Users should call this function on the same
@@ -6022,7 +6042,7 @@ psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operat
  * \retval #PSA_ERROR_DATA_INVALID \emptydescription
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of
- *         \c psa_interruptible_set_max_ops(). There is still work to be done.
+ *         \c psa_iop_set_max_ops(). There is still work to be done.
  *         Call this function again with the same operation object.
  */
 psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *operation,
