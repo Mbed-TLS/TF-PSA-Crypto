@@ -1645,9 +1645,9 @@
  * This allows various functions to pause by returning
  * #PSA_OPERATION_INCOMPLETE and then be called later again in
  * order to further progress and eventually complete their operation. This is
- * controlled through psa_interruptible_set_max_ops() which limits the maximum
+ * controlled through psa_iop_set_max_ops() which limits the maximum
  * number of ECC operations a function may perform before pausing; see
- * psa_interruptible_set_max_ops() for more information.
+ * psa_iop_set_max_ops() for more information.
  *
  * This is useful in non-threaded environments if you want to avoid blocking
  * for too long on ECC (and, hence, X.509 or SSL/TLS) operations.
@@ -1680,7 +1680,6 @@
  *
  * Uncomment this macro to enable restartable ECC computations.
  */
-//#define MBEDTLS_ECP_RESTARTABLE
 
 /**
  * Uncomment to enable using new bignum code in the ECC modules.

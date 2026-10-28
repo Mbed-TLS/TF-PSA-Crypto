@@ -7157,7 +7157,7 @@ void sign_hash_interruptible(int key_type_arg, data_t *key_data,
     TEST_LE_U(signature_size, PSA_SIGNATURE_MAX_SIZE);
     TEST_CALLOC(signature, signature_size);
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     interruptible_signverify_get_minmax_completes(max_ops, PSA_SUCCESS,
                                                   &min_completes, &max_completes);
@@ -7331,7 +7331,7 @@ void sign_hash_fail_interruptible(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     interruptible_signverify_get_minmax_completes(max_ops,
                                                   expected_complete_status,
@@ -7553,7 +7553,7 @@ void sign_verify_hash_interruptible(int key_type_arg, data_t *key_data,
     TEST_LE_U(signature_size, PSA_SIGNATURE_MAX_SIZE);
     TEST_CALLOC(signature, signature_size);
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     interruptible_signverify_get_minmax_completes(max_ops, PSA_SUCCESS,
                                                   &min_completes, &max_completes);
@@ -7745,7 +7745,7 @@ void verify_hash_interruptible(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     interruptible_signverify_get_minmax_completes(max_ops, PSA_SUCCESS,
                                                   &min_completes, &max_completes);
@@ -7913,7 +7913,7 @@ void verify_hash_fail_interruptible(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     interruptible_signverify_get_minmax_completes(max_ops,
                                                   expected_complete_status,
@@ -8035,7 +8035,7 @@ void interruptible_signverify_hash_state_test(int key_type_arg,
     TEST_LE_U(signature_size, PSA_SIGNATURE_MAX_SIZE);
     TEST_CALLOC(signature, signature_size);
 
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    psa_iop_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     /* --- Attempt completes prior to starts --- */
     TEST_EQUAL(psa_sign_hash_complete(&sign_operation, signature,
@@ -8058,7 +8058,7 @@ void interruptible_signverify_hash_state_test(int key_type_arg,
 
     PSA_ASSERT(psa_sign_hash_abort(&sign_operation));
 
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 
     PSA_ASSERT(psa_sign_hash_start(&sign_operation, key, alg,
                                    input_data->x, input_data->len));
@@ -8070,7 +8070,7 @@ void interruptible_signverify_hash_state_test(int key_type_arg,
 
     PSA_ASSERT(psa_sign_hash_abort(&sign_operation));
 
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    psa_iop_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     PSA_ASSERT(psa_sign_hash_start(&sign_operation, key, alg,
                                    input_data->x, input_data->len));
@@ -8089,7 +8089,7 @@ void interruptible_signverify_hash_state_test(int key_type_arg,
 
     PSA_ASSERT(psa_verify_hash_abort(&verify_operation));
 
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 
     PSA_ASSERT(psa_verify_hash_start(&verify_operation, key, alg,
                                      input_data->x, input_data->len,
@@ -8100,7 +8100,7 @@ void interruptible_signverify_hash_state_test(int key_type_arg,
 
     PSA_ASSERT(psa_verify_hash_abort(&verify_operation));
 
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    psa_iop_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     PSA_ASSERT(psa_verify_hash_start(&verify_operation, key, alg,
                                      input_data->x, input_data->len,
@@ -8194,7 +8194,7 @@ void interruptible_signverify_hash_edgecase_tests(int key_type_arg,
     /* --- Change function inputs mid run, to cause an error (sign only,
      *     verify passes all inputs to start. --- */
 
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 
     PSA_ASSERT(psa_sign_hash_start(&sign_operation, key, alg,
                                    input_data->x, input_data->len));
@@ -8219,7 +8219,7 @@ void interruptible_signverify_hash_edgecase_tests(int key_type_arg,
 
     /* Trash the hash buffer in between start and complete, to ensure
      * no reliance on external buffers. */
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    psa_iop_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     TEST_CALLOC(input_buffer, input_data->len);
 
@@ -8286,6 +8286,20 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
                                              data_t *key_data, int alg_arg,
                                              data_t *input_data)
 {
+    /* Deprecated-name compatibility: the wrappers must behave
+     * identically to psa_iop_{set,get}_max_ops(). */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    psa_interruptible_set_max_ops(0xbeef);
+    TEST_EQUAL(psa_iop_get_max_ops(), 0xbeef);
+    TEST_EQUAL(psa_interruptible_get_max_ops(), 0xbeef);
+    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    TEST_EQUAL(psa_interruptible_get_max_ops(), PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
@@ -8325,7 +8339,7 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
     PSA_ASSERT(psa_sign_hash_start(&sign_operation, key, alg,
                                    input_data->x, input_data->len));
 
-    TEST_EQUAL(psa_interruptible_get_max_ops(),
+    TEST_EQUAL(psa_iop_get_max_ops(),
                PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     PSA_ASSERT(psa_sign_hash_abort(&sign_operation));
@@ -8334,20 +8348,20 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
                                      input_data->x, input_data->len,
                                      signature, signature_size));
 
-    TEST_EQUAL(psa_interruptible_get_max_ops(),
+    TEST_EQUAL(psa_iop_get_max_ops(),
                PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     PSA_ASSERT(psa_verify_hash_abort(&verify_operation));
 
     /* Check that max ops gets set properly. */
 
-    psa_interruptible_set_max_ops(0xbeef);
+    psa_iop_set_max_ops(0xbeef);
 
-    TEST_EQUAL(psa_interruptible_get_max_ops(), 0xbeef);
+    TEST_EQUAL(psa_iop_get_max_ops(), 0xbeef);
 
     /* --- Ensure changing the max ops mid operation works (operation should
      *     complete successfully after setting max ops to unlimited --- */
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 
     PSA_ASSERT(psa_sign_hash_start(&sign_operation, key, alg,
                                    input_data->x, input_data->len));
@@ -8357,7 +8371,7 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
                                       &signature_length),
                PSA_OPERATION_INCOMPLETE);
 
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    psa_iop_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     PSA_ASSERT(psa_sign_hash_complete(&sign_operation, signature,
                                       signature_size,
@@ -8365,7 +8379,7 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
 
     PSA_ASSERT(psa_sign_hash_abort(&sign_operation));
 
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 
     PSA_ASSERT(psa_verify_hash_start(&verify_operation, key, alg,
                                      input_data->x, input_data->len,
@@ -8374,7 +8388,7 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
     TEST_EQUAL(psa_verify_hash_complete(&verify_operation),
                PSA_OPERATION_INCOMPLETE);
 
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    psa_iop_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
     PSA_ASSERT(psa_verify_hash_complete(&verify_operation));
 
@@ -8383,7 +8397,7 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
     /* --- Test that not calling get_num_ops inbetween complete calls does not
      *     result in lost ops. ---*/
 
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 
     PSA_ASSERT(psa_sign_hash_start(&sign_operation, key, alg,
                                    input_data->x, input_data->len));
@@ -10294,7 +10308,7 @@ void key_agreement_interruptible(int alg_arg,
     TEST_LE_U(PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(our_key_type, key_bits),
               PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE);
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     TEST_CALLOC(output, expected_output->len);
 
@@ -10937,7 +10951,7 @@ void iop_export_public_key(
     num_ops_prior = psa_export_public_key_iop_get_num_ops(&export_key_operation);
     TEST_EQUAL(num_ops_prior, 0);
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     min_num_ops = interruptible_operations_get_min_num_ops(bits);

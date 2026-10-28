@@ -3606,12 +3606,12 @@ exit:
 
 static uint32_t psa_interruptible_max_ops = PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED;
 
-void psa_interruptible_set_max_ops(uint32_t max_ops)
+void psa_iop_set_max_ops(uint32_t max_ops)
 {
     psa_interruptible_max_ops = max_ops;
 }
 
-uint32_t psa_interruptible_get_max_ops(void)
+uint32_t psa_iop_get_max_ops(void)
 {
     return psa_interruptible_max_ops;
 }
@@ -4123,7 +4123,7 @@ psa_status_t mbedtls_psa_sign_hash_complete(
     mbedtls_mpi_init(&s);
 
     /* Ensure max_ops is set to the current value (or default). */
-    mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());
+    mbedtls_psa_interruptible_set_max_ops(psa_iop_get_max_ops());
 
     if (signature_size < 2 * operation->coordinate_bytes) {
         status = PSA_ERROR_BUFFER_TOO_SMALL;
@@ -4365,7 +4365,7 @@ psa_status_t mbedtls_psa_verify_hash_complete(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
     /* Ensure max_ops is set to the current value (or default). */
-    mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());
+    mbedtls_psa_interruptible_set_max_ops(psa_iop_get_max_ops());
 
     status = mbedtls_to_psa_error(
         mbedtls_ecdsa_verify_restartable(&operation->ctx->grp,

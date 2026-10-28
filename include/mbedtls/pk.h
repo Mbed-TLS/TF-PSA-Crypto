@@ -534,7 +534,7 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \note            Performs the same job as \c mbedtls_pk_verify(), but can
  *                  return early and restart according to the limit set with
- *                  \c psa_interruptible_set_max_ops() to reduce blocking for ECC
+ *                  \c psa_iop_set_max_ops() to reduce blocking for ECC
  *                  operations. For RSA, same as \c mbedtls_pk_verify().
  *
  * \param ctx       The PK context to use. It must have been populated.
@@ -547,7 +547,7 @@ int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \return          See \c mbedtls_pk_verify(), or
  * \return          #PSA_OPERATION_INCOMPLETE if maximum number of
- *                  operations was reached: see \c psa_interruptible_set_max_ops().
+ *                  operations was reached: see \c psa_iop_set_max_ops().
  */
 int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
                                   mbedtls_md_type_t md_alg,
@@ -617,7 +617,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  *
  * \note            Performs the same job as \c mbedtls_pk_sign(), but can
  *                  return early and restart according to the limit set with \c
- *                  psa_interruptible_set_max_ops() to reduce blocking for ECC
+ *                  psa_iop_set_max_ops() to reduce blocking for ECC
  *                  operations. For RSA, same as \c mbedtls_pk_sign().
  *
  * \note            For ECC keys, always uses #MBEDTLS_PK_ALG_ECDSA(hash), where
@@ -644,7 +644,7 @@ int mbedtls_pk_sign(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
  * \return          See \c mbedtls_pk_sign().
  * \return          #PSA_OPERATION_INCOMPLETE if the maximum number of
  *                  operations was reached: see \c
- *                  psa_interruptible_set_max_ops().
+ *                  psa_iop_set_max_ops().
  */
 int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
                                 mbedtls_md_type_t md_alg,

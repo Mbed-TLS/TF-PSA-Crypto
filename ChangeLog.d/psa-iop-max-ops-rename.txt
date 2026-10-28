@@ -1,0 +1,6 @@
+Changes
+   * Rename psa_interruptible_set_max_ops() and
+     psa_interruptible_get_max_ops() to psa_iop_set_max_ops() and
+     psa_iop_get_max_ops(), following the PSA Certified Crypto API
+     specification. The old names remain available as deprecated
+     static inline wrappers for backward compatibility. Fixes #860.
