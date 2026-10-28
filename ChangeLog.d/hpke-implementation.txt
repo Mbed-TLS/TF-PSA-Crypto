@@ -1,0 +1,16 @@
+Features
+   * Add support for HPKE (RFC 9180) in the built-in PSA crypto driver.
+     This adds HPKE context setup, encapsulation/decapsulation, authenticated
+     encryption/decryption, and exporter support for HPKE cipher suites,
+     including validation with RFC test vectors for
+     DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, and AES-128-GCM.
+
+Changes
+   * When PSA_WANT_ALG_HPKE is enabled, automatically request the dependent
+     algorithms mechanisms so HPKE prerequisites are configured.
+   * Rework HPKE-related built-in selection in
+     drivers/builtin/include/mbedtls/private/
+     crypto_adjust_config_enable_builtins.h to use the generic accelerator
+     coverage logic, instead of a dedicated HPKE-to-GCM special case.
+     This keeps software fallback behavior consistent with driver
+     acceleration coverage.
