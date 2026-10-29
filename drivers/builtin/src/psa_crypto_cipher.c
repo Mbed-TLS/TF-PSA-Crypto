@@ -87,6 +87,9 @@ static psa_status_t mbedtls_cipher_validate_values(
 #if !defined(PSA_WANT_ALG_CMAC)
     MBEDTLS_ASSUME(alg != PSA_ALG_CMAC);
 #endif
+#if !defined(PSA_WANT_ALG_XTS)
+    MBEDTLS_ASSUME(alg != PSA_ALG_XTS);
+#endif
 
     if (alg == PSA_ALG_STREAM_CIPHER ||
         alg == PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0)) {
@@ -108,7 +111,6 @@ static psa_status_t mbedtls_cipher_validate_values(
     if (alg == PSA_ALG_CTR ||
         alg == PSA_ALG_CFB ||
         alg == PSA_ALG_OFB ||
-        alg == PSA_ALG_XTS ||
         alg == PSA_ALG_ECB_NO_PADDING ||
         alg == PSA_ALG_CBC_NO_PADDING ||
         alg == PSA_ALG_CBC_PKCS7 ||
@@ -116,6 +118,13 @@ static psa_status_t mbedtls_cipher_validate_values(
         if (key_type == PSA_KEY_TYPE_AES ||
             key_type == PSA_KEY_TYPE_ARIA ||
             key_type == PSA_KEY_TYPE_CAMELLIA) {
+            return PSA_SUCCESS;
+        }
+    }
+
+    /* XTS is only supported with AES. */
+    if (alg == PSA_ALG_XTS) {
+        if (key_type == PSA_KEY_TYPE_AES) {
             return PSA_SUCCESS;
         }
     }
@@ -189,6 +198,11 @@ psa_status_t mbedtls_cipher_values_from_psa(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305)
             case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0):
                 *mode = MBEDTLS_MODE_CHACHAPOLY;
+                break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_XTS)
+            case PSA_ALG_XTS:
+                *mode = MBEDTLS_MODE_XTS;
                 break;
 #endif
             default:
@@ -507,6 +521,19 @@ psa_status_t mbedtls_psa_cipher_update(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     size_t expected_output_size;
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_XTS)
+    if (operation->alg == PSA_ALG_XTS) {
+        if (operation->ctx.cipher.xts_unit_done && input_length != 0) {
+            /* A second update would reuse the tweak. */
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+        if (input_length != 0 && input_length < operation->block_length) {
+            /* A data unit is at least one block. */
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+        expected_output_size = input_length;
+    } else
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_XTS */
     if (!PSA_ALG_IS_STREAM_CIPHER(operation->alg)) {
         /* Take the unprocessed partial block left over from previous
          * update calls, if any, plus the input to this call. Remove
@@ -578,6 +605,15 @@ psa_status_t mbedtls_psa_cipher_finish(
             goto exit;
         }
     }
+
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_XTS)
+    /* An empty XTS operation has nothing valid to finalize. */
+    if (operation->alg == PSA_ALG_XTS &&
+        !operation->ctx.cipher.xts_unit_done) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_ALG_XTS */
 
     status = mbedtls_to_psa_error(
         mbedtls_cipher_finish_padded(&operation->ctx.cipher,
