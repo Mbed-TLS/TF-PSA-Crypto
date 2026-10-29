@@ -29,6 +29,11 @@
 /* Include the context structure definitions for the Mbed TLS software drivers */
 #include "mbedtls/private/crypto_builtin_composites.h"
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED) || \
+    defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+#include "mbedtls/psa_crypto_async_contexts.h"
+#endif
+
 /* Include the context structure definitions for those drivers that were
  * declared during the autogeneration process. */
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
@@ -162,11 +167,17 @@ typedef union {
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */
     mbedtls_psa_sign_hash_interruptible_operation_t mbedtls_ctx;
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+    mbedtls_psa_async_crypto_signature_operation_t async_crypto_ctx;
+#endif
 } psa_driver_sign_hash_interruptible_context_t;
 
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */
     mbedtls_psa_verify_hash_interruptible_operation_t mbedtls_ctx;
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+    mbedtls_psa_async_crypto_signature_operation_t async_crypto_ctx;
+#endif
 } psa_driver_verify_hash_interruptible_context_t;
 
 typedef union {
