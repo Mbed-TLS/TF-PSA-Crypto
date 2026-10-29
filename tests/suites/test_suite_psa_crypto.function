@@ -8286,20 +8286,6 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
                                              data_t *key_data, int alg_arg,
                                              data_t *input_data)
 {
-    /* Deprecated-name compatibility: the wrappers must behave
-     * identically to psa_iop_{set,get}_max_ops(). */
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-    psa_interruptible_set_max_ops(0xbeef);
-    TEST_EQUAL(psa_iop_get_max_ops(), 0xbeef);
-    TEST_EQUAL(psa_interruptible_get_max_ops(), 0xbeef);
-    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
-    TEST_EQUAL(psa_interruptible_get_max_ops(), PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
@@ -8464,6 +8450,21 @@ void interruptible_signverify_hash_ops_tests(int key_type_arg,
 
     PSA_ASSERT(psa_verify_hash_abort(&verify_operation));
 
+
+    /* Deprecated-name compatibility: the wrappers must behave identically
+     * to psa_iop_{set,get}_max_ops(). */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    psa_interruptible_set_max_ops(0xbeef);
+    TEST_EQUAL(psa_iop_get_max_ops(), 0xbeef);
+    TEST_EQUAL(psa_interruptible_get_max_ops(), 0xbeef);
+    psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+    TEST_EQUAL(psa_interruptible_get_max_ops(), PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 exit:
     /*
      * Key attributes may have been returned by psa_get_key_attributes()
