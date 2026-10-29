@@ -1,0 +1,7 @@
+Bugfix
+   * Fix GCM encryption and decryption failing with PSA_ERROR_INVALID_ARGUMENT
+     for valid buffers when the output buffer lies more than 2 GiB after the
+     input buffer, which can happen on 32-bit platforms when the library is
+     built with GCC and link-time optimization. Through the PSA API, only
+     builds with MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS enabled are affected.
+     Fixes Mbed-TLS/mbedtls#4538.
