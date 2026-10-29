@@ -4709,12 +4709,22 @@ void psa_iop_set_max_ops(uint32_t max_ops);
  */
 uint32_t psa_iop_get_max_ops(void);
 
+/* The wrappers below are deprecated aliases. Use the build system's
+ * deprecation attribute when available; in configurations that remove
+ * deprecation support (e.g. MBEDTLS_DEPRECATED_REMOVED), provide them
+ * without the annotation. */
+#if defined(MBEDTLS_DEPRECATED)
+#define TF_PSA_CRYPTO_DEPRECATED_COMPAT MBEDTLS_DEPRECATED
+#else
+#define TF_PSA_CRYPTO_DEPRECATED_COMPAT
+#endif
+
 /** Deprecated: use psa_iop_set_max_ops() instead.
  *
  * This function is provided for backward compatibility. It behaves exactly
  * like psa_iop_set_max_ops().
  */
-MBEDTLS_DEPRECATED static inline void psa_interruptible_set_max_ops(uint32_t max_ops)
+TF_PSA_CRYPTO_DEPRECATED_COMPAT static inline void psa_interruptible_set_max_ops(uint32_t max_ops)
 {
     psa_iop_set_max_ops(max_ops);
 }
@@ -4724,7 +4734,7 @@ MBEDTLS_DEPRECATED static inline void psa_interruptible_set_max_ops(uint32_t max
  * This function is provided for backward compatibility. It behaves exactly
  * like psa_iop_get_max_ops().
  */
-MBEDTLS_DEPRECATED static inline uint32_t psa_interruptible_get_max_ops(void)
+TF_PSA_CRYPTO_DEPRECATED_COMPAT static inline uint32_t psa_interruptible_get_max_ops(void)
 {
     return psa_iop_get_max_ops();
 }
