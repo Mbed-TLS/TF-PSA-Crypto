@@ -37,7 +37,8 @@
 
 #include "psa_util_internal.h"
 
-#if defined(MBEDTLS_ASN1_PARSE_C) && defined(MBEDTLS_CIPHER_C)
+#if defined(MBEDTLS_ASN1_PARSE_C) && defined(MBEDTLS_CIPHER_C) && \
+    defined(MBEDTLS_CIPHER_PADDING_PKCS7)
 static int pkcs5_parse_pbkdf2_params(const mbedtls_asn1_buf *params,
                                      mbedtls_asn1_buf *salt, int *iterations,
                                      int *keylen, mbedtls_md_type_t *md_type)
@@ -102,15 +103,7 @@ static int pkcs5_parse_pbkdf2_params(const mbedtls_asn1_buf *params,
     return 0;
 }
 
-#if !defined(MBEDTLS_CIPHER_PADDING_PKCS7)
-int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
-                            const unsigned char *pwd,  size_t pwdlen,
-                            const unsigned char *data, size_t datalen,
-                            unsigned char *output, size_t output_size,
-                            size_t *output_len);
-#endif
-
-int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
+int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params,
                             const unsigned char *pwd,  size_t pwdlen,
                             const unsigned char *data, size_t datalen,
                             unsigned char *output, size_t output_size,
@@ -125,7 +118,6 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
     const mbedtls_cipher_info_t *cipher_info;
     mbedtls_cipher_type_t cipher_alg;
     mbedtls_cipher_context_t cipher_ctx;
-    unsigned int padlen = 0;
 
     p = pbe_params->p;
     end = p + pbe_params->len;
@@ -146,8 +138,7 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PKCS5_INVALID_FORMAT, ret);
     }
 
-    // Only PBKDF2 supported at the moment
-    //
+    /* Only PBKDF2 supported at the moment */
     if (MBEDTLS_OID_CMP(MBEDTLS_OID_PKCS5_PBKDF2, &kdf_alg_oid) != 0) {
         return MBEDTLS_ERR_PKCS5_FEATURE_UNAVAILABLE;
     }
@@ -183,17 +174,8 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
         return MBEDTLS_ERR_PKCS5_INVALID_FORMAT;
     }
 
-    if (mode == MBEDTLS_PKCS5_DECRYPT) {
-        if (output_size < datalen) {
-            return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
-        }
-    }
-
-    if (mode == MBEDTLS_PKCS5_ENCRYPT) {
-        padlen = cipher_info->block_size - (datalen % cipher_info->block_size);
-        if (output_size < (datalen + padlen)) {
-            return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
-        }
+    if (output_size < datalen) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
     }
 
     mbedtls_cipher_init(&cipher_ctx);
@@ -211,30 +193,17 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
     }
 
     if ((ret = mbedtls_cipher_setkey(&cipher_ctx, key, 8 * keylen,
-                                     (mbedtls_operation_t) mode)) != 0) {
+                                     MBEDTLS_DECRYPT)) != 0) {
         goto exit;
     }
 
 #if defined(MBEDTLS_CIPHER_MODE_WITH_PADDING)
-    {
-        /* PKCS5 uses CBC with PKCS7 padding (which is the same as
-         * "PKCS5 padding" except that it's typically only called PKCS5
-         * with 64-bit-block ciphers).
-         */
-        mbedtls_cipher_padding_t padding = MBEDTLS_PADDING_PKCS7;
-#if !defined(MBEDTLS_CIPHER_PADDING_PKCS7)
-        /* For historical reasons, when decrypting, this function works when
-         * decrypting even when support for PKCS7 padding is disabled. In this
-         * case, it ignores the padding, and so will never report a
-         * password mismatch.
-         */
-        if (mode == MBEDTLS_DECRYPT) {
-            padding = MBEDTLS_PADDING_NONE;
-        }
-#endif
-        if ((ret = mbedtls_cipher_set_padding_mode(&cipher_ctx, padding)) != 0) {
-            goto exit;
-        }
+    /* PKCS5 uses CBC with PKCS7 padding (which is the same as
+     * "PKCS5 padding" except that it's typically only called PKCS5
+     * with 64-bit-block ciphers).
+     */
+    if ((ret = mbedtls_cipher_set_padding_mode(&cipher_ctx, MBEDTLS_PADDING_PKCS7)) != 0) {
+        goto exit;
     }
 #endif /* MBEDTLS_CIPHER_MODE_WITH_PADDING */
     if ((ret = mbedtls_cipher_crypt(&cipher_ctx, iv, enc_scheme_params.len,
@@ -247,7 +216,7 @@ exit:
 
     return ret;
 }
-#endif /* MBEDTLS_ASN1_PARSE_C && MBEDTLS_CIPHER_C */
+#endif /* MBEDTLS_ASN1_PARSE_C && MBEDTLS_CIPHER_C && MBEDTLS_CIPHER_PADDING_PKCS7 */
 
 static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
                              const unsigned char *password,
@@ -277,8 +246,7 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
         return ret;
     }
     while (key_length) {
-        // U1 ends up in work
-        //
+        /* U1 ends up in work */
         if ((ret = mbedtls_md_hmac_update(ctx, salt, slen)) != 0) {
             goto cleanup;
         }
@@ -298,8 +266,7 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
         memcpy(md1, work, md_size);
 
         for (i = 1; i < iteration_count; i++) {
-            // U2 ends up in md1
-            //
+            /* U2 ends up in md1 */
             if ((ret = mbedtls_md_hmac_update(ctx, md1, md_size)) != 0) {
                 goto cleanup;
             }
@@ -312,8 +279,7 @@ static int pkcs5_pbkdf2_hmac(mbedtls_md_context_t *ctx,
                 goto cleanup;
             }
 
-            // U1 xor U2
-            //
+            /* U1 xor U2 */
             mbedtls_xor(work, work, md1, md_size);
         }
 

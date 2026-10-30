@@ -26,13 +26,10 @@
 #define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  PSA_ERROR_INVALID_ARGUMENT
 /** Unexpected ASN.1 data. */
 #define MBEDTLS_ERR_PKCS5_INVALID_FORMAT                  -0x2f00
-/** Requested encryption or digest alg not available. */
+/** Requested KDF or digest alg not available. */
 #define MBEDTLS_ERR_PKCS5_FEATURE_UNAVAILABLE             -0x2e80
 /** Given private key password does not allow for correct decryption. */
 #define MBEDTLS_ERR_PKCS5_PASSWORD_MISMATCH               -0x2e00
-
-#define MBEDTLS_PKCS5_DECRYPT      MBEDTLS_DECRYPT
-#define MBEDTLS_PKCS5_ENCRYPT      MBEDTLS_ENCRYPT
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,19 +40,17 @@ extern "C" {
 #if defined(MBEDTLS_CIPHER_PADDING_PKCS7)
 
 /**
- * \brief          PKCS#5 PBES2 function
+ * \brief          PKCS#5 PBES2 decryption function
  *
- * \warning        When decrypting:
- *                 - This function validates the CBC padding and returns
- *                   #MBEDTLS_ERR_PKCS5_PASSWORD_MISMATCH if the padding is
- *                   invalid. Note that this can help active adversaries
- *                   attempting to brute-forcing the password. Note also that
- *                   there is no guarantee that an invalid password will be
- *                   detected (the chances of a valid padding with a random
- *                   password are about 1/255).
+ * \warning        This function validates the CBC padding and returns
+ *                 #MBEDTLS_ERR_PKCS5_PASSWORD_MISMATCH if the padding is
+ *                 invalid. Note that this can help active adversaries
+ *                 attempting to brute-forcing the password. Note also that
+ *                 there is no guarantee that an invalid password will be
+ *                 detected (the chances of a valid padding with a random
+ *                 password are about 1/255).
  *
  * \param pbe_params the ASN.1 algorithm parameters
- * \param mode       either #MBEDTLS_PKCS5_DECRYPT or #MBEDTLS_PKCS5_ENCRYPT
  * \param pwd        password to use when generating key
  * \param pwdlen     length of password
  * \param data       data to process
@@ -63,19 +58,13 @@ extern "C" {
  * \param output     Output buffer.
  *                   On success, it contains the decrypted data.
  *                   On failure, the content is indetermidate.
- *                   For decryption, there must be enough room for \p datalen
- *                   bytes.
- *                   For encryption, there must be enough room for
- *                   \p datalen + 1 bytes, rounded up to the block size of
- *                   the block cipher identified by \p pbe_params.
  * \param output_size size of output buffer.
- *                    This must be big enough to accommodate for output plus
- *                    padding data.
+ *                    There must be enough room for \p datalen bytes.
  * \param output_len On success, length of actual data written to the output buffer.
  *
  * \returns        0 on success, or a MBEDTLS_ERR_XXX code if parsing or decryption fails.
  */
-int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params, int mode,
+int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params,
                             const unsigned char *pwd,  size_t pwdlen,
                             const unsigned char *data, size_t datalen,
                             unsigned char *output, size_t output_size,
