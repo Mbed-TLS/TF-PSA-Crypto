@@ -39,4 +39,11 @@ INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
         # component_tests_pkcs5_with_limited_pbkdf2_iteration_count.
         'PBES2 Decrypt AES-128-CBC (FAIL, generated with OpenSSL, 20k iterations in PBKDF2 - too many)', #pylint: disable=line-too-long
     ],
+    'test_suite_psa_crypto': [
+        'PSA generate key: RSA, key pair size does not fit in static key buffer',
+        'PSA generate key: RSA, key pair size fits in static key buffer',
+    ],
+    'test_suite_psa_crypto_storage_format.misc': [
+        'PSA storage read: key larger than MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE',
+    ],
 }
