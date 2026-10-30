@@ -44,7 +44,48 @@
 #define MBEDTLS_CT_X86_64_ASM
 #elif defined(__i386__)
 #define MBEDTLS_CT_X86_ASM
+#elif defined(__XTENSA__)
+#define MBEDTLS_CT_XTENSA_ASM
 #endif
+#endif
+
+/* Force inlining of the constant-time primitives where an assembly path is
+ * in use.
+ *
+ * At -Os the compiler leaves these out of line even though the asm bodies are
+ * a handful of instructions, so every use pays a call. Measured on
+ * mbedtls_mpi_core_sub(), which calls mbedtls_ct_uint_lt() twice per limb:
+ *
+ *   arm-none-eabi-gcc -mthumb -mcpu=cortex-m4 -Os : 2 calls, not inlined
+ *   arm-none-eabi-gcc -mthumb -mcpu=cortex-m4 -O2 : 0 calls, inlined
+ *   arm-none-eabi-gcc -marm   -mcpu=arm7tdmi  -Os : 2 calls, not inlined
+ *   x86-64 gcc and clang                  -Os/-O2 : 0 calls, always inlined
+ *
+ * x86-64 inlines regardless, which is presumably why this has gone unnoticed.
+ * Cost on the Arm thumb -Os measurement: +8 bytes of .text for the whole
+ * translation unit.
+ *
+ * Deliberately NOT applied to the generic C fallback, which is much larger:
+ * there the same change costs +396 bytes on the same measurement, which is a
+ * size/speed trade-off rather than a clear win. Either always_inline branch
+ * implies __GNUC__, because the MBEDTLS_CT_*_ASM macros above require it.
+ *
+ * The conditions below mirror the ones guarding the assembly bodies: the
+ * AArch64 and x86-64 paths cover both limb sizes, while the Arm, x86 and
+ * Xtensa paths are 32-bit only. This matters only for a 32-bit architecture
+ * with 64-bit limbs, which no configuration reaches today: bignum.h never
+ * selects 64-bit limbs on these architectures, and check_config rejects an
+ * explicit MBEDTLS_HAVE_INT64 whenever MBEDTLS_HAVE_ASM is on. Keeping the
+ * two sets of conditions in step costs nothing and stops them drifting apart.
+ */
+#if (defined(MBEDTLS_CT_AARCH64_ASM) || defined(MBEDTLS_CT_X86_64_ASM)) && \
+    (defined(MBEDTLS_CT_SIZE_32) || defined(MBEDTLS_CT_SIZE_64))
+#define MBEDTLS_CT_INLINE static inline __attribute__((always_inline))
+#elif (defined(MBEDTLS_CT_ARM_ASM) || defined(MBEDTLS_CT_X86_ASM) || \
+    defined(MBEDTLS_CT_XTENSA_ASM)) && defined(MBEDTLS_CT_SIZE_32)
+#define MBEDTLS_CT_INLINE static inline __attribute__((always_inline))
+#else
+#define MBEDTLS_CT_INLINE static inline
 #endif
 
 #define MBEDTLS_CT_SIZE (sizeof(mbedtls_ct_uint_t) * 8)
@@ -113,7 +154,7 @@ static inline mbedtls_ct_uint_t mbedtls_ct_compiler_opaque(mbedtls_ct_uint_t x)
 #endif
 
 /* Convert a number into a condition in constant time. */
-static inline mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
+MBEDTLS_CT_INLINE mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
 {
     /*
      * Define mask-generation code that, as far as possible, will not use branches or conditional instructions.
@@ -176,6 +217,18 @@ static inline mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
                   :
                   );
     return (mbedtls_ct_condition_t) x;
+#elif defined(MBEDTLS_CT_XTENSA_ASM) && defined(MBEDTLS_CT_SIZE_32)
+    uint32_t s;
+    asm volatile ("neg   %[s], %[x]                               \n\t"
+                  "or    %[x], %[s], %[x]                         \n\t"
+                  "srai  %[x], %[x], 31                           \n\t"
+                  :
+                  [s] "=&a" (s),
+                  [x] "+&a" (x)
+                  :
+                  :
+                  );
+    return (mbedtls_ct_condition_t) x;
 #else
     const mbedtls_ct_uint_t xo = mbedtls_ct_compiler_opaque(x);
 #if defined(_MSC_VER)
@@ -198,9 +251,9 @@ static inline mbedtls_ct_condition_t mbedtls_ct_bool(mbedtls_ct_uint_t x)
 #endif
 }
 
-static inline mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
-                                              mbedtls_ct_uint_t if1,
-                                              mbedtls_ct_uint_t if0)
+MBEDTLS_CT_INLINE mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
+                                                  mbedtls_ct_uint_t if1,
+                                                  mbedtls_ct_uint_t if0)
 {
 #if defined(MBEDTLS_CT_AARCH64_ASM) && (defined(MBEDTLS_CT_SIZE_32) || defined(MBEDTLS_CT_SIZE_64))
     asm volatile ("and %x[if1], %x[if1], %x[condition]            \n\t"
@@ -257,6 +310,24 @@ static inline mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
                   :
                   );
     return if1;
+#elif defined(MBEDTLS_CT_XTENSA_ASM) && defined(MBEDTLS_CT_SIZE_32)
+    /* Xtensa has no and-not, so ~condition is built with movi -1 / xor. */
+    uint32_t n, t;
+    asm volatile ("movi  %[n], -1                                 \n\t"
+                  "xor   %[n], %[condition], %[n]                 \n\t"
+                  "and   %[t], %[condition], %[if1]               \n\t"
+                  "and   %[n], %[n], %[if0]                       \n\t"
+                  "or    %[t], %[t], %[n]                         \n\t"
+                  :
+                  [n] "=&a" (n),
+                  [t] "=&a" (t)
+                  :
+                  [condition] "a" (condition),
+                  [if1] "a" (if1),
+                  [if0] "a" (if0)
+                  :
+                  );
+    return (mbedtls_ct_uint_t) t;
 #else
     mbedtls_ct_condition_t not_cond =
         (mbedtls_ct_condition_t) (~mbedtls_ct_compiler_opaque(condition));
@@ -264,7 +335,8 @@ static inline mbedtls_ct_uint_t mbedtls_ct_if(mbedtls_ct_condition_t condition,
 #endif
 }
 
-static inline mbedtls_ct_condition_t mbedtls_ct_uint_lt(mbedtls_ct_uint_t x, mbedtls_ct_uint_t y)
+MBEDTLS_CT_INLINE mbedtls_ct_condition_t mbedtls_ct_uint_lt(mbedtls_ct_uint_t x,
+                                                            mbedtls_ct_uint_t y)
 {
 #if defined(MBEDTLS_CT_AARCH64_ASM) && (defined(MBEDTLS_CT_SIZE_32) || defined(MBEDTLS_CT_SIZE_64))
     uint64_t s1;
@@ -343,6 +415,26 @@ static inline mbedtls_ct_condition_t mbedtls_ct_uint_lt(mbedtls_ct_uint_t x, mbe
                   :
                   );
     return (mbedtls_ct_condition_t) x;
+#elif defined(MBEDTLS_CT_XTENSA_ASM) && defined(MBEDTLS_CT_SIZE_32)
+    uint32_t s, n, t;
+    asm volatile ("xor   %[s], %[x], %[y]                         \n\t"
+                  "sub   %[t], %[x], %[y]                         \n\t"
+                  "movi  %[n], -1                                 \n\t"
+                  "xor   %[n], %[s], %[n]                         \n\t"
+                  "and   %[t], %[t], %[n]                         \n\t"
+                  "and   %[s], %[s], %[y]                         \n\t"
+                  "or    %[t], %[t], %[s]                         \n\t"
+                  "srai  %[t], %[t], 31                           \n\t"
+                  :
+                  [s] "=&a" (s),
+                  [n] "=&a" (n),
+                  [t] "=&a" (t)
+                  :
+                  [x] "a" (x),
+                  [y] "a" (y)
+                  :
+                  );
+    return (mbedtls_ct_condition_t) t;
 #else
     /* Ensure that the compiler cannot optimise the following operations over x and y,
      * even if it knows the value of x and y.
