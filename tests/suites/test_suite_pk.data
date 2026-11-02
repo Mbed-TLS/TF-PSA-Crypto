@@ -688,6 +688,18 @@ PK sign ext: SECP521R1, PK_ECDSA, MD_SHA512
 depends_on:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ECC_SECP_R1_521:PSA_WANT_ALG_SHA_512
 pk_sign_ext:MBEDTLS_PK_ECDSA:MBEDTLS_ECP_DP_SECP521R1:MBEDTLS_PK_ECDSA:MBEDTLS_MD_SHA512:MBEDTLS_PK_SIGNATURE_MAX_SIZE:0
 
+PK sign: ECDSA deterministic policy falls back to randomized signing
+depends_on:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ALG_ECDSA:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_PSA_CRYPTO_CLIENT
+pk_sign_ecdsa_randomized_fallback
+
+PK sign: initialized context without a private key
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC
+pk_sign_without_private_key
+
+PK sign: ECDSA DER encoding with undersized output buffer
+depends_on:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_256
+pk_sign_ecdsa_der_buffer_too_small
+
 PSA wrapped sign ext: RSA2048, PK_RSA, MD_SHA256, no sign policy
 depends_on:PSA_WANT_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_SHA_256:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC
 pk_psa_wrap_sign_ext:MBEDTLS_PK_RSA:2048:MBEDTLS_PK_RSA:MBEDTLS_MD_SHA256:1
