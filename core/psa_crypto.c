@@ -338,16 +338,16 @@ static int psa_is_dh_key_size_valid(size_t bits)
           MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY ||
           PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE */
 
-/* Check if the size of an ML-DSA key is valid.
+/* Check if the size (in bytes) of an ML-DSA public key is valid.
  * Only ML-DSA-87 is supported.
  */
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) || \
     defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
-static int psa_is_ml_dsa_key_size_valid(size_t bytes)
+static int psa_is_ml_dsa_public_key_size_valid(size_t bytes)
 {
     switch (bytes) {
 #if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
-        case 2592:
+        case PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87):
             return 1;
 #endif /* PSA_WANT_KEY_TYPE_ML_DSA_87 */
         default:
@@ -748,7 +748,7 @@ psa_status_t psa_import_key_into_slot(
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
         if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-            if (psa_is_ml_dsa_key_size_valid(data_length) == 0) {
+            if (psa_is_ml_dsa_public_key_size_valid(data_length) == 0) {
                 return PSA_ERROR_NOT_SUPPORTED;
             }
             return mbedtls_psa_mldsa_import_key(attributes,
