@@ -483,8 +483,9 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
  *                  function is indeterminate if \p B is zero.
  *
  * \param[out] Q    The pointer to the (little-endian) array to receive
- *                  the integer quotient of \p A by \p B.
- *                  This must be of length \p A_limbs.
+ *                  the integer quotient of \p A by \p B, or NULL if the
+ *                  quotient is not needed. If non-NULL, this must be of
+ *                  length \p A_limbs.
  * \param[out] R    The pointer to the (little-endian) array to receive
  *                  the remainder \p A mod \p B. (0 <= \p R < \p B).
  *                  This must be of length \p B_limbs.

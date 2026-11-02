@@ -1282,13 +1282,17 @@ void mpi_core_div_preconditions()
     mbedtls_mpi_uint B3[3] = { 0 };
     mbedtls_mpi_uint Q1[1], Q3[3], R1[1], R3[3], T1[1], T3[3];
 
-    mbedtls_mpi_core_div(Q1, R1, A1, 1, B1, 1, T1);
-    mbedtls_mpi_core_div(Q3, R1, A3, 3, B1, 1, T1);
-    mbedtls_mpi_core_div(Q1, R3, A1, 1, B3, 3, T3);
-    mbedtls_mpi_core_div(Q3, R3, A3, 3, B3, 3, T3);
+    for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
+        mbedtls_mpi_uint *q1 = use_quotient ? Q1 : NULL;
+        mbedtls_mpi_uint *q3 = use_quotient ? Q3 : NULL;
+        mbedtls_mpi_core_div(q1, R1, A1, 1, B1, 1, T1);
+        mbedtls_mpi_core_div(q3, R1, A3, 3, B1, 1, T1);
+        mbedtls_mpi_core_div(q1, R3, A1, 1, B3, 3, T3);
+        mbedtls_mpi_core_div(q3, R3, A3, 3, B3, 3, T3);
 
-    /* Input aliasing remains permitted when both inputs are zero. */
-    mbedtls_mpi_core_div(Q1, R1, B1, 1, B1, 1, T1);
+        /* Input aliasing remains permitted when both inputs are zero. */
+        mbedtls_mpi_core_div(q1, R1, B1, 1, B1, 1, T1);
+    }
 
     /* We're only asserting that we didn't crash above */
     TEST_ASSERT(1);
@@ -1313,26 +1317,31 @@ void mpi_core_div_alias()
     for (size_t c = 0; c < ARRAY_LENGTH(cases); c++) {
         const size_t A_limbs = cases[c].A_limbs;
         const size_t B_limbs = cases[c].B_limbs;
-        mbedtls_test_set_step(c);
         memcpy(AB, cases[c].value, sizeof(AB));
-        memset(Q, 'Q', sizeof(Q));
-        memset(R, 'R', sizeof(R));
-        memset(T, 'T', sizeof(T));
+        for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
+            mbedtls_test_set_step(2 * c + use_quotient);
+            memset(Q, 'Q', sizeof(Q));
+            memset(R, 'R', sizeof(R));
+            memset(T, 'T', sizeof(T));
 
-        TEST_CF_SECRET(AB, sizeof(AB));
-        mbedtls_mpi_core_div(Q, R, AB, A_limbs, AB, B_limbs, T);
-        TEST_CF_PUBLIC(Q, A_limbs * sizeof(*Q));
-        TEST_CF_PUBLIC(R, B_limbs * sizeof(*R));
-        TEST_CF_PUBLIC(AB, sizeof(AB));
+            TEST_CF_SECRET(AB, sizeof(AB));
+            mbedtls_mpi_core_div(use_quotient ? Q : NULL, R,
+                                 AB, A_limbs, AB, B_limbs, T);
+            if (use_quotient) {
+                TEST_CF_PUBLIC(Q, A_limbs * sizeof(*Q));
+                TEST_EQUAL(Q[0], 1);
+                for (size_t i = 1; i < A_limbs; i++) {
+                    TEST_EQUAL(Q[i], 0);
+                }
+            }
+            TEST_CF_PUBLIC(R, B_limbs * sizeof(*R));
+            TEST_CF_PUBLIC(AB, sizeof(AB));
 
-        TEST_EQUAL(Q[0], 1);
-        for (size_t i = 1; i < A_limbs; i++) {
-            TEST_EQUAL(Q[i], 0);
+            for (size_t i = 0; i < B_limbs; i++) {
+                TEST_EQUAL(R[i], 0);
+            }
+            TEST_MEMORY_COMPARE(AB, sizeof(AB), cases[c].value, sizeof(AB));
         }
-        for (size_t i = 0; i < B_limbs; i++) {
-            TEST_EQUAL(R[i], 0);
-        }
-        TEST_MEMORY_COMPARE(AB, sizeof(AB), cases[c].value, sizeof(AB));
     }
 }
 /* END_CASE */
@@ -1372,21 +1381,27 @@ void mpi_core_div(char *input_A, char *input_B,
     TEST_CALLOC(Q_got, A_limbs);
     TEST_CALLOC(R_got, B_limbs);
     TEST_CALLOC(T, B_limbs);
-    memset(Q_got, 'Q', Q_bytes);
-    memset(R_got, 'R', R_bytes);
+    for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
+        mbedtls_test_set_step(use_quotient);
+        memset(Q_got, 'Q', Q_bytes);
+        memset(R_got, 'R', R_bytes);
 
-    TEST_CF_SECRET(A, A_bytes);
-    TEST_CF_SECRET(B, B_bytes);
+        TEST_CF_SECRET(A, A_bytes);
+        TEST_CF_SECRET(B, B_bytes);
 
-    mbedtls_mpi_core_div(Q_got, R_got, A, A_limbs, B, B_limbs, T);
-    TEST_CF_PUBLIC(Q_got, Q_bytes);
-    TEST_MEMORY_COMPARE(Q_got, Q_bytes, Q_exp, Q_bytes);
-    TEST_CF_PUBLIC(R_got, R_bytes);
-    TEST_MEMORY_COMPARE(R_got, R_bytes, R_exp, R_bytes);
-    TEST_CF_PUBLIC(A, A_bytes);
-    TEST_CF_PUBLIC(B, B_bytes);
-    TEST_MEMORY_COMPARE(A, A_bytes, A_orig, A_bytes);
-    TEST_MEMORY_COMPARE(B, B_bytes, B_orig, B_bytes);
+        mbedtls_mpi_core_div(use_quotient ? Q_got : NULL, R_got,
+                             A, A_limbs, B, B_limbs, T);
+        if (use_quotient) {
+            TEST_CF_PUBLIC(Q_got, Q_bytes);
+            TEST_MEMORY_COMPARE(Q_got, Q_bytes, Q_exp, Q_bytes);
+        }
+        TEST_CF_PUBLIC(R_got, R_bytes);
+        TEST_MEMORY_COMPARE(R_got, R_bytes, R_exp, R_bytes);
+        TEST_CF_PUBLIC(A, A_bytes);
+        TEST_CF_PUBLIC(B, B_bytes);
+        TEST_MEMORY_COMPARE(A, A_bytes, A_orig, A_bytes);
+        TEST_MEMORY_COMPARE(B, B_bytes, B_orig, B_bytes);
+    }
 
 exit:
     mbedtls_free(A);

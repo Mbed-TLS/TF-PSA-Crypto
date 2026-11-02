@@ -540,7 +540,9 @@ void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
                           const mbedtls_mpi_uint *B, size_t B_limbs,
                           mbedtls_mpi_uint *T)
 {
-    memset(Q, 0, A_limbs * sizeof(mbedtls_mpi_uint));
+    if (Q != NULL) {
+        memset(Q, 0, A_limbs * sizeof(mbedtls_mpi_uint));
+    }
     memset(R, 0, B_limbs * sizeof(mbedtls_mpi_uint));
     for (long bit = (long) A_limbs * biL - 1; bit >= 0; bit--) {
         /* Shift in next bit of A into R, retaining the overflow bit. */
@@ -554,12 +556,14 @@ void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
         mbedtls_ct_condition_t R_ge_B = mbedtls_ct_bool_or(
             mbedtls_ct_uint_ne(carry, 0), mbedtls_ct_uint_eq(borrow, 0));
 
-        /* If R >= B, then R -= B; Q |= 1 << bit */
+        /* If R >= B, then R -= B; Q |= 1 << bit (if requested) */
         mbedtls_mpi_core_cond_assign(R, T, B_limbs, R_ge_B);
-        Q[bit / biL] = mbedtls_ct_mpi_uint_if(
-            R_ge_B,
-            Q[bit / biL] | (((mbedtls_mpi_uint) 1) << (bit % biL)),
-            Q[bit / biL]);
+        if (Q != NULL) {
+            Q[bit / biL] = mbedtls_ct_mpi_uint_if(
+                R_ge_B,
+                Q[bit / biL] | (((mbedtls_mpi_uint) 1) << (bit % biL)),
+                Q[bit / biL]);
+        }
     }
 }
 
