@@ -609,3 +609,13 @@ mpi_core_div:"309":"7":"6f":"0"
 
 DIV: random 512-bit div random 256-bit -> 257-bit quotient, 255-bit remainder
 mpi_core_div:"f2a65fba418a2d74cc59090d880b9794f7b5d2785c4289e42798393cf67b16f8abd6c5ea13b3dce6b5f5301ca272c14f5592671049ba97710caf726471da6a21":"8a03b9c27df1ec3fc577d717937ee0e8b7100e8a8a98ee81ed3b49bd9ef2dfcd":"0000000000000000000000000000000000000000000000000000000000000001c215ef13c589ee1ce3003184b38d96e33b14e52532a1adf0a6bfb7c99de35daf":"44f7186bfbdd95b62f055ed45e2ada3951197636432cc1a0571eff7462bef3fe"
+
+DIV: 64-bit div 1-bit
+mpi_core_div:"ffffffffffffffff":"01":"ffffffffffffffff":"00"
+
+DIV: 64-bit div 64-bit
+mpi_core_div:"ffffffffffffffff":"8000000000000000":"0000000000000001":"7fffffffffffffff"
+
+DIV: 64-bit div 65-bit
+mpi_core_div:"ffffffffffffffff":"010000000000000000":"0000000000000000":"00ffffffffffffffff"
+

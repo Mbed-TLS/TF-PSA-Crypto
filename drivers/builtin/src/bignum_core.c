@@ -525,26 +525,38 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
  * 5. Append the next bit of A to X, then go back to step 2.
  * 6. When we've used all bits of A, the final value of X is R.
  *
- * So, normally the number of iterations would depend on bitlen(B) and
- * bitlen(A), but we don't want to leak those. This is easy to fix:
- * - we don't need to take bitlen(B) bits initially, we can shift them in
- *   one by one: until we'll taken enough we'll just have X < B at step 2;
- * - the algorithm works the same is A is 0-padded on the left, so we just
- *   start from the top according to the number of limbs in A.
- *
- * With those minor changes, the algorithm becomes constant time.
- * Its cost is A_limbs * biL * (shift + sub of B_limbs-sized values).
+ * The bit length of B is public, so the top B_bits - 1 bits of A can be
+ * copied into R without subtraction: that prefix is always less than B.
+ * The remaining bits each require one shift and conditional subtraction.
+ * The loop count depends only on public sizes, not on the value of B.
  */
 void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
                           const mbedtls_mpi_uint *A, size_t A_limbs,
-                          const mbedtls_mpi_uint *B, size_t B_limbs,
+                          const mbedtls_mpi_uint *B, size_t B_limbs, size_t B_bits,
                           mbedtls_mpi_uint *T)
 {
+    const size_t A_bits = A_limbs * biL;
+    const size_t prefix_bits = B_bits == 0 ? 0 :
+                               (B_bits - 1 < A_bits ? B_bits - 1 : A_bits);
+    const size_t remaining_bits = A_bits - prefix_bits;
+    const size_t start_limb = remaining_bits / biL;
+    const size_t start_shift = remaining_bits % biL;
+
     if (Q != NULL) {
         memset(Q, 0, A_limbs * sizeof(mbedtls_mpi_uint));
     }
     memset(R, 0, B_limbs * sizeof(mbedtls_mpi_uint));
-    for (long bit = (long) A_limbs * biL - 1; bit >= 0; bit--) {
+
+    /* R = A >> remaining_bits, using only the B_limbs-sized destination. */
+    for (size_t i = 0; i < B_limbs && start_limb + i < A_limbs; i++) {
+        size_t source = start_limb + i;
+        R[i] = A[source] >> start_shift;
+        if (start_shift != 0 && source + 1 < A_limbs) {
+            R[i] |= A[source + 1] << (biL - start_shift);
+        }
+    }
+
+    for (size_t bit = remaining_bits; bit-- > 0;) {
         /* Shift in next bit of A into R, retaining the overflow bit. */
         mbedtls_mpi_uint carry = R[B_limbs - 1] >> (biL - 1);
         mbedtls_mpi_core_shift_l(R, B_limbs, 1);

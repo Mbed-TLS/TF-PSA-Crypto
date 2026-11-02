@@ -1281,17 +1281,19 @@ void mpi_core_div_preconditions()
     mbedtls_mpi_uint B1[1] = { 0 };
     mbedtls_mpi_uint B3[3] = { 0 };
     mbedtls_mpi_uint Q1[1], Q3[3], R1[1], R3[3], T1[1], T3[3];
+    const size_t B1_bits = mbedtls_mpi_core_bitlen(B1, 1);
+    const size_t B3_bits = mbedtls_mpi_core_bitlen(B3, 3);
 
     for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
         mbedtls_mpi_uint *q1 = use_quotient ? Q1 : NULL;
         mbedtls_mpi_uint *q3 = use_quotient ? Q3 : NULL;
-        mbedtls_mpi_core_div(q1, R1, A1, 1, B1, 1, T1);
-        mbedtls_mpi_core_div(q3, R1, A3, 3, B1, 1, T1);
-        mbedtls_mpi_core_div(q1, R3, A1, 1, B3, 3, T3);
-        mbedtls_mpi_core_div(q3, R3, A3, 3, B3, 3, T3);
+        mbedtls_mpi_core_div(q1, R1, A1, 1, B1, 1, B1_bits, T1);
+        mbedtls_mpi_core_div(q3, R1, A3, 3, B1, 1, B1_bits, T1);
+        mbedtls_mpi_core_div(q1, R3, A1, 1, B3, 3, B3_bits, T3);
+        mbedtls_mpi_core_div(q3, R3, A3, 3, B3, 3, B3_bits, T3);
 
         /* Input aliasing remains permitted when both inputs are zero. */
-        mbedtls_mpi_core_div(q1, R1, B1, 1, B1, 1, T1);
+        mbedtls_mpi_core_div(q1, R1, B1, 1, B1, 1, B1_bits, T1);
     }
 
     /* We're only asserting that we didn't crash above */
@@ -1318,6 +1320,7 @@ void mpi_core_div_alias()
         const size_t A_limbs = cases[c].A_limbs;
         const size_t B_limbs = cases[c].B_limbs;
         memcpy(AB, cases[c].value, sizeof(AB));
+        const size_t B_bits = mbedtls_mpi_core_bitlen(AB, B_limbs);
         for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
             mbedtls_test_set_step(2 * c + use_quotient);
             memset(Q, 'Q', sizeof(Q));
@@ -1326,7 +1329,7 @@ void mpi_core_div_alias()
 
             TEST_CF_SECRET(AB, sizeof(AB));
             mbedtls_mpi_core_div(use_quotient ? Q : NULL, R,
-                                 AB, A_limbs, AB, B_limbs, T);
+                                 AB, A_limbs, AB, B_limbs, B_bits, T);
             if (use_quotient) {
                 TEST_CF_PUBLIC(Q, A_limbs * sizeof(*Q));
                 TEST_EQUAL(Q[0], 1);
@@ -1372,6 +1375,7 @@ void mpi_core_div(char *input_A, char *input_B,
     const size_t R_bytes = R_limbs * sizeof(mbedtls_mpi_uint);
     const size_t A_bytes = A_limbs * sizeof(mbedtls_mpi_uint);
     const size_t B_bytes = B_limbs * sizeof(mbedtls_mpi_uint);
+    const size_t B_bits = mbedtls_mpi_core_bitlen(B, B_limbs);
 
     TEST_CALLOC(A_orig, A_limbs);
     TEST_CALLOC(B_orig, B_limbs);
@@ -1390,7 +1394,7 @@ void mpi_core_div(char *input_A, char *input_B,
         TEST_CF_SECRET(B, B_bytes);
 
         mbedtls_mpi_core_div(use_quotient ? Q_got : NULL, R_got,
-                             A, A_limbs, B, B_limbs, T);
+                             A, A_limbs, B, B_limbs, B_bits, T);
         if (use_quotient) {
             TEST_CF_PUBLIC(Q_got, Q_bytes);
             TEST_MEMORY_COMPARE(Q_got, Q_bytes, Q_exp, Q_bytes);

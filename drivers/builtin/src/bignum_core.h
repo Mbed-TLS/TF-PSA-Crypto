@@ -495,6 +495,8 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
  * \param[in] B     The pointer to the (little-endian) array
  *                  representing the divisor.
  * \param B_limbs   The number of limbs in \p B.
+ * \param B_bits    The public bit length of \p B. It must equal the value
+ *                  returned by mbedtls_mpi_core_bitlen(B, B_limbs).
  * \param[in,out] T Temporary storage of size at least \p B_limbs limbs.
  *                  Its initial content is unused and
  *                  its final content is indeterminate.
@@ -503,7 +505,7 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
  */
 void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
                           const mbedtls_mpi_uint *A, size_t A_limbs,
-                          const mbedtls_mpi_uint *B, size_t B_limbs,
+                          const mbedtls_mpi_uint *B, size_t B_limbs, size_t B_bits,
                           mbedtls_mpi_uint *T);
 
 /**
