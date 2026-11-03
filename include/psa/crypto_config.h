@@ -117,10 +117,18 @@
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
+//#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
-//#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
+
+/* This option enables the ML-DSA-87 parameter set. It does not enable an
+ * ML-DSA key type by itself. To enable ML-DSA support, enable at least
+ * one of the ML-DSA key type options (PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY
+ * or PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_...) and at least one of the ML-DSA
+ * parameter set options.
+ */
 //#define PSA_WANT_KEY_TYPE_ML_DSA_87             1
+
 /*
  * The following symbols extend and deprecate the legacy
  * PSA_WANT_KEY_TYPE_xxx_KEY_PAIR ones. They include the usage of that key in
