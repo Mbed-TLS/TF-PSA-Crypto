@@ -317,23 +317,8 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
-    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR &&
-        psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
+    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
         return PSA_ERROR_NOT_SUPPORTED;
-    }
-
-    if (psa_get_key_type(attributes) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
-        if (key_buffer_size != TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87)) {
-            return PSA_ERROR_INVALID_ARGUMENT;
-        }
-        if (key_buffer_size > data_size) {
-            return PSA_ERROR_BUFFER_TOO_SMALL;
-        }
-        memcpy(data, key_buffer, key_buffer_size);
-        memset(data + key_buffer_size, 0,
-               data_size - key_buffer_size);
-        *data_length = key_buffer_size;
-        return PSA_SUCCESS;
     }
 
     if (key_buffer_size == SEED_SIZE) {

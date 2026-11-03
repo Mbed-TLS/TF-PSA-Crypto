@@ -1459,9 +1459,7 @@ psa_status_t psa_export_public_key_internal(
 {
     psa_key_type_t type = attributes->type;
 
-    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) &&
-        (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type) ||
-         PSA_KEY_TYPE_IS_DH(type))) {
+    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type)) {
         /* Exporting public -> public */
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
@@ -1506,16 +1504,6 @@ psa_status_t psa_export_public_key_internal(
         return PSA_ERROR_NOT_SUPPORTED;
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_EXPORT) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY) */
-    } else if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
-        return tf_psa_crypto_mldsa_export_public_key(attributes,
-                                                     key_buffer,
-                                                     key_buffer_size,
-                                                     data, data_size,
-                                                     data_length);
-#else
-        return PSA_ERROR_NOT_SUPPORTED;
-#endif /* defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)*/
     } else {
         (void) key_buffer;
         (void) key_buffer_size;
