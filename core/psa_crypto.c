@@ -338,24 +338,28 @@ static int psa_is_dh_key_size_valid(size_t bits)
           MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY ||
           PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE */
 
-/* Check if the size (in bytes) of an ML-DSA public key is valid.
+/* Check that the parameter set specified by *bits matches
+ * the representation size of the ML-DSA public key.
+ * Infer the parameter set from the representation size
+ * if *bits is set to zero.
+ *
  * Only ML-DSA-87 is supported.
  */
-#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) || \
-    defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
-static int psa_is_ml_dsa_public_key_size_valid(size_t bytes)
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+static psa_status_t psa_validate_ml_dsa_public_key_bits(size_t data_length,
+                                                        size_t *bits)
 {
-    switch (bytes) {
 #if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
-        case PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87):
-            return 1;
-#endif /* PSA_WANT_KEY_TYPE_ML_DSA_87 */
-        default:
-            return 0;
+    if (data_length == PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)) {
+        if (*bits == 0) {
+            *bits = 87;
+        }
+        return *bits == 87 ? PSA_SUCCESS : PSA_ERROR_INVALID_ARGUMENT;
     }
+#endif /* PSA_WANT_KEY_TYPE_ML_DSA_87 */
+    return PSA_ERROR_NOT_SUPPORTED;
 }
-#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED ||
-        * TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+#endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */
 
 psa_status_t mbedtls_to_psa_error(int ret)
 {
@@ -748,8 +752,9 @@ psa_status_t psa_import_key_into_slot(
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
         if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-            if (psa_is_ml_dsa_public_key_size_valid(data_length) == 0) {
-                return PSA_ERROR_NOT_SUPPORTED;
+            status = psa_validate_ml_dsa_public_key_bits(data_length, bits);
+            if (status != PSA_SUCCESS) {
+                return status;
             }
             return mbedtls_psa_mldsa_import_key(attributes,
                                                 data, data_length,
