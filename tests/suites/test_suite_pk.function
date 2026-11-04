@@ -1225,7 +1225,7 @@ void pk_sign_verify_restart(int pk_type,
         } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
     }
     if (ret != 0) {
-        TEST_ASSERT(ret == sign_ret);
+        TEST_EQUAL(ret, sign_ret);
         goto exit;
     }
 
@@ -1638,7 +1638,7 @@ void pk_sign_without_private_key()
     TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)), 0);
     TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, sizeof(hash),
                                sig, sizeof(sig), &sig_len),
-               MBEDTLS_ERR_PK_BAD_INPUT_DATA);
+               PSA_ERROR_NOT_SUPPORTED);
 
 exit:
     mbedtls_pk_free(&pk);
