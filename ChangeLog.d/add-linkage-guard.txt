@@ -1,3 +1,0 @@
-Bugfix
-   Add extern "C" guard to constant_time.h. Fixes #930.
-
