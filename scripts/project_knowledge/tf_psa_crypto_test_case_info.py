@@ -29,4 +29,9 @@ INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
     'test_suite_config.crypto_combinations': [
         'Config: entropy: NV seed only',
     ],
+    'test_suite_pkcs5': [
+        # This configuration is only tested in TF-PSA-Crypto through
+        # component_tests_pkcs5_with_limited_pbkdf2_iteration_count.
+        'PBES2 Decrypt AES-128-CBC (FAIL, generated with OpenSSL, 20k iterations in PBKDF2 - too many)', #pylint: disable=line-too-long
+    ],
 }
