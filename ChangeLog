@@ -26,7 +26,9 @@ Security
      Tahir (MS Information Security, MCS, NUST). CVE-2026-93845
    * Build symbol MBEDTLS_PK_DECRYPT_MAX_ITERATIONS has been added to
      limit the maximum number of iterations for the PBKDF2 algorithm used when
-     decrypting a PKCS#8 encrypted private key in PK module. CVE-2026-50582.
+     decrypting a PKCS#8 encrypted private key in PK module. Reported by
+     jiliang, Tanish Saxena ("Logic26"), Hila Cohen (@hillalee on GitHub).
+     CVE-2026-50582.
    * Fix a Spectre v1 side channel in AES and GCM acceleration: a powerful
      local attacker could potentially recover part of the key or plaintext
      through timing measurements even when AESNI or AESCE is available,
