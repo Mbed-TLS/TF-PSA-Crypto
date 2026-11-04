@@ -1623,7 +1623,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC */
+/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_HAVE_ALG_ECDSA_SIGN */
 void pk_sign_without_private_key()
 {
     mbedtls_pk_context pk;

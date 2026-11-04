@@ -693,7 +693,7 @@ depends_on:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ALG
 pk_sign_ecdsa_randomized_fallback
 
 PK sign: initialized context without a private key
-depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_HAVE_ALG_ECDSA_SIGN
 pk_sign_without_private_key
 
 PK sign: ECDSA DER encoding with undersized output buffer
