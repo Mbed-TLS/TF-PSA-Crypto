@@ -205,6 +205,10 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # https://github.com/Mbed-TLS/mbedtls/issues/9592
             'PSA sign DETERMINISTIC_ECDSA(SHA_256): !ECDSA but DETERMINISTIC_ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
         ],
+        'test_suite_psa_crypto_metadata.experimental': [
+            #Requires ML-DSA key-pair support.
+            'Key type: ML-DSA key pair',
+        ],
     }
 
     def __init__(self, options) -> None:
