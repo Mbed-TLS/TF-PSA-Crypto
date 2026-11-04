@@ -179,19 +179,6 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
     return status;
 }
 
-static int convert_keysize_to_bits(size_t key_length)
-{
-    switch (key_length) {
-#if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
-        case 2592:
-            return 87;
-#endif
-        /* In future, support ML-DSA-44 and 65 */
-        default:
-            return -1;
-    }
-}
-
 static psa_status_t seed_to_public_key(
     size_t bits,
     const uint8_t *key_buffer, size_t key_buffer_size,
@@ -275,35 +262,6 @@ static psa_status_t export_public_from_expanded(
     } else {
         return status;
     }
-}
-
-psa_status_t mbedtls_psa_mldsa_import_key(
-    const psa_key_attributes_t *attributes,
-    const uint8_t *data, size_t data_length,
-    uint8_t *key_buffer, size_t key_buffer_size,
-    size_t *key_buffer_length, size_t *bits)
-{
-    int key_bits = 0;
-
-    if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR &&
-        psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-
-    if (key_buffer_size < data_length) {
-        return PSA_ERROR_BUFFER_TOO_SMALL;
-    }
-
-    key_bits = convert_keysize_to_bits(data_length);
-    if (key_bits == -1) {
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-
-    memcpy(key_buffer, data, data_length);
-    *key_buffer_length = data_length;
-    *bits = (size_t) key_bits;
-
-    return PSA_SUCCESS;
 }
 
 psa_status_t tf_psa_crypto_mldsa_export_public_key(

@@ -752,15 +752,18 @@ psa_status_t psa_import_key_into_slot(
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
         if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+            if (key_buffer_size < data_length) {
+                return PSA_ERROR_BUFFER_TOO_SMALL;
+            }
+
             status = psa_validate_ml_dsa_public_key_bits(data_length, bits);
             if (status != PSA_SUCCESS) {
                 return status;
             }
-            return mbedtls_psa_mldsa_import_key(attributes,
-                                                data, data_length,
-                                                key_buffer, key_buffer_size,
-                                                key_buffer_length,
-                                                bits);
+
+            memcpy(key_buffer, data, data_length);
+            *key_buffer_length = data_length;
+            return PSA_SUCCESS;
         }
 #endif /* defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED) */
     }
