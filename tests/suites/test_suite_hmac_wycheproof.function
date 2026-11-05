@@ -1,0 +1,82 @@
+/* BEGIN_HEADER */
+#include "psa/crypto.h"
+
+/* Project Wycheproof HMAC harness. There is one .data file per hash.
+ * Columns: <PSA hash alg>:key:msg:tag
+ *   valid               -> mbedtls_hmac_gen_ver
+ *   invalid + ModifiedTag -> mbedtls_hmac_ver_modified_tag
+ * Wycheproof truncates the tag (tagSize may be less than the hash output), so the MAC
+ * algorithm is truncated to tag->len when shorter than the full hash length. */
+
+/* Build the (possibly truncated) HMAC algorithm for a given tag length. */
+static psa_algorithm_t wp_hmac_alg(psa_algorithm_t hash, size_t tag_len)
+{
+    psa_algorithm_t full = PSA_ALG_HMAC(hash);
+    if (tag_len == PSA_HASH_LENGTH(hash)) {
+        return full;
+    }
+    return PSA_ALG_TRUNCATED_MAC(full, tag_len);
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:PSA_WANT_ALG_HMAC
+ * END_DEPENDENCIES
+ */
+
+/* Valid vector: the HMAC of msg under key matches the tag (compute + verify). */
+/* BEGIN_CASE */
+void mbedtls_hmac_gen_ver(int hash_arg, data_t* key, data_t* msg, data_t* tag)
+{
+    psa_algorithm_t hash = (psa_algorithm_t)hash_arg;
+    psa_algorithm_t alg = wp_hmac_alg(hash, tag->len);
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    unsigned char mac[PSA_MAC_MAX_SIZE];
+    size_t mac_len = 0;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
+    PSA_ASSERT(psa_import_key(&attr, key->x, key->len, &key_id));
+
+    /* Compute and compare. */
+    PSA_ASSERT(psa_mac_compute(key_id, alg, msg->x, msg->len,
+        mac, sizeof(mac), &mac_len));
+    TEST_MEMORY_COMPARE(mac, mac_len, tag->x, tag->len);
+
+    /* Verify. */
+    PSA_ASSERT(psa_mac_verify(key_id, alg, msg->x, msg->len, tag->x, tag->len));
+
+exit:
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* Invalid vector with a modified tag: verification must reject it. */
+/* BEGIN_CASE */
+void mbedtls_hmac_ver_modified_tag(int hash_arg, data_t* key, data_t* msg, data_t* tag)
+{
+    psa_algorithm_t hash = (psa_algorithm_t)hash_arg;
+    psa_algorithm_t alg = wp_hmac_alg(hash, tag->len);
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
+    PSA_ASSERT(psa_import_key(&attr, key->x, key->len, &key_id));
+
+    TEST_EQUAL(PSA_ERROR_INVALID_SIGNATURE,
+        psa_mac_verify(key_id, alg, msg->x, msg->len, tag->x, tag->len));
+
+exit:
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
