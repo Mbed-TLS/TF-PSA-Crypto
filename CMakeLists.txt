@@ -81,15 +81,16 @@ ADD_CUSTOM_TARGET(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto-apidoc
 option(ENABLE_PROGRAMS "Build TF-PSA-Crypto programs." ON)
 
 option(TF_PSA_CRYPTO_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
-if(CMAKE_HOST_WIN32)
-    # N.B. The comment on the next line is significant! If you change it,
-    # edit the sed command in prepare_release.sh that modifies
-    # CMakeLists.txt.
-    option(GEN_FILES "Generate the auto-generated files as needed" OFF) # off in development
-else()
-    option(GEN_FILES "Generate the auto-generated files as needed" ON)
+
+set(tf_psa_crypto_default_gen_files ON)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+    set(tf_psa_crypto_default_gen_files OFF)
+    message(STATUS "TF-PSA-Crypto Git metadata not found; GEN_FILES defaults to OFF.")
+elseif(CMAKE_HOST_WIN32)
+     set(tf_psa_crypto_default_gen_files OFF)
 endif()
 
+option(GEN_FILES "Generate the auto-generated files as needed" ${tf_psa_crypto_default_gen_files})
 # Support for package config and install to be added later.
 option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target export and installation" ${TF_PSA_CRYPTO_AS_SUBPROJECT})
 
