@@ -1593,7 +1593,13 @@ void pk_sign_ecdsa_randomized_fallback()
 {
     mbedtls_pk_context signer, verifier;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+#if defined(PSA_WANT_ALG_SHA_256)
     unsigned char hash[32] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA256;
+#else
+    unsigned char hash[64] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA512;
+#endif
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
 
@@ -1610,9 +1616,9 @@ void pk_sign_ecdsa_randomized_fallback()
     TEST_EQUAL(mbedtls_pk_wrap_psa(&signer, key_id), 0);
     TEST_EQUAL(mbedtls_pk_copy_public_from_psa(key_id, &verifier), 0);
 
-    TEST_EQUAL(mbedtls_pk_sign(&signer, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+    TEST_EQUAL(mbedtls_pk_sign(&signer, md_alg, hash, sizeof(hash),
                                sig, sizeof(sig), &sig_len), 0);
-    TEST_EQUAL(mbedtls_pk_verify(&verifier, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+    TEST_EQUAL(mbedtls_pk_verify(&verifier, md_alg, hash, sizeof(hash),
                                  sig, sig_len), 0);
 
 exit:
@@ -1650,7 +1656,13 @@ exit:
 void pk_sign_ecdsa_der_buffer_too_small()
 {
     mbedtls_pk_context pk;
+#if defined(PSA_WANT_ALG_SHA_256)
     unsigned char hash[32] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA256;
+#else
+    unsigned char hash[64] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA512;
+#endif
     unsigned char sig[PSA_ECDSA_SIGNATURE_SIZE(256)];
     size_t sig_len;
 
@@ -1659,7 +1671,7 @@ void pk_sign_ecdsa_der_buffer_too_small()
 
     TEST_EQUAL(pk_setup(&pk, MBEDTLS_PK_ECDSA, MBEDTLS_ECP_DP_SECP256R1), 0);
     /* The raw PSA signature fits exactly, but its DER encoding is larger. */
-    TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+    TEST_EQUAL(mbedtls_pk_sign(&pk, md_alg, hash, sizeof(hash),
                                sig, sizeof(sig), &sig_len),
                MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
 
