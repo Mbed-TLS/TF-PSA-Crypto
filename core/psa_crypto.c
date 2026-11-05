@@ -3051,8 +3051,9 @@ exit:
 /* Asymmetric cryptography */
 /****************************************************************/
 
-static psa_status_t psa_sign_verify_check_alg(int input_is_message,
-                                              psa_algorithm_t alg)
+MBEDTLS_STATIC_TESTABLE psa_status_t psa_sign_verify_check_alg(
+    int input_is_message,
+    psa_algorithm_t alg)
 {
     if (input_is_message) {
         if (!PSA_ALG_IS_SIGN_MESSAGE(alg)) {
@@ -3068,9 +3069,10 @@ static psa_status_t psa_sign_verify_check_alg(int input_is_message,
     /* Now hash_alg==0 if alg by itself doesn't need a hash.
      * This is good enough for sign-hash, but a guaranteed failure for
      * sign-message which needs to hash first for all algorithms
-     * supported at the moment. */
+     * supported at the moment. Except for EDDSA which is a sign-message algorithm
+     * that doesn't have a separate hash step: the hashing is part of the signature algorithm. */
 
-    if (hash_alg == 0 && input_is_message) {
+    if (hash_alg == 0 && input_is_message && alg != PSA_ALG_PURE_EDDSA) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
     if (hash_alg == PSA_ALG_ANY_HASH) {
