@@ -95,8 +95,8 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
                             const unsigned char input[16],
                             unsigned char output[16])
 {
-    const __m128i *rk = (const __m128i *) (ctx->buf + ctx->rk_offset);
-    unsigned nr = ctx->nr; // Number of remaining rounds
+    const __m128i *rk = (const __m128i *) (ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx));
+    unsigned nr = MBEDTLS_AES_GET_NR(ctx); // Number of remaining rounds
 
     // Load round key 0
     __m128i state;
@@ -499,7 +499,12 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
          "3:                        \n\t"
          "movdqu    %%xmm0, (%4)    \n\t" // export output
          :
-         : "r" (ctx->nr), "r" (ctx->buf + ctx->rk_offset), "r" (mode), "r" (input), "r" (output)
+         :
+         "r" (MBEDTLS_AES_GET_NR(ctx)),
+         "r" (ctx->buf + MBEDTLS_AES_GET_RK_OFFSET(ctx)),
+         "r" (mode),
+         "r" (input),
+         "r" (output)
          : "memory", "cc", "xmm0", "xmm1", "0", "1");
 
 
