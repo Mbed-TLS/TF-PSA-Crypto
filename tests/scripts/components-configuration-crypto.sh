@@ -1457,3 +1457,42 @@ component_test_pqcp_buffer_alloc_pthread_hooks () {
     msg "test: TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC, pthread+hooks"
     ctest
 }
+
+# Build sha3.c with only its hash part: built-in SHA3 hashes, no
+# built-in SHAKE.
+component_test_sha3_hashes_no_shake () {
+    msg "build: full config, no built-in SHAKE"
+    scripts/config.py full
+    scripts/config.py unset PSA_WANT_ALG_SHAKE128
+    scripts/config.py unset PSA_WANT_ALG_SHAKE256
+    # ML-DSA otherwise forces the built-in SHAKEs back on (see
+    # crypto_adjust_config_dependencies.h); disable it in this
+    # component (see Mbed-TLS/TF-PSA-Crypto#912).
+    scripts/config.py unset TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
+    scripts/config.py unset TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
+    scripts/config.py unset TF_PSA_CRYPTO_PQCP_MLDSA_65_ENABLED
+    scripts/config.py unset TF_PSA_CRYPTO_PQCP_MLDSA_44_ENABLED
+
+    cmake -S . -B build-noshake
+    cmake --build build-noshake -j"$(nproc)"
+
+    msg "test: full config, no built-in SHAKE"
+    build-noshake/tests/test_suite_config.crypto_combinations
+}
+
+# Build sha3.c with only its XOF part: built-in SHAKE, no built-in
+# SHA3 hash.
+component_test_shake_no_sha3_hash () {
+    msg "build: full config, SHAKE but no built-in SHA3 hash"
+    scripts/config.py full
+    scripts/config.py unset PSA_WANT_ALG_SHA3_224
+    scripts/config.py unset PSA_WANT_ALG_SHA3_256
+    scripts/config.py unset PSA_WANT_ALG_SHA3_384
+    scripts/config.py unset PSA_WANT_ALG_SHA3_512
+
+    cmake -S . -B build-nohash
+    cmake --build build-nohash -j"$(nproc)"
+
+    msg "test: full config, SHAKE but no built-in SHA3 hash"
+    build-nohash/tests/test_suite_config.crypto_combinations
+}
