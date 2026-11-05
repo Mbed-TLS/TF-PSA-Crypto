@@ -1836,6 +1836,23 @@
 //#define MBEDTLS_RSA_NO_CRT
 
 /**
+ * \def MBEDTLS_SHA1_SMALLER
+ *
+ * Enable an implementation of SHA-1 that has lower ROM footprint but also
+ * lower performance.
+ *
+ * The default implementation fully unrolls the 80 rounds of
+ * mbedtls_internal_sha1_process(). This version uses a single loop instead,
+ * optimising aggressively for size at the expense of performance. Eg on
+ * Cortex-M0+ it reduces the size of mbedtls_internal_sha1_process() from
+ * ~4.5KB to ~0.4KB (on Cortex-M4 from ~3.7KB to ~0.35KB) for a throughput
+ * reduction of about 2.6x on Cortex-M0+.
+ *
+ * Uncomment to enable the smaller implementation of SHA1.
+ */
+//#define MBEDTLS_SHA1_SMALLER
+
+/**
  * \def MBEDTLS_SHA256_SMALLER
  *
  * Enable an implementation of SHA-256 that has lower ROM footprint but also
