@@ -52,6 +52,39 @@ component_tf_psa_crypto_test_default_out_of_box () {
     make test
 }
 
+component_tf_psa_crypto_test_async_provider_modes () {
+    msg "build/test: async PSA crypto provider mode matrix"
+
+    local mode
+    for mode in default hardware_available software_only hybrid off; do
+        local build_dir="$OUT_OF_SOURCE_DIR/async-provider-$mode"
+        local c_flags=""
+        case "$mode" in
+            hardware_available)
+                c_flags="-DMBEDTLS_PSA_ASYNC_CRYPTO_HARDWARE_AVAILABLE=1"
+                ;;
+            software_only)
+                c_flags="-DMBEDTLS_PSA_ASYNC_CRYPTO_MODE_SOFTWARE_ONLY=1"
+                ;;
+            hybrid)
+                c_flags="-DMBEDTLS_PSA_ASYNC_CRYPTO_HARDWARE_AVAILABLE=1 -DMBEDTLS_PSA_ASYNC_CRYPTO_MODE_HYBRID=1"
+                ;;
+            off)
+                c_flags="-DMBEDTLS_PSA_ASYNC_CRYPTO_MODE_OFF=1"
+                ;;
+        esac
+
+        msg "build: async provider mode $mode"
+        mkdir -p "$build_dir"
+        cd "$build_dir"
+        cmake -DCMAKE_BUILD_TYPE:String=Check -DCMAKE_C_FLAGS="$c_flags" "$TF_PSA_CRYPTO_ROOT_DIR"
+        make test_suite_psa_crypto_async_provider
+
+        msg "test: async provider mode $mode"
+        ctest -R psa_crypto_async_provider --output-on-failure
+    done
+}
+
 component_tf_psa_crypto_test_default_gcc_asan () {
     msg "build: gcc, ASan" # ~ 1 min 50s
     cd $OUT_OF_SOURCE_DIR

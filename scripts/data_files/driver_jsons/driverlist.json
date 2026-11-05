@@ -1,4 +1,5 @@
 [
+    "psa_crypto_async_transparent_driver.json",
     "p256_transparent_driver.json",
     "pqcp_driver.json",
     "mbedtls_test_transparent_driver.json",

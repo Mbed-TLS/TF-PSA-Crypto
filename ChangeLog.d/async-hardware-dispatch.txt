@@ -1,0 +1,5 @@
+Features
+   * Add generic async hardware dispatch support for selected PSA and PK
+     asymmetric operations. This lets platform providers route supported ECDSA,
+     ECDH, and RSA operations to interrupt-driven hardware without blocking the
+     PSA caller.

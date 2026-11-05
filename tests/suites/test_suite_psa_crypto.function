@@ -72,6 +72,296 @@ static int mem_is_char(void *buffer, unsigned char c, size_t size)
     }
     return 1;
 }
+
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_RSA) ||   \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
+typedef void (*async_hardware_test_callback_t)(int success, void *context);
+
+typedef struct {
+    async_hardware_test_callback_t callback;
+    void *context;
+    size_t starts;
+    int start_result;
+} async_hardware_test_state_t;
+
+static async_hardware_test_state_t async_hardware_test_ecdsa_sign;
+static async_hardware_test_state_t async_hardware_test_ecdsa_verify;
+static async_hardware_test_state_t async_hardware_test_rsa_sign;
+static async_hardware_test_state_t async_hardware_test_rsa_verify;
+static async_hardware_test_state_t async_hardware_test_ecdh;
+
+static void async_hardware_test_reset(void)
+{
+    memset(&async_hardware_test_ecdsa_sign, 0,
+           sizeof(async_hardware_test_ecdsa_sign));
+    memset(&async_hardware_test_ecdsa_verify, 0,
+           sizeof(async_hardware_test_ecdsa_verify));
+    memset(&async_hardware_test_rsa_sign, 0,
+           sizeof(async_hardware_test_rsa_sign));
+    memset(&async_hardware_test_rsa_verify, 0,
+           sizeof(async_hardware_test_rsa_verify));
+    memset(&async_hardware_test_ecdh, 0, sizeof(async_hardware_test_ecdh));
+    async_hardware_test_ecdsa_sign.start_result = 1;
+    async_hardware_test_ecdsa_verify.start_result = 1;
+    async_hardware_test_rsa_sign.start_result = 1;
+    async_hardware_test_rsa_verify.start_result = 1;
+    async_hardware_test_ecdh.start_result = 1;
+}
+
+static int async_hardware_test_complete(async_hardware_test_state_t *state,
+                                        int success)
+{
+    if (state->callback == NULL) {
+        return 0;
+    }
+    state->callback(success, state->context);
+    state->callback = NULL;
+    state->context = NULL;
+    return 1;
+}
+
+static int async_hardware_test_start(async_hardware_test_state_t *state,
+                                     async_hardware_test_callback_t callback,
+                                     void *context)
+{
+    state->starts++;
+    if (state->start_result == 0) {
+        return 0;
+    }
+    state->callback = callback;
+    state->context = context;
+    return 1;
+}
+#endif
+
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+int mbedtls_async_hardware_ecdsa_p256_sign_start(
+    const uint8_t private_key[32], const uint8_t hash[32],
+    uint8_t signature[64], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdsa_p384_sign_start(
+    const uint8_t private_key[48], const uint8_t hash[48],
+    uint8_t signature[96], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdsa_p521_sign_start(
+    const uint8_t private_key[66], const uint8_t hash[64],
+    uint8_t signature[132], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdsa_p256_verify_start(
+    const uint8_t public_key[65], const uint8_t hash[32],
+    const uint8_t signature[64], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdsa_p384_verify_start(
+    const uint8_t public_key[97], const uint8_t hash[48],
+    const uint8_t signature[96], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdsa_p521_verify_start(
+    const uint8_t public_key[133], const uint8_t hash[64],
+    const uint8_t signature[132], async_hardware_test_callback_t callback,
+    void *context);
+
+int mbedtls_async_hardware_ecdsa_p256_sign_start(
+    const uint8_t private_key[32], const uint8_t hash[32],
+    uint8_t signature[64], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) private_key;
+    (void) hash;
+    memset(signature, 0x5a, 64);
+    return async_hardware_test_start(&async_hardware_test_ecdsa_sign,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_ecdsa_p384_sign_start(
+    const uint8_t private_key[48], const uint8_t hash[48],
+    uint8_t signature[96], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) private_key;
+    (void) hash;
+    memset(signature, 0x5a, 96);
+    return async_hardware_test_start(&async_hardware_test_ecdsa_sign,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_ecdsa_p521_sign_start(
+    const uint8_t private_key[66], const uint8_t hash[64],
+    uint8_t signature[132], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) private_key;
+    (void) hash;
+    memset(signature, 0x5a, 132);
+    return async_hardware_test_start(&async_hardware_test_ecdsa_sign,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_ecdsa_p256_verify_start(
+    const uint8_t public_key[65], const uint8_t hash[32],
+    const uint8_t signature[64], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) public_key;
+    (void) hash;
+    (void) signature;
+    return async_hardware_test_start(&async_hardware_test_ecdsa_verify,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_ecdsa_p384_verify_start(
+    const uint8_t public_key[97], const uint8_t hash[48],
+    const uint8_t signature[96], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) public_key;
+    (void) hash;
+    (void) signature;
+    return async_hardware_test_start(&async_hardware_test_ecdsa_verify,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_ecdsa_p521_verify_start(
+    const uint8_t public_key[133], const uint8_t hash[64],
+    const uint8_t signature[132], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) public_key;
+    (void) hash;
+    (void) signature;
+    return async_hardware_test_start(&async_hardware_test_ecdsa_verify,
+                                     callback, context);
+}
+#endif
+
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+int mbedtls_async_hardware_rsa_pss_sign_start(
+    uint16_t hash_bits, const uint8_t *private_key, size_t private_key_length,
+    const uint8_t *hash, size_t hash_length, uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_rsa_pkcs1_sign_start(
+    uint16_t hash_bits, const uint8_t *private_key, size_t private_key_length,
+    const uint8_t *hash, size_t hash_length, uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_rsa_pss_verify_start(
+    uint16_t hash_bits, const uint8_t *public_key, size_t public_key_length,
+    const uint8_t *hash, size_t hash_length, const uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_rsa_pkcs1_verify_start(
+    uint16_t hash_bits, const uint8_t *public_key, size_t public_key_length,
+    const uint8_t *hash, size_t hash_length, const uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context);
+
+int mbedtls_async_hardware_rsa_pss_sign_start(
+    uint16_t hash_bits, const uint8_t *private_key, size_t private_key_length,
+    const uint8_t *hash, size_t hash_length, uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) hash_bits;
+    (void) private_key;
+    (void) private_key_length;
+    (void) hash;
+    (void) hash_length;
+    memset(signature, 0xa5, signature_length);
+    return async_hardware_test_start(&async_hardware_test_rsa_sign,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_rsa_pkcs1_sign_start(
+    uint16_t hash_bits, const uint8_t *private_key, size_t private_key_length,
+    const uint8_t *hash, size_t hash_length, uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context)
+{
+    return mbedtls_async_hardware_rsa_pss_sign_start(
+        hash_bits, private_key, private_key_length, hash, hash_length,
+        signature, signature_length, callback, context);
+}
+
+int mbedtls_async_hardware_rsa_pss_verify_start(
+    uint16_t hash_bits, const uint8_t *public_key, size_t public_key_length,
+    const uint8_t *hash, size_t hash_length, const uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) hash_bits;
+    (void) public_key;
+    (void) public_key_length;
+    (void) hash;
+    (void) hash_length;
+    (void) signature;
+    (void) signature_length;
+    return async_hardware_test_start(&async_hardware_test_rsa_verify,
+                                     callback, context);
+}
+
+int mbedtls_async_hardware_rsa_pkcs1_verify_start(
+    uint16_t hash_bits, const uint8_t *public_key, size_t public_key_length,
+    const uint8_t *hash, size_t hash_length, const uint8_t *signature,
+    size_t signature_length, async_hardware_test_callback_t callback,
+    void *context)
+{
+    return mbedtls_async_hardware_rsa_pss_verify_start(
+        hash_bits, public_key, public_key_length, hash, hash_length,
+        signature, signature_length, callback, context);
+}
+#endif
+
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
+int mbedtls_async_hardware_ecdh_p256_start(
+    const uint8_t private_scalar[32], const uint8_t peer_public_key[65],
+    uint8_t shared_secret[32], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdh_p384_start(
+    const uint8_t private_scalar[48], const uint8_t peer_public_key[97],
+    uint8_t shared_secret[48], async_hardware_test_callback_t callback,
+    void *context);
+int mbedtls_async_hardware_ecdh_p521_start(
+    const uint8_t private_scalar[66], const uint8_t peer_public_key[133],
+    uint8_t shared_secret[66], async_hardware_test_callback_t callback,
+    void *context);
+
+int mbedtls_async_hardware_ecdh_p256_start(
+    const uint8_t private_scalar[32], const uint8_t peer_public_key[65],
+    uint8_t shared_secret[32], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) private_scalar;
+    (void) peer_public_key;
+    memset(shared_secret, 0x3c, 32);
+    return async_hardware_test_start(&async_hardware_test_ecdh, callback,
+                                     context);
+}
+
+int mbedtls_async_hardware_ecdh_p384_start(
+    const uint8_t private_scalar[48], const uint8_t peer_public_key[97],
+    uint8_t shared_secret[48], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) private_scalar;
+    (void) peer_public_key;
+    memset(shared_secret, 0x3c, 48);
+    return async_hardware_test_start(&async_hardware_test_ecdh, callback,
+                                     context);
+}
+
+int mbedtls_async_hardware_ecdh_p521_start(
+    const uint8_t private_scalar[66], const uint8_t peer_public_key[133],
+    uint8_t shared_secret[66], async_hardware_test_callback_t callback,
+    void *context)
+{
+    (void) private_scalar;
+    (void) peer_public_key;
+    memset(shared_secret, 0x3c, 66);
+    return async_hardware_test_start(&async_hardware_test_ecdh, callback,
+                                     context);
+}
+#endif
 #if defined(MBEDTLS_ASN1_WRITE_C)
 /* Write the ASN.1 INTEGER with the value 2^(bits-1)+x backwards from *p. */
 static int asn1_write_10x(unsigned char **p,
@@ -7225,6 +7515,72 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_ASYNC_HARDWARE_ECDSA */
+void sign_hash_async_hardware_mock(void)
+{
+    static const uint8_t private_key[32] = {
+        0x49, 0xc9, 0xa8, 0xc1, 0x8c, 0x4b, 0x88, 0x56,
+        0x38, 0xc4, 0x31, 0xcf, 0x1d, 0xf1, 0xc9, 0x94,
+        0x13, 0x16, 0x09, 0xb5, 0x80, 0xd4, 0xfd, 0x43,
+        0xa0, 0xca, 0xb1, 0x7d, 0xb2, 0xf1, 0x3e, 0xee,
+    };
+    static const uint8_t hash[32] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+    };
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_sign_hash_interruptible_operation_t operation =
+        psa_sign_hash_interruptible_operation_init_short();
+    uint8_t signature[64];
+    size_t signature_length = INVALID_EXPORT_LENGTH;
+
+    async_hardware_test_reset();
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH);
+    psa_set_key_algorithm(&attributes, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
+    psa_set_key_type(&attributes,
+                     PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&attributes, private_key, sizeof(private_key),
+                              &key));
+
+    PSA_ASSERT(psa_sign_hash_start(&operation, key,
+                                   PSA_ALG_ECDSA(PSA_ALG_SHA_256),
+                                   hash, sizeof(hash)));
+    TEST_EQUAL(psa_sign_hash_complete(&operation, signature,
+                                      sizeof(signature), &signature_length),
+               PSA_OPERATION_INCOMPLETE);
+    TEST_EQUAL(async_hardware_test_ecdsa_sign.starts, 1);
+    TEST_EQUAL(signature_length, 0);
+
+    TEST_ASSERT(async_hardware_test_complete(&async_hardware_test_ecdsa_sign, 1));
+    PSA_ASSERT(psa_sign_hash_complete(&operation, signature,
+                                      sizeof(signature), &signature_length));
+    TEST_EQUAL(signature_length, sizeof(signature));
+    TEST_ASSERT(mem_is_char(signature, 0x5a, sizeof(signature)));
+
+    PSA_ASSERT(psa_sign_hash_start(&operation, key,
+                                   PSA_ALG_ECDSA(PSA_ALG_SHA_256),
+                                   hash, sizeof(hash)));
+    TEST_EQUAL(psa_sign_hash_complete(&operation, signature,
+                                      sizeof(signature), &signature_length),
+               PSA_OPERATION_INCOMPLETE);
+    TEST_ASSERT(async_hardware_test_complete(&async_hardware_test_ecdsa_sign, 0));
+    TEST_EQUAL(psa_sign_hash_complete(&operation, signature,
+                                      sizeof(signature), &signature_length),
+               PSA_ERROR_HARDWARE_FAILURE);
+
+exit:
+    psa_sign_hash_abort(&operation);
+    psa_destroy_key(key);
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE */
 void sign_hash_fail(int key_type_arg, data_t *key_data,
                     int alg_arg, data_t *input_data,
@@ -10401,6 +10757,85 @@ exit:
     psa_destroy_key(output_key);
     mbedtls_free(output);
     mbedtls_free(bad_peer_key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ASYNC_HARDWARE_ECDH */
+void key_agreement_async_hardware_mock(void)
+{
+    static const uint8_t private_key[32] = {
+        0xc8, 0x8f, 0x01, 0xf5, 0x10, 0xd9, 0xac, 0x3f,
+        0x70, 0xa2, 0x92, 0xda, 0xa2, 0x31, 0x6d, 0xe5,
+        0x44, 0xe9, 0xaa, 0xb8, 0xaf, 0xe8, 0x40, 0x49,
+        0xc6, 0x2a, 0x9c, 0x57, 0x86, 0x2d, 0x14, 0x33,
+    };
+    static const uint8_t peer_key[65] = {
+        0x04, 0xd1, 0x2d, 0xfb, 0x52, 0x89, 0xc8, 0xd4,
+        0xf8, 0x12, 0x08, 0xb7, 0x02, 0x70, 0x39, 0x8c,
+        0x34, 0x22, 0x96, 0x97, 0x0a, 0x0b, 0xcc, 0xb7,
+        0x4c, 0x73, 0x6f, 0xc7, 0x55, 0x44, 0x94, 0xbf,
+        0x63, 0x56, 0xfb, 0xf3, 0xca, 0x36, 0x6c, 0xc2,
+        0x3e, 0x81, 0x57, 0x85, 0x4c, 0x13, 0xc5, 0x8d,
+        0x6a, 0xac, 0x23, 0xf0, 0x46, 0xad, 0xa3, 0x0f,
+        0x83, 0x53, 0xe7, 0x4f, 0x33, 0x03, 0x98, 0x72,
+        0xab,
+    };
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t shared_key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t shared_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_agreement_iop_t operation = psa_key_agreement_iop_init();
+    uint8_t shared_secret[32];
+    size_t shared_secret_length = INVALID_EXPORT_LENGTH;
+
+    async_hardware_test_reset();
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes,
+                            PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_ECDH);
+    psa_set_key_type(&attributes,
+                     PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    PSA_ASSERT(psa_import_key(&attributes, private_key, sizeof(private_key),
+                              &key));
+
+    psa_set_key_type(&shared_attributes, PSA_KEY_TYPE_RAW_DATA);
+    psa_set_key_usage_flags(&shared_attributes, PSA_KEY_USAGE_EXPORT);
+
+    PSA_ASSERT(psa_key_agreement_iop_setup(&operation, key, peer_key,
+                                           sizeof(peer_key), PSA_ALG_ECDH,
+                                           &shared_attributes));
+    TEST_EQUAL(psa_key_agreement_iop_complete(&operation, &shared_key),
+               PSA_OPERATION_INCOMPLETE);
+    TEST_EQUAL(async_hardware_test_ecdh.starts, 1);
+
+    TEST_ASSERT(async_hardware_test_complete(&async_hardware_test_ecdh, 1));
+    PSA_ASSERT(psa_key_agreement_iop_complete(&operation, &shared_key));
+    PSA_ASSERT(psa_export_key(shared_key, shared_secret, sizeof(shared_secret),
+                              &shared_secret_length));
+    TEST_EQUAL(shared_secret_length, sizeof(shared_secret));
+    TEST_ASSERT(mem_is_char(shared_secret, 0x3c, sizeof(shared_secret)));
+
+    PSA_ASSERT(psa_destroy_key(shared_key));
+    shared_key = MBEDTLS_SVC_KEY_ID_INIT;
+    PSA_ASSERT(psa_key_agreement_iop_abort(&operation));
+
+    PSA_ASSERT(psa_key_agreement_iop_setup(&operation, key, peer_key,
+                                           sizeof(peer_key), PSA_ALG_ECDH,
+                                           &shared_attributes));
+    TEST_EQUAL(psa_key_agreement_iop_complete(&operation, &shared_key),
+               PSA_OPERATION_INCOMPLETE);
+    TEST_ASSERT(async_hardware_test_complete(&async_hardware_test_ecdh, 0));
+    TEST_EQUAL(psa_key_agreement_iop_complete(&operation, &shared_key),
+               PSA_ERROR_HARDWARE_FAILURE);
+
+exit:
+    psa_key_agreement_iop_abort(&operation);
+    psa_destroy_key(shared_key);
+    psa_destroy_key(key);
+    psa_reset_key_attributes(&attributes);
+    psa_reset_key_attributes(&shared_attributes);
     PSA_DONE();
 }
 /* END_CASE */
