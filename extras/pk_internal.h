@@ -53,8 +53,9 @@
  * The current compromise is that if ECC is the only key type supported in PK,
  * then we export keys on the stack, and otherwise we use the heap.
  *
- * Note: add && !ML-DSA when adding support for ML-DSA */
-#if !defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+ */
+#if !defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    !defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)
 #define PK_EXPORT_KEYS_ON_THE_STACK
 #endif
 
