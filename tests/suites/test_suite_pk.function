@@ -1080,7 +1080,7 @@ void pk_rsa_verify_test_vec(data_t *message_str, int digest,
     rs_ctx = &ctx;
     mbedtls_pk_restart_init(rs_ctx);
     // this setting would ensure restart would happen if ECC was used
-    psa_interruptible_set_max_ops(1);
+    psa_iop_set_max_ops(1);
 #endif
 
     mbedtls_pk_init(&pk);
@@ -1201,7 +1201,7 @@ void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
     TEST_ASSERT(mbedtls_pk_ecc_set_group(&pub, grp_id) == 0);
     TEST_ASSERT(mbedtls_pk_ecc_set_pubkey(&pub, pub_key, pub_key_len) == 0);
 
-    psa_interruptible_set_max_ops(max_ops);
+    psa_iop_set_max_ops(max_ops);
 
     slen = sizeof(sig);
     cnt_restart = 0;
@@ -1276,7 +1276,7 @@ void pk_sign_verify(int type, int curve_or_keybits, int sign_ret, int verify_ret
     /* This value is large enough that the operation will complete in one run.
      * See comments at the top of ecp_test_vect_restart in
      * test_suite_ecp.function for estimates of operation counts. */
-    psa_interruptible_set_max_ops(42000);
+    psa_iop_set_max_ops(42000);
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
     mbedtls_pk_init(&pk);

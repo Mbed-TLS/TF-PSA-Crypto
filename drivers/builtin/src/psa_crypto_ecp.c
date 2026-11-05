@@ -771,7 +771,7 @@ psa_status_t mbedtls_psa_ecp_export_public_key_iop_complete(
     int ret = 0;
 
     if (mbedtls_ecp_is_zero(&operation->key->Q)) {
-        mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());
+        mbedtls_psa_interruptible_set_max_ops(psa_iop_get_max_ops());
 
         ret = mbedtls_ecp_mul_restartable(&operation->key->grp, &operation->key->Q,
                                           &operation->key->d, &operation->key->grp.G,
@@ -875,7 +875,7 @@ psa_status_t mbedtls_psa_key_agreement_iop_complete(
 
     mbedtls_ecp_point_init(&secret);
 
-    mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());
+    mbedtls_psa_interruptible_set_max_ops(psa_iop_get_max_ops());
 
     status = mbedtls_to_psa_error(
         mbedtls_ecp_mul_restartable(&operation->our_key->grp,

@@ -420,7 +420,7 @@ void key_agreement_fail(int key_type_arg, data_t *key_data,
     if (PSA_KEY_TYPE_IS_ECC(key_type)) {
 
         psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-        psa_interruptible_set_max_ops(1);
+        psa_iop_set_max_ops(1);
 
         status = psa_key_agreement_iop_setup(&iop_operation, key_id, public_key,
                                              public_key_length, alg,
