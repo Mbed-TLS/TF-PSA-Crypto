@@ -2210,6 +2210,14 @@ static int is_hash_supported(psa_algorithm_t alg)
         case PSA_ALG_SHA3_512:
             return 1;
 #endif
+#if defined(PSA_WANT_ALG_BLAKE2S_HASH256)
+        case PSA_ALG_BLAKE2S_HASH256:
+            return 1;
+#endif
+#if defined(PSA_WANT_ALG_BLAKE2B_HASH512)
+        case PSA_ALG_BLAKE2B_HASH512:
+            return 1;
+#endif
         default:
             return 0;
     }
