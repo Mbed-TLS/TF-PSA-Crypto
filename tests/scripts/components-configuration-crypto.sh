@@ -24,6 +24,10 @@ component_test_accel_ecc_all () {
     scripts/config.py unset MBEDTLS_PK_PARSE_EC_COMPRESSED
     scripts/config.py unset PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE
 
+    # SPAKE2+ key management is not supported by the test driver yet.
+    scripts/config.py unset-all "^PSA_WANT_ALG_SPAKE2P_"
+    scripts/config.py unset-all "^PSA_WANT_KEY_TYPE_SPAKE2P_"
+
     # Restartable feature is not yet supported by PSA. Once it will in
     # the future, the following line could be removed (see issues
     # 6061, 6332 and following ones)
@@ -70,6 +74,10 @@ component_test_accel_ecc_all_but_ecp_light() {
     scripts/config.py set MBEDTLS_PK_PARSE_EC_COMPRESSED
     scripts/config.py set PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE
 
+    # SPAKE2+ key management is not supported by the test driver yet.
+    scripts/config.py unset-all "^PSA_WANT_ALG_SPAKE2P_"
+    scripts/config.py unset-all "^PSA_WANT_KEY_TYPE_SPAKE2P_"
+
     # Build
     # -----
 
@@ -111,6 +119,10 @@ config_accel_ecc_ffdh_no_bignum () {
     scripts/config.py unset MBEDTLS_PK_PARSE_EC_EXTENDED
     scripts/config.py unset MBEDTLS_PK_PARSE_EC_COMPRESSED
     scripts/config.py unset PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE
+
+    # SPAKE2+ key management is not supported by the test driver yet.
+    scripts/config.py unset-all "^PSA_WANT_ALG_SPAKE2P_"
+    scripts/config.py unset-all "^PSA_WANT_KEY_TYPE_SPAKE2P_"
 
     # RSA support is intentionally disabled on this test because RSA_C depends
     # on BIGNUM_C.
@@ -284,6 +296,10 @@ common_test_accel_ecc_some_curves () {
                           set-all MBEDTLS_PSA_ACCEL_ECC_SECP
         scripts/config.py -f "$OUT_OF_SOURCE_DIR/user-config-accel-ecc-some-curves.h" \
                           set-all MBEDTLS_PSA_ACCEL_ECC_BRAINPOOL
+
+        # SPAKE2+ key management is not supported by the test driver yet.
+        scripts/config.py unset-all "^PSA_WANT_ALG_SPAKE2P_"
+        scripts/config.py unset-all "^PSA_WANT_KEY_TYPE_SPAKE2P_"
     else
         scripts/config.py -f "$OUT_OF_SOURCE_DIR/user-config-accel-ecc-some-curves.h" \
                           set-all MBEDTLS_PSA_ACCEL_ECC_MONTGOMERY
