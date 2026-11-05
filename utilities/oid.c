@@ -455,6 +455,12 @@ static const oid_md_alg_t oid_md_alg[] =
         MBEDTLS_MD_SHA3_512,
     },
 #endif
+#if defined(PSA_WANT_ALG_SM3)
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_DIGEST_ALG_SM3,       "id-sm3",       "SM3"),
+        MBEDTLS_MD_SM3,
+    },
+#endif
     {
         NULL_OID_DESCRIPTOR,
         MBEDTLS_MD_NONE,
