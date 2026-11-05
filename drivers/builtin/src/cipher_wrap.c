@@ -26,6 +26,7 @@
 
 #if defined(MBEDTLS_CAMELLIA_C)
 #include "mbedtls/private/camellia.h"
+#include "mbedtls/private/sm4.h"
 #endif
 
 #if defined(MBEDTLS_ARIA_C)
@@ -55,6 +56,10 @@ enum mbedtls_cipher_base_index {
 #endif
 #if defined(MBEDTLS_CAMELLIA_C)
     MBEDTLS_CIPHER_BASE_INDEX_CAMELLIA,
+#endif
+
+#if defined(MBEDTLS_SM4_C)
+    MBEDTLS_CIPHER_BASE_INDEX_SM4,
 #endif
 #if defined(MBEDTLS_CIPHER_HAVE_CCM_AES_VIA_LEGACY_OR_USE_PSA)
     MBEDTLS_CIPHER_BASE_INDEX_CCM_AES,
@@ -1161,6 +1166,91 @@ static const mbedtls_cipher_info_t camellia_256_ccm_star_no_tag_info = {
 #endif /* MBEDTLS_CCM_C */
 
 #endif /* MBEDTLS_CAMELLIA_C */
+#if defined(MBEDTLS_SM4_C)
+
+static int sm4_crypt_ecb_wrap(void *ctx, mbedtls_operation_t operation,
+                              const unsigned char *input, unsigned char *output)
+{
+    return mbedtls_sm4_crypt_ecb((mbedtls_sm4_context *) ctx, operation, input,
+                                 output);
+}
+
+static int sm4_setkey_enc_wrap(void *ctx, const unsigned char *key,
+                               unsigned int key_bitlen)
+{
+    (void) key_bitlen;
+    (void) key_bitlen;
+    return mbedtls_sm4_setkey_enc((mbedtls_sm4_context *) ctx, key);
+}
+
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+static int sm4_setkey_dec_wrap(void *ctx, const unsigned char *key,
+                               unsigned int key_bitlen)
+{
+    (void) key_bitlen;
+    (void) key_bitlen;
+    return mbedtls_sm4_setkey_dec((mbedtls_sm4_context *) ctx, key);
+}
+#endif
+
+static void *sm4_ctx_alloc(void)
+{
+    mbedtls_sm4_context *ctx;
+    ctx = mbedtls_calloc(1, sizeof(mbedtls_sm4_context));
+    if (ctx == NULL) {
+        return NULL;
+    }
+    mbedtls_sm4_init(ctx);
+    return ctx;
+}
+
+static void sm4_ctx_free(void *ctx)
+{
+    mbedtls_sm4_free((mbedtls_sm4_context *) ctx);
+    mbedtls_free(ctx);
+}
+
+static const mbedtls_cipher_base_t sm4_info = {
+    MBEDTLS_CIPHER_ID_SM4,
+    sm4_crypt_ecb_wrap,
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
+    NULL,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+    NULL,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_OFB)
+    NULL,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+    NULL,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_XTS)
+    NULL,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+    sm4_setkey_enc_wrap,
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+    sm4_setkey_dec_wrap,
+#endif
+    sm4_ctx_alloc,
+    sm4_ctx_free
+};
+
+static const mbedtls_cipher_info_t sm4_128_ecb_info = {
+    "SM4-128-ECB",
+    16,
+    0 >> MBEDTLS_IV_SIZE_SHIFT,
+    128 >> MBEDTLS_KEY_BITLEN_SHIFT,
+    MBEDTLS_MODE_ECB,
+    MBEDTLS_CIPHER_SM4_128_ECB,
+    0,
+    MBEDTLS_CIPHER_BASE_INDEX_SM4
+};
+
+#endif /* MBEDTLS_SM4_C */
 
 #if defined(MBEDTLS_ARIA_C)
 
@@ -1846,6 +1936,10 @@ const mbedtls_cipher_definition_t mbedtls_cipher_definitions[] =
 #endif
 #endif /* MBEDTLS_CAMELLIA_C */
 
+
+#if defined(MBEDTLS_SM4_C)
+    { MBEDTLS_CIPHER_SM4_128_ECB,     &sm4_128_ecb_info },
+#endif /* MBEDTLS_SM4_C */
 #if defined(MBEDTLS_ARIA_C)
     { MBEDTLS_CIPHER_ARIA_128_ECB,     &aria_128_ecb_info },
     { MBEDTLS_CIPHER_ARIA_192_ECB,     &aria_192_ecb_info },
@@ -1905,6 +1999,10 @@ const mbedtls_cipher_base_t * const mbedtls_cipher_base_lookup_table[] = {
 #if defined(MBEDTLS_CAMELLIA_C)
     [MBEDTLS_CIPHER_BASE_INDEX_CAMELLIA] = &camellia_info,
 #endif
+#if defined(MBEDTLS_SM4_C)
+    [MBEDTLS_CIPHER_BASE_INDEX_SM4] = &sm4_info,
+#endif
+
 #if defined(MBEDTLS_CIPHER_HAVE_CCM_AES_VIA_LEGACY_OR_USE_PSA)
     [MBEDTLS_CIPHER_BASE_INDEX_CCM_AES] = &ccm_aes_info,
 #endif
