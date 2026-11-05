@@ -16,9 +16,7 @@
 #   tfpsacrypto and tfpsacrypto-apidoc targets.
 #
 
-# We specify a minimum requirement of 3.10.2, but for now use 3.5.1 here
-# until our infrastructure catches up.
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.20.2)
 
 include(CMakePackageConfigHelpers)
 
@@ -127,17 +125,10 @@ if(USE_STATIC_TF_PSA_CRYPTO_LIBRARY AND USE_SHARED_TF_PSA_CRYPTO_LIBRARY)
 endif()
 
 # Python 3 is only needed here to check for configuration warnings.
-if(NOT CMAKE_VERSION VERSION_LESS 3.15.0)
-    set(Python3_FIND_STRATEGY LOCATION)
-    find_package(Python3 COMPONENTS Interpreter)
-    if(Python3_Interpreter_FOUND)
-        set(TF_PSA_CRYPTO_PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-    endif()
-else()
-    find_package(PythonInterp 3)
-    if(PYTHONINTERP_FOUND)
-        set(TF_PSA_CRYPTO_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
-    endif()
+set(Python3_FIND_STRATEGY LOCATION)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    set(TF_PSA_CRYPTO_PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 endif()
 
 # We now potentially need to link all executables against PThreads, if available
@@ -589,11 +580,9 @@ if(NOT DISABLE_PACKAGE_CONFIG_AND_INSTALL)
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/TF-PSA-Crypto"
         FILE "TF-PSA-CryptoTargets.cmake")
 
-    if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
-        # Do not export the package by default
-        cmake_policy(SET CMP0090 NEW)
+    # Do not export the package by default
+    cmake_policy(SET CMP0090 NEW)
 
-        # Make this package visible to the system
-        export(PACKAGE TF-PSA-Crypto)
-    endif()
+    # Make this package visible to the system
+    export(PACKAGE TF-PSA-Crypto)
 endif()
