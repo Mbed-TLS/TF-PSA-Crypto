@@ -31,6 +31,27 @@
 #define MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE
 #endif
 
+/* HPKE currently uses DHKEM(X25519, HKDF-SHA256) and AES-GCM in this tree.
+ * Express that once here and let the generic sections below decide which
+ * built-ins to enable depending on acceleration coverage.
+ */
+#if defined(PSA_WANT_ALG_HPKE)
+#define PSA_HPKE_C
+#define PSA_WANT_ALG_ECDH
+#define PSA_WANT_ECC_MONTGOMERY_255
+#define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT
+#define PSA_WANT_ALG_HKDF
+#define PSA_WANT_ALG_HKDF_EXTRACT
+#define PSA_WANT_ALG_HKDF_EXPAND
+#define PSA_WANT_ALG_HMAC
+#define PSA_WANT_ALG_SHA_256
+#define PSA_WANT_KEY_TYPE_AES
+#define PSA_WANT_ALG_GCM
+#endif /* PSA_WANT_ALG_HPKE */
+
 /*
  * ECC: support for a feature is controlled by a triplet or a pair:
  * (curve, key_type public/basic, alg) or (curve, key_type_<action>).
@@ -793,6 +814,7 @@
 #define MBEDTLS_GCM_C
 #endif
 #endif /* PSA_WANT_ALG_GCM */
+
 
 #if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_CHACHA20_POLY1305)

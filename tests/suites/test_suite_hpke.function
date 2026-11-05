@@ -1,0 +1,544 @@
+/* BEGIN_HEADER */
+
+#include "mbedtls/private/hpke.h"
+
+#define MAX_CT_LEN sizeof("4265617574792069732074727574682c20747275746820626561757479")
+#define MAX_L 32
+
+static int clamping_X25519_PrivateKey(unsigned char *private_key_bytes, size_t private_key_bytes_len)
+{
+    if (private_key_bytes == NULL || private_key_bytes_len != 32) {
+        return PSA_HPKE_INVALID_ARGUMENT;
+    }
+
+    // Clamping the private key as per RFC 7748
+    private_key_bytes[0] &= 248;  
+    private_key_bytes[31] &= 127;  
+    private_key_bytes[31] |= 64;  
+
+    return 0;
+}
+
+static int clamping_X448_PrivateKey(unsigned char *private_key_bytes, size_t private_key_bytes_len)
+{
+    if (private_key_bytes == NULL || private_key_bytes_len != 56) {
+        return PSA_HPKE_INVALID_ARGUMENT;
+    }
+
+    // Clamping the private key as per RFC 7748
+    private_key_bytes[0] &= 252;   // Clear the 3 least significant bits
+    private_key_bytes[55] |= 128;  // Clear the most significant bit
+
+    return 0;
+}
+
+/* END_HEADER */
+
+        kem_id = 32; 
+        kdf_id =  1; 
+        aead_id = 1; 
+
+/* BEGIN_CASE */
+void serialize_deserialize_privKey(int mode, int algo_id, data_t *skXm_example)
+{
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = PSA_KEY_ID_NULL;
+    psa_status_t status;
+
+    status= psa_hpke_setup_parameters(algo_id, (uint8_t) mode, NULL, 0, &params);
+    unsigned char tmp[PSA_HPKE_MAX_KEM_NSK];
+    unsigned char clamped[PSA_HPKE_MAX_KEM_NSK];
+
+    PSA_ASSERT(status);
+    TEST_ASSERT((uint16_t) (skXm_example->len)==params.PSA_HPKE_KEM_NSK);
+
+    psa_set_key_type(&attr, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_EXPORT);
+    size_t pk_len=(size_t) params.PSA_HPKE_KEM_NSK;
+    status = psa_hpke_deserializePrivateKey(&params,(unsigned char *) (skXm_example->x), pk_len, &attr, &key_id);
+    PSA_ASSERT(status);
+
+    status = psa_hpke_serializePrivateKey(&params, key_id, tmp);
+    PSA_ASSERT(status);
+
+    memcpy(clamped, (unsigned char *) (skXm_example->x), params.PSA_HPKE_KEM_NSK);
+
+    if(params.PSA_HPKE_KEM_CURVE_ID == MBEDTLS_ECP_DP_CURVE25519){
+        status = clamping_X25519_PrivateKey(clamped, params.PSA_HPKE_KEM_NSK);
+        PSA_ASSERT(status);
+    }else if(params.PSA_HPKE_KEM_CURVE_ID == MBEDTLS_ECP_DP_CURVE448){
+        status = clamping_X448_PrivateKey(clamped, params.PSA_HPKE_KEM_NSK);
+        PSA_ASSERT(status);
+    }
+
+
+    printf("tmp   : ");
+    for (size_t i = 0; i < params.PSA_HPKE_KEM_NSK; i++) printf("%02x", tmp[i]);
+    printf("\n");
+    printf("clamped: ");
+    for (size_t i = 0; i < params.PSA_HPKE_KEM_NSK; i++) printf("%02x", clamped[i]);
+    printf("\n");
+
+    TEST_MEMORY_COMPARE(tmp, params.PSA_HPKE_KEM_NSK, clamped, params.PSA_HPKE_KEM_NSK);
+
+exit:
+    psa_destroy_key(key_id);
+    psa_reset_key_attributes(&attr);
+
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void serialize_deserialize_publicKey(int mode, int algo_id, data_t *pkXm_example)
+{
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = PSA_KEY_ID_NULL;
+    psa_status_t status;
+
+    status= psa_hpke_setup_parameters(algo_id, (uint8_t) mode, NULL, 0, &params);
+    unsigned char tmp[PSA_HPKE_MAX_KEM_NPK];
+
+    PSA_ASSERT(status);
+    TEST_ASSERT((uint16_t) (pkXm_example->len)==params.PSA_HPKE_KEM_NPK);
+
+    psa_set_key_type(&attr, PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(params.PSA_HPKE_KEM_KEY_TYPE));
+    psa_set_key_algorithm(&attr, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    status = psa_hpke_deserializePublicKey(&params,
+                                    pkXm_example->x,
+                                    pkXm_example->len,
+                                    &attr,
+                                    &key_id);
+    PSA_ASSERT(status);
+
+    status = psa_hpke_serializePublicKey(&params, key_id, tmp);
+    PSA_ASSERT(status);
+
+
+    TEST_MEMORY_COMPARE(tmp, params.PSA_HPKE_KEM_NPK, pkXm_example->x, pkXm_example->len);
+
+exit:
+    psa_destroy_key(key_id);
+    psa_reset_key_attributes(&attr);
+
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void deriveKeyPair(int mode, int algo_id,data_t *ikm_provided, data_t *pkXm_example )
+{
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_derived = PSA_KEY_ID_NULL;
+    psa_status_t status;
+
+    status= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+    unsigned char out_pk[PSA_HPKE_MAX_KEM_NPK];
+
+    PSA_ASSERT(status);
+
+    psa_set_key_type(&attr, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    status = psa_hpke_kem_deriveKeyPair(&params,
+                                        (unsigned char*) ikm_provided->x,
+                                        (size_t) ikm_provided->len,
+                                        &key_id_derived,
+                                        &attr);
+    PSA_ASSERT(status);
+
+    status = psa_hpke_serializePublicKey(&params, key_id_derived, out_pk);
+    PSA_ASSERT(status);
+
+    TEST_ASSERT(params.PSA_HPKE_KEM_NPK ==pkXm_example->len );
+    TEST_MEMORY_COMPARE(out_pk, params.PSA_HPKE_KEM_NPK, pkXm_example->x, pkXm_example->len);
+
+exit:
+    psa_destroy_key(key_id_derived);
+    psa_reset_key_attributes(&attr);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void create_hpke_context( int mode,
+            int algo_id,
+            int role,
+            data_t *info,
+            data_t *shared_secret,
+            data_t *base_nonce_expected,
+            data_t *exporter_secret_expected)
+{
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_hpke_context_t ctx;
+
+    psa_status_t status;
+
+    status= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+    PSA_ASSERT(status);
+
+    TEST_ASSERT((size_t) (shared_secret->len) ==params.PSA_HPKE_KEM_NSECRET);
+
+    status=psa_hpke_create_hpke_context(&params, (enum PSA_HPKE_role_t) role, (unsigned char *) (shared_secret->x), (unsigned char *) (info->x), (size_t) (info->len), &ctx);
+
+    PSA_ASSERT(status);
+
+    TEST_ASSERT(ctx.base_nonce_len== (size_t) base_nonce_expected->len );
+    TEST_MEMORY_COMPARE(ctx.base_nonce, ctx.base_nonce_len,(unsigned char *) base_nonce_expected->x, (size_t) base_nonce_expected->len );
+
+    TEST_ASSERT(ctx.exporter_secret_len== (size_t) exporter_secret_expected->len );
+    TEST_MEMORY_COMPARE(ctx.exporter_secret, ctx.exporter_secret_len,(unsigned char *) exporter_secret_expected->x, (size_t) exporter_secret_expected->len );
+
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void base_setup( int mode, int algo_id,
+                    data_t *info,
+                    data_t *pkRm,
+                    data_t *skRm)
+{
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_status_t status1= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+
+    psa_hpke_context_t ctx_sender;
+    psa_hpke_context_t ctx_receiver;
+    unsigned char out_enc[PSA_HPKE_MAX_KEM_NPK];
+
+    psa_key_attributes_t attr_pub_R = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_pub_R = PSA_KEY_ID_NULL;
+    psa_set_key_type(&attr_pub_R, PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(params.PSA_HPKE_KEM_KEY_TYPE));
+    psa_set_key_algorithm(&attr_pub_R, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr_pub_R, PSA_KEY_USAGE_DERIVE |  PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_EXPORT);
+    psa_status_t status2= psa_hpke_deserializePublicKey(&params, pkRm->x, pkRm->len, &attr_pub_R, &key_id_pub_R);
+
+    psa_key_attributes_t attr_R = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_R = PSA_KEY_ID_NULL;
+    psa_set_key_type(&attr_R, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr_R, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr_R, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_DECRYPT    |  PSA_KEY_USAGE_EXPORT);
+    psa_status_t status3= psa_hpke_deserializePrivateKey(&params, skRm->x, skRm->len, &attr_R, &key_id_R);
+
+
+
+    psa_status_t status = psa_hpke_baseSetupSender(&params,
+                                            pkRm->x,
+                                            info->x, info->len, out_enc,
+                                            &ctx_sender);
+
+    PSA_ASSERT(status1);
+    PSA_ASSERT(status2);
+    PSA_ASSERT(status3);
+    PSA_ASSERT(status);
+
+
+
+    status = psa_hpke_baseSetupReceiver(&params, out_enc, &key_id_R,
+                                            info->x, info->len,
+                                            &ctx_receiver);
+    PSA_ASSERT(status);
+
+    //these are only the same if secret  is the same on both sides (therefore  kem_shared_secret and key must be the same on both sides)
+    TEST_MEMORY_COMPARE(ctx_sender.base_nonce, ctx_sender.base_nonce_len, ctx_receiver.base_nonce, ctx_receiver.base_nonce_len);
+
+    TEST_MEMORY_COMPARE(ctx_sender.exporter_secret, ctx_sender.exporter_secret_len,ctx_receiver.exporter_secret, ctx_receiver.exporter_secret_len);
+    TEST_ASSERT(mbedtls_mpi_cmp_mpi(&(ctx_receiver.sequence_number), &(ctx_sender.sequence_number)) ==0 );
+
+exit:
+    psa_destroy_key(key_id_pub_R);
+    psa_destroy_key(key_id_R);
+    psa_reset_key_attributes(&attr_pub_R);
+    psa_reset_key_attributes(&attr_R);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void encap_decap(int mode,
+            int algo_id,
+            data_t *sk_R){
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_status_t status= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+
+    psa_key_attributes_t attr_R = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_R = PSA_KEY_ID_NULL;
+    psa_set_key_type(&attr_R, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr_R, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr_R, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_hpke_deserializePrivateKey(&params, sk_R->x, params.PSA_HPKE_KEM_NSK, &attr_R, &key_id_R);
+
+    unsigned char pubkey_R[PSA_HPKE_MAX_KEM_NPK];
+    status = psa_hpke_serializePublicKey(&params, key_id_R, pubkey_R);
+    PSA_ASSERT(status);
+
+    unsigned char out_shared_secret_E[PSA_HPKE_MAX_KEM_NSECRET];
+    unsigned char out_shared_secret_R[PSA_HPKE_MAX_KEM_NSECRET];
+    unsigned char out_enc[PSA_HPKE_MAX_KEM_NPK];
+
+    status=  psa_hpke_encap(&params,
+                                    pubkey_R,
+                                    out_enc,
+                                    out_shared_secret_E);
+    PSA_ASSERT(status);
+
+    status= psa_hpke_decap(&params,
+                                    out_enc,
+                                    &key_id_R,
+                                    out_shared_secret_R);
+
+    PSA_ASSERT(status);
+    TEST_MEMORY_COMPARE(out_shared_secret_E, params.PSA_HPKE_KEM_NSECRET,out_shared_secret_R, params.PSA_HPKE_KEM_NSECRET );
+
+exit:
+    psa_destroy_key(key_id_R);
+    psa_reset_key_attributes(&attr_R);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void encap_decap_with_senderKey(int mode,
+            int algo_id,
+            data_t *sk_E,
+            data_t *sk_R,
+            data_t *enc_expected,
+            data_t *shared_secret_expected)
+{
+
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_status_t status= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+
+    psa_key_attributes_t attr_R = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_R = PSA_KEY_ID_NULL;
+    psa_set_key_type(&attr_R, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr_R, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr_R, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_hpke_deserializePrivateKey(&params, sk_R->x, params.PSA_HPKE_KEM_NSK, &attr_R, &key_id_R);
+
+    psa_key_attributes_t attr_E = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_E = PSA_KEY_ID_NULL;
+    psa_set_key_type(&attr_E, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr_E, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr_E, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_hpke_deserializePrivateKey(&params, sk_E->x, params.PSA_HPKE_KEM_NSK, &attr_E, &key_id_E);
+
+    unsigned char pubkey_R[PSA_HPKE_MAX_KEM_NPK];
+    status = psa_hpke_serializePublicKey(&params, key_id_R, pubkey_R);
+    PSA_ASSERT(status);
+
+    unsigned char out_shared_secret_E[PSA_HPKE_MAX_KEM_NSECRET];
+    unsigned char out_shared_secret_R[PSA_HPKE_MAX_KEM_NSECRET];
+    unsigned char out_enc[PSA_HPKE_MAX_KEM_NPK];
+
+    status=  psa_hpke_encap_with_senderKeys(&params,
+                                    pubkey_R,
+                                    out_enc,
+                                    out_shared_secret_E,
+                                    key_id_E);
+
+    PSA_ASSERT(status);
+    TEST_MEMORY_COMPARE(out_enc, params.PSA_HPKE_KEM_NPK,enc_expected->x, enc_expected->len );
+    TEST_MEMORY_COMPARE(out_shared_secret_E, params.PSA_HPKE_KEM_NSECRET,shared_secret_expected->x, shared_secret_expected->len );
+
+    status= psa_hpke_decap(&params,
+                                    out_enc,
+                                    &key_id_R,
+                                    out_shared_secret_R);
+
+    PSA_ASSERT(status);
+    TEST_MEMORY_COMPARE(out_shared_secret_R, params.PSA_HPKE_KEM_NSECRET,shared_secret_expected->x, shared_secret_expected->len );
+
+exit:
+    psa_destroy_key(key_id_R);
+    psa_destroy_key(key_id_E);
+    psa_reset_key_attributes(&attr_R);
+    psa_reset_key_attributes(&attr_E);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void seal_open(int mode,
+            int algo_id,
+            data_t *info,
+            data_t *shared_secret,
+            data_t *pt,
+            data_t *aad,
+            data_t *ciphertext_expected,
+            int sequence_number_provided)
+{
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_status_t status1= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+
+    size_t tag_len= params.PSA_HPKE_AEAD_NT;
+    size_t out_ct_len=pt->len;
+    unsigned char out_ciphertext[MAX_CT_LEN];
+    unsigned char out_pt[MAX_CT_LEN];
+    unsigned char tag[PSA_HPKE_MAX_AEAD_NT];
+    psa_hpke_context_t ctx_sender;
+    psa_hpke_context_t ctx_receiver;
+
+
+
+    psa_status_t status2 = psa_hpke_create_hpke_context(&params, PSA_HPKE_SENDER,
+                                              shared_secret->x,
+                                              info->x,
+                                              info->len,
+                                              &ctx_sender);
+    psa_status_t status3= mbedtls_mpi_lset(&(ctx_sender.sequence_number), (mbedtls_mpi_sint) sequence_number_provided);
+
+
+
+    psa_status_t status4 = psa_hpke_create_hpke_context(&params, PSA_HPKE_RECEIVER,
+                                              shared_secret->x,
+                                              info->x,
+                                              info->len,
+                                              &ctx_receiver);
+    psa_status_t status5= mbedtls_mpi_lset(&(ctx_receiver.sequence_number), (mbedtls_mpi_sint) sequence_number_provided);
+
+    PSA_ASSERT(status1);
+    PSA_ASSERT(status2);
+    PSA_ASSERT(status3);
+    PSA_ASSERT(status4);
+    PSA_ASSERT(status5);
+
+    psa_status_t status = psa_hpke_context_sender_seal(&params,
+                                            &ctx_sender,
+                                              aad->x,
+                                              aad->len,
+                                              pt->x,
+                                              pt->len,
+                                              tag,
+                                              tag_len,
+                                              out_ciphertext,
+                                              out_ct_len);
+    PSA_ASSERT(status);
+    TEST_MEMORY_COMPARE(out_ciphertext,out_ct_len,ciphertext_expected->x, out_ct_len );
+    TEST_MEMORY_COMPARE(tag,tag_len,ciphertext_expected->x+out_ct_len, tag_len );
+
+
+    status = psa_hpke_context_receiver_open(&params,
+                                                &ctx_receiver,
+                                                aad->x,
+                                                aad->len,
+                                                tag,
+                                                tag_len,
+                                                out_ciphertext,
+                                                out_ct_len,
+                                                out_pt,
+                                                pt->len);
+    PSA_ASSERT(status);
+    TEST_MEMORY_COMPARE(out_pt, pt->len,pt->x, pt->len );
+
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void open_seal_single_message(int mode,
+                                    int algo_id,
+                                    data_t *info,
+                                    data_t *pkRm,
+                                    data_t *skRm,
+                                    data_t *pt,
+                                    data_t *aad)
+{
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_status_t status1= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+
+    size_t tag_len= params.PSA_HPKE_AEAD_NT;
+    size_t out_ct_len=pt->len;
+    unsigned char out_ciphertext[MAX_CT_LEN];
+    unsigned char out_pt[MAX_CT_LEN];
+    unsigned char out_tag[PSA_HPKE_MAX_AEAD_NT];
+    unsigned char out_enc[PSA_HPKE_MAX_KEM_NPK];
+
+    psa_key_attributes_t attr_R = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id_R = PSA_KEY_ID_NULL;
+    psa_set_key_type(&attr_R, params.PSA_HPKE_KEM_KEY_TYPE);
+    psa_set_key_algorithm(&attr_R, params.PSA_HPKE_KEM_KEY_ALG);
+    psa_set_key_usage_flags(&attr_R, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    psa_status_t status2= psa_hpke_deserializePrivateKey(&params, skRm->x, skRm->len, &attr_R, &key_id_R);
+
+    psa_status_t status4= psa_hpke_seal_single_msg(&params,
+                                        pkRm->x,
+                                        info->x, info->len,
+                                        aad->x, aad->len,
+                                        pt->x, pt->len,
+                                        out_enc,
+                                        out_tag, tag_len,
+                                        out_ciphertext, out_ct_len);
+
+    PSA_ASSERT(status1);
+    PSA_ASSERT(status2);
+    PSA_ASSERT(status4);
+    psa_status_t status5= psa_hpke_open_single_msg(
+                                          &params,
+                                          out_enc,
+                                          &key_id_R,
+                                          info->x, info->len,
+                                          aad->x, aad->len,
+                                          out_tag, tag_len,
+                                          out_ciphertext, out_ct_len,
+                                          out_pt, pt->len);
+    PSA_ASSERT(status5);
+    TEST_MEMORY_COMPARE(out_pt,pt->len,pt->x, pt->len );
+exit:
+    psa_destroy_key(key_id_R);
+    psa_reset_key_attributes(&attr_R);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void context_export(int mode, int algo_id,
+        data_t *info, data_t *shared_secret,
+        data_t *exporter_context, int L, data_t *export_expected){
+    
+    PSA_ASSERT(psa_crypto_init());
+    psa_hpke_params params;
+    psa_hpke_context_t ctx;
+    unsigned char export[MAX_L];
+
+    psa_status_t status;
+
+    status= psa_hpke_setup_parameters(algo_id, mode, NULL, 0, &params);
+    PSA_ASSERT(status);
+
+    TEST_ASSERT((size_t) (shared_secret->len) ==params.PSA_HPKE_KEM_NSECRET);
+
+    status=psa_hpke_create_hpke_context(&params, PSA_HPKE_SENDER,
+                (unsigned char *) (shared_secret->x),
+                (unsigned char *) (info->x), (size_t) (info->len),
+                &ctx);
+    PSA_ASSERT(status);
+
+    status= psa_hpke_context_export(&params, &ctx,
+                                        exporter_context->x, exporter_context->len,
+                                        export, L);
+    PSA_ASSERT(status);
+    TEST_MEMORY_COMPARE(export, L, export_expected->x, export_expected->len);
+
+}
+/* END_CASE */
+
+
