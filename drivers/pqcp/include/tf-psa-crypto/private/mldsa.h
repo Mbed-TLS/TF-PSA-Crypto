@@ -34,7 +34,8 @@
  * The `bits` attribute of the key indicates the parameter set:
  * 44, 65 or 87.
  */
-#define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
+#define PSA_KEY_TYPE_ML_DSA_KEY_PAIR    \
+    TF_PSA_CRYPTO_PSA_KEY_TYPE_ML_DSA_KEY_PAIR
 
 /** The size of an ML-DSA key pair in the PSA representation,
  * which is just the seed.
