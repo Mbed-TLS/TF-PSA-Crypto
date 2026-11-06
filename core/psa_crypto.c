@@ -349,14 +349,14 @@ static int psa_is_dh_key_size_valid(size_t bits)
 static psa_status_t psa_validate_ml_dsa_public_key_bits(size_t data_length,
                                                         size_t *bits)
 {
-#if defined(PSA_WANT_KEY_TYPE_ML_DSA_87)
+#if defined(PSA_WANT_ML_DSA_87)
     if (data_length == PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)) {
         if (*bits == 0) {
             *bits = 87;
         }
         return *bits == 87 ? PSA_SUCCESS : PSA_ERROR_INVALID_ARGUMENT;
     }
-#endif /* PSA_WANT_KEY_TYPE_ML_DSA_87 */
+#endif /* PSA_WANT_ML_DSA_87 */
     return PSA_ERROR_NOT_SUPPORTED;
 }
 #endif /* TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED */

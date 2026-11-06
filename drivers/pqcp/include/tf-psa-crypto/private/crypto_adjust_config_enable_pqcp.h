@@ -16,7 +16,7 @@
 #define TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
 #endif
 
-#if defined(PSA_WANT_KEY_TYPE_ML_DSA_87) && \
+#if defined(PSA_WANT_ML_DSA_87) && \
     defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
 #define TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED
 #endif

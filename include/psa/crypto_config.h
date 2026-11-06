@@ -117,7 +117,7 @@
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
-//#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
+// #define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
 
@@ -127,7 +127,7 @@
  * or PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_...) and at least one of the ML-DSA
  * parameter set options.
  */
-//#define PSA_WANT_KEY_TYPE_ML_DSA_87             1
+// #define PSA_WANT_ML_DSA_87                      1
 
 /*
  * The following symbols extend and deprecate the legacy

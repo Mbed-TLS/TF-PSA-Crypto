@@ -496,7 +496,7 @@ component_test_crypto_with_static_key_slots() {
     # Unset MLDSA as it requires a larger buffer size and is
     # tested in component_test_crypto_with_static_key_slots_mldsa
     scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY
-    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_87
+    scripts/config.py unset PSA_WANT_ML_DSA_87
     scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
     # Intentionally set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE to a value that
     # is enough to contain:
