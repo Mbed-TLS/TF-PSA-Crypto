@@ -206,8 +206,20 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'PSA sign DETERMINISTIC_ECDSA(SHA_256): !ECDSA but DETERMINISTIC_ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
         ],
         'test_suite_psa_crypto_metadata.experimental': [
-            #Requires ML-DSA key-pair support.
+            # Requires ML-DSA key-pair support.
             'Key type: ML-DSA key pair',
+        ],
+        'test_suite_dispatch_transparent.dilithium_py': [
+            # Requires ML-DSA key-pair support.
+            re.compile(r'MLDSA-87 export public key .*'),
+            re.compile(r'MLDSA-87 sign deterministic .*'),
+            re.compile(r'MLDSA-87 sign_deterministic multipart .*'),
+        ],
+        'test_suite_psa_crypto_mldsa.dilithium_py': [
+            # Requires ML-DSA key-pair support.
+            re.compile(r'MLDSA-87 export public key .*'),
+            re.compile(r'MLDSA-87 sign deterministic .*'),
+            re.compile(r'MLDSA-87 sign_deterministic multipart .*'),
         ],
     }
 
