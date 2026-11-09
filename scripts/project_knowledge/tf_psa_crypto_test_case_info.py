@@ -41,4 +41,20 @@ INTERNAL_TEST_CASES: Dict[str, List[Union[str, Pattern]]] = {
     'test_suite_psa_crypto_storage_format.misc': [
         'PSA storage read: key larger than MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE',
     ],
+    'test_suite_psa_crypto_metadata.experimental': [
+        # Requires ML-DSA key-pair support.
+        'Key type: ML-DSA key pair',
+    ],
+    'test_suite_dispatch_transparent.dilithium_py': [
+        # Requires ML-DSA key-pair support.
+        re.compile(r'MLDSA-87 export public key .*'),
+        re.compile(r'MLDSA-87 sign deterministic .*'),
+        re.compile(r'MLDSA-87 sign_deterministic multipart .*'),
+    ],
+    'test_suite_psa_crypto_mldsa.dilithium_py': [
+        # Requires ML-DSA key-pair support.
+        re.compile(r'MLDSA-87 export public key .*'),
+        re.compile(r'MLDSA-87 sign deterministic .*'),
+        re.compile(r'MLDSA-87 sign_deterministic multipart .*'),
+    ],
 }
