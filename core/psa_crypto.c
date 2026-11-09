@@ -751,7 +751,7 @@ psa_status_t psa_import_key_into_slot(
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
 #if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
-    defined(PSA_WANT_ML_DSA_87)
+        defined(PSA_WANT_ML_DSA_87)
         if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
             if (key_buffer_size < data_length) {
                 return PSA_ERROR_BUFFER_TOO_SMALL;

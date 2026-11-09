@@ -887,7 +887,8 @@
      (key_type) == PSA_KEY_TYPE_RSA_PUBLIC_KEY ? PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) ? PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(key_bits) :      \
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
-     (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? \
+     PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits) : \
      PSA_BITS_TO_BYTES(key_bits)) /*unstructured; FFDH public or private*/
 
 /** Sufficient output buffer size for psa_export_public_key().
