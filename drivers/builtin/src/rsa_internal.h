@@ -20,6 +20,11 @@
 /**
  * \brief           Parse a PKCS#1 (ASN.1) encoded private RSA key.
  *
+ * \warning         This function checks the public part and the key
+ *                  representation, but does not establish consistency of the
+ *                  private parameters. Callers accepting untrusted private keys
+ *                  must additionally call mbedtls_rsa_check_privkey().
+ *
  * \param rsa       The RSA context where parsed data will be stored.
  * \param key       The buffer that contains the key.
  * \param keylen    The length of the key buffer in bytes.
