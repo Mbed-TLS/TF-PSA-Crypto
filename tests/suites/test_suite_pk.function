@@ -617,9 +617,9 @@ static int pk_sign_verify_pair(mbedtls_pk_context *pk, mbedtls_pk_context *pub,
         memset(sig, 0, sizeof(sig));
         TEST_EQUAL(restart ?
                    mbedtls_pk_sign_restartable(pk, MBEDTLS_MD_SHA256, hash, sizeof(hash),
-                                                sig, sizeof(sig), &sig_len, rs) :
+                                               sig, sizeof(sig), &sig_len, rs) :
                    mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256, hash, sizeof(hash),
-                                    sig, sizeof(sig), &sig_len), sign_ret);
+                                   sig, sizeof(sig), &sig_len), sign_ret);
         if (sign_ret == 0) {
             TEST_ASSERT(sig_len <= sizeof(sig));
         } else {
@@ -635,7 +635,7 @@ static int pk_sign_verify_pair(mbedtls_pk_context *pk, mbedtls_pk_context *pub,
             int ret = restart ?
                       mbedtls_pk_verify(pub, MBEDTLS_MD_SHA256, hash, sizeof(hash), sig, sig_len) :
                       mbedtls_pk_verify_restartable(pub, MBEDTLS_MD_SHA256, hash, sizeof(hash),
-                                                     sig, sig_len, rs);
+                                                    sig, sig_len, rs);
             if (changed == 0) {
                 TEST_EQUAL(ret, verify_ret);
             } else {
@@ -1309,7 +1309,8 @@ void pk_sign_verify_restart(int pk_type,
     size_t pub_key_len;
 
     TEST_ASSERT(mbedtls_pk_ecc_set_group(&prv, MBEDTLS_ECP_DP_SECP256R1) == 0);
-    TEST_ASSERT(mbedtls_pk_ecc_set_key(&prv, pk_test_ec_scalar, sizeof(pk_test_ec_scalar) - 1) == 0);
+    TEST_ASSERT(mbedtls_pk_ecc_set_key(&prv, pk_test_ec_scalar,
+                                       sizeof(pk_test_ec_scalar) - 1) == 0);
 
     PSA_ASSERT(psa_export_public_key(prv.priv_id, pub_key, sizeof(pub_key), &pub_key_len));
 
@@ -1320,14 +1321,25 @@ void pk_sign_verify_restart(int pk_type,
 
     cnt_restart = 0;
     if (pub_key_test) {
-        ret = mbedtls_pk_sign_restartable(&pub, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
-                                          sig, sig_length, &slen,
+        ret = mbedtls_pk_sign_restartable(&pub,
+                                          MBEDTLS_MD_SHA256,
+                                          pk_test_hash,
+                                          sizeof(pk_test_hash) - 1,
+                                          sig,
+                                          sig_length,
+                                          &slen,
                                           &rs_ctx);
     } else {
         do {
-            ret = mbedtls_pk_sign_restartable(&prv, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
-                                              sig, sig_length, &slen,
-                                              &rs_ctx);
+            ret =
+                mbedtls_pk_sign_restartable(&prv,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            sig_length,
+                                            &slen,
+                                            &rs_ctx);
         } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
     }
     if (ret != 0) {
@@ -1343,8 +1355,13 @@ void pk_sign_verify_restart(int pk_type,
 
     cnt_restart = 0;
     do {
-        ret = mbedtls_pk_verify_restartable(&pub, MBEDTLS_MD_SHA256,
-                                            pk_test_hash, sizeof(pk_test_hash) - 1, sig, slen, &rs_ctx);
+        ret = mbedtls_pk_verify_restartable(&pub,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            slen,
+                                            &rs_ctx);
     } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
 
     TEST_ASSERT(ret == 0);
@@ -1353,8 +1370,13 @@ void pk_sign_verify_restart(int pk_type,
 
     sig[0]++;
     do {
-        ret = mbedtls_pk_verify_restartable(&pub, MBEDTLS_MD_SHA256,
-                                            pk_test_hash, sizeof(pk_test_hash) - 1, sig, slen, &rs_ctx);
+        ret = mbedtls_pk_verify_restartable(&pub,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            slen,
+                                            &rs_ctx);
     } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
     TEST_ASSERT(ret != 0);
     sig[0]--;
@@ -1362,14 +1384,24 @@ void pk_sign_verify_restart(int pk_type,
     /* Do we leak memory when aborting? try verify then sign
      * This test only makes sense when we actually restart */
     if (min_restart > 0) {
-        ret = mbedtls_pk_verify_restartable(&pub, MBEDTLS_MD_SHA256,
-                                            pk_test_hash, sizeof(pk_test_hash) - 1, sig, slen, &rs_ctx);
+        ret = mbedtls_pk_verify_restartable(&pub,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            slen,
+                                            &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
         mbedtls_pk_restart_free(&rs_ctx);
 
         slen = sizeof(sig);
-        ret = mbedtls_pk_sign_restartable(&prv, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
-                                          sig, sig_length, &slen,
+        ret = mbedtls_pk_sign_restartable(&prv,
+                                          MBEDTLS_MD_SHA256,
+                                          pk_test_hash,
+                                          sizeof(pk_test_hash) - 1,
+                                          sig,
+                                          sig_length,
+                                          &slen,
                                           &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
     }
@@ -1475,8 +1507,8 @@ void pk_sign_key_paths(int type, data_t *private_der, data_t *public_der)
         /* Check both APIs on public-only contexts, with this branch's
          * EC and RSA error mappings for a missing private PSA key. */
         TEST_ASSERT(pk_sign_reject(&pub, reject_dh ? MBEDTLS_ERR_PK_TYPE_MISMATCH :
-                                  (type == MBEDTLS_PK_RSA ? MBEDTLS_ERR_PK_KEY_INVALID_FORMAT :
-                                   PSA_ERROR_NOT_SUPPORTED), 42000));
+                                   (type == MBEDTLS_PK_RSA ? MBEDTLS_ERR_PK_KEY_INVALID_FORMAT :
+                                    PSA_ERROR_NOT_SUPPORTED), 42000));
         mbedtls_pk_free(&derived);
         mbedtls_pk_free(&pub);
     }
@@ -1549,7 +1581,7 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int no_sign_usage,
     mbedtls_pk_init(&pk);
     PSA_INIT();
     TEST_EQUAL(pk_setup(&pk, PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_RSA : MBEDTLS_PK_ECKEY,
-                         curve_or_bits), 0);
+                        curve_or_bits), 0);
     /* Export the same public key before and after copying/wrapping. Preserve DER
      * write/parse coverage when enabled, and raw export coverage otherwise. */
     for (int state = 0; state <= 1; state++) {
@@ -1581,11 +1613,13 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int no_sign_usage,
                 TEST_EQUAL(mbedtls_pk_get_type(&pk), MBEDTLS_PK_ECKEY);
                 TEST_ASSERT(pk_sign_verify_pair(&pk, &pk, 0, 0));
             }
-            TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
+            TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, pk_test_hash,
+                                       sizeof(pk_test_hash) - 1,
                                        sig, sizeof(sig), &sig_len), expected_ret);
             if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type) && expected_ret == 0) {
                 TEST_EQUAL(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                             pk_test_hash, sizeof(pk_test_hash) - 1, sig, sig_len), 0);
+                                             pk_test_hash, sizeof(pk_test_hash) - 1, sig, sig_len),
+                           0);
             }
         }
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
@@ -1596,7 +1630,7 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int no_sign_usage,
 #else
         if (state) {
             PSA_ASSERT(psa_export_public_key(key_id, pubkey[state], sizeof(pubkey[state]),
-                                              &pubkey_len[state]));
+                                             &pubkey_len[state]));
         } else {
             TEST_ASSERT(pk.pub_raw_len <= sizeof(pubkey[state]));
             memcpy(pubkey[state], pk.pub_raw, pk.pub_raw_len);
@@ -1615,7 +1649,8 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int no_sign_usage,
     TEST_EQUAL(mbedtls_pk_parse_public_key(&pk, pubkey[0], pubkey_len[0]), 0);
 #else
     TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(
-                                   PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_RSA : MBEDTLS_PK_ECKEY)), 0);
+                                    PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_RSA :
+                                    MBEDTLS_PK_ECKEY)), 0);
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
         TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, pubkey[0], pubkey_len[0]), 0);
@@ -1629,7 +1664,8 @@ void pk_psa_sign(int psa_type, int bits, int psa_alg, int no_sign_usage,
 #endif
     TEST_EQUAL(mbedtls_pk_verify_ext(PSA_ALG_IS_RSA_PSS_ANY_SALT(psa_alg) ?
                                      MBEDTLS_PK_SIGALG_RSA_PSS :
-                                     (PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_SIGALG_RSA_PKCS1V15 :
+                                     (PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_SIGALG_RSA_PKCS1V15
+    :
                                       MBEDTLS_PK_SIGALG_ECDSA),
                                      &pk, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
                                      sig, sig_len), 0);
@@ -1677,7 +1713,8 @@ void pk_sign_ext(int pk_type, int curve_or_keybits, int sig_type, int md_alg,
         /* A v1.5-only wrapped key must refuse a PSS request. */
         if (sig_type == MBEDTLS_PK_SIGALG_RSA_PKCS1V15) {
             TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, md_alg, hash, hash_len,
-                                           sig, sizeof(sig), &sig_len), MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+                                           sig, sizeof(sig), &sig_len),
+                       MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
         }
     }
     TEST_EQUAL(mbedtls_pk_sign_ext(sig_type, &pk, md_alg, hash, hash_len,
