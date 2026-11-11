@@ -1410,22 +1410,80 @@ void pk_sign_key_paths(int type, data_t *private_der, data_t *public_der)
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
 
-    mbedtls_pk_init(&pk);
+    mbedtls_pk_init(&source);
+    mbedtls_pk_init(&derived);
+    mbedtls_pk_init(&pub);
     PSA_INIT();
-
-    memset(sig, 0, sizeof(sig));
-
-    TEST_ASSERT(mbedtls_pk_parse_key(&pk, priv_key->x, priv_key->len, NULL, 0) == 0);
-    TEST_ASSERT(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256,
-                                hash->x, hash->len,
-                                sig, sizeof(sig), &sig_len) == 0);
-    TEST_ASSERT(sig_len == expected_sig->len);
-    TEST_ASSERT(memcmp(sig, expected_sig->x, sig_len) == 0);
-    TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                  hash->x, hash->len, sig, sig_len) == 0);
-
+    TEST_EQUAL(mbedtls_pk_parse_key(&source, private_der->x, private_der->len, NULL, 0), 0);
+    TEST_EQUAL(mbedtls_pk_get_type(&source), type);
+    for (int path = 0; path < 3; path++) {
+        mbedtls_pk_context *pk = path == 0 ? &source : &derived;
+        mbedtls_test_set_step(path);
+        if (path == 1) {
+            TEST_EQUAL(mbedtls_pk_copy_from_psa(source.priv_id, pk), 0);
+            TEST_EQUAL(mbedtls_pk_get_type(pk), type == MBEDTLS_PK_RSA ? MBEDTLS_PK_RSA :
+                       MBEDTLS_PK_ECKEY);
+            TEST_EQUAL(mbedtls_pk_copy_public_from_psa(source.priv_id, &pub), 0);
+        } else {
+            if (path == 2) {
+                /* ECKEY_DH is a PK descriptor, not a PSA key type. Copying
+                 * rebuilds an unrestricted ECKEY; wrapping uses key policy. */
+                if (type == MBEDTLS_PK_ECKEY_DH) {
+                    break;
+                }
+                TEST_EQUAL(mbedtls_pk_wrap_psa(pk, source.priv_id), 0);
+            }
+            TEST_EQUAL(mbedtls_pk_parse_public_key(&pub, public_der->x, public_der->len), 0);
+        }
+        int reject_dh = type == MBEDTLS_PK_ECKEY_DH && path == 0;
+        if (reject_dh) {
+            TEST_ASSERT(pk_sign_reject(pk, MBEDTLS_ERR_PK_TYPE_MISMATCH, 42000));
+        } else {
+            TEST_ASSERT(pk_sign_verify_pair(pk, &pub, 0, 0));
+            /* A one-byte buffer cannot hold even the raw signature. */
+            int small_ret = type == MBEDTLS_PK_RSA ?
+                            (path == 2 ? MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE :
+                             MBEDTLS_ERR_PK_BUFFER_TOO_SMALL) : PSA_ERROR_BUFFER_TOO_SMALL;
+            TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256,
+                                       pk_test_hash, sizeof(pk_test_hash) - 1,
+                                       sig, 1, &sig_len), small_ret);
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_256)
+            if (type != MBEDTLS_PK_RSA) {
+                TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256,
+                                           pk_test_hash, sizeof(pk_test_hash) - 1,
+                                           sig, sizeof(sig), &sig_len), 0);
+                TEST_MEMORY_COMPARE(sig, sig_len, pk_test_ec_signature,
+                                    sizeof(pk_test_ec_signature) - 1);
+                /* The raw 64-byte signature fits, but its DER encoding does not. */
+                TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256,
+                                           pk_test_hash, sizeof(pk_test_hash) - 1,
+                                           sig, PSA_ECDSA_SIGNATURE_SIZE(256), &sig_len),
+                           MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
+            }
+#endif
+#if defined(PSA_WANT_ALG_RSA_PSS)
+            if (type == MBEDTLS_PK_RSA && path != 2) {
+                TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, pk, MBEDTLS_MD_SHA256,
+                                               pk_test_hash, sizeof(pk_test_hash) - 1,
+                                               sig, sizeof(sig), &sig_len), 0);
+                TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pub, MBEDTLS_MD_SHA256,
+                                                 pk_test_hash, sizeof(pk_test_hash) - 1,
+                                                 sig, sig_len), 0);
+            }
+#endif
+        }
+        /* Check both APIs on public-only contexts, with this branch's
+         * EC and RSA error mappings for a missing private PSA key. */
+        TEST_ASSERT(pk_sign_reject(&pub, reject_dh ? MBEDTLS_ERR_PK_TYPE_MISMATCH :
+                                  (type == MBEDTLS_PK_RSA ? MBEDTLS_ERR_PK_KEY_INVALID_FORMAT :
+                                   PSA_ERROR_NOT_SUPPORTED), 42000));
+        mbedtls_pk_free(&derived);
+        mbedtls_pk_free(&pub);
+    }
 exit:
-    mbedtls_pk_free(&pk);
+    mbedtls_pk_free(&source);
+    mbedtls_pk_free(&derived);
+    mbedtls_pk_free(&pub);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1584,32 +1642,65 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg,
-                 int sig_size, int expected_sign_ret)
+/* Consolidates ordinary and wrapped sign_ext checks for TC9, TC11, TC31 and
+ * TC33, including existing padding, output-size and key-usage failures. */
+void pk_sign_ext(int pk_type, int curve_or_keybits, int sig_type, int md_alg,
+                 int sig_size, int expected_sign_ret, int wrapped, int no_sign_usage)
 {
-    mbedtls_pk_context pk;
-    size_t sig_len;
-    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
-    size_t hash_len = mbedtls_md_get_size_from_type(md_alg);
-    memset(hash, 0x2a, sizeof(hash));
-    memset(sig, 0, sizeof(sig));
+    mbedtls_pk_context pk, pub;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE], hash[MBEDTLS_MD_MAX_SIZE];
+    size_t sig_len, hash_len = mbedtls_md_get_size_from_type(md_alg);
 
     mbedtls_pk_init(&pk);
+    mbedtls_pk_init(&pub);
     PSA_INIT();
-
+    memset(hash, 0x2a, sizeof(hash));
+    memset(sig, 0, sizeof(sig));
     TEST_EQUAL(pk_setup(&pk, pk_type, curve_or_keybits), 0);
-
-    TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
+    if (wrapped) {
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+        TEST_EQUAL(mbedtls_pk_setup(&pub, mbedtls_pk_info_from_type(pk_type)), 0);
+        TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pub, pk.pub_raw, pk.pub_raw_len), 0);
+#endif
+        TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attr), 0);
+        if (sig_type == MBEDTLS_PK_SIGALG_RSA_PSS) {
+            psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
+        }
+        if (no_sign_usage) {
+            psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
+        }
+        TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attr, &key_id), 0);
+        mbedtls_pk_free(&pk);
+        TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
+        /* A v1.5-only wrapped key must refuse a PSS request. */
+        if (sig_type == MBEDTLS_PK_SIGALG_RSA_PKCS1V15) {
+            TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, md_alg, hash, hash_len,
+                                           sig, sizeof(sig), &sig_len), MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+        }
+    }
+    TEST_EQUAL(mbedtls_pk_sign_ext(sig_type, &pk, md_alg, hash, hash_len,
                                    sig, sig_size, &sig_len), expected_sign_ret);
     if (expected_sign_ret != 0) {
         goto exit;
     }
-
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
+    if (wrapped) {
+        TEST_EQUAL(mbedtls_pk_verify_ext(sig_type, &pk, md_alg, hash, hash_len, sig, sig_len),
+                   sig_type == MBEDTLS_PK_SIGALG_RSA_PSS ? MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE :
+                   MBEDTLS_ERR_PK_TYPE_MISMATCH);
+    }
+    TEST_EQUAL(mbedtls_pk_verify_ext(sig_type, wrapped ? &pub : &pk, md_alg,
                                      hash, hash_len, sig, sig_len), 0);
+    if (wrapped) {
+        TEST_EQUAL(mbedtls_pk_sign_ext(sig_type, &pk, md_alg, hash, hash_len,
+                                       sig, 1, &sig_len), MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE);
+    }
 exit:
     mbedtls_pk_free(&pk);
+    mbedtls_pk_free(&pub);
+    psa_destroy_key(key_id);
+    psa_reset_key_attributes(&attr);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1698,96 +1789,6 @@ void pk_sign_ecdsa_der_buffer_too_small()
 
 exit:
     mbedtls_pk_free(&pk);
-    PSA_DONE();
-}
-/* END_CASE */
-
-/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-void pk_psa_wrap_sign_ext(int pk_type,
-                          int key_bits,
-                          int key_pk_type,
-                          int md_alg,
-                          int no_sign_usage_test)
-{
-    mbedtls_pk_context pk;
-    size_t sig_len, pkey_len;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
-    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    unsigned char pkey[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
-    unsigned char hash[PSA_HASH_MAX_SIZE];
-    psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-    size_t hash_len = PSA_HASH_LENGTH(psa_md_alg);
-
-    mbedtls_pk_init(&pk);
-    PSA_INIT();
-
-    /* Create legacy RSA public/private key in PK context. */
-    TEST_EQUAL(pk_setup(&pk, pk_type, key_bits), 0);
-
-    /* Export underlying public key for re-importing in a legacy context. */
-    pkey_len = pk.pub_raw_len;
-    memcpy(pkey, pk.pub_raw, pk.pub_raw_len);
-
-    /* Turn PK context into an opaque one. */
-    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
-    }
-    if (no_sign_usage_test) {
-        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_ENCRYPT);
-    }
-    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id), 0);
-    mbedtls_pk_free(&pk);
-    mbedtls_pk_init(&pk);
-    TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
-
-    memset(hash, 0x2a, sizeof(hash));
-    memset(sig, 0, sizeof(sig));
-
-    /* Check that trying to use the wrong pk_type in sign_ext() results in a failure.
-     * The PSA key was setup to use PKCS1 v1.5 signature algorithm, but here we try
-     * to use it for PSS (PKCS1 v2.1) and it should fail. */
-    if (key_pk_type == MBEDTLS_PK_RSA) {
-        TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, md_alg, hash, hash_len,
-                                       sig, sizeof(sig), &sig_len),
-                   MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
-    }
-
-    /* Perform sign_ext() with the correct pk_type. */
-    if (no_sign_usage_test) {
-        TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                       sig, sizeof(sig), &sig_len), MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
-        goto exit;
-    } else {
-        TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                       sig, sizeof(sig), &sig_len), 0);
-    }
-
-    /* verify_ext() is not supported when using an opaque context. */
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                         hash, hash_len, sig, sig_len),
-                   MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
-    } else {
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                         hash, hash_len, sig, sig_len),
-                   MBEDTLS_ERR_PK_TYPE_MISMATCH);
-    }
-
-    mbedtls_pk_free(&pk);
-    TEST_EQUAL(PSA_SUCCESS, psa_destroy_key(key_id));
-
-    mbedtls_pk_init(&pk);
-    TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(pk_type)), 0);
-    TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, pkey, pkey_len), 0);
-
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                     hash, hash_len, sig, sig_len), 0);
-
-exit:
-    mbedtls_pk_free(&pk);
-    psa_destroy_key(key_id);
     PSA_DONE();
 }
 /* END_CASE */
