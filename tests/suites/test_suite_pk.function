@@ -1399,10 +1399,14 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_HAVE_ALG_ECDSA_SIGN:PSA_HAVE_ALG_ECDSA_VERIFY */
-void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_sig)
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_SHA_256 */
+/* Consolidates the parsed EC vector test and adds construction-path checks:
+ * EC TCs 1, 2, 4, 13-16, 21, 23, 25-27, 36, 38; RSA TCs 8, 10, 12, 17-19,
+ * 22, 24, 30, 32, 37, 39. The ECDH-only fixture covers TC6 and demonstrates
+ * the copy behavior discussed by TC16. */
+void pk_sign_key_paths(int type, data_t *private_der, data_t *public_der)
 {
-    mbedtls_pk_context pk;
+    mbedtls_pk_context source, derived, pub;
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
 
