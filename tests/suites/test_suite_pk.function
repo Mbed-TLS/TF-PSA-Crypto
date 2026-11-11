@@ -1381,7 +1381,7 @@ void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_s
     TEST_ASSERT(sig_len == expected_sig->len);
     TEST_ASSERT(memcmp(sig, expected_sig->x, sig_len) == 0);
     TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                 hash->x, hash->len, sig, sig_len) == 0);
+                                  hash->x, hash->len, sig, sig_len) == 0);
 
 exit:
     mbedtls_pk_free(&pk);
