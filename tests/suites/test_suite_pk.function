@@ -1362,26 +1362,26 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_SIGN:PSA_HAVE_ALG_ECDSA_VERIFY */
-void pk_sign_verify_parsed_ec(data_t *priv_key)
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_HAVE_ALG_ECDSA_SIGN:PSA_HAVE_ALG_ECDSA_VERIFY */
+void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_sig)
 {
     mbedtls_pk_context pk;
-    unsigned char hash[32];
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
 
     mbedtls_pk_init(&pk);
     PSA_INIT();
 
-    memset(hash, 0x2a, sizeof(hash));
     memset(sig, 0, sizeof(sig));
 
     TEST_ASSERT(mbedtls_pk_parse_key(&pk, priv_key->x, priv_key->len, NULL, 0) == 0);
     TEST_ASSERT(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256,
-                                hash, sizeof(hash),
+                                hash->x, hash->len,
                                 sig, sizeof(sig), &sig_len) == 0);
+    TEST_ASSERT(sig_len == expected_sig->len);
+    TEST_ASSERT(memcmp(sig, expected_sig->x, sig_len) == 0);
     TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                 hash, sizeof(hash), sig, sig_len) == 0);
+                                 hash->x, hash->len, sig, sig_len) == 0);
 
 exit:
     mbedtls_pk_free(&pk);
