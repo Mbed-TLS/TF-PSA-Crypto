@@ -13,13 +13,11 @@
 #include "mbedtls/private/error_common.h"
 #include "mbedtls/private/rsa.h"
 #include "rsa_internal.h"
-#include "pk_internal.h"
 
 #include <limits.h>
 #include <stdint.h>
 
 #include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
 
 #include <test/psa_exercise_key.h>
 
@@ -579,6 +577,119 @@ exit:
     return new_key_id;
 }
 #endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
+
+/* Consolidates repeated deterministic fixtures for construction-path cases
+ * TC2, TC14 and TC26, and the existing restartable signing cases including TC20. */
+#if defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA) && \
+    (defined(MBEDTLS_ECP_RESTARTABLE) || defined(MBEDTLS_PK_PARSE_C))
+static const unsigned char pk_test_ec_signature[] =
+    "\x30\x45\x02\x21\x00\xf1\xab\xb0\x23\x51\x83\x51\xcd\x71\xd8\x81"
+    "\x56\x7b\x1e\xa6\x63\xed\x3e\xfc\xf6\xc5\x13\x2b\x35\x4f\x28\xd3"
+    "\xb0\xb7\xd3\x83\x67\x02\x20\x01\x9f\x41\x13\x74\x2a\x2b\x14\xbd"
+    "\x25\x92\x6b\x49\xc6\x49\x15\x5f\x26\x7e\x60\xd3\x81\x4b\x4c\x0c"
+    "\xc8\x42\x50\xe4\x6f\x00\x83";
+#endif
+static const unsigned char pk_test_hash[] =
+    "\x9f\x86\xd0\x81\x88\x4c\x7d\x65\x9a\x2f\xea\xa0\xc5\x5a\xd0\x15"
+    "\xa3\xbf\x4f\x1b\x2b\x0b\x82\x2c\xd1\x5d\x6c\x15\xb0\xf0\x0a\x08";
+
+/* Consolidates direct/restartable sign, cross-API verify and tamper checks used
+ * by TC1, TC2, TC4, TC5, TC7, TC8, TC13-TC19, TC25-TC27, TC30 and TC32.
+ * The dedicated restart test below retains suspension and abort coverage
+ * for TC20 and the existing restart-budget scenarios. */
+#if defined(PSA_WANT_ALG_SHA_256)
+static int pk_sign_verify_pair(mbedtls_pk_context *pk, mbedtls_pk_context *pub,
+                               int sign_ret, int verify_ret)
+{
+    unsigned char hash[32], sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
+    size_t sig_len;
+    void *rs = NULL;
+    int ok = 0;
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    mbedtls_pk_restart_ctx restart_ctx;
+    rs = &restart_ctx;
+    mbedtls_pk_restart_init(rs);
+    psa_interruptible_set_max_ops(42000);
+#endif
+    memcpy(hash, pk_test_hash, sizeof(hash));
+    for (int restart = 0; restart <= 1; restart++) {
+        memset(sig, 0, sizeof(sig));
+        TEST_EQUAL(restart ?
+                   mbedtls_pk_sign_restartable(pk, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+                                               sig, sizeof(sig), &sig_len, rs) :
+                   mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+                                   sig, sizeof(sig), &sig_len), sign_ret);
+        if (sign_ret == 0) {
+            TEST_ASSERT(sig_len <= sizeof(sig));
+        } else {
+            sig_len = sizeof(sig);
+        }
+        for (int changed = 0; changed < (verify_ret == 0 ? 3 : 1); changed++) {
+            if (changed == 1) {
+                hash[0]++;
+            } else if (changed == 2) {
+                hash[0]--;
+                sig[0]++;
+            }
+            int ret = restart ?
+                      mbedtls_pk_verify(pub, MBEDTLS_MD_SHA256, hash, sizeof(hash), sig, sig_len) :
+                      mbedtls_pk_verify_restartable(pub, MBEDTLS_MD_SHA256, hash, sizeof(hash),
+                                                    sig, sig_len, rs);
+            if (changed == 0) {
+                TEST_EQUAL(ret, verify_ret);
+            } else {
+                TEST_ASSERT(ret != 0);
+            }
+        }
+        hash[0] = pk_test_hash[0];
+    }
+    ok = 1;
+exit:
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    mbedtls_pk_restart_free(rs);
+#endif
+    return ok;
+}
+
+#endif /* PSA_WANT_ALG_SHA_256 */
+
+/* Consolidates direct and restartable rejection checks for parsed DH-only and
+ * public-only keys (TC6, TC21-TC24, TC36-TC39), and descriptor-only cases
+ * (TC35, TC40). */
+static int pk_sign_reject(mbedtls_pk_context *pk, int expected_ret, int max_ops)
+{
+    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
+    size_t sig_len;
+    void *rs = NULL;
+    int ok = 0;
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    mbedtls_pk_restart_ctx restart_ctx;
+    rs = &restart_ctx;
+    mbedtls_pk_restart_init(rs);
+    psa_interruptible_set_max_ops(max_ops);
+#else
+    (void) max_ops;
+#endif
+    TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
+                               sig, sizeof(sig), &sig_len), expected_ret);
+    TEST_EQUAL(mbedtls_pk_sign_restartable(pk, MBEDTLS_MD_SHA256,
+                                           pk_test_hash, sizeof(pk_test_hash) - 1,
+                                           sig, sizeof(sig), &sig_len, NULL), expected_ret);
+    TEST_EQUAL(mbedtls_pk_sign_restartable(pk, MBEDTLS_MD_SHA256,
+                                           pk_test_hash, sizeof(pk_test_hash) - 1,
+                                           sig, sizeof(sig), &sig_len, rs),
+               rs != NULL && max_ops != 0 && expected_ret == PSA_ERROR_NOT_SUPPORTED ?
+               MBEDTLS_ERR_PK_KEY_INVALID_FORMAT : expected_ret);
+    ok = 1;
+exit:
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    mbedtls_pk_restart_free(rs);
+#endif
+    return ok;
+}
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -1165,63 +1276,92 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:PSA_WANT_ALG_DETERMINISTIC_ECDSA */
-void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
-                            char *QX_str, char *QY_str,
-                            int md_alg, data_t *hash, data_t *sig_check,
-                            int max_ops, int min_restart, int max_restart)
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_RESTARTABLE:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256 */
+/* Consolidates repeated key, hash and signature fixtures for existing
+ * restartable-signing and buffer scenarios; TC20 covers public-only rejection. */
+void pk_sign_verify_restart(int pk_type,
+                            int max_ops,
+                            int min_restart,
+                            int max_restart,
+                            int pub_key_test,
+                            int sign_ret,
+                            int sig_length)
 {
+    unsigned char pk_test_ec_scalar[] =
+        "\xc9\xaf\xa9\xd8\x45\xba\x75\x16\x6b\x5c\x21\x57\x67\xb1\xd6\x93"
+        "\x4e\x50\xc3\xdb\x36\xe8\x9b\x12\x7b\x8a\x62\x2b\x12\x0f\x67\x21";
     int ret, cnt_restart;
     mbedtls_pk_restart_ctx rs_ctx;
     mbedtls_pk_context prv, pub;
     size_t slen;
-    unsigned char sig[MBEDTLS_ECDSA_MAX_LEN];
+    unsigned char *sig = NULL;
+    TEST_CALLOC(sig, sig_length);
 
     mbedtls_pk_restart_init(&rs_ctx);
     mbedtls_pk_init(&prv);
     mbedtls_pk_init(&pub);
     PSA_INIT();
 
-    memset(sig, 0, sizeof(sig));
-
     TEST_ASSERT(mbedtls_pk_setup(&prv, mbedtls_pk_info_from_type(pk_type)) == 0);
     TEST_ASSERT(mbedtls_pk_setup(&pub, mbedtls_pk_info_from_type(pk_type)) == 0);
-
-    (void) QX_str;
-    (void) QY_str;
 
     unsigned char pub_key[MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH] = { 0 };
     size_t pub_key_len;
 
-    TEST_ASSERT(mbedtls_pk_ecc_set_group(&prv, grp_id) == 0);
-    TEST_ASSERT(mbedtls_pk_ecc_set_key(&prv, (unsigned char *) d_str->x, d_str->len) == 0);
+    TEST_ASSERT(mbedtls_pk_ecc_set_group(&prv, MBEDTLS_ECP_DP_SECP256R1) == 0);
+    TEST_ASSERT(mbedtls_pk_ecc_set_key(&prv, pk_test_ec_scalar,
+                                       sizeof(pk_test_ec_scalar) - 1) == 0);
 
     PSA_ASSERT(psa_export_public_key(prv.priv_id, pub_key, sizeof(pub_key), &pub_key_len));
 
-    TEST_ASSERT(mbedtls_pk_ecc_set_group(&pub, grp_id) == 0);
+    TEST_ASSERT(mbedtls_pk_ecc_set_group(&pub, MBEDTLS_ECP_DP_SECP256R1) == 0);
     TEST_ASSERT(mbedtls_pk_ecc_set_pubkey(&pub, pub_key, pub_key_len) == 0);
 
     psa_interruptible_set_max_ops(max_ops);
 
-    slen = sizeof(sig);
     cnt_restart = 0;
-    do {
-        ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                          sig, sizeof(sig), &slen,
+    if (pub_key_test) {
+        ret = mbedtls_pk_sign_restartable(&pub,
+                                          MBEDTLS_MD_SHA256,
+                                          pk_test_hash,
+                                          sizeof(pk_test_hash) - 1,
+                                          sig,
+                                          sig_length,
+                                          &slen,
                                           &rs_ctx);
-    } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
+    } else {
+        do {
+            ret =
+                mbedtls_pk_sign_restartable(&prv,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            sig_length,
+                                            &slen,
+                                            &rs_ctx);
+        } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
+    }
+    if (ret != 0) {
+        TEST_EQUAL(ret, sign_ret);
+        goto exit;
+    }
 
-    TEST_ASSERT(ret == 0);
-    TEST_ASSERT(slen == sig_check->len);
-    TEST_ASSERT(memcmp(sig, sig_check->x, slen) == 0);
+    TEST_EQUAL(sign_ret, 0);
+    TEST_MEMORY_COMPARE(sig, slen, pk_test_ec_signature, sizeof(pk_test_ec_signature) - 1);
 
     TEST_ASSERT(cnt_restart >= min_restart);
     TEST_ASSERT(cnt_restart <= max_restart);
 
     cnt_restart = 0;
     do {
-        ret = mbedtls_pk_verify_restartable(&pub, md_alg,
-                                            hash->x, hash->len, sig, slen, &rs_ctx);
+        ret = mbedtls_pk_verify_restartable(&pub,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            slen,
+                                            &rs_ctx);
     } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restart);
 
     TEST_ASSERT(ret == 0);
@@ -1230,8 +1370,13 @@ void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
 
     sig[0]++;
     do {
-        ret = mbedtls_pk_verify_restartable(&pub, md_alg,
-                                            hash->x, hash->len, sig, slen, &rs_ctx);
+        ret = mbedtls_pk_verify_restartable(&pub,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            slen,
+                                            &rs_ctx);
     } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
     TEST_ASSERT(ret != 0);
     sig[0]--;
@@ -1239,14 +1384,24 @@ void pk_sign_verify_restart(int pk_type, int grp_id, data_t *d_str,
     /* Do we leak memory when aborting? try verify then sign
      * This test only makes sense when we actually restart */
     if (min_restart > 0) {
-        ret = mbedtls_pk_verify_restartable(&pub, md_alg,
-                                            hash->x, hash->len, sig, slen, &rs_ctx);
+        ret = mbedtls_pk_verify_restartable(&pub,
+                                            MBEDTLS_MD_SHA256,
+                                            pk_test_hash,
+                                            sizeof(pk_test_hash) - 1,
+                                            sig,
+                                            slen,
+                                            &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
         mbedtls_pk_restart_free(&rs_ctx);
 
         slen = sizeof(sig);
-        ret = mbedtls_pk_sign_restartable(&prv, md_alg, hash->x, hash->len,
-                                          sig, sizeof(sig), &slen,
+        ret = mbedtls_pk_sign_restartable(&prv,
+                                          MBEDTLS_MD_SHA256,
+                                          pk_test_hash,
+                                          sizeof(pk_test_hash) - 1,
+                                          sig,
+                                          sig_length,
+                                          &slen,
                                           &rs_ctx);
         TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);
     }
@@ -1255,91 +1410,112 @@ exit:
     mbedtls_pk_restart_free(&rs_ctx);
     mbedtls_pk_free(&prv);
     mbedtls_pk_free(&pub);
+    mbedtls_free(sig);
     PSA_DONE();
 }
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256 */
+/* Consolidates generic sign/verify assertions through the shared helper;
+ * this retains ECKEY_DH and RSA behavior from TC5 and TC7. */
 void pk_sign_verify(int type, int curve_or_keybits, int sign_ret, int verify_ret)
 {
     mbedtls_pk_context pk;
-    size_t sig_len;
-    unsigned char hash[32]; // Hard-coded for SHA256
-    size_t hash_len = sizeof(hash);
-    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    void *rs_ctx = NULL;
-#if defined(MBEDTLS_ECP_RESTARTABLE)
-    mbedtls_pk_restart_ctx ctx;
-
-    rs_ctx = &ctx;
-    mbedtls_pk_restart_init(rs_ctx);
-    /* This value is large enough that the operation will complete in one run.
-     * See comments at the top of ecp_test_vect_restart in
-     * test_suite_ecp.function for estimates of operation counts. */
-    psa_interruptible_set_max_ops(42000);
-#endif /* MBEDTLS_ECP_RESTARTABLE */
-
     mbedtls_pk_init(&pk);
     PSA_INIT();
-
-    memset(hash, 0x2a, sizeof(hash));
-    memset(sig, 0, sizeof(sig));
-
-    TEST_ASSERT(pk_setup(&pk, type, curve_or_keybits) == 0);
-
-    TEST_ASSERT(mbedtls_pk_sign_restartable(&pk, MBEDTLS_MD_SHA256,
-                                            hash, hash_len,
-                                            sig, sizeof(sig), &sig_len,
-                                            rs_ctx) == sign_ret);
-    if (sign_ret == 0) {
-        TEST_ASSERT(sig_len <= MBEDTLS_PK_SIGNATURE_MAX_SIZE);
-    } else {
-        sig_len = MBEDTLS_PK_SIGNATURE_MAX_SIZE;
-    }
-
-    TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                  hash, hash_len, sig, sig_len) == verify_ret);
-
-    if (verify_ret == 0) {
-        hash[0]++;
-        TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                      hash, hash_len, sig, sig_len) != 0);
-        hash[0]--;
-
-        sig[0]++;
-        TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                      hash, hash_len, sig, sig_len) != 0);
-        sig[0]--;
-    }
-
-    TEST_ASSERT(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, hash_len,
-                                sig, sizeof(sig), &sig_len) == sign_ret);
-    if (sign_ret == 0) {
-        TEST_ASSERT(sig_len <= MBEDTLS_PK_SIGNATURE_MAX_SIZE);
-    } else {
-        sig_len = MBEDTLS_PK_SIGNATURE_MAX_SIZE;
-    }
-
-    TEST_ASSERT(mbedtls_pk_verify_restartable(&pk, MBEDTLS_MD_SHA256,
-                                              hash, hash_len, sig, sig_len, rs_ctx) == verify_ret);
-
-    if (verify_ret == 0) {
-        hash[0]++;
-        TEST_ASSERT(mbedtls_pk_verify_restartable(&pk, MBEDTLS_MD_SHA256,
-                                                  hash, sizeof(hash), sig, sig_len, rs_ctx) != 0);
-        hash[0]--;
-
-        sig[0]++;
-        TEST_ASSERT(mbedtls_pk_verify_restartable(&pk, MBEDTLS_MD_SHA256,
-                                                  hash, sizeof(hash), sig, sig_len, rs_ctx) != 0);
-        sig[0]--;
-    }
-
+    TEST_EQUAL(pk_setup(&pk, type, curve_or_keybits), 0);
+    TEST_ASSERT(pk_sign_verify_pair(&pk, &pk, sign_ret, verify_ret));
 exit:
-#if defined(MBEDTLS_ECP_RESTARTABLE)
-    mbedtls_pk_restart_free(rs_ctx);
-#endif
     mbedtls_pk_free(&pk);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_SHA_256 */
+/* Consolidates the parsed EC vector test and adds construction-path checks:
+ * EC TCs 1, 2, 4, 13-16, 21, 23, 25-27, 36, 38; RSA TCs 8, 10, 12, 17-19,
+ * 22, 24, 30, 32, 37, 39. The ECDH-only fixture covers TC6 and demonstrates
+ * the copy behavior discussed by TC16. */
+void pk_sign_key_paths(int type, data_t *private_der, data_t *public_der)
+{
+    mbedtls_pk_context source, derived, pub;
+    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
+    size_t sig_len;
+
+    mbedtls_pk_init(&source);
+    mbedtls_pk_init(&derived);
+    mbedtls_pk_init(&pub);
+    PSA_INIT();
+    TEST_EQUAL(mbedtls_pk_parse_key(&source, private_der->x, private_der->len, NULL, 0), 0);
+    TEST_EQUAL(mbedtls_pk_get_type(&source), type);
+    for (int path = 0; path < 3; path++) {
+        mbedtls_pk_context *pk = path == 0 ? &source : &derived;
+        mbedtls_test_set_step(path);
+        if (path == 1) {
+            TEST_EQUAL(mbedtls_pk_copy_from_psa(source.priv_id, pk), 0);
+            TEST_EQUAL(mbedtls_pk_get_type(pk), type == MBEDTLS_PK_RSA ? MBEDTLS_PK_RSA :
+                       MBEDTLS_PK_ECKEY);
+            TEST_EQUAL(mbedtls_pk_copy_public_from_psa(source.priv_id, &pub), 0);
+        } else {
+            if (path == 2) {
+                /* ECKEY_DH is a PK descriptor, not a PSA key type. Copying
+                 * rebuilds an unrestricted ECKEY; wrapping uses key policy. */
+                if (type == MBEDTLS_PK_ECKEY_DH) {
+                    break;
+                }
+                TEST_EQUAL(mbedtls_pk_wrap_psa(pk, source.priv_id), 0);
+            }
+            TEST_EQUAL(mbedtls_pk_parse_public_key(&pub, public_der->x, public_der->len), 0);
+        }
+        int reject_dh = type == MBEDTLS_PK_ECKEY_DH && path == 0;
+        if (reject_dh) {
+            TEST_ASSERT(pk_sign_reject(pk, MBEDTLS_ERR_PK_TYPE_MISMATCH, 42000));
+        } else {
+            TEST_ASSERT(pk_sign_verify_pair(pk, &pub, 0, 0));
+            /* A one-byte buffer cannot hold even the raw signature. */
+            int small_ret = type == MBEDTLS_PK_RSA ?
+                            (path == 2 ? MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE :
+                             MBEDTLS_ERR_PK_BUFFER_TOO_SMALL) : PSA_ERROR_BUFFER_TOO_SMALL;
+            TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256,
+                                       pk_test_hash, sizeof(pk_test_hash) - 1,
+                                       sig, 1, &sig_len), small_ret);
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_256)
+            if (type != MBEDTLS_PK_RSA) {
+                TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256,
+                                           pk_test_hash, sizeof(pk_test_hash) - 1,
+                                           sig, sizeof(sig), &sig_len), 0);
+                TEST_MEMORY_COMPARE(sig, sig_len, pk_test_ec_signature,
+                                    sizeof(pk_test_ec_signature) - 1);
+                /* The raw 64-byte signature fits, but its DER encoding does not. */
+                TEST_EQUAL(mbedtls_pk_sign(pk, MBEDTLS_MD_SHA256,
+                                           pk_test_hash, sizeof(pk_test_hash) - 1,
+                                           sig, PSA_ECDSA_SIGNATURE_SIZE(256), &sig_len),
+                           MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
+            }
+#endif
+#if defined(PSA_WANT_ALG_RSA_PSS)
+            if (type == MBEDTLS_PK_RSA && path != 2) {
+                TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, pk, MBEDTLS_MD_SHA256,
+                                               pk_test_hash, sizeof(pk_test_hash) - 1,
+                                               sig, sizeof(sig), &sig_len), 0);
+                TEST_EQUAL(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pub, MBEDTLS_MD_SHA256,
+                                                 pk_test_hash, sizeof(pk_test_hash) - 1,
+                                                 sig, sig_len), 0);
+            }
+#endif
+        }
+        /* Check both APIs on public-only contexts, with this branch's
+         * EC and RSA error mappings for a missing private PSA key. */
+        TEST_ASSERT(pk_sign_reject(&pub, reject_dh ? MBEDTLS_ERR_PK_TYPE_MISMATCH :
+                                   (type == MBEDTLS_PK_RSA ? MBEDTLS_ERR_PK_KEY_INVALID_FORMAT :
+                                    PSA_ERROR_NOT_SUPPORTED), 42000));
+        mbedtls_pk_free(&derived);
+        mbedtls_pk_free(&pub);
+    }
+exit:
+    mbedtls_pk_free(&source);
+    mbedtls_pk_free(&derived);
+    mbedtls_pk_free(&pub);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1384,257 +1560,269 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256:MBEDTLS_TEST_PK_PSA_SIGN */
-void pk_psa_sign(int psa_type, int bits, int psa_alg, int expected_ret)
+/* Consolidates the wrapped-key sign and public-key export checks for TC28,
+ * TC29 and TC34. The copy_key path adds TC16's ECDH-policy conversion case. */
+void pk_psa_sign(int psa_type, int bits, int psa_alg, int no_sign_usage,
+                 int copy_key, int expected_ret)
 {
     mbedtls_pk_context pk;
-    unsigned char hash[32];
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    unsigned char normal_pub_key[MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
-    unsigned char psa_wrapped_pub_key[MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
-    size_t sig_len, normal_pub_key_len, psa_wrapped_pub_key_len;
+    unsigned char pubkey[2][MBEDTLS_PK_WRITE_PUBKEY_MAX_SIZE];
+    size_t sig_len, pubkey_len[2];
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    int ret;
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    mbedtls_ecp_group_id ecp_grp_id = MBEDTLS_ECP_DP_NONE;
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
-
-    /*
-     * Following checks are perfomed:
-     * - create a normal PK context and export its public key;
-     * - create a PSA-wrapping PK context starting from the previous one;
-     * - sign with PSA-wrapping context for both EC and RSA keys;
-     * - [EC only] verify with PSA-wrapping context;
-     * - verify that public keys of PSA-wrapping and normal PK contexts match;
-     * - verify with normal PK context.
-     */
+    int curve_or_bits = bits;
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    if (PSA_KEY_TYPE_IS_ECC(psa_type)) {
+        curve_or_bits = mbedtls_ecc_group_from_psa(psa_type, bits);
+    }
+#endif
 
     mbedtls_pk_init(&pk);
     PSA_INIT();
-
-    /* Create the legacy EC/RSA PK context. */
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-    if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
-        TEST_EQUAL(pk_setup(&pk, MBEDTLS_PK_RSA, bits), 0);
-    }
-#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
-        ecp_grp_id = mbedtls_ecc_group_from_psa(psa_type, bits);
-        TEST_ASSERT(pk_setup(&pk, MBEDTLS_PK_ECKEY, ecp_grp_id) == 0);
-    }
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
-
-    /* Export public key from the non-PSA-wrapping PK context we just created. */
+    TEST_EQUAL(pk_setup(&pk, PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_RSA : MBEDTLS_PK_ECKEY,
+                        curve_or_bits), 0);
+    /* Export the same public key before and after copying/wrapping. Preserve DER
+     * write/parse coverage when enabled, and raw export coverage otherwise. */
+    for (int state = 0; state <= 1; state++) {
+        if (state) {
+            TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attributes), 0);
+            if (copy_key) {
+                /* TC16: copying discards the source key's ECDH-only policy. */
+                TEST_EQUAL(psa_alg, PSA_ALG_ECDH);
+                psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+            } else if (no_sign_usage) {
+                psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
+            }
+            psa_set_key_algorithm(&attributes, psa_alg);
+            TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &key_id), 0);
+            mbedtls_pk_free(&pk);
+            TEST_EQUAL(copy_key ? mbedtls_pk_copy_from_psa(key_id, &pk) :
+                       mbedtls_pk_wrap_psa(&pk, key_id), 0);
+            PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
+            TEST_EQUAL(psa_get_key_type(&attributes), (psa_key_type_t) psa_type);
+            TEST_EQUAL(psa_get_key_bits(&attributes), (size_t) bits);
+            TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
+            TEST_EQUAL(psa_get_key_algorithm(&attributes), (psa_algorithm_t) psa_alg);
+            if (copy_key) {
+                TEST_EQUAL(psa_get_key_usage_flags(&attributes),
+                           PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+                TEST_EQUAL(psa_sign_hash(key_id, MBEDTLS_PK_ALG_ECDSA(PSA_ALG_SHA_256),
+                                         pk_test_hash, sizeof(pk_test_hash) - 1,
+                                         sig, sizeof(sig), &sig_len), PSA_ERROR_NOT_PERMITTED);
+                TEST_EQUAL(mbedtls_pk_get_type(&pk), MBEDTLS_PK_ECKEY);
+                TEST_ASSERT(pk_sign_verify_pair(&pk, &pk, 0, 0));
+            }
+            TEST_EQUAL(mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, pk_test_hash,
+                                       sizeof(pk_test_hash) - 1,
+                                       sig, sizeof(sig), &sig_len), expected_ret);
+            if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type) && expected_ret == 0) {
+                TEST_EQUAL(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
+                                             pk_test_hash, sizeof(pk_test_hash) - 1, sig, sig_len),
+                           0);
+            }
+        }
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
-    ret = mbedtls_pk_write_pubkey_der(&pk, normal_pub_key, sizeof(normal_pub_key));
-    TEST_ASSERT(ret >= 0);
-    normal_pub_key_len = (size_t) ret;
-    /* mbedtls_pk_write_pubkey_der() writes backwards in the data buffer so we
-     * shift data back to the beginning of the buffer. */
-    memmove(normal_pub_key,
-            normal_pub_key + sizeof(normal_pub_key) - normal_pub_key_len,
-            normal_pub_key_len);
-#else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-    TEST_ASSERT(sizeof(normal_pub_key) >= pk.pub_raw_len);
-    memcpy(normal_pub_key, pk.pub_raw, pk.pub_raw_len);
-    normal_pub_key_len = pk.pub_raw_len;
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-
-    /* Turn the PK context into an PSA-wrapping one. */
-    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attributes), 0);
-    psa_set_key_algorithm(&attributes, psa_alg);
-    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &key_id), 0);
-    mbedtls_pk_free(&pk);
-    mbedtls_pk_init(&pk);
-    TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
-
-    PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
-    TEST_EQUAL(psa_get_key_type(&attributes), (psa_key_type_t) psa_type);
-    TEST_EQUAL(psa_get_key_bits(&attributes), (size_t) bits);
-    TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
-
-    /* Sign with the PSA-wrapping context. */
-    memset(hash, 0x2a, sizeof(hash));
-    memset(sig, 0, sizeof(sig));
-    ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, sizeof(hash), sig, sizeof(sig), &sig_len);
-    TEST_EQUAL(ret, expected_ret);
-    /* Do verification only for:
-     * - wrapped EC keys because wrapped RSA ones doesn't support verification;
-     * - exp_result == PSA_SUCCESS, i.e. signature was not expected to fail
-     */
-    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type) && (expected_ret == PSA_SUCCESS)) {
-        TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                      hash, sizeof(hash), sig, sig_len) == 0);
+        int len = mbedtls_pk_write_pubkey_der(&pk, pubkey[state], sizeof(pubkey[state]));
+        TEST_ASSERT(len >= 0);
+        pubkey_len[state] = len;
+        memmove(pubkey[state], pubkey[state] + sizeof(pubkey[state]) - len, len);
+#else
+        if (state) {
+            PSA_ASSERT(psa_export_public_key(key_id, pubkey[state], sizeof(pubkey[state]),
+                                             &pubkey_len[state]));
+        } else {
+            TEST_ASSERT(pk.pub_raw_len <= sizeof(pubkey[state]));
+            memcpy(pubkey[state], pk.pub_raw, pk.pub_raw_len);
+            pubkey_len[state] = pk.pub_raw_len;
+        }
+#endif
     }
-
-    /* Export public key from the PSA-wrapping PK context. */
-#if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
-    ret = mbedtls_pk_write_pubkey_der(&pk, psa_wrapped_pub_key, sizeof(psa_wrapped_pub_key));
-    TEST_ASSERT(ret >= 0);
-    psa_wrapped_pub_key_len = (size_t) ret;
-    /* mbedtls_pk_write_pubkey_der() writes backwards in the data buffer. */
-    memmove(psa_wrapped_pub_key,
-            psa_wrapped_pub_key + sizeof(psa_wrapped_pub_key) - psa_wrapped_pub_key_len,
-            psa_wrapped_pub_key_len);
-#else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-    TEST_EQUAL(psa_export_public_key(key_id, psa_wrapped_pub_key, sizeof(psa_wrapped_pub_key),
-                                     &psa_wrapped_pub_key_len), PSA_SUCCESS);
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-
-    /* Check that the public keys of PSA-wrapping and normal PK contexts match. */
-    TEST_EQUAL(psa_wrapped_pub_key_len, normal_pub_key_len);
-    TEST_MEMORY_COMPARE(psa_wrapped_pub_key, psa_wrapped_pub_key_len,
-                        normal_pub_key, normal_pub_key_len);
-
-    /* Destroy the PSA-wrapping PK context and the wrapped PSA key. */
+    TEST_MEMORY_COMPARE(pubkey[0], pubkey_len[0], pubkey[1], pubkey_len[1]);
     mbedtls_pk_free(&pk);
-    TEST_ASSERT(PSA_SUCCESS == psa_destroy_key(key_id));
-
-    /* Don't try to verify signature if the initial signature was expected to fail. */
-    if (expected_ret != PSA_SUCCESS) {
+    PSA_ASSERT(psa_destroy_key(key_id));
+    key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    if (expected_ret != 0) {
         goto exit;
     }
-
-    /* Create a new normal PK context to verify the signature. */
-    mbedtls_pk_init(&pk);
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C)
-    TEST_EQUAL(mbedtls_pk_parse_public_key(&pk, normal_pub_key, normal_pub_key_len), 0);
-#else /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-#if defined(PSA_HAVE_ALG_ECDSA_SIGN)
-    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
-        TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)), 0);
-        TEST_EQUAL(mbedtls_pk_ecc_set_group(&pk, ecp_grp_id), 0);
-        TEST_EQUAL(mbedtls_pk_ecc_set_pubkey(&pk, normal_pub_key, normal_pub_key_len), 0);
-    }
-#endif /* PSA_HAVE_ALG_ECDSA_SIGN */
-#if defined(MBEDTLS_RSA_C)
+    TEST_EQUAL(mbedtls_pk_parse_public_key(&pk, pubkey[0], pubkey_len[0]), 0);
+#else
+    TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(
+                                    PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_RSA :
+                                    MBEDTLS_PK_ECKEY)), 0);
     if (PSA_KEY_TYPE_IS_RSA(psa_type)) {
-        TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)), 0);
-        TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, normal_pub_key, normal_pub_key_len), 0);
-    }
-#endif /* MBEDTLS_RSA_C */
-#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C */
-
-    /* When psa_alg is RSA PSS the PSA wrapping RSA context will sign using PSS
-     * (PK gets the algorithm from the PSA key). The problem is that mbedtls_pk_verify()
-     * would use PKCS v1.5 padding mode for normal PK context, which would case
-     * verification to fail. Therefore we use mbedtls_pk_verify_ext() in this
-     * case.
-     */
-    if (PSA_ALG_IS_RSA_PSS_ANY_SALT(psa_alg)) {
-        TEST_ASSERT(mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, MBEDTLS_MD_SHA256,
-                                          hash, sizeof(hash), sig, sig_len) == 0);
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+        TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, pubkey[0], pubkey_len[0]), 0);
+#endif
     } else {
-        TEST_ASSERT(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                      hash, sizeof(hash), sig, sig_len) == 0);
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+        TEST_EQUAL(mbedtls_pk_ecc_set_group(&pk, curve_or_bits), 0);
+        TEST_EQUAL(mbedtls_pk_ecc_set_pubkey(&pk, pubkey[0], pubkey_len[0]), 0);
+#endif
     }
-
-
+#endif
+    TEST_EQUAL(mbedtls_pk_verify_ext(PSA_ALG_IS_RSA_PSS_ANY_SALT(psa_alg) ?
+                                     MBEDTLS_PK_SIGALG_RSA_PSS :
+                                     (PSA_KEY_TYPE_IS_RSA(psa_type) ? MBEDTLS_PK_SIGALG_RSA_PKCS1V15
+    :
+                                      MBEDTLS_PK_SIGALG_ECDSA),
+                                     &pk, MBEDTLS_MD_SHA256, pk_test_hash, sizeof(pk_test_hash) - 1,
+                                     sig, sig_len), 0);
 exit:
     psa_reset_key_attributes(&attributes);
-
     mbedtls_pk_free(&pk);
+    psa_destroy_key(key_id);
     PSA_DONE();
 }
 /* END_CASE */
 
 /* BEGIN_CASE */
-void pk_sign_ext(int pk_type, int curve_or_keybits, int key_pk_type, int md_alg)
+/* Consolidates ordinary and wrapped sign_ext checks for TC9, TC11, TC31 and
+ * TC33, including existing padding, output-size and key-usage failures. */
+void pk_sign_ext(int pk_type, int curve_or_keybits, int sig_type, int md_alg,
+                 int sig_size, int expected_sign_ret, int wrapped, int no_sign_usage)
 {
-    mbedtls_pk_context pk;
-    size_t sig_len;
-    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
-    size_t hash_len = mbedtls_md_get_size_from_type(md_alg);
-    memset(hash, 0x2a, sizeof(hash));
-    memset(sig, 0, sizeof(sig));
+    mbedtls_pk_context pk, pub;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE], hash[MBEDTLS_MD_MAX_SIZE];
+    size_t sig_len, hash_len = mbedtls_md_get_size_from_type(md_alg);
 
     mbedtls_pk_init(&pk);
+    mbedtls_pk_init(&pub);
+    PSA_INIT();
+    memset(hash, 0x2a, sizeof(hash));
+    memset(sig, 0, sizeof(sig));
+    TEST_EQUAL(pk_setup(&pk, pk_type, curve_or_keybits), 0);
+    if (wrapped) {
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+        TEST_EQUAL(mbedtls_pk_setup(&pub, mbedtls_pk_info_from_type(pk_type)), 0);
+        TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pub, pk.pub_raw, pk.pub_raw_len), 0);
+#endif
+        TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &attr), 0);
+        if (sig_type == MBEDTLS_PK_SIGALG_RSA_PSS) {
+            psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
+        }
+        if (no_sign_usage) {
+            psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
+        }
+        TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attr, &key_id), 0);
+        mbedtls_pk_free(&pk);
+        TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
+        /* A v1.5-only wrapped key must refuse a PSS request. */
+        if (sig_type == MBEDTLS_PK_SIGALG_RSA_PKCS1V15) {
+            TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, md_alg, hash, hash_len,
+                                           sig, sizeof(sig), &sig_len),
+                       MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+        }
+    }
+    TEST_EQUAL(mbedtls_pk_sign_ext(sig_type, &pk, md_alg, hash, hash_len,
+                                   sig, sig_size, &sig_len), expected_sign_ret);
+    if (expected_sign_ret != 0) {
+        goto exit;
+    }
+    if (wrapped) {
+        TEST_EQUAL(mbedtls_pk_verify_ext(sig_type, &pk, md_alg, hash, hash_len, sig, sig_len),
+                   sig_type == MBEDTLS_PK_SIGALG_RSA_PSS ? MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE :
+                   MBEDTLS_ERR_PK_TYPE_MISMATCH);
+    }
+    TEST_EQUAL(mbedtls_pk_verify_ext(sig_type, wrapped ? &pub : &pk, md_alg,
+                                     hash, hash_len, sig, sig_len), 0);
+    if (wrapped) {
+        TEST_EQUAL(mbedtls_pk_sign_ext(sig_type, &pk, md_alg, hash, hash_len,
+                                       sig, 1, &sig_len), MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE);
+    }
+exit:
+    mbedtls_pk_free(&pk);
+    mbedtls_pk_free(&pub);
+    psa_destroy_key(key_id);
+    psa_reset_key_attributes(&attr);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ALG_ECDSA:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_PSA_CRYPTO_CLIENT */
+void pk_sign_ecdsa_randomized_fallback()
+{
+    mbedtls_pk_context signer, verifier;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+#if defined(PSA_WANT_ALG_SHA_256)
+    unsigned char hash[32] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA256;
+#else
+    unsigned char hash[64] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA512;
+#endif
+    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
+    size_t sig_len;
+
+    mbedtls_pk_init(&signer);
+    mbedtls_pk_init(&verifier);
     PSA_INIT();
 
-    TEST_EQUAL(pk_setup(&pk, pk_type, curve_or_keybits), 0);
+    /* This key policy permits randomized ECDSA only. The signing dispatcher
+     * must retry after deterministic ECDSA returns PSA_ERROR_NOT_PERMITTED. */
+    PSA_ASSERT(pk_psa_setup(PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1), 256,
+                            PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH,
+                            PSA_ALG_ECDSA(PSA_ALG_ANY_HASH), PSA_ALG_NONE,
+                            MBEDTLS_SVC_KEY_ID_INIT, &key_id));
+    TEST_EQUAL(mbedtls_pk_wrap_psa(&signer, key_id), 0);
+    TEST_EQUAL(mbedtls_pk_copy_public_from_psa(key_id, &verifier), 0);
 
-    TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                   sig, sizeof(sig), &sig_len), 0);
+    TEST_EQUAL(mbedtls_pk_sign(&signer, md_alg, hash, sizeof(hash),
+                               sig, sizeof(sig), &sig_len), 0);
+    TEST_EQUAL(mbedtls_pk_verify(&verifier, md_alg, hash, sizeof(hash),
+                                 sig, sig_len), 0);
 
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                     hash, hash_len, sig, sig_len), 0);
+exit:
+    mbedtls_pk_free(&signer);
+    mbedtls_pk_free(&verifier);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* Extends the existing EC descriptor rejection case (TC35) to RSA (TC40) and
+ * to restartable signing with restarting disabled and enabled. */
+void pk_sign_without_private_key(int type, int max_ops)
+{
+    mbedtls_pk_context pk;
+    mbedtls_pk_init(&pk);
+    PSA_INIT();
+    TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(type)), 0);
+    TEST_ASSERT(pk_sign_reject(&pk, type == MBEDTLS_PK_RSA ?
+                               MBEDTLS_ERR_PK_KEY_INVALID_FORMAT : PSA_ERROR_NOT_SUPPORTED,
+                               max_ops));
 exit:
     mbedtls_pk_free(&pk);
     PSA_DONE();
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
-void pk_psa_wrap_sign_ext(int pk_type, int key_bits, int key_pk_type, int md_alg)
+/* BEGIN_CASE depends_on:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_256 */
+void pk_sign_ecdsa_der_buffer_too_small()
 {
     mbedtls_pk_context pk;
-    size_t sig_len, pkey_len;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
-    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    unsigned char pkey[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
-    unsigned char hash[PSA_HASH_MAX_SIZE];
-    psa_algorithm_t psa_md_alg = mbedtls_md_psa_alg_from_type(md_alg);
-    size_t hash_len = PSA_HASH_LENGTH(psa_md_alg);
+#if defined(PSA_WANT_ALG_SHA_256)
+    unsigned char hash[32] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA256;
+#else
+    unsigned char hash[64] = { 0 };
+    const mbedtls_md_type_t md_alg = MBEDTLS_MD_SHA512;
+#endif
+    unsigned char sig[PSA_ECDSA_SIGNATURE_SIZE(256)];
+    size_t sig_len;
 
     mbedtls_pk_init(&pk);
     PSA_INIT();
 
-    /* Create legacy RSA public/private key in PK context. */
-    TEST_EQUAL(pk_setup(&pk, pk_type, key_bits), 0);
-
-    /* Export underlying public key for re-importing in a legacy context. */
-    pkey_len = pk.pub_raw_len;
-    memcpy(pkey, pk.pub_raw, pk.pub_raw_len);
-
-    /* Turn PK context into an opaque one. */
-    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH));
-    }
-    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id), 0);
-    mbedtls_pk_free(&pk);
-    mbedtls_pk_init(&pk);
-    TEST_EQUAL(mbedtls_pk_wrap_psa(&pk, key_id), 0);
-
-    memset(hash, 0x2a, sizeof(hash));
-    memset(sig, 0, sizeof(sig));
-
-    /* Check that trying to use the wrong pk_type in sign_ext() results in a failure.
-     * The PSA key was setup to use PKCS1 v1.5 signature algorithm, but here we try
-     * to use it for PSS (PKCS1 v2.1) and it should fail. */
-    if (key_pk_type == MBEDTLS_PK_RSA) {
-        TEST_EQUAL(mbedtls_pk_sign_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk, md_alg, hash, hash_len,
-                                       sig, sizeof(sig), &sig_len),
-                   MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
-    }
-
-    /* Perform sign_ext() with the correct pk_type. */
-    TEST_EQUAL(mbedtls_pk_sign_ext(key_pk_type, &pk, md_alg, hash, hash_len,
-                                   sig, sizeof(sig), &sig_len), 0);
-
-    /* verify_ext() is not supported when using an opaque context. */
-    if (key_pk_type == MBEDTLS_PK_RSASSA_PSS) {
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                         hash, hash_len, sig, sig_len),
-                   MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
-    } else {
-        TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                         hash, hash_len, sig, sig_len),
-                   MBEDTLS_ERR_PK_TYPE_MISMATCH);
-    }
-
-    mbedtls_pk_free(&pk);
-    TEST_EQUAL(PSA_SUCCESS, psa_destroy_key(key_id));
-
-    mbedtls_pk_init(&pk);
-    TEST_EQUAL(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(pk_type)), 0);
-    TEST_EQUAL(mbedtls_pk_rsa_set_pubkey(&pk, pkey, pkey_len), 0);
-
-    TEST_EQUAL(mbedtls_pk_verify_ext(key_pk_type, &pk, md_alg,
-                                     hash, hash_len, sig, sig_len), 0);
+    TEST_EQUAL(pk_setup(&pk, MBEDTLS_PK_ECDSA, MBEDTLS_ECP_DP_SECP256R1), 0);
+    /* The raw PSA signature fits exactly, but its DER encoding is larger. */
+    TEST_EQUAL(mbedtls_pk_sign(&pk, md_alg, hash, sizeof(hash),
+                               sig, sizeof(sig), &sig_len),
+               MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
 
 exit:
     mbedtls_pk_free(&pk);
