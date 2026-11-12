@@ -921,7 +921,8 @@ int mbedtls_cipher_check_tag(mbedtls_cipher_context_t *ctx,
 #endif /* MBEDTLS_CHACHAPOLY_C */
 
 exit:
-    mbedtls_platform_zeroize(check_tag, tag_len);
+    /* tag_len is only validated in the AEAD branches above. */
+    mbedtls_platform_zeroize(check_tag, sizeof(check_tag));
     return ret;
 }
 #endif /* MBEDTLS_GCM_C || MBEDTLS_CHACHAPOLY_C */
