@@ -1,0 +1,6 @@
+Features
+   * Add MBEDTLS_SHA1_SMALLER, a size-optimised implementation of SHA-1 that
+     uses a single loop over the rounds instead of unrolling them all. On
+     Cortex-M0+ it reduces the size of the SHA-1 block processing function
+     from about 4.5KB to about 0.4KB, for a throughput reduction of about
+     2.6x.
