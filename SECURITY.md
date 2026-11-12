@@ -134,7 +134,7 @@ even remote. The attacks can result in key recovery.
 
 - Turn on hardware acceleration for AES. This is supported only on selected
   architectures and currently only available for AES. See configuration options
-  `TF_PSA_CRYPTO_AESCE_C` and `TF_PSA_CRYPTO_AESNI_C` for details.
+  `MBEDTLS_AESCE_C` and `MBEDTLS_AESNI_C` for details.
 - Add a secure alternative implementation (typically hardware acceleration) for
   the vulnerable cipher. See the [PSA Cryptography Driver Interface](
   docs/proposed/psa-driver-interface.md) for more information.
