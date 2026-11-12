@@ -271,6 +271,10 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
 {
     *data_length = 0;           /* Safe default */
 
+    if (psa_get_key_bits(attributes) != 87) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
         return PSA_ERROR_NOT_SUPPORTED;
     }
