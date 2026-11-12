@@ -1,0 +1,47 @@
+/* BEGIN_HEADER */
+#include "mbedtls/pk.h"
+#include "psa/crypto.h"
+/* Project Wycheproof RSA PKCS#1 v1.5 decryption.
+ * Columns: privPkcs8:ct:msg:expected_valid.
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_RSA_PKCS1V15_CRYPT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_pkcs1v15_decrypt(data_t* pkcs8, data_t* ct, data_t* msg,
+    int expected_valid)
+{
+    mbedtls_pk_context pk;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char out[600];
+    size_t olen = 0;
+    psa_status_t status;
+
+    mbedtls_pk_init(&pk);
+    PSA_INIT();
+
+    TEST_EQUAL(0, mbedtls_pk_parse_key(&pk, pkcs8->x, pkcs8->len, NULL, 0));
+    TEST_EQUAL(0, mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_DECRYPT, &attr));
+    psa_set_key_algorithm(&attr, PSA_ALG_RSA_PKCS1V15_CRYPT);
+    TEST_EQUAL(0, mbedtls_pk_import_into_psa(&pk, &attr, &key_id));
+
+    status = psa_asymmetric_decrypt(key_id, PSA_ALG_RSA_PKCS1V15_CRYPT,
+        ct->x, ct->len, NULL, 0, out, sizeof(out), &olen);
+    if (expected_valid) {
+        PSA_ASSERT(status);
+        TEST_MEMORY_COMPARE(out, olen, msg->x, msg->len);
+    } else {
+        TEST_ASSERT(status != PSA_SUCCESS);
+    }
+
+exit:
+    psa_destroy_key(key_id);
+    mbedtls_pk_free(&pk);
+    PSA_DONE();
+}
+/* END_CASE */

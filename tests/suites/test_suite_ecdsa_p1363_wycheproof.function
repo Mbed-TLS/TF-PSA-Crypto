@@ -1,0 +1,48 @@
+/* BEGIN_HEADER */
+#include "psa/crypto.h"
+
+/* Project Wycheproof ECDSA P1363 (raw r||s) signature verification.
+ * Columns: <PSA hash alg>:<PSA_ECC_FAMILY>:bits:rawPublicPoint:msg:sig:expected_valid
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:PSA_WANT_ALG_ECDSA:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mbedtls_ecdsa_verify_p1363(int hash_arg, int family, int bits, data_t* point,
+    data_t* msg, data_t* sig, int expected_valid)
+{
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_algorithm_t alg = PSA_ALG_ECDSA((psa_algorithm_t)hash_arg);
+    psa_status_t status;
+
+    PSA_INIT();
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_PUBLIC_KEY((psa_ecc_family_t)family));
+    psa_set_key_bits(&attr, (size_t)bits);
+
+    status = psa_import_key(&attr, point->x, point->len, &key);
+    if (status != PSA_SUCCESS) {
+        /* Some tests include invalid keys which should be rejected at import. */
+        TEST_EQUAL(expected_valid, 0);
+        goto exit;
+    }
+
+    status = psa_verify_message(key, alg, msg->x, msg->len, sig->x, sig->len);
+    if (expected_valid) {
+        PSA_ASSERT(status);
+    } else {
+        TEST_ASSERT(status != PSA_SUCCESS);
+    }
+
+exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
