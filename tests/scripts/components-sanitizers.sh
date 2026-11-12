@@ -33,8 +33,8 @@ skip_all_except_given_suite () {
 component_tf_psa_crypto_test_memsan_constant_flow_psa () {
     # This tests both (1) accesses to undefined memory, and (2) branches or
     # memory access depending on secret values. To distinguish between those:
-    # - unset MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN - does the failure persist?
-    # - or alternatively, change the build type to MemSanDbg, which enables
+    # - change the build type to MemSan - does the failure persist?
+    # - or alternatively, change the build type to CFMemSanDbg, which enables
     # origin tracking and nicer stack traces (which are useful for debugging
     # anyway), and check if the origin was TEST_CF_SECRET() or something else.
     msg "build: cmake MSan (clang), full config with constant flow testing"
@@ -45,8 +45,7 @@ component_tf_psa_crypto_test_memsan_constant_flow_psa () {
     cmake -DCMAKE_C_COMPILER=clang -DGEN_FILES=ON "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
-    $TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN
-    cmake -DCMAKE_C_COMPILER=clang -DGEN_FILES=OFF -DCMAKE_BUILD_TYPE:String=MemSan "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake -DCMAKE_C_COMPILER=clang -DGEN_FILES=OFF -DCMAKE_BUILD_TYPE:String=CFMemSan "$TF_PSA_CRYPTO_ROOT_DIR"
     make
 
     msg "test: main suites (Msan + constant flow)"
