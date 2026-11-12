@@ -17,6 +17,8 @@
 #include <mbedtls/private/error_common.h>
 #include <string.h>
 
+#include "sm3_internal.h"
+
 #if defined(MBEDTLS_PSA_BUILTIN_HASH)
 psa_status_t mbedtls_psa_hash_abort(
     mbedtls_psa_hash_operation_t *operation)
@@ -76,6 +78,11 @@ psa_status_t mbedtls_psa_hash_abort(
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_SOME_HASH)
             mbedtls_sha3_free(&operation->ctx.sha3);
+            break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
+        case PSA_ALG_SM3:
+            tf_psa_crypto_sm3_reset(&operation->ctx.sm3);
             break;
 #endif
         default:
@@ -163,6 +170,12 @@ psa_status_t mbedtls_psa_hash_setup(
             ret = mbedtls_sha3_starts(&operation->ctx.sha3, MBEDTLS_SHA3_512);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
+        case PSA_ALG_SM3:
+            tf_psa_crypto_sm3_setup(&operation->ctx.sm3);
+            ret = PSA_SUCCESS;
+            break;
+#endif
         default:
             return PSA_ALG_IS_HASH(alg) ?
                    PSA_ERROR_NOT_SUPPORTED :
@@ -242,6 +255,11 @@ psa_status_t mbedtls_psa_hash_clone(
                                &source_operation->ctx.sha3);
             break;
 #endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
+        case PSA_ALG_SM3:
+            target_operation->ctx.sm3 = source_operation->ctx.sm3;
+            break;
+#endif
         default:
             (void) source_operation;
             (void) target_operation;
@@ -318,6 +336,18 @@ psa_status_t mbedtls_psa_hash_update(
     ret = mbedtls_sha3_update(&operation->ctx.sha3,
                               input, input_length);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
+        case PSA_ALG_SM3:
+        {
+            psa_status_t status = tf_psa_crypto_sm3_update(
+                &operation->ctx.sm3, input, input_length);
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+            ret = PSA_SUCCESS;
+            break;
+        }
 #endif
         default:
             (void) input;
@@ -404,6 +434,12 @@ psa_status_t mbedtls_psa_hash_finish(
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_SOME_HASH)
     ret = mbedtls_sha3_finish(&operation->ctx.sha3, hash, hash_size);
     break;
+#endif
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SM3)
+        case PSA_ALG_SM3:
+            tf_psa_crypto_sm3_finish(&operation->ctx.sm3, hash);
+            ret = PSA_SUCCESS;
+            break;
 #endif
         default:
             (void) hash;
