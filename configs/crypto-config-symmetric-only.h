@@ -46,9 +46,7 @@
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
 #define PSA_WANT_ALG_SHAKE128                   1
 #define PSA_WANT_ALG_SHAKE256                   1
-
-/* XTS is not yet supported via the PSA API in Mbed TLS. */
-//#define PSA_WANT_ALG_XTS                        1
+#define PSA_WANT_ALG_XTS                        1
 
 #define PSA_WANT_KEY_TYPE_AES                   1
 #define PSA_WANT_KEY_TYPE_ARIA                  1
