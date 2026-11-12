@@ -67,10 +67,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
     # were also not covered by Mbed TLS testing as of Mbed TLS 4.1.0.
     UNCOVERED_TESTS = {
         'test_suite_config.crypto_combinations': [
-            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
-            'Config: built-in SHA3: no SHAKE',
-            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
-            'Config: built-in SHA3: no hash',
             # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
             'Config: no built-in AEAD',
             # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
