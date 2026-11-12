@@ -106,6 +106,8 @@ component_tf_psa_crypto_check_test_dependencies () {
     echo "!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT" >> $expected
     # No PSA equivalent - we should probably have one in the future.
     echo "!MBEDTLS_ECP_RESTARTABLE" >> $expected
+    # No PSA equivalent - some observable parsing behaviour depends on this.
+    echo "!MBEDTLS_RSA_NO_CRT" >> $expected
     # MBEDTLS_ASN1_WRITE_C is used by import_rsa_made_up() in test_suite_psa_crypto
     # in order to build a fake RSA key of the wanted size based on
     # PSA_VENDOR_RSA_MAX_KEY_BITS. The legacy module is only used by
@@ -119,6 +121,8 @@ component_tf_psa_crypto_check_test_dependencies () {
     echo "MBEDTLS_ECP_RESTARTABLE" >> $expected
     # No PSA equivalent - needed by some init tests
     echo "MBEDTLS_ENTROPY_NV_SEED" >> $expected
+    # No PSA equivalent - some observable parsing behaviour depends on this.
+    echo "MBEDTLS_RSA_NO_CRT" >> $expected
     # No PSA equivalent - required to run threaded tests.
     echo "MBEDTLS_THREADING_PTHREAD" >> $expected
 
