@@ -583,7 +583,10 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
         return 0;
     }
 
-    if (output > input && (size_t) (output - input) < input_length) {
+    /* The buffers may be separate objects, for which comparing or
+     * subtracting pointers is undefined behavior, so compare addresses. */
+    if ((uintptr_t) output > (uintptr_t) input &&
+        (uintptr_t) output - (uintptr_t) input < input_length) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
 

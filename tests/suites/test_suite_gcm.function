@@ -733,6 +733,57 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE */
+/* Encrypt 16 bytes from one place in a buffer to another. The output may be
+ * the input, but it must not start inside it. */
+void gcm_update_overlap(int input_offset, int output_offset, int expected_ret)
+{
+    mbedtls_gcm_context ctx;
+    mbedtls_gcm_init(&ctx);
+    uint8_t b16[16] = { 0 };
+    uint8_t buffer[48] = { 0 };
+    size_t olen = 0;
+
+    BLOCK_CIPHER_PSA_INIT();
+
+    TEST_ASSERT(input_offset >= 0 && input_offset <= 32);
+    TEST_ASSERT(output_offset >= 0 && output_offset <= 32);
+    gcm_reset_ctx(&ctx, b16, sizeof(b16) * 8, b16, 12, 0);
+    TEST_EQUAL(expected_ret,
+               mbedtls_gcm_update(&ctx, buffer + input_offset, 16,
+                                  buffer + output_offset, 16, &olen));
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* Encrypt from a static buffer to one on the stack. In a 32-bit process the
+ * two can lie more than 2 GiB apart, which the overlap check must allow. */
+void gcm_update_separate_buffers(void)
+{
+    static const uint8_t input[16] = { 0 };
+    mbedtls_gcm_context ctx;
+    mbedtls_gcm_init(&ctx);
+    uint8_t b16[16] = { 0 };
+    uint8_t output[16];
+    size_t olen = 0;
+
+    BLOCK_CIPHER_PSA_INIT();
+
+    gcm_reset_ctx(&ctx, b16, sizeof(b16) * 8, b16, 12, 0);
+    TEST_EQUAL(0, mbedtls_gcm_update(&ctx, input, sizeof(input),
+                                     output, sizeof(output), &olen));
+    TEST_EQUAL(olen, sizeof(input));
+
+exit:
+    mbedtls_gcm_free(&ctx);
+    BLOCK_CIPHER_PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST:MBEDTLS_CCM_GCM_CAN_AES */
 void gcm_selftest()
 {
