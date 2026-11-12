@@ -190,4 +190,15 @@
  */
 typedef int mbedtls_iso_c_forbids_empty_translation_units;
 
+/*
+ * The PSA interruptible API follows version 1.6 of the PSA Certified Crypto
+ * API specification: psa_interruptible_set_max_ops() and
+ * psa_interruptible_get_max_ops() were renamed to psa_iop_set_max_ops()
+ * and psa_iop_get_max_ops(). Shared code that must compile against both
+ * old and new library versions (e.g. the mbedtls test framework,
+ * including LTS branches) can test this macro to select the appropriate
+ * function names.
+ */
+#define TF_PSA_CRYPTO_PSA_INTERRUPTIBLE_API_1_6
+
 #endif /* TF_PSA_CRYPTO_BUILD_INFO_H */

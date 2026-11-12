@@ -1159,7 +1159,7 @@ int mbedtls_pk_verify_restartable(mbedtls_pk_context *ctx,
     }
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-    int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
+    int is_restartable_enabled = psa_iop_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
         is_restartable_enabled &&
@@ -1304,7 +1304,7 @@ int mbedtls_pk_sign_restartable(mbedtls_pk_context *ctx,
     }
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-    int is_restartable_enabled = psa_interruptible_get_max_ops() != 0;
+    int is_restartable_enabled = psa_iop_get_max_ops() != 0;
     /* optimization: use non-restartable version if restart disabled */
     if (rs_ctx != NULL &&
         is_restartable_enabled &&
