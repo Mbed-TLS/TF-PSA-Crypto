@@ -22,6 +22,8 @@
 #define PSA_WANT_ALG_CHACHA20_POLY1305          1
 #define PSA_WANT_ALG_CMAC                       1
 #define PSA_WANT_ALG_CTR                        1
+#define PSA_WANT_ALG_BLAKE2S_HASH256            1
+#define PSA_WANT_ALG_BLAKE2B_HASH512            1
 #define PSA_WANT_ALG_ECB_NO_PADDING             1
 #define PSA_WANT_ALG_GCM                        1
 #define PSA_WANT_ALG_HKDF                       1
