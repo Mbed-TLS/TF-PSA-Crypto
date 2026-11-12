@@ -369,6 +369,57 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_XTS */
+void aes_crypt_xts_in_place(char *hex_key_string, char *hex_data_unit_string,
+                            char *hex_src_string, char *hex_dst_string)
+{
+    enum { AES_BLOCK_SIZE = 16 };
+    unsigned char *data_unit = NULL;
+    unsigned char *key = NULL;
+    unsigned char *src = NULL;
+    unsigned char *dst = NULL;
+    unsigned char *buf = NULL;
+    mbedtls_aes_xts_context ctx;
+    size_t key_len, src_len, dst_len, data_unit_len;
+
+    mbedtls_aes_xts_init(&ctx);
+
+    data_unit = mbedtls_test_unhexify_alloc(hex_data_unit_string,
+                                            &data_unit_len);
+    TEST_ASSERT(data_unit_len == AES_BLOCK_SIZE);
+
+    key = mbedtls_test_unhexify_alloc(hex_key_string, &key_len);
+    TEST_ASSERT(key_len % 2 == 0);
+
+    src = mbedtls_test_unhexify_alloc(hex_src_string, &src_len);
+    dst = mbedtls_test_unhexify_alloc(hex_dst_string, &dst_len);
+    TEST_ASSERT(src_len == dst_len);
+
+    buf = mbedtls_test_zero_alloc(src_len);
+
+    /* Encrypt with input == output. */
+    memcpy(buf, src, src_len);
+    TEST_ASSERT(mbedtls_aes_xts_setkey_enc(&ctx, key, key_len * 8) == 0);
+    TEST_ASSERT(mbedtls_aes_crypt_xts(&ctx, MBEDTLS_AES_ENCRYPT, src_len,
+                                      data_unit, buf, buf) == 0);
+    TEST_ASSERT(memcmp(buf, dst, dst_len) == 0);
+
+    /* Decrypt with input == output. */
+    TEST_ASSERT(mbedtls_aes_xts_setkey_dec(&ctx, key, key_len * 8) == 0);
+    TEST_ASSERT(mbedtls_aes_crypt_xts(&ctx, MBEDTLS_AES_DECRYPT, src_len,
+                                      data_unit, buf, buf) == 0);
+    TEST_ASSERT(memcmp(buf, src, src_len) == 0);
+
+exit:
+    mbedtls_aes_xts_free(&ctx);
+    mbedtls_free(data_unit);
+    mbedtls_free(key);
+    mbedtls_free(src);
+    mbedtls_free(dst);
+    mbedtls_free(buf);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_XTS */
 void aes_crypt_xts_size(int size, int retval)
 {
     mbedtls_aes_xts_context ctx;
