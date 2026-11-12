@@ -473,6 +473,42 @@ void mbedtls_mpi_core_mul(mbedtls_mpi_uint *X,
                           const mbedtls_mpi_uint *B, size_t B_limbs);
 
 /**
+ * \brief Perform a known-size division with remainder A = B * Q + R.
+ *
+ * \p Q and \p R may not be aliased to any of the inputs for this function,
+ * or to each other.
+ * \p A may be aliased to \p B.
+ *
+ * \warning         The divisor \p B must be non-zero. The output of this
+ *                  function is indeterminate if \p B is zero.
+ *
+ * \param[out] Q    The pointer to the (little-endian) array to receive
+ *                  the integer quotient of \p A by \p B, or NULL if the
+ *                  quotient is not needed. If non-NULL, this must be of
+ *                  length \p A_limbs.
+ * \param[out] R    The pointer to the (little-endian) array to receive
+ *                  the remainder \p A mod \p B. (0 <= \p R < \p B).
+ *                  This must be of length \p B_limbs.
+ * \param[in] A     The pointer to the (little-endian) array
+ *                  representing the dividend.
+ * \param A_limbs   The number of limbs in \p A.
+ * \param[in] B     The pointer to the (little-endian) array
+ *                  representing the divisor.
+ * \param B_limbs   The number of limbs in \p B.
+ * \param B_bits    The public bit length of \p B. It must equal the value
+ *                  returned by mbedtls_mpi_core_bitlen(B, B_limbs).
+ * \param[in,out] T Temporary storage of size at least \p B_limbs limbs.
+ *                  Its initial content is unused and
+ *                  its final content is indeterminate.
+ *                  It must not alias or otherwise overlap any of the
+ *                  other parameters.
+ */
+void mbedtls_mpi_core_div(mbedtls_mpi_uint *Q, mbedtls_mpi_uint *R,
+                          const mbedtls_mpi_uint *A, size_t A_limbs,
+                          const mbedtls_mpi_uint *B, size_t B_limbs, size_t B_bits,
+                          mbedtls_mpi_uint *T);
+
+/**
  * \brief Calculate initialisation value for fast Montgomery modular
  *        multiplication
  *

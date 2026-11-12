@@ -1272,6 +1272,155 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void mpi_core_div_preconditions()
+{
+    /* A zero divisor leaves Q and R indeterminate, but must not crash.
+     * The documentation doesn't explicitly say, but test it anyway. */
+    mbedtls_mpi_uint A1[1] = { 0 };
+    mbedtls_mpi_uint A3[3] = { 42, 0, 1 };
+    mbedtls_mpi_uint B1[1] = { 0 };
+    mbedtls_mpi_uint B3[3] = { 0 };
+    mbedtls_mpi_uint Q1[1], Q3[3], R1[1], R3[3], T1[1], T3[3];
+    const size_t B1_bits = mbedtls_mpi_core_bitlen(B1, 1);
+    const size_t B3_bits = mbedtls_mpi_core_bitlen(B3, 3);
+
+    for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
+        mbedtls_mpi_uint *q1 = use_quotient ? Q1 : NULL;
+        mbedtls_mpi_uint *q3 = use_quotient ? Q3 : NULL;
+        mbedtls_mpi_core_div(q1, R1, A1, 1, B1, 1, B1_bits, T1);
+        mbedtls_mpi_core_div(q3, R1, A3, 3, B1, 1, B1_bits, T1);
+        mbedtls_mpi_core_div(q1, R3, A1, 1, B3, 3, B3_bits, T3);
+        mbedtls_mpi_core_div(q3, R3, A3, 3, B3, 3, B3_bits, T3);
+
+        /* Input aliasing remains permitted when both inputs are zero. */
+        mbedtls_mpi_core_div(q1, R1, B1, 1, B1, 1, B1_bits, T1);
+    }
+
+    /* We're only asserting that we didn't crash above */
+    TEST_ASSERT(1);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_div_alias()
+{
+    const struct {
+        size_t A_limbs;
+        size_t B_limbs;
+        mbedtls_mpi_uint value[3];
+    } cases[] = {
+        { 1, 1, { 42, 0, 0 } },
+        { 1, 3, { 42, 0, 0 } },
+        { 3, 1, { 42, 0, 0 } },
+        { 3, 3, { 42, 0, 1 } },
+    };
+    mbedtls_mpi_uint AB[3], Q[3], R[3], T[3];
+
+    for (size_t c = 0; c < ARRAY_LENGTH(cases); c++) {
+        const size_t A_limbs = cases[c].A_limbs;
+        const size_t B_limbs = cases[c].B_limbs;
+        memcpy(AB, cases[c].value, sizeof(AB));
+        const size_t B_bits = mbedtls_mpi_core_bitlen(AB, B_limbs);
+        for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
+            mbedtls_test_set_step(2 * c + use_quotient);
+            memset(Q, 'Q', sizeof(Q));
+            memset(R, 'R', sizeof(R));
+            memset(T, 'T', sizeof(T));
+
+            TEST_CF_SECRET(AB, sizeof(AB));
+            mbedtls_mpi_core_div(use_quotient ? Q : NULL, R,
+                                 AB, A_limbs, AB, B_limbs, B_bits, T);
+            if (use_quotient) {
+                TEST_CF_PUBLIC(Q, A_limbs * sizeof(*Q));
+                TEST_EQUAL(Q[0], 1);
+                for (size_t i = 1; i < A_limbs; i++) {
+                    TEST_EQUAL(Q[i], 0);
+                }
+            }
+            TEST_CF_PUBLIC(R, B_limbs * sizeof(*R));
+            TEST_CF_PUBLIC(AB, sizeof(AB));
+
+            for (size_t i = 0; i < B_limbs; i++) {
+                TEST_EQUAL(R[i], 0);
+            }
+            TEST_MEMORY_COMPARE(AB, sizeof(AB), cases[c].value, sizeof(AB));
+        }
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_div(char *input_A, char *input_B,
+                  char *input_Q, char *input_R)
+{
+    mbedtls_mpi_uint *A      = NULL;
+    mbedtls_mpi_uint *A_orig = NULL;
+    mbedtls_mpi_uint *B      = NULL;
+    mbedtls_mpi_uint *B_orig = NULL;
+    mbedtls_mpi_uint *Q_exp  = NULL;
+    mbedtls_mpi_uint *R_exp  = NULL;
+    mbedtls_mpi_uint *Q_got  = NULL;
+    mbedtls_mpi_uint *R_got  = NULL;
+    mbedtls_mpi_uint *T      = NULL;
+    size_t A_limbs, B_limbs, R_limbs, Q_limbs;
+
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&A, &A_limbs, input_A), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&B, &B_limbs, input_B), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&Q_exp, &Q_limbs, input_Q), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&R_exp, &R_limbs, input_R), 0);
+
+    TEST_EQUAL(Q_limbs, A_limbs);
+    TEST_EQUAL(R_limbs, B_limbs);
+    const size_t Q_bytes = Q_limbs * sizeof(mbedtls_mpi_uint);
+    const size_t R_bytes = R_limbs * sizeof(mbedtls_mpi_uint);
+    const size_t A_bytes = A_limbs * sizeof(mbedtls_mpi_uint);
+    const size_t B_bytes = B_limbs * sizeof(mbedtls_mpi_uint);
+    const size_t B_bits = mbedtls_mpi_core_bitlen(B, B_limbs);
+
+    TEST_CALLOC(A_orig, A_limbs);
+    TEST_CALLOC(B_orig, B_limbs);
+    memcpy(A_orig, A, A_bytes);
+    memcpy(B_orig, B, B_bytes);
+
+    TEST_CALLOC(Q_got, A_limbs);
+    TEST_CALLOC(R_got, B_limbs);
+    TEST_CALLOC(T, B_limbs);
+    for (size_t use_quotient = 0; use_quotient < 2; use_quotient++) {
+        mbedtls_test_set_step(use_quotient);
+        memset(Q_got, 'Q', Q_bytes);
+        memset(R_got, 'R', R_bytes);
+
+        TEST_CF_SECRET(A, A_bytes);
+        TEST_CF_SECRET(B, B_bytes);
+
+        mbedtls_mpi_core_div(use_quotient ? Q_got : NULL, R_got,
+                             A, A_limbs, B, B_limbs, B_bits, T);
+        if (use_quotient) {
+            TEST_CF_PUBLIC(Q_got, Q_bytes);
+            TEST_MEMORY_COMPARE(Q_got, Q_bytes, Q_exp, Q_bytes);
+        }
+        TEST_CF_PUBLIC(R_got, R_bytes);
+        TEST_MEMORY_COMPARE(R_got, R_bytes, R_exp, R_bytes);
+        TEST_CF_PUBLIC(A, A_bytes);
+        TEST_CF_PUBLIC(B, B_bytes);
+        TEST_MEMORY_COMPARE(A, A_bytes, A_orig, A_bytes);
+        TEST_MEMORY_COMPARE(B, B_bytes, B_orig, B_bytes);
+    }
+
+exit:
+    mbedtls_free(A);
+    mbedtls_free(A_orig);
+    mbedtls_free(B);
+    mbedtls_free(B_orig);
+    mbedtls_free(Q_exp);
+    mbedtls_free(R_exp);
+    mbedtls_free(Q_got);
+    mbedtls_free(R_got);
+    mbedtls_free(T);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void mpi_core_exp_mod(char *input_N, char *input_A,
                       char *input_E, char *input_X)
 {
