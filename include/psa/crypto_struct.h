@@ -507,11 +507,47 @@ struct psa_sign_hash_interruptible_operation_s {
     unsigned int MBEDTLS_PRIVATE(error_occurred) : 1;
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+    unsigned int MBEDTLS_PRIVATE(async_hardware_started) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_done) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_success) : 1;
+    uint16_t MBEDTLS_PRIVATE(async_hardware_key_bits);
+#endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
+    uint8_t MBEDTLS_PRIVATE(async_hardware_private_key)[66];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_hash)[64];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_signature)[132];
+#endif
+#if defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+    uint8_t *MBEDTLS_PRIVATE(async_hardware_rsa_private_key);
+    size_t MBEDTLS_PRIVATE(async_hardware_rsa_private_key_length);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_rsa_hash)[64];
+    uint16_t MBEDTLS_PRIVATE(async_hardware_rsa_hash_length);
+    uint16_t MBEDTLS_PRIVATE(async_hardware_rsa_signature_length);
+    uint16_t MBEDTLS_PRIVATE(async_hardware_rsa_hash_bits);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_rsa_pkcs1);
+#endif
 #endif
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
+#elif (defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)) && \
+    defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT                    \
+    { 0, { 0 }, 0, 0, 0, 0, 0, 0, { 0 }, { 0 }, { 0 }, 0, 0, { 0 }, \
+      0, 0, 0, 0 }
+#elif defined(MBEDTLS_ASYNC_HARDWARE_ECDSA) || \
+    defined(MBEDTLS_ASYNC_HARDWARE_ECDSA_SIGN)
+#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT \
+    { 0, { 0 }, 0, 0, 0, 0, 0, 0, { 0 }, { 0 }, { 0 } }
+#elif defined(MBEDTLS_ASYNC_HARDWARE_RSA)
+#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT \
+    { 0, { 0 }, 0, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0, 0, 0 }
 #else
 #define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
 #endif
@@ -545,13 +581,27 @@ struct psa_verify_hash_interruptible_operation_s {
     unsigned int MBEDTLS_PRIVATE(error_occurred) : 1;
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+    unsigned int MBEDTLS_PRIVATE(async_hardware_started) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_done) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_success) : 1;
+    uint16_t MBEDTLS_PRIVATE(async_hardware_key_bits);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_public_key)[97];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_hash)[48];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_signature)[96];
+#endif
 #endif
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
 #else
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDSA)
+#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT \
+    { 0, { 0 }, 0, 0, 0, 0, 0, 0, { 0 }, { 0 }, { 0 } }
+#else
 #define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
+#endif
 #endif
 
 static inline struct psa_verify_hash_interruptible_operation_s
@@ -583,11 +633,35 @@ struct psa_key_agreement_iop_s {
     uint32_t MBEDTLS_PRIVATE(num_ops);
     psa_key_attributes_t MBEDTLS_PRIVATE(attributes);
     unsigned int MBEDTLS_PRIVATE(error_occurred) : 1;
+#if defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
+    unsigned int MBEDTLS_PRIVATE(async_hardware_started) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_done) : 1;
+    unsigned int MBEDTLS_PRIVATE(async_hardware_success) : 1;
+    uint16_t MBEDTLS_PRIVATE(async_hardware_key_bits);
+    uint8_t MBEDTLS_PRIVATE(async_hardware_private_scalar)[66];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_peer_public_key)[133];
+    uint8_t MBEDTLS_PRIVATE(async_hardware_shared_secret)[66];
+#endif
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    mbedtls_psa_async_crypto_key_agreement_operation_t MBEDTLS_PRIVATE(async_crypto_ctx);
+#endif
 #endif
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_KEY_AGREEMENT_IOP_INIT { 0 }
+#elif defined(MBEDTLS_ASYNC_HARDWARE_ECDH) && \
+    defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+#define PSA_KEY_AGREEMENT_IOP_INIT { 0, MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT, 0, \
+                                     PSA_KEY_ATTRIBUTES_INIT, 0, 0, 0, 0,      \
+                                     0, { 0 }, { 0 }, { 0 }, { 0 } }
+#elif defined(MBEDTLS_ASYNC_HARDWARE_ECDH)
+#define PSA_KEY_AGREEMENT_IOP_INIT { 0, MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT, 0, \
+                                     PSA_KEY_ATTRIBUTES_INIT, 0, 0, 0, 0,      \
+                                     0, { 0 }, { 0 }, { 0 } }
+#elif defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+#define PSA_KEY_AGREEMENT_IOP_INIT { 0, MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT, 0, \
+                                     PSA_KEY_ATTRIBUTES_INIT, 0, { 0 } }
 #else
 #define PSA_KEY_AGREEMENT_IOP_INIT { 0, MBEDTLS_PSA_KEY_AGREEMENT_IOP_INIT, 0, \
                                      PSA_KEY_ATTRIBUTES_INIT, 0 }
@@ -658,11 +732,17 @@ struct psa_export_public_key_iop_s {
     mbedtls_psa_export_public_key_iop_t MBEDTLS_PRIVATE(ctx);
     unsigned int MBEDTLS_PRIVATE(error_occurred) : 1;
     uint32_t MBEDTLS_PRIVATE(num_ops);
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+    mbedtls_psa_async_crypto_export_public_key_operation_t MBEDTLS_PRIVATE(async_crypto_ctx);
+#endif
 #endif
 };
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
 #define PSA_EXPORT_PUBLIC_KEY_IOP_INIT { 0 }
+#elif defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)
+#define PSA_EXPORT_PUBLIC_KEY_IOP_INIT \
+    { 0, MBEDTLS_PSA_EXPORT_PUBLIC_KEY_IOP_INIT, 0, 0, { 0 } }
 #else
 #define PSA_EXPORT_PUBLIC_KEY_IOP_INIT { 0, MBEDTLS_PSA_EXPORT_PUBLIC_KEY_IOP_INIT, 0, 0 }
 #endif

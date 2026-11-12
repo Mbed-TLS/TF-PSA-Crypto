@@ -1,0 +1,85 @@
+{
+  "prefix": "mbedtls_psa_async_crypto",
+  "type": "transparent",
+  "mbedtls/h_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED) || defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)",
+  "headers": ["mbedtls/psa_crypto_async_driver.h"],
+  "capabilities": [
+    {
+      "_comment": "Algorithm-agnostic interruptible dispatch into async PSA provider",
+      "mbedtls/c_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)",
+      "entry_points": [
+        "operation_start",
+        "operation_complete",
+        "operation_abort",
+        "operation_get_num_ops"
+      ],
+      "fallback": false
+    },
+    {
+      "_comment": "TF-PSA interruptible ECDSA sign and verify dispatch into async PSA provider",
+      "mbedtls/c_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)",
+      "entry_points": [
+        "sign_hash_start",
+        "sign_hash_complete",
+        "sign_hash_abort",
+        "sign_hash_get_num_ops",
+        "verify_hash_start",
+        "verify_hash_complete",
+        "verify_hash_abort",
+        "verify_hash_get_num_ops"
+      ],
+      "names": {
+        "sign_hash_abort": "mbedtls_psa_async_crypto_transparent_signature_abort",
+        "sign_hash_get_num_ops": "mbedtls_psa_async_crypto_transparent_signature_get_num_ops",
+        "verify_hash_abort": "mbedtls_psa_async_crypto_transparent_signature_abort",
+        "verify_hash_get_num_ops": "mbedtls_psa_async_crypto_transparent_signature_get_num_ops"
+      },
+      "fallback": false
+    },
+    {
+      "_comment": "TF-PSA interruptible ECDH dispatch into async PSA provider",
+      "mbedtls/c_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)",
+      "entry_points": [
+        "key_agreement_setup",
+        "key_agreement_complete",
+        "key_agreement_abort",
+        "key_agreement_get_num_ops"
+      ],
+      "fallback": false
+    },
+    {
+      "_comment": "TF-PSA interruptible ECC public-key export dispatch into async PSA provider",
+      "mbedtls/c_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)",
+      "entry_points": [
+        "export_public_key_iop_setup",
+        "export_public_key_iop_complete",
+        "export_public_key_iop_abort",
+        "export_public_key_iop_get_num_ops"
+      ],
+      "fallback": false
+    },
+    {
+      "_comment": "TF-PSA interruptible random dispatch into async PSA provider",
+      "mbedtls/c_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)",
+      "entry_points": [
+        "generate_random_start",
+        "generate_random_complete",
+        "generate_random_abort",
+        "generate_random_get_num_ops"
+      ],
+      "fallback": false
+    },
+    {
+      "_comment": "TF-PSA interruptible one-shot AEAD dispatch into async PSA provider",
+      "mbedtls/c_condition": "defined(MBEDTLS_PSA_ASYNC_CRYPTO_DRIVER_ENABLED)",
+      "entry_points": [
+        "aead_encrypt_start",
+        "aead_decrypt_start",
+        "aead_complete",
+        "aead_abort",
+        "aead_get_num_ops"
+      ],
+      "fallback": false
+    }
+  ]
+}
