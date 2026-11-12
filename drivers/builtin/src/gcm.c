@@ -45,6 +45,17 @@
 #define MBEDTLS_GCM_ACC_AESNI       2
 #define MBEDTLS_GCM_ACC_AESCE       3
 
+#if !defined(MBEDTLS_AES_C)
+// Helper macro to get the AES context from a GCM context
+#define GCM_GET_AES_CTX(gcm_ctx)     NULL
+#else // MBEDTLS_AES_C
+#if defined(MBEDTLS_BLOCK_CIPHER_C)
+#define GCM_GET_AES_CTX(gcm_ctx)     (&((gcm_ctx)->block_cipher_ctx.ctx.aes))
+#elif defined(MBEDTLS_CIPHER_C)
+#define GCM_GET_AES_CTX(gcm_ctx)     ((mbedtls_aes_context *) ((gcm_ctx)->cipher_ctx.cipher_ctx))
+#endif
+#endif // MBEDTLS_AES_C
+
 /*
  * Initialize a context
  */
@@ -53,25 +64,59 @@ void mbedtls_gcm_init(mbedtls_gcm_context *ctx)
     memset(ctx, 0, sizeof(mbedtls_gcm_context));
 }
 
-static inline void gcm_set_acceleration(mbedtls_gcm_context *ctx)
+static unsigned gcm_use_aesce(mbedtls_gcm_context *ctx)
 {
-#if defined(MBEDTLS_GCM_LARGE_TABLE)
-    ctx->acceleration = MBEDTLS_GCM_ACC_LARGETABLE;
+    /* Helper function to determine if GCM cipher operations should use AESCE -
+     * ie., AESCE is compiled in, supported by the hardware and the cipher being
+     * used is AES.
+     *
+     * This differs from gcm_get_acceleration() which is used to determine if
+     * GCM tag operations (independent of cipher) should use AESCE.
+     *
+     * This all typically resolves to a compile-time constant, which is
+     * very impactful for code-size. */
+    (void) ctx;
+    // first check AESCE is built and supported
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
+        // check cipher is AES
+#if defined(MBEDTLS_ONLY_GCM_CIPHER_IS_AES)
+        return 1;
+#elif defined(MBEDTLS_BLOCK_CIPHER_C)
+        return ctx->block_cipher_ctx.id == MBEDTLS_BLOCK_CIPHER_ID_AES;
+#elif defined(MBEDTLS_CIPHER_C)
+        return ctx->cipher_ctx.cipher_info->type == MBEDTLS_CIPHER_ID_AES;
 #else
-    ctx->acceleration = MBEDTLS_GCM_ACC_SMALLTABLE;
+#error Neither MBEDTLS_BLOCK_CIPHER_C or MBEDTLS_CIPHER_C is defined
+#endif // AES cipher check
+    }
+#endif // MBEDTLS_AESCE_HAVE_CODE
+
+    // Either AESCE not available, or cipher is not AES
+    return 0;
+}
+
+static inline unsigned gcm_get_acceleration(void)
+{
+#if defined(MBEDTLS_AESCE_HAVE_CODE)
+    /* Note: we do not need AES support to use the AESCE GCM implementation
+     * for a non-AES cipher. */
+    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
+        return MBEDTLS_GCM_ACC_AESCE;
+    }
 #endif
 
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
     /* With CLMUL support, we need only h, not the rest of the table */
     if (mbedtls_aesni_has_support(MBEDTLS_AESNI_CLMUL)) {
-        ctx->acceleration = MBEDTLS_GCM_ACC_AESNI;
+        return MBEDTLS_GCM_ACC_AESNI;
     }
 #endif
 
-#if defined(MBEDTLS_AESCE_HAVE_CODE)
-    if (MBEDTLS_AESCE_HAS_SUPPORT()) {
-        ctx->acceleration = MBEDTLS_GCM_ACC_AESCE;
-    }
+#if defined(MBEDTLS_GCM_LARGE_TABLE)
+    return MBEDTLS_GCM_ACC_LARGETABLE;
+#else
+    return MBEDTLS_GCM_ACC_SMALLTABLE;
 #endif
 }
 
@@ -96,9 +141,9 @@ static inline void gcm_gen_table_rightshift(uint64_t dst[2], const uint64_t src[
  */
 static int gcm_gen_table(mbedtls_gcm_context *ctx)
 {
-    int ret, i, j;
     uint64_t u64h[2] = { 0 };
     uint8_t *h = (uint8_t *) u64h;
+    int ret;
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     ret = mbedtls_block_cipher_encrypt(&ctx->block_cipher_ctx, h, h);
@@ -110,42 +155,44 @@ static int gcm_gen_table(mbedtls_gcm_context *ctx)
         return ret;
     }
 
-    gcm_set_acceleration(ctx);
-
-    /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
-    ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
-    ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
-
-    switch (ctx->acceleration) {
+    switch (gcm_get_acceleration()) {
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESNI:
+            /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
             return 0;
 #endif
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESCE:
+            mbedtls_aesce_gcm_gen_table(ctx, h);
             return 0;
 #endif
 
         default:
+            /* MBEDTLS_GCM_HTABLE_SIZE/2 = 1000 corresponds to 1 in GF(2^128) */
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][0] = u64h[0];
+            ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2][1] = u64h[1];
+
             /* 0 corresponds to 0 in GF(2^128) */
             ctx->H[0][0] = 0;
             ctx->H[0][1] = 0;
 
-            for (i = MBEDTLS_GCM_HTABLE_SIZE/4; i > 0; i >>= 1) {
+            for (int i = MBEDTLS_GCM_HTABLE_SIZE/4; i > 0; i >>= 1) {
                 gcm_gen_table_rightshift(ctx->H[i], ctx->H[i*2]);
             }
 
 #if !defined(MBEDTLS_GCM_LARGE_TABLE)
             /* pack elements of H as 64-bits ints, big-endian */
-            for (i = MBEDTLS_GCM_HTABLE_SIZE/2; i > 0; i >>= 1) {
+            for (int i = MBEDTLS_GCM_HTABLE_SIZE/2; i > 0; i >>= 1) {
                 MBEDTLS_PUT_UINT64_BE(ctx->H[i][0], &ctx->H[i][0], 0);
                 MBEDTLS_PUT_UINT64_BE(ctx->H[i][1], &ctx->H[i][1], 0);
             }
 #endif
 
-            for (i = 2; i < MBEDTLS_GCM_HTABLE_SIZE; i <<= 1) {
-                for (j = 1; j < i; j++) {
+            for (int i = 2; i < MBEDTLS_GCM_HTABLE_SIZE; i <<= 1) {
+                for (int j = 1; j < i; j++) {
                     mbedtls_xor_no_simd((unsigned char *) ctx->H[i+j],
                                         (unsigned char *) ctx->H[i],
                                         (unsigned char *) ctx->H[j],
@@ -164,9 +211,15 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
+#if defined(MBEDTLS_ONLY_GCM_CIPHER_IS_AES) && defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+    if (keybits != 128) {
+        return MBEDTLS_ERR_GCM_BAD_INPUT;
+    }
+#else
     if (keybits != 128 && keybits != 192 && keybits != 256) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
+#endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     mbedtls_block_cipher_free(&ctx->block_cipher_ctx);
@@ -203,11 +256,7 @@ int mbedtls_gcm_setkey(mbedtls_gcm_context *ctx,
     }
 #endif
 
-    if ((ret = gcm_gen_table(ctx)) != 0) {
-        return ret;
-    }
-
-    return 0;
+    return gcm_gen_table(ctx);
 }
 
 #if defined(MBEDTLS_GCM_LARGE_TABLE)
@@ -345,7 +394,7 @@ static void gcm_mult_smalltable(uint8_t *output, const uint8_t *x, uint64_t H[16
 static void gcm_mult(mbedtls_gcm_context *ctx, const unsigned char x[16],
                      unsigned char output[16])
 {
-    switch (ctx->acceleration) {
+    switch (gcm_get_acceleration()) {
 #if defined(MBEDTLS_AESNI_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESNI:
             mbedtls_aesni_gcm_mult(output, x, (uint8_t *) ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2]);
@@ -354,7 +403,7 @@ static void gcm_mult(mbedtls_gcm_context *ctx, const unsigned char x[16],
 
 #if defined(MBEDTLS_AESCE_HAVE_CODE)
         case MBEDTLS_GCM_ACC_AESCE:
-            mbedtls_aesce_gcm_mult(output, x, (uint8_t *) ctx->H[MBEDTLS_GCM_HTABLE_SIZE/2]);
+            mbedtls_aesce_gcm_mult(output, x, &ctx->aesce_H[16]);
             break;
 #endif
 
@@ -377,7 +426,6 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
                        const unsigned char *iv, size_t iv_len)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char work_buf[16];
     const unsigned char *p;
     size_t use_len;
     uint64_t iv_bits;
@@ -402,9 +450,7 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
         memcpy(ctx->y, iv, iv_len);
         ctx->y[15] = 1;
     } else {
-        memset(work_buf, 0x00, 16);
         iv_bits = (uint64_t) iv_len * 8;
-        MBEDTLS_PUT_UINT64_BE(iv_bits, work_buf, 8);
 
         p = iv;
         while (iv_len > 0) {
@@ -415,7 +461,7 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
 #pragma GCC diagnostic warning "-Wstringop-overflow=0"
 #endif
 
-            mbedtls_xor(ctx->y, ctx->y, p, use_len);
+            MBEDTLS_XOR_SMALL(ctx->y, ctx->y, p, use_len);
 
 #if defined(MBEDTLS_COMPILER_IS_GCC) && (MBEDTLS_GCC_VERSION >= 70110)
 #pragma GCC diagnostic pop
@@ -427,22 +473,20 @@ int mbedtls_gcm_starts(mbedtls_gcm_context *ctx,
             p += use_len;
         }
 
-        mbedtls_xor(ctx->y, ctx->y, work_buf, 16);
+        uint64_t k = MBEDTLS_GET_UINT64_BE(ctx->y, 8);
+        k ^= iv_bits;
+        MBEDTLS_PUT_UINT64_BE(k, ctx->y, 8);
 
         gcm_mult(ctx, ctx->y, ctx->y);
     }
-
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     ret = mbedtls_block_cipher_encrypt(&ctx->block_cipher_ctx, ctx->y, ctx->base_ectr);
 #else
     ret = mbedtls_cipher_update(&ctx->cipher_ctx, ctx->y, 16, ctx->base_ectr, &olen);
 #endif
-    if (ret != 0) {
-        return ret;
-    }
 
-    return 0;
+    return ret;
 }
 
 /**
@@ -490,7 +534,7 @@ int mbedtls_gcm_update_ad(mbedtls_gcm_context *ctx,
             use_len = add_len;
         }
 
-        mbedtls_xor(ctx->buf + offset, ctx->buf + offset, p, use_len);
+        MBEDTLS_XOR_SMALL(ctx->buf + offset, ctx->buf + offset, p, use_len);
 
         if (offset + use_len == 16) {
             gcm_mult(ctx, ctx->buf, ctx->buf);
@@ -504,7 +548,7 @@ int mbedtls_gcm_update_ad(mbedtls_gcm_context *ctx,
     ctx->add_len += add_len;
 
     while (add_len >= 16) {
-        mbedtls_xor(ctx->buf, ctx->buf, p, 16);
+        MBEDTLS_XOR_SMALL(ctx->buf, ctx->buf, p, 16);
 
         gcm_mult(ctx, ctx->buf, ctx->buf);
 
@@ -513,7 +557,7 @@ int mbedtls_gcm_update_ad(mbedtls_gcm_context *ctx,
     }
 
     if (add_len > 0) {
-        mbedtls_xor(ctx->buf, ctx->buf, p, add_len);
+        MBEDTLS_XOR_SMALL(ctx->buf, ctx->buf, p, add_len);
     }
 
     return 0;
@@ -548,12 +592,17 @@ static int gcm_mask(mbedtls_gcm_context *ctx,
         return ret;
     }
 
-    if (ctx->mode == MBEDTLS_GCM_DECRYPT) {
-        mbedtls_xor(ctx->buf + offset, ctx->buf + offset, input, use_len);
-    }
-    mbedtls_xor(output, ectr + offset, input, use_len);
-    if (ctx->mode == MBEDTLS_GCM_ENCRYPT) {
-        mbedtls_xor(ctx->buf + offset, ctx->buf + offset, output, use_len);
+    // slightly awkward but saves 140b to use a loop like this.
+    // note that for in-place operations, the order of the two xor operations matters.
+    uint8_t *ps[] = {
+        ctx->buf + offset, ctx->buf + offset, (uint8_t *) input,
+        output, ectr + offset, (uint8_t *) input,
+        ctx->buf + offset, ctx->buf + offset, output,
+    };
+    uint8_t **ap = (ctx->mode == MBEDTLS_GCM_DECRYPT) ? &ps[0] : &ps[3];
+    for (unsigned i = 0; i < 6; i += 3) {
+        mbedtls_xor_no_simd(ap[i], (const uint8_t *) ap[i + 1], (const uint8_t *) ap[i + 2],
+                            use_len);
     }
 
     return 0;
@@ -569,6 +618,7 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
     unsigned char *out_p = output;
     size_t offset;
     unsigned char ectr[16] = { 0 };
+    uint64_t len = ctx->len;
 
     if (output_size < input_length) {
         return MBEDTLS_ERR_GCM_BUFFER_TOO_SMALL;
@@ -589,60 +639,126 @@ int mbedtls_gcm_update(mbedtls_gcm_context *ctx,
 
     /* Total length is restricted to 2^39 - 256 bits, ie 2^36 - 2^5 bytes
      * Also check for possible overflow */
-    if (ctx->len + input_length < ctx->len ||
-        (uint64_t) ctx->len + input_length > 0xFFFFFFFE0ull) {
+    if (len + input_length < len ||
+        (uint64_t) len + input_length > 0xFFFFFFFE0ull) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
 
-    if (ctx->len == 0 && ctx->add_len % 16 != 0) {
+    /* Determine if we should use directly aesce gcm. This circumvents a
+     * bunch of indirect dispatch for each block. */
+    unsigned use_aesce = gcm_use_aesce(ctx);
+
+    uint8_t scratch[32];
+
+    if (len == 0 && ctx->add_len % 16 != 0) {
         gcm_mult(ctx, ctx->buf, ctx->buf);
     }
 
-    offset = ctx->len % 16;
+    offset = len % 16;
+
     if (offset != 0) {
         size_t use_len = 16 - offset;
         if (use_len > input_length) {
             use_len = input_length;
         }
 
-        if ((ret = gcm_mask(ctx, ectr, offset, use_len, p, out_p)) != 0) {
-            return ret;
+#if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
+        if (use_aesce) {
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx),
+                                                   ctx,
+                                                   p,
+                                                   out_p,
+                                                   offset,
+                                                   use_len,
+                                                   scratch);
+        } else
+#endif
+        {
+            if ((ret = gcm_mask(ctx, ectr, offset, use_len, p, out_p)) != 0) {
+                goto done;
+            }
+
+            if (offset + use_len == 16) {
+                gcm_mult(ctx, ctx->buf, ctx->buf);
+            }
         }
 
-        if (offset + use_len == 16) {
-            gcm_mult(ctx, ctx->buf, ctx->buf);
-        }
-
-        ctx->len += use_len;
+        len += use_len;
         input_length -= use_len;
         p += use_len;
         out_p += use_len;
     }
 
-    ctx->len += input_length;
+    len += input_length;
 
-    while (input_length >= 16) {
-        gcm_incr(ctx->y);
-        if ((ret = gcm_mask(ctx, ectr, 0, 16, p, out_p)) != 0) {
-            return ret;
+#if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
+    if (use_aesce) {
+        size_t blocks = input_length / 16;
+#if MBEDTLS_AESCE_OPTIMISE_FOR_SIZE == 1
+        for (size_t i = 0; i < blocks; i++) {
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx),
+                                                   ctx,
+                                                   p + i * 16,
+                                                   out_p + i * 16,
+                                                   0,
+                                                   16,
+                                                   scratch);
         }
+#else
+        mbedtls_aesce_gcm_update_blocks(GCM_GET_AES_CTX(ctx), ctx, p, out_p, blocks);
+#endif
+        input_length -= blocks * 16;
+        p += blocks * 16;
+        out_p += blocks * 16;
+    } else
+#endif
+    {
+        while (input_length >= 16) {
+            gcm_incr(ctx->y);
+            if ((ret = gcm_mask(ctx, ectr, 0, 16, p, out_p)) != 0) {
+                goto done;
+            }
 
-        gcm_mult(ctx, ctx->buf, ctx->buf);
+            gcm_mult(ctx, ctx->buf, ctx->buf);
 
-        input_length -= 16;
-        p += 16;
-        out_p += 16;
+            input_length -= 16;
+            p += 16;
+            out_p += 16;
+        }
     }
 
     if (input_length > 0) {
-        gcm_incr(ctx->y);
-        if ((ret = gcm_mask(ctx, ectr, 0, input_length, p, out_p)) != 0) {
-            return ret;
+#if defined(MBEDTLS_AESCE_HAVE_CODE) && defined(MBEDTLS_AES_C)
+        if (use_aesce) {
+            mbedtls_aesce_gcm_update_block_partial(GCM_GET_AES_CTX(ctx),
+                                                   ctx,
+                                                   p,
+                                                   out_p,
+                                                   0,
+                                                   input_length,
+                                                   scratch);
+        } else
+#endif
+        {
+            gcm_incr(ctx->y);
+            if ((ret = gcm_mask(ctx, ectr, 0, input_length, p, out_p)) != 0) {
+                goto done;
+            }
         }
     }
 
-    mbedtls_platform_zeroize(ectr, sizeof(ectr));
-    return 0;
+    if (use_aesce) {
+        mbedtls_platform_zeroize(scratch, sizeof(scratch));
+    }
+
+    ret = 0;
+
+done:
+    if (!use_aesce) {
+        mbedtls_platform_zeroize(ectr, sizeof(ectr));
+    }
+    ctx->len = len;
+    return ret;
 }
 
 int mbedtls_gcm_finish(mbedtls_gcm_context *ctx,
@@ -666,33 +782,26 @@ int mbedtls_gcm_finish(mbedtls_gcm_context *ctx,
     orig_len = ctx->len * 8;
     orig_add_len = ctx->add_len * 8;
 
-    if (ctx->len == 0 && ctx->add_len % 16 != 0) {
-        gcm_mult(ctx, ctx->buf, ctx->buf);
-    }
-
     if (tag_len > 16 || tag_len < 4) {
         return MBEDTLS_ERR_GCM_BAD_INPUT;
     }
 
-    if (ctx->len % 16 != 0) {
+    if ((ctx->len == 0 && ctx->add_len % 16 != 0)
+        || (ctx->len % 16 != 0)) {
         gcm_mult(ctx, ctx->buf, ctx->buf);
     }
 
     memcpy(tag, ctx->base_ectr, tag_len);
 
     if (orig_len || orig_add_len) {
-        memset(work_buf, 0x00, 16);
+        MBEDTLS_PUT_UINT64_BE(orig_add_len, work_buf, 0);
+        MBEDTLS_PUT_UINT64_BE(orig_len, work_buf, 8);
 
-        MBEDTLS_PUT_UINT32_BE((orig_add_len >> 32), work_buf, 0);
-        MBEDTLS_PUT_UINT32_BE((orig_add_len), work_buf, 4);
-        MBEDTLS_PUT_UINT32_BE((orig_len     >> 32), work_buf, 8);
-        MBEDTLS_PUT_UINT32_BE((orig_len), work_buf, 12);
-
-        mbedtls_xor(ctx->buf, ctx->buf, work_buf, 16);
+        MBEDTLS_XOR_SMALL(ctx->buf, ctx->buf, work_buf, 16);
 
         gcm_mult(ctx, ctx->buf, ctx->buf);
 
-        mbedtls_xor(tag, tag, ctx->buf, tag_len);
+        MBEDTLS_XOR_SMALL(tag, tag, ctx->buf, tag_len);
     }
 
     return 0;
