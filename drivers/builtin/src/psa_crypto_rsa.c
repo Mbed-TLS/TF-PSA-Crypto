@@ -118,6 +118,15 @@ psa_status_t mbedtls_psa_rsa_import_key(
         goto exit;
     }
 
+    /* Stored representations are trusted, so check private consistency at
+     * import rather than in the loader above (used by all operations). */
+    if (PSA_KEY_TYPE_IS_KEY_PAIR(attributes->type)) {
+        status = mbedtls_to_psa_error(mbedtls_rsa_check_privkey(rsa));
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    }
+
     *bits = (psa_key_bits_t) PSA_BYTES_TO_BITS(mbedtls_rsa_get_len(rsa));
 
     /* Re-export the data to PSA export format, such that we can store export

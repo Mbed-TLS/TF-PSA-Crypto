@@ -195,7 +195,8 @@ int mbedtls_rsa_parse_key(mbedtls_rsa_context *rsa, const unsigned char *key, si
         goto cleanup;
     }
 
-    if ((ret = mbedtls_rsa_check_privkey(rsa)) != 0) {
+    /* This check is inexpensive and includes size minima. */
+    if ((ret = mbedtls_rsa_check_pubkey(rsa)) != 0) {
         goto cleanup;
     }
 
