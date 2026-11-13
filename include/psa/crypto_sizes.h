@@ -827,6 +827,11 @@
 #define PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(key_bits)   \
     (PSA_BITS_TO_BYTES(key_bits))
 
+/** The size, in bytes, of the export encoding of an ML-DSA key pair -
+ *  represented by the 32-byte seed value.
+ */
+#define PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE 32u
+
 /* Size, in bytes, of the export encoding of an ML-DSA public key.
  *
  * Only ML-DSA-87 is supported.
@@ -889,6 +894,7 @@
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
      (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? \
      PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR ? PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE : \
      PSA_BITS_TO_BYTES(key_bits)) /*unstructured; FFDH public or private*/
 
 /** Sufficient output buffer size for psa_export_public_key().
@@ -973,6 +979,11 @@
 #undef PSA_EXPORT_KEY_PAIR_MAX_SIZE
 #define PSA_EXPORT_KEY_PAIR_MAX_SIZE    \
     PSA_KEY_EXPORT_FFDH_KEY_PAIR_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC) && \
+    (PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE > PSA_EXPORT_KEY_PAIR_MAX_SIZE)
+#undef PSA_EXPORT_KEY_PAIR_MAX_SIZE
+#define PSA_EXPORT_KEY_PAIR_MAX_SIZE PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE
 #endif
 
 /** Sufficient buffer size for exporting any asymmetric public key.
