@@ -27,16 +27,6 @@
  *   ML-DSA is reachable through the API.
  */
 
-/** The type of an ML-DSA key pair.
- *
- * By default, it is represented as just the 32-byte seed.
- *
- * The `bits` attribute of the key indicates the parameter set:
- * 44, 65 or 87.
- */
-#define PSA_KEY_TYPE_ML_DSA_KEY_PAIR    \
-    TF_PSA_CRYPTO_PSA_KEY_TYPE_ML_DSA_KEY_PAIR
-
 /** The size of an ML-DSA key pair in the PSA representation,
  * which is just the seed.
  */
