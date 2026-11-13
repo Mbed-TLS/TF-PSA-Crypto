@@ -129,7 +129,7 @@ extern "C" {
  * the entropy source does not provide enough material to form a nonce.
  * See the documentation of mbedtls_ctr_drbg_seed() for more information.
  */
-#define MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN (MBEDTLS_CTR_DRBG_ENTROPY_LEN + 1) / 2
+#define MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN ((MBEDTLS_CTR_DRBG_ENTROPY_LEN + 1) / 2)
 #endif
 
 #if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)

@@ -1,0 +1,6 @@
+Changes
+   * Add missing parentheses around the expansion or the arguments of
+     several internal macros, so that they behave as expected when used
+     next to a higher-precedence operator or with an expression argument.
+     No current use of these macros is affected. Found with clang-tidy's
+     bugprone-macro-parentheses check (Mbed-TLS/mbedtls#9483).

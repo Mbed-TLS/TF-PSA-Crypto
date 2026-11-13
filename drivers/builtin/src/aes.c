@@ -343,7 +343,7 @@ MBEDTLS_MAYBE_UNUSED static uint32_t round_constants[10];
 /*
  * Tables generation code
  */
-#define ROTL8(x) (((x) << 8) & 0xFFFFFFFF) | ((x) >> 24)
+#define ROTL8(x) ((((x) << 8) & 0xFFFFFFFF) | ((x) >> 24))
 #define XTIME(x) (((x) << 1) ^ (((x) & 0x80) ? 0x1B : 0x00))
 #define MUL(x, y) (((x) && (y)) ? pow[(log[(x)]+log[(y)]) % 255] : 0)
 
