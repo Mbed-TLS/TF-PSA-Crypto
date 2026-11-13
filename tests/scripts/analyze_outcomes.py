@@ -47,7 +47,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'PSA sign hash int: ECDSA not supported',
         ],
         'test_suite_psa_crypto_driver_wrappers': [
-            re.compile('PSA MAC .*'),
             re.compile('PSA decrypt transparent driver: .*'),
             re.compile('PSA encrypt transparent driver: .*'),
             re.compile('PSA encrypt-decrypt transparent driver: .*'),
