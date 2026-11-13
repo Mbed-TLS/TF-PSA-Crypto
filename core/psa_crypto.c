@@ -347,10 +347,17 @@ static int psa_is_dh_key_size_valid(size_t bits)
  */
 #if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
     defined(PSA_WANT_ML_DSA_87)
-static psa_status_t psa_validate_ml_dsa_public_key_bits(size_t data_length,
-                                                        size_t *bits)
+static psa_status_t psa_validate_ml_dsa_key_bits(psa_key_type_t type,
+                                                 size_t data_length,
+                                                 size_t *bits)
 {
-    if (data_length == PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)) {
+    if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        if (data_length == PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE && *bits == 87) {
+            return PSA_SUCCESS;
+        }
+        // The caller didn't choose a (supported) parameter set,
+        // and we cannot infer it from the data length either.
+    } else if (data_length == PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)) {
         if (*bits == 0) {
             *bits = 87;
         }
@@ -757,7 +764,8 @@ psa_status_t psa_import_key_into_slot(
                 return PSA_ERROR_BUFFER_TOO_SMALL;
             }
 
-            status = psa_validate_ml_dsa_public_key_bits(data_length, bits);
+            status = psa_validate_ml_dsa_key_bits(type,
+                                                  data_length, bits);
             if (status != PSA_SUCCESS) {
                 return status;
             }
