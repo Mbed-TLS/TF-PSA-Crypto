@@ -117,7 +117,7 @@ psa_status_t tf_psa_crypto_pqcp_alloc_done(void);
  * between calls to tf_psa_crypto_pqcp_alloc_start() and
  * tf_psa_crypto_pqcp_alloc_done().
  */
-extern uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+extern uint8_t tf_psa_crypto_pqcp_mldsa_public_key[PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE];
 
 #else /* TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC */
 

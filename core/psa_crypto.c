@@ -27,6 +27,9 @@
 #include "psa_crypto_rsa.h"
 #include "psa_crypto_ecp.h"
 #include "psa_crypto_slot_management.h"
+#if defined(TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED)
+#include "psa_crypto_mldsa.h"
+#endif
 /* Include internal declarations that are useful for implementing persistently
  * stored keys. */
 #include "psa_crypto_storage.h"
@@ -334,6 +337,36 @@ static int psa_is_dh_key_size_valid(size_t bits)
 #endif /* MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_KEY_PAIR_IMPORT ||
           MBEDTLS_PSA_BUILTIN_KEY_TYPE_DH_PUBLIC_KEY ||
           PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE */
+
+/* Check that the parameter set specified by *bits matches
+ * the representation size of the ML-DSA public key.
+ * Infer the parameter set from the representation size
+ * if *bits is set to zero.
+ *
+ * Only ML-DSA-87 is supported.
+ */
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_ML_DSA_87)
+static psa_status_t psa_validate_ml_dsa_key_bits(psa_key_type_t type,
+                                                 size_t data_length,
+                                                 size_t *bits)
+{
+    if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        if (data_length == PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE && *bits == 87) {
+            return PSA_SUCCESS;
+        }
+        // The caller didn't choose a (supported) parameter set,
+        // and we cannot infer it from the data length either.
+    } else if (data_length == PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(87)) {
+        if (*bits == 0) {
+            *bits = 87;
+        }
+        return *bits == 87 ? PSA_SUCCESS : PSA_ERROR_INVALID_ARGUMENT;
+    }
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+#endif /* defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) &&
+          defined(PSA_WANT_ML_DSA_87) */
 
 psa_status_t mbedtls_to_psa_error(int ret)
 {
@@ -724,6 +757,25 @@ psa_status_t psa_import_key_into_slot(
 #endif /* (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT) &&
            defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_PUBLIC_KEY) */
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
+        defined(PSA_WANT_ML_DSA_87)
+        if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+            if (key_buffer_size < data_length) {
+                return PSA_ERROR_BUFFER_TOO_SMALL;
+            }
+
+            status = psa_validate_ml_dsa_key_bits(type,
+                                                  data_length, bits);
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+
+            memcpy(key_buffer, data, data_length);
+            *key_buffer_length = data_length;
+            return PSA_SUCCESS;
+        }
+#endif /* defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) &&
+          defined(PSA_WANT_ML_DSA_87) */
     }
 
     return PSA_ERROR_NOT_SUPPORTED;
@@ -1349,7 +1401,8 @@ psa_status_t psa_export_key_internal(
     if (key_type_is_raw_bytes(type) ||
         PSA_KEY_TYPE_IS_RSA(type)   ||
         PSA_KEY_TYPE_IS_ECC(type)   ||
-        PSA_KEY_TYPE_IS_DH(type)) {
+        PSA_KEY_TYPE_IS_DH(type)    ||
+        PSA_KEY_TYPE_IS_ML_DSA(type)) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
@@ -1419,9 +1472,7 @@ psa_status_t psa_export_public_key_internal(
 {
     psa_key_type_t type = attributes->type;
 
-    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) &&
-        (PSA_KEY_TYPE_IS_RSA(type) || PSA_KEY_TYPE_IS_ECC(type) ||
-         PSA_KEY_TYPE_IS_DH(type))) {
+    if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type)) {
         /* Exporting public -> public */
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
