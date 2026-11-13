@@ -27,11 +27,6 @@
  *   ML-DSA is reachable through the API.
  */
 
-/** The size of an ML-DSA key pair in the PSA representation,
- * which is just the seed.
- */
-#define TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE 32u
-
 /** The size of an ML-DSA key pair in the joined representation:
  * the concatenation of the 32-byte seed with the standard ML-DSA
  * expanded key format.
@@ -50,22 +45,6 @@
 /** The maximum size of an ML-DSA key pair in the joined representation. */
 #define TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_MAX_SIZE    \
     TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(87)
-
-/** The size of an ML-DSA public key.
- *
- * \param bits  The ML-DSA parameter set (44, 65 or 87).
- * \return      The size of the public key in bytes.
- *              Unpecified if \p bits is not supported.
- */
-#define TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(bits)              \
-    ((bits) == 44 ? 1312u :                                         \
-     (bits) == 65 ? 1952u :                                         \
-     (bits) == 87 ? 2592u :                                         \
-     0u)
-
-/** The maximum size of an ML-DSA public key. */
-#define TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE    \
-    TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87)
 
 /** Hedged pure ML-DSA (without pre-hashing). */
 #define PSA_ALG_ML_DSA ((psa_algorithm_t) 0x06004400)

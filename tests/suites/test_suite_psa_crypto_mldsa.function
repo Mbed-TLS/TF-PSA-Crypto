@@ -884,13 +884,13 @@ static void poison_cleanup(void)
 /* BEGIN_CASE */
 void size_macros()
 {
-    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE, MLDSA_SEEDBYTES);
+    TEST_EQUAL(PSA_EXPORT_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_ML_DSA_KEY_PAIR, 87), MLDSA_SEEDBYTES);
 
 #if defined(TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED)
-    TEST_EQUAL(TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87),
+    TEST_EQUAL(PSA_EXPORT_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87),
                MLDSA87_PUBLICKEYBYTES);
-    TEST_LE_U(TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(87),
-              TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE);
+    TEST_LE_U(PSA_EXPORT_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY, 87),
+              PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE);
     TEST_EQUAL(TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(87),
                MLDSA_SEEDBYTES + MLDSA87_SECRETKEYBYTES);
     TEST_LE_U(TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(87),
@@ -1410,7 +1410,7 @@ void sign_deterministic_multipart(
                                               &attributes,
                                               private_key->x, private_key->len,
                                               alg));
-    if (private_key->len > TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE) {
+    if (private_key->len > PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE) {
         /* No observable heap usage when we have the expanded private key */
         TEST_ASSERT(operation.key == NULL);
     }

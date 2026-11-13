@@ -150,7 +150,7 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
     }
     /* Beyond this point, we must go through the cleanup code. */
 #if !defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
-    uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    uint8_t tf_psa_crypto_pqcp_mldsa_public_key[PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE];
 #endif
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(
@@ -338,7 +338,7 @@ psa_status_t tf_psa_crypto_mldsa_generate_key_custom(
     /* Beyond this point, we must go through the cleanup code. */
 
 #if !defined(TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC)
-    uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    uint8_t tf_psa_crypto_pqcp_mldsa_public_key[PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE];
 #endif
 
     uint8_t *expanded_private_key = key_buffer + SEED_SIZE;
@@ -389,7 +389,7 @@ static psa_status_t sign_from_seed(
     uint8_t *signature, size_t *signature_length)
 {
     uint8_t secret[TF_PSA_CRYPTO_PQCP_MLDSA_EXPANDED_SECRET_MAX_SIZE];
-    uint8_t public[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+    uint8_t public[PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE];
 
     int ret = tf_psa_crypto_pqcp_mldsa87_keypair_internal(public,
                                                           secret,

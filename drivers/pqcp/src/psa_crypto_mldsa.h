@@ -18,7 +18,7 @@
  * \param bits                  The ML-DSA parameter set (44, 65 or 87).
  * \param[in] standard_key      The seed to expand.
  * \param standard_key_length   The length of \p seed, in bytes. This must be
- *                              #TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE.
+ *                              #PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE.
  * \param[out] custom_key       On success, the key in joined format.
  *                              The pointers \p custom_key and \p standard_key
  *                              may be equal, but no other overlap between
@@ -56,7 +56,7 @@ psa_status_t tf_psa_crypto_mldsa_expand_private_key(
  * \param[out] data             On success, the exported key.
  * \param data_size             The size of \p data, in bytes.
  *                              This must be at least
- *                              #TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_SIZE(\c bits)
+ *                              #PSA_EXPORT_PUBLIC_KEY_OUTPUT_SIZE(#PSA_KEY_TYPE_ML_DSA_KEY_PAIR, \c bits)
  *                              where \c bits is the ML-DSA parameter set
  *                              equal to psa_get_key_bits(\p attributes).
  * \param[out] data_length      On success, the length of the data written
@@ -102,7 +102,7 @@ psa_status_t tf_psa_crypto_mldsa_export_public_key(
  * \param[out] key_buffer       The private key in the chosen format.
  * \param key_buffer_size       The size of \p key_buffer, in bytes.
  *                              It must be at least
- *                              #TF_PSA_CRYPTO_PQCP_MLDSA_SEED_SIZE bytes when
+ *                              #PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE bytes when
  *                              the chosen format is the seed, and at least
  *                              #TF_PSA_CRYPTO_PQCP_MLDSA_JOINED_PRIVATE_KEY_SIZE(\c bits)
  *                              when the chosen format is the joined format,

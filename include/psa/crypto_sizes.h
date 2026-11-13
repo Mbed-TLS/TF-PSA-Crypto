@@ -832,12 +832,17 @@
  */
 #define PSA_KEY_EXPORT_ML_DSA_KEY_PAIR_SIZE 32u
 
-/* Size, in bytes, of the export encoding of an ML-DSA public key.
+/** The size of the export encoding of an ML-DSA public key.
  *
- * Only ML-DSA-87 is supported.
+ * \param bits  The ML-DSA parameter set (44, 65 or 87).
+ * \return      The size of the public key in bytes.
+ *              Unpecified if \p bits is not supported.
  */
-#define PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(key_bits)   \
-    ((key_bits) == 87 ? 2592u : 0)
+#define PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_SIZE(bits) \
+    ((bits) == 44 ? 1312u :                         \
+     (bits) == 65 ? 1952u :                         \
+     (bits) == 87 ? 2592u :                         \
+     0u)
 
 /* Maximum size, in bytes, of the export encoding of an ML-DSA
  * public key.
