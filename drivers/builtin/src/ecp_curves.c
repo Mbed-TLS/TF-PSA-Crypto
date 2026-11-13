@@ -3937,9 +3937,9 @@ int mbedtls_ecp_group_load(mbedtls_ecp_group *grp, mbedtls_ecp_group_id id)
 
 #define MAX32   (X_limbs * 2)
 #define A(j)                                                \
-    (j) % 2 ?                                               \
-    (uint32_t) (X[(j) / 2] >> 32) :                         \
-    (uint32_t) (X[(j) / 2])
+    ((j) % 2 ?                                              \
+     (uint32_t) (X[(j) / 2] >> 32) :                        \
+     (uint32_t) (X[(j) / 2]))
 #define STORE32                                             \
     if (i % 2) {                                            \
         X[i/2] &= 0x00000000FFFFFFFF;                       \
