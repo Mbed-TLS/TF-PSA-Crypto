@@ -737,20 +737,19 @@
  */
 #define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t) 0x4002)
 
-/* Temporary name for the ML-DSA key-pair type.
+/** The type of an ML-DSA key pair.
  *
- * PSA_KEY_TYPE_ML_DSA_KEY_PAIR is currently not defined.
- * This temporary name prevents the test generators from
- * assuming key-pair support. Remove this alternative name
- * and replace it with PSA_KEY_TYPE_ML_DSA_KEY_PAIR as part
- * of key-pair support in TF-PSA-Crypto #900.
+ * By default, it is represented as just the 32-byte seed.
+ *
+ * The `bits` attribute of the key indicates the parameter set:
+ * 44, 65 or 87.
  */
-#define TF_PSA_CRYPTO_PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
+#define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t) 0x7002)
 
 /** Whether the key type is an ML-DSA key (key pair or public key). */
 #define PSA_KEY_TYPE_IS_ML_DSA(type)                \
     ((type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ||    \
-     (type) == TF_PSA_CRYPTO_PSA_KEY_TYPE_ML_DSA_KEY_PAIR)
+     (type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR)
 
 #define PSA_GET_KEY_TYPE_BLOCK_SIZE_EXPONENT(type)      \
     (((type) >> 8) & 7)
