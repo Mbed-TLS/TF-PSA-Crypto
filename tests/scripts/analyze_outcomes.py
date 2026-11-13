@@ -205,18 +205,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # https://github.com/Mbed-TLS/mbedtls/issues/9592
             'PSA sign DETERMINISTIC_ECDSA(SHA_256): !ECDSA but DETERMINISTIC_ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
         ],
-        'test_suite_dispatch_transparent.dilithium_py': [
-            # Requires ML-DSA key-pair support.
-            re.compile(r'MLDSA-87 export public key .*'),
-            re.compile(r'MLDSA-87 sign deterministic .*'),
-            re.compile(r'MLDSA-87 sign_deterministic multipart .*'),
-        ],
-        'test_suite_psa_crypto_mldsa.dilithium_py': [
-            # Requires ML-DSA key-pair support.
-            re.compile(r'MLDSA-87 export public key .*'),
-            re.compile(r'MLDSA-87 sign deterministic .*'),
-            re.compile(r'MLDSA-87 sign_deterministic multipart .*'),
-        ],
     }
 
     def __init__(self, options) -> None:
