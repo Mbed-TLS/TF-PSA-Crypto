@@ -1527,12 +1527,23 @@
  * Uncomment this macro to use precomputed AES tables stored in ROM.
  * Comment this macro to generate AES tables in RAM at runtime.
  *
- * Tradeoff: Using precomputed ROM tables reduces RAM usage by ~8kb
- * (or ~2kb if \c MBEDTLS_AES_FEWER_TABLES is used) and reduces the
- * initialization time before the first AES operation can be performed.
- * It comes at the cost of additional ~8kb ROM use (resp. ~2kb if \c
- * MBEDTLS_AES_FEWER_TABLES below is used), and potentially degraded
- * performance if ROM access is slower than RAM access.
+ * Size tradeoff: Using precomputed ROM tables reduces RAM usage by ~8kb
+ * (or ~2kb if \c MBEDTLS_AES_FEWER_TABLES is used). It comes at the cost
+ * of additional ~8kb ROM use (resp. ~2kb if \c MBEDTLS_AES_FEWER_TABLES
+ * below is used).
+ *
+ * Performance tradeoff: Using precomputed ROM tables reduces the
+ * initialization time before the first AES operation can be performed,
+ * but has potentially degraded performance if ROM access is slower than
+ * RAM access.
+ *
+ * \warning Security tradeoff: note that the timing of table lookups can
+ *          leak key material. On many microcontrollers, code is executed
+ *          from flash memory and the timing of flash reads is more strongly
+ *          correlated to the sequence of indices than RAM reads. As a
+ *          consequence, when this option is enabled on a device that
+ *          executes from flash, an external observer may be able to
+ *          reconstruct long-term keys from timing measurements.
  *
  * This option is independent of \c MBEDTLS_AES_FEWER_TABLES.
  */
@@ -2124,6 +2135,19 @@
  * Uncomment to override the default buffer size used by TF_PSA_CRYPTO_PQCP_BUFFER_ALLOC
  */
 //#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE MLD_TOTAL_ALLOC_87
+
+/**
+ * \def MBEDTLS_PK_DECRYPT_MAX_ITERATIONS
+ *
+ * Maximum number of iterations for the PBKDF2 algorithm used when decrypting
+ * PKCS#8 private keys.
+ *
+ * As suggested in NIST SP 800-132 this value should be a compromise between
+ * security (the higher iterations the lower the probabilty an attacker can
+ * guess the key from the password) and computation time (the higher the
+ * iterations the longer it will take to compute the key).
+ */
+#define MBEDTLS_PK_DECRYPT_MAX_ITERATIONS     10000000
 
 /** \} name SECTION: Builtin drivers */
 

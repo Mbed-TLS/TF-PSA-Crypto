@@ -127,17 +127,23 @@ Currently there are four block ciphers in TF-PSA-Crypto: AES, CAMELLIA, ARIA and
 DES. The pure software implementation of these block ciphers uses lookup
 tables, which are vulnerable to timing attacks.
 
+The pure software implementation of GCM also uses lookup tables for GHASH
+multiplication. Its table accesses depend on data derived from the key and
+processed message, and are vulnerable to timing attacks even if the block
+cipher implementation itself does not use lookup tables. This caveat applies
+to both encryption and decryption with software GCM.
+
 These timing attacks can be physical, local or depending on network latency
 even remote. The attacks can result in key recovery.
 
 **Workarounds:**
 
-- Turn on hardware acceleration for AES. This is supported only on selected
-  architectures and currently only available for AES. See configuration options
-  `TF_PSA_CRYPTO_AESCE_C` and `TF_PSA_CRYPTO_AESNI_C` for details.
+- Turn on hardware acceleration for AES and GCM. This is supported only on
+  selected architectures. See configuration options `TF_PSA_CRYPTO_AESCE_C` and
+  `TF_PSA_CRYPTO_AESNI_C` for details.
 - Add a secure alternative implementation (typically hardware acceleration) for
-  the vulnerable cipher. See the [PSA Cryptography Driver Interface](
-  docs/proposed/psa-driver-interface.md) for more information.
+  the vulnerable cipher and GHASH when using GCM. See the [PSA Cryptography
+  Driver Interface](docs/proposed/psa-driver-interface.md) for more information.
 - Use cryptographic mechanisms that are not based on block ciphers. In
   particular, for authenticated encryption, use ChaCha20/Poly1305 instead of
   block cipher modes. For random generation, use HMAC\_DRBG instead of CTR\_DRBG.
