@@ -54,6 +54,7 @@
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_GENPRIME)
 /**
  * \brief          Compute RSA private exponent from
  *                 prime moduli and public key.
@@ -82,6 +83,7 @@ int mbedtls_rsa_deduce_private_exponent(mbedtls_mpi const *P,
                                         mbedtls_mpi const *Q,
                                         mbedtls_mpi const *E,
                                         mbedtls_mpi *D);
+#endif /* MBEDTLS_GENPRIME */
 
 
 /**
