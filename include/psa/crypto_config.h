@@ -2125,6 +2125,26 @@
  */
 //#define TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE MLD_TOTAL_ALLOC_87
 
+/**
+ * \def MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256
+ *
+ * Enable built-in driver support for ALG_BLAKE2S_HASH256.
+ *
+ * \warning This is totally internal, not meant to be accessed directly. It's
+ *          also temporary and will be removed in issue #923.
+ */
+#define MBEDTLS_PSA_BUILTIN_ALG_BLAKE2S_HASH256
+
+/**
+ * \def MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512
+ *
+ * Enable built-in driver support for ALG_BLAKE2B_HASH512.
+ *
+ * \warning This is totally internal, not meant to be accessed directly. It's
+ *          also temporary and will be removed in issue #923.
+ */
+#define MBEDTLS_PSA_BUILTIN_ALG_BLAKE2B_HASH512
+
 /** \} name SECTION: Builtin drivers */
 
 /* Do not enable except for testing. Will be removed in a future minor version.
