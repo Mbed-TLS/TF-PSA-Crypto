@@ -64,9 +64,12 @@ psa_status_t mbedtls_psa_rsa_load_representation(
     mbedtls_rsa_init(*p_rsa);
 
     /* Parse the data. */
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
     if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
         status = mbedtls_to_psa_error(mbedtls_rsa_parse_key(*p_rsa, data, data_length));
-    } else {
+    } else
+#endif
+    {
         status = mbedtls_to_psa_error(mbedtls_rsa_parse_pubkey(*p_rsa, data, data_length));
     }
     if (status != PSA_SUCCESS) {
@@ -163,9 +166,12 @@ psa_status_t mbedtls_psa_rsa_export_key(psa_key_type_t type,
     /* PSA Crypto API defines the format of an RSA key as a DER-encoded
      * representation of the non-encrypted PKCS#1 RSAPrivateKey for a
      * private key and of the RFC3279 RSAPublicKey for a public key. */
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
     if (PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
         ret = mbedtls_rsa_write_key(rsa, data, &end);
-    } else {
+    } else
+#endif
+    {
         ret = mbedtls_rsa_write_pubkey(rsa, data, &end);
     }
 
