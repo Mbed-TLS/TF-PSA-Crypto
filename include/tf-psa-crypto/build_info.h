@@ -88,6 +88,24 @@
 #endif
 #endif
 
+/* This is defined if the architecture is Armv9-A, or higher */
+#if !defined(MBEDTLS_ARCH_IS_ARMV9_A)
+#if defined(__ARM_ARCH) && defined(__ARM_ARCH_PROFILE)
+#if (__ARM_ARCH >= 9) && (__ARM_ARCH_PROFILE == 'A')
+/* GCC, clang, armclang and IAR */
+#define MBEDTLS_ARCH_IS_ARMV9_A
+#endif
+#endif
+#endif
+
+#if defined(__ARM_NEON)
+#include <arm_neon.h>
+#define MBEDTLS_HAVE_NEON_INTRINSICS
+#elif defined(MBEDTLS_PLATFORM_IS_WINDOWS_ON_ARM64)
+#include <arm64_neon.h>
+#define MBEDTLS_HAVE_NEON_INTRINSICS
+#endif
+
 #if defined(__GNUC__) && !defined(__ARMCC_VERSION) && !defined(__clang__) \
     && !defined(__llvm__) && !defined(__INTEL_COMPILER)
 /* Defined if the compiler really is gcc and not clang, etc */
