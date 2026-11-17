@@ -150,8 +150,8 @@ If what is False, announce that the job has failed.'''
                 enabled.append(key + '=' + value)
         command = [
             'cmake', '-S', '.', '-B', options.build_dir,
-            '-DCMAKE_BUILD_TYPE=Release', '-DENABLE_TESTING=ON',
-            '-DTF_PSA_CRYPTO_FATAL_WARNINGS=ON',
+        ] + shlex.split(options.cmake_config_options) + [
+            '-DENABLE_TESTING=ON',
             '-DTF_PSA_CRYPTO_CONFIG_FILE=',
             '-DTF_PSA_CRYPTO_CONFIG_BASE_FILE=' + os.path.abspath(options.config),
             '-DTF_PSA_CRYPTO_CONFIG_NAME=full',
@@ -565,6 +565,10 @@ def main():
         parser.add_argument('--list-domains',
                             help='List supported domains and exit',
                             action='append_const', dest='list', const='domains')
+        parser.add_argument('--cmake-config-options', metavar='OPTIONS',
+                            help='CMake configure options (default: %(default)s)',
+                            default='-DCMAKE_BUILD_TYPE=Release '
+                                    '-DTF_PSA_CRYPTO_FATAL_WARNINGS=ON')
         parser.add_argument('--out-of-source-dir', metavar='DIR', dest='build_dir',
                             help='CMake build directory (default: %(default)s)',
                             default='out_of_source_build')
