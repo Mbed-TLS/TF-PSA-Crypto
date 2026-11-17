@@ -45,6 +45,7 @@ a full config without a couple of slowing down or unnecessary options
 (see set_reference_config), then the specific job config is derived.
 """
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -170,7 +171,7 @@ If what is False, announce that the job has failed.'''
                 return False
         return True
 
-    def _consistency_check(self):
+    def _consistency_check(self, config_file):
         '''Check if the testable option is consistent with the goal.
 
         The purpose of this function to ensure that every option is set or unset according to
@@ -179,7 +180,8 @@ If what is False, announce that the job has failed.'''
         log_command(['consistency check'])
         c_name = None
         exe_name = None
-        header = '#include "tf-psa-crypto/build_info.h"\n'
+        header = ('#define TF_PSA_CRYPTO_CONFIG_FILE ' + json.dumps(config_file) + '\n'
+                  '#include "tf-psa-crypto/build_info.h"\n')
 
         # Generate a C error directive for each setting to test if it is active
         for option, value in sorted(self.config_settings.items()):
@@ -214,7 +216,7 @@ If what is False, announce that the job has failed.'''
         '''Run the job's build and test commands.
 Return True if all commands succeed. Stop this job on any failure: later
 commands may depend on the configuration or build produced by earlier ones.'''
-        if not self._consistency_check():
+        if not self._consistency_check(os.path.abspath(options.config)):
             return False
         for command in self.commands:
             log_command(command)
