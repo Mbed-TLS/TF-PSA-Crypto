@@ -237,8 +237,9 @@ and subsequent commands are tests that cannot run if the build failed).'''
         return success
 
 # If the configuration option A requires B, make sure that
-# B in REVERSE_DEPENDENCIES[A].
-# All the information here should be contained in check_config.h or check_crypto_config.h.
+# A is in REVERSE_DEPENDENCIES[B].
+# These dependencies are checked by the TF-PSA-Crypto configuration checks.
+# MBEDTLS_* entries here are crypto options still present in crypto_config.h.
 # This file includes a copy because it changes rarely and it would be a pain
 # to extract automatically.
 REVERSE_DEPENDENCIES = {
@@ -252,8 +253,7 @@ REVERSE_DEPENDENCIES = {
 
     'PSA_WANT_ECC_SECP_R1_256': ['PSA_WANT_ALG_JPAKE'],
 
-    'PSA_WANT_ALG_ECDSA': ['PSA_WANT_ALG_DETERMINISTIC_ECDSA',
-                           'MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED'],
+    'PSA_WANT_ALG_ECDSA': ['PSA_WANT_ALG_DETERMINISTIC_ECDSA'],
     'PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC': [
         'PSA_WANT_ALG_ECDSA',
         'PSA_WANT_ALG_ECDH',
@@ -265,16 +265,8 @@ REVERSE_DEPENDENCIES = {
         'PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE',
         'MBEDTLS_ECP_RESTARTABLE',
         'MBEDTLS_PK_PARSE_EC_EXTENDED',
-        'MBEDTLS_PK_PARSE_EC_COMPRESSED',
-        'MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED',
-        'MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED',
-        'MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED',
-        'MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_EPHEMERAL_ENABLED'],
-    'PSA_WANT_ALG_JPAKE': ['MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED'],
-    'PSA_WANT_ALG_RSA_OAEP': ['PSA_WANT_ALG_RSA_PSS',
-                              'MBEDTLS_X509_RSASSA_PSS_SUPPORT'],
-    'PSA_WANT_ALG_RSA_PSS': ['MBEDTLS_X509_RSASSA_PSS_SUPPORT'],
-    'PSA_WANT_ALG_RSA_PKCS1V15_SIGN': ['MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED'],
+        'MBEDTLS_PK_PARSE_EC_COMPRESSED'],
+    'PSA_WANT_ALG_RSA_OAEP': ['PSA_WANT_ALG_RSA_PSS'],
     'PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC': [
         'PSA_WANT_ALG_RSA_PKCS1V15_SIGN',
         'PSA_WANT_ALG_RSA_PKCS1V15_CRYPT',
@@ -284,11 +276,9 @@ REVERSE_DEPENDENCIES = {
         'PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT',
         'PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE'],
 
-    'PSA_WANT_ALG_SHA_224': ['MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED',
-                             'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT',
+    'PSA_WANT_ALG_SHA_224': ['MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT',
                              'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY'],
-    'PSA_WANT_ALG_SHA_256': ['MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED',
-                             'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT',
+    'PSA_WANT_ALG_SHA_256': ['MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT',
                              'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY',
                              'MBEDTLS_LMS_C',
                              'MBEDTLS_LMS_PRIVATE',
@@ -302,17 +292,13 @@ REVERSE_DEPENDENCIES = {
 # These are not necessarily dependencies, but just minimal required changes
 # if a given define is the only one enabled from an exclusive group.
 EXCLUSIVE_GROUPS = {
-    'PSA_WANT_ALG_SHA_512': ['-MBEDTLS_SSL_COOKIE_C',
-                             '-MBEDTLS_SSL_TLS_C'],
     'PSA_WANT_ECC_MONTGOMERY_448': ['-PSA_WANT_ALG_ECDSA',
                                     '-PSA_WANT_ALG_JPAKE',],
     'PSA_WANT_ECC_MONTGOMERY_255': ['-PSA_WANT_ALG_ECDSA',
                                     '-PSA_WANT_ALG_JPAKE'],
     'PSA_WANT_KEY_TYPE_ARIA': ['-PSA_WANT_ALG_CMAC',
                                '-PSA_WANT_ALG_CCM',
-                               '-PSA_WANT_ALG_GCM',
-                               '-MBEDTLS_SSL_TICKET_C',
-                               '-MBEDTLS_SSL_CONTEXT_SERIALIZATION'],
+                               '-PSA_WANT_ALG_GCM'],
     'PSA_WANT_KEY_TYPE_CAMELLIA': ['-PSA_WANT_ALG_CMAC'],
     'PSA_WANT_KEY_TYPE_CHACHA20': ['-PSA_WANT_ALG_CMAC',
                                    '-PSA_WANT_ALG_CCM',
@@ -459,9 +445,6 @@ class DomainData:
         # Find elliptic curve enabling macros by name.
         curve_symbols = self.config_symbols_matching(r'PSA_WANT_ECC_\w+\Z')
 
-        # Find key exchange enabling macros by name.
-        key_exchange_symbols = self.config_symbols_matching(r'MBEDTLS_KEY_EXCHANGE_\w+_ENABLED\Z')
-
         # Find cipher key types
         cipher_key_types = {symbol
                             for key_type, symbol in key_types.items()
@@ -492,17 +475,13 @@ class DomainData:
             'hashes': DualDomain(hash_symbols, build_and_test,
                                  exclude=r'PSA_WANT_ALG_(?!SHA_(256|512))'),
 
-            # Key exchange types.
-            'kex': ExclusiveDomain(key_exchange_symbols, build_and_test),
-
             'pkalgs': ComplementaryDomain(['PSA_WANT_ALG_ECDSA',
                                            'PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC',
                                            'PSA_WANT_ALG_RSA_OAEP',
                                            'PSA_WANT_ALG_RSA_PSS',
                                            'PSA_WANT_ALG_RSA_PKCS1V15_CRYPT',
                                            'PSA_WANT_ALG_RSA_PKCS1V15_SIGN',
-                                           'PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC',
-                                           'MBEDTLS_X509_RSASSA_PSS_SUPPORT'],
+                                           'PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC'],
                                           build_and_test),
         }
         self.jobs = {}
