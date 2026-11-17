@@ -48,6 +48,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import traceback
@@ -157,7 +158,17 @@ If what is False, announce that the job has failed.'''
             '-DTF_PSA_CRYPTO_CONFIG_SET=' + ';'.join(enabled),
             '-DTF_PSA_CRYPTO_CONFIG_UNSET=' + ';'.join(disabled),
         ]
-        log_command(command)
+        command_log = ''
+        for arg in command:
+            if arg.startswith(('-DTF_PSA_CRYPTO_CONFIG_SET=',
+                               '-DTF_PSA_CRYPTO_CONFIG_UNSET=')):
+                name, value = arg.split('=', 1)
+                command_log += '\n    ' + name + '='
+                if value:
+                    command_log += '\n        ' + ';\n        '.join(value.split(';'))
+            else:
+                command_log += (' ' if command_log else '') + shlex.quote(arg)
+        log_line(command_log, prefix='+')
         ret = subprocess.call(command)
         if ret != 0:
             log_line('*** [{}] Error {}'.format(' '.join(command), ret))
