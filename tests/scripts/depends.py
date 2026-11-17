@@ -212,15 +212,10 @@ If what is False, announce that the job has failed.'''
 
     def test(self, options):
         '''Run the job's build and test commands.
-Return True if all the commands succeed and False otherwise.
-If options.keep_going is false, stop as soon as one command fails. Otherwise
-run all the commands, except that if the first command fails, none of the
-other commands are run (typically, the first command is a build command
-and subsequent commands are tests that cannot run if the build failed).'''
+Return True if all commands succeed. Stop this job on any failure: later
+commands may depend on the configuration or build produced by earlier ones.'''
         if not self._consistency_check():
             return False
-        built = False
-        success = True
         for command in self.commands:
             log_command(command)
             env = os.environ.copy()
@@ -228,13 +223,9 @@ and subsequent commands are tests that cannot run if the build failed).'''
                 env['MBEDTLS_TEST_CONFIGURATION'] += '-' + self.name
             ret = subprocess.call(command, env=env)
             if ret != 0:
-                if command[0] not in ['make', options.make_command]:
-                    log_line('*** [{}] Error {}'.format(' '.join(command), ret))
-                if not options.keep_going or not built:
-                    return False
-                success = False
-            built = True
-        return success
+                log_line('*** [{}] Error {}'.format(' '.join(command), ret))
+                return False
+        return True
 
 # If the configuration option A requires B, make sure that
 # A is in REVERSE_DEPENDENCIES[B].
