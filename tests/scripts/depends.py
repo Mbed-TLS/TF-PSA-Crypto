@@ -125,7 +125,7 @@ which will make a symbol defined with a certain value."""
     return True
 
 def set_reference_config(conf, colors):
-    """Change the library configuration file (mbedtls_config.h) to the reference state.
+    """Change the library configuration file (crypto_config.h) to the reference state.
 The reference state is the one from which the tested configurations are
 derived."""
     # Turn off options that are not relevant to the tests and slow them down.
@@ -179,7 +179,7 @@ If what is False, announce that the job has failed.'''
         log_command(['consistency check'])
         c_name = None
         exe_name = None
-        header = '#include "mbedtls/build_info.h"\n'
+        header = '#include "tf-psa-crypto/build_info.h"\n'
 
         # Generate a C error directive for each setting to test if it is active
         for option, value in sorted(self.config_settings.items()):
@@ -422,7 +422,7 @@ BaseDomain, before the parent __init__ calls."""
 class DomainData:
     """A container for domains and jobs, used to structurize testing."""
     def config_symbols_matching(self, regexp):
-        """List the mbedtls_config.h settings matching regexp."""
+        """List the crypto_config.h settings matching regexp."""
         return [symbol for symbol in self.all_config_symbols
                 if re.match(regexp, symbol)]
 
@@ -583,10 +583,7 @@ def main():
                             choices=['always', 'auto', 'never'], default='auto')
         parser.add_argument('-c', '--config', metavar='FILE',
                             help='Configuration file to modify',
-                            default=config.MbedTLSConfigFile.default_path[0])
-        parser.add_argument('-r', '--crypto-config', metavar='FILE',
-                            help='Crypto configuration file to modify',
-                            default=config.CryptoConfigFile.default_path[0])
+                            default=config.TFPSACryptoConfigFile.default_path[0])
         parser.add_argument('-C', '--directory', metavar='DIR',
                             help='Change to this directory before anything else',
                             default='.')
@@ -612,8 +609,7 @@ def main():
                             default=True)
         options = parser.parse_args()
         os.chdir(options.directory)
-        conf = config.CombinedConfig(config.MbedTLSConfigFile(options.config),
-                                     config.CryptoConfigFile(options.crypto_config))
+        conf = config.TFPSACryptoConfig(options.config)
         domain_data = DomainData(options, conf)
 
         if options.tasks is True:
