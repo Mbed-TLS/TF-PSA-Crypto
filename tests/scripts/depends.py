@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
 """
-Test Mbed TLS with a subset of algorithms.
+Test TF-PSA-Crypto with a subset of algorithms.
 
 This script can be divided into several steps:
 
-First, include/mbedtls/mbedtls_config.h or a different config file passed
-in the arguments is parsed to extract any configuration options (using config.py).
+First, include/psa/crypto_config.h or a different config file passed in the
+arguments is parsed using the TF-PSA-Crypto scripts/config.py module.
 
 Then, test domains (groups of jobs, tests) are built based on predefined data
 collected in the DomainData class. Here, each domain has five major traits:
@@ -29,20 +29,29 @@ The configuration building method can be one of the three following:
   any non-standard symbols to set/unset in EXCLUSIVE_GROUPS. These are usually not
   direct dependencies, but rather non-trivial results of other configs missing. Then
   look for any unset symbols and handle their reverse dependencies.
-  Examples of EXCLUSIVE_GROUPS usage:
-  - PSA_WANT_ALG_SHA_512 job turns off all hashes except SHA512. MBEDTLS_SSL_COOKIE_C
-    requires either SHA256 or SHA384 to work, so it also has to be disabled.
-    This is not a dependency on SHA512, but a result of an exclusive domain
-    config building method. Relevant field:
-    'PSA_WANT_ALG_SHA_512': ['-MBEDTLS_SSL_COOKIE_C'],
+  For example, selecting only Montgomery curves also disables ECDSA and JPAKE,
+  which require other curve families.
 
 - DualDomain - combination of the two above - both complementary and exclusive domain
   job generation code will be run. Currently only used for hashes.
 
+By default each job configures a CMake build in out_of_source_build at the
+repository root, builds with warnings treated as errors, and runs CTest.
+--out-of-source-dir selects a different build directory. The directory is
+created if needed and reused if it already exists.
+--build-and-test-command can replace the build and test steps with a custom script.
+
+The selected configuration file is only read. CMake derives each job's
+configuration using TF_PSA_CRYPTO_CONFIG_BASE_FILE, TF_PSA_CRYPTO_CONFIG_NAME,
+TF_PSA_CRYPTO_CONFIG_SET and TF_PSA_CRYPTO_CONFIG_UNSET. The generated file is
+include/psa/crypto_config.h in the build directory and remains for investigation.
+Custom build commands must also use this generated configuration file.
+
 Lastly, the collected jobs are executed and (optionally) tested, with
 error reporting and coloring as configured in options. Each test starts with
-a full config without a couple of slowing down or unnecessary options
-(see set_reference_config), then the specific job config is derived.
+a full configuration with test hooks disabled, then applies the job settings.
+After CMake configuration, a consistency check verifies the generated settings
+before the build and test commands run.
 """
 import argparse
 import json
@@ -53,7 +62,7 @@ import subprocess
 import sys
 import traceback
 
-# Add the Mbed TLS Python library directory to the module search path
+# Add the TF-PSA-Crypto and shared framework Python directories to the search path
 import scripts_path # pylint: disable=unused-import
 import config
 from mbedtls_framework import c_build_helper
@@ -539,7 +548,7 @@ def main():
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description=
-            "Test Mbed TLS with a subset of algorithms.\n\n"
+            "Test TF-PSA-Crypto with a subset of algorithms.\n\n"
             "Example usage:\n"
             r"./tests/scripts/depends.py \!PSA_WANT_ALG_SHA_1 PSA_WANT_ALG_SHA_256""\n"
             "./tests/scripts/depends.py PSA_WANT_KEY_TYPE_AES hashes\n"
