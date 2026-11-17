@@ -51,7 +51,6 @@ import re
 import subprocess
 import sys
 import traceback
-from typing import Union
 
 # Add the Mbed TLS Python library directory to the module search path
 import scripts_path # pylint: disable=unused-import
@@ -103,37 +102,6 @@ def log_command(cmd):
 cmd is a list of strings: a command name and its arguments."""
     log_line(' '.join(cmd), prefix='+')
 
-def option_exists(conf, option):
-    return option in conf.settings
-
-def set_config_option_value(conf, option, colors, value: Union[bool, str]):
-    """Set/unset a configuration option, optionally specifying a value.
-value can be either True/False (set/unset config option), or a string,
-which will make a symbol defined with a certain value."""
-    if not option_exists(conf, option):
-        log_line('Symbol {} was not found in {}'.format(option, conf.filename()), color=colors.red)
-        return False
-
-    if value is False:
-        log_command(['config.py', 'unset', option])
-        conf.unset(option)
-    elif value is True:
-        log_command(['config.py', 'set', option])
-        conf.set(option)
-    else:
-        log_command(['config.py', 'set', option, value])
-        conf.set(option, value)
-    return True
-
-def set_reference_config(conf, colors):
-    """Change the library configuration file (crypto_config.h) to the reference state.
-The reference state is the one from which the tested configurations are
-derived."""
-    # Turn off options that are not relevant to the tests and slow them down.
-    log_command(['config.py', 'full'])
-    conf.adapt(config.full_adapter)
-    set_config_option_value(conf, 'MBEDTLS_TEST_HOOKS', colors, False)
-
 class Job:
     """A job builds the library in a specific configuration and runs some tests."""
     def __init__(self, name, config_settings, commands):
@@ -162,13 +130,38 @@ If what is False, announce that the job has failed.'''
         else:
             log_line('starting ' + self.name, color=colors.cyan)
 
-    def configure(self, conf, colors):
-        '''Set library configuration options as required for the job.'''
-        set_reference_config(conf, colors)
-        for key, value in sorted(self.config_settings.items()):
-            ret = set_config_option_value(conf, key, colors, value)
-            if ret is False:
+    def configure(self, options, conf, colors):
+        """Generate the job's configuration through CMake."""
+        settings = {'MBEDTLS_TEST_HOOKS': False}
+        settings.update(self.config_settings)
+        enabled = []
+        disabled = []
+        for key, value in sorted(settings.items()):
+            if key not in conf.settings:
+                log_line('Symbol {} was not found in {}'.format(key, conf.filename()),
+                         color=colors.red)
                 return False
+            if value is False:
+                disabled.append(key)
+            elif value is True:
+                enabled.append(key)
+            else:
+                enabled.append(key + '=' + value)
+        command = [
+            'cmake', '-S', '.', '-B', options.build_dir,
+            '-DCMAKE_BUILD_TYPE=Release', '-DENABLE_TESTING=ON',
+            '-DTF_PSA_CRYPTO_FATAL_WARNINGS=ON',
+            '-DTF_PSA_CRYPTO_CONFIG_FILE=',
+            '-DTF_PSA_CRYPTO_CONFIG_BASE_FILE=' + os.path.abspath(options.config),
+            '-DTF_PSA_CRYPTO_CONFIG_NAME=full',
+            '-DTF_PSA_CRYPTO_CONFIG_SET=' + ';'.join(enabled),
+            '-DTF_PSA_CRYPTO_CONFIG_UNSET=' + ';'.join(disabled),
+        ]
+        log_command(command)
+        ret = subprocess.call(command)
+        if ret != 0:
+            log_line('*** [{}] Error {}'.format(' '.join(command), ret))
+            return False
         return True
 
     def _consistency_check(self, config_file):
@@ -216,7 +209,8 @@ If what is False, announce that the job has failed.'''
         '''Run the job's build and test commands.
 Return True if all commands succeed. Stop this job on any failure: later
 commands may depend on the configuration or build produced by earlier ones.'''
-        if not self._consistency_check(os.path.abspath(options.config)):
+        if not self._consistency_check(os.path.abspath(
+                os.path.join(options.build_dir, 'include', 'psa', 'crypto_config.h'))):
             return False
         for command in self.commands:
             log_command(command)
@@ -412,10 +406,6 @@ class DomainData:
             build_and_test = [[options.build_and_test_command]]
         else:
             build_and_test = [
-                ['cmake', '-S', '.', '-B', options.build_dir,
-                 '-DCMAKE_BUILD_TYPE=Release', '-DENABLE_TESTING=ON',
-                 '-DTF_PSA_CRYPTO_FATAL_WARNINGS=ON',
-                 '-DTF_PSA_CRYPTO_CONFIG_FILE=' + os.path.abspath(options.config)],
                 ['cmake', '--build', options.build_dir, '--clean-first'],
                 ['cmake', '-E', 'chdir', options.build_dir,
                  'ctest', '--output-on-failure'],
@@ -498,10 +488,9 @@ A name can either be the name of a domain or the name of one specific job."""
 def run(options, job, conf, colors=NO_COLORS):
     """Run the specified job (a Job instance)."""
     job.announce(colors, None)
-    if not job.configure(conf, colors):
+    if not job.configure(options, conf, colors):
         job.announce(colors, False)
         return False
-    conf.write()
     success = job.test(options)
     job.announce(colors, success)
     return success
@@ -517,25 +506,15 @@ Run the jobs listed in options.tasks."""
     successes = []
     for name in options.tasks:
         jobs += domain_data.get_jobs(name)
-    conf.backup()
-    try:
-        for job in jobs:
-            success = run(options, job, conf, colors=colors)
-            if not success:
-                if options.keep_going:
-                    failures.append(job.name)
-                else:
-                    return False
+    for job in jobs:
+        success = run(options, job, conf, colors=colors)
+        if not success:
+            if options.keep_going:
+                failures.append(job.name)
             else:
-                successes.append(job.name)
-        conf.restore()
-    except:
-        # Restore the configuration, except in stop-on-error mode if there
-        # was an error, where we leave the failing configuration up for
-        # developer convenience.
-        if options.keep_going:
-            conf.restore()
-        raise
+                return False
+        else:
+            successes.append(job.name)
     if successes:
         log_line('{} passed'.format(' '.join(successes)), color=colors.bold_green)
     if failures:
@@ -558,7 +537,7 @@ def main():
                             help='Colorize the output (always/auto/never)',
                             choices=['always', 'auto', 'never'], default='auto')
         parser.add_argument('-c', '--config', metavar='FILE',
-                            help='Configuration file to modify',
+                            help='Base configuration file to read',
                             default=config.TFPSACryptoConfigFile.default_path[0])
         parser.add_argument('-C', '--directory', metavar='DIR',
                             help='Change to this directory before anything else',
