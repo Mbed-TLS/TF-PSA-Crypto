@@ -409,10 +409,15 @@ class DomainData:
         if options.build_and_test_command:
             build_and_test = [[options.build_and_test_command]]
         else:
-            build_command = [options.make_command, '-f', 'scripts/legacy.make',
-                             'CFLAGS=-Werror -O2']
-            build_and_test = [build_command, [options.make_command, '-f',
-                                              'scripts/legacy.make', 'test']]
+            build_and_test = [
+                ['cmake', '-S', '.', '-B', options.build_dir,
+                 '-DCMAKE_BUILD_TYPE=Release', '-DENABLE_TESTING=ON',
+                 '-DTF_PSA_CRYPTO_FATAL_WARNINGS=ON',
+                 '-DTF_PSA_CRYPTO_CONFIG_FILE=' + os.path.abspath(options.config)],
+                ['cmake', '--build', options.build_dir, '--clean-first'],
+                ['cmake', '-E', 'chdir', options.build_dir,
+                 'ctest', '--output-on-failure'],
+            ]
         self.all_config_symbols = set(conf.settings.keys())
         psa_info = psa_information.Information().constructors
         algs = {crypto_knowledge.Algorithm(alg): symbol
@@ -490,7 +495,6 @@ A name can either be the name of a domain or the name of one specific job."""
 
 def run(options, job, conf, colors=NO_COLORS):
     """Run the specified job (a Job instance)."""
-    subprocess.check_call([options.make_command, '-f', 'scripts/legacy.make', 'clean'])
     job.announce(colors, None)
     if not job.configure(conf, colors):
         job.announce(colors, False)
@@ -569,9 +573,9 @@ def main():
         parser.add_argument('--list-domains',
                             help='List supported domains and exit',
                             action='append_const', dest='list', const='domains')
-        parser.add_argument('--make-command', metavar='CMD',
-                            help='Command to run instead of make (e.g. gmake)',
-                            action='store', default='make')
+        parser.add_argument('--out-of-source-dir', metavar='DIR', dest='build_dir',
+                            help='CMake build directory (default: %(default)s)',
+                            default='out_of_source_build')
         parser.add_argument('--build-and-test-command',
                             help='Provide a custom command or script to build and test')
         parser.add_argument('tasks', metavar='TASKS', nargs='*',
