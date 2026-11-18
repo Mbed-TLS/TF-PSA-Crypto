@@ -1109,6 +1109,32 @@ component_test_crypto_for_psa_service () {
   ctest
 }
 
+# depends.py family of tests
+component_test_depends_py_cipher_id () {
+    msg "test/build: depends.py cipher_id"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" cipher_id
+}
+
+component_test_depends_py_cipher_chaining () {
+    msg "test/build: depends.py cipher_chaining"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" cipher_chaining
+}
+
+component_test_depends_py_curves () {
+    msg "test/build: depends.py curves"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" curves
+}
+
+component_test_depends_py_hashes () {
+    msg "test/build: depends.py hashes"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" hashes
+}
+
+component_test_depends_py_pkalgs () {
+    msg "test/build: depends.py pkalgs"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" pkalgs
+}
+
 component_test_psa_crypto_config_ffdh_2048_only () {
     msg "build: full config - only DH 2048"
 
