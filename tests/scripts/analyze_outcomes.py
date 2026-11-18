@@ -21,45 +21,23 @@ from project_knowledge import tf_psa_crypto_test_case_info
 class CoverageTask(outcome_analysis.CoverageTask):
     """Justify test cases that are never executed."""
 
-    # Tests that may not be covered by TF-PSA-Crypto testing, but are
-    # covered by Mbed TLS testing.
+    # Tests covered by Mbed TLS but still missing from TF-PSA-Crypto CI.
     # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/740
-    IGNORED_TESTS = {
+    IGNORED_TESTS: outcome_analysis.TestCaseSetDescription = {
         'test_suite_config.psa_boolean': [
             'Config: !MBEDTLS_PLATFORM_C',
             'Config: !MBEDTLS_PSA_CRYPTO_C',
-            'Config: !PSA_WANT_ALG_HKDF',
-            'Config: !PSA_WANT_ALG_SHA_224',
-            'Config: !PSA_WANT_ALG_SHA_256',
-            'Config: !PSA_WANT_ALG_TLS12_PRF',
-            'Config: !PSA_WANT_ALG_TLS12_PSK_TO_MS',
-            'Config: !PSA_WANT_KEY_TYPE_AES',
             'Config: MBEDTLS_DEPRECATED_WARNING',
             'Config: MBEDTLS_PSA_CRYPTO_CLIENT',
         ],
-        'test_suite_pk': [
-            'PK size macro: MBEDTLS_PK_ECP_PRV_DER_MAX_BYTES: only curve is P-256',
-            'PK size macro: MBEDTLS_PK_ECP_PUB_DER_MAX_BYTES: only curve is P-256',
-            'PK size macro: MBEDTLS_PK_MAX_PUBKEY_RAW_LEN: RSA, !ECC',
-        ],
         'test_suite_psa_crypto': [
             'PSA generate key custom: RSA, e=3 with driver and no fallback (not yet supported)',
-            'PSA sign hash int: ECDSA not supported',
         ],
         'test_suite_psa_crypto_driver_wrappers': [
             re.compile('PSA MAC .*'),
             re.compile('PSA decrypt transparent driver: .*'),
             re.compile('PSA encrypt transparent driver: .*'),
             re.compile('PSA encrypt-decrypt transparent driver: .*'),
-        ],
-        'test_suite_psa_crypto_not_supported.generated': [
-            re.compile('.*'),
-        ],
-        'test_suite_psa_crypto_op_fail.generated': [
-            re.compile('.* !.*'),
-        ],
-        'test_suite_psa_crypto_op_fail.misc': [
-            'PSA sign RSA_PSS(SHA_256): RSA_PSS not enabled, key pair',
         ],
     }
 
@@ -69,10 +47,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
         'test_suite_config.crypto_combinations': [
             # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
             'Config: built-in SHA3: no SHAKE',
-            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
-            'Config: built-in SHA3: no hash',
-            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
-            'Config: no built-in AEAD',
             # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
             'Config: no built-in MAC',
             # We don't support any signature algorithm that isn't either
