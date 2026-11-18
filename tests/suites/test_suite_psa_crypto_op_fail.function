@@ -103,6 +103,18 @@ void mac_fail(int key_type_arg, data_t *key_data,
     PSA_INIT();
 
     psa_set_key_type(&attributes, key_type);
+
+    // HACK: set key size for ML-DSA keypairs
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ML_DSA_65) || defined(PSA_WANT_ML_DSA_44)
+#error "ML-DSA 65 or 44 is not supported"
+#elif defined(PSA_WANT_ML_DSA_87)
+    if (key_type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        psa_set_key_bits(&attributes, 87);
+    }
+#endif
+#endif
+
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_SIGN_HASH |
                             PSA_KEY_USAGE_VERIFY_HASH);
@@ -149,6 +161,18 @@ void cipher_fail(int key_type_arg, data_t *key_data,
     PSA_INIT();
 
     psa_set_key_type(&attributes, key_type);
+
+    // HACK: set key size for ML-DSA keypairs
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ML_DSA_65) || defined(PSA_WANT_ML_DSA_44)
+#error "ML-DSA 65 or 44 is not supported"
+#elif defined(PSA_WANT_ML_DSA_87)
+    if (key_type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        psa_set_key_bits(&attributes, 87);
+    }
+#endif
+#endif
+
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_ENCRYPT |
                             PSA_KEY_USAGE_DECRYPT);
@@ -195,6 +219,18 @@ void aead_fail(int key_type_arg, data_t *key_data,
     PSA_INIT();
 
     psa_set_key_type(&attributes, key_type);
+
+    // HACK: set key size for ML-DSA keypairs
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ML_DSA_65) || defined(PSA_WANT_ML_DSA_44)
+#error "ML-DSA 65 or 44 is not supported"
+#elif defined(PSA_WANT_ML_DSA_87)
+    if (key_type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        psa_set_key_bits(&attributes, 87);
+    }
+#endif
+#endif
+
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_ENCRYPT |
                             PSA_KEY_USAGE_DECRYPT);
@@ -247,6 +283,18 @@ void sign_fail(int key_type_arg, data_t *key_data,
     PSA_INIT();
 
     psa_set_key_type(&attributes, key_type);
+
+    // HACK: set key size for ML-DSA keypairs
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ML_DSA_65) || defined(PSA_WANT_ML_DSA_44)
+#error "ML-DSA 65 or 44 is not supported"
+#elif defined(PSA_WANT_ML_DSA_87)
+    if (key_type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        psa_set_key_bits(&attributes, 87);
+    }
+#endif
+#endif
+
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_SIGN_HASH |
                             PSA_KEY_USAGE_VERIFY_HASH);
@@ -317,6 +365,18 @@ void asymmetric_encryption_fail(int key_type_arg, data_t *key_data,
     PSA_INIT();
 
     psa_set_key_type(&attributes, key_type);
+
+    // HACK: set key size for ML-DSA keypairs
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ML_DSA_65) || defined(PSA_WANT_ML_DSA_44)
+#error "ML-DSA 65 or 44 is not supported"
+#elif defined(PSA_WANT_ML_DSA_87)
+    if (key_type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        psa_set_key_bits(&attributes, 87);
+    }
+#endif
+#endif
+
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_ENCRYPT |
                             PSA_KEY_USAGE_DECRYPT);
@@ -388,6 +448,18 @@ void key_agreement_fail(int key_type_arg, data_t *key_data,
     PSA_INIT();
 
     psa_set_key_type(&attributes, key_type);
+
+    // HACK: set key size for ML-DSA keypairs
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ML_DSA_65) || defined(PSA_WANT_ML_DSA_44)
+#error "ML-DSA 65 or 44 is not supported"
+#elif defined(PSA_WANT_ML_DSA_87)
+    if (key_type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
+        psa_set_key_bits(&attributes, 87);
+    }
+#endif
+#endif
+
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
