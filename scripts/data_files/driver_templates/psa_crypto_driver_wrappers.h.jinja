@@ -1324,6 +1324,28 @@ data_length
 {% endwith %}
 }
 
+/** Deprecated same-driver copy_key entry point.
+ *
+ * \param attributes                    Attributes of the key that is being
+ *                                      created.
+ * \param[in] source_key                Source key representation, in the
+ *                                      driver's representation.
+ * \param source_key_length             Length of \p source_key in bytes.
+ * \param[out] target_key_buffer        On success, the representation of the
+ *                                      newly created key.
+ * \param target_key_buffer_size        Size of \p target_key_buffer in bytes.
+ * \param[out] target_key_buffer_length On success, the length of the key
+ *                                      representation written to
+ *                                      \p target_key_buffer, in bytes.
+ *
+ * \return A PSA status code.
+ *
+ * \deprecated
+ * This dispatch entry point will be removed in a future minor version
+ * of TF-PSA-Crypto, and replaced by an dispatch function that is more
+ * suited for cross-driver copies.
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/953
+ */
 static inline psa_status_t psa_driver_wrapper_copy_key(
     psa_key_attributes_t *attributes,
     const uint8_t *source_key, size_t source_key_length,
