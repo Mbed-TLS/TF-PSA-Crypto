@@ -897,7 +897,7 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_pk_parse_key_pkcs8_encrypted_der(
 
 #if defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_CIPHER_PADDING_PKCS7) && defined(MBEDTLS_CIPHER_C)
     if (MBEDTLS_OID_CMP(MBEDTLS_OID_PKCS5_PBES2, &pbe_alg_oid) == 0) {
-        if ((ret = mbedtls_pkcs5_pbes2_ext(&pbe_params, MBEDTLS_PKCS5_DECRYPT, pwd, pwdlen,
+        if ((ret = mbedtls_pkcs5_pbes2_ext(&pbe_params, pwd, pwdlen,
                                            p, len, buf, len, &outlen)) != 0) {
             if (ret == MBEDTLS_ERR_PKCS5_PASSWORD_MISMATCH) {
                 return MBEDTLS_ERR_PK_PASSWORD_MISMATCH;
