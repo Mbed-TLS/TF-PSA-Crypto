@@ -5,6 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#include "constant_time_internal.h"
 #include "tf_psa_crypto_common.h"
 
 #if defined(MBEDTLS_PEM_PARSE_C) || defined(MBEDTLS_PEM_WRITE_C)
@@ -178,33 +179,42 @@ exit:
 #if defined(MBEDTLS_AES_C)
 static int pem_check_pkcs_padding(unsigned char *input, size_t input_len, size_t *data_len)
 {
-    /* input_len > 0 is not guaranteed by mbedtls_pem_read_buffer(). */
-    if (input_len < 1) {
+    /* input_len > 0 is not guaranteed by mbedtls_pem_read_buffer(), and the
+     * only caller has decrypted an AES-CBC buffer, so anything below one
+     * block cannot carry valid padding. */
+    if (input_len < 16) {
         return MBEDTLS_ERR_PEM_INVALID_DATA;
     }
     size_t pad_len = input[input_len - 1];
-    size_t i;
-    unsigned char diff = 0;
     unsigned char pad_byte = (unsigned char) pad_len;
+    size_t i, pad_idx;
 
-    /* Validate the padding in constant time. Early-returning on the first
-     * mismatching byte (or branching on pad_len) leaks the position of the
-     * first difference through timing, which for CBC-encrypted PEM blobs
-     * without a MAC is a Vaudenay-style padding oracle. */
-    if (pad_len < 1 || pad_len > input_len) {
-        return MBEDTLS_ERR_PEM_PASSWORD_MISMATCH;
+    /* Validate the padding in constant time, mirroring
+     * mbedtls_get_pkcs_padding(). The padding length is secret derived, so
+     * nothing below branches on it or scales with it: a fixed span of one
+     * AES block is inspected, each byte reaches the accumulator only through
+     * a mask saying whether it lies inside the padding, and the range check
+     * (the padding must be 1..16 bytes) shares the same accumulator.
+     * Early-returning at the first mismatching byte, or looping over
+     * pad_len bytes, would leak the mismatch position and the padding
+     * length through timing: for CBC-encrypted PEM blobs without a MAC,
+     * that is a Vaudenay-style padding oracle. */
+    mbedtls_ct_condition_t bad = mbedtls_ct_uint_eq(pad_len, 0);
+    bad = mbedtls_ct_bool_or(bad, mbedtls_ct_uint_gt(pad_len, 16));
+
+    pad_idx = input_len - pad_len;
+    for (i = input_len - 16; i < input_len; i++) {
+        mbedtls_ct_condition_t in_padding = mbedtls_ct_uint_ge(i, pad_idx);
+        mbedtls_ct_condition_t different = mbedtls_ct_uint_ne(input[i], pad_byte);
+        bad = mbedtls_ct_bool_or(bad, mbedtls_ct_bool_and(in_padding, different));
     }
 
-    *data_len = input_len - pad_len;
-
-    for (i = *data_len; i < input_len; i++) {
-        diff |= input[i] ^ pad_byte;
+    int ret = mbedtls_ct_error_if_else_0(bad, MBEDTLS_ERR_PEM_PASSWORD_MISMATCH);
+    if (ret != 0) {
+        return ret;
     }
 
-    if (diff != 0) {
-        return MBEDTLS_ERR_PEM_PASSWORD_MISMATCH;
-    }
-
+    *data_len = pad_idx;
     return 0;
 }
 #endif /* MBEDTLS_AES_C */
