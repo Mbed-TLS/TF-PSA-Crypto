@@ -1038,6 +1038,27 @@ component_test_full_no_ccm_star_no_tag () {
     ctest
 }
 
+component_test_full_no_key_derivation () {
+    msg "build: full config without key derivation algorithms"
+
+    scripts/config.py full
+    scripts/config.py unset PSA_WANT_ALG_HKDF
+    scripts/config.py unset PSA_WANT_ALG_HKDF_EXTRACT
+    scripts/config.py unset PSA_WANT_ALG_HKDF_EXPAND
+    scripts/config.py unset PSA_WANT_ALG_PBKDF2_HMAC
+    scripts/config.py unset PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128
+    scripts/config.py unset PSA_WANT_ALG_TLS12_PRF
+    scripts/config.py unset PSA_WANT_ALG_TLS12_PSK_TO_MS
+    scripts/config.py unset PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
+
+    msg "test: full config without key derivation algorithms"
+    ctest
+}
+
 component_test_config_symmetric_only () {
     msg "build: configs/crypto-config-symmetric-only.h"
     CRYPTO_CONFIG="configs/crypto-config-symmetric-only.h"
