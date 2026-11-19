@@ -334,7 +334,10 @@ int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_
 #endif /* MBEDTLS_CIPHER_C */
 #endif /* MBEDTLS_PKCS5_C && MBEDTLS_ASN1_PARSE_C */
 
-#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
+/* Enable this function for driver testing, especially with a test driver
+ * generated from the built-in driver. */
+#if (defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)) || \
+    defined(PSA_CRYPTO_DRIVER_TEST)
 /**
  * \brief          Translate md_type into hash algorithm OID
  *
@@ -345,7 +348,7 @@ int mbedtls_oid_get_cipher_alg(const mbedtls_asn1_buf *oid, mbedtls_cipher_type_
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_oid_by_md(mbedtls_md_type_t md_alg, const char **oid, size_t *olen);
-#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
+#endif /* (MBEDTLS_PKCS1_V15 && MBEDTLS_RSA_C) || PSA_CRYPTO_DRIVER_TEST */
 
 #ifdef __cplusplus
 }
