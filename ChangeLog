@@ -65,9 +65,9 @@ Bugfix
      added to the PK context when the key was parsed. This could cause
      other unexpected failures when using that PK context for other operations.
      Fixes #807.
-   Fix missing zeroization of the shared secret buffer in
-   psa_key_agreement(). Fixes #849.
-   Add extern "C" guard to constant_time.h. Fixes #930.
+   * Fix missing zeroization of the shared secret buffer in
+     psa_key_agreement(). Fixes #849.
+   * Add extern "C" guard to constant_time.h. Fixes #930.
    * Fix psa_hash_update(), psa_hash_compute() and psa_hash_compare()
      computing the wrong digest (or comparison result) for PSA_ALG_MD5,
      PSA_ALG_RIPEMD160, PSA_ALG_SHA_1, PSA_ALG_SHA_224 and
@@ -156,7 +156,7 @@ Security
      is a problem for protocols using FFDH that expect contributory behaviour,
      that is, where neither party should be able to force the shared secret
      into a small set. Reported independently by Eva Crystal (0xiviel) and
-+    another reporter.
+     another reporter.
    * Add tag length validation in mbedtls_ccm_finish() to prevent
      out-of-bounds reads and mitigate potential application buffer
      overflows where applications relied on the library to enforce
