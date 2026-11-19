@@ -669,6 +669,109 @@ component_test_crypto_with_static_key_slots() {
     ctest
 }
 
+# Test that PSA core and the main library do not allocate. The test driver
+# implements the cryptographic mechanisms and may use the heap, as may tests.
+component_test_psa_crypto_without_heap () {
+    msg "build: PSA crypto without heap, with allocating test driver"
+
+    # These mechanisms allocate in PSA core, independently of acceleration.
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE
+    scripts/config.py unset-all '^PSA_WANT_ALG_HKDF'
+    scripts/config.py unset-all '^PSA_WANT_ALG_PBKDF2_'
+    scripts/config.py unset-all '^PSA_WANT_ALG_TLS12_'
+    scripts/config.py unset PSA_WANT_ALG_JPAKE
+    # libtestdriver1 shares MD and HMAC_DRBG with the main library. Their
+    # implementations allocate, so deterministic ECDSA cannot be tested here.
+    scripts/config.py unset PSA_WANT_ALG_DETERMINISTIC_ECDSA
+    # RSA key parsing uses shared ASN.1 routines which allocate.
+    scripts/config.py unset-all '^PSA_WANT_KEY_TYPE_RSA_'
+    scripts/config.py unset-all '^PSA_WANT_ALG_RSA_'
+
+    # User config for everything except the generated driver and test code:
+    # accelerate all remaining mechanisms and enable their implementations
+    # in the generated driver.
+    {
+        scripts/config.py get-all-enabled '^PSA_WANT_' |
+            sed 's/^PSA_WANT_/#define MBEDTLS_PSA_ACCEL_/'
+        cat <<EOF
+
+#include "$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-test-driver-extension.h"
+EOF
+    } > "$OUT_OF_SOURCE_DIR/user-config-all-accelerated.h"
+
+    # User config for the generated driver and test code: inherit the same
+    # acceleration definitions, then override memory allocation and cleanup.
+    cat > "$OUT_OF_SOURCE_DIR/user-config-restore-heap.h" <<'EOF'
+#include "user-config-all-accelerated.h"
+
+/* Allow test code and the generated driver to allocate while the main
+ * library's platform allocator callbacks remain NULL. */
+#undef MBEDTLS_PLATFORM_MEMORY
+#undef MBEDTLS_PLATFORM_STD_CALLOC
+#undef MBEDTLS_PLATFORM_STD_FREE
+/* This shared helper must also use the caller's allocating configuration. */
+#define mbedtls_zeroize_and_free mbedtls_test_zeroize_and_free
+EOF
+
+    # This also disables dynamic key-slot allocation and persistent storage.
+    scripts/config.py unset-all '^MBEDTLS_'
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_C
+    scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
+    scripts/config.py set MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+    scripts/config.py set MBEDTLS_PLATFORM_C
+    scripts/config.py set MBEDTLS_PLATFORM_MEMORY
+    scripts/config.py set MBEDTLS_PLATFORM_STD_CALLOC NULL
+    scripts/config.py set MBEDTLS_PLATFORM_STD_FREE NULL
+
+    # The generated driver's ECDSA implementation re-enables shared ASN.1
+    # support during config adjustment, reverting its disablement by
+    # unset-all '^MBEDTLS_' above. Skip the legacy ASN.1 suites because they
+    # exercise allocating APIs that would call the main library's NULL
+    # calloc/free callbacks. PSA operations still test the shared helpers.
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=ON \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$PWD/user-config-all-accelerated.h" \
+          -DSKIP_TEST_SUITES="asn1parse;asn1write" \
+          "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build . --target tfpsacrypto
+    cp core/libtfpsacrypto.a libtfpsacrypto-no-heap.a
+
+    msg "build: allocating test driver and test support"
+    cmake -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$PWD/user-config-restore-heap.h" .
+    # Build objects first: the temporary allocating archive renames the shared
+    # cleanup helper and must be replaced before linking any test executables.
+    cmake --build . --target tfpsacrypto tf_psa_crypto_test
+
+    # The archive includes the test driver. Restore the no-heap main library,
+    # then replace only the test driver's objects with their allocating build.
+    loc_ar=$(sed -n 's/^CMAKE_AR:FILEPATH=//p' CMakeCache.txt)
+    cp libtfpsacrypto-no-heap.a core/libtfpsacrypto.a
+    "$loc_ar" rs core/libtfpsacrypto.a \
+        drivers/libtestdriver1/CMakeFiles/libtestdriver1.dir/src/*.o
+    # Verify that relinking tests does not rebuild the no-heap archive.
+    cp core/libtfpsacrypto.a libtfpsacrypto-tested.a
+    msg "build: test suites and helpers using the no-heap main library"
+    cmake --build .
+    cmp libtfpsacrypto-tested.a core/libtfpsacrypto.a
+
+    # Only the generated driver may reference libc allocation. Its objects
+    # must not call the main library's NULL-backed allocation wrappers.
+    loc_nm=$(sed -n 's/^CMAKE_NM:FILEPATH=//p' CMakeCache.txt)
+    "$loc_nm" -A -u core/libtfpsacrypto.a > undefined-symbols.txt
+    awk '
+        ($NF ~ /^(calloc|free)$/ && $1 !~ /:libtestdriver1-/) ||
+        ($NF ~ /^mbedtls_(calloc|free)$/ && $1 ~ /:libtestdriver1-/) {
+            print "Unexpected allocator reference: " $0
+            failed = 1
+        }
+        END { exit failed }
+    ' undefined-symbols.txt
+
+    msg "test: PSA crypto without heap"
+    ctest --output-on-failure
+}
+
 # check_renamed_symbols HEADER LIB
 # Check that symbols renamed by HEADER are not present in LIB.
 check_renamed_symbols () {
