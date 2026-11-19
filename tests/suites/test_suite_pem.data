@@ -73,3 +73,19 @@ mbedtls_pem_read_buffer:"-----BEGIN EC PRIVATE KEY-----":"-----END EC PRIVATE KE
 PEM read (AES-128-CBC, padding data is larger than AES block length)
 depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_CIPHER_MODE_CBC
 mbedtls_pem_read_buffer:"-----BEGIN EC PRIVATE KEY-----":"-----END EC PRIVATE KEY-----":"-----BEGIN EC PRIVATE KEY-----\nProc-Type\: 4,ENCRYPTED\nDEK-Info\: AES-128-CBC,31323334353637380000000000000000\n\n5wA/XVXHuMsQAAOGFQmK0g==\n-----END EC PRIVATE KEY-----":"password":MBEDTLS_ERR_PEM_PASSWORD_MISMATCH:""
+
+# The padding byte is 0, which is not valid padding (it must be between 1 and the
+# block size). Plaintext: 15 x 'A' followed by 0x00. Encrypted with AES-128-CBC,
+# key = MD5("password" || first 8 bytes of the IV), IV = 000102...0f, no padding.
+PEM read (AES-128-CBC, padding byte is 0)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_CIPHER_MODE_CBC
+mbedtls_pem_read_buffer:"-----BEGIN EC PRIVATE KEY-----":"-----END EC PRIVATE KEY-----":"-----BEGIN EC PRIVATE KEY-----\nProc-Type\: 4,ENCRYPTED\nDEK-Info\: AES-128-CBC,000102030405060708090A0B0C0D0E0F\n\nuEbFQRmeNEb3f8ir7TXsGA==\n-----END EC PRIVATE KEY-----":"password":MBEDTLS_ERR_PEM_PASSWORD_MISMATCH:""
+
+# A full block of padding: 16 x 0x10, so the decrypted data is empty.
+PEM read (AES-128-CBC, padding is a full block)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_CIPHER_MODE_CBC
+mbedtls_pem_read_buffer:"-----BEGIN EC PRIVATE KEY-----":"-----END EC PRIVATE KEY-----":"-----BEGIN EC PRIVATE KEY-----\nProc-Type\: 4,ENCRYPTED\nDEK-Info\: AES-128-CBC,000102030405060708090A0B0C0D0E0F\n\n3e3XUWFisnuTYHOP+DUSBw==\n-----END EC PRIVATE KEY-----":"password":0:""
+
+PEM read (AES-128-CBC, 2 bytes of padding, mismatch in the first one)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_CIPHER_MODE_CBC
+mbedtls_pem_read_buffer:"-----BEGIN EC PRIVATE KEY-----":"-----END EC PRIVATE KEY-----":"-----BEGIN EC PRIVATE KEY-----\nProc-Type\: 4,ENCRYPTED\nDEK-Info\: AES-128-CBC,000102030405060708090A0B0C0D0E0F\n\nq0JqDDBIch00jFmUXeQwtA==\n-----END EC PRIVATE KEY-----":"password":MBEDTLS_ERR_PEM_PASSWORD_MISMATCH:""
