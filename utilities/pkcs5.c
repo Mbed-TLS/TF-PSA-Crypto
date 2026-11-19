@@ -72,13 +72,6 @@ static int pkcs5_parse_pbkdf2_params(const mbedtls_asn1_buf *params,
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PKCS5_INVALID_FORMAT, ret);
     }
 
-    /* RFC 8018 section 4.2 requires iterationCount to be at least 1.
-     * Accepting 0 would derive the key from a single HMAC block, letting the
-     * producer of the EncryptedPrivateKeyInfo weaken the KDF cost. */
-    if (*iterations < 1) {
-        return MBEDTLS_ERR_PKCS5_INVALID_FORMAT;
-    }
-
     if (p == end) {
         return 0;
     }
