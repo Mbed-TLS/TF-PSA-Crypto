@@ -765,6 +765,27 @@ component_test_full_no_ccm_star_no_tag () {
     ctest
 }
 
+component_test_full_no_key_derivation () {
+    msg "build: full config without key derivation algorithms"
+
+    scripts/config.py full
+    scripts/config.py unset PSA_WANT_ALG_HKDF
+    scripts/config.py unset PSA_WANT_ALG_HKDF_EXTRACT
+    scripts/config.py unset PSA_WANT_ALG_HKDF_EXPAND
+    scripts/config.py unset PSA_WANT_ALG_PBKDF2_HMAC
+    scripts/config.py unset PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128
+    scripts/config.py unset PSA_WANT_ALG_TLS12_PRF
+    scripts/config.py unset PSA_WANT_ALG_TLS12_PSK_TO_MS
+    scripts/config.py unset PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D CMAKE_BUILD_TYPE:String=Release "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build .
+
+    msg "test: full config without key derivation algorithms"
+    ctest
+}
+
 component_test_config_symmetric_only () {
     msg "build: configs/crypto-config-symmetric-only.h"
     CRYPTO_CONFIG="configs/crypto-config-symmetric-only.h"
@@ -834,6 +855,32 @@ component_test_crypto_for_psa_service () {
   CFLAGS="-O1" cmake .
   cmake --build .
   ctest
+}
+
+# depends.py family of tests
+component_test_depends_py_cipher_id () {
+    msg "test/build: depends.py cipher_id"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" cipher_id
+}
+
+component_test_depends_py_cipher_chaining () {
+    msg "test/build: depends.py cipher_chaining"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" cipher_chaining
+}
+
+component_test_depends_py_curves () {
+    msg "test/build: depends.py curves"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" curves
+}
+
+component_test_depends_py_hashes () {
+    msg "test/build: depends.py hashes"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" hashes
+}
+
+component_test_depends_py_pkalgs () {
+    msg "test/build: depends.py pkalgs"
+    tests/scripts/depends.py --out-of-source-dir "$OUT_OF_SOURCE_DIR" pkalgs
 }
 
 component_test_psa_crypto_config_ffdh_2048_only () {
