@@ -1,0 +1,5 @@
+Bugfix
+   * Fix mbedtls_cipher_check_tag() writing past the end of a stack buffer
+     when called with tag_len greater than 16 on a context that uses neither
+     GCM nor ChaCha20-Poly1305. Such calls now return
+     MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE as intended.
