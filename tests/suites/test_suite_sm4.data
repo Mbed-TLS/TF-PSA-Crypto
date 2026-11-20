@@ -1,0 +1,8 @@
+SM4 - Invalid parameters
+sm4_invalid_param:
+
+SM4-128-ECB Encrypt Example 1
+sm4_encrypt_ecb:
+
+SM4 Self-test
+sm4_self_test:
