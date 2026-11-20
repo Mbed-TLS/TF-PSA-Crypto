@@ -426,13 +426,6 @@ static void aesni_setkey_enc_256(unsigned char *rk_bytes,
 
 #else /* MBEDTLS_AESNI_HAVE_CODE == 1 */
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
-#warning \
-    "MBEDTLS_AESNI_C is known to cause spurious error reports with some memory sanitizers as they do not understand the assembly code."
-#endif
-#endif
-
 /*
  * Binutils needs to be at least 2.19 to support AES-NI instructions.
  * Unfortunately, a lot of users have a lower version now (2014-04).
@@ -467,6 +460,11 @@ int mbedtls_aesni_crypt_ecb(mbedtls_aes_context *ctx,
                             const unsigned char input[16],
                             unsigned char output[16])
 {
+    #if defined(__has_feature)
+    #if __has_feature(memory_sanitizer)
+        __msan_unpoison(output, 16);
+    #endif
+    #endif
     asm ("movdqu    (%3), %%xmm0    \n\t" // load input
          "movdqu    (%1), %%xmm1    \n\t" // load round key 0
          "pxor      %%xmm1, %%xmm0  \n\t" // round 0
