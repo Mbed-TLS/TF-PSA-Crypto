@@ -71,10 +71,6 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'Config: built-in SHA3: no SHAKE',
             # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/805
             'Config: built-in SHA3: no hash',
-            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
-            'Config: no built-in AEAD',
-            # https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/804
-            'Config: no built-in MAC',
             # We don't support any signature algorithm that isn't either
             # hash-then-sign or sign-short-message (raw RSA PKCS#1v1.5).
             # So we don't have built-in multipart signature entry points.
