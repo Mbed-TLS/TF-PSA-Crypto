@@ -952,10 +952,10 @@ typedef uint32_t psa_pake_primitive_t;
  *         Return 0 if the requested primitive can't be encoded as
  *         ::psa_pake_primitive_t.
  */
-#define PSA_PAKE_PRIMITIVE(pake_type, pake_family, pake_bits) \
-    (((pake_bits & 0xFFFF) != pake_bits) ? 0 :                 \
-     ((psa_pake_primitive_t) (((pake_type) << 24 |             \
-                               (pake_family) << 16) | (pake_bits))))
+#define PSA_PAKE_PRIMITIVE(pake_type, pake_family, pake_bits)              \
+    ((((pake_bits) & 0xFFFF) != (pake_bits)) ? 0 :                         \
+     ((psa_pake_primitive_t) ((((pake_type) << 24) |                       \
+                               ((pake_family) << 16)) | (pake_bits))))
 
 /** The key share being sent to or received from the peer.
  *
