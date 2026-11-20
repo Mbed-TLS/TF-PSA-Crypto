@@ -376,14 +376,16 @@ psa_status_t mbedtls_to_psa_error(int ret)
             return PSA_ERROR_BAD_STATE;
 #endif
 
-#if defined(MBEDTLS_CIPHER_C)
+/* Enable cipher error mappings for driver testing, especially with a test driver
+ * generated from the built-in driver. */
+#if defined(MBEDTLS_CIPHER_C) || defined(PSA_CRYPTO_DRIVER_TEST)
         case MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE:
             return PSA_ERROR_NOT_SUPPORTED;
         case MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED:
             return PSA_ERROR_INVALID_ARGUMENT;
         case MBEDTLS_ERR_CIPHER_INVALID_CONTEXT:
             return PSA_ERROR_CORRUPTION_DETECTED;
-#endif
+#endif /* MBEDTLS_CIPHER_C || PSA_CRYPTO_DRIVER_TEST */
 
 #if !(defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) ||      \
             defined(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE))
