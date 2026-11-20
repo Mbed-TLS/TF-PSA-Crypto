@@ -34,7 +34,6 @@
  */
 #define PSA_PUBKEY_SIZE         65
 #define PSA_PUBKEY_HEADER_BYTE  0x04
-#define P256_PUBKEY_SIZE        64
 #define PRIVKEY_SIZE            32
 #define SHARED_SECRET_SIZE      32
 #define SIGNATURE_SIZE          64
@@ -150,14 +149,7 @@ psa_status_t p256_transparent_generate_key(
         return PSA_ERROR_BUFFER_TOO_SMALL;
     }
 
-    /*
-     *  p256-m's keypair generation function outputs both public and private
-     *  keys. Allocate a buffer to which the public key will be written. The
-     *  private key will be written to key_buffer, which is passed to this
-     *  function as an argument. */
-    uint8_t public_key_buffer[P256_PUBKEY_SIZE];
-
-    int ret = p256_gen_keypair(key_buffer, public_key_buffer);
+    int ret = p256_gen_privkey(key_buffer);
     if (ret == P256_SUCCESS) {
         *key_buffer_length = PRIVKEY_SIZE;
     }
