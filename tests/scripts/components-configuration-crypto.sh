@@ -493,6 +493,10 @@ component_test_psa_assume_exclusive_buffers () {
 component_test_crypto_with_static_key_slots() {
     msg "build: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
     scripts/config.py full
+    # Unset MLDSA as it exceeds the intentionally small memory
+    # allowance of the static key-slot buffer here.
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY
+    scripts/config.py unset PSA_WANT_ML_DSA_87
     scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
     # Intentionally set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE to a value that
     # is enough to contain:

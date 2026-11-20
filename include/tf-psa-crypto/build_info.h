@@ -153,6 +153,8 @@
  * accelerated. */
 #include "mbedtls/private/crypto_adjust_config_enable_builtins.h"
 
+#include "tf-psa-crypto/private/crypto_adjust_config_enable_pqcp.h"
+
 #if defined(TF_PSA_CRYPTO_TEST_LIBTESTDRIVER1)
 #include "mbedtls/private/libtestdriver1-crypto_adjust_config_enable_builtins.h"
 #endif
