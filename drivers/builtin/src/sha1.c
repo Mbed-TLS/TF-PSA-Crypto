@@ -66,6 +66,7 @@ static int mbedtls_internal_sha1_process(mbedtls_sha1_context *ctx,
         uint32_t temp, W[16], A, B, C, D, E;
     } local;
 
+#if !defined(MBEDTLS_SHA1_SMALLER)
     local.W[0] = MBEDTLS_GET_UINT32_BE(data,  0);
     local.W[1] = MBEDTLS_GET_UINT32_BE(data,  4);
     local.W[2] = MBEDTLS_GET_UINT32_BE(data,  8);
@@ -82,6 +83,7 @@ static int mbedtls_internal_sha1_process(mbedtls_sha1_context *ctx,
     local.W[13] = MBEDTLS_GET_UINT32_BE(data, 52);
     local.W[14] = MBEDTLS_GET_UINT32_BE(data, 56);
     local.W[15] = MBEDTLS_GET_UINT32_BE(data, 60);
+#endif /* !MBEDTLS_SHA1_SMALLER */
 
 #define S(x, n) (((x) << (n)) | (((x) & 0xFFFFFFFF) >> (32 - (n))))
 
@@ -94,18 +96,61 @@ static int mbedtls_internal_sha1_process(mbedtls_sha1_context *ctx,
         (local.W[(t) & 0x0F] = S(local.temp, 1))               \
     )
 
+    local.A = ctx->state[0];
+    local.B = ctx->state[1];
+    local.C = ctx->state[2];
+    local.D = ctx->state[3];
+    local.E = ctx->state[4];
+
+#if defined(MBEDTLS_SHA1_SMALLER)
+    /*
+     * Size-optimised variant: a single pass over the 80 rounds, rotating the
+     * working variables explicitly, instead of unrolling every round below.
+     */
+    {
+        /* Round constants, one per group of 20 rounds */
+        static const uint32_t K[4] = {
+            0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6
+        };
+        unsigned int stage, j, t = 0;
+
+        for (stage = 0; stage < 4; stage++) {
+            for (j = 0; j < 20; j++, t++) {
+                /* Message schedule: W[t & 0x0F] holds the word for round t */
+                if (t < 16) {
+                    local.W[t] = MBEDTLS_GET_UINT32_BE(data, 4 * t);
+                } else {
+                    R(t);
+                }
+
+                /* Round function f(B, C, D), see FIPS 180-4 section 4.1.1 */
+                if (stage == 0) {
+                    local.temp = local.D ^ (local.B & (local.C ^ local.D));
+                } else if (stage == 2) {
+                    local.temp = (local.B & local.C) |
+                                 (local.D & (local.B | local.C));
+                } else {
+                    local.temp = local.B ^ local.C ^ local.D;
+                }
+
+                local.temp += S(local.A, 5) + local.E + K[stage] +
+                              local.W[t & 0x0F];
+                local.E = local.D;
+                local.D = local.C;
+                local.C = S(local.B, 30);
+                local.B = local.A;
+                local.A = local.temp;
+            }
+        }
+    }
+#else /* MBEDTLS_SHA1_SMALLER */
+
 #define P(a, b, c, d, e, x)                                          \
     do                                                          \
     {                                                           \
         (e) += S((a), 5) + F((b), (c), (d)) + K + (x);             \
         (b) = S((b), 30);                                        \
     } while (0)
-
-    local.A = ctx->state[0];
-    local.B = ctx->state[1];
-    local.C = ctx->state[2];
-    local.D = ctx->state[3];
-    local.E = ctx->state[4];
 
 #define F(x, y, z) ((z) ^ ((x) & ((y) ^ (z))))
 #define K 0x5A827999
@@ -214,6 +259,8 @@ static int mbedtls_internal_sha1_process(mbedtls_sha1_context *ctx,
 
 #undef K
 #undef F
+
+#endif /* MBEDTLS_SHA1_SMALLER */
 
     ctx->state[0] += local.A;
     ctx->state[1] += local.B;
