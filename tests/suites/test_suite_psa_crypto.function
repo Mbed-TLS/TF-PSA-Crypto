@@ -16,6 +16,7 @@
 #include "psa_crypto_slot_management.h"
 
 #include "psa_crypto_core.h"
+#include "psa_crypto_invasive.h"
 
 /* For constant-time testing of PKCS#1 v1.5 decryption errors */
 #include "rsa_invasive.h"
@@ -8460,6 +8461,16 @@ exit:
     psa_destroy_key(key);
     mbedtls_free(signature);
     PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS:MBEDTLS_PSA_CRYPTO_C */
+void sign_verify_check_alg(int input_is_message_arg,
+                           int alg_arg,
+                           int expected_status_arg)
+{
+    TEST_EQUAL(psa_sign_verify_check_alg(input_is_message_arg, alg_arg),
+               expected_status_arg);
 }
 /* END_CASE */
 
