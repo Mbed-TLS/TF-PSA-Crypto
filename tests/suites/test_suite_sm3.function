@@ -1,0 +1,42 @@
+/* BEGIN_HEADER */
+
+#include "sm3_internal.h"
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_BUILTIN_ALG_SM3
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void sm3_selftest()
+{
+    TEST_EQUAL(tf_psa_crypto_sm3_self_test(1), 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void sm3_update_error_paths()
+{
+    tf_psa_crypto_sm3_operation_t operation;
+    tf_psa_crypto_sm3_operation_t before;
+    const uint8_t byte = 0;
+
+    memset(&operation, 0, sizeof(operation));
+    tf_psa_crypto_sm3_setup(&operation);
+
+    before = operation;
+    TEST_EQUAL(tf_psa_crypto_sm3_update(&operation, NULL, 1),
+               PSA_ERROR_INVALID_ARGUMENT);
+    TEST_MEMORY_COMPARE((const uint8_t *) &before, sizeof(before),
+                        (const uint8_t *) &operation, sizeof(operation));
+
+    operation.total = UINT64_MAX >> 3;
+    before = operation;
+    TEST_EQUAL(tf_psa_crypto_sm3_update(&operation, &byte, 1),
+               PSA_ERROR_INVALID_ARGUMENT);
+    TEST_MEMORY_COMPARE((const uint8_t *) &before, sizeof(before),
+                        (const uint8_t *) &operation, sizeof(operation));
+}
+/* END_CASE */
