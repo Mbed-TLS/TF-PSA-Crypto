@@ -77,6 +77,14 @@
 #endif
 #endif
 
+#if defined(PSA_WANT_ALG_XTS)
+#if defined(MBEDTLS_PSA_ACCEL_ALG_XTS)
+#undef MBEDTLS_PSA_ACCEL_ALG_XTS
+#else
+#define MBEDTLS_PSA_ACCEL_ALG_XTS 1
+#endif
+#endif
+
 #if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
 #if defined(MBEDTLS_PSA_ACCEL_ECC_BRAINPOOL_P_R1_256)
 #undef MBEDTLS_PSA_ACCEL_ECC_BRAINPOOL_P_R1_256
