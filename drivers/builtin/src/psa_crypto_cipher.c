@@ -507,14 +507,13 @@ psa_status_t mbedtls_psa_cipher_update(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     size_t expected_output_size;
 
-    if (!PSA_ALG_IS_STREAM_CIPHER(operation->alg)) {
+    if (!PSA_ALG_IS_STREAM_CIPHER(operation->alg) && operation->ctx.cipher.operation) {
         /* Take the unprocessed partial block left over from previous
          * update calls, if any, plus the input to this call. Remove
          * the last partial block, if any. You get the data that will be
          * output in this call. */
         expected_output_size =
-            (operation->ctx.cipher.unprocessed_len + input_length)
-            / operation->block_length * operation->block_length;
+            operation->ctx.cipher.unprocessed_len + input_length;
     } else {
         expected_output_size = input_length;
     }
