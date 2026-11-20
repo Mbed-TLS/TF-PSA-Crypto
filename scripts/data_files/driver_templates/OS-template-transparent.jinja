@@ -7,12 +7,26 @@ Expected inputs:
 -#}
 {% for driver in drivers if driver.type == "transparent" -%}
 {% for capability in driver.capabilities if entry_point in capability.entry_points -%}
-#if ({% if capability['mbedtls/c_condition'] is defined -%}{{ capability['mbedtls/c_condition'] }} {% else -%} {{ 1 }} {% endif %})
+#if {% if capability['mbedtls/c_condition'] is defined -%}{{ capability['mbedtls/c_condition'] }} {% else -%} {{ 1 }} {% endif %}
 {%- filter indent(width = nest_indent) %}
+{% if capability['multipart_handler'] is defined -%}
+{{ capability['multipart_handler'] }} {{(driver.prefix + "_" + driver.type + "_driver_id").upper()}}:
+{% endif %}
+{% if capability['multipart_id_clone'] -%}
+    target_operation->id = {{(driver.prefix + "_" + driver.type + "_driver_id").upper()}};
+{% endif %}
 status = {{ entry_point_name(capability, entry_point, driver) }}({{entry_point_param(driver) | indent(20)}});
-
-if( status != PSA_ERROR_NOT_SUPPORTED )
-    return( status );
+{% if capability['multipart_id_init'] -%}
+if(status == PSA_SUCCESS)
+    operation->id = {{(driver.prefix + "_" + driver.type + "_driver_id").upper()}};
+{% endif %}
+{% if capability['fallback'] -%}
+/* Declared with fallback == true */
+if(status != PSA_ERROR_NOT_SUPPORTED)
+    return status;
+{% else -%}
+    return status;
+{% endif %}
 {% endfilter -%}
 #endif
 {% endfor %}
