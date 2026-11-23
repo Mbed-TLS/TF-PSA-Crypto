@@ -700,18 +700,6 @@ component_test_psa_crypto_without_heap () {
 EOF
     } > "$OUT_OF_SOURCE_DIR/user-config-all-accelerated.h"
 
-    # User config for the generated driver and test code: inherit the same
-    # acceleration definitions and redirect mbedtls_zeroize_and_free() to its
-    # test implementation, which will be compiled with heap allocation restored.
-    cat > "$OUT_OF_SOURCE_DIR/user-config-restore-heap.h" <<'EOF'
-#include "user-config-all-accelerated.h"
-
-#undef MBEDTLS_PLATFORM_MEMORY
-#undef MBEDTLS_PLATFORM_STD_CALLOC
-#undef MBEDTLS_PLATFORM_STD_FREE
-#define mbedtls_zeroize_and_free mbedtls_test_zeroize_and_free
-EOF
-
     # Disable all MBEDTLS_xxx symbols. This disables module configuration options,
     # dynamic key-slot allocation, persistent storage, extras/platform/utilities
     # modules ...
@@ -747,6 +735,18 @@ EOF
     cp core/libtfpsacrypto.a libtfpsacrypto-no-heap.a
 
     msg "build: allocating test driver and test support"
+    # User config for the generated driver and test code: inherit the same
+    # acceleration definitions and redirect mbedtls_zeroize_and_free() to its
+    # test implementation, which will be compiled with heap allocation restored.
+    cat > user-config-restore-heap.h <<'EOF'
+#include "user-config-all-accelerated.h"
+
+#undef MBEDTLS_PLATFORM_MEMORY
+#undef MBEDTLS_PLATFORM_STD_CALLOC
+#undef MBEDTLS_PLATFORM_STD_FREE
+#define mbedtls_zeroize_and_free mbedtls_test_zeroize_and_free
+EOF
+
     cmake -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$PWD/user-config-restore-heap.h" .
     # Build the whole library and the test helpers with the heap restored.
     cmake --build . --target tfpsacrypto tf_psa_crypto_test
