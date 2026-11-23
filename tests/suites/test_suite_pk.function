@@ -2287,7 +2287,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_CLIENT*/
-void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg)
+void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg,
+                             size_t sig_size, int sign_ret)
 {
     psa_key_type_t key_type = key_type_arg;
     mbedtls_pk_context pk_from_exportable;
@@ -2301,9 +2302,13 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg)
     unsigned char hash[32] = { 0 };
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
+    int ret;
 #endif
     mbedtls_svc_key_id_t non_exportable_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_svc_key_id_t exportable_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    (void) sig_size;
+    (void) sign_ret;
 
     PSA_INIT();
 
@@ -2331,15 +2336,20 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg)
 
 #if defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
     defined(PSA_WANT_ALG_SHA_256)
-    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type)) {
+    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) &&
+        PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) != PSA_ECC_FAMILY_MONTGOMERY) {
         /* Exercise signing through a private PK context copied from PSA, and
          * verify with the public context copied from the same PSA key. */
         TEST_EQUAL(mbedtls_pk_copy_from_psa(exportable_key_id, &pk_private), 0);
-        TEST_EQUAL(mbedtls_pk_sign(&pk_private, MBEDTLS_MD_SHA256,
-                                   hash, sizeof(hash), sig, sizeof(sig),
-                                   &sig_len), 0);
-        TEST_EQUAL(mbedtls_pk_verify(&pk_from_exportable, MBEDTLS_MD_SHA256,
-                                     hash, sizeof(hash), sig, sig_len), 0);
+        ret = mbedtls_pk_sign(&pk_private, MBEDTLS_MD_SHA256,
+                              hash, sizeof(hash), sig, sig_size,
+                              &sig_len);
+        TEST_EQUAL(ret, sign_ret);
+        if (ret == 0) {
+            /* Validate the generated signature with the corresponding public key. */
+            TEST_EQUAL(mbedtls_pk_verify(&pk_from_exportable, MBEDTLS_MD_SHA256,
+                                         hash, sizeof(hash), sig, sig_len), 0);
+        }
     }
 #endif
 
