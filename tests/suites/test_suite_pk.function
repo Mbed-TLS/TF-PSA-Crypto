@@ -2297,8 +2297,10 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg,
     mbedtls_pk_init(&pk_from_non_exportable);
     mbedtls_pk_context pk_private;
     mbedtls_pk_init(&pk_private);
-#if defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
-    defined(PSA_WANT_ALG_SHA_256)
+#if (defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
+     defined(PSA_WANT_ALG_SHA_256)) || \
+    (defined(MBEDTLS_RSA_C) && defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN) && \
+     defined(PSA_WANT_ALG_SHA_256))
     unsigned char hash[32] = { 0 };
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
@@ -2334,8 +2336,10 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg,
     mbedtls_pk_free(&pk_private);
     mbedtls_pk_init(&pk_private);
 
-#if defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
-    defined(PSA_WANT_ALG_SHA_256)
+#if (defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
+     defined(PSA_WANT_ALG_SHA_256)) || \
+    (defined(MBEDTLS_RSA_C) && defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN) && \
+     defined(PSA_WANT_ALG_SHA_256))
     if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) &&
         PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) != PSA_ECC_FAMILY_MONTGOMERY) {
         /* Exercise signing through a private PK context copied from PSA, and
@@ -2347,6 +2351,17 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg,
         TEST_EQUAL(ret, sign_ret);
         if (ret == 0) {
             /* Validate the generated signature with the corresponding public key. */
+            TEST_EQUAL(mbedtls_pk_verify(&pk_from_exportable, MBEDTLS_MD_SHA256,
+                                         hash, sizeof(hash), sig, sig_len), 0);
+        }
+    } else if (PSA_KEY_TYPE_IS_RSA(key_type)) {
+        /* Exercise RSA PKCS#1 v1.5 signing with the copied private key. */
+        TEST_EQUAL(mbedtls_pk_copy_from_psa(exportable_key_id, &pk_private), 0);
+        ret = mbedtls_pk_sign(&pk_private, MBEDTLS_MD_SHA256,
+                              hash, sizeof(hash), sig, sig_size,
+                              &sig_len);
+        TEST_EQUAL(ret, sign_ret);
+        if (ret == 0) {
             TEST_EQUAL(mbedtls_pk_verify(&pk_from_exportable, MBEDTLS_MD_SHA256,
                                          hash, sizeof(hash), sig, sig_len), 0);
         }
