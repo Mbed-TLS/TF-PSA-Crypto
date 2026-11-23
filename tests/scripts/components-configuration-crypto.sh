@@ -735,15 +735,17 @@ EOF
     cp core/libtfpsacrypto.a libtfpsacrypto-no-heap.a
 
     msg "build: allocating test driver and test support"
+    # Restore heap allocation for the generated driver and test code.
+    "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_MEMORY
+    "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_STD_CALLOC
+    "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_STD_FREE
+
     # User config for the generated driver and test code: inherit the same
     # acceleration definitions and redirect mbedtls_zeroize_and_free() to its
     # test implementation, which will be compiled with heap allocation restored.
     cat > user-config-restore-heap.h <<'EOF'
 #include "user-config-all-accelerated.h"
 
-#undef MBEDTLS_PLATFORM_MEMORY
-#undef MBEDTLS_PLATFORM_STD_CALLOC
-#undef MBEDTLS_PLATFORM_STD_FREE
 #define mbedtls_zeroize_and_free mbedtls_test_zeroize_and_free
 EOF
 
