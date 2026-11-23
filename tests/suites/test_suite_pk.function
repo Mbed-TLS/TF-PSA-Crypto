@@ -1399,7 +1399,7 @@ void pk_sign_verify_parsed_key(data_t *priv_key, data_t *hash, data_t *expected_
         sig_to_verify = sig;
         sig_len_to_verify = sig_len;
     } else {
-        /* In failure cases, verify the known vector independently. */
+        /* In failure cases, verify the supplied signature independently. */
         sig_to_verify = expected_sig->x;
         sig_len_to_verify = expected_sig->len;
     }
