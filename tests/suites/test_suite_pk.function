@@ -1364,8 +1364,8 @@ exit:
 
 /* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_SHA_256 */
 void pk_sign_verify_parsed_key(data_t *priv_key, data_t *hash, data_t *expected_sig,
-                               int expected_pk_type, size_t sig_size,
-                               int sign_ret, int verify_ret)
+                               int expected_pk_type, int sig_alg,
+                               size_t sig_size, int sign_ret, int verify_ret)
 {
     mbedtls_pk_context pk;
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
@@ -1381,9 +1381,15 @@ void pk_sign_verify_parsed_key(data_t *priv_key, data_t *hash, data_t *expected_
 
     TEST_ASSERT(mbedtls_pk_parse_key(&pk, priv_key->x, priv_key->len, NULL, 0) == 0);
     TEST_EQUAL(mbedtls_pk_get_type(&pk), expected_pk_type);
-    ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256,
-                          hash->x, hash->len,
-                          sig, sig_size, &sig_len);
+    if (sig_alg == MBEDTLS_PK_SIGALG_NONE) {
+        ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256,
+                              hash->x, hash->len,
+                              sig, sig_size, &sig_len);
+    } else {
+        ret = mbedtls_pk_sign_ext((mbedtls_pk_sigalg_t) sig_alg, &pk,
+                                  MBEDTLS_MD_SHA256, hash->x, hash->len,
+                                  sig, sig_size, &sig_len);
+    }
     TEST_EQUAL(ret, sign_ret);
     if (ret == 0) {
         if (expected_sig->len != 0) {
@@ -1398,10 +1404,16 @@ void pk_sign_verify_parsed_key(data_t *priv_key, data_t *hash, data_t *expected_
         sig_len_to_verify = expected_sig->len;
     }
 
-    TEST_EQUAL(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
-                                 hash->x, hash->len,
-                                 sig_to_verify, sig_len_to_verify),
-               verify_ret);
+    if (sig_alg == MBEDTLS_PK_SIGALG_NONE) {
+        ret = mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
+                                hash->x, hash->len,
+                                sig_to_verify, sig_len_to_verify);
+    } else {
+        ret = mbedtls_pk_verify_ext((mbedtls_pk_sigalg_t) sig_alg, &pk,
+                                    MBEDTLS_MD_SHA256, hash->x, hash->len,
+                                    sig_to_verify, sig_len_to_verify);
+    }
+    TEST_EQUAL(ret, verify_ret);
 
 exit:
     mbedtls_pk_free(&pk);
