@@ -2296,6 +2296,12 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg)
     mbedtls_pk_init(&pk_from_non_exportable);
     mbedtls_pk_context pk_private;
     mbedtls_pk_init(&pk_private);
+#if defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
+    defined(PSA_WANT_ALG_SHA_256)
+    unsigned char hash[32] = { 0 };
+    unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
+    size_t sig_len;
+#endif
     mbedtls_svc_key_id_t non_exportable_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_svc_key_id_t exportable_key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -2320,6 +2326,22 @@ void pk_copy_public_from_psa(data_t *priv_key_data, int key_type_arg)
     /* Check that the non-exportable key really is non-exportable */
     TEST_EQUAL(mbedtls_pk_copy_from_psa(non_exportable_key_id, &pk_private),
                MBEDTLS_ERR_PK_TYPE_MISMATCH);
+    mbedtls_pk_free(&pk_private);
+    mbedtls_pk_init(&pk_private);
+
+#if defined(MBEDTLS_ECP_C) && defined(PSA_HAVE_ALG_ECDSA_SIGN) && \
+    defined(PSA_WANT_ALG_SHA_256)
+    if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type)) {
+        /* Exercise signing through a private PK context copied from PSA, and
+         * verify with the public context copied from the same PSA key. */
+        TEST_EQUAL(mbedtls_pk_copy_from_psa(exportable_key_id, &pk_private), 0);
+        TEST_EQUAL(mbedtls_pk_sign(&pk_private, MBEDTLS_MD_SHA256,
+                                   hash, sizeof(hash), sig, sizeof(sig),
+                                   &sig_len), 0);
+        TEST_EQUAL(mbedtls_pk_verify(&pk_from_exportable, MBEDTLS_MD_SHA256,
+                                     hash, sizeof(hash), sig, sig_len), 0);
+    }
+#endif
 
     psa_destroy_key(exportable_key_id);
     psa_destroy_key(non_exportable_key_id);
