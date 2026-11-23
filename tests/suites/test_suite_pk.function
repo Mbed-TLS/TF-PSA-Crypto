@@ -1362,9 +1362,10 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_HAVE_ALG_ECDSA_SIGN:PSA_HAVE_ALG_ECDSA_VERIFY */
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256 */
 void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_sig,
-                              size_t sig_size, int sign_ret, int verify_ret)
+                              int expected_pk_type, size_t sig_size,
+                              int sign_ret, int verify_ret)
 {
     mbedtls_pk_context pk;
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
@@ -1377,6 +1378,7 @@ void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_s
     memset(sig, 0, sizeof(sig));
 
     TEST_ASSERT(mbedtls_pk_parse_key(&pk, priv_key->x, priv_key->len, NULL, 0) == 0);
+    TEST_EQUAL(mbedtls_pk_get_type(&pk), expected_pk_type);
     ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256,
                           hash->x, hash->len,
                           sig, sig_size, &sig_len);
