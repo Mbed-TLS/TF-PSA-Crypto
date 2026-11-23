@@ -1362,14 +1362,16 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ALG_SHA_256 */
-void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_sig,
-                              int expected_pk_type, size_t sig_size,
-                              int sign_ret, int verify_ret)
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_SHA_256 */
+void pk_sign_verify_parsed_key(data_t *priv_key, data_t *hash, data_t *expected_sig,
+                               int expected_pk_type, size_t sig_size,
+                               int sign_ret, int verify_ret)
 {
     mbedtls_pk_context pk;
     unsigned char sig[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
     size_t sig_len;
+    const unsigned char *sig_to_verify;
+    size_t sig_len_to_verify;
     int ret;
 
     mbedtls_pk_init(&pk);
@@ -1384,16 +1386,21 @@ void pk_sign_verify_parsed_ec(data_t *priv_key, data_t *hash, data_t *expected_s
                           sig, sig_size, &sig_len);
     TEST_EQUAL(ret, sign_ret);
     if (ret == 0) {
-        TEST_ASSERT(sig_len == expected_sig->len);
-        TEST_ASSERT(memcmp(sig, expected_sig->x, sig_len) == 0);
+        if (expected_sig->len != 0) {
+            TEST_ASSERT(sig_len == expected_sig->len);
+            TEST_ASSERT(memcmp(sig, expected_sig->x, sig_len) == 0);
+        }
+        sig_to_verify = sig;
+        sig_len_to_verify = sig_len;
+    } else {
+        /* In failure cases, verify the known vector independently. */
+        sig_to_verify = expected_sig->x;
+        sig_len_to_verify = expected_sig->len;
     }
 
-    /* Verify the known signature vector even if the output buffer was too
-     * small to produce a signature. On success it matches the signature above.
-     */
     TEST_EQUAL(mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256,
                                  hash->x, hash->len,
-                                 expected_sig->x, expected_sig->len),
+                                 sig_to_verify, sig_len_to_verify),
                verify_ret);
 
 exit:
