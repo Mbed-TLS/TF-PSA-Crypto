@@ -12,6 +12,71 @@
 CMAKE_BUILTIN_BUILD_DIR="drivers/builtin/CMakeFiles/builtin.dir/src"
 CMAKE_EXTRAS_BUILD_DIR="extras/CMakeFiles/extras.dir"
 
+component_test_accel_aead () {
+    msg "test: accelerated AEAD"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+    # Disable CCM_STAR_NO_TAG because this re-enables CCM_C.
+    scripts/config.py unset PSA_WANT_ALG_CCM_STAR_NO_TAG
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-aead.h" ..
+    make
+
+    # Make sure built-in AEAD alg objects are empty.
+    not grep mbedtls_ccm ${CMAKE_BUILTIN_BUILD_DIR}/ccm.c.o
+    not grep mbedtls_gcm ${CMAKE_BUILTIN_BUILD_DIR}/gcm.c.o
+    not grep mbedtls_chachapoly ${CMAKE_BUILTIN_BUILD_DIR}/chachapoly.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: accelerated AEAD"
+    ctest
+}
+
+component_test_accel_cipher_aead_cmac () {
+    msg "build: full config with accelerated cipher inc. AEAD and CMAC"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+    scripts/config.py unset MBEDTLS_NIST_KW_C
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-cipher-aead-cmac.h" ..
+    make
+
+    # Make sure built-in cipher, AEAD and CMAC are empty.
+    not grep mbedtls_cipher ${CMAKE_BUILTIN_BUILD_DIR}/cipher.c.o
+    not grep mbedtls_aes ${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o
+    not grep mbedtls_aria ${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o
+    not grep mbedtls_camellia ${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o
+    not grep mbedtls_ccm ${CMAKE_BUILTIN_BUILD_DIR}/ccm.c.o
+    not grep mbedtls_gcm ${CMAKE_BUILTIN_BUILD_DIR}/gcm.c.o
+    not grep mbedtls_chachapoly ${CMAKE_BUILTIN_BUILD_DIR}/chachapoly.c.o
+    not grep mbedtls_cmac ${CMAKE_BUILTIN_BUILD_DIR}/cmac.c.o
+    not grep mbedtls_poly1305 ${CMAKE_BUILTIN_BUILD_DIR}/poly1305.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: full config with accelerated cipher inc. AEAD and CMAC"
+    ctest
+}
+
 component_test_accel_ecc_all () {
     msg "build: full + all ECC accelerated"
 
@@ -442,6 +507,32 @@ component_test_accel_ecjpake() {
     ctest
 }
 
+component_test_accel_ffdh () {
+    msg "build: full with accelerated FFDH"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ffdh.h" ..
+    make
+
+    # Make sure built-in FFDH is empty.
+    not grep mbedtls_psa_ffdh_key_agreement ${CMAKE_BUILTIN_BUILD_DIR}/psa_crypto_ffdh.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: full with accelerated FFDH"
+    ctest
+}
+
 component_test_accel_hash () {
     msg "test: accelerated hash"
 
@@ -465,6 +556,73 @@ component_test_accel_hash () {
     # -------------
 
     msg "test: accelerated hash"
+    ctest
+}
+
+component_test_accel_hmac () {
+    msg "test: full with accelerated hmac"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+
+    # Disable MD_C in order to disable the builtin support for HMAC. MD_LIGHT
+    # is still enabled though (for ENTROPY_C among others).
+    scripts/config.py unset MBEDTLS_MD_C
+
+    # Disable dependents of MD_C.
+    scripts/config.py unset MBEDTLS_PKCS7_C
+    scripts/config.py unset MBEDTLS_PKCS5_C
+    scripts/config.py unset MBEDTLS_HMAC_DRBG_C
+    scripts/config.py unset MBEDTLS_HKDF_C
+    # Disable dependents of HMAC_DRBG
+    scripts/config.py unset PSA_WANT_ALG_DETERMINISTIC_ECDSA
+    # Disable dependents of built-in SHA-512
+    scripts/config.py unset-all "MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+    scripts/config.py unset-all "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_*"
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-hmac.h" ..
+    make
+
+    # Make sure built-in HMAC is empty.
+    not grep mbedtls_md_hmac ${CMAKE_BUILTIN_BUILD_DIR}/md.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: full with accelerated hmac"
+    ctest
+}
+
+component_test_accel_rsa() {
+    msg "build: accelerated RSA"
+
+    # Configure
+    # ---------
+
+    ./scripts/config.py full
+
+    # Build
+    # -----
+
+    cd $OUT_OF_SOURCE_DIR
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-rsa.h" ..
+    make
+
+    # Make sure built-in RSA is empty.
+    not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.c.o
+
+    # Run the tests
+    # -------------
+
+    msg "test: accelerated RSA"
     ctest
 }
 
