@@ -740,9 +740,10 @@ EOF
     "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_STD_CALLOC
     "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_STD_FREE
 
-    # User config for the generated driver and test code: inherit the same
-    # acceleration definitions and redirect mbedtls_zeroize_and_free() to its
-    # test implementation, which will be compiled with heap allocation restored.
+    # Configure the generated driver and test code with the same acceleration
+    # definitions, but redirect mbedtls_zeroize_and_free() to the test helper
+    # mbedtls_test_zeroize_and_free(), built with heap allocation enabled.
+    # This allows drivers and tests to zeroize and free properly allocated memory.
     cat > user-config-restore-heap.h <<'EOF'
 #include "user-config-all-accelerated.h"
 
