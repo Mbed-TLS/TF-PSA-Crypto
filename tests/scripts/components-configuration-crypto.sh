@@ -43,6 +43,109 @@ component_test_accel_aead () {
     ctest
 }
 
+common_block_cipher_dispatch () {
+    # Start from the full config
+    ./scripts/config.py full
+
+    # Disable cipher's modes that, when not accelerated, cause
+    # legacy key types to be re-enabled in "config_adjust_legacy_from_psa.h".
+    scripts/config.py unset PSA_WANT_ALG_CTR
+    scripts/config.py unset PSA_WANT_ALG_CFB
+    scripts/config.py unset PSA_WANT_ALG_OFB
+    scripts/config.py unset PSA_WANT_ALG_CBC_NO_PADDING
+    scripts/config.py unset PSA_WANT_ALG_CBC_PKCS7
+    scripts/config.py unset PSA_WANT_ALG_CMAC
+    scripts/config.py unset PSA_WANT_ALG_CCM_STAR_NO_TAG
+    scripts/config.py unset PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128
+
+    # Disable direct dependency on AES_C
+    scripts/config.py unset MBEDTLS_NIST_KW_C
+
+    # Prevent the cipher module from using deprecated PSA path. The reason is
+    # that otherwise there will be tests relying on "aes_info" (defined in
+    # "cipher_wrap.c") whose functions are not available when AES_C is
+    # not defined. ARIA and Camellia are not a problem in this case because
+    # the PSA path is not tested for these key types.
+    scripts/config.py set MBEDTLS_DEPRECATED_REMOVED
+}
+
+component_test_full_block_cipher_psa_dispatch () {
+    msg "build: full + PSA dispatch in block_cipher"
+
+    # Configure
+    # ---------
+
+    common_block_cipher_dispatch
+
+    # Build
+    # -----
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cat > user-config-accel-aes-aria-camellia.h <<EOF
+#define MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_AES
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_ARIA
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_CAMELLIA
+#include "$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-test-driver-extension.h"
+EOF
+
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-aes-aria-camellia.h" "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    # Make sure built-in AES/ARIA/CAMELLIA objects are empty.
+    not grep mbedtls_aes_ "${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o"
+    not grep mbedtls_aria_ "${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o"
+    not grep mbedtls_camellia_ "${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o"
+
+    # Run the tests
+    # -------------
+
+    msg "test: full + PSA dispatch in block_cipher"
+    $MAKE_COMMAND test
+}
+
+component_test_full_block_cipher_psa_dispatch_static_keystore () {
+    msg "build: full + PSA dispatch in block_cipher with static keystore"
+    # Check that the static key store works well when CTR_DRBG uses a
+    # PSA key for AES.
+
+    # Configure
+    # ---------
+
+    common_block_cipher_dispatch
+    scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
+
+    # Build
+    # -----
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cat > user-config-accel-aes-aria-camellia.h <<EOF
+#define MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_AES
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_ARIA
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_CAMELLIA
+#include "$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-test-driver-extension.h"
+EOF
+
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-aes-aria-camellia.h" "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    # Make sure built-in AES/ARIA/CAMELLIA objects are empty.
+    not grep mbedtls_aes_ "${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o"
+    not grep mbedtls_aria_ "${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o"
+    not grep mbedtls_camellia_ "${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o"
+
+    # Run the tests
+    # -------------
+
+    msg "test: full + PSA dispatch in block_cipher with static keystore"
+    $MAKE_COMMAND test
+}
+
 component_test_accel_cipher_aead_cmac () {
     msg "build: full config with accelerated cipher inc. AEAD and CMAC"
 
