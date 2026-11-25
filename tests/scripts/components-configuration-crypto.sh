@@ -771,8 +771,8 @@ EOF
     loc_nm=$(sed -n 's/^CMAKE_NM:FILEPATH=//p' CMakeCache.txt)
     "$loc_nm" -A -u core/libtfpsacrypto.a > undefined-symbols.txt
     awk '
-        ($NF ~ /^(calloc|free)$/ && $1 !~ /:libtestdriver1-/) ||
-        ($NF ~ /^mbedtls_(calloc|free)$/ && $1 ~ /:libtestdriver1-/) {
+        ($NF ~ /^_?(calloc|free)$/ && $1 !~ /:libtestdriver1-/) ||
+        ($NF ~ /^_?mbedtls_(calloc|free)$/ && $1 ~ /:libtestdriver1-/) {
             print "Unexpected allocator reference: " $0
             failed = 1
         }
