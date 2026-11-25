@@ -669,6 +669,121 @@ component_test_crypto_with_static_key_slots() {
     ctest
 }
 
+# Test that PSA core and the main library do not allocate. The test driver
+# implements the cryptographic mechanisms and may use the heap, as may tests.
+component_test_psa_crypto_without_heap () {
+    msg "build: PSA crypto without heap, with allocating test driver"
+
+    # These mechanisms allocate in PSA core, independently of acceleration.
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE
+    scripts/config.py unset-all '^PSA_WANT_ALG_HKDF'
+    scripts/config.py unset-all '^PSA_WANT_ALG_PBKDF2_'
+    scripts/config.py unset-all '^PSA_WANT_ALG_TLS12_'
+    scripts/config.py unset PSA_WANT_ALG_JPAKE
+    # The generated driver shares MD and HMAC_DRBG with the main library. Their
+    # implementations allocate, so deterministic ECDSA cannot be tested here.
+    scripts/config.py unset PSA_WANT_ALG_DETERMINISTIC_ECDSA
+    # RSA key parsing uses shared ASN.1 routines which allocate.
+    scripts/config.py unset-all '^PSA_WANT_KEY_TYPE_RSA_'
+    scripts/config.py unset-all '^PSA_WANT_ALG_RSA_'
+
+    # User config for everything except the generated driver and test code:
+    # accelerate all remaining mechanisms in the main library. The extension
+    # header leaves the generated driver's acceleration macros undefined for
+    # these mechanisms, enabling their implementations in the generated driver.
+    {
+        scripts/config.py get-all-enabled '^PSA_WANT_' |
+            sed 's/^PSA_WANT_/#define MBEDTLS_PSA_ACCEL_/'
+        cat <<EOF
+
+#include "$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-test-driver-extension.h"
+EOF
+    } > "$OUT_OF_SOURCE_DIR/user-config-all-accelerated.h"
+
+    # Disable all MBEDTLS_xxx symbols. This disables module configuration options,
+    # dynamic key-slot allocation, persistent storage, extras/platform/utilities
+    # modules ...
+    scripts/config.py unset-all '^MBEDTLS_'
+    # Enable PSA core.
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_C
+    # Preallocate key slots and their key material instead of using the heap.
+    scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
+    # Prevent PSA core from allocating copies of input/output buffers.
+    scripts/config.py set MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
+    # Use the test RNG instead of the built-in DRBG and entropy modules.
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+    # Set the main library's allocation function pointers to NULL. Any call
+    # through them will crash, detecting allocation attempts from library
+    # modules during the tests. Note that heap allocation for the generated
+    # driver is restored in the next step.
+    scripts/config.py set MBEDTLS_PLATFORM_C
+    scripts/config.py set MBEDTLS_PLATFORM_MEMORY
+    scripts/config.py set MBEDTLS_PLATFORM_STD_CALLOC NULL
+    scripts/config.py set MBEDTLS_PLATFORM_STD_FREE NULL
+
+    # The generated driver's ECDSA implementation re-enables shared ASN.1
+    # support during config adjustment, reverting its disablement by
+    # unset-all '^MBEDTLS_' above. Skip the legacy ASN.1 suites because they
+    # exercise allocating APIs that would call the main library's NULL
+    # allocation functions.
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=ON \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$PWD/user-config-all-accelerated.h" \
+          -DSKIP_TEST_SUITES="asn1parse;asn1write" \
+          "$TF_PSA_CRYPTO_ROOT_DIR"
+    cmake --build . --target tfpsacrypto
+    cp core/libtfpsacrypto.a libtfpsacrypto-no-heap.a
+
+    msg "build: allocating test driver and test support"
+    # Restore heap allocation for the generated driver and test code.
+    "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_MEMORY
+    "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_STD_CALLOC
+    "$TF_PSA_CRYPTO_ROOT_DIR/scripts/config.py" unset MBEDTLS_PLATFORM_STD_FREE
+
+    # Configure the generated driver and test code with the same acceleration
+    # definitions, but redirect mbedtls_zeroize_and_free() to the test helper
+    # mbedtls_test_zeroize_and_free(), built with heap allocation enabled.
+    # This allows drivers and tests to zeroize and free properly allocated memory.
+    cat > user-config-restore-heap.h <<'EOF'
+#include "user-config-all-accelerated.h"
+
+#define mbedtls_zeroize_and_free mbedtls_test_zeroize_and_free
+EOF
+
+    cmake -DTF_PSA_CRYPTO_USER_CONFIG_FILE="$PWD/user-config-restore-heap.h" .
+    # Build the whole library and the test helpers with the heap restored.
+    cmake --build . --target tfpsacrypto tf_psa_crypto_test
+
+    # Restore the no-heap main library from the first build, then replace
+    # the generated test driver's objects with those from the second build.
+    loc_ar=$(sed -n 's/^CMAKE_AR:FILEPATH=//p' CMakeCache.txt)
+    cp libtfpsacrypto-no-heap.a core/libtfpsacrypto.a
+    "$loc_ar" rs core/libtfpsacrypto.a \
+        drivers/libtestdriver1/CMakeFiles/libtestdriver1.dir/src/*.o
+    # Save the mixed library, build and link the tests, then verify that
+    # the library is unchanged.
+    cp core/libtfpsacrypto.a libtfpsacrypto-tested.a
+    msg "build: test suites and helpers using the no-heap main library"
+    cmake --build .
+    cmp libtfpsacrypto-tested.a core/libtfpsacrypto.a
+
+    # Only the generated driver may reference libc allocation. Its objects
+    # must not call the main library's NULL-backed allocation wrappers.
+    loc_nm=$(sed -n 's/^CMAKE_NM:FILEPATH=//p' CMakeCache.txt)
+    "$loc_nm" -A -u core/libtfpsacrypto.a > undefined-symbols.txt
+    awk '
+        ($NF ~ /^_?(calloc|free)$/ && $1 !~ /:libtestdriver1-/) ||
+        ($NF ~ /^_?mbedtls_(calloc|free)$/ && $1 ~ /:libtestdriver1-/) {
+            print "Unexpected allocator reference: " $0
+            failed = 1
+        }
+        END { exit failed }
+    ' undefined-symbols.txt
+
+    msg "test: PSA crypto without heap"
+    ctest --output-on-failure
+}
+
 # check_renamed_symbols HEADER LIB
 # Check that symbols renamed by HEADER are not present in LIB.
 check_renamed_symbols () {
