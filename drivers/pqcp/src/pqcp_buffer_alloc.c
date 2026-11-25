@@ -14,7 +14,7 @@
 static MLD_ALIGN uint8_t tf_psa_crypto_pqcp_alloc_buffer[TF_PSA_CRYPTO_PQCP_ALLOC_BUFFER_SIZE];
 MBEDTLS_STATIC_TESTABLE size_t tf_psa_crypto_pqcp_alloc_used;
 static psa_status_t tf_psa_crypto_pqcp_alloc_status;
-uint8_t tf_psa_crypto_pqcp_mldsa_public_key[TF_PSA_CRYPTO_PQCP_MLDSA_PUBLIC_KEY_MAX_SIZE];
+uint8_t tf_psa_crypto_pqcp_mldsa_public_key[PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE];
 
 #if defined(MBEDTLS_TEST_HOOKS)
 /* Added on start, subtracted on done*/
