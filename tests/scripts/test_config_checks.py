@@ -17,9 +17,6 @@ class CryptoTestConfigChecks(unittest_config_checks.TestConfigChecks):
     #pylint: disable=invalid-name # uppercase letters make sense here
 
     PROJECT_CONFIG_C = 'core/tf_psa_crypto_config.c'
-    PROJECT_SPECIFIC_INCLUDE_DIRECTORIES = [
-        'drivers/builtin/include',
-    ]
 
     def test_crypto_config_read(self) -> None:
         """Check that crypto_config.h is read in crypto."""
@@ -80,6 +77,7 @@ class CryptoTestRNGConfigChecks(unittest_config_checks.TestConfigChecks):
     PROJECT_CONFIG_C = 'core/tf_psa_crypto_config.c'
     PROJECT_SPECIFIC_INCLUDE_DIRECTORIES = [
         'drivers/builtin/include',
+        'drivers/pqcp/include',
     ]
 
     def test_rng_no_drbg(self) -> None:
