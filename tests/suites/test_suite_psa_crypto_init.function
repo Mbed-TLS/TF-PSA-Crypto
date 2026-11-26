@@ -210,3 +210,20 @@ void validate_module_init_key_based(int count)
     TEST_ASSERT(mbedtls_svc_key_id_is_null(key));
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void validate_module_init_purge_key(int count, int key_id_arg)
+{
+    psa_status_t status;
+    mbedtls_svc_key_id_t key = mbedtls_svc_key_id_make(1, key_id_arg);
+    int i;
+
+    for (i = 0; i < count; i++) {
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        PSA_DONE();
+    }
+    status = psa_purge_key(key);
+    TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+}
+/* END_CASE */

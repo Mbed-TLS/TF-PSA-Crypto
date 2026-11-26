@@ -21,3 +21,15 @@ validate_module_init_generate_random:1
 
 No key slot access after deinit
 validate_module_init_key_based:1
+
+No purge of a persistent key without init
+validate_module_init_purge_key:0:1
+
+No purge of a volatile key without init
+validate_module_init_purge_key:0:PSA_KEY_ID_VENDOR_MIN
+
+No purge of a persistent key after deinit
+validate_module_init_purge_key:1:1
+
+No purge of a volatile key after deinit
+validate_module_init_purge_key:1:PSA_KEY_ID_VENDOR_MIN
