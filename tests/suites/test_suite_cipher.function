@@ -369,6 +369,35 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_GCM_C */
+void check_tag_non_aead(int cipher_id, int tag_len_arg)
+{
+    const mbedtls_cipher_info_t *cipher_info;
+    mbedtls_cipher_context_t ctx;
+    unsigned char key[32] = { 0 };
+    unsigned char *tag = NULL;
+    size_t tag_len = tag_len_arg;
+
+    mbedtls_cipher_init(&ctx);
+    TEST_CALLOC(tag, tag_len);
+
+    cipher_info = mbedtls_cipher_info_from_type(cipher_id);
+    TEST_ASSERT(cipher_info != NULL);
+    TEST_EQUAL(0, mbedtls_cipher_setup(&ctx, cipher_info));
+    TEST_EQUAL(0, mbedtls_cipher_setkey(&ctx, key,
+                                        mbedtls_cipher_info_get_key_bitlen(cipher_info),
+                                        MBEDTLS_DECRYPT));
+
+    /* A non-AEAD context has no tag to check, whatever tag_len is. */
+    TEST_EQUAL(MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE,
+               mbedtls_cipher_check_tag(&ctx, tag, tag_len));
+
+exit:
+    mbedtls_cipher_free(&ctx);
+    mbedtls_free(tag);
+}
+/* END_CASE */
+
 /* BEGIN_CASE */
 void enc_dec_buf(int cipher_id, char *cipher_string, int key_len,
                  int length_val, int pad_mode)
