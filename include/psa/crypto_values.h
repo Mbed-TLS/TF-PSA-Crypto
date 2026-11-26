@@ -947,6 +947,20 @@
  * has the same output size and a (theoretically) higher security strength.
  */
 #define PSA_ALG_SHAKE256_512                    ((psa_algorithm_t) 0x02000015)
+/** The BLAKE2s cryptographic hash with 256 bits of output (BLAKE2s-256). */
+#define PSA_ALG_BLAKE2S_HASH256                 ((psa_algorithm_t) 0x0200001C)
+/** The BLAKE2b cryptographic hash with 512 bits of output (BLAKE2b-512). */
+#define PSA_ALG_BLAKE2B_HASH512                 ((psa_algorithm_t) 0x0200001E)
+
+/** Whether the specified algorithm is a BLAKE2 hash algorithm.
+ *
+ * \param alg An algorithm identifier: a value of type psa_algorithm_t.
+ *
+ * \return 1 if alg is a BLAKE2 hash algorithm, 0 otherwise.
+ */
+#define PSA_ALG_IS_BLAKE2_HASH(alg)     \
+    (((alg) == PSA_ALG_BLAKE2S_HASH256) || \
+     ((alg) == PSA_ALG_BLAKE2B_HASH512))
 
 /** In a hash-and-sign algorithm policy, allow any hash algorithm.
  *
@@ -1045,6 +1059,32 @@
 #define PSA_ALG_IS_HMAC(alg)                                            \
     (((alg) & (PSA_ALG_CATEGORY_MASK | PSA_ALG_MAC_SUBCATEGORY_MASK)) == \
      PSA_ALG_HMAC_BASE)
+
+#define PSA_ALG_BLAKE2_MAC_BASE               ((psa_algorithm_t) 0x03400000)
+
+/** Macro to build an BLAKE2 message-authentication-code algorithm from a
+ *  BLAKE2 hash algorithm.
+ *
+ * \param hash_alg A hash algorithm (PSA_ALG_XXX value such that
+ *                 #PSA_ALG_IS_BLAKE2_HASH(hash_alg) is true.
+ */
+#define PSA_ALG_BLAKE2_MAC(hash_alg)                        \
+    (PSA_ALG_BLAKE2_MAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+#define PSA_ALG_BLAKE2_MAC_GET_HASH(hmac_alg)              \
+    (PSA_ALG_CATEGORY_HASH | ((hmac_alg) & PSA_ALG_HASH_MASK))
+
+/** Whether the specified algorithm is a BLAKE2 MAC algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a BLAKE2 MAC algorithm, 0 otherwise. This macro can
+ *         return either 0 or 1 if \p alg is not a supported algorithm
+ *         identifier.
+ */
+#define PSA_ALG_IS_BLAKE2_MAC(alg)                              \
+    (((alg) & (PSA_ALG_CATEGORY_MASK | PSA_ALG_MAC_SUBCATEGORY_MASK)) == \
+     PSA_ALG_BLAKE2_MAC_BASE)
 
 /* In the encoding of a MAC algorithm, the bits corresponding to
  * PSA_ALG_MAC_TRUNCATION_MASK encode the length to which the MAC is
@@ -1429,6 +1469,10 @@
  * This is the signature scheme defined by RFC 8017
  * (PKCS#1: RSA Cryptography Specifications) under the name
  * RSASSA-PKCS1-v1_5.
+ *
+ * \note                PSA_ALG_BLAKE2S_HASH256 and PSA_ALG_BLAKE2B_HASH512 are
+ *                      not specified with PSA_ALG_RSA_PKCS1V15_SIGN due to the
+ *                      lack of a standard OID for these hash algorithms.
  *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
