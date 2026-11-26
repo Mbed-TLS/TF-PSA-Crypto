@@ -43,7 +43,7 @@ component_test_accel_aead () {
     ctest
 }
 
-common_block_cipher_dispatch () {
+config_accel_block_cipher () {
     # Start from the full config
     ./scripts/config.py full
 
@@ -69,13 +69,13 @@ common_block_cipher_dispatch () {
     scripts/config.py set MBEDTLS_DEPRECATED_REMOVED
 }
 
-component_test_full_block_cipher_psa_dispatch () {
-    msg "build: full + PSA dispatch in block_cipher"
+component_test_accel_block_cipher () {
+    msg "build: built-in GCM/CCM and accelerated AES/ARIA/Camellia"
 
     # Configure
     # ---------
 
-    common_block_cipher_dispatch
+    config_accel_block_cipher
 
     # Build
     # -----
@@ -102,19 +102,19 @@ EOF
     # Run the tests
     # -------------
 
-    msg "test: full + PSA dispatch in block_cipher"
+    msg "test: built-in GCM/CCM and accelerated AES/ARIA/Camellia"
     $MAKE_COMMAND test
 }
 
-component_test_full_block_cipher_psa_dispatch_static_keystore () {
-    msg "build: full + PSA dispatch in block_cipher with static keystore"
+component_test_accel_block_cipher_static_keystore () {
+    msg "build: built-in GCM/CCM, accelerated AES/ARIA/Camellia and static keystore"
     # Check that the static key store works well when CTR_DRBG uses a
     # PSA key for AES.
 
     # Configure
     # ---------
 
-    common_block_cipher_dispatch
+    config_accel_block_cipher
     scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
 
     # Build
@@ -142,7 +142,7 @@ EOF
     # Run the tests
     # -------------
 
-    msg "test: full + PSA dispatch in block_cipher with static keystore"
+    msg "test: built-in GCM/CCM, accelerated AES/ARIA/Camellia and static keystore"
     $MAKE_COMMAND test
 }
 
