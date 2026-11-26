@@ -236,13 +236,13 @@ common_test_accel_ecc_ffdh_no_bignum () {
     cmake --build .
 
     # Make sure any built-in EC alg was not re-enabled
-    not grep mbedtls_ecdsa_ ${CMAKE_BUILTIN_BUILD_DIR}/ecdsa.o
-    not grep mbedtls_psa_key_agreement_ecdh ${CMAKE_BUILTIN_BUILD_DIR}/psa_crypto_ecp.o
-    not grep mbedtls_ecjpake_ ${CMAKE_BUILTIN_BUILD_DIR}/ecjpake.o
+    not grep mbedtls_ecdsa_ ${CMAKE_BUILTIN_BUILD_DIR}/ecdsa.c.o
+    not grep mbedtls_psa_key_agreement_ecdh ${CMAKE_BUILTIN_BUILD_DIR}/psa_crypto_ecp.c.o
+    not grep mbedtls_ecjpake_ ${CMAKE_BUILTIN_BUILD_DIR}/ecjpake.c.o
     # Also ensure that ECP, RSA or BIGNUM modules were not re-enabled
-    not grep mbedtls_ecp_ ${CMAKE_BUILTIN_BUILD_DIR}/ecp.o
-    not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.o
-    not grep mbedtls_mpi_ ${CMAKE_BUILTIN_BUILD_DIR}/bignum.o
+    not grep mbedtls_ecp_ ${CMAKE_BUILTIN_BUILD_DIR}/ecp.c.o
+    not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.c.o
+    not grep mbedtls_mpi_ ${CMAKE_BUILTIN_BUILD_DIR}/bignum.c.o
 
     # Run the tests
     # -------------
@@ -1471,13 +1471,13 @@ helper_block_cipher_no_decrypt_build_test () {
     cmake --build .
 
     # Make sure we don't have mbedtls_xxx_setkey_dec in AES/ARIA/CAMELLIA
-    not grep mbedtls_aes_setkey_dec ${BUILTIN_SRC_PATH}/aes.o
-    not grep mbedtls_aria_setkey_dec ${BUILTIN_SRC_PATH}/aria.o
-    not grep mbedtls_camellia_setkey_dec ${BUILTIN_SRC_PATH}/camellia.o
+    not grep mbedtls_aes_setkey_dec ${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o
+    not grep mbedtls_aria_setkey_dec ${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o
+    not grep mbedtls_camellia_setkey_dec ${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o
     # Make sure we don't have mbedtls_internal_aes_decrypt in AES
-    not grep mbedtls_internal_aes_decrypt ${BUILTIN_SRC_PATH}/aes.o
+    not grep mbedtls_internal_aes_decrypt ${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o
     # Make sure we don't have mbedtls_aesni_inverse_key in AESNI
-    not grep mbedtls_aesni_inverse_key ${BUILTIN_SRC_PATH}/aesni.o
+    not grep mbedtls_aesni_inverse_key ${CMAKE_BUILTIN_BUILD_DIR}/aesni.c.o
 
     msg "test: default config + BLOCK_CIPHER_NO_DECRYPT${set_opts:+ + $set_opts}${unset_opts:+ - $unset_opts} with $cflags${ldflags:+, $ldflags}"
     ctest
