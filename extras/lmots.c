@@ -22,6 +22,7 @@
 
 #if defined(MBEDTLS_LMS_C)
 
+#include <stddef.h>
 #include <string.h>
 
 #include "lmots.h"
@@ -211,86 +212,63 @@ static int hash_digit_array(const mbedtls_lmots_parameters_t *params,
                             const unsigned char *hash_idx_max_values,
                             unsigned char *output)
 {
+    struct lmots_hash_input {
+        unsigned char i_key_id[MBEDTLS_LMOTS_I_KEY_ID_LEN];
+        unsigned char q_leaf_id[MBEDTLS_LMOTS_Q_LEAF_ID_LEN];
+        unsigned char i_digit_idx[I_DIGIT_IDX_LEN];
+        unsigned char j_hash_idx;
+        unsigned char hash[MBEDTLS_LMOTS_N_HASH_LEN_MAX];
+    } hash_input;
+    MBEDTLS_STATIC_ASSERT(sizeof(struct lmots_hash_input) ==
+                          MBEDTLS_LMOTS_I_KEY_ID_LEN + MBEDTLS_LMOTS_Q_LEAF_ID_LEN +
+                          I_DIGIT_IDX_LEN + J_HASH_IDX_LEN + MBEDTLS_LMOTS_N_HASH_LEN_MAX,
+                          "LM-OTS hash input must not contain padding");
     unsigned int i_digit_idx;
-    unsigned char i_digit_idx_bytes[I_DIGIT_IDX_LEN];
     unsigned int j_hash_idx;
-    unsigned char j_hash_idx_bytes[J_HASH_IDX_LEN];
     unsigned int j_hash_idx_min;
     unsigned int j_hash_idx_max;
-    psa_hash_operation_t op = PSA_HASH_OPERATION_INIT;
+    const size_t hash_len = MBEDTLS_LMOTS_N_HASH_LEN(params->type);
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     size_t output_hash_len;
     unsigned char tmp_hash[MBEDTLS_LMOTS_N_HASH_LEN_MAX];
+
+    memcpy(hash_input.i_key_id, params->I_key_identifier, sizeof(hash_input.i_key_id));
+    memcpy(hash_input.q_leaf_id, params->q_leaf_identifier, sizeof(hash_input.q_leaf_id));
 
     for (i_digit_idx = 0;
          i_digit_idx < MBEDTLS_LMOTS_P_SIG_DIGIT_COUNT(params->type);
          i_digit_idx++) {
 
         memcpy(tmp_hash,
-               &x_digit_array[i_digit_idx * MBEDTLS_LMOTS_N_HASH_LEN(params->type)],
-               MBEDTLS_LMOTS_N_HASH_LEN(params->type));
+               &x_digit_array[i_digit_idx * hash_len], hash_len);
 
         j_hash_idx_min = hash_idx_min_values != NULL ?
                          hash_idx_min_values[i_digit_idx] : 0;
         j_hash_idx_max = hash_idx_max_values != NULL ?
                          hash_idx_max_values[i_digit_idx] : DIGIT_MAX_VALUE;
+        MBEDTLS_PUT_UINT16_BE(i_digit_idx, hash_input.i_digit_idx, 0);
 
         for (j_hash_idx = j_hash_idx_min;
              j_hash_idx < j_hash_idx_max;
              j_hash_idx++) {
-            status = psa_hash_setup(&op, PSA_ALG_SHA_256);
+            hash_input.j_hash_idx = (unsigned char) j_hash_idx;
+            memcpy(hash_input.hash, tmp_hash, hash_len);
+
+            status = psa_hash_compute(PSA_ALG_SHA_256,
+                                      (const unsigned char *) &hash_input,
+                                      offsetof(struct lmots_hash_input, hash) + hash_len,
+                                      tmp_hash, sizeof(tmp_hash), &output_hash_len);
             if (status != PSA_SUCCESS) {
                 goto exit;
             }
-
-            status = psa_hash_update(&op,
-                                     params->I_key_identifier,
-                                     MBEDTLS_LMOTS_I_KEY_ID_LEN);
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            status = psa_hash_update(&op,
-                                     params->q_leaf_identifier,
-                                     MBEDTLS_LMOTS_Q_LEAF_ID_LEN);
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            MBEDTLS_PUT_UINT16_BE(i_digit_idx, i_digit_idx_bytes, 0);
-            status = psa_hash_update(&op, i_digit_idx_bytes, I_DIGIT_IDX_LEN);
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            j_hash_idx_bytes[0] = (uint8_t) j_hash_idx;
-            status = psa_hash_update(&op, j_hash_idx_bytes, J_HASH_IDX_LEN);
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            status = psa_hash_update(&op, tmp_hash,
-                                     MBEDTLS_LMOTS_N_HASH_LEN(params->type));
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            status = psa_hash_finish(&op, tmp_hash, sizeof(tmp_hash),
-                                     &output_hash_len);
-            if (status != PSA_SUCCESS) {
-                goto exit;
-            }
-
-            psa_hash_abort(&op);
         }
 
-        memcpy(&output[i_digit_idx * MBEDTLS_LMOTS_N_HASH_LEN(params->type)],
-               tmp_hash, MBEDTLS_LMOTS_N_HASH_LEN(params->type));
+        memcpy(&output[i_digit_idx * hash_len], tmp_hash, hash_len);
     }
 
 exit:
-    psa_hash_abort(&op);
     mbedtls_platform_zeroize(tmp_hash, sizeof(tmp_hash));
+    mbedtls_platform_zeroize(&hash_input, sizeof(hash_input));
 
     return PSA_TO_MBEDTLS_ERR(status);
 }
