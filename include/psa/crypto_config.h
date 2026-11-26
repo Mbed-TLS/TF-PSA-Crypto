@@ -524,7 +524,37 @@
 //#define MBEDTLS_PLATFORM_STD_SNPRINTF    snprintf /**< Default snprintf to use, can be undefined */
 //#define MBEDTLS_PLATFORM_STD_TIME            time /**< Default time to use, can be undefined. MBEDTLS_HAVE_TIME must be enabled */
 //#define MBEDTLS_PLATFORM_TIME_MACRO            time /**< Default time macro to use, can be undefined. MBEDTLS_HAVE_TIME must be enabled */
-//#define MBEDTLS_PLATFORM_TIME_TYPE_MACRO       time_t /**< Default time macro to use, can be undefined. MBEDTLS_HAVE_TIME must be enabled */
+/** \def MBEDTLS_PLATFORM_TIME_TYPE_MACRO
+ *
+ * The type to use for mbedtls_time_t instead of the default type time_t.
+ *
+ * The type must be a scalar arithmetic type (for example int64_t or
+ * uint32_t). Mbed TLS uses mbedtls_time_t values in the
+ * following ways:
+ * - Subtraction and comparison of two mbedtls_time_t values, to measure
+ *   elapsed time (for session ticket lifetime, session cache timeout, and
+ *   DTLS cookie timeout).
+ * - Conversion to unsigned integer types when encoding protocol fields
+ *   (for example, the gmt_unix_time field of a TLS 1.2 ClientHello or
+ *   ServerHello, encoded as uint32_t, and the session start time in
+ *   serialized session data, encoded as uint64_t).
+ * - Passing by pointer to mbedtls_platform_gmtime_r() as
+ *   const mbedtls_time_t *, to convert a time value to calendar date
+ *   and time, when MBEDTLS_HAVE_TIME_DATE is enabled.
+ *
+ * Time values represent seconds since the Unix epoch
+ * (1970-01-01 00:00:00 UTC). The range of the type must be sufficient for
+ * all timestamps used by the application. Note that 32-bit signed integers
+ * overflow in 2038, and 32-bit unsigned integers overflow in 2106.
+ *
+ * If the type configured by this macro is not compatible with the
+ * platform's time_t, and MBEDTLS_HAVE_TIME_DATE is enabled, you must
+ * provide a custom implementation of mbedtls_platform_gmtime_r() by
+ * defining MBEDTLS_PLATFORM_GMTIME_R_ALT.
+ *
+ * Requires: MBEDTLS_PLATFORM_C, MBEDTLS_HAVE_TIME.
+ */
+//#define MBEDTLS_PLATFORM_TIME_TYPE_MACRO       time_t
 //#define MBEDTLS_PLATFORM_VSNPRINTF_MACRO    vsnprintf /**< Default vsnprintf macro to use, can be undefined */
 //#define MBEDTLS_PRINTF_MS_TIME    PRId64 /**< Default fmt for printf. That's avoid compiler warning if mbedtls_ms_time_t is redefined */
 

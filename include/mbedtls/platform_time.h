@@ -16,8 +16,27 @@
 extern "C" {
 #endif
 
-/*
- * The time_t datatype
+/**
+ * \brief   The type used for representing time values in Mbed TLS.
+ *
+ * By default this is time_t as defined in <time.h>. This type may be
+ * overridden by defining #MBEDTLS_PLATFORM_TIME_TYPE_MACRO to a suitable
+ * scalar arithmetic type (for example int64_t or uint32_t).
+ *
+ * Mbed TLS uses values of this type in the following ways:
+ * - Subtraction and comparison of two mbedtls_time_t values, to measure
+ *   elapsed time (for example for TLS session ticket lifetime, session
+ *   cache timeout, and DTLS cookie timeout).
+ * - Conversion to unsigned integer types when encoding protocol fields
+ *   (for example, the gmt_unix_time field of a TLS 1.2 ClientHello or
+ *   ServerHello, encoded as uint32_t, and the session start time in
+ *   serialized session data, encoded as uint64_t).
+ * - Passing by pointer to mbedtls_platform_gmtime_r() as
+ *   const mbedtls_time_t *, to convert a time value to calendar date
+ *   and time, when #MBEDTLS_HAVE_TIME_DATE is enabled.
+ *
+ * Time values of this type represent seconds since the Unix epoch
+ * (1970-01-01 00:00:00 UTC).
  */
 #if defined(MBEDTLS_PLATFORM_TIME_TYPE_MACRO)
 typedef MBEDTLS_PLATFORM_TIME_TYPE_MACRO mbedtls_time_t;
