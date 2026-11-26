@@ -3094,6 +3094,22 @@ static psa_status_t psa_sign_verify_check_alg(int input_is_message,
     return PSA_SUCCESS;
 }
 
+static psa_status_t psa_validate_sign_hash_length(psa_algorithm_t alg,
+                                                  size_t hash_length)
+{
+    if (PSA_ALG_IS_SIGN_HASH(alg) && alg != PSA_ALG_RSA_PKCS1V15_SIGN_RAW) {
+        psa_algorithm_t hash_alg = PSA_ALG_SIGN_GET_HASH(alg);
+        size_t expected_hash_length = PSA_HASH_LENGTH(hash_alg);
+        if (expected_hash_length == 0) {
+            return PSA_SUCCESS;
+        }
+        if (hash_length != expected_hash_length) {
+            return PSA_ERROR_INVALID_ARGUMENT;
+        }
+    }
+    return PSA_SUCCESS;
+}
+
 static psa_status_t psa_sign_internal(mbedtls_svc_key_id_t key,
                                       int input_is_message,
                                       psa_algorithm_t alg,
@@ -3144,10 +3160,15 @@ static psa_status_t psa_sign_internal(mbedtls_svc_key_id_t key,
             signature, signature_size, signature_length);
     } else {
 
-        status = psa_driver_wrapper_sign_hash(
-            &slot->attr, slot->key.data, slot->key.bytes,
-            alg, input, input_length,
-            signature, signature_size, signature_length);
+        /* Enforce hash length for hash-and-sign algorithms
+         * (PSA Crypto API 1.1) */
+        status = psa_validate_sign_hash_length(alg, input_length);
+        if (status == PSA_SUCCESS) {
+            status = psa_driver_wrapper_sign_hash(
+                &slot->attr, slot->key.data, slot->key.bytes,
+                alg, input, input_length,
+                signature, signature_size, signature_length);
+        }
     }
 
 
@@ -3193,10 +3214,15 @@ static psa_status_t psa_verify_internal(mbedtls_svc_key_id_t key,
             alg, input, input_length,
             signature, signature_length);
     } else {
-        status = psa_driver_wrapper_verify_hash(
-            &slot->attr, slot->key.data, slot->key.bytes,
-            alg, input, input_length,
-            signature, signature_length);
+        /* Enforce hash length for hash-and-sign algorithms
+         * (PSA Crypto API 1.1) */
+        status = psa_validate_sign_hash_length(alg, input_length);
+        if (status == PSA_SUCCESS) {
+            status = psa_driver_wrapper_verify_hash(
+                &slot->attr, slot->key.data, slot->key.bytes,
+                alg, input, input_length,
+                signature, signature_length);
+        }
     }
 
     unlock_status = psa_unregister_read_under_mutex(slot);
@@ -3687,6 +3713,12 @@ psa_status_t psa_sign_hash_start(
         goto exit;
     }
 
+    /* Enforce hash length for hash-and-sign algorithms (PSA Crypto API 1.1) */
+    status = psa_validate_sign_hash_length(alg, hash_length);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
     LOCAL_INPUT_ALLOC(hash_external, hash_length, hash);
 
     /* Ensure ops count gets reset, in case of operation re-use. */
@@ -3847,6 +3879,14 @@ psa_status_t psa_verify_hash_start(
 
     if (status != PSA_SUCCESS) {
         operation->error_occurred = 1;
+        return status;
+    }
+
+    /* Enforce hash length for hash-and-sign algorithms (PSA Crypto API 1.1) */
+    status = psa_validate_sign_hash_length(alg, hash_length);
+    if (status != PSA_SUCCESS) {
+        operation->error_occurred = 1;
+        psa_unregister_read_under_mutex(slot);
         return status;
     }
 
@@ -4040,6 +4080,12 @@ psa_status_t mbedtls_psa_sign_hash_start(
 
     if (!can_do_interruptible_sign_verify(alg)) {
         return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    /* Enforce hash length for hash-and-sign algorithms (PSA Crypto API 1.1) */
+    status = psa_validate_sign_hash_length(alg, hash_length);
+    if (status != PSA_SUCCESS) {
+        return status;
     }
 
 #if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \
@@ -4260,6 +4306,12 @@ psa_status_t mbedtls_psa_verify_hash_start(
 
     if (!can_do_interruptible_sign_verify(alg)) {
         return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    /* Enforce hash length for hash-and-sign algorithms (PSA Crypto API 1.1) */
+    status = psa_validate_sign_hash_length(alg, hash_length);
+    if (status != PSA_SUCCESS) {
+        return status;
     }
 
 #if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \
