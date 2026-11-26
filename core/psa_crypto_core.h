@@ -767,7 +767,7 @@ psa_status_t mbedtls_psa_sign_hash_start(
  *
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of \c
- *         psa_interruptible_set_max_ops(), there is still work to be done,
+ *         psa_iop_set_max_ops(), there is still work to be done,
  *         please call this function again with the same operation object.
  *
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
@@ -867,7 +867,7 @@ psa_status_t mbedtls_psa_verify_hash_start(
  *
  * \retval #PSA_OPERATION_INCOMPLETE
  *         Operation was interrupted due to the setting of \c
- *         psa_interruptible_set_max_ops(), there is still work to be done,
+ *         psa_iop_set_max_ops(), there is still work to be done,
  *         please call this function again with the same operation object.
  *
  * \retval #PSA_ERROR_INVALID_SIGNATURE
