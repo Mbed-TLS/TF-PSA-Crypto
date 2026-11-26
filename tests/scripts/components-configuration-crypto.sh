@@ -13,7 +13,7 @@ CMAKE_BUILTIN_BUILD_DIR="drivers/builtin/CMakeFiles/builtin.dir/src"
 CMAKE_EXTRAS_BUILD_DIR="extras/CMakeFiles/extras.dir"
 
 component_test_accel_aead () {
-    msg "test: accelerated AEAD"
+    msg "build: accelerated AEAD"
 
     # Configure
     # ---------
@@ -395,7 +395,7 @@ common_test_accel_ecc_some_curves () {
     # Run the tests
     # -------------
 
-    msg "test suites: crypto_full minus PK with accelerated EC algs and weirstrass curves"
+    msg "test suites: full minus PK with accelerated EC algs and $desc curves"
     ctest
 }
 
@@ -545,7 +545,7 @@ component_test_accel_ffdh () {
 }
 
 component_test_accel_hash () {
-    msg "test: accelerated hash"
+    msg "build: accelerated hash"
 
     # Build
     # -----
@@ -572,7 +572,7 @@ component_test_accel_hash () {
 }
 
 component_test_accel_hmac () {
-    msg "test: full with accelerated hmac"
+    msg "build: full with accelerated hmac"
 
     # Configure
     # ---------
@@ -647,7 +647,7 @@ component_test_psa_crypto_key_id_encodes_owner () {
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: full config - USE_PSA_CRYPTO + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
+    msg "test: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
     make test
 }
 
@@ -677,9 +677,10 @@ component_test_crypto_with_static_key_slots() {
     # with the static behavior that we're testing here.
     scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
 
-    msg "test: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     cmake --build .
+
+    msg "test: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
     ctest
 }
 
@@ -832,7 +833,7 @@ check_renamed_symbols () {
 }
 
 component_build_psa_crypto_spm () {
-    msg "build: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER + PSA_CRYPTO_SPM, make, gcc"
+    msg "build: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER + PSA_CRYPTO_SPM, cmake"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
     scripts/config.py set MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
@@ -890,7 +891,7 @@ component_test_no_ctr_drbg () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: Full minus CTR_DRBG, USE_PSA_CRYPTO - main suites"
+    msg "test: Full minus CTR_DRBG - main suites"
     make test
 }
 
@@ -903,7 +904,7 @@ component_test_no_hmac_drbg () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: Full minus HMAC_DRBG, USE_PSA_CRYPTO - main suites"
+    msg "test: Full minus HMAC_DRBG - main suites"
     make test
 }
 
@@ -925,7 +926,7 @@ component_test_psa_external_rng_no_drbg () {
 }
 
 component_test_psa_external_rng_use_psa_crypto () {
-    msg "build: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG/NV_SEED"
+    msg "build: full + PSA_CRYPTO_EXTERNAL_RNG minus CTR_DRBG/NV_SEED"
     scripts/config.py full
     scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
@@ -935,7 +936,7 @@ component_test_psa_external_rng_use_psa_crypto () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     cmake --build .
 
-    msg "test: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG/NV_SEED"
+    msg "test: full + PSA_CRYPTO_EXTERNAL_RNG minus CTR_DRBG/NV_SEED"
     ctest
 }
 
@@ -1412,7 +1413,7 @@ component_test_gcm_largetable () {
     cmake -D CMAKE_BUILD_TYPE:String=Release .
     cmake --build .
 
-    msg "test: default config - GCM_LARGE_TABLE - AESNI_C - AESCE_C"
+    msg "test: default config + GCM_LARGE_TABLE - AESNI_C - AESCE_C"
     ctest
 }
 
@@ -1602,7 +1603,7 @@ component_test_ctr_drbg_aes_256_sha_256 () {
 }
 
 component_test_ctr_drbg_aes_128_sha_512 () {
-    msg "build: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 (ASan build)"
+    msg "build: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 + MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512 (ASan build)"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
     scripts/config.py set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128
@@ -1610,7 +1611,7 @@ component_test_ctr_drbg_aes_128_sha_512 () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 (ASan build)"
+    msg "test: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 + MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512 (ASan build)"
     make test
 }
 
