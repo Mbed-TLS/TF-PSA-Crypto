@@ -133,7 +133,7 @@ void sha3_empty(int type, int len)
     uint8_t *output_update_null = NULL;
     uint8_t *output_update_nonnull = NULL;
     uint8_t *output_update_twice = NULL;
-    uint8_t byte = 'b';
+    uint8_t byte[1] = { 'b' };
 
     TEST_CALLOC(output_no_update, len);
     TEST_CALLOC(output_update_null, len);
@@ -148,12 +148,12 @@ void sha3_empty(int type, int len)
     TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_update_null, len), 0);
 
     TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
-    TEST_EQUAL(mbedtls_sha3_update(&ctx, &byte, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, byte, 0), 0);
     TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_update_nonnull, len), 0);
 
     TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
-    TEST_EQUAL(mbedtls_sha3_update(&ctx, &byte, 0), 0);
-    TEST_EQUAL(mbedtls_sha3_update(&ctx, &byte, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, byte, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, byte, 0), 0);
     TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_update_twice, len), 0);
 
     TEST_MEMORY_COMPARE(output_no_update, 0, output_update_null, 0);
