@@ -342,8 +342,8 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
     { MBEDTLS_ECP_DP_NONE,          0,     0,      NULL                },
 };
 
-#define ECP_NB_CURVES   sizeof(ecp_supported_curves) /    \
-    sizeof(ecp_supported_curves[0])
+#define ECP_NB_CURVES   (sizeof(ecp_supported_curves) /    \
+                         sizeof(ecp_supported_curves[0]))
 
 static mbedtls_ecp_group_id ecp_supported_grp_id[ECP_NB_CURVES];
 
@@ -1155,7 +1155,7 @@ cleanup:
         unsigned char nonzero = mbedtls_mpi_cmp_int((X), 0) != 0;        \
         MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&tmp, &grp->P, (X)));      \
         MBEDTLS_MPI_CHK(mbedtls_mpi_safe_cond_assign((X), &tmp,          \
-                                                     nonzero & cond)); \
+                                                     nonzero & (cond))); \
     } while (0)
 
 #define MPI_ECP_NEG(X) MPI_ECP_COND_NEG((X), 1)
@@ -1632,7 +1632,7 @@ cleanup:
 #endif
 
 /* d = ceil( n / w ) */
-#define COMB_MAX_D      (MBEDTLS_ECP_MAX_BITS + 1) / 2
+#define COMB_MAX_D      ((MBEDTLS_ECP_MAX_BITS + 1) / 2)
 
 /* number of precomputed points */
 #define COMB_MAX_PRE    (1 << (MBEDTLS_ECP_WINDOW_SIZE - 1))
