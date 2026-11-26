@@ -100,6 +100,9 @@
 #if defined(PSA_WANT_ALG_ECB_NO_PADDING)
 #error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and PSA_WANT_ALG_ECB_NO_PADDING cannot be defined simultaneously"
 #endif
+#if defined(PSA_WANT_ALG_XTS)
+#error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and PSA_WANT_ALG_XTS cannot be defined simultaneously"
+#endif
 #if defined(MBEDTLS_NIST_KW_C)
 #error "MBEDTLS_BLOCK_CIPHER_NO_DECRYPT and MBEDTLS_NIST_KW_C cannot be defined simultaneously"
 #endif
