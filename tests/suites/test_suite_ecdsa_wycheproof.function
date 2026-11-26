@@ -1,0 +1,49 @@
+/* BEGIN_HEADER */
+#include "mbedtls/md.h"
+#include "mbedtls/pk.h"
+
+/* Project Wycheproof ECDSA signature-verification harness.
+ * Tests DER (ASN.1) signatures using `mbedtls_pk_*` to use the DER parser.
+ * Columns: <MBEDTLS_MD_*>:publicKeyDer:msg:sig:expected_valid
+ */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PK_PARSE_C:PSA_WANT_ALG_ECDSA
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mbedtls_ecdsa_verify_der(int md_type, data_t* pubkey, data_t* msg,
+    data_t* sig, int expected_valid)
+{
+    mbedtls_pk_context pk;
+    const mbedtls_md_info_t* mdi;
+    unsigned char hash[64];
+    int ret;
+
+    mbedtls_pk_init(&pk);
+    PSA_INIT();
+
+    mdi = mbedtls_md_info_from_type((mbedtls_md_type_t)md_type);
+    TEST_ASSERT(mdi != NULL);
+    TEST_LE_U(mbedtls_md_get_size(mdi), sizeof(hash));
+
+    TEST_EQUAL(0, mbedtls_pk_parse_public_key(&pk, pubkey->x, pubkey->len));
+    TEST_EQUAL(0, mbedtls_md(mdi, msg->x, msg->len, hash));
+
+    ret = mbedtls_pk_verify(&pk, (mbedtls_md_type_t)md_type,
+        hash, mbedtls_md_get_size(mdi),
+        sig->x, sig->len);
+
+    if (expected_valid) {
+        TEST_EQUAL(ret, 0);
+    } else {
+        TEST_ASSERT(ret != 0);
+    }
+
+exit:
+    mbedtls_pk_free(&pk);
+    PSA_DONE();
+}
+/* END_CASE */
