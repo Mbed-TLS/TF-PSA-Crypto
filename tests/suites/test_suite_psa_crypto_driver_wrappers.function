@@ -1047,6 +1047,105 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void key_agreement_opaque(int alg_arg,
+                          int force_status_arg,
+                          int our_key_type_arg,
+                          data_t *our_key_data,
+                          data_t *peer_key_data,
+                          data_t *shared_secret,
+                          int expected_status_arg)
+{
+    psa_key_lifetime_t lifetime =
+        PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(
+            PSA_KEY_PERSISTENCE_VOLATILE, PSA_CRYPTO_TEST_DRIVER_LOCATION);
+    psa_status_t force_status = force_status_arg;
+    psa_status_t expected_status = expected_status_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t our_key_type = our_key_type_arg;
+    mbedtls_svc_key_id_t our_key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t reference = PSA_KEY_DERIVATION_OPERATION_INIT;
+    static const uint8_t info[] = "opaque key agreement";
+    unsigned char *output = NULL;
+    size_t output_length = ~0;
+    unsigned char derived[32];
+    unsigned char expected_derived[32];
+    psa_status_t actual_status;
+    mbedtls_test_driver_key_agreement_hooks =
+        mbedtls_test_driver_key_agreement_hooks_init();
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_lifetime(&attributes, lifetime);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, our_key_type);
+    PSA_ASSERT(psa_import_key(&attributes,
+                              our_key_data->x, our_key_data->len,
+                              &our_key));
+
+    mbedtls_test_driver_key_agreement_hooks.hits = 0;
+    mbedtls_test_driver_key_agreement_hooks.forced_status = force_status;
+
+    if (PSA_ALG_IS_RAW_KEY_AGREEMENT(alg)) {
+        TEST_CALLOC(output, shared_secret->len);
+        actual_status = psa_raw_key_agreement(alg, our_key,
+                                              peer_key_data->x, peer_key_data->len,
+                                              output, shared_secret->len,
+                                              &output_length);
+        TEST_EQUAL(actual_status, expected_status);
+        TEST_EQUAL(mbedtls_test_driver_key_agreement_hooks.hits, 1);
+        if (actual_status == PSA_SUCCESS) {
+            TEST_MEMORY_COMPARE(output, output_length,
+                                shared_secret->x, shared_secret->len);
+        }
+    } else {
+        PSA_ASSERT(psa_key_derivation_setup(&operation, alg));
+        actual_status = psa_key_derivation_key_agreement(&operation,
+                                                         PSA_KEY_DERIVATION_INPUT_SECRET,
+                                                         our_key,
+                                                         peer_key_data->x,
+                                                         peer_key_data->len);
+        TEST_EQUAL(actual_status, expected_status);
+        TEST_EQUAL(mbedtls_test_driver_key_agreement_hooks.hits, 1);
+        if (actual_status == PSA_SUCCESS) {
+            /* Compare with the same KDF fed with the expected shared secret. */
+            PSA_ASSERT(psa_key_derivation_setup(&reference,
+                                                PSA_ALG_KEY_AGREEMENT_GET_KDF(alg)));
+            PSA_ASSERT(psa_key_derivation_input_bytes(&reference,
+                                                      PSA_KEY_DERIVATION_INPUT_SECRET,
+                                                      shared_secret->x,
+                                                      shared_secret->len));
+            PSA_ASSERT(psa_key_derivation_input_bytes(&operation,
+                                                      PSA_KEY_DERIVATION_INPUT_INFO,
+                                                      info, sizeof(info)));
+            PSA_ASSERT(psa_key_derivation_input_bytes(&reference,
+                                                      PSA_KEY_DERIVATION_INPUT_INFO,
+                                                      info, sizeof(info)));
+            PSA_ASSERT(psa_key_derivation_output_bytes(&operation,
+                                                       derived, sizeof(derived)));
+            PSA_ASSERT(psa_key_derivation_output_bytes(&reference,
+                                                       expected_derived,
+                                                       sizeof(expected_derived)));
+            TEST_MEMORY_COMPARE(derived, sizeof(derived),
+                                expected_derived, sizeof(expected_derived));
+        }
+    }
+
+exit:
+    mbedtls_free(output);
+    psa_key_derivation_abort(&operation);
+    psa_key_derivation_abort(&reference);
+    psa_reset_key_attributes(&attributes);
+    psa_destroy_key(our_key);
+    PSA_DONE();
+    mbedtls_test_driver_key_agreement_hooks =
+        mbedtls_test_driver_key_agreement_hooks_init();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void cipher_encrypt_validation(int alg_arg,
                                int key_type_arg,
                                data_t *key_data,

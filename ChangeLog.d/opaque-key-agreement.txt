@@ -1,0 +1,6 @@
+Features
+   * psa_raw_key_agreement(), psa_key_agreement() and
+     psa_key_derivation_key_agreement() now accept a private key in an opaque
+     driver and pass it to the driver's key_agreement entry point. This lets
+     ECDH run in a secure element. Previously these functions returned
+     PSA_ERROR_NOT_SUPPORTED for such keys. Fixes #1001.
