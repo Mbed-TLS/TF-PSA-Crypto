@@ -1,0 +1,4 @@
+Bugfix
+   * Fix NULL checks on condition-variable function pointers in the threading
+     abstraction layer (MBEDTLS_THREADING_ALT): they no longer dereference a
+     potentially NULL function pointer (undefined behavior).

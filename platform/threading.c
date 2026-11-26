@@ -181,7 +181,7 @@ static int (*cond_init_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
 int mbedtls_condition_variable_init(
     mbedtls_threading_condition_variable_t *cond)
 {
-    if (*cond_init_ptr == NULL) {
+    if (cond_init_ptr == NULL) {
         return PSA_ERROR_BAD_STATE;
     }
     return (*cond_init_ptr)(&cond->cond);
@@ -192,7 +192,7 @@ static void (*cond_destroy_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
 void mbedtls_condition_variable_free(
     mbedtls_threading_condition_variable_t *cond)
 {
-    if (*cond_destroy_ptr == NULL) {
+    if (cond_destroy_ptr == NULL) {
         return;
     }
     (*cond_destroy_ptr)(&cond->cond);
@@ -203,7 +203,7 @@ static int (*cond_signal_ptr)(mbedtls_platform_condition_variable_t *) = NULL;
 int mbedtls_condition_variable_signal(
     mbedtls_threading_condition_variable_t *cond)
 {
-    if (*cond_signal_ptr == NULL) {
+    if (cond_signal_ptr == NULL) {
         return PSA_ERROR_BAD_STATE;
     }
     return (*cond_signal_ptr)(&cond->cond);
@@ -214,7 +214,7 @@ static int (*cond_broadcast_ptr)(mbedtls_platform_condition_variable_t *) = NULL
 int mbedtls_condition_variable_broadcast(
     mbedtls_threading_condition_variable_t *cond)
 {
-    if (*cond_broadcast_ptr == NULL) {
+    if (cond_broadcast_ptr == NULL) {
         return PSA_ERROR_BAD_STATE;
     }
     return (*cond_broadcast_ptr)(&cond->cond);
@@ -227,7 +227,7 @@ int mbedtls_condition_variable_wait(
     mbedtls_threading_condition_variable_t *cond,
     mbedtls_threading_mutex_t *mutex)
 {
-    if (*cond_wait_ptr == NULL) {
+    if (cond_wait_ptr == NULL) {
         return PSA_ERROR_BAD_STATE;
     }
     return (*cond_wait_ptr)(&cond->cond, &mutex->mutex);
