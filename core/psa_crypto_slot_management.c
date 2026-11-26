@@ -925,6 +925,10 @@ psa_status_t psa_purge_key(mbedtls_svc_key_id_t key)
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot;
 
+    if (!psa_get_key_slots_initialized()) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
 #if defined(MBEDTLS_THREADING_C)
     /* We need to set status as success, otherwise CORRUPTION_DETECTED
      * would be returned if the lock fails. */

@@ -1,0 +1,5 @@
+Bugfix
+   * Fix a NULL pointer dereference when psa_purge_key() is called on a
+     persistent key identifier before psa_crypto_init() or after
+     mbedtls_psa_crypto_free(). It now returns PSA_ERROR_BAD_STATE, like
+     the other key management functions. Fixes #984.
