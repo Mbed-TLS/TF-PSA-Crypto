@@ -1,0 +1,5 @@
+Bugfix
+   * Reject PBES2 parameters whose optional PBKDF2 keyLength field is
+     present but differs from the key length of the encryption scheme.
+     Previously the field was parsed and then ignored. Contributed by
+     ManoharPaturi in #918.
