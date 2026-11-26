@@ -33,6 +33,17 @@ extern "C" {
 extern int p256_generate_random(uint8_t * output, unsigned output_size);
 
 /*
+ * ECDH/ECDSA generate private key
+ *
+ * [in] draws from p256_generate_random()
+ * [out] priv: on success, holds the private key, as a big-endian integer
+ *
+ * return:  P256_SUCCESS on success
+ *          P256_RANDOM_FAILED on failure
+ */
+int p256_gen_privkey(uint8_t priv[32]);
+
+/*
  * ECDH/ECDSA generate key pair
  *
  * [in] draws from p256_generate_random()
