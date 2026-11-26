@@ -114,6 +114,7 @@
 #define PSA_WANT_KEY_TYPE_AES                   1
 #define PSA_WANT_KEY_TYPE_ARIA                  1
 #define PSA_WANT_KEY_TYPE_CAMELLIA              1
+#define PSA_WANT_KEY_TYPE_SM4                   1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
