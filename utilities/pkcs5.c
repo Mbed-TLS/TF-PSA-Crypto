@@ -168,9 +168,14 @@ int mbedtls_pkcs5_pbes2_ext(const mbedtls_asn1_buf *pbe_params,
     }
 
     /*
-     * The value of keylen from pkcs5_parse_pbkdf2_params() is ignored
-     * since it is optional and we don't know if it was set or not
+     * keyLength is optional (0 = absent); if present, reject a value that
+     * differs from the encryption scheme's key length, matching OpenSSL
+     * (RFC 8018 section A.2 treats it as informational).
      */
+    if (keylen != 0 &&
+        keylen != (int) mbedtls_cipher_info_get_key_bitlen(cipher_info) / 8) {
+        return MBEDTLS_ERR_PKCS5_INVALID_FORMAT;
+    }
     keylen = (int) mbedtls_cipher_info_get_key_bitlen(cipher_info) / 8;
 
     if (enc_scheme_params.tag != MBEDTLS_ASN1_OCTET_STRING ||
