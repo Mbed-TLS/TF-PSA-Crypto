@@ -26,7 +26,8 @@ component_test_accel_aead () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-aead.h" ..
     make
 
@@ -55,7 +56,8 @@ component_test_accel_cipher_aead_cmac () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-cipher-aead-cmac.h" ..
     make
 
@@ -98,7 +100,8 @@ component_test_accel_ecc_all () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ecc.h" ..
     cmake --build .
 
@@ -139,7 +142,8 @@ component_test_accel_ecc_all_but_ecp_light() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ecc.h" ..
     cmake --build .
 
@@ -231,7 +235,8 @@ common_test_accel_ecc_ffdh_no_bignum () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="${user_config_accel_file_path}" ..
     cmake --build .
 
@@ -289,7 +294,8 @@ component_test_accel_ecc_some_key_types () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecc-some-key-types.h" ..
     cmake --build .
 
@@ -358,7 +364,8 @@ common_test_accel_ecc_some_curves () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecc-some-curves.h" ..
     cmake --build .
 
@@ -419,7 +426,8 @@ component_test_accel_ecdh() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecdh.h" ..
     cmake --build .
 
@@ -459,7 +467,8 @@ component_test_accel_ecdsa() {
 
     cd $OUT_OF_SOURCE_DIR
 
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecdsa.h" ..
     cmake --build .
 
@@ -493,7 +502,8 @@ component_test_accel_ecjpake() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecjpake.h" ..
     cmake --build .
 
@@ -519,7 +529,8 @@ component_test_accel_ffdh () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ffdh.h" ..
     make
 
@@ -540,7 +551,8 @@ component_test_accel_hash () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-hash.h" ..
     cmake --build .
 
@@ -586,7 +598,8 @@ component_test_accel_hmac () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-hmac.h" ..
     make
 
@@ -612,7 +625,8 @@ component_test_accel_rsa() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-rsa.h" ..
     make
 
