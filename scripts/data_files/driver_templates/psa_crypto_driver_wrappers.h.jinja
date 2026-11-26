@@ -879,6 +879,11 @@ static inline uint32_t psa_driver_wrapper_sign_hash_get_num_ops(
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return(mbedtls_psa_sign_hash_get_num_ops(&operation->ctx.mbedtls_ctx));
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+        case MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID:
+            return( mbedtls_psa_async_crypto_transparent_signature_get_num_ops(
+                        &operation->ctx.async_crypto_ctx ) );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
             /* Add test driver tests here */
@@ -903,6 +908,11 @@ static inline uint32_t psa_driver_wrapper_verify_hash_get_num_ops(
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return (mbedtls_psa_verify_hash_get_num_ops(&operation->ctx.mbedtls_ctx));
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+        case MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID:
+            return(mbedtls_psa_async_crypto_transparent_signature_get_num_ops(
+                        &operation->ctx.async_crypto_ctx));
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
             /* Add test driver tests here */
@@ -932,6 +942,17 @@ static inline psa_status_t psa_driver_wrapper_sign_hash_start(
             /* Key is stored in the slot in export representation, so
              * cycle through all known transparent accelerators */
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+            status = mbedtls_psa_async_crypto_transparent_sign_hash_start(
+                        &operation->ctx.async_crypto_ctx,
+                        attributes,
+                        key_buffer, key_buffer_size,
+                        alg, hash, hash_length );
+            if( status == PSA_SUCCESS )
+                operation->id = MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID;
+            if( status != PSA_ERROR_NOT_SUPPORTED )
+                return( status );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
 
@@ -973,6 +994,13 @@ static inline psa_status_t psa_driver_wrapper_sign_hash_complete(
                                                     signature, signature_size,
                                                     signature_length ) );
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+        case MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID:
+            return( mbedtls_psa_async_crypto_transparent_sign_hash_complete(
+                        &operation->ctx.async_crypto_ctx,
+                        signature, signature_size,
+                        signature_length ) );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
             /* Add test driver tests here */
@@ -996,6 +1024,11 @@ static inline psa_status_t psa_driver_wrapper_sign_hash_abort(
         case PSA_CRYPTO_MBED_TLS_DRIVER_ID:
             return( mbedtls_psa_sign_hash_abort( &operation->ctx.mbedtls_ctx ) );
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+        case MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID:
+            return( mbedtls_psa_async_crypto_transparent_signature_abort(
+                        &operation->ctx.async_crypto_ctx ) );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
             /* Add test driver tests here */
@@ -1024,6 +1057,18 @@ static inline psa_status_t psa_driver_wrapper_verify_hash_start(
             /* Key is stored in the slot in export representation, so
              * cycle through all known transparent accelerators */
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+            status = mbedtls_psa_async_crypto_transparent_verify_hash_start(
+                        &operation->ctx.async_crypto_ctx,
+                        attributes,
+                        key_buffer, key_buffer_size,
+                        alg, hash, hash_length,
+                        signature, signature_length );
+            if( status == PSA_SUCCESS )
+                operation->id = MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID;
+            if( status != PSA_ERROR_NOT_SUPPORTED )
+                return( status );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
 
@@ -1064,6 +1109,11 @@ static inline psa_status_t psa_driver_wrapper_verify_hash_complete(
                                                      &operation->ctx.mbedtls_ctx
                                                      ) );
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+        case MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID:
+            return( mbedtls_psa_async_crypto_transparent_verify_hash_complete(
+                        &operation->ctx.async_crypto_ctx ) );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
             /* Add test driver tests here */
@@ -1084,6 +1134,11 @@ static inline psa_status_t psa_driver_wrapper_verify_hash_abort(
             return( mbedtls_psa_verify_hash_abort( &operation->ctx.mbedtls_ctx
                                                  ) );
 
+#if defined(MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED)
+        case MBEDTLS_PSA_ASYNC_CRYPTO_TRANSPARENT_DRIVER_ID:
+            return( mbedtls_psa_async_crypto_transparent_signature_abort(
+                        &operation->ctx.async_crypto_ctx ) );
+#endif /* MBEDTLS_PSA_ASYNC_CRYPTO_SIGNATURE_DRIVER_ENABLED */
 #if defined(PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT)
 #if defined(PSA_CRYPTO_DRIVER_TEST)
             /* Add test driver tests here */
