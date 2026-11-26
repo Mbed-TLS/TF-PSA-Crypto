@@ -69,7 +69,11 @@ typedef struct {
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_mac_operation_t;
 
-#define MBEDTLS_PSA_MAC_OPERATION_INIT { 0, { 0 } }
+/* Leave ctx implicitly initialized so the whole union is zeroed
+ * (C17 6.7.9 paragraphs 10 and 21). An explicit { 0 } initializes only
+ * dummy (6.7.9 paragraph 17), leaving bytes beyond it unspecified
+ * (6.2.6.1 paragraph 7; see also DR 283). */
+#define MBEDTLS_PSA_MAC_OPERATION_INIT { 0 }
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_CCM) || \
