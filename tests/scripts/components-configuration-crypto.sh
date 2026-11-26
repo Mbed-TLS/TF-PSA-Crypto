@@ -467,7 +467,12 @@ common_test_accel_ecc_some_curves () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+    # Use Debug's -O0 so the private Montgomery helpers remain visible to
+    # the symbol checks below. Pass sanitizer flags explicitly because Debug
+    # does not enable sanitizers.
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Debug \
+          -DCMAKE_C_FLAGS="$ASAN_CFLAGS" \
+          -DCMAKE_EXE_LINKER_FLAGS="$ASAN_CFLAGS" \
           -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecc-some-curves.h" ..
     cmake --build .
