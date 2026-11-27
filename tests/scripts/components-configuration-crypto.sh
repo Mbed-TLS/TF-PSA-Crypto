@@ -13,7 +13,7 @@ CMAKE_BUILTIN_BUILD_DIR="drivers/builtin/CMakeFiles/builtin.dir/src"
 CMAKE_EXTRAS_BUILD_DIR="extras/CMakeFiles/extras.dir"
 
 component_test_accel_aead () {
-    msg "test: accelerated AEAD"
+    msg "build: accelerated AEAD"
 
     # Configure
     # ---------
@@ -26,7 +26,8 @@ component_test_accel_aead () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-aead.h" ..
     make
 
@@ -42,6 +43,109 @@ component_test_accel_aead () {
     ctest
 }
 
+config_accel_block_cipher () {
+    # Start from the full config
+    ./scripts/config.py full
+
+    # Disable cipher's modes that, when not accelerated, cause
+    # legacy key types to be re-enabled in "crypto_adjust_config_enable_builtins.h".
+    scripts/config.py unset PSA_WANT_ALG_CTR
+    scripts/config.py unset PSA_WANT_ALG_CFB
+    scripts/config.py unset PSA_WANT_ALG_OFB
+    scripts/config.py unset PSA_WANT_ALG_CBC_NO_PADDING
+    scripts/config.py unset PSA_WANT_ALG_CBC_PKCS7
+    scripts/config.py unset PSA_WANT_ALG_CMAC
+    scripts/config.py unset PSA_WANT_ALG_CCM_STAR_NO_TAG
+    scripts/config.py unset PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128
+
+    # Disable direct dependency on AES_C
+    scripts/config.py unset MBEDTLS_NIST_KW_C
+
+    # Prevent the cipher module from using deprecated PSA path. The reason is
+    # that otherwise there will be tests relying on "aes_info" (defined in
+    # "cipher_wrap.c") whose functions are not available when AES_C is
+    # not defined. ARIA and Camellia are not a problem in this case because
+    # the PSA path is not tested for these key types.
+    scripts/config.py set MBEDTLS_DEPRECATED_REMOVED
+}
+
+component_test_accel_block_cipher () {
+    msg "build: built-in GCM/CCM and accelerated AES/ARIA/Camellia"
+
+    # Configure
+    # ---------
+
+    config_accel_block_cipher
+
+    # Build
+    # -----
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cat > user-config-accel-aes-aria-camellia.h <<EOF
+#define MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_AES
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_ARIA
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_CAMELLIA
+#include "$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-test-driver-extension.h"
+EOF
+
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-aes-aria-camellia.h" "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    # Make sure built-in AES/ARIA/CAMELLIA objects are empty.
+    not grep mbedtls_aes_ "${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o"
+    not grep mbedtls_aria_ "${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o"
+    not grep mbedtls_camellia_ "${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o"
+
+    # Run the tests
+    # -------------
+
+    msg "test: built-in GCM/CCM and accelerated AES/ARIA/Camellia"
+    $MAKE_COMMAND test
+}
+
+component_test_accel_block_cipher_static_keystore () {
+    msg "build: built-in GCM/CCM, accelerated AES/ARIA/Camellia and static keystore"
+    # Check that the static key store works well when CTR_DRBG uses a
+    # PSA key for AES.
+
+    # Configure
+    # ---------
+
+    config_accel_block_cipher
+    scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
+
+    # Build
+    # -----
+
+    cd "$OUT_OF_SOURCE_DIR"
+    cat > user-config-accel-aes-aria-camellia.h <<EOF
+#define MBEDTLS_PSA_ACCEL_ALG_ECB_NO_PADDING
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_AES
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_ARIA
+#define MBEDTLS_PSA_ACCEL_KEY_TYPE_CAMELLIA
+#include "$TF_PSA_CRYPTO_ROOT_DIR/tests/configs/user-config-test-driver-extension.h"
+EOF
+
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+          -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-aes-aria-camellia.h" "$TF_PSA_CRYPTO_ROOT_DIR"
+    make
+
+    # Make sure built-in AES/ARIA/CAMELLIA objects are empty.
+    not grep mbedtls_aes_ "${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o"
+    not grep mbedtls_aria_ "${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o"
+    not grep mbedtls_camellia_ "${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o"
+
+    # Run the tests
+    # -------------
+
+    msg "test: built-in GCM/CCM, accelerated AES/ARIA/Camellia and static keystore"
+    $MAKE_COMMAND test
+}
+
 component_test_accel_cipher_aead_cmac () {
     msg "build: full config with accelerated cipher inc. AEAD and CMAC"
 
@@ -55,7 +159,8 @@ component_test_accel_cipher_aead_cmac () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-cipher-aead-cmac.h" ..
     make
 
@@ -98,7 +203,8 @@ component_test_accel_ecc_all () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ecc.h" ..
     cmake --build .
 
@@ -139,7 +245,8 @@ component_test_accel_ecc_all_but_ecp_light() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ecc.h" ..
     cmake --build .
 
@@ -231,18 +338,19 @@ common_test_accel_ecc_ffdh_no_bignum () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="${user_config_accel_file_path}" ..
     cmake --build .
 
     # Make sure any built-in EC alg was not re-enabled
-    not grep mbedtls_ecdsa_ ${CMAKE_BUILTIN_BUILD_DIR}/ecdsa.o
-    not grep mbedtls_psa_key_agreement_ecdh ${CMAKE_BUILTIN_BUILD_DIR}/psa_crypto_ecp.o
-    not grep mbedtls_ecjpake_ ${CMAKE_BUILTIN_BUILD_DIR}/ecjpake.o
+    not grep mbedtls_ecdsa_ ${CMAKE_BUILTIN_BUILD_DIR}/ecdsa.c.o
+    not grep mbedtls_psa_key_agreement_ecdh ${CMAKE_BUILTIN_BUILD_DIR}/psa_crypto_ecp.c.o
+    not grep mbedtls_ecjpake_ ${CMAKE_BUILTIN_BUILD_DIR}/ecjpake.c.o
     # Also ensure that ECP, RSA or BIGNUM modules were not re-enabled
-    not grep mbedtls_ecp_ ${CMAKE_BUILTIN_BUILD_DIR}/ecp.o
-    not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.o
-    not grep mbedtls_mpi_ ${CMAKE_BUILTIN_BUILD_DIR}/bignum.o
+    not grep mbedtls_ecp_ ${CMAKE_BUILTIN_BUILD_DIR}/ecp.c.o
+    not grep mbedtls_rsa_ ${CMAKE_BUILTIN_BUILD_DIR}/rsa.c.o
+    not grep mbedtls_mpi_ ${CMAKE_BUILTIN_BUILD_DIR}/bignum.c.o
 
     # Run the tests
     # -------------
@@ -289,7 +397,8 @@ component_test_accel_ecc_some_key_types () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecc-some-key-types.h" ..
     cmake --build .
 
@@ -358,7 +467,13 @@ common_test_accel_ecc_some_curves () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    # Use Debug's -O0 so the private Montgomery helpers remain visible to
+    # the symbol checks below. Pass sanitizer flags explicitly because Debug
+    # does not enable sanitizers.
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Debug \
+          -DCMAKE_C_FLAGS="$ASAN_CFLAGS" \
+          -DCMAKE_EXE_LINKER_FLAGS="$ASAN_CFLAGS" \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecc-some-curves.h" ..
     cmake --build .
 
@@ -388,7 +503,7 @@ common_test_accel_ecc_some_curves () {
     # Run the tests
     # -------------
 
-    msg "test suites: crypto_full minus PK with accelerated EC algs and weirstrass curves"
+    msg "test suites: full minus PK with accelerated EC algs and $desc curves"
     ctest
 }
 
@@ -419,7 +534,8 @@ component_test_accel_ecdh() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecdh.h" ..
     cmake --build .
 
@@ -459,7 +575,8 @@ component_test_accel_ecdsa() {
 
     cd $OUT_OF_SOURCE_DIR
 
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecdsa.h" ..
     cmake --build .
 
@@ -493,7 +610,8 @@ component_test_accel_ecjpake() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="user-config-accel-ecjpake.h" ..
     cmake --build .
 
@@ -519,7 +637,8 @@ component_test_accel_ffdh () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-ffdh.h" ..
     make
 
@@ -534,13 +653,14 @@ component_test_accel_ffdh () {
 }
 
 component_test_accel_hash () {
-    msg "test: accelerated hash"
+    msg "build: accelerated hash"
 
     # Build
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-hash.h" ..
     cmake --build .
 
@@ -560,7 +680,7 @@ component_test_accel_hash () {
 }
 
 component_test_accel_hmac () {
-    msg "test: full with accelerated hmac"
+    msg "build: full with accelerated hmac"
 
     # Configure
     # ---------
@@ -586,7 +706,8 @@ component_test_accel_hmac () {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-hmac.h" ..
     make
 
@@ -612,7 +733,8 @@ component_test_accel_rsa() {
     # -----
 
     cd $OUT_OF_SOURCE_DIR
-    cmake -DTF_PSA_CRYPTO_TEST_DRIVER=On \
+    cmake -DCMAKE_C_COMPILER=$ASAN_CC -DCMAKE_BUILD_TYPE:String=Asan \
+          -DTF_PSA_CRYPTO_TEST_DRIVER=On \
           -DTF_PSA_CRYPTO_USER_CONFIG_FILE="../tests/configs/user-config-accel-rsa.h" ..
     make
 
@@ -633,7 +755,7 @@ component_test_psa_crypto_key_id_encodes_owner () {
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: full config - USE_PSA_CRYPTO + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
+    msg "test: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
     make test
 }
 
@@ -663,9 +785,10 @@ component_test_crypto_with_static_key_slots() {
     # with the static behavior that we're testing here.
     scripts/config.py unset MBEDTLS_PSA_KEY_STORE_DYNAMIC
 
-    msg "test: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     cmake --build .
+
+    msg "test: crypto full + MBEDTLS_PSA_STATIC_KEY_SLOTS"
     ctest
 }
 
@@ -818,7 +941,7 @@ check_renamed_symbols () {
 }
 
 component_build_psa_crypto_spm () {
-    msg "build: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER + PSA_CRYPTO_SPM, make, gcc"
+    msg "build: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER + PSA_CRYPTO_SPM, cmake"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
     scripts/config.py set MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
@@ -876,7 +999,7 @@ component_test_no_ctr_drbg () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: Full minus CTR_DRBG, USE_PSA_CRYPTO - main suites"
+    msg "test: Full minus CTR_DRBG - main suites"
     make test
 }
 
@@ -889,7 +1012,7 @@ component_test_no_hmac_drbg () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: Full minus HMAC_DRBG, USE_PSA_CRYPTO - main suites"
+    msg "test: Full minus HMAC_DRBG - main suites"
     make test
 }
 
@@ -911,7 +1034,7 @@ component_test_psa_external_rng_no_drbg () {
 }
 
 component_test_psa_external_rng_use_psa_crypto () {
-    msg "build: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG/NV_SEED"
+    msg "build: full + PSA_CRYPTO_EXTERNAL_RNG minus CTR_DRBG/NV_SEED"
     scripts/config.py full
     scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
@@ -921,7 +1044,7 @@ component_test_psa_external_rng_use_psa_crypto () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     cmake --build .
 
-    msg "test: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG/NV_SEED"
+    msg "test: full + PSA_CRYPTO_EXTERNAL_RNG minus CTR_DRBG/NV_SEED"
     ctest
 }
 
@@ -1398,7 +1521,7 @@ component_test_gcm_largetable () {
     cmake -D CMAKE_BUILD_TYPE:String=Release .
     cmake --build .
 
-    msg "test: default config - GCM_LARGE_TABLE - AESNI_C - AESCE_C"
+    msg "test: default config + GCM_LARGE_TABLE - AESNI_C - AESCE_C"
     ctest
 }
 
@@ -1471,13 +1594,13 @@ helper_block_cipher_no_decrypt_build_test () {
     cmake --build .
 
     # Make sure we don't have mbedtls_xxx_setkey_dec in AES/ARIA/CAMELLIA
-    not grep mbedtls_aes_setkey_dec ${BUILTIN_SRC_PATH}/aes.o
-    not grep mbedtls_aria_setkey_dec ${BUILTIN_SRC_PATH}/aria.o
-    not grep mbedtls_camellia_setkey_dec ${BUILTIN_SRC_PATH}/camellia.o
+    not grep mbedtls_aes_setkey_dec ${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o
+    not grep mbedtls_aria_setkey_dec ${CMAKE_BUILTIN_BUILD_DIR}/aria.c.o
+    not grep mbedtls_camellia_setkey_dec ${CMAKE_BUILTIN_BUILD_DIR}/camellia.c.o
     # Make sure we don't have mbedtls_internal_aes_decrypt in AES
-    not grep mbedtls_internal_aes_decrypt ${BUILTIN_SRC_PATH}/aes.o
+    not grep mbedtls_internal_aes_decrypt ${CMAKE_BUILTIN_BUILD_DIR}/aes.c.o
     # Make sure we don't have mbedtls_aesni_inverse_key in AESNI
-    not grep mbedtls_aesni_inverse_key ${BUILTIN_SRC_PATH}/aesni.o
+    not grep mbedtls_aesni_inverse_key ${CMAKE_BUILTIN_BUILD_DIR}/aesni.c.o
 
     msg "test: default config + BLOCK_CIPHER_NO_DECRYPT${set_opts:+ + $set_opts}${unset_opts:+ - $unset_opts} with $cflags${ldflags:+, $ldflags}"
     ctest
@@ -1588,7 +1711,7 @@ component_test_ctr_drbg_aes_256_sha_256 () {
 }
 
 component_test_ctr_drbg_aes_128_sha_512 () {
-    msg "build: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 (ASan build)"
+    msg "build: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 + MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512 (ASan build)"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
     scripts/config.py set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128
@@ -1596,7 +1719,7 @@ component_test_ctr_drbg_aes_128_sha_512 () {
     CC=$ASAN_CC cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 (ASan build)"
+    msg "test: full + set MBEDTLS_PSA_CRYPTO_RNG_STRENGTH 128 + MBEDTLS_PSA_CRYPTO_RNG_HASH PSA_ALG_SHA_512 (ASan build)"
     make test
 }
 
