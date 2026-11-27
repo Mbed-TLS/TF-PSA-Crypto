@@ -48,7 +48,7 @@ config_accel_block_cipher () {
     ./scripts/config.py full
 
     # Disable cipher's modes that, when not accelerated, cause
-    # legacy key types to be re-enabled in "config_adjust_legacy_from_psa.h".
+    # legacy key types to be re-enabled in "crypto_adjust_config_enable_builtins.h".
     scripts/config.py unset PSA_WANT_ALG_CTR
     scripts/config.py unset PSA_WANT_ALG_CFB
     scripts/config.py unset PSA_WANT_ALG_OFB
