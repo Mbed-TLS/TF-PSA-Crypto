@@ -8446,6 +8446,14 @@ static psa_status_t psa_validate_key_type_and_size_for_key_generation(
         }
     } else
 #endif /* defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE) */
+
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE) && defined(PSA_WANT_ML_DSA_87)
+    if (PSA_KEY_TYPE_IS_ML_DSA(type) && PSA_KEY_TYPE_IS_KEY_PAIR(type)) {
+        if (bits != 87) {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+    } else
+#endif /* defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE) */
     {
         return PSA_ERROR_NOT_SUPPORTED;
     }
