@@ -38,7 +38,8 @@ The configuration building method can be one of the three following:
 By default each job configures a CMake build in out_of_source_build at the
 repository root, builds with warnings treated as errors, and runs CTest.
 --out-of-source-dir selects a different build directory. The directory is
-created if needed and reused if it already exists.
+created if needed. Any existing CMakeCache.txt and CMakeFiles/ are removed
+before the first job, then the directory is reused between jobs.
 --build-and-test-command can replace the build and test steps with a custom script.
 
 The selected configuration file is only read. CMake derives each job's
@@ -58,6 +59,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import traceback
@@ -526,6 +528,12 @@ Run the jobs listed in options.tasks."""
     successes = []
     for name in options.tasks:
         jobs += domain_data.get_jobs(name)
+    cache_file = os.path.join(options.build_dir, 'CMakeCache.txt')
+    if os.path.exists(cache_file):
+        os.remove(cache_file)
+    cmake_files = os.path.join(options.build_dir, 'CMakeFiles')
+    if os.path.isdir(cmake_files):
+        shutil.rmtree(cmake_files)
     for job in jobs:
         success = run(options, job, conf, colors=colors)
         if not success:
