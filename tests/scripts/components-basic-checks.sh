@@ -115,6 +115,10 @@ component_tf_psa_crypto_check_test_dependencies () {
     echo "!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT" >> $expected
     # No PSA equivalent - we should probably have one in the future.
     echo "!MBEDTLS_ECP_RESTARTABLE" >> $expected
+    # No PSA equivalent - test infrastructure, not a crypto feature. Used in
+    # test_suite_psa_crypto_memory by tests that install their own calloc,
+    # which would conflict with the buffer allocator set up by the test runner.
+    echo "!MBEDTLS_MEMORY_BUFFER_ALLOC_C" >> $expected
     # No PSA equivalent - some observable parsing behaviour depends on this.
     echo "!MBEDTLS_RSA_NO_CRT" >> $expected
     # MBEDTLS_ASN1_WRITE_C is used by import_rsa_made_up() in test_suite_psa_crypto
