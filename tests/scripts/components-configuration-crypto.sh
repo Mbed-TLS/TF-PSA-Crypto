@@ -495,10 +495,12 @@ component_test_crypto_with_static_key_slots() {
     scripts/config.py full
     # Unset MLDSA as it exceeds the intentionally small memory
     # allowance of the static key-slot buffer here.
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY
     scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC
     scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT
     scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT
-    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE
+    scripts/config.py unset PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE
     scripts/config.py unset PSA_WANT_ML_DSA_87
     scripts/config.py set MBEDTLS_PSA_STATIC_KEY_SLOTS
     # Intentionally set MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE to a value that

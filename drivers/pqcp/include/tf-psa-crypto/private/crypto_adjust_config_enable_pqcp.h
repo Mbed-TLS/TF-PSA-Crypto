@@ -18,7 +18,11 @@
     (defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT) && \
     !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT)) /* //no-check-names */ || \
     (defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT) && \
-    !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)) /* //no-check-names */
+    !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)) /* //no-check-names */ || \
+    (defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE) && \
+    !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE)) /* //no-check-names */ || \
+    (defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE) && \
+    !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE)) /* //no-check-names */
 #define TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED
 #endif
 
