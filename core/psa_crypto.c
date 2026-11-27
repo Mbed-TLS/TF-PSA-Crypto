@@ -6654,7 +6654,7 @@ static psa_status_t psa_generate_derived_key_internal(
     psa_key_derivation_operation_t *operation)
 {
     uint8_t *data = NULL;
-    size_t bytes = PSA_BITS_TO_BYTES(bits);
+    size_t bytes = PSA_EXPORT_KEY_OUTPUT_SIZE(slot->attr.type, bits);
     size_t storage_size = bytes;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
@@ -6682,10 +6682,24 @@ static psa_status_t psa_generate_derived_key_internal(
     } else
 #endif /* defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) ||
           defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_DERIVE) */
-    if (key_type_is_raw_bytes(slot->attr.type)) {
-        if (bits % 8 != 0) {
-            return PSA_ERROR_INVALID_ARGUMENT;
+    {
+        if (key_type_is_raw_bytes(slot->attr.type)) {
+            if (bits % 8 != 0) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+        } else
+
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE) && defined(PSA_WANT_ML_DSA_87)
+        if (PSA_KEY_TYPE_IS_ML_DSA(slot->attr.type)) {
+            if (bits != 87) {
+                return PSA_ERROR_NOT_SUPPORTED;
+            }
+        } else
+#endif /* defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE) && defined(PSA_WANT_ML_DSA_87) */
+        {
+            return PSA_ERROR_NOT_SUPPORTED;
         }
+
         data = mbedtls_calloc(1, bytes);
         if (data == NULL) {
             return PSA_ERROR_INSUFFICIENT_MEMORY;
@@ -6695,8 +6709,6 @@ static psa_status_t psa_generate_derived_key_internal(
         if (status != PSA_SUCCESS) {
             goto exit;
         }
-    } else {
-        return PSA_ERROR_NOT_SUPPORTED;
     }
 
     slot->attr.bits = (psa_key_bits_t) bits;
